@@ -10,6 +10,7 @@ import AppBar from "@mui/material/AppBar";
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
 import Collapse from "@mui/material/Collapse";
+import Container from "@mui/material/Container";
 import Divider from "@mui/material/Divider";
 import Drawer from "@mui/material/Drawer";
 import IconButton from "@mui/material/IconButton";
@@ -250,7 +251,10 @@ export default function AppShell({ user, children }: { user: SessionUser; childr
 				}}
 			>
 				<Toolbar />
-				{children}
+				{/* Cap and centre page content so it doesn't stretch across ultra-wide monitors. */}
+				<Container maxWidth="xl" disableGutters>
+					{children}
+				</Container>
 			</Box>
 		</Box>
 	);
