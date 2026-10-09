@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+# A newer push to the same branch/PR cancels the older run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    name: API (ruff)
+    runs-on: ubuntu-latest
+    env:
+      UV_FROZEN: "1" # fail if uv.lock is out of date instead of silently re-resolving
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - uses: extractions/setup-just@v4
+      - run: just check-api # ruff check + ruff format --check
+
+  web:
+    name: Web (oxfmt, oxlint, tsc)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      # Reads the pnpm version from package.json "packageManager" and runs `pnpm install`.
+      - uses: pnpm/action-setup@v6
+        with:
+          cache: true
+      - uses: extractions/setup-just@v4
+      - run: just check-web # oxfmt --check, oxlint, tsc --noEmit
