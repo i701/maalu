@@ -3,6 +3,7 @@ name = "maalu"
 version = "0.1.0"
 description = "Maalu (މާލު) - open-source personal finance tracker"
 requires-python = ">=3.13"
+license = "Apache-2.0"
 dependencies = []
 
 [tool.uv.workspace]

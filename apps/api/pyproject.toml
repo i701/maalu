@@ -3,6 +3,7 @@ name = "maalu-api"
 version = "0.1.0"
 description = "Maalu core API"
 requires-python = ">=3.13"
+license = "Apache-2.0"
 dependencies = [
     "fastapi[standard]>=0.115",
     "sqlalchemy[asyncio]>=2.0.36",
