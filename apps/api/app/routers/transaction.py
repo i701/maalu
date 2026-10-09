@@ -4,9 +4,16 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException, Query, Response, status
 
 from app.dependencies import CurrentUserId, TransactionServiceDep
-from app.enums import PaymentMethod
+from app.enums import PaymentMethod, TransactionType
 from app.schemas import TransactionCreate, TransactionResponse, TransactionUpdate
-from app.services import ExchangeRateRequiredError, SubscriptionNotFoundError, VendorNotFoundError
+from app.services import (
+    AccountCurrencyMismatchError,
+    AccountNotFoundError,
+    ExchangeRateRequiredError,
+    SubscriptionNotFoundError,
+    TransactionRuleError,
+    VendorNotFoundError,
+)
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 
@@ -17,6 +24,7 @@ _RATE_REQUIRED = HTTPException(
 _SUBSCRIPTION_NOT_FOUND = HTTPException(
     status.HTTP_422_UNPROCESSABLE_CONTENT, "Subscription not found"
 )
+_ACCOUNT_NOT_FOUND = HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Account not found")
 _VENDOR_NOT_FOUND = HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Vendor not found")
 
 
@@ -32,6 +40,15 @@ async def create_transaction(
         raise _RATE_REQUIRED from None
     except SubscriptionNotFoundError:
         raise _SUBSCRIPTION_NOT_FOUND from None
+    except AccountNotFoundError:
+        raise _ACCOUNT_NOT_FOUND from None
+    except TransactionRuleError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
+    except AccountCurrencyMismatchError as exc:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            f"Transactions in this account must be in {exc.currency}",
+        ) from None
 
 
 @router.get("", response_model=list[TransactionResponse])
@@ -40,15 +57,19 @@ async def list_transactions(
     service: TransactionServiceDep,
     vendor_id: uuid.UUID | None = None,
     subscription_id: uuid.UUID | None = None,
+    account_id: uuid.UUID | None = None,
     payment_method: PaymentMethod | None = None,
+    transaction_type: Annotated[TransactionType | None, Query(alias="type")] = None,
     currency: str | None = None,
     limit: Annotated[int, Query(ge=1, le=200)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
 ):
     return await service.list_for_user(
         user_id,
+        transaction_type=transaction_type,
         vendor_id=vendor_id,
         subscription_id=subscription_id,
+        account_id=account_id,
         payment_method=payment_method,
         currency=currency,
         limit=limit,
@@ -84,6 +105,15 @@ async def update_transaction(
         raise _RATE_REQUIRED from None
     except SubscriptionNotFoundError:
         raise _SUBSCRIPTION_NOT_FOUND from None
+    except AccountNotFoundError:
+        raise _ACCOUNT_NOT_FOUND from None
+    except TransactionRuleError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
+    except AccountCurrencyMismatchError as exc:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            f"Transactions in this account must be in {exc.currency}",
+        ) from None
 
 
 @router.delete("/{transaction_id}", status_code=status.HTTP_204_NO_CONTENT)

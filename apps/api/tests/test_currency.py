@@ -4,6 +4,7 @@ from httpx import AsyncClient
 
 URL = "/api/v1/transactions"
 TX = {
+    "type": "expense",
     "amount": "10.00",
     "payment_method": "cash",
     "category": "food",

@@ -5,7 +5,7 @@ from decimal import Decimal
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.enums import SubscriptionStatus
+from app.enums import SubscriptionStatus, TransactionType
 from app.models import Subscription, Transaction, User, Vendor
 from app.schedule import MONTHLY_QUANTUM, monthly_cost, next_due_date
 from app.schemas import (
@@ -16,6 +16,7 @@ from app.schemas import (
     SubscriptionUpdate,
     VendorResponse,
 )
+from app.services.errors import TransactionRuleError
 from app.services.money import price_in_base
 from app.services.vendor import VendorNotFoundError, VendorService
 
@@ -136,6 +137,8 @@ class SubscriptionService:
         transaction = await self.db.scalar(stmt)
         if transaction is None:
             raise TransactionNotFoundError
+        if transaction.type is not TransactionType.EXPENSE:
+            raise TransactionRuleError("Only expenses can become subscriptions")
         if transaction.subscription_id is not None:
             raise TransactionAlreadyLinkedError
 
@@ -144,10 +147,10 @@ class SubscriptionService:
             name=data.name
             or (transaction.vendor.name if transaction.vendor else transaction.category),
             vendor=transaction.vendor,
-            amount=abs(transaction.amount),
+            amount=transaction.amount,
             currency=transaction.currency,
             exchange_rate=transaction.exchange_rate,
-            base_amount=abs(transaction.base_amount),
+            base_amount=transaction.base_amount,
             payment_method=transaction.payment_method,
             category=transaction.category,
             interval_unit=data.interval_unit,

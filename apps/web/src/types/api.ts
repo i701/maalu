@@ -1,6 +1,15 @@
 /** What every server function returns: errors are values, so they survive serialisation. */
 export type ApiResult<T> = { ok: true; data: T } | { ok: false; status: number; error: string };
 
+export const TRANSACTION_TYPES = ["income", "expense", "transfer"] as const;
+export type TransactionType = (typeof TRANSACTION_TYPES)[number];
+
+export const TRANSACTION_TYPE_LABELS: Record<TransactionType, string> = {
+	income: "Income",
+	expense: "Expense",
+	transfer: "Transfer",
+};
+
 export const PAYMENT_METHODS = [
 	"cash",
 	"bank_transfer",
@@ -30,6 +39,35 @@ export const SUBSCRIPTION_STATUS_LABELS: Record<SubscriptionStatus, string> = {
 	active: "Active",
 	paused: "Paused",
 	cancelled: "Cancelled",
+};
+
+export const ACCOUNT_GROUPS = [
+	"cash",
+	"accounts",
+	"card",
+	"debit_card",
+	"savings",
+	"prepaid",
+	"investments",
+	"overdrafts",
+	"loan",
+	"insurance",
+	"others",
+] as const;
+export type AccountGroup = (typeof ACCOUNT_GROUPS)[number];
+
+export const ACCOUNT_GROUP_LABELS: Record<AccountGroup, string> = {
+	cash: "Cash",
+	accounts: "Accounts",
+	card: "Card",
+	debit_card: "Debit Card",
+	savings: "Savings",
+	prepaid: "Top-Up/Prepaid",
+	investments: "Investments",
+	overdrafts: "Overdrafts",
+	loan: "Loan",
+	insurance: "Insurance",
+	others: "Others",
 };
 
 export type User = {
@@ -78,10 +116,41 @@ export type SubscriptionSummary = {
 	currency: string;
 };
 
+export type Account = {
+	id: string;
+	group: AccountGroup;
+	name: string;
+	opening_amount: string;
+	currency: string;
+	exchange_rate: string;
+	description: string | null;
+	/** Card / Overdrafts / Loan: the balance is money you owe. */
+	is_liability: boolean;
+	/** Opening amount + linked transactions (computed by the API). */
+	balance: string;
+	/** Balance valued in your base currency. */
+	base_balance: string;
+	transaction_count: number;
+	created_at: string;
+};
+
+export type AccountRef = { id: string; name: string; group: AccountGroup; currency: string };
+
+export type AccountSummary = {
+	assets: string;
+	liabilities: string;
+	total: string;
+	currency: string;
+};
+
 // Money fields are decimal *strings* end to end; never parse them into floats for math.
 export type Transaction = {
 	id: string;
+	type: TransactionType;
+	/** Always positive: `type` says which way the money moved. */
 	amount: string;
+	/** Transfers only: what arrived in the destination account (its currency). */
+	to_amount: string | null;
 	currency: string;
 	exchange_rate: string;
 	base_amount: string;
@@ -91,5 +160,8 @@ export type Transaction = {
 	transaction_date: string;
 	vendor: Vendor | null;
 	subscription: { id: string; name: string } | null;
+	account: AccountRef | null;
+	/** Transfers only: the destination account (`account` is the source). */
+	to_account: AccountRef | null;
 	created_at: string;
 };

@@ -5,7 +5,8 @@ from httpx import AsyncClient
 from tests.conftest import Signup
 
 TX = {
-    "amount": "-4.50",
+    "type": "expense",
+    "amount": "4.50",
     "payment_method": "cash",
     "category": "coffee",
     "transaction_date": "2026-02-01",

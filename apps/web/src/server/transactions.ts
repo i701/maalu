@@ -1,12 +1,16 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { PAYMENT_METHODS, type Transaction } from "#/types/api";
+import { PAYMENT_METHODS, TRANSACTION_TYPES, type Transaction } from "#/types/api";
 import { apiRequest } from "./api";
 
 export const PAGE_SIZE = 20;
 
-// Decimals are validated as strings and forwarded untouched: no float round-trip.
-const amount = z.string().regex(/^-?\d+(\.\d{1,4})?$/, "Enter a valid amount (max 4 decimals)");
+// Decimals are validated as strings and forwarded untouched: no float round-trip. Amounts are
+// always positive: the transaction `type` decides whether money comes in or goes out.
+const amount = z
+	.string()
+	.regex(/^\d+(\.\d{1,4})?$/, "Enter a valid positive amount (max 4 decimals)")
+	.refine((v) => Number(v) > 0, "Amount must be greater than 0");
 const exchangeRate = z
 	.string()
 	.regex(/^\d+(\.\d{1,8})?$/, "Enter a valid rate (max 8 decimals)")
@@ -14,15 +18,20 @@ const exchangeRate = z
 const currency = z.string().regex(/^[A-Za-z]{3}$/, "Use a 3-letter currency code");
 
 const createSchema = z.object({
+	type: z.enum(TRANSACTION_TYPES),
 	amount,
 	currency: currency.optional(),
 	exchange_rate: exchangeRate.optional(),
-	payment_method: z.enum(PAYMENT_METHODS),
-	category: z.string().trim().min(1).max(100),
+	// Required for income/expense; transfers have neither (the API enforces this).
+	payment_method: z.enum(PAYMENT_METHODS).optional(),
+	category: z.string().trim().min(1).max(100).optional(),
 	description: z.string().nullable().optional(),
 	transaction_date: z.iso.date(),
 	vendor_name: z.string().trim().min(1).max(200).optional(),
 	subscription_id: z.uuid().optional(),
+	account_id: z.uuid().optional(),
+	to_account_id: z.uuid().optional(),
+	to_amount: amount.optional(),
 });
 
 const updateSchema = z.object({
@@ -34,13 +43,17 @@ const updateSchema = z.object({
 			vendor_name: z.string().trim().min(1).max(200).optional(),
 			vendor_id: z.null().optional(), // explicit null unlinks the vendor
 			subscription_id: z.uuid().nullable().optional(), // explicit null unlinks the subscription
+			account_id: z.uuid().nullable().optional(), // explicit null unlinks the account
+			to_account_id: z.uuid().nullable().optional(),
 		}),
 });
 
 const listSchema = z.object({
 	page: z.number().int().min(1).default(1),
+	type: z.enum(TRANSACTION_TYPES).optional(),
 	payment_method: z.enum(PAYMENT_METHODS).optional(),
 	vendor_id: z.uuid().optional(),
+	account_id: z.uuid().optional(),
 	currency: currency.optional(),
 });
 
@@ -52,8 +65,10 @@ export const listTransactionsFn = createServerFn({ method: "GET" })
 			query: {
 				limit: PAGE_SIZE + 1,
 				offset: (data.page - 1) * PAGE_SIZE,
+				type: data.type,
 				payment_method: data.payment_method,
 				vendor_id: data.vendor_id,
+				account_id: data.account_id,
 				currency: data.currency,
 			},
 		});

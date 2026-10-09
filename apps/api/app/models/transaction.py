@@ -5,7 +5,8 @@ from decimal import Decimal
 from sqlalchemy import Date, DateTime, Enum, ForeignKey, Index, Numeric, String, Text, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.enums import PaymentMethod
+from app.enums import PaymentMethod, TransactionType
+from app.models.account import Account
 from app.models.base import Base
 from app.models.subscription import Subscription
 from app.models.vendor import Vendor
@@ -21,7 +22,6 @@ class Transaction(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         Uuid, ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
-    # Signed: negative = money out, positive = money in. Never a float.
     # Optional payee. Deleting a vendor keeps the transaction and just unlinks it.
     vendor_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid, ForeignKey("vendors.id", ondelete="SET NULL"), index=True, default=None
@@ -32,9 +32,33 @@ class Transaction(Base):
         Uuid, ForeignKey("subscriptions.id", ondelete="SET NULL"), index=True, default=None
     )
     subscription: Mapped[Subscription | None] = relationship(lazy="joined")
+    # Optional account this moved money in/out of. Deleting the account only unlinks it.
+    account_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("accounts.id", ondelete="SET NULL"), index=True, default=None
+    )
+    account: Mapped[Account | None] = relationship(lazy="joined", foreign_keys=[account_id])
+    # Transfers only: the destination account and the amount that arrived there (in that
+    # account's currency). `account` is then the source and `amount` what left it.
+    to_account_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("accounts.id", ondelete="SET NULL"), index=True, default=None
+    )
+    to_account: Mapped[Account | None] = relationship(lazy="joined", foreign_keys=[to_account_id])
+    to_amount: Mapped[Decimal | None] = mapped_column(Numeric(19, 4), default=None)
+    type: Mapped[TransactionType] = mapped_column(
+        Enum(
+            TransactionType,
+            native_enum=False,
+            length=32,
+            create_constraint=False,
+            values_callable=lambda e: [m.value for m in e],
+        ),
+        index=True,
+    )
+    # Always positive and never a float; `type` decides the direction (income in, expense and
+    # transfer out). In `currency`.
     amount: Mapped[Decimal] = mapped_column(Numeric(19, 4))
-    # `amount` is in `currency`. `exchange_rate` = units of the user's base currency per 1 unit
-    # of `currency` (1 when they match); base_amount = amount * exchange_rate, in base currency.
+    # `exchange_rate` = units of the user's base currency per 1 unit of `currency` (1 when they
+    # match); base_amount = amount * exchange_rate, in base currency.
     currency: Mapped[str] = mapped_column(String(3))
     exchange_rate: Mapped[Decimal] = mapped_column(Numeric(19, 8))
     base_amount: Mapped[Decimal] = mapped_column(Numeric(19, 4))

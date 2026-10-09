@@ -17,7 +17,8 @@ SUB = {
     "start_date": "2026-01-01",
 }
 TX_BODY = {
-    "amount": "-99.00",
+    "type": "expense",
+    "amount": "99.00",
     "payment_method": "debit_card",
     "category": "Entertainment",
     "transaction_date": "2026-01-01",
@@ -100,7 +101,7 @@ async def test_overdue_and_non_active_statuses(client: AsyncClient, auth):
 
 
 async def test_from_transaction_creates_and_links(client: AsyncClient, auth):
-    body = {**TX_BODY, "amount": "-12.50", "currency": "USD", "exchange_rate": "15"}
+    body = {**TX_BODY, "amount": "12.50", "currency": "USD", "exchange_rate": "15"}
     tx = (await client.post(TX, json={**body, "vendor_name": "Spotify"}, headers=auth)).json()
 
     resp = await client.post(
@@ -109,7 +110,7 @@ async def test_from_transaction_creates_and_links(client: AsyncClient, auth):
     assert resp.status_code == 201
     sub = resp.json()
     assert sub["name"] == "Spotify"  # defaults to the vendor
-    assert Decimal(sub["amount"]) == Decimal("12.5")  # sign dropped
+    assert Decimal(sub["amount"]) == Decimal("12.5")
     assert sub["currency"] == "USD"
     assert Decimal(sub["exchange_rate"]) == 15
     assert sub["start_date"] == "2026-01-01"

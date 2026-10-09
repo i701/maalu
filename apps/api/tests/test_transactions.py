@@ -3,7 +3,8 @@ from httpx import AsyncClient
 from tests.conftest import Signup
 
 PAYLOAD = {
-    "amount": "-12.3456",
+    "type": "expense",
+    "amount": "12.3456",
     "payment_method": "debit_card",
     "category": "food",
     "transaction_date": "2026-01-15",
@@ -19,7 +20,8 @@ async def test_create_and_list(client: AsyncClient, auth: dict[str, str]):
     created = await client.post(URL, json=PAYLOAD, headers=auth)
     assert created.status_code == 201
     body = created.json()
-    assert body["amount"] == "-12.3456"  # exact Decimal, serialised as a string
+    assert body["amount"] == "12.3456"  # exact Decimal, serialised as a string
+    assert body["type"] == "expense"
     assert "user_id" not in body
 
     listed = await client.get(URL, headers=auth)
@@ -66,6 +68,6 @@ async def test_payment_method_update_and_filter(client: AsyncClient, auth: dict[
 
 async def test_required_fields_cannot_be_nulled(client: AsyncClient, auth: dict[str, str]):
     tid = (await client.post(URL, json=PAYLOAD, headers=auth)).json()["id"]
-    for field in ("amount", "payment_method", "category", "transaction_date"):
+    for field in ("type", "amount", "payment_method", "category", "transaction_date"):
         resp = await client.patch(f"{URL}/{tid}", json={field: None}, headers=auth)
         assert resp.status_code == 422, field

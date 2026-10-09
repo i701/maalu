@@ -1,3 +1,4 @@
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import LogoutIcon from "@mui/icons-material/Logout";
@@ -36,6 +37,12 @@ const SECTIONS = [
 		label: "Main",
 		items: [
 			{ to: "/transactions", label: "Transactions", icon: ReceiptLongIcon, color: "primary.main" },
+			{
+				to: "/accounts",
+				label: "Accounts",
+				icon: AccountBalanceWalletIcon,
+				color: "success.main",
+			},
 			{
 				to: "/subscriptions",
 				label: "Subscriptions",

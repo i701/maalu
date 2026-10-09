@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
 from app.config import settings
-from app.routers import auth, currency, subscription, transaction, vendor
+from app.routers import account, auth, currency, subscription, transaction, vendor
 
 
 def create_app() -> FastAPI:
@@ -13,6 +13,7 @@ def create_app() -> FastAPI:
 
     app.include_router(auth.router, prefix="/api/v1")
     app.include_router(transaction.router, prefix="/api/v1")
+    app.include_router(account.router, prefix="/api/v1")
     app.include_router(vendor.router, prefix="/api/v1")
     app.include_router(subscription.router, prefix="/api/v1")
     app.include_router(currency.router, prefix="/api/v1")

@@ -15,6 +15,7 @@ from app.services import (
     ExchangeRateRequiredError,
     TransactionAlreadyLinkedError,
     TransactionNotFoundError,
+    TransactionRuleError,
     VendorNotFoundError,
 )
 
@@ -77,6 +78,8 @@ async def subscription_from_transaction(
         subscription = await service.from_transaction(user_id, transaction_id, data)
     except TransactionNotFoundError:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Transaction not found") from None
+    except TransactionRuleError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
     except TransactionAlreadyLinkedError:
         raise HTTPException(
             status.HTTP_409_CONFLICT, "Transaction already belongs to a subscription"

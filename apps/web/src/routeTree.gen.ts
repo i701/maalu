@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ProtectedAccountsRouteImport } from './routes/_protected/accounts'
 import { Route as ProtectedProfileRouteImport } from './routes/_protected/profile'
 import { Route as ProtectedSubscriptionsRouteImport } from './routes/_protected/subscriptions'
 import { Route as ProtectedTransactionsRouteImport } from './routes/_protected/transactions'
@@ -36,6 +37,11 @@ const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ProtectedAccountsRoute = ProtectedAccountsRouteImport.update({
+  id: '/accounts',
+  path: '/accounts',
+  getParentRoute: () => ProtectedRoute,
 } as any)
 const ProtectedProfileRoute = ProtectedProfileRouteImport.update({
   id: '/profile',
@@ -62,6 +68,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/accounts': typeof ProtectedAccountsRoute
   '/profile': typeof ProtectedProfileRoute
   '/subscriptions': typeof ProtectedSubscriptionsRoute
   '/transactions': typeof ProtectedTransactionsRoute
@@ -71,6 +78,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/accounts': typeof ProtectedAccountsRoute
   '/profile': typeof ProtectedProfileRoute
   '/subscriptions': typeof ProtectedSubscriptionsRoute
   '/transactions': typeof ProtectedTransactionsRoute
@@ -82,6 +90,7 @@ export interface FileRoutesById {
   '/_protected': typeof ProtectedRouteWithChildren
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/_protected/accounts': typeof ProtectedAccountsRoute
   '/_protected/profile': typeof ProtectedProfileRoute
   '/_protected/subscriptions': typeof ProtectedSubscriptionsRoute
   '/_protected/transactions': typeof ProtectedTransactionsRoute
@@ -93,6 +102,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/register'
+    | '/accounts'
     | '/profile'
     | '/subscriptions'
     | '/transactions'
@@ -102,6 +112,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/register'
+    | '/accounts'
     | '/profile'
     | '/subscriptions'
     | '/transactions'
@@ -112,6 +123,7 @@ export interface FileRouteTypes {
     | '/_protected'
     | '/login'
     | '/register'
+    | '/_protected/accounts'
     | '/_protected/profile'
     | '/_protected/subscriptions'
     | '/_protected/transactions'
@@ -155,6 +167,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_protected/accounts': {
+      id: '/_protected/accounts'
+      path: '/accounts'
+      fullPath: '/accounts'
+      preLoaderRoute: typeof ProtectedAccountsRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
     '/_protected/profile': {
       id: '/_protected/profile'
       path: '/profile'
@@ -187,6 +206,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface ProtectedRouteChildren {
+  ProtectedAccountsRoute: typeof ProtectedAccountsRoute
   ProtectedProfileRoute: typeof ProtectedProfileRoute
   ProtectedSubscriptionsRoute: typeof ProtectedSubscriptionsRoute
   ProtectedTransactionsRoute: typeof ProtectedTransactionsRoute
@@ -194,6 +214,7 @@ interface ProtectedRouteChildren {
 }
 
 const ProtectedRouteChildren: ProtectedRouteChildren = {
+  ProtectedAccountsRoute: ProtectedAccountsRoute,
   ProtectedProfileRoute: ProtectedProfileRoute,
   ProtectedSubscriptionsRoute: ProtectedSubscriptionsRoute,
   ProtectedTransactionsRoute: ProtectedTransactionsRoute,

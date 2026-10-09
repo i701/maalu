@@ -1,3 +1,10 @@
+from app.schemas.account import (
+    AccountCreate,
+    AccountRef,
+    AccountResponse,
+    AccountSummary,
+    AccountUpdate,
+)
 from app.schemas.subscription import (
     SubscriptionCreate,
     SubscriptionFromTransaction,
@@ -11,6 +18,11 @@ from app.schemas.user import Token, UserCreate, UserResponse
 from app.schemas.vendor import VendorCreate, VendorResponse, VendorUpdate
 
 __all__ = [
+    "AccountCreate",
+    "AccountRef",
+    "AccountResponse",
+    "AccountSummary",
+    "AccountUpdate",
     "SubscriptionCreate",
     "SubscriptionFromTransaction",
     "SubscriptionRef",

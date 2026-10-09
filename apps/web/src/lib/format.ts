@@ -44,3 +44,20 @@ export function daysUntil(iso: string): number {
 	today.setHours(0, 0, 0, 0);
 	return Math.round((new Date(`${iso}T00:00:00`).getTime() - today.getTime()) / 86_400_000);
 }
+
+/** Exact sum of decimal strings (no floats): scales to integers with BigInt. */
+export function sumDecimals(values: string[]): string {
+	const SCALE = 8;
+	let total = 0n;
+	for (const v of values) {
+		const negative = v.startsWith("-");
+		const [int, frac = ""] = v.replace("-", "").split(".");
+		const scaled = BigInt(int + frac.padEnd(SCALE, "0").slice(0, SCALE));
+		total += negative ? -scaled : scaled;
+	}
+	const negative = total < 0n;
+	const digits = (negative ? -total : total).toString().padStart(SCALE + 1, "0");
+	const whole = digits.slice(0, -SCALE);
+	const fraction = digits.slice(-SCALE).replace(/0+$/, "").padEnd(2, "0");
+	return `${negative ? "-" : ""}${whole}.${fraction}`;
+}

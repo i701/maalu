@@ -21,6 +21,7 @@ export default defineConfig(({ mode }) => {
 				"@emotion/styled",
 				"@emotion/cache",
 				...[
+					"AccountBalanceWallet",
 					"Add",
 					"Autorenew",
 					"ChevronRight",

@@ -8,7 +8,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.models import User
 from app.security import decode_access_token
-from app.services import SubscriptionService, TransactionService, UserService, VendorService
+from app.services import (
+    AccountService,
+    SubscriptionService,
+    TransactionService,
+    UserService,
+    VendorService,
+)
 
 DbSession = Annotated[AsyncSession, Depends(get_db)]
 
@@ -27,6 +33,10 @@ def get_vendor_service(db: DbSession) -> VendorService:
     return VendorService(db)
 
 
+def get_account_service(db: DbSession) -> AccountService:
+    return AccountService(db)
+
+
 def get_subscription_service(db: DbSession) -> SubscriptionService:
     return SubscriptionService(db)
 
@@ -34,6 +44,7 @@ def get_subscription_service(db: DbSession) -> SubscriptionService:
 UserServiceDep = Annotated[UserService, Depends(get_user_service)]
 TransactionServiceDep = Annotated[TransactionService, Depends(get_transaction_service)]
 VendorServiceDep = Annotated[VendorService, Depends(get_vendor_service)]
+AccountServiceDep = Annotated[AccountService, Depends(get_account_service)]
 SubscriptionServiceDep = Annotated[SubscriptionService, Depends(get_subscription_service)]
 
 

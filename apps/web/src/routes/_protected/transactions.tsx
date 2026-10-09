@@ -29,31 +29,50 @@ import TransactionForm from "#/components/TransactionForm";
 import { formatDate, formatMoney } from "#/lib/format";
 import { unwrap } from "#/lib/unwrap";
 import { deleteTransactionFn, listTransactionsFn, PAGE_SIZE } from "#/server/transactions";
+import { listAccountsFn } from "#/server/accounts";
 import { listCurrenciesFn } from "#/server/currencies";
 import { listSubscriptionsFn } from "#/server/subscriptions";
 import { listVendorsFn } from "#/server/vendors";
-import { PAYMENT_METHODS, PAYMENT_METHOD_LABELS, type Transaction } from "#/types/api";
+import {
+	PAYMENT_METHODS,
+	PAYMENT_METHOD_LABELS,
+	TRANSACTION_TYPES,
+	TRANSACTION_TYPE_LABELS,
+	type Transaction,
+} from "#/types/api";
+
+/** Amounts are stored positive; the type decides the sign shown and the colour. */
+const TYPE_SIGN = { income: "+", expense: "−", transfer: "" } as const;
+const TYPE_AMOUNT_COLOR = {
+	income: "success.main",
+	expense: "error.main",
+	transfer: "text.primary",
+} as const;
 
 const searchSchema = z.object({
 	page: z.number().int().min(1).default(1).catch(1),
+	type: z.enum(TRANSACTION_TYPES).optional().catch(undefined),
 	payment_method: z.enum(PAYMENT_METHODS).optional().catch(undefined),
 	vendor_id: z.uuid().optional().catch(undefined),
+	account_id: z.uuid().optional().catch(undefined),
 });
 
 export const Route = createFileRoute("/_protected/transactions")({
 	validateSearch: searchSchema,
 	loaderDeps: ({ search }) => search,
 	loader: async ({ deps }) => {
-		const [transactions, vendors, subscriptions, currencies] = await Promise.all([
+		const [transactions, vendors, subscriptions, accounts, currencies] = await Promise.all([
 			listTransactionsFn({ data: deps }),
 			listVendorsFn(),
 			listSubscriptionsFn(),
+			listAccountsFn(),
 			listCurrenciesFn(),
 		]);
 		return {
 			...unwrap(transactions),
 			vendors: unwrap(vendors),
 			subscriptions: unwrap(subscriptions),
+			accounts: unwrap(accounts),
 			currencies,
 		};
 	},
@@ -61,7 +80,7 @@ export const Route = createFileRoute("/_protected/transactions")({
 });
 
 function TransactionsPage() {
-	const { items, hasMore, vendors, subscriptions, currencies } = Route.useLoaderData();
+	const { items, hasMore, vendors, subscriptions, accounts, currencies } = Route.useLoaderData();
 	const { user } = Route.useRouteContext();
 	const search = Route.useSearch();
 	const navigate = Route.useNavigate();
@@ -69,7 +88,9 @@ function TransactionsPage() {
 	const [deleting, setDeleting] = useState<Transaction | null>(null);
 	const [converting, setConverting] = useState<Transaction | null>(null);
 
-	const filtered = Boolean(search.payment_method || search.vendor_id);
+	const filtered = Boolean(
+		search.type || search.payment_method || search.vendor_id || search.account_id,
+	);
 
 	return (
 		<>
@@ -92,6 +113,29 @@ function TransactionsPage() {
 					<TextField
 						select
 						size="small"
+						label="Type"
+						value={search.type ?? ""}
+						onChange={(e) =>
+							navigate({
+								search: (p) => ({
+									...p,
+									page: 1,
+									type: (e.target.value || undefined) as typeof p.type,
+								}),
+							})
+						}
+						sx={{ maxWidth: { sm: 160 } }}
+					>
+						<MenuItem value="">All</MenuItem>
+						{TRANSACTION_TYPES.map((t) => (
+							<MenuItem key={t} value={t}>
+								{TRANSACTION_TYPE_LABELS[t]}
+							</MenuItem>
+						))}
+					</TextField>
+					<TextField
+						select
+						size="small"
 						label="Payment method"
 						value={search.payment_method ?? ""}
 						onChange={(e) =>
@@ -109,6 +153,25 @@ function TransactionsPage() {
 						{PAYMENT_METHODS.map((m) => (
 							<MenuItem key={m} value={m}>
 								{PAYMENT_METHOD_LABELS[m]}
+							</MenuItem>
+						))}
+					</TextField>
+					<TextField
+						select
+						size="small"
+						label="Account"
+						value={search.account_id ?? ""}
+						onChange={(e) =>
+							navigate({
+								search: (p) => ({ ...p, page: 1, account_id: e.target.value || undefined }),
+							})
+						}
+						sx={{ maxWidth: { sm: 220 } }}
+					>
+						<MenuItem value="">All</MenuItem>
+						{accounts.map((a) => (
+							<MenuItem key={a.id} value={a.id}>
+								{a.name}
 							</MenuItem>
 						))}
 					</TextField>
@@ -166,10 +229,17 @@ function TransactionsPage() {
 										</TableCell>
 										<TableCell>
 											<Typography variant="body2" sx={{ fontWeight: 500 }}>
-												{t.vendor?.name ?? t.category}
+												{t.type === "transfer"
+													? `${t.account?.name ?? "Deleted account"} → ${t.to_account?.name ?? "Deleted account"}`
+													: (t.vendor?.name ?? t.category)}
 											</Typography>
 											<Typography variant="caption" sx={{ color: "text.secondary" }}>
-												{[t.vendor ? t.category : null, t.description].filter(Boolean).join(" · ")}
+												{(t.type === "transfer"
+													? [t.description]
+													: [t.vendor ? t.category : null, t.description]
+												)
+													.filter(Boolean)
+													.join(" · ")}
 											</Typography>
 											{t.subscription && (
 												<Chip
@@ -182,27 +252,45 @@ function TransactionsPage() {
 											)}
 										</TableCell>
 										<TableCell>
-											<Chip size="small" label={PAYMENT_METHOD_LABELS[t.payment_method]} />
+											{t.type === "transfer" ? (
+												<Chip size="small" color="info" label="Transfer" />
+											) : (
+												<Chip size="small" label={PAYMENT_METHOD_LABELS[t.payment_method]} />
+											)}
+											{t.type !== "transfer" && t.account && (
+												<Typography
+													variant="caption"
+													sx={{ display: "block", color: "text.secondary", mt: 0.5 }}
+												>
+													{t.account.name}
+												</Typography>
+											)}
 										</TableCell>
 										<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
 											<Typography
 												variant="body2"
-												sx={{
-													fontWeight: 600,
-													color: t.amount.startsWith("-") ? "error.main" : "success.main",
-												}}
+												sx={{ fontWeight: 600, color: TYPE_AMOUNT_COLOR[t.type] }}
 											>
+												{TYPE_SIGN[t.type]}
 												{formatMoney(t.amount, t.currency)}
 											</Typography>
-											{t.currency !== user.base_currency && (
+											{t.type === "transfer" &&
+												t.to_account &&
+												t.to_account.currency !== t.currency && (
+													<Typography variant="caption" sx={{ color: "text.secondary" }}>
+														→ {formatMoney(t.to_amount ?? "0", t.to_account.currency)}
+													</Typography>
+												)}
+											{t.type !== "transfer" && t.currency !== user.base_currency && (
 												<Typography variant="caption" sx={{ color: "text.secondary" }}>
-													≈ {formatMoney(t.base_amount, user.base_currency)} @{" "}
+													≈ {TYPE_SIGN[t.type]}
+													{formatMoney(t.base_amount, user.base_currency)} @{" "}
 													{Number(t.exchange_rate)}
 												</Typography>
 											)}
 										</TableCell>
 										<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-											{!t.subscription && (
+											{t.type === "expense" && !t.subscription && (
 												<Tooltip title="Make subscription">
 													<IconButton
 														aria-label="Make subscription"
@@ -263,6 +351,7 @@ function TransactionsPage() {
 					transaction={editing === "new" ? undefined : editing}
 					vendors={vendors}
 					subscriptions={subscriptions}
+					accounts={accounts}
 					currencies={currencies}
 					baseCurrency={user.base_currency}
 					onClose={() => setEditing(null)}
