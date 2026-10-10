@@ -1,15 +1,23 @@
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
-import { useEffect, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 
 const DEBOUNCE_MS = 400;
 const DECIMAL = /^\d+(\.\d{1,4})?$/;
 
 type Range = { min?: string; max?: string };
 
+/** What's wrong with a typed min/max pair, if anything. Amounts stay strings (no float rounding). */
+function check(min: string, max: string) {
+	const minBad = min !== "" && !DECIMAL.test(min);
+	const maxBad = max !== "" && !DECIMAL.test(max);
+	const backwards = !minBad && !maxBad && min !== "" && max !== "" && Number(min) > Number(max);
+	return { minBad, maxBad, backwards, invalid: minBad || maxBad || backwards };
+}
+
 /**
  * Min / max amount inputs. Applies the range after you pause typing, and only while both values
- * are valid numbers with min <= max. Amounts stay strings end to end (no float rounding).
+ * are valid numbers with min <= max.
  */
 export default function AmountRangeField({
 	value,
@@ -24,26 +32,29 @@ export default function AmountRangeField({
 	const [max, setMax] = useState(value.max ?? "");
 
 	// Follow external changes (e.g. "Clear all") without fighting what the user is typing.
-	const [seen, setSeen] = useState(`${value.min ?? ""}|${value.max ?? ""}`);
 	const incoming = `${value.min ?? ""}|${value.max ?? ""}`;
+	const [seen, setSeen] = useState(incoming);
 	if (incoming !== seen) {
 		setSeen(incoming);
 		setMin(value.min ?? "");
 		setMax(value.max ?? "");
 	}
 
-	const minBad = min !== "" && !DECIMAL.test(min);
-	const maxBad = max !== "" && !DECIMAL.test(max);
-	const backwards = !minBad && !maxBad && min !== "" && max !== "" && Number(min) > Number(max);
-	const invalid = minBad || maxBad || backwards;
+	const { minBad, maxBad, backwards, invalid } = check(min, max);
+
+	// Always the latest onChange / committed value, without restarting the debounce when they change.
+	const report = useEffectEvent((next: Range) => {
+		if (next.min !== value.min || next.max !== value.max) onChange(next);
+	});
 
 	useEffect(() => {
 		if (invalid) return;
-		const next = { min: min || undefined, max: max || undefined };
-		if (next.min === value.min && next.max === value.max) return;
-		const timer = setTimeout(() => onChange(next), DEBOUNCE_MS);
+		const timer = setTimeout(
+			() => report({ min: min || undefined, max: max || undefined }),
+			DEBOUNCE_MS,
+		);
 		return () => clearTimeout(timer);
-	}, [min, max, invalid, value.min, value.max, onChange]);
+	}, [min, max, invalid]);
 
 	return (
 		<Stack direction="row" spacing={1.5} sx={{ alignItems: "flex-start" }}>

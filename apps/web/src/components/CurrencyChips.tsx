@@ -6,7 +6,7 @@ import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
-import { currencyName } from "./CurrencyField";
+import { currencyName } from "#/lib/currency-name";
 
 /**
  * Currency picker as quick-select chips (the currencies you already use) plus a "+" that opens a

@@ -3,7 +3,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
-import { useEffect, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 
 const DEBOUNCE_MS = 300;
 
@@ -32,12 +32,15 @@ export default function SearchField({
 		if (text.trim() !== value) setText(value);
 	}
 
+	// Always the latest onChange, without restarting the debounce when its identity changes.
+	const report = useEffectEvent((next: string) => onChange(next));
+
 	useEffect(() => {
 		const next = text.trim();
 		if (next === value) return;
-		const timer = setTimeout(() => onChange(next), DEBOUNCE_MS);
+		const timer = setTimeout(() => report(next), DEBOUNCE_MS);
 		return () => clearTimeout(timer);
-	}, [text, value, onChange]);
+	}, [text, value]);
 
 	return (
 		<TextField

@@ -1,7 +1,7 @@
 import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 type Range = { from?: string; to?: string };
 
@@ -56,11 +56,14 @@ export default function DateRangeField({
 
 	const backwards = from !== "" && to !== "" && from > to;
 
-	useEffect(() => {
-		if (backwards) return;
-		const next = { from: from || undefined, to: to || undefined };
+	// Apply the range from the event that changed it (no effect): only while the order is valid.
+	const edit = (nextFrom: string, nextTo: string) => {
+		setFrom(nextFrom);
+		setTo(nextTo);
+		if (nextFrom !== "" && nextTo !== "" && nextFrom > nextTo) return;
+		const next = { from: nextFrom || undefined, to: nextTo || undefined };
 		if (next.from !== value.from || next.to !== value.to) onChange(next);
-	}, [from, to, backwards, value.from, value.to, onChange]);
+	};
 
 	return (
 		<Stack spacing={1.5}>
@@ -85,7 +88,7 @@ export default function DateRangeField({
 					type="date"
 					label="From"
 					value={from}
-					onChange={(e) => setFrom(e.target.value)}
+					onChange={(e) => edit(e.target.value, to)}
 					error={backwards}
 					slotProps={{ inputLabel: { shrink: true } }}
 				/>
@@ -94,7 +97,7 @@ export default function DateRangeField({
 					type="date"
 					label="To"
 					value={to}
-					onChange={(e) => setTo(e.target.value)}
+					onChange={(e) => edit(from, e.target.value)}
 					error={backwards}
 					helperText={backwards ? "Before the start date" : undefined}
 					slotProps={{ inputLabel: { shrink: true } }}

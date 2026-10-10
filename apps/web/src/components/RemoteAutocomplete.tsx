@@ -2,7 +2,7 @@ import Autocomplete from "@mui/material/Autocomplete";
 import CircularProgress from "@mui/material/CircularProgress";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export type RemoteOption = {
 	id: string;
@@ -46,6 +46,7 @@ export default function RemoteAutocomplete({
 	const [input, setInput] = useState("");
 	const [options, setOptions] = useState<RemoteOption[]>([]);
 	const [loading, setLoading] = useState(false);
+	const inFlight = useRef(0); // requests running, so a stale one finishing never hides the spinner
 
 	// When the box just shows the chosen label, list everything rather than only that one match.
 	const query = value && input === value.label ? "" : input;
@@ -55,6 +56,7 @@ export default function RemoteAutocomplete({
 		let cancelled = false;
 		const timer = setTimeout(
 			async () => {
+				inFlight.current += 1;
 				setLoading(true);
 				try {
 					const found = await search(query);
@@ -62,7 +64,8 @@ export default function RemoteAutocomplete({
 				} catch {
 					if (!cancelled) setOptions([]);
 				} finally {
-					if (!cancelled) setLoading(false);
+					inFlight.current -= 1;
+					setLoading(inFlight.current > 0);
 				}
 			},
 			query ? DEBOUNCE_MS : 0,
@@ -93,7 +96,7 @@ export default function RemoteAutocomplete({
 			filterOptions={(all) => all} // the server did the filtering
 			getOptionLabel={(o) => o.label}
 			isOptionEqualToValue={(a, b) => a.id === b.id}
-			loading={loading}
+			loading={open && loading}
 			loadingText="Searching…"
 			noOptionsText={query ? "No matches" : "Nothing yet"}
 			renderOption={({ key, ...props }, option) => (
@@ -119,7 +122,7 @@ export default function RemoteAutocomplete({
 							...params.slotProps.input,
 							endAdornment: (
 								<>
-									{loading && <CircularProgress size={16} />}
+									{open && loading && <CircularProgress size={16} />}
 									{params.slotProps.input.endAdornment}
 								</>
 							),

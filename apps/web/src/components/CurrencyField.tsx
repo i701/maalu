@@ -1,24 +1,7 @@
 import Autocomplete, { createFilterOptions } from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-
-const displayNames = (() => {
-	try {
-		return new Intl.DisplayNames(["en"], { type: "currency" });
-	} catch {
-		return null;
-	}
-})();
-
-/** English currency name for a code ("USD" -> "US Dollar"), or "" when unknown. */
-export function currencyName(code: string): string {
-	try {
-		const name = displayNames?.of(code.toUpperCase());
-		return name && name !== code.toUpperCase() ? name : "";
-	} catch {
-		return "";
-	}
-}
+import { currencyName } from "#/lib/currency-name";
 
 // Match on the code or the name, so "dollar" finds USD, AUD, CAD...
 const filterOptions = createFilterOptions<string>({
