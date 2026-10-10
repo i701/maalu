@@ -1,8 +1,10 @@
 import uuid
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Response, status
+from fastapi import APIRouter, HTTPException, Query, Response, status
 
 from app.dependencies import AccountServiceDep, CurrentUserId
+from app.pagination import PageDep, set_total
 from app.schemas import AccountCreate, AccountResponse, AccountSummary, AccountUpdate
 from app.services import (
     AccountHasTransactionsError,
@@ -32,8 +34,18 @@ async def create_account(data: AccountCreate, user_id: CurrentUserId, service: A
 
 
 @router.get("", response_model=list[AccountResponse])
-async def list_accounts(user_id: CurrentUserId, service: AccountServiceDep):
-    return await service.present(await service.list_for_user(user_id))
+async def list_accounts(
+    user_id: CurrentUserId,
+    service: AccountServiceDep,
+    response: Response,
+    page: PageDep,
+    q: Annotated[str | None, Query(max_length=100, description="Search name, description")] = None,
+):
+    """All accounts, or one page with `limit`/`offset`, optionally searched by name. The total
+    number of matches, ignoring paging, is in `X-Total-Count`. Built for autocomplete pickers."""
+    set_total(response, await service.count_for_user(user_id, q=q))
+    accounts = await service.list_for_user(user_id, q=q, limit=page.limit, offset=page.offset)
+    return await service.present(accounts)
 
 
 # Declared before "/{account_id}" so "summary" isn't parsed as an id.

@@ -1,12 +1,14 @@
 import uuid
+from datetime import date
 from decimal import Decimal
 
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.enums import PaymentMethod, TransactionType
+from app.export import EXPORT_LIMIT, build_workbook
 from app.models import Account, Subscription, Transaction, User, Vendor
-from app.schemas import TransactionCreate, TransactionUpdate
+from app.schemas import TransactionCreate, TransactionTotals, TransactionUpdate
 from app.services.account import AccountCurrencyMismatchError, AccountNotFoundError
 from app.services.errors import TransactionRuleError
 from app.services.money import BASE_AMOUNT_QUANTUM, price_in_base
@@ -165,6 +167,68 @@ class TransactionService:
         await self.db.refresh(transaction)
         return transaction
 
+    @staticmethod
+    def _conditions(
+        user_id: uuid.UUID,
+        *,
+        transaction_type: TransactionType | None,
+        vendor_id: uuid.UUID | None,
+        subscription_id: uuid.UUID | None,
+        account_id: uuid.UUID | None,
+        payment_method: PaymentMethod | None,
+        currency: str | None,
+        q: str | None = None,
+        min_amount: Decimal | None = None,
+        max_amount: Decimal | None = None,
+        date_from: date | None = None,
+        date_to: date | None = None,
+    ) -> list:
+        """Filters shared by the list, the count and the totals, so they always agree.
+
+        `q` is a case-insensitive "contains" over category, description, vendor, subscription and
+        account names (a transfer matches either of its accounts). `%`, `_` and `\\` in it are
+        matched literally, not as wildcards. The amount range compares `base_amount` (your base
+        currency), so transactions in different currencies are comparable. Dates are inclusive.
+        """
+        conditions = [Transaction.user_id == user_id]
+        if min_amount is not None:
+            conditions.append(Transaction.base_amount >= min_amount)
+        if max_amount is not None:
+            conditions.append(Transaction.base_amount <= max_amount)
+        if date_from is not None:
+            conditions.append(Transaction.transaction_date >= date_from)
+        if date_to is not None:
+            conditions.append(Transaction.transaction_date <= date_to)
+        if q and q.strip():
+            term = q.strip()
+            conditions.append(
+                or_(
+                    Transaction.category.icontains(term, autoescape=True),
+                    Transaction.description.icontains(term, autoescape=True),
+                    Transaction.vendor.has(Vendor.name.icontains(term, autoescape=True)),
+                    Transaction.subscription.has(
+                        Subscription.name.icontains(term, autoescape=True)
+                    ),
+                    Transaction.account.has(Account.name.icontains(term, autoescape=True)),
+                    Transaction.to_account.has(Account.name.icontains(term, autoescape=True)),
+                )
+            )
+        if transaction_type is not None:
+            conditions.append(Transaction.type == transaction_type)
+        if vendor_id is not None:
+            conditions.append(Transaction.vendor_id == vendor_id)
+        if subscription_id is not None:
+            conditions.append(Transaction.subscription_id == subscription_id)
+        if account_id is not None:  # a transfer belongs to both of its accounts
+            conditions.append(
+                or_(Transaction.account_id == account_id, Transaction.to_account_id == account_id)
+            )
+        if currency is not None:
+            conditions.append(Transaction.currency == currency.upper())
+        if payment_method is not None:
+            conditions.append(Transaction.payment_method == payment_method)
+        return conditions
+
     async def list_for_user(
         self,
         user_id: uuid.UUID,
@@ -175,30 +239,218 @@ class TransactionService:
         account_id: uuid.UUID | None = None,
         payment_method: PaymentMethod | None = None,
         currency: str | None = None,
+        q: str | None = None,
+        min_amount: Decimal | None = None,
+        max_amount: Decimal | None = None,
+        date_from: date | None = None,
+        date_to: date | None = None,
         limit: int = 50,
         offset: int = 0,
     ) -> list[Transaction]:
-        stmt = select(Transaction).where(Transaction.user_id == user_id)
-        if transaction_type is not None:
-            stmt = stmt.where(Transaction.type == transaction_type)
-        if vendor_id is not None:
-            stmt = stmt.where(Transaction.vendor_id == vendor_id)
-        if subscription_id is not None:
-            stmt = stmt.where(Transaction.subscription_id == subscription_id)
-        if account_id is not None:  # a transfer belongs to both of its accounts
-            stmt = stmt.where(
-                or_(Transaction.account_id == account_id, Transaction.to_account_id == account_id)
-            )
-        if currency is not None:
-            stmt = stmt.where(Transaction.currency == currency.upper())
-        if payment_method is not None:
-            stmt = stmt.where(Transaction.payment_method == payment_method)
+        conditions = self._conditions(
+            user_id,
+            transaction_type=transaction_type,
+            vendor_id=vendor_id,
+            subscription_id=subscription_id,
+            account_id=account_id,
+            payment_method=payment_method,
+            currency=currency,
+            q=q,
+            min_amount=min_amount,
+            max_amount=max_amount,
+            date_from=date_from,
+            date_to=date_to,
+        )
         stmt = (
-            stmt.order_by(Transaction.transaction_date.desc(), Transaction.created_at.desc())
+            select(Transaction)
+            .where(*conditions)
+            .order_by(Transaction.transaction_date.desc(), Transaction.created_at.desc())
             .limit(limit)
             .offset(offset)
         )
         return list((await self.db.scalars(stmt)).all())
+
+    async def count_for_user(
+        self,
+        user_id: uuid.UUID,
+        *,
+        transaction_type: TransactionType | None = None,
+        vendor_id: uuid.UUID | None = None,
+        subscription_id: uuid.UUID | None = None,
+        account_id: uuid.UUID | None = None,
+        payment_method: PaymentMethod | None = None,
+        currency: str | None = None,
+        q: str | None = None,
+        min_amount: Decimal | None = None,
+        max_amount: Decimal | None = None,
+        date_from: date | None = None,
+        date_to: date | None = None,
+    ) -> int:
+        conditions = self._conditions(
+            user_id,
+            transaction_type=transaction_type,
+            vendor_id=vendor_id,
+            subscription_id=subscription_id,
+            account_id=account_id,
+            payment_method=payment_method,
+            currency=currency,
+            q=q,
+            min_amount=min_amount,
+            max_amount=max_amount,
+            date_from=date_from,
+            date_to=date_to,
+        )
+        return (await self.db.scalar(select(func.count(Transaction.id)).where(*conditions))) or 0
+
+    async def totals_for_user(
+        self,
+        user_id: uuid.UUID,
+        *,
+        transaction_type: TransactionType | None = None,
+        vendor_id: uuid.UUID | None = None,
+        subscription_id: uuid.UUID | None = None,
+        account_id: uuid.UUID | None = None,
+        payment_method: PaymentMethod | None = None,
+        currency: str | None = None,
+        q: str | None = None,
+        min_amount: Decimal | None = None,
+        max_amount: Decimal | None = None,
+        date_from: date | None = None,
+        date_to: date | None = None,
+    ) -> TransactionTotals:
+        """Income and expense totals (base currency) for the rows the same filters would list."""
+        conditions = self._conditions(
+            user_id,
+            transaction_type=transaction_type,
+            vendor_id=vendor_id,
+            subscription_id=subscription_id,
+            account_id=account_id,
+            payment_method=payment_method,
+            currency=currency,
+            q=q,
+            min_amount=min_amount,
+            max_amount=max_amount,
+            date_from=date_from,
+            date_to=date_to,
+        )
+        stmt = (
+            select(Transaction.type, func.sum(Transaction.base_amount))
+            .where(
+                *conditions, Transaction.type.in_([TransactionType.INCOME, TransactionType.EXPENSE])
+            )
+            .group_by(Transaction.type)
+        )
+        sums = {
+            kind: Decimal(str(total or 0)) for kind, total in (await self.db.execute(stmt)).all()
+        }
+        return TransactionTotals(
+            income=sums.get(TransactionType.INCOME, Decimal(0)),
+            expense=sums.get(TransactionType.EXPENSE, Decimal(0)),
+            currency=await self._base_currency(user_id),
+        )
+
+    async def export_xlsx(
+        self,
+        user_id: uuid.UUID,
+        *,
+        transaction_type: TransactionType | None = None,
+        vendor_id: uuid.UUID | None = None,
+        subscription_id: uuid.UUID | None = None,
+        account_id: uuid.UUID | None = None,
+        payment_method: PaymentMethod | None = None,
+        currency: str | None = None,
+        q: str | None = None,
+        min_amount: Decimal | None = None,
+        max_amount: Decimal | None = None,
+        date_from: date | None = None,
+        date_to: date | None = None,
+    ) -> bytes:
+        """An Excel file of every transaction matching the filters, oldest first.
+
+        Raises TransactionRuleError instead of silently truncating when there are too many rows.
+        """
+        filters = {
+            "transaction_type": transaction_type,
+            "vendor_id": vendor_id,
+            "subscription_id": subscription_id,
+            "account_id": account_id,
+            "payment_method": payment_method,
+            "currency": currency,
+            "q": q,
+            "min_amount": min_amount,
+            "max_amount": max_amount,
+            "date_from": date_from,
+            "date_to": date_to,
+        }
+        conditions = self._conditions(user_id, **filters)
+        matches = (await self.db.scalar(select(func.count(Transaction.id)).where(*conditions))) or 0
+        if matches > EXPORT_LIMIT:
+            raise TransactionRuleError(
+                f"{matches:,} transactions match; exports are limited to {EXPORT_LIMIT:,}. "
+                "Narrow the filters and try again."
+            )
+        stmt = (
+            select(Transaction)
+            .where(*conditions)
+            .order_by(Transaction.transaction_date, Transaction.created_at)
+        )
+        rows = list((await self.db.scalars(stmt)).all())
+        return build_workbook(
+            rows,
+            base_currency=await self._base_currency(user_id),
+            filter_labels=await self._filter_labels(user_id, **filters),
+            generated_on=date.today(),
+        )
+
+    async def _filter_labels(
+        self,
+        user_id: uuid.UUID,
+        *,
+        transaction_type: TransactionType | None,
+        vendor_id: uuid.UUID | None,
+        subscription_id: uuid.UUID | None,
+        account_id: uuid.UUID | None,
+        payment_method: PaymentMethod | None,
+        currency: str | None,
+        q: str | None,
+        min_amount: Decimal | None,
+        max_amount: Decimal | None,
+        date_from: date | None,
+        date_to: date | None,
+    ) -> list[str]:
+        """Human-readable description of the active filters, for the Summary sheet."""
+        labels: list[str] = []
+        if q and q.strip():
+            labels.append(f"Search: {q.strip()}")
+        if transaction_type is not None:
+            labels.append(f"Type: {transaction_type.value}")
+        if payment_method is not None:
+            labels.append(f"Payment method: {payment_method.value.replace('_', ' ')}")
+        if currency:
+            labels.append(f"Currency: {currency.upper()}")
+        if vendor_id is not None:
+            vendor = await self.vendors.get(user_id, vendor_id)
+            labels.append(f"Vendor: {vendor.name if vendor else 'unknown'}")
+        if account_id is not None:
+            account = await self._resolve_account_or_none(user_id, account_id)
+            labels.append(f"Account: {account.name if account else 'unknown'}")
+        if subscription_id is not None:
+            labels.append("Subscription: selected")
+        if min_amount is not None or max_amount is not None:
+            low = f"{min_amount:,}" if min_amount is not None else "any"
+            high = f"{max_amount:,}" if max_amount is not None else "any"
+            labels.append(f"Amount: {low} to {high}")
+        if date_from is not None or date_to is not None:
+            start = date_from.isoformat() if date_from else "start"
+            end = date_to.isoformat() if date_to else "today"
+            labels.append(f"Dates: {start} to {end}")
+        return labels
+
+    async def _resolve_account_or_none(
+        self, user_id: uuid.UUID, account_id: uuid.UUID
+    ) -> Account | None:
+        stmt = select(Account).where(Account.id == account_id, Account.user_id == user_id)
+        return await self.db.scalar(stmt)
 
     async def get(self, user_id: uuid.UUID, transaction_id: uuid.UUID) -> Transaction | None:
         stmt = select(Transaction).where(

@@ -46,3 +46,11 @@ class TransactionType(StrEnum):
     INCOME = "income"
     EXPENSE = "expense"
     TRANSFER = "transfer"  # moves money between two of the user's accounts
+
+
+class VendorLocality(StrEnum):
+    """Filter for vendors by whether they are local, foreign or not yet classified."""
+
+    LOCAL = "local"
+    FOREIGN = "foreign"
+    UNKNOWN = "unknown"

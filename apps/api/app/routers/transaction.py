@@ -1,11 +1,20 @@
 import uuid
+from datetime import date
+from decimal import Decimal
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, Response, status
 
 from app.dependencies import CurrentUserId, TransactionServiceDep
 from app.enums import PaymentMethod, TransactionType
-from app.schemas import TransactionCreate, TransactionResponse, TransactionUpdate
+from app.export import XLSX_MEDIA_TYPE
+from app.pagination import MAX_LIMIT, set_total
+from app.schemas import (
+    TransactionCreate,
+    TransactionResponse,
+    TransactionTotals,
+    TransactionUpdate,
+)
 from app.services import (
     AccountCurrencyMismatchError,
     AccountNotFoundError,
@@ -24,6 +33,22 @@ _RATE_REQUIRED = HTTPException(
 _SUBSCRIPTION_NOT_FOUND = HTTPException(
     status.HTTP_422_UNPROCESSABLE_CONTENT, "Subscription not found"
 )
+
+
+def _check_range(low: Decimal | None, high: Decimal | None) -> None:
+    if low is not None and high is not None and low > high:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT, "min_amount can't be greater than max_amount"
+        )
+
+
+def _check_dates(start: date | None, end: date | None) -> None:
+    if start is not None and end is not None and start > end:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT, "date_from can't be after date_to"
+        )
+
+
 _ACCOUNT_NOT_FOUND = HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Account not found")
 _VENDOR_NOT_FOUND = HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Vendor not found")
 
@@ -55,16 +80,145 @@ async def create_transaction(
 async def list_transactions(
     user_id: CurrentUserId,
     service: TransactionServiceDep,
+    response: Response,
     vendor_id: uuid.UUID | None = None,
     subscription_id: uuid.UUID | None = None,
     account_id: uuid.UUID | None = None,
     payment_method: PaymentMethod | None = None,
     transaction_type: Annotated[TransactionType | None, Query(alias="type")] = None,
     currency: str | None = None,
-    limit: Annotated[int, Query(ge=1, le=200)] = 50,
+    q: Annotated[
+        str | None,
+        Query(
+            max_length=100,
+            description="Search category, description, vendor, subscription, accounts",
+        ),
+    ] = None,
+    min_amount: Annotated[
+        Decimal | None,
+        Query(ge=0, max_digits=19, decimal_places=4, description="Base currency, inclusive"),
+    ] = None,
+    max_amount: Annotated[
+        Decimal | None,
+        Query(ge=0, max_digits=19, decimal_places=4, description="Base currency, inclusive"),
+    ] = None,
+    date_from: Annotated[date | None, Query(description="Inclusive, YYYY-MM-DD")] = None,
+    date_to: Annotated[date | None, Query(description="Inclusive, YYYY-MM-DD")] = None,
+    limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
 ):
-    return await service.list_for_user(
+    """One page (default 50) of matching transactions. The total number of matches, ignoring
+    `limit`/`offset`, is in the `X-Total-Count` header."""
+    filters = {
+        "transaction_type": transaction_type,
+        "vendor_id": vendor_id,
+        "subscription_id": subscription_id,
+        "account_id": account_id,
+        "payment_method": payment_method,
+        "currency": currency,
+        "q": q,
+        "min_amount": min_amount,
+        "max_amount": max_amount,
+        "date_from": date_from,
+        "date_to": date_to,
+    }
+    _check_range(min_amount, max_amount)
+    _check_dates(date_from, date_to)
+    set_total(response, await service.count_for_user(user_id, **filters))
+    return await service.list_for_user(user_id, **filters, limit=limit, offset=offset)
+
+
+@router.get("/export", response_class=Response, responses={200: {"content": {XLSX_MEDIA_TYPE: {}}}})
+async def export_transactions(
+    user_id: CurrentUserId,
+    service: TransactionServiceDep,
+    vendor_id: uuid.UUID | None = None,
+    subscription_id: uuid.UUID | None = None,
+    account_id: uuid.UUID | None = None,
+    payment_method: PaymentMethod | None = None,
+    transaction_type: Annotated[TransactionType | None, Query(alias="type")] = None,
+    currency: str | None = None,
+    q: Annotated[
+        str | None,
+        Query(
+            max_length=100,
+            description="Search category, description, vendor, subscription, accounts",
+        ),
+    ] = None,
+    min_amount: Annotated[
+        Decimal | None,
+        Query(ge=0, max_digits=19, decimal_places=4, description="Base currency, inclusive"),
+    ] = None,
+    max_amount: Annotated[
+        Decimal | None,
+        Query(ge=0, max_digits=19, decimal_places=4, description="Base currency, inclusive"),
+    ] = None,
+    date_from: Annotated[date | None, Query(description="Inclusive, YYYY-MM-DD")] = None,
+    date_to: Annotated[date | None, Query(description="Inclusive, YYYY-MM-DD")] = None,
+):
+    """Download the transactions matching the same filters as the list as an Excel (.xlsx) file.
+    Not paginated: you get every match (up to 50,000), oldest first."""
+    _check_range(min_amount, max_amount)
+    _check_dates(date_from, date_to)
+    try:
+        content = await service.export_xlsx(
+            user_id,
+            transaction_type=transaction_type,
+            vendor_id=vendor_id,
+            subscription_id=subscription_id,
+            account_id=account_id,
+            payment_method=payment_method,
+            currency=currency,
+            q=q,
+            min_amount=min_amount,
+            max_amount=max_amount,
+            date_from=date_from,
+            date_to=date_to,
+        )
+    except TransactionRuleError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
+    filename = f"maalu-transactions-{date.today().isoformat()}.xlsx"
+    return Response(
+        content,
+        media_type=XLSX_MEDIA_TYPE,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+# Declared before "/{transaction_id}" so "summary" isn't parsed as an id.
+@router.get("/summary", response_model=TransactionTotals)
+async def transaction_totals(
+    user_id: CurrentUserId,
+    service: TransactionServiceDep,
+    vendor_id: uuid.UUID | None = None,
+    subscription_id: uuid.UUID | None = None,
+    account_id: uuid.UUID | None = None,
+    payment_method: PaymentMethod | None = None,
+    transaction_type: Annotated[TransactionType | None, Query(alias="type")] = None,
+    currency: str | None = None,
+    q: Annotated[
+        str | None,
+        Query(
+            max_length=100,
+            description="Search category, description, vendor, subscription, accounts",
+        ),
+    ] = None,
+    min_amount: Annotated[
+        Decimal | None,
+        Query(ge=0, max_digits=19, decimal_places=4, description="Base currency, inclusive"),
+    ] = None,
+    max_amount: Annotated[
+        Decimal | None,
+        Query(ge=0, max_digits=19, decimal_places=4, description="Base currency, inclusive"),
+    ] = None,
+    date_from: Annotated[date | None, Query(description="Inclusive, YYYY-MM-DD")] = None,
+    date_to: Annotated[date | None, Query(description="Inclusive, YYYY-MM-DD")] = None,
+):
+    """Total income and expense (in your base currency) of the transactions matching the same
+    filters as the list. Transfers are not counted."""
+    _check_range(min_amount, max_amount)
+    _check_dates(date_from, date_to)
+    return await service.totals_for_user(
         user_id,
         transaction_type=transaction_type,
         vendor_id=vendor_id,
@@ -72,8 +226,11 @@ async def list_transactions(
         account_id=account_id,
         payment_method=payment_method,
         currency=currency,
-        limit=limit,
-        offset=offset,
+        q=q,
+        min_amount=min_amount,
+        max_amount=max_amount,
+        date_from=date_from,
+        date_to=date_to,
     )
 
 

@@ -1,9 +1,12 @@
 import uuid
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Response, status
+from fastapi import APIRouter, HTTPException, Query, Response, status
 
 from app.dependencies import CurrentUserId, VendorServiceDep
+from app.enums import VendorLocality
 from app.models import Vendor
+from app.pagination import PageDep, set_total
 from app.schemas import VendorCreate, VendorResponse, VendorUpdate
 from app.services import VendorNameTakenError
 
@@ -30,8 +33,22 @@ async def create_vendor(data: VendorCreate, user_id: CurrentUserId, service: Ven
 
 
 @router.get("", response_model=list[VendorResponse])
-async def list_vendors(user_id: CurrentUserId, service: VendorServiceDep):
-    return await service.list_for_user(user_id)
+async def list_vendors(
+    user_id: CurrentUserId,
+    service: VendorServiceDep,
+    response: Response,
+    page: PageDep,
+    q: Annotated[
+        str | None, Query(max_length=100, description="Search name, contact, address")
+    ] = None,
+    locality: VendorLocality | None = None,
+):
+    """All vendors, or one page with `limit`/`offset`, optionally filtered. The total number of
+    matches, ignoring paging, is in `X-Total-Count`."""
+    set_total(response, await service.count_for_user(user_id, q=q, locality=locality))
+    return await service.list_for_user(
+        user_id, q=q, locality=locality, limit=page.limit, offset=page.offset
+    )
 
 
 @router.get("/{vendor_id}", response_model=VendorResponse)

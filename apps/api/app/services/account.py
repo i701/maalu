@@ -35,9 +35,37 @@ class AccountService:
         assert user is not None
         return user.base_currency
 
-    async def list_for_user(self, user_id: uuid.UUID) -> list[Account]:
-        stmt = select(Account).where(Account.user_id == user_id).order_by(Account.name)
+    @staticmethod
+    def _conditions(user_id: uuid.UUID, q: str | None) -> list:
+        """Filters shared by the list and the count. `q` is a case-insensitive "contains" over
+        name and description; %, _ and backslash in it are matched literally."""
+        conditions = [Account.user_id == user_id]
+        if q and q.strip():
+            term = q.strip()
+            conditions.append(
+                or_(
+                    Account.name.icontains(term, autoescape=True),
+                    Account.description.icontains(term, autoescape=True),
+                )
+            )
+        return conditions
+
+    async def list_for_user(
+        self,
+        user_id: uuid.UUID,
+        *,
+        q: str | None = None,
+        limit: int | None = None,
+        offset: int = 0,
+    ) -> list[Account]:
+        stmt = select(Account).where(*self._conditions(user_id, q)).order_by(Account.name)
+        if limit is not None:
+            stmt = stmt.limit(limit).offset(offset)
         return list((await self.db.scalars(stmt)).all())
+
+    async def count_for_user(self, user_id: uuid.UUID, *, q: str | None = None) -> int:
+        stmt = select(func.count(Account.id)).where(*self._conditions(user_id, q))
+        return (await self.db.scalar(stmt)) or 0
 
     async def get(self, user_id: uuid.UUID, account_id: uuid.UUID) -> Account | None:
         stmt = select(Account).where(Account.id == account_id, Account.user_id == user_id)

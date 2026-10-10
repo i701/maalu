@@ -1,9 +1,10 @@
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.enums import VendorLocality
 from app.models import Vendor
 from app.schemas import VendorCreate, VendorUpdate
 
@@ -24,9 +25,55 @@ class VendorService:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
 
-    async def list_for_user(self, user_id: uuid.UUID) -> list[Vendor]:
-        stmt = select(Vendor).where(Vendor.user_id == user_id).order_by(Vendor.normalized_name)
+    @staticmethod
+    def _conditions(user_id: uuid.UUID, q: str | None, locality: VendorLocality | None) -> list:
+        """Filters shared by the list and the count. `q` is a case-insensitive "contains" over
+        name, contact and address; %, _ and \\ in it are matched literally, not as wildcards."""
+        conditions = [Vendor.user_id == user_id]
+        if q and q.strip():
+            term = q.strip()
+            conditions.append(
+                or_(
+                    Vendor.name.icontains(term, autoescape=True),
+                    Vendor.contact.icontains(term, autoescape=True),
+                    Vendor.address.icontains(term, autoescape=True),
+                )
+            )
+        if locality is VendorLocality.LOCAL:
+            conditions.append(Vendor.is_local.is_(True))
+        elif locality is VendorLocality.FOREIGN:
+            conditions.append(Vendor.is_local.is_(False))
+        elif locality is VendorLocality.UNKNOWN:
+            conditions.append(Vendor.is_local.is_(None))
+        return conditions
+
+    async def list_for_user(
+        self,
+        user_id: uuid.UUID,
+        *,
+        q: str | None = None,
+        locality: VendorLocality | None = None,
+        limit: int | None = None,
+        offset: int = 0,
+    ) -> list[Vendor]:
+        stmt = (
+            select(Vendor)
+            .where(*self._conditions(user_id, q, locality))
+            .order_by(Vendor.normalized_name)
+        )
+        if limit is not None:
+            stmt = stmt.limit(limit).offset(offset)
         return list((await self.db.scalars(stmt)).all())
+
+    async def count_for_user(
+        self,
+        user_id: uuid.UUID,
+        *,
+        q: str | None = None,
+        locality: VendorLocality | None = None,
+    ) -> int:
+        stmt = select(func.count(Vendor.id)).where(*self._conditions(user_id, q, locality))
+        return (await self.db.scalar(stmt)) or 0
 
     async def get(self, user_id: uuid.UUID, vendor_id: uuid.UUID) -> Vendor | None:
         stmt = select(Vendor).where(Vendor.id == vendor_id, Vendor.user_id == user_id)

@@ -13,7 +13,12 @@ from app.schemas.subscription import (
     SubscriptionSummary,
     SubscriptionUpdate,
 )
-from app.schemas.transaction import TransactionCreate, TransactionResponse, TransactionUpdate
+from app.schemas.transaction import (
+    TransactionCreate,
+    TransactionResponse,
+    TransactionTotals,
+    TransactionUpdate,
+)
 from app.schemas.user import Token, UserCreate, UserResponse
 from app.schemas.vendor import VendorCreate, VendorResponse, VendorUpdate
 
@@ -32,6 +37,7 @@ __all__ = [
     "Token",
     "TransactionCreate",
     "TransactionResponse",
+    "TransactionTotals",
     "TransactionUpdate",
     "UserCreate",
     "UserResponse",

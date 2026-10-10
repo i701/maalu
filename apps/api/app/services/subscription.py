@@ -2,10 +2,10 @@ import uuid
 from datetime import date
 from decimal import Decimal
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.enums import SubscriptionStatus, TransactionType
+from app.enums import IntervalUnit, SubscriptionStatus, TransactionType
 from app.models import Subscription, Transaction, User, Vendor
 from app.schedule import MONTHLY_QUANTUM, monthly_cost, next_due_date
 from app.schemas import (
@@ -57,14 +57,62 @@ class SubscriptionService:
             return await self.vendors.get_or_create(user_id, vendor_name)
         return None
 
-    async def list_for_user(
-        self, user_id: uuid.UUID, status: SubscriptionStatus | None = None
-    ) -> list[Subscription]:
-        stmt = select(Subscription).where(Subscription.user_id == user_id)
+    @staticmethod
+    def _conditions(
+        user_id: uuid.UUID,
+        status: SubscriptionStatus | None,
+        q: str | None = None,
+        interval_unit: IntervalUnit | None = None,
+    ) -> list:
+        """Filters shared by the list and the count. `q` is a case-insensitive "contains" over
+        name, category and vendor name; wildcard characters in it are matched literally."""
+        conditions = [Subscription.user_id == user_id]
         if status is not None:
-            stmt = stmt.where(Subscription.status == status)
-        stmt = stmt.order_by(Subscription.name)
+            conditions.append(Subscription.status == status)
+        if interval_unit is not None:
+            conditions.append(Subscription.interval_unit == interval_unit)
+        if q and q.strip():
+            term = q.strip()
+            conditions.append(
+                or_(
+                    Subscription.name.icontains(term, autoescape=True),
+                    Subscription.category.icontains(term, autoescape=True),
+                    Subscription.vendor.has(Vendor.name.icontains(term, autoescape=True)),
+                )
+            )
+        return conditions
+
+    async def list_for_user(
+        self,
+        user_id: uuid.UUID,
+        status: SubscriptionStatus | None = None,
+        *,
+        q: str | None = None,
+        interval_unit: IntervalUnit | None = None,
+        limit: int | None = None,
+        offset: int = 0,
+    ) -> list[Subscription]:
+        stmt = (
+            select(Subscription)
+            .where(*self._conditions(user_id, status, q, interval_unit))
+            .order_by(Subscription.name)
+        )
+        if limit is not None:
+            stmt = stmt.limit(limit).offset(offset)
         return list((await self.db.scalars(stmt)).all())
+
+    async def count_for_user(
+        self,
+        user_id: uuid.UUID,
+        status: SubscriptionStatus | None = None,
+        *,
+        q: str | None = None,
+        interval_unit: IntervalUnit | None = None,
+    ) -> int:
+        stmt = select(func.count(Subscription.id)).where(
+            *self._conditions(user_id, status, q, interval_unit)
+        )
+        return (await self.db.scalar(stmt)) or 0
 
     async def get(self, user_id: uuid.UUID, subscription_id: uuid.UUID) -> Subscription | None:
         stmt = select(Subscription).where(

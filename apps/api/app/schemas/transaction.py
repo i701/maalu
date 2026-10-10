@@ -129,3 +129,12 @@ class TransactionResponse(BaseModel):
     account: AccountRef | None
     to_account: AccountRef | None
     created_at: datetime
+
+
+class TransactionTotals(BaseModel):
+    """Totals of the matching income and expense transactions, in your base currency. Transfers
+    only move money between your accounts, so they are not counted."""
+
+    income: Decimal
+    expense: Decimal
+    currency: str

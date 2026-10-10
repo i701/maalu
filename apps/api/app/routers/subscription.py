@@ -1,9 +1,11 @@
 import uuid
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Response, status
+from fastapi import APIRouter, HTTPException, Query, Response, status
 
 from app.dependencies import CurrentUserId, SubscriptionServiceDep
-from app.enums import SubscriptionStatus
+from app.enums import IntervalUnit, SubscriptionStatus
+from app.pagination import PageDep, set_total
 from app.schemas import (
     SubscriptionCreate,
     SubscriptionFromTransaction,
@@ -50,9 +52,22 @@ async def create_subscription(
 async def list_subscriptions(
     user_id: CurrentUserId,
     service: SubscriptionServiceDep,
+    response: Response,
+    page: PageDep,
     status_filter: SubscriptionStatus | None = None,
+    interval_unit: IntervalUnit | None = None,
+    q: Annotated[
+        str | None, Query(max_length=100, description="Search name, category, vendor")
+    ] = None,
 ):
-    return await service.present(await service.list_for_user(user_id, status_filter))
+    """All subscriptions, or one page with `limit`/`offset`, optionally filtered. The total
+    number of matches, ignoring paging, is in `X-Total-Count`."""
+    filters = {"q": q, "interval_unit": interval_unit}
+    set_total(response, await service.count_for_user(user_id, status_filter, **filters))
+    subscriptions = await service.list_for_user(
+        user_id, status_filter, **filters, limit=page.limit, offset=page.offset
+    )
+    return await service.present(subscriptions)
 
 
 # Declared before "/{subscription_id}" so "summary" isn't parsed as an id.
