@@ -23,6 +23,7 @@ import ExportButton from "#/components/ExportButton";
 import FiltersDrawer from "#/components/FiltersDrawer";
 import MakeSubscriptionDialog from "#/components/MakeSubscriptionDialog";
 import PageHeader from "#/components/PageHeader";
+import PendingOverlay from "#/components/PendingOverlay";
 import Reveal from "#/components/Reveal";
 import TableCard from "#/components/TableCard";
 import ResponsiveTable from "#/components/ResponsiveTable";
@@ -32,6 +33,7 @@ import TableToolbar from "#/components/TableToolbar";
 import TransactionFilters from "#/components/TransactionFilters";
 import TransactionForm from "#/components/TransactionForm";
 import { formatDate, formatMoney } from "#/lib/format";
+import { useLiveSearch } from "#/lib/live-search";
 import { useLastDefined } from "#/lib/motion";
 import { pageSearch, useClampPage } from "#/lib/pagination";
 import { unwrap } from "#/lib/unwrap";
@@ -239,7 +241,8 @@ function TransactionsPage() {
 		selectedAccount,
 	} = Route.useLoaderData();
 	const { user } = Route.useRouteContext();
-	const search = Route.useSearch();
+	const committed = Route.useSearch(); // matches the rows on screen
+	const search = useLiveSearch(searchSchema); // matches the controls: updates instantly
 	const navigate = Route.useNavigate();
 	const [editing, setEditing] = useState<Transaction | "new" | null>(null);
 	const [deleting, setDeleting] = useState<Transaction | null>(null);
@@ -249,8 +252,8 @@ function TransactionsPage() {
 
 	const setPage = (page: number) => navigate({ search: (p) => ({ ...p, page }), replace: true });
 	useClampPage({
-		page: search.page,
-		pageSize: search.pageSize,
+		page: committed.page,
+		pageSize: committed.pageSize,
 		total,
 		itemCount: items.length,
 		setPage,
@@ -389,205 +392,207 @@ function TransactionsPage() {
 
 					<Box sx={{ minWidth: 0 }}>
 						{/* The cards open/close smoothly instead of popping in and shoving the table down. */}
-						<Reveal in={Boolean(totals)}>
-							{shownTotals && (
-								<Grid container spacing={2} sx={{ pb: 2 }}>
-									<Grid size={{ xs: 12, sm: 6 }}>
-										<Card>
-											<CardContent>
-												<Typography variant="body2" sx={{ color: "text.secondary" }}>
-													Income in these results
-												</Typography>
-												<Typography
-													variant="h2"
-													component="p"
-													sx={{ mt: 0.5, color: "success.main" }}
-												>
-													{formatMoney(shownTotals.income, shownTotals.currency)}
-												</Typography>
-											</CardContent>
-										</Card>
-									</Grid>
-									<Grid size={{ xs: 12, sm: 6 }}>
-										<Card>
-											<CardContent>
-												<Typography variant="body2" sx={{ color: "text.secondary" }}>
-													Expense in these results
-												</Typography>
-												<Typography
-													variant="h2"
-													component="p"
-													sx={{ mt: 0.5, color: "error.main" }}
-												>
-													{formatMoney(shownTotals.expense, shownTotals.currency)}
-												</Typography>
-											</CardContent>
-										</Card>
-									</Grid>
-								</Grid>
-							)}
-						</Reveal>
-
-						<TableCard>
-							<TableToolbar
-								summary={`${total} ${total === 1 ? "transaction" : "transactions"}`}
-								actions={
-									<ExportButton
-										filters={{
-											q: search.q,
-											type: search.type,
-											payment_method: search.payment_method,
-											vendor_id: search.vendor_id,
-											account_id: search.account_id,
-											min_amount: search.min_amount,
-											max_amount: search.max_amount,
-											date_from: search.date_from,
-											date_to: search.date_to,
-										}}
-									/>
-								}
-								filters={
-									<>
-										<SearchField
-											value={search.q ?? ""}
-											placeholder="Search category, vendor, note…"
-											onChange={(q) =>
-												navigate({ search: (p) => ({ ...p, page: 1, q: q || undefined }) })
-											}
-										/>
-										{/* Only on narrow layouts: wide ones show the panel beside the table. */}
-										<FiltersDrawer
-											activeCount={activeCount}
-											total={total}
-											sx={{ display: "inline-flex", [WIDE]: { display: "none" } }}
-										>
-											{filterPanel}
-										</FiltersDrawer>
-									</>
-								}
-							/>
-
-							{/* Wide layouts already show the panel; narrow ones get removable chips. */}
-							<ActiveFilters
-								filters={activeFilters}
-								onClear={clearAll}
-								sx={{ [WIDE]: { display: "none" } }}
-							/>
-
-							{items.length === 0 ? (
-								<EmptyState firstRun={!filtered}>
-									{filtered
-										? "No transactions match these filters."
-										: "No transactions yet. Add your first one."}
-								</EmptyState>
-							) : (
-								<ResponsiveTable
-									rows={items}
-									getKey={(t) => t.id}
-									minWidth={820}
-									head={
-										<TableRow>
-											<TableCell>Date</TableCell>
-											<TableCell>Details</TableCell>
-											<TableCell>Method</TableCell>
-											<TableCell align="right">Amount</TableCell>
-											<TableCell align="right" sx={{ width: 100 }} />
-										</TableRow>
-									}
-									renderRow={(t) => (
-										<TableRow hover>
-											<TableCell sx={{ whiteSpace: "nowrap", color: "text.secondary" }}>
-												{formatDate(t.transaction_date)}
-											</TableCell>
-											<TableCell>
-												<Typography variant="body2" sx={{ fontWeight: 500 }}>
-													{txTitle(t)}
-												</Typography>
-												<Typography variant="caption" sx={{ color: "text.secondary" }}>
-													{txSubtitle(t)}
-												</Typography>
-												{t.subscription && (
-													<Box sx={{ mt: 0.5 }}>
-														<TxSubscriptionChip t={t} />
-													</Box>
-												)}
-											</TableCell>
-											<TableCell>
-												<TxMethodChip t={t} />
-												{t.type !== "transfer" && t.account && (
-													<Typography
-														variant="caption"
-														sx={{ display: "block", color: "text.secondary", mt: 0.5 }}
-													>
-														{t.account.name}
+						<PendingOverlay>
+							<Reveal in={Boolean(totals)}>
+								{shownTotals && (
+									<Grid container spacing={2} sx={{ pb: 2 }}>
+										<Grid size={{ xs: 12, sm: 6 }}>
+											<Card>
+												<CardContent>
+													<Typography variant="body2" sx={{ color: "text.secondary" }}>
+														Income in these results
 													</Typography>
-												)}
-											</TableCell>
-											<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-												<TxAmount t={t} baseCurrency={user.base_currency} />
-											</TableCell>
-											<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-												<TxActions
-													t={t}
-													onConvert={() => setConverting(t)}
-													onEdit={() => setEditing(t)}
-													onDelete={() => setDeleting(t)}
-												/>
-											</TableCell>
-										</TableRow>
-									)}
-									renderCard={(t) => (
-										<MobileCard
-											primary={
-												<Typography variant="body2" sx={{ fontWeight: 500 }}>
-													{txTitle(t)}
-												</Typography>
-											}
-											secondary={
-												txSubtitle(t) && (
+													<Typography
+														variant="h2"
+														component="p"
+														sx={{ mt: 0.5, color: "success.main" }}
+													>
+														{formatMoney(shownTotals.income, shownTotals.currency)}
+													</Typography>
+												</CardContent>
+											</Card>
+										</Grid>
+										<Grid size={{ xs: 12, sm: 6 }}>
+											<Card>
+												<CardContent>
+													<Typography variant="body2" sx={{ color: "text.secondary" }}>
+														Expense in these results
+													</Typography>
+													<Typography
+														variant="h2"
+														component="p"
+														sx={{ mt: 0.5, color: "error.main" }}
+													>
+														{formatMoney(shownTotals.expense, shownTotals.currency)}
+													</Typography>
+												</CardContent>
+											</Card>
+										</Grid>
+									</Grid>
+								)}
+							</Reveal>
+
+							<TableCard>
+								<TableToolbar
+									summary={`${total} ${total === 1 ? "transaction" : "transactions"}`}
+									actions={
+										<ExportButton
+											filters={{
+												q: search.q,
+												type: search.type,
+												payment_method: search.payment_method,
+												vendor_id: search.vendor_id,
+												account_id: search.account_id,
+												min_amount: search.min_amount,
+												max_amount: search.max_amount,
+												date_from: search.date_from,
+												date_to: search.date_to,
+											}}
+										/>
+									}
+									filters={
+										<>
+											<SearchField
+												value={search.q ?? ""}
+												placeholder="Search category, vendor, note…"
+												onChange={(q) =>
+													navigate({ search: (p) => ({ ...p, page: 1, q: q || undefined }) })
+												}
+											/>
+											{/* Only on narrow layouts: wide ones show the panel beside the table. */}
+											<FiltersDrawer
+												activeCount={activeCount}
+												total={total}
+												sx={{ display: "inline-flex", [WIDE]: { display: "none" } }}
+											>
+												{filterPanel}
+											</FiltersDrawer>
+										</>
+									}
+								/>
+
+								{/* Wide layouts already show the panel; narrow ones get removable chips. */}
+								<ActiveFilters
+									filters={activeFilters}
+									onClear={clearAll}
+									sx={{ [WIDE]: { display: "none" } }}
+								/>
+
+								{items.length === 0 ? (
+									<EmptyState firstRun={!filtered}>
+										{filtered
+											? "No transactions match these filters."
+											: "No transactions yet. Add your first one."}
+									</EmptyState>
+								) : (
+									<ResponsiveTable
+										rows={items}
+										getKey={(t) => t.id}
+										minWidth={820}
+										head={
+											<TableRow>
+												<TableCell>Date</TableCell>
+												<TableCell>Details</TableCell>
+												<TableCell>Method</TableCell>
+												<TableCell align="right">Amount</TableCell>
+												<TableCell align="right" sx={{ width: 100 }} />
+											</TableRow>
+										}
+										renderRow={(t) => (
+											<TableRow hover>
+												<TableCell sx={{ whiteSpace: "nowrap", color: "text.secondary" }}>
+													{formatDate(t.transaction_date)}
+												</TableCell>
+												<TableCell>
+													<Typography variant="body2" sx={{ fontWeight: 500 }}>
+														{txTitle(t)}
+													</Typography>
 													<Typography variant="caption" sx={{ color: "text.secondary" }}>
 														{txSubtitle(t)}
 													</Typography>
-												)
-											}
-											end={<TxAmount t={t} baseCurrency={user.base_currency} />}
-											meta={
-												<>
-													<Typography variant="caption" sx={{ color: "text.secondary" }}>
-														{formatDate(t.transaction_date)}
-													</Typography>
+													{t.subscription && (
+														<Box sx={{ mt: 0.5 }}>
+															<TxSubscriptionChip t={t} />
+														</Box>
+													)}
+												</TableCell>
+												<TableCell>
 													<TxMethodChip t={t} />
 													{t.type !== "transfer" && t.account && (
-														<Typography variant="caption" sx={{ color: "text.secondary" }}>
+														<Typography
+															variant="caption"
+															sx={{ display: "block", color: "text.secondary", mt: 0.5 }}
+														>
 															{t.account.name}
 														</Typography>
 													)}
-													<TxSubscriptionChip t={t} />
-												</>
-											}
-											actions={
-												<TxActions
-													t={t}
-													onConvert={() => setConverting(t)}
-													onEdit={() => setEditing(t)}
-													onDelete={() => setDeleting(t)}
-												/>
-											}
-										/>
-									)}
-								/>
-							)}
+												</TableCell>
+												<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+													<TxAmount t={t} baseCurrency={user.base_currency} />
+												</TableCell>
+												<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+													<TxActions
+														t={t}
+														onConvert={() => setConverting(t)}
+														onEdit={() => setEditing(t)}
+														onDelete={() => setDeleting(t)}
+													/>
+												</TableCell>
+											</TableRow>
+										)}
+										renderCard={(t) => (
+											<MobileCard
+												primary={
+													<Typography variant="body2" sx={{ fontWeight: 500 }}>
+														{txTitle(t)}
+													</Typography>
+												}
+												secondary={
+													txSubtitle(t) && (
+														<Typography variant="caption" sx={{ color: "text.secondary" }}>
+															{txSubtitle(t)}
+														</Typography>
+													)
+												}
+												end={<TxAmount t={t} baseCurrency={user.base_currency} />}
+												meta={
+													<>
+														<Typography variant="caption" sx={{ color: "text.secondary" }}>
+															{formatDate(t.transaction_date)}
+														</Typography>
+														<TxMethodChip t={t} />
+														{t.type !== "transfer" && t.account && (
+															<Typography variant="caption" sx={{ color: "text.secondary" }}>
+																{t.account.name}
+															</Typography>
+														)}
+														<TxSubscriptionChip t={t} />
+													</>
+												}
+												actions={
+													<TxActions
+														t={t}
+														onConvert={() => setConverting(t)}
+														onEdit={() => setEditing(t)}
+														onDelete={() => setDeleting(t)}
+													/>
+												}
+											/>
+										)}
+									/>
+								)}
 
-							<TablePager
-								total={total}
-								page={search.page}
-								pageSize={search.pageSize}
-								onPageChange={setPage}
-								onPageSizeChange={(pageSize) =>
-									navigate({ search: (p) => ({ ...p, page: 1, pageSize }) })
-								}
-							/>
-						</TableCard>
+								<TablePager
+									total={total}
+									page={search.page}
+									pageSize={search.pageSize}
+									onPageChange={setPage}
+									onPageSizeChange={(pageSize) =>
+										navigate({ search: (p) => ({ ...p, page: 1, pageSize }) })
+									}
+								/>
+							</TableCard>
+						</PendingOverlay>
 					</Box>
 				</Box>
 			</Box>

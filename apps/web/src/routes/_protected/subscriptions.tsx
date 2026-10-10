@@ -20,6 +20,7 @@ import ConfirmDelete from "#/components/ConfirmDelete";
 import MobileCard from "#/components/MobileCard";
 import EmptyState from "#/components/EmptyState";
 import PageHeader from "#/components/PageHeader";
+import PendingOverlay from "#/components/PendingOverlay";
 import TableCard from "#/components/TableCard";
 import ResponsiveTable from "#/components/ResponsiveTable";
 import SearchField from "#/components/SearchField";
@@ -27,6 +28,7 @@ import SubscriptionForm from "#/components/SubscriptionForm";
 import TablePager from "#/components/TablePager";
 import TableToolbar from "#/components/TableToolbar";
 import { daysUntil, formatDate, formatInterval, formatMoney } from "#/lib/format";
+import { useLiveSearch } from "#/lib/live-search";
 import { pageSearch, useClampPage } from "#/lib/pagination";
 import { unwrap } from "#/lib/unwrap";
 import { listCurrenciesFn } from "#/server/currencies";
@@ -46,14 +48,16 @@ import {
 	type SubscriptionStatus,
 } from "#/types/api";
 
+const searchSchema = z.object({
+	...pageSearch,
+	// coerce: the router parses a typed ?q=2026 as a number, which should still be a search
+	q: z.coerce.string().max(100).optional().catch(undefined),
+	status: z.enum(SUBSCRIPTION_STATUSES).optional().catch(undefined),
+	interval_unit: z.enum(INTERVAL_UNITS).optional().catch(undefined),
+});
+
 export const Route = createFileRoute("/_protected/subscriptions")({
-	validateSearch: z.object({
-		...pageSearch,
-		// coerce: the router parses a typed ?q=2026 as a number, which should still be a search
-		q: z.coerce.string().max(100).optional().catch(undefined),
-		status: z.enum(SUBSCRIPTION_STATUSES).optional().catch(undefined),
-		interval_unit: z.enum(INTERVAL_UNITS).optional().catch(undefined),
-	}),
+	validateSearch: searchSchema,
 	loaderDeps: ({ search }) => search,
 	loader: async ({ deps }) => {
 		const [subscriptions, summary, vendors, currencies] = await Promise.all([
@@ -144,15 +148,16 @@ function SubscriptionsPage() {
 	const { user } = Route.useRouteContext();
 	const [editing, setEditing] = useState<Subscription | "new" | null>(null);
 	const [deleting, setDeleting] = useState<Subscription | null>(null);
-	const search = Route.useSearch();
+	const committed = Route.useSearch(); // matches the rows on screen
+	const search = useLiveSearch(searchSchema); // matches the controls: updates instantly
 	const navigate = Route.useNavigate();
 
 	const filtered = Boolean(search.q || search.status || search.interval_unit);
 
 	const setPage = (page: number) => navigate({ search: (p) => ({ ...p, page }), replace: true });
 	useClampPage({
-		page: search.page,
-		pageSize: search.pageSize,
+		page: committed.page,
+		pageSize: committed.pageSize,
 		total,
 		itemCount: items.length,
 		setPage,
@@ -197,171 +202,173 @@ function SubscriptionsPage() {
 				</Grid>
 			</Grid>
 
-			<TableCard>
-				<TableToolbar
-					summary={`${total} ${total === 1 ? "subscription" : "subscriptions"}`}
-					filters={
-						<>
-							<SearchField
-								value={search.q ?? ""}
-								placeholder="Search name, vendor, category"
-								onChange={(q) =>
-									navigate({ search: (p) => ({ ...p, page: 1, q: q || undefined }) })
-								}
-							/>
-							<TextField
-								select
-								size="small"
-								label="Status"
-								value={search.status ?? ""}
-								onChange={(e) =>
-									navigate({
-										search: (p) => ({
-											...p,
-											page: 1,
-											status: (e.target.value || undefined) as SubscriptionStatus | undefined,
-										}),
-									})
-								}
-								sx={{ minWidth: { sm: 140 } }}
-							>
-								<MenuItem value="">All statuses</MenuItem>
-								{SUBSCRIPTION_STATUSES.map((st) => (
-									<MenuItem key={st} value={st}>
-										{SUBSCRIPTION_STATUS_LABELS[st]}
-									</MenuItem>
-								))}
-							</TextField>
-							<TextField
-								select
-								size="small"
-								label="Billing"
-								value={search.interval_unit ?? ""}
-								onChange={(e) =>
-									navigate({
-										search: (p) => ({
-											...p,
-											page: 1,
-											interval_unit: (e.target.value || undefined) as IntervalUnit | undefined,
-										}),
-									})
-								}
-								sx={{ minWidth: { sm: 140 } }}
-							>
-								<MenuItem value="">Any period</MenuItem>
-								{INTERVAL_UNITS.map((u) => (
-									<MenuItem key={u} value={u}>
-										{INTERVAL_UNIT_LABELS[u]}
-									</MenuItem>
-								))}
-							</TextField>
-							{filtered && (
-								<Button
-									color="inherit"
-									onClick={() => navigate({ search: (p) => ({ page: 1, pageSize: p.pageSize }) })}
+			<PendingOverlay>
+				<TableCard>
+					<TableToolbar
+						summary={`${total} ${total === 1 ? "subscription" : "subscriptions"}`}
+						filters={
+							<>
+								<SearchField
+									value={search.q ?? ""}
+									placeholder="Search name, vendor, category"
+									onChange={(q) =>
+										navigate({ search: (p) => ({ ...p, page: 1, q: q || undefined }) })
+									}
+								/>
+								<TextField
+									select
+									size="small"
+									label="Status"
+									value={search.status ?? ""}
+									onChange={(e) =>
+										navigate({
+											search: (p) => ({
+												...p,
+												page: 1,
+												status: (e.target.value || undefined) as SubscriptionStatus | undefined,
+											}),
+										})
+									}
+									sx={{ minWidth: { sm: 140 } }}
 								>
-									Clear filters
-								</Button>
-							)}
-						</>
-					}
-				/>
-
-				{items.length === 0 ? (
-					<EmptyState firstRun={!filtered}>
-						{filtered
-							? "No subscriptions match these filters."
-							: 'No subscriptions yet. Add one, or use "Make subscription" on a transaction.'}
-					</EmptyState>
-				) : (
-					<ResponsiveTable
-						rows={items}
-						getKey={(s) => s.id}
-						minWidth={860}
-						head={
-							<TableRow>
-								<TableCell>Name</TableCell>
-								<TableCell>Cost</TableCell>
-								<TableCell>Next due</TableCell>
-								<TableCell>Status</TableCell>
-								<TableCell align="right">Per month</TableCell>
-								<TableCell align="right" sx={{ width: 100 }} />
-							</TableRow>
+									<MenuItem value="">All statuses</MenuItem>
+									{SUBSCRIPTION_STATUSES.map((st) => (
+										<MenuItem key={st} value={st}>
+											{SUBSCRIPTION_STATUS_LABELS[st]}
+										</MenuItem>
+									))}
+								</TextField>
+								<TextField
+									select
+									size="small"
+									label="Billing"
+									value={search.interval_unit ?? ""}
+									onChange={(e) =>
+										navigate({
+											search: (p) => ({
+												...p,
+												page: 1,
+												interval_unit: (e.target.value || undefined) as IntervalUnit | undefined,
+											}),
+										})
+									}
+									sx={{ minWidth: { sm: 140 } }}
+								>
+									<MenuItem value="">Any period</MenuItem>
+									{INTERVAL_UNITS.map((u) => (
+										<MenuItem key={u} value={u}>
+											{INTERVAL_UNIT_LABELS[u]}
+										</MenuItem>
+									))}
+								</TextField>
+								{filtered && (
+									<Button
+										color="inherit"
+										onClick={() => navigate({ search: (p) => ({ page: 1, pageSize: p.pageSize }) })}
+									>
+										Clear filters
+									</Button>
+								)}
+							</>
 						}
-						renderRow={(s) => (
-							<TableRow hover>
-								<TableCell>
-									<Typography variant="body2" sx={{ fontWeight: 500 }}>
-										{s.name}
-									</Typography>
-									<Typography variant="caption" sx={{ color: "text.secondary" }}>
-										{[s.vendor?.name, s.category].filter(Boolean).join(" · ")}
-									</Typography>
-								</TableCell>
-								<TableCell sx={{ whiteSpace: "nowrap" }}>
-									<SubCost s={s} baseCurrency={user.base_currency} />
-								</TableCell>
-								<TableCell sx={{ whiteSpace: "nowrap" }}>
-									<SubNextDue s={s} />
-								</TableCell>
-								<TableCell>
-									<StatusChip s={s} />
-								</TableCell>
-								<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-									{formatMoney(s.monthly_base_cost, user.base_currency)}
-								</TableCell>
-								<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-									<SubActions onEdit={() => setEditing(s)} onDelete={() => setDeleting(s)} />
-								</TableCell>
-							</TableRow>
-						)}
-						renderCard={(s) => (
-							<MobileCard
-								primary={
-									<Typography variant="body2" sx={{ fontWeight: 500 }}>
-										{s.name}
-									</Typography>
-								}
-								secondary={
-									<Typography variant="caption" sx={{ color: "text.secondary" }}>
-										{[s.vendor?.name, s.category].filter(Boolean).join(" · ")}
-									</Typography>
-								}
-								end={<SubCost s={s} baseCurrency={user.base_currency} />}
-								meta={
-									<>
-										<StatusChip s={s} />
-										{s.next_due_date && (
-											<>
-												<Typography variant="caption" sx={{ color: "text.secondary" }}>
-													Next {formatDate(s.next_due_date)}
-												</Typography>
-												<DueChip sub={s} />
-											</>
-										)}
-										<Typography variant="caption" sx={{ color: "text.secondary" }}>
-											{formatMoney(s.monthly_base_cost, user.base_currency)} / month
-										</Typography>
-									</>
-								}
-								actions={
-									<SubActions onEdit={() => setEditing(s)} onDelete={() => setDeleting(s)} />
-								}
-							/>
-						)}
 					/>
-				)}
 
-				<TablePager
-					total={total}
-					page={search.page}
-					pageSize={search.pageSize}
-					onPageChange={setPage}
-					onPageSizeChange={(pageSize) =>
-						navigate({ search: (p) => ({ ...p, page: 1, pageSize }) })
-					}
-				/>
-			</TableCard>
+					{items.length === 0 ? (
+						<EmptyState firstRun={!filtered}>
+							{filtered
+								? "No subscriptions match these filters."
+								: 'No subscriptions yet. Add one, or use "Make subscription" on a transaction.'}
+						</EmptyState>
+					) : (
+						<ResponsiveTable
+							rows={items}
+							getKey={(s) => s.id}
+							minWidth={860}
+							head={
+								<TableRow>
+									<TableCell>Name</TableCell>
+									<TableCell>Cost</TableCell>
+									<TableCell>Next due</TableCell>
+									<TableCell>Status</TableCell>
+									<TableCell align="right">Per month</TableCell>
+									<TableCell align="right" sx={{ width: 100 }} />
+								</TableRow>
+							}
+							renderRow={(s) => (
+								<TableRow hover>
+									<TableCell>
+										<Typography variant="body2" sx={{ fontWeight: 500 }}>
+											{s.name}
+										</Typography>
+										<Typography variant="caption" sx={{ color: "text.secondary" }}>
+											{[s.vendor?.name, s.category].filter(Boolean).join(" · ")}
+										</Typography>
+									</TableCell>
+									<TableCell sx={{ whiteSpace: "nowrap" }}>
+										<SubCost s={s} baseCurrency={user.base_currency} />
+									</TableCell>
+									<TableCell sx={{ whiteSpace: "nowrap" }}>
+										<SubNextDue s={s} />
+									</TableCell>
+									<TableCell>
+										<StatusChip s={s} />
+									</TableCell>
+									<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+										{formatMoney(s.monthly_base_cost, user.base_currency)}
+									</TableCell>
+									<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+										<SubActions onEdit={() => setEditing(s)} onDelete={() => setDeleting(s)} />
+									</TableCell>
+								</TableRow>
+							)}
+							renderCard={(s) => (
+								<MobileCard
+									primary={
+										<Typography variant="body2" sx={{ fontWeight: 500 }}>
+											{s.name}
+										</Typography>
+									}
+									secondary={
+										<Typography variant="caption" sx={{ color: "text.secondary" }}>
+											{[s.vendor?.name, s.category].filter(Boolean).join(" · ")}
+										</Typography>
+									}
+									end={<SubCost s={s} baseCurrency={user.base_currency} />}
+									meta={
+										<>
+											<StatusChip s={s} />
+											{s.next_due_date && (
+												<>
+													<Typography variant="caption" sx={{ color: "text.secondary" }}>
+														Next {formatDate(s.next_due_date)}
+													</Typography>
+													<DueChip sub={s} />
+												</>
+											)}
+											<Typography variant="caption" sx={{ color: "text.secondary" }}>
+												{formatMoney(s.monthly_base_cost, user.base_currency)} / month
+											</Typography>
+										</>
+									}
+									actions={
+										<SubActions onEdit={() => setEditing(s)} onDelete={() => setDeleting(s)} />
+									}
+								/>
+							)}
+						/>
+					)}
+
+					<TablePager
+						total={total}
+						page={search.page}
+						pageSize={search.pageSize}
+						onPageChange={setPage}
+						onPageSizeChange={(pageSize) =>
+							navigate({ search: (p) => ({ ...p, page: 1, pageSize }) })
+						}
+					/>
+				</TableCard>
+			</PendingOverlay>
 
 			{editing && (
 				<SubscriptionForm
