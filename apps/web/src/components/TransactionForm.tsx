@@ -1,21 +1,12 @@
-import { keyframes } from "@emotion/react";
-import Alert from "@mui/material/Alert";
 import Autocomplete from "@mui/material/Autocomplete";
-import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
-import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
-import { Fragment, type ComponentProps, useState } from "react";
+import { type FormEvent, useState } from "react";
 import { SUGGESTED_PAYMENT_METHOD } from "#/lib/accounts";
-import { EASE_OUT, useLastDefined } from "#/lib/motion";
 import { useAction } from "#/lib/use-action";
-import { createTransactionFn, updateTransactionFn } from "#/server/transactions";
 import {
-	ACCOUNT_GROUP_LABELS,
-	PAYMENT_METHODS,
-	PAYMENT_METHOD_LABELS,
 	TRANSACTION_TYPES,
 	TRANSACTION_TYPE_LABELS,
 	type Account,
@@ -25,67 +16,18 @@ import {
 	type TransactionType,
 	type Vendor,
 } from "#/types/api";
-import CurrencyField from "./CurrencyField";
 import FormDialog from "./FormDialog";
 import { useNotify } from "./Notify";
-import Reveal from "./Reveal";
 import VendorField from "./VendorField";
-
-type CellSize = ComponentProps<typeof Grid>["size"];
-
-const cellIn = keyframes`from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; }`;
-const cellFade = keyframes`from { opacity: 0; } to { opacity: 1; }`;
-
-/**
- * A form cell. Row spacing is padding inside the cell (the grid only spaces columns), so a cell
- * wrapped in <RevealCell> takes no space at all while hidden. `fadeIn` plays a short entrance when
- * the cell mounts, used when switching transaction type swaps the whole set of fields.
- */
-function Cell({
-	size,
-	fadeIn = false,
-	children,
-}: {
-	size: CellSize;
-	fadeIn?: boolean;
-	children: React.ReactNode;
-}) {
-	return (
-		<Grid
-			size={size}
-			sx={{
-				pb: 2,
-				...(fadeIn && {
-					animation: `${cellIn} 160ms ${EASE_OUT} both`,
-					"@media (prefers-reduced-motion: reduce)": {
-						animation: `${cellFade} 120ms ${EASE_OUT} both`,
-					},
-				}),
-			}}
-		>
-			{children}
-		</Grid>
-	);
-}
-
-/** A cell that opens and closes smoothly instead of popping in and shoving the form around. */
-function RevealCell({
-	size,
-	show,
-	children,
-}: {
-	size: CellSize;
-	show: boolean;
-	children: React.ReactNode;
-}) {
-	return (
-		<Grid size={size}>
-			<Reveal in={show}>
-				<Box sx={{ pb: 2 }}>{children}</Box>
-			</Reveal>
-		</Grid>
-	);
-}
+import { Cell, RevealCell } from "./transaction-form/Cells";
+import OrdinaryFields from "./transaction-form/OrdinaryFields";
+import TransferFields from "./transaction-form/TransferFields";
+import {
+	buildTransactionRequest,
+	initialValues,
+	subscriptionChoices,
+	type SubRef,
+} from "./transaction-form/request";
 
 const today = () => {
 	const d = new Date();
@@ -93,8 +35,6 @@ const today = () => {
 };
 
 const TYPE_COLOR = { income: "success", expense: "error", transfer: "info" } as const;
-
-type SubRef = { id: string; name: string };
 
 export default function TransactionForm({
 	transaction,
@@ -118,32 +58,23 @@ export default function TransactionForm({
 	const notify = useNotify();
 	const [localError, setLocalError] = useState<string | null>(null);
 
-	const [type, setType] = useState<TransactionType>(transaction?.type ?? "expense");
+	const initial = initialValues(transaction, baseCurrency);
+	const [type, setType] = useState<TransactionType>(initial.type);
 	const isTransfer = type === "transfer";
 
 	// Income / expense: an optional account locks the currency to the account's and suggests a
 	// payment method. Transfer: a from-account and a to-account.
-	const [accountId, setAccountId] = useState(transaction?.account?.id ?? "");
-	const [toAccountId, setToAccountId] = useState(transaction?.to_account?.id ?? "");
+	const [accountId, setAccountId] = useState(initial.accountId);
+	const [toAccountId, setToAccountId] = useState(initial.toAccountId);
 	const account = accounts.find((a) => a.id === accountId) ?? null;
 	const toAccount = accounts.find((a) => a.id === toAccountId) ?? null;
-	const [currency, setCurrency] = useState(
-		transaction && transaction.type !== "transfer" ? transaction.currency : baseCurrency,
-	);
-	const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(
-		transaction && transaction.type !== "transfer" ? transaction.payment_method : "cash",
-	);
-	// Only expenses can belong to a subscription. The linked one may not be in the list if it was
-	// cancelled, so fall back to the transaction's own copy.
-	const [subscription, setSubscription] = useState<SubRef | null>(
-		transaction?.subscription ?? null,
-	);
-	const subscriptionOptions: SubRef[] = subscriptions
-		.filter((s) => s.status !== "cancelled" || s.id === transaction?.subscription?.id)
-		.map((s) => ({ id: s.id, name: s.name }));
+	const [currency, setCurrency] = useState(initial.currency);
+	const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(initial.paymentMethod);
+	// Only expenses can belong to a subscription.
+	const [subscription, setSubscription] = useState<SubRef | null>(initial.subscription);
+	const subscriptionOptions = subscriptionChoices(subscriptions, transaction);
 
 	const [switched, setSwitched] = useState(false); // true once the user has changed the type
-	const shownTo = useLastDefined(toAccount); // keeps its currency while the field closes
 	const effectiveCurrency = account ? account.currency : currency;
 	const foreign =
 		effectiveCurrency.length === 3 && effectiveCurrency.toUpperCase() !== baseCurrency;
@@ -163,103 +94,25 @@ export default function TransactionForm({
 		setLocalError(null);
 	}
 
-	async function submit(e: React.FormEvent<HTMLFormElement>) {
+	async function submit(e: FormEvent<HTMLFormElement>) {
 		e.preventDefault();
-		const f = new FormData(e.currentTarget);
-		const text = (k: string) => String(f.get(k) ?? "").trim();
-		const description = text("description");
-		const common = {
+		const request = buildTransactionRequest(new FormData(e.currentTarget), {
 			type,
-			amount: text("amount"),
-			transaction_date: text("transaction_date"),
-		};
-
-		if (isTransfer) {
-			if (!accountId || !toAccountId)
-				return setLocalError("Choose the accounts to move money between");
-			if (accountId === toAccountId) return setLocalError("Choose two different accounts");
-			const fields = {
-				...common,
-				account_id: accountId,
-				to_account_id: toAccountId,
-				to_amount: crossCurrency ? text("to_amount") : undefined,
-			};
-			setLocalError(null);
-			const ok = await run(() =>
-				transaction
-					? updateTransactionFn({
-							data: {
-								id: transaction.id,
-								changes: { ...fields, description: description || null },
-							},
-						})
-					: createTransactionFn({ data: { ...fields, description: description || undefined } }),
-			);
-			if (ok) {
-				notify(transaction ? "Transfer updated" : "Transfer added");
-				onClose();
-			}
-			return;
-		}
-
-		const base = {
-			...common,
-			currency: account ? account.currency : text("currency").toUpperCase(),
-			exchange_rate: foreign ? text("exchange_rate") : undefined,
-			payment_method: text("payment_method") as PaymentMethod,
-			category: text("category"),
-		};
-		const vendorName = text("vendor");
+			transaction,
+			accountId,
+			toAccountId,
+			account,
+			crossCurrency: Boolean(crossCurrency),
+			foreign,
+			subscription,
+		});
+		if ("error" in request) return setLocalError(request.error);
 		setLocalError(null);
-
-		const ok = await run(() =>
-			transaction
-				? updateTransactionFn({
-						data: {
-							id: transaction.id,
-							changes: {
-								...base,
-								description: description || null,
-								// changed -> link / unlink; unchanged -> omit
-								...(accountId === (transaction.account?.id ?? "")
-									? {}
-									: { account_id: accountId || null }),
-								...(subscription?.id === (transaction.subscription?.id ?? undefined)
-									? {}
-									: { subscription_id: subscription?.id ?? null }),
-								// unchanged -> omit; cleared -> unlink; otherwise find-or-create by name
-								...(vendorName === (transaction.vendor?.name ?? "")
-									? {}
-									: vendorName
-										? { vendor_name: vendorName }
-										: { vendor_id: null }),
-							},
-						},
-					})
-				: createTransactionFn({
-						data: {
-							...base,
-							description: description || undefined,
-							vendor_name: vendorName || undefined,
-							subscription_id: subscription?.id,
-							account_id: accountId || undefined,
-						},
-					}),
-		);
-		if (ok) {
-			notify(transaction ? "Transaction updated" : "Transaction added");
+		if (await run(request.send)) {
+			notify(request.success);
 			onClose();
 		}
 	}
-
-	const accountOptions = (exclude?: string) =>
-		accounts
-			.filter((a) => a.id !== exclude)
-			.map((a) => (
-				<MenuItem key={a.id} value={a.id}>
-					{a.name} · {ACCOUNT_GROUP_LABELS[a.group]} · {a.currency}
-				</MenuItem>
-			));
 
 	return (
 		<FormDialog
@@ -288,163 +141,35 @@ export default function TransactionForm({
 				</Cell>
 
 				{isTransfer ? (
-					<Fragment key="transfer">
-						<Cell size={{ xs: 12, sm: 6 }} fadeIn={switched}>
-							<TextField
-								select
-								label="From"
-								value={accountId}
-								onChange={(e) => pickAccount(e.target.value)}
-								required
-							>
-								{accountOptions(toAccountId)}
-							</TextField>
-						</Cell>
-						<Cell size={{ xs: 12, sm: 6 }} fadeIn={switched}>
-							<TextField
-								select
-								label="To"
-								value={toAccountId}
-								onChange={(e) => setToAccountId(e.target.value)}
-								required
-							>
-								{accountOptions(accountId)}
-							</TextField>
-						</Cell>
-						<RevealCell size={12} show={accounts.length < 2}>
-							<Alert severity="info">
-								Add at least two accounts on the Accounts page to make a transfer.
-							</Alert>
-						</RevealCell>
-						<Cell size={{ xs: 12, sm: crossCurrency ? 6 : 12 }} fadeIn={switched}>
-							<TextField
-								label={account ? `Amount (${account.currency})` : "Amount"}
-								name="amount"
-								defaultValue={transaction?.amount}
-								placeholder="100.00"
-								helperText="Taken out of the From account"
-								required
-								autoFocus
-								slotProps={{ htmlInput: { inputMode: "decimal" } }}
-							/>
-						</Cell>
-						<RevealCell size={{ xs: 12, sm: 6 }} show={Boolean(crossCurrency && toAccount)}>
-							<TextField
-								label={`Amount received (${shownTo?.currency ?? ""})`}
-								name="to_amount"
-								defaultValue={transaction?.to_amount ?? ""}
-								placeholder="10.00"
-								helperText="Different currencies: enter what arrived"
-								required
-								slotProps={{ htmlInput: { inputMode: "decimal" } }}
-							/>
-						</RevealCell>
-					</Fragment>
+					<TransferFields
+						key="transfer"
+						accounts={accounts}
+						accountId={accountId}
+						toAccountId={toAccountId}
+						onPickAccount={pickAccount}
+						onPickToAccount={setToAccountId}
+						crossCurrency={Boolean(crossCurrency)}
+						transaction={transaction}
+						switched={switched}
+					/>
 				) : (
-					<Fragment key="ordinary">
-						<Cell size={12} fadeIn={switched}>
-							<TextField
-								label="Amount"
-								name="amount"
-								defaultValue={transaction?.amount}
-								placeholder="12.50"
-								helperText={type === "income" ? "Money received" : "Money spent"}
-								required
-								autoFocus
-								slotProps={{ htmlInput: { inputMode: "decimal" } }}
-							/>
-						</Cell>
-
-						<Cell size={12} fadeIn={switched}>
-							<TextField
-								select
-								label="Account"
-								value={accountId}
-								onChange={(e) => pickAccount(e.target.value)}
-								helperText={
-									account
-										? `Uses the account's currency (${account.currency}) and updates its balance`
-										: "Optional. Choose where the money moved"
-								}
-							>
-								<MenuItem value="">None</MenuItem>
-								{accountOptions()}
-							</TextField>
-						</Cell>
-
-						<Cell size={{ xs: 12, sm: 6 }} fadeIn={switched}>
-							{account ? (
-								<TextField
-									key="currency-locked"
-									label="Currency"
-									value={account.currency}
-									disabled
-								/>
-							) : (
-								<CurrencyField
-									key="currency-free"
-									name="currency"
-									label="Currency"
-									currencies={currencies}
-									defaultValue={currency}
-									onInputChange={(v) => setCurrency(v.toUpperCase())}
-									required
-								/>
-							)}
-						</Cell>
-
-						<Cell size={{ xs: 12, sm: 6 }} fadeIn={switched}>
-							{foreign ? (
-								<TextField
-									key={`rate-${effectiveCurrency}`}
-									label={`Rate: 1 ${effectiveCurrency} = ? ${baseCurrency}`}
-									name="exchange_rate"
-									defaultValue={
-										transaction?.currency === effectiveCurrency ? transaction.exchange_rate : ""
-									}
-									placeholder="15.42"
-									required
-									slotProps={{ htmlInput: { inputMode: "decimal" } }}
-								/>
-							) : (
-								<TextField
-									key="rate-base"
-									label="Rate"
-									value={`1 (${baseCurrency}, your base currency)`}
-									disabled
-								/>
-							)}
-						</Cell>
-
-						<Cell size={{ xs: 12, sm: 6 }} fadeIn={switched}>
-							<TextField
-								select
-								label="Payment method"
-								name="payment_method"
-								value={paymentMethod}
-								onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
-								required
-							>
-								{PAYMENT_METHODS.map((m) => (
-									<MenuItem key={m} value={m}>
-										{PAYMENT_METHOD_LABELS[m]}
-									</MenuItem>
-								))}
-							</TextField>
-						</Cell>
-
-						<Cell size={{ xs: 12, sm: 6 }} fadeIn={switched}>
-							<TextField
-								label="Category"
-								name="category"
-								defaultValue={
-									transaction && transaction.type !== "transfer" ? transaction.category : ""
-								}
-								required
-								slotProps={{ htmlInput: { maxLength: 100 } }}
-							/>
-						</Cell>
-					</Fragment>
+					<OrdinaryFields
+						key="ordinary"
+						type={type}
+						accounts={accounts}
+						accountId={accountId}
+						onPickAccount={pickAccount}
+						currencies={currencies}
+						currency={currency}
+						onCurrencyChange={setCurrency}
+						effectiveCurrency={effectiveCurrency}
+						foreign={foreign}
+						baseCurrency={baseCurrency}
+						paymentMethod={paymentMethod}
+						onPaymentMethodChange={setPaymentMethod}
+						transaction={transaction}
+						switched={switched}
+					/>
 				)}
 
 				<Cell size={{ xs: 12, sm: isTransfer ? 12 : 6 }}>

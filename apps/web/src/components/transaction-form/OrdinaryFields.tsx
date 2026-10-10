@@ -1,0 +1,150 @@
+import MenuItem from "@mui/material/MenuItem";
+import TextField from "@mui/material/TextField";
+import { Fragment } from "react";
+import {
+	PAYMENT_METHODS,
+	PAYMENT_METHOD_LABELS,
+	type Account,
+	type PaymentMethod,
+	type Transaction,
+	type TransactionType,
+} from "#/types/api";
+import CurrencyField from "../CurrencyField";
+import { Cell } from "./Cells";
+import { accountMenuItems } from "./accountMenuItems";
+
+/** The fields for an income or expense: amount, account, currency and rate, method, category. */
+export default function OrdinaryFields({
+	type,
+	accounts,
+	accountId,
+	onPickAccount,
+	currencies,
+	currency,
+	onCurrencyChange,
+	effectiveCurrency,
+	foreign,
+	baseCurrency,
+	paymentMethod,
+	onPaymentMethodChange,
+	transaction,
+	switched,
+}: {
+	type: TransactionType;
+	accounts: Account[];
+	accountId: string;
+	onPickAccount: (id: string) => void;
+	currencies: string[];
+	currency: string;
+	onCurrencyChange: (currency: string) => void;
+	/** The account's currency when one is picked, otherwise what was typed. */
+	effectiveCurrency: string;
+	foreign: boolean;
+	baseCurrency: string;
+	paymentMethod: PaymentMethod;
+	onPaymentMethodChange: (method: PaymentMethod) => void;
+	transaction?: Transaction;
+	switched: boolean;
+}) {
+	const account = accounts.find((a) => a.id === accountId) ?? null;
+
+	return (
+		<Fragment>
+			<Cell size={12} fadeIn={switched}>
+				<TextField
+					label="Amount"
+					name="amount"
+					defaultValue={transaction?.amount}
+					placeholder="12.50"
+					helperText={type === "income" ? "Money received" : "Money spent"}
+					required
+					autoFocus
+					slotProps={{ htmlInput: { inputMode: "decimal" } }}
+				/>
+			</Cell>
+
+			<Cell size={12} fadeIn={switched}>
+				<TextField
+					select
+					label="Account"
+					value={accountId}
+					onChange={(e) => onPickAccount(e.target.value)}
+					helperText={
+						account
+							? `Uses the account's currency (${account.currency}) and updates its balance`
+							: "Optional. Choose where the money moved"
+					}
+				>
+					<MenuItem value="">None</MenuItem>
+					{accountMenuItems(accounts)}
+				</TextField>
+			</Cell>
+
+			<Cell size={{ xs: 12, sm: 6 }} fadeIn={switched}>
+				{account ? (
+					<TextField key="currency-locked" label="Currency" value={account.currency} disabled />
+				) : (
+					<CurrencyField
+						key="currency-free"
+						name="currency"
+						label="Currency"
+						currencies={currencies}
+						defaultValue={currency}
+						onInputChange={(v) => onCurrencyChange(v.toUpperCase())}
+						required
+					/>
+				)}
+			</Cell>
+
+			<Cell size={{ xs: 12, sm: 6 }} fadeIn={switched}>
+				{foreign ? (
+					<TextField
+						key={`rate-${effectiveCurrency}`}
+						label={`Rate: 1 ${effectiveCurrency} = ? ${baseCurrency}`}
+						name="exchange_rate"
+						defaultValue={
+							transaction?.currency === effectiveCurrency ? transaction.exchange_rate : ""
+						}
+						placeholder="15.42"
+						required
+						slotProps={{ htmlInput: { inputMode: "decimal" } }}
+					/>
+				) : (
+					<TextField
+						key="rate-base"
+						label="Rate"
+						value={`1 (${baseCurrency}, your base currency)`}
+						disabled
+					/>
+				)}
+			</Cell>
+
+			<Cell size={{ xs: 12, sm: 6 }} fadeIn={switched}>
+				<TextField
+					select
+					label="Payment method"
+					name="payment_method"
+					value={paymentMethod}
+					onChange={(e) => onPaymentMethodChange(e.target.value as PaymentMethod)}
+					required
+				>
+					{PAYMENT_METHODS.map((m) => (
+						<MenuItem key={m} value={m}>
+							{PAYMENT_METHOD_LABELS[m]}
+						</MenuItem>
+					))}
+				</TextField>
+			</Cell>
+
+			<Cell size={{ xs: 12, sm: 6 }} fadeIn={switched}>
+				<TextField
+					label="Category"
+					name="category"
+					defaultValue={transaction && transaction.type !== "transfer" ? transaction.category : ""}
+					required
+					slotProps={{ htmlInput: { maxLength: 100 } }}
+				/>
+			</Cell>
+		</Fragment>
+	);
+}
