@@ -2,11 +2,9 @@ import AddIcon from "@mui/icons-material/Add";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import TuneIcon from "@mui/icons-material/Tune";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
-import Drawer from "@mui/material/Drawer";
 import Grid from "@mui/material/Grid";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
@@ -23,6 +21,7 @@ import ConfirmDelete from "#/components/ConfirmDelete";
 import MobileCard from "#/components/MobileCard";
 import EmptyState from "#/components/EmptyState";
 import ExportButton from "#/components/ExportButton";
+import FiltersDrawer from "#/components/FiltersDrawer";
 import MakeSubscriptionDialog from "#/components/MakeSubscriptionDialog";
 import PageHeader from "#/components/PageHeader";
 import Reveal from "#/components/Reveal";
@@ -271,8 +270,6 @@ function TransactionsPage() {
 		search.date_to,
 	);
 
-	const [filtersOpen, setFiltersOpen] = useState(false);
-
 	const filterValues = {
 		type: search.type,
 		payment_method: search.payment_method,
@@ -461,37 +458,13 @@ function TransactionsPage() {
 											}
 										/>
 										{/* Only on narrow layouts: wide ones show the panel beside the table. */}
-										<Button
-											variant="outlined"
-											color="inherit"
-											startIcon={<TuneIcon />}
-											onClick={() => setFiltersOpen(true)}
+										<FiltersDrawer
+											activeCount={activeCount}
+											total={total}
 											sx={{ display: "inline-flex", [WIDE]: { display: "none" } }}
 										>
-											Filters
-											{activeCount > 0 && (
-												<Box
-													component="span"
-													sx={{
-														ml: 1,
-														minWidth: 20,
-														height: 20,
-														px: 0.75,
-														display: "inline-flex",
-														alignItems: "center",
-														justifyContent: "center",
-														borderRadius: "10px",
-														bgcolor: "primary.main",
-														color: "primary.contrastText",
-														fontSize: 12,
-														fontWeight: 600,
-														lineHeight: 1,
-													}}
-												>
-													{activeCount}
-												</Box>
-											)}
-										</Button>
+											{filterPanel}
+										</FiltersDrawer>
 									</>
 								}
 							/>
@@ -620,19 +593,6 @@ function TransactionsPage() {
 					</Box>
 				</Box>
 			</Box>
-
-			{/* Narrow layouts: the same panel in a bottom drawer. */}
-			<Drawer
-				anchor="bottom"
-				open={filtersOpen}
-				onClose={() => setFiltersOpen(false)}
-				slotProps={{ paper: { sx: { maxHeight: "85vh", p: 2.5 } } }}
-			>
-				{filterPanel}
-				<Button variant="contained" fullWidth sx={{ mt: 3 }} onClick={() => setFiltersOpen(false)}>
-					Show {total} {total === 1 ? "result" : "results"}
-				</Button>
-			</Drawer>
 
 			{editing && (
 				<TransactionForm
