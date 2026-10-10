@@ -13,7 +13,7 @@ import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useState } from "react";
+import { memo, useState } from "react";
 import { z } from "zod";
 import ActiveFilters, { type ActiveFilter } from "#/components/ActiveFilters";
 import ConfirmDelete from "#/components/ConfirmDelete";
@@ -227,6 +227,120 @@ function TxActions({
 		</>
 	);
 }
+
+/** The results table. Memoised so it only re-renders when the loaded rows change, not every time
+ * a filter control updates (the controls follow the URL instantly; the rows follow the loader). */
+const TransactionsTable = memo(function TransactionsTable({
+	items,
+	baseCurrency,
+	onConvert,
+	onEdit,
+	onDelete,
+}: {
+	items: Transaction[];
+	baseCurrency: string;
+	onConvert: (t: Transaction) => void;
+	onEdit: (t: Transaction) => void;
+	onDelete: (t: Transaction) => void;
+}) {
+	return (
+		<ResponsiveTable
+			rows={items}
+			getKey={(t) => t.id}
+			minWidth={820}
+			head={
+				<TableRow>
+					<TableCell>Date</TableCell>
+					<TableCell>Details</TableCell>
+					<TableCell>Method</TableCell>
+					<TableCell align="right">Amount</TableCell>
+					<TableCell align="right" sx={{ width: 100 }} />
+				</TableRow>
+			}
+			renderRow={(t) => (
+				<TableRow hover>
+					<TableCell sx={{ whiteSpace: "nowrap", color: "text.secondary" }}>
+						{formatDate(t.transaction_date)}
+					</TableCell>
+					<TableCell>
+						<Typography variant="body2" sx={{ fontWeight: 500 }}>
+							{txTitle(t)}
+						</Typography>
+						<Typography variant="caption" sx={{ color: "text.secondary" }}>
+							{txSubtitle(t)}
+						</Typography>
+						{t.subscription && (
+							<Box sx={{ mt: 0.5 }}>
+								<TxSubscriptionChip t={t} />
+							</Box>
+						)}
+					</TableCell>
+					<TableCell>
+						<TxMethodChip t={t} />
+						{t.type !== "transfer" && t.account && (
+							<Typography
+								variant="caption"
+								sx={{ display: "block", color: "text.secondary", mt: 0.5 }}
+							>
+								{t.account.name}
+							</Typography>
+						)}
+					</TableCell>
+					<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+						<TxAmount t={t} baseCurrency={baseCurrency} />
+					</TableCell>
+					<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+						<TxActions
+							t={t}
+							onConvert={() => onConvert(t)}
+							onEdit={() => onEdit(t)}
+							onDelete={() => onDelete(t)}
+						/>
+					</TableCell>
+				</TableRow>
+			)}
+			renderCard={(t) => (
+				<MobileCard
+					primary={
+						<Typography variant="body2" sx={{ fontWeight: 500 }}>
+							{txTitle(t)}
+						</Typography>
+					}
+					secondary={
+						txSubtitle(t) && (
+							<Typography variant="caption" sx={{ color: "text.secondary" }}>
+								{txSubtitle(t)}
+							</Typography>
+						)
+					}
+					end={<TxAmount t={t} baseCurrency={baseCurrency} />}
+					meta={
+						<>
+							<Typography variant="caption" sx={{ color: "text.secondary" }}>
+								{formatDate(t.transaction_date)}
+							</Typography>
+							<TxMethodChip t={t} />
+							{t.type !== "transfer" && t.account && (
+								<Typography variant="caption" sx={{ color: "text.secondary" }}>
+									{t.account.name}
+								</Typography>
+							)}
+							<TxSubscriptionChip t={t} />
+						</>
+					}
+					actions={
+						<TxActions
+							t={t}
+							onConvert={() => onConvert(t)}
+							onEdit={() => onEdit(t)}
+							onDelete={() => onDelete(t)}
+						/>
+					}
+				/>
+			)}
+		/>
+	);
+});
 
 function TransactionsPage() {
 	const {
@@ -490,100 +604,12 @@ function TransactionsPage() {
 											: "No transactions yet. Add your first one."}
 									</EmptyState>
 								) : (
-									<ResponsiveTable
-										rows={items}
-										getKey={(t) => t.id}
-										minWidth={820}
-										head={
-											<TableRow>
-												<TableCell>Date</TableCell>
-												<TableCell>Details</TableCell>
-												<TableCell>Method</TableCell>
-												<TableCell align="right">Amount</TableCell>
-												<TableCell align="right" sx={{ width: 100 }} />
-											</TableRow>
-										}
-										renderRow={(t) => (
-											<TableRow hover>
-												<TableCell sx={{ whiteSpace: "nowrap", color: "text.secondary" }}>
-													{formatDate(t.transaction_date)}
-												</TableCell>
-												<TableCell>
-													<Typography variant="body2" sx={{ fontWeight: 500 }}>
-														{txTitle(t)}
-													</Typography>
-													<Typography variant="caption" sx={{ color: "text.secondary" }}>
-														{txSubtitle(t)}
-													</Typography>
-													{t.subscription && (
-														<Box sx={{ mt: 0.5 }}>
-															<TxSubscriptionChip t={t} />
-														</Box>
-													)}
-												</TableCell>
-												<TableCell>
-													<TxMethodChip t={t} />
-													{t.type !== "transfer" && t.account && (
-														<Typography
-															variant="caption"
-															sx={{ display: "block", color: "text.secondary", mt: 0.5 }}
-														>
-															{t.account.name}
-														</Typography>
-													)}
-												</TableCell>
-												<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-													<TxAmount t={t} baseCurrency={user.base_currency} />
-												</TableCell>
-												<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-													<TxActions
-														t={t}
-														onConvert={() => setConverting(t)}
-														onEdit={() => setEditing(t)}
-														onDelete={() => setDeleting(t)}
-													/>
-												</TableCell>
-											</TableRow>
-										)}
-										renderCard={(t) => (
-											<MobileCard
-												primary={
-													<Typography variant="body2" sx={{ fontWeight: 500 }}>
-														{txTitle(t)}
-													</Typography>
-												}
-												secondary={
-													txSubtitle(t) && (
-														<Typography variant="caption" sx={{ color: "text.secondary" }}>
-															{txSubtitle(t)}
-														</Typography>
-													)
-												}
-												end={<TxAmount t={t} baseCurrency={user.base_currency} />}
-												meta={
-													<>
-														<Typography variant="caption" sx={{ color: "text.secondary" }}>
-															{formatDate(t.transaction_date)}
-														</Typography>
-														<TxMethodChip t={t} />
-														{t.type !== "transfer" && t.account && (
-															<Typography variant="caption" sx={{ color: "text.secondary" }}>
-																{t.account.name}
-															</Typography>
-														)}
-														<TxSubscriptionChip t={t} />
-													</>
-												}
-												actions={
-													<TxActions
-														t={t}
-														onConvert={() => setConverting(t)}
-														onEdit={() => setEditing(t)}
-														onDelete={() => setDeleting(t)}
-													/>
-												}
-											/>
-										)}
+									<TransactionsTable
+										items={items}
+										baseCurrency={user.base_currency}
+										onConvert={setConverting}
+										onEdit={setEditing}
+										onDelete={setDeleting}
 									/>
 								)}
 
