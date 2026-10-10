@@ -11,7 +11,8 @@
 		"lint": "oxlint",
 		"lint:fix": "oxlint --fix",
 		"fmt": "oxfmt",
-		"fmt:check": "oxfmt --check"
+		"fmt:check": "oxfmt --check",
+		"react-doctor": "react-doctor . --no-supply-chain --no-score -y"
 	},
 	"dependencies": {
 		"@emotion/cache": "^11.14.0",
@@ -33,6 +34,8 @@
 		"@vitejs/plugin-react": "^6.1.2",
 		"oxfmt": "^0.72.0",
 		"oxlint": "^1.87.0",
+		"react-doctor": "^0.9.17",
+		"react-scan": "^0.5.7",
 		"typescript": "^7.0.2",
 		"vite": "^8.3.4"
 	}
