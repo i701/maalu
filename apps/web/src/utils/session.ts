@@ -1,4 +1,4 @@
-import { useSession } from "@tanstack/react-start/server";
+import { useSession as openSession } from "@tanstack/react-start/server";
 
 export type SessionUser = {
 	id: string;
@@ -14,8 +14,8 @@ export type SessionData = {
 	user?: SessionUser;
 };
 
-export function useAppSession(maxAge?: number) {
-	return useSession<SessionData>({
+export function getAppSession(maxAge?: number) {
+	return openSession<SessionData>({
 		name: "maalu_session",
 		password: process.env.SESSION_SECRET!,
 		maxAge,

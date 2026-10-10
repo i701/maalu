@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useAppSession } from "#/utils/session";
+import { getAppSession } from "#/utils/session";
 
 // Only these filters are forwarded to the API (which validates them again).
 const FILTERS = [
@@ -25,7 +25,7 @@ export const Route = createFileRoute("/api/export/transactions")({
 	server: {
 		handlers: {
 			GET: async ({ request }) => {
-				const { token, expiresAt } = (await useAppSession()).data;
+				const { token, expiresAt } = (await getAppSession()).data;
 				if (!token || (expiresAt && expiresAt * 1000 <= Date.now())) {
 					return Response.json({ detail: "Session expired" }, { status: 401 });
 				}

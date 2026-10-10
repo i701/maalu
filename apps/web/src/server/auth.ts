@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import type { User } from "#/types/api";
 import { apiRequest } from "./api";
-import { jwtExpiry, useAppSession } from "#/utils/session";
+import { jwtExpiry, getAppSession } from "#/utils/session";
 
 const loginSchema = z.object({
 	email: z.email(),
@@ -31,7 +31,7 @@ async function startSession(email: string, password: string) {
 	// Cookie lifetime matches the token's, so an expired token can't linger in a live cookie.
 	const expiresAt = jwtExpiry(token);
 	const maxAge = expiresAt ? expiresAt - Math.floor(Date.now() / 1000) : undefined;
-	const session = await useAppSession(maxAge);
+	const session = await getAppSession(maxAge);
 	await session.update({
 		token,
 		expiresAt,
@@ -57,14 +57,14 @@ export const registerFn = createServerFn({ method: "POST" })
 	});
 
 export const logoutFn = createServerFn({ method: "POST" }).handler(async () => {
-	const session = await useAppSession();
+	const session = await getAppSession();
 	await session.clear();
 	return { ok: true as const };
 });
 
 /** Cookie-only check (no API call). Returns the cached user, never the token. */
 export const getSessionFn = createServerFn({ method: "GET" }).handler(async () => {
-	const { token, expiresAt, user } = (await useAppSession()).data;
+	const { token, expiresAt, user } = (await getAppSession()).data;
 	if (!token || !user) return null;
 	if (expiresAt && expiresAt * 1000 <= Date.now()) return null;
 	return { user };

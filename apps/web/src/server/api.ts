@@ -1,5 +1,5 @@
 import type { ApiResult } from "#/types/api";
-import { useAppSession } from "#/utils/session";
+import { getAppSession } from "#/utils/session";
 
 const API_URL = () => process.env.API_URL ?? "http://localhost:8000";
 
@@ -38,7 +38,7 @@ export async function apiRequest<T>(
 	opts: RequestOptions = {},
 ): Promise<ApiResult<T>> {
 	const headers: Record<string, string> = {};
-	const session = await useAppSession();
+	const session = await getAppSession();
 
 	if (opts.token) {
 		headers.Authorization = `Bearer ${opts.token}`;

@@ -10,13 +10,15 @@ export const Route = createFileRoute("/_protected")({
 		if (!session) throw redirect({ to: "/login", search: { redirect: location.href } });
 		return { user: session.user };
 	},
-	component: () => {
-		const { user } = Route.useRouteContext();
-		return (
-			<AppShell user={user}>
-				<RevalidateOnFocus />
-				<Outlet />
-			</AppShell>
-		);
-	},
+	component: ProtectedLayout,
 });
+
+function ProtectedLayout() {
+	const { user } = Route.useRouteContext();
+	return (
+		<AppShell user={user}>
+			<RevalidateOnFocus />
+			<Outlet />
+		</AppShell>
+	);
+}
