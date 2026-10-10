@@ -54,6 +54,10 @@ check-web:
     pnpm --filter @maalu/web lint
     pnpm --filter @maalu/web typecheck
 
+# React health check (react-doctor); fails on errors, warnings are advisory
+doctor-web:
+    pnpm --filter @maalu/web run react-doctor
+
 # Lint only (no changes)
 lint: lint-api lint-web
 
