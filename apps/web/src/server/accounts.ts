@@ -25,9 +25,12 @@ const updateSchema = z.object({
 	changes: createSchema.partial(),
 });
 
-export const listAccountsFn = createServerFn({ method: "GET" }).handler(async () =>
-	apiRequest<Account[]>("/accounts"),
-);
+/** Every account, or only those whose name or description contains `q`. */
+export const listAccountsFn = createServerFn({ method: "GET" })
+	.validator(z.object({ q: z.string().max(100).optional() }).optional())
+	.handler(async ({ data }) =>
+		apiRequest<Account[]>("/accounts", { query: data?.q ? { q: data.q } : undefined }),
+	);
 
 /** Server-side search for pickers/autocompletes: matches name and description. */
 export const searchAccountsFn = createServerFn({ method: "GET" })
