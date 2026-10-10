@@ -19,6 +19,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Fragment, useState } from "react";
 import AccountForm from "#/components/AccountForm";
 import ConfirmDelete from "#/components/ConfirmDelete";
+import EmptyState from "#/components/EmptyState";
 import PageHeader from "#/components/PageHeader";
 import RefreshButton from "#/components/RefreshButton";
 import TableCard from "#/components/TableCard";
@@ -116,9 +117,9 @@ function AccountsPage() {
 				</Stack>
 
 				{accounts.length === 0 ? (
-					<Typography sx={{ textAlign: "center", py: 8, px: 2, color: "text.secondary" }}>
+					<EmptyState firstRun>
 						No accounts yet. Add your wallet or bank account to start tracking balances.
-					</Typography>
+					</EmptyState>
 				) : (
 					<TableContainer>
 						<Table>

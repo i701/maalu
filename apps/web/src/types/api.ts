@@ -1,5 +1,11 @@
 /** What every server function returns: errors are values, so they survive serialisation. */
-export type ApiResult<T> = { ok: true; data: T } | { ok: false; status: number; error: string };
+export type ApiResult<T> =
+	| {
+			ok: true;
+			data: T;
+			/** From the API's X-Total-Count header on paginated lists. */ total?: number;
+	  }
+	| { ok: false; status: number; error: string };
 
 export const TRANSACTION_TYPES = ["income", "expense", "transfer"] as const;
 export type TransactionType = (typeof TRANSACTION_TYPES)[number];
@@ -28,6 +34,17 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
 	paypal: "PayPal",
 	other: "Other",
 };
+
+export const VENDOR_LOCALITIES = ["local", "foreign", "unknown"] as const;
+export type VendorLocality = (typeof VENDOR_LOCALITIES)[number];
+
+export const VENDOR_LOCALITY_LABELS: Record<VendorLocality, string> = {
+	local: "Local",
+	foreign: "Foreign",
+	unknown: "Not set",
+};
+
+export const INTERVAL_UNIT_LABELS = { week: "Weekly", month: "Monthly", year: "Yearly" } as const;
 
 export const INTERVAL_UNITS = ["week", "month", "year"] as const;
 export type IntervalUnit = (typeof INTERVAL_UNITS)[number];
@@ -165,3 +182,6 @@ export type Transaction = {
 	to_account: AccountRef | null;
 	created_at: string;
 };
+
+/** Income and expense totals of the filtered transactions, in the user's base currency. */
+export type TransactionTotals = { income: string; expense: string; currency: string };

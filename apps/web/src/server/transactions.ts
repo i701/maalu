@@ -1,9 +1,15 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { PAYMENT_METHODS, TRANSACTION_TYPES, type Transaction } from "#/types/api";
+import {
+	PAYMENT_METHODS,
+	TRANSACTION_TYPES,
+	type Transaction,
+	type TransactionTotals,
+} from "#/types/api";
+import type { PageResult } from "#/lib/pagination";
 import { apiRequest } from "./api";
 
-export const PAGE_SIZE = 20;
+import { DEFAULT_PAGE_SIZE, PAGE_SIZES } from "#/lib/pagination";
 
 // Decimals are validated as strings and forwarded untouched: no float round-trip. Amounts are
 // always positive: the transaction `type` decides whether money comes in or goes out.
@@ -50,34 +56,80 @@ const updateSchema = z.object({
 
 const listSchema = z.object({
 	page: z.number().int().min(1).default(1),
+	pageSize: z
+		.number()
+		.int()
+		.refine((v) => PAGE_SIZES.includes(v))
+		.default(DEFAULT_PAGE_SIZE),
 	type: z.enum(TRANSACTION_TYPES).optional(),
 	payment_method: z.enum(PAYMENT_METHODS).optional(),
 	vendor_id: z.uuid().optional(),
 	account_id: z.uuid().optional(),
 	currency: currency.optional(),
+	q: z.string().max(100).optional(),
+	// In the user's base currency, inclusive. Decimal strings, never floats.
+	min_amount: z
+		.string()
+		.regex(/^\d+(\.\d{1,4})?$/)
+		.optional(),
+	max_amount: z
+		.string()
+		.regex(/^\d+(\.\d{1,4})?$/)
+		.optional(),
+	// Inclusive YYYY-MM-DD bounds on the transaction date.
+	date_from: z.iso.date().optional(),
+	date_to: z.iso.date().optional(),
 });
 
 export const listTransactionsFn = createServerFn({ method: "GET" })
 	.validator(listSchema)
 	.handler(async ({ data }) => {
-		// Ask for one extra row so the UI knows whether a next page exists.
 		const res = await apiRequest<Transaction[]>("/transactions", {
 			query: {
-				limit: PAGE_SIZE + 1,
-				offset: (data.page - 1) * PAGE_SIZE,
+				limit: data.pageSize,
+				offset: (data.page - 1) * data.pageSize,
 				type: data.type,
 				payment_method: data.payment_method,
 				vendor_id: data.vendor_id,
 				account_id: data.account_id,
 				currency: data.currency,
+				q: data.q,
+				min_amount: data.min_amount,
+				max_amount: data.max_amount,
+				date_from: data.date_from,
+				date_to: data.date_to,
 			},
 		});
 		if (!res.ok) return res;
+		// `total` is the number of matches across all pages (the API's X-Total-Count header).
 		return {
 			ok: true as const,
-			data: { items: res.data.slice(0, PAGE_SIZE), hasMore: res.data.length > PAGE_SIZE },
+			data: {
+				items: res.data,
+				total: res.total ?? res.data.length,
+			} satisfies PageResult<Transaction>,
 		};
 	});
+
+/** Income / expense totals (base currency) for the same filters as the list. */
+export const getTransactionTotalsFn = createServerFn({ method: "GET" })
+	.validator(listSchema.omit({ page: true, pageSize: true }))
+	.handler(async ({ data }) =>
+		apiRequest<TransactionTotals>("/transactions/summary", {
+			query: {
+				type: data.type,
+				payment_method: data.payment_method,
+				vendor_id: data.vendor_id,
+				account_id: data.account_id,
+				currency: data.currency,
+				q: data.q,
+				min_amount: data.min_amount,
+				max_amount: data.max_amount,
+				date_from: data.date_from,
+				date_to: data.date_to,
+			},
+		}),
+	);
 
 export const createTransactionFn = createServerFn({ method: "POST" })
 	.validator(createSchema)

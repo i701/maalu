@@ -29,6 +29,18 @@ export const listAccountsFn = createServerFn({ method: "GET" }).handler(async ()
 	apiRequest<Account[]>("/accounts"),
 );
 
+/** Server-side search for pickers/autocompletes: matches name and description. */
+export const searchAccountsFn = createServerFn({ method: "GET" })
+	.validator(z.object({ q: z.string().max(100).default("") }))
+	.handler(async ({ data }) =>
+		apiRequest<Account[]>("/accounts", { query: { q: data.q, limit: 20 } }),
+	);
+
+/** One account by id, to show the selected value of an autocomplete. */
+export const getAccountFn = createServerFn({ method: "GET" })
+	.validator(z.object({ id: z.uuid() }))
+	.handler(async ({ data }) => apiRequest<Account>(`/accounts/${data.id}`));
+
 export const getAccountSummaryFn = createServerFn({ method: "GET" }).handler(async () =>
 	apiRequest<AccountSummary>("/accounts/summary"),
 );

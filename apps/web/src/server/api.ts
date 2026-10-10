@@ -82,5 +82,10 @@ export async function apiRequest<T>(
 			error: errorMessage(json, `Request failed (${res.status})`),
 		};
 	}
-	return { ok: true, data: json as T };
+	const total = Number(res.headers.get("x-total-count"));
+	return {
+		ok: true,
+		data: json as T,
+		...(res.headers.has("x-total-count") && Number.isFinite(total) ? { total } : {}),
+	};
 }

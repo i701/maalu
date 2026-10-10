@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { DEFAULT_PAGE_SIZE, PAGE_SIZES, type PageResult } from "#/lib/pagination";
 import {
 	INTERVAL_UNITS,
 	PAYMENT_METHODS,
@@ -47,6 +48,41 @@ const updateSchema = z.object({
 export const listSubscriptionsFn = createServerFn({ method: "GET" }).handler(async () =>
 	apiRequest<Subscription[]>("/subscriptions"),
 );
+
+/** One page of subscriptions for the table. `listSubscriptionsFn` returns all of them. */
+export const listSubscriptionsPageFn = createServerFn({ method: "GET" })
+	.validator(
+		z.object({
+			page: z.number().int().min(1).default(1),
+			pageSize: z
+				.number()
+				.int()
+				.refine((v) => PAGE_SIZES.includes(v))
+				.default(DEFAULT_PAGE_SIZE),
+			q: z.string().max(100).optional(),
+			status: z.enum(SUBSCRIPTION_STATUSES).optional(),
+			interval_unit: z.enum(INTERVAL_UNITS).optional(),
+		}),
+	)
+	.handler(async ({ data }) => {
+		const res = await apiRequest<Subscription[]>("/subscriptions", {
+			query: {
+				limit: data.pageSize,
+				offset: (data.page - 1) * data.pageSize,
+				q: data.q,
+				status_filter: data.status,
+				interval_unit: data.interval_unit,
+			},
+		});
+		if (!res.ok) return res;
+		return {
+			ok: true as const,
+			data: {
+				items: res.data,
+				total: res.total ?? res.data.length,
+			} satisfies PageResult<Subscription>,
+		};
+	});
 
 export const getSubscriptionSummaryFn = createServerFn({ method: "GET" }).handler(async () =>
 	apiRequest<SubscriptionSummary>("/subscriptions/summary"),

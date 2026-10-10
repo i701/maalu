@@ -4,31 +4,50 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
-import Stack from "@mui/material/Stack";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
+import MenuItem from "@mui/material/MenuItem";
+import TextField from "@mui/material/TextField";
 import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { z } from "zod";
 import ConfirmDelete from "#/components/ConfirmDelete";
+import MobileCard from "#/components/MobileCard";
+import EmptyState from "#/components/EmptyState";
 import PageHeader from "#/components/PageHeader";
+import ResponsiveTable from "#/components/ResponsiveTable";
+import SearchField from "#/components/SearchField";
 import TableCard from "#/components/TableCard";
-import RefreshButton from "#/components/RefreshButton";
+import TablePager from "#/components/TablePager";
+import TableToolbar from "#/components/TableToolbar";
 import VendorForm from "#/components/VendorForm";
+import { pageSearch, useClampPage } from "#/lib/pagination";
 import { unwrap } from "#/lib/unwrap";
 import { listCurrenciesFn } from "#/server/currencies";
-import { deleteVendorFn, listVendorsFn } from "#/server/vendors";
-import type { Vendor } from "#/types/api";
+import { deleteVendorFn, listVendorsPageFn } from "#/server/vendors";
+import {
+	VENDOR_LOCALITIES,
+	VENDOR_LOCALITY_LABELS,
+	type Vendor,
+	type VendorLocality,
+} from "#/types/api";
 
 export const Route = createFileRoute("/_protected/vendors")({
-	loader: async () => {
-		const [vendors, currencies] = await Promise.all([listVendorsFn(), listCurrenciesFn()]);
-		return { vendors: unwrap(vendors), currencies };
+	validateSearch: z.object({
+		...pageSearch,
+		// coerce: the router parses a typed ?q=2026 as a number, which should still be a search
+		q: z.coerce.string().max(100).optional().catch(undefined),
+		locality: z.enum(VENDOR_LOCALITIES).optional().catch(undefined),
+	}),
+	loaderDeps: ({ search }) => search,
+	loader: async ({ deps }) => {
+		const [vendors, currencies] = await Promise.all([
+			listVendorsPageFn({ data: deps }),
+			listCurrenciesFn(),
+		]);
+		return { ...unwrap(vendors), currencies };
 	},
 	component: VendorsPage,
 });
@@ -39,10 +58,51 @@ const dash = (
 	</Typography>
 );
 
+function LocalChip({ vendor }: { vendor: Vendor }) {
+	if (vendor.is_local == null) return null;
+	return (
+		<Chip
+			size="small"
+			color={vendor.is_local ? "success" : "warning"}
+			label={vendor.is_local ? "Local" : "Foreign"}
+		/>
+	);
+}
+
+function VendorActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
+	return (
+		<>
+			<Tooltip title="Edit">
+				<IconButton aria-label="Edit" size="small" onClick={onEdit}>
+					<EditOutlinedIcon fontSize="small" />
+				</IconButton>
+			</Tooltip>
+			<Tooltip title="Delete">
+				<IconButton aria-label="Delete" size="small" onClick={onDelete}>
+					<DeleteOutlineIcon fontSize="small" />
+				</IconButton>
+			</Tooltip>
+		</>
+	);
+}
+
 function VendorsPage() {
-	const { vendors, currencies } = Route.useLoaderData();
+	const { items, total, currencies } = Route.useLoaderData();
+	const search = Route.useSearch();
+	const navigate = Route.useNavigate();
 	const [editing, setEditing] = useState<Vendor | "new" | null>(null);
 	const [deleting, setDeleting] = useState<Vendor | null>(null);
+
+	const filtered = Boolean(search.q || search.locality);
+
+	const setPage = (page: number) => navigate({ search: (p) => ({ ...p, page }), replace: true });
+	useClampPage({
+		page: search.page,
+		pageSize: search.pageSize,
+		total,
+		itemCount: items.length,
+		setPage,
+	});
 
 	return (
 		<>
@@ -57,76 +117,137 @@ function VendorsPage() {
 			/>
 
 			<TableCard>
-				<Stack
-					direction="row"
-					sx={{ alignItems: "center", justifyContent: "space-between", px: 2, py: 1 }}
-				>
-					<Typography variant="body2" sx={{ color: "text.secondary" }}>
-						{vendors.length} {vendors.length === 1 ? "vendor" : "vendors"}
-					</Typography>
-					<RefreshButton />
-				</Stack>
-				{vendors.length === 0 ? (
-					<Typography sx={{ textAlign: "center", py: 8, px: 2, color: "text.secondary" }}>
-						No vendors yet. They're also created automatically when you name one on a transaction.
-					</Typography>
-				) : (
-					<TableContainer>
-						<Table>
-							<TableHead>
-								<TableRow>
-									<TableCell>Name</TableCell>
-									<TableCell>Type</TableCell>
-									<TableCell>Currency</TableCell>
-									<TableCell>Contact</TableCell>
-									<TableCell>Address</TableCell>
-									<TableCell align="right" sx={{ width: 100 }} />
-								</TableRow>
-							</TableHead>
-							<TableBody>
-								{vendors.map((v) => (
-									<TableRow key={v.id} hover>
-										<TableCell>
-											<Typography variant="body2" sx={{ fontWeight: 500 }}>
-												{v.name}
-											</Typography>
-										</TableCell>
-										<TableCell>
-											{v.is_local == null ? (
-												dash
-											) : (
-												<Chip
-													size="small"
-													color={v.is_local ? "success" : "warning"}
-													label={v.is_local ? "Local" : "Foreign"}
-												/>
-											)}
-										</TableCell>
-										<TableCell>{v.currency ?? dash}</TableCell>
-										<TableCell>{v.contact ?? dash}</TableCell>
-										<TableCell sx={{ maxWidth: 260 }}>
-											<Typography variant="body2" noWrap>
-												{v.address ?? dash}
-											</Typography>
-										</TableCell>
-										<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-											<Tooltip title="Edit">
-												<IconButton aria-label="Edit" size="small" onClick={() => setEditing(v)}>
-													<EditOutlinedIcon fontSize="small" />
-												</IconButton>
-											</Tooltip>
-											<Tooltip title="Delete">
-												<IconButton aria-label="Delete" size="small" onClick={() => setDeleting(v)}>
-													<DeleteOutlineIcon fontSize="small" />
-												</IconButton>
-											</Tooltip>
-										</TableCell>
-									</TableRow>
+				<TableToolbar
+					summary={`${total} ${total === 1 ? "vendor" : "vendors"}`}
+					filters={
+						<>
+							<SearchField
+								value={search.q ?? ""}
+								placeholder="Search name, contact, address"
+								onChange={(q) =>
+									navigate({ search: (p) => ({ ...p, page: 1, q: q || undefined }) })
+								}
+							/>
+							<TextField
+								select
+								size="small"
+								label="Type"
+								value={search.locality ?? ""}
+								onChange={(e) =>
+									navigate({
+										search: (p) => ({
+											...p,
+											page: 1,
+											locality: (e.target.value || undefined) as VendorLocality | undefined,
+										}),
+									})
+								}
+								sx={{ minWidth: { sm: 150 } }}
+							>
+								<MenuItem value="">All types</MenuItem>
+								{VENDOR_LOCALITIES.map((l) => (
+									<MenuItem key={l} value={l}>
+										{VENDOR_LOCALITY_LABELS[l]}
+									</MenuItem>
 								))}
-							</TableBody>
-						</Table>
-					</TableContainer>
+							</TextField>
+							{filtered && (
+								<Button
+									color="inherit"
+									onClick={() => navigate({ search: (p) => ({ page: 1, pageSize: p.pageSize }) })}
+								>
+									Clear filters
+								</Button>
+							)}
+						</>
+					}
+				/>
+
+				{items.length === 0 ? (
+					<EmptyState firstRun={!filtered}>
+						{filtered
+							? "No vendors match these filters."
+							: "No vendors yet. They're also created automatically when you name one on a transaction."}
+					</EmptyState>
+				) : (
+					<ResponsiveTable
+						rows={items}
+						getKey={(v) => v.id}
+						minWidth={760}
+						head={
+							<TableRow>
+								<TableCell>Name</TableCell>
+								<TableCell>Type</TableCell>
+								<TableCell>Currency</TableCell>
+								<TableCell>Contact</TableCell>
+								<TableCell>Address</TableCell>
+								<TableCell align="right" sx={{ width: 100 }} />
+							</TableRow>
+						}
+						renderRow={(v) => (
+							<TableRow hover>
+								<TableCell>
+									<Typography variant="body2" sx={{ fontWeight: 500 }}>
+										{v.name}
+									</Typography>
+								</TableCell>
+								<TableCell>{v.is_local == null ? dash : <LocalChip vendor={v} />}</TableCell>
+								<TableCell>{v.currency ?? dash}</TableCell>
+								<TableCell>{v.contact ?? dash}</TableCell>
+								<TableCell sx={{ maxWidth: 260 }}>
+									<Typography variant="body2" noWrap>
+										{v.address ?? dash}
+									</Typography>
+								</TableCell>
+								<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+									<VendorActions onEdit={() => setEditing(v)} onDelete={() => setDeleting(v)} />
+								</TableCell>
+							</TableRow>
+						)}
+						renderCard={(v) => (
+							<MobileCard
+								primary={
+									<Typography variant="body2" sx={{ fontWeight: 500 }}>
+										{v.name}
+									</Typography>
+								}
+								secondary={
+									v.contact && (
+										<Typography variant="caption" sx={{ color: "text.secondary" }}>
+											{v.contact}
+										</Typography>
+									)
+								}
+								end={v.currency && <Chip size="small" variant="outlined" label={v.currency} />}
+								meta={
+									(v.is_local != null || v.address) && (
+										<>
+											<LocalChip vendor={v} />
+											{v.address && (
+												<Typography variant="caption" sx={{ color: "text.secondary" }}>
+													{v.address}
+												</Typography>
+											)}
+										</>
+									)
+								}
+								actions={
+									<VendorActions onEdit={() => setEditing(v)} onDelete={() => setDeleting(v)} />
+								}
+							/>
+						)}
+					/>
 				)}
+
+				<TablePager
+					total={total}
+					page={search.page}
+					pageSize={search.pageSize}
+					onPageChange={setPage}
+					onPageSizeChange={(pageSize) =>
+						navigate({ search: (p) => ({ ...p, page: 1, pageSize }) })
+					}
+				/>
 			</TableCard>
 
 			{editing && (

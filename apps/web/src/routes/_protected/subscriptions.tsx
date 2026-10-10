@@ -7,43 +7,64 @@ import CardContent from "@mui/material/CardContent";
 import Chip from "@mui/material/Chip";
 import Grid from "@mui/material/Grid";
 import IconButton from "@mui/material/IconButton";
+import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
+import TextField from "@mui/material/TextField";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { z } from "zod";
 import ConfirmDelete from "#/components/ConfirmDelete";
+import MobileCard from "#/components/MobileCard";
+import EmptyState from "#/components/EmptyState";
 import PageHeader from "#/components/PageHeader";
 import TableCard from "#/components/TableCard";
-import RefreshButton from "#/components/RefreshButton";
+import ResponsiveTable from "#/components/ResponsiveTable";
+import SearchField from "#/components/SearchField";
 import SubscriptionForm from "#/components/SubscriptionForm";
+import TablePager from "#/components/TablePager";
+import TableToolbar from "#/components/TableToolbar";
 import { daysUntil, formatDate, formatInterval, formatMoney } from "#/lib/format";
+import { pageSearch, useClampPage } from "#/lib/pagination";
 import { unwrap } from "#/lib/unwrap";
 import { listCurrenciesFn } from "#/server/currencies";
 import {
 	deleteSubscriptionFn,
 	getSubscriptionSummaryFn,
-	listSubscriptionsFn,
+	listSubscriptionsPageFn,
 } from "#/server/subscriptions";
 import { listVendorsFn } from "#/server/vendors";
-import { SUBSCRIPTION_STATUS_LABELS, type Subscription } from "#/types/api";
+import {
+	INTERVAL_UNITS,
+	INTERVAL_UNIT_LABELS,
+	SUBSCRIPTION_STATUSES,
+	SUBSCRIPTION_STATUS_LABELS,
+	type IntervalUnit,
+	type Subscription,
+	type SubscriptionStatus,
+} from "#/types/api";
 
 export const Route = createFileRoute("/_protected/subscriptions")({
-	loader: async () => {
+	validateSearch: z.object({
+		...pageSearch,
+		// coerce: the router parses a typed ?q=2026 as a number, which should still be a search
+		q: z.coerce.string().max(100).optional().catch(undefined),
+		status: z.enum(SUBSCRIPTION_STATUSES).optional().catch(undefined),
+		interval_unit: z.enum(INTERVAL_UNITS).optional().catch(undefined),
+	}),
+	loaderDeps: ({ search }) => search,
+	loader: async ({ deps }) => {
 		const [subscriptions, summary, vendors, currencies] = await Promise.all([
-			listSubscriptionsFn(),
+			listSubscriptionsPageFn({ data: deps }),
 			getSubscriptionSummaryFn(),
-			listVendorsFn(),
+			listVendorsFn(), // every vendor, for the form's picker
 			listCurrenciesFn(),
 		]);
 		return {
-			subscriptions: unwrap(subscriptions),
+			...unwrap(subscriptions),
 			summary: unwrap(summary),
 			vendors: unwrap(vendors),
 			currencies,
@@ -71,11 +92,76 @@ function DueChip({ sub }: { sub: Subscription }) {
 
 const statusColor = { active: "success", paused: "warning", cancelled: "default" } as const;
 
+/** Pieces shared by the desktop row and the mobile card. */
+function SubCost({ s, baseCurrency }: { s: Subscription; baseCurrency: string }) {
+	return (
+		<>
+			<Typography variant="body2">
+				{formatMoney(s.amount, s.currency)}{" "}
+				<Typography component="span" variant="caption" sx={{ color: "text.secondary" }}>
+					{formatInterval(s.interval_unit, s.interval_count)}
+				</Typography>
+			</Typography>
+			{s.currency !== baseCurrency && (
+				<Typography variant="caption" sx={{ color: "text.secondary", display: "block" }}>
+					≈ {formatMoney(s.base_amount, baseCurrency)} @ {Number(s.exchange_rate)}
+				</Typography>
+			)}
+		</>
+	);
+}
+
+function SubNextDue({ s }: { s: Subscription }) {
+	if (!s.next_due_date) return dash;
+	return (
+		<Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+			<Typography variant="body2">{formatDate(s.next_due_date)}</Typography>
+			<DueChip sub={s} />
+		</Stack>
+	);
+}
+
+function StatusChip({ s }: { s: Subscription }) {
+	return (
+		<Chip size="small" color={statusColor[s.status]} label={SUBSCRIPTION_STATUS_LABELS[s.status]} />
+	);
+}
+
+function SubActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
+	return (
+		<>
+			<Tooltip title="Edit">
+				<IconButton aria-label="Edit" size="small" onClick={onEdit}>
+					<EditOutlinedIcon fontSize="small" />
+				</IconButton>
+			</Tooltip>
+			<Tooltip title="Delete">
+				<IconButton aria-label="Delete" size="small" onClick={onDelete}>
+					<DeleteOutlineIcon fontSize="small" />
+				</IconButton>
+			</Tooltip>
+		</>
+	);
+}
+
 function SubscriptionsPage() {
-	const { subscriptions, summary, vendors, currencies } = Route.useLoaderData();
+	const { items, total, summary, vendors, currencies } = Route.useLoaderData();
 	const { user } = Route.useRouteContext();
 	const [editing, setEditing] = useState<Subscription | "new" | null>(null);
 	const [deleting, setDeleting] = useState<Subscription | null>(null);
+	const search = Route.useSearch();
+	const navigate = Route.useNavigate();
+
+	const filtered = Boolean(search.q || search.status || search.interval_unit);
+
+	const setPage = (page: number) => navigate({ search: (p) => ({ ...p, page }), replace: true });
+	useClampPage({
+		page: search.page,
+		pageSize: search.pageSize,
+		total,
+		itemCount: items.length,
+		setPage,
+	});
 
 	return (
 		<>
@@ -117,100 +203,169 @@ function SubscriptionsPage() {
 			</Grid>
 
 			<TableCard>
-				<Stack
-					direction="row"
-					sx={{ alignItems: "center", justifyContent: "space-between", px: 2, py: 1 }}
-				>
-					<Typography variant="body2" sx={{ color: "text.secondary" }}>
-						{subscriptions.length} {subscriptions.length === 1 ? "subscription" : "subscriptions"}
-					</Typography>
-					<RefreshButton />
-				</Stack>
-
-				{subscriptions.length === 0 ? (
-					<Typography sx={{ textAlign: "center", py: 8, px: 2, color: "text.secondary" }}>
-						No subscriptions yet. Add one, or use "Make subscription" on a transaction.
-					</Typography>
-				) : (
-					<TableContainer>
-						<Table>
-							<TableHead>
-								<TableRow>
-									<TableCell>Name</TableCell>
-									<TableCell>Cost</TableCell>
-									<TableCell>Next due</TableCell>
-									<TableCell>Status</TableCell>
-									<TableCell align="right">Per month</TableCell>
-									<TableCell align="right" sx={{ width: 100 }} />
-								</TableRow>
-							</TableHead>
-							<TableBody>
-								{subscriptions.map((s) => (
-									<TableRow key={s.id} hover>
-										<TableCell>
-											<Typography variant="body2" sx={{ fontWeight: 500 }}>
-												{s.name}
-											</Typography>
-											<Typography variant="caption" sx={{ color: "text.secondary" }}>
-												{[s.vendor?.name, s.category].filter(Boolean).join(" · ")}
-											</Typography>
-										</TableCell>
-										<TableCell sx={{ whiteSpace: "nowrap" }}>
-											<Typography variant="body2">
-												{formatMoney(s.amount, s.currency)}{" "}
-												<Typography
-													component="span"
-													variant="caption"
-													sx={{ color: "text.secondary" }}
-												>
-													{formatInterval(s.interval_unit, s.interval_count)}
-												</Typography>
-											</Typography>
-											{s.currency !== user.base_currency && (
-												<Typography variant="caption" sx={{ color: "text.secondary" }}>
-													≈ {formatMoney(s.base_amount, user.base_currency)} @{" "}
-													{Number(s.exchange_rate)}
-												</Typography>
-											)}
-										</TableCell>
-										<TableCell sx={{ whiteSpace: "nowrap" }}>
-											{s.next_due_date ? (
-												<Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-													<Typography variant="body2">{formatDate(s.next_due_date)}</Typography>
-													<DueChip sub={s} />
-												</Stack>
-											) : (
-												dash
-											)}
-										</TableCell>
-										<TableCell>
-											<Chip
-												size="small"
-												color={statusColor[s.status]}
-												label={SUBSCRIPTION_STATUS_LABELS[s.status]}
-											/>
-										</TableCell>
-										<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-											{formatMoney(s.monthly_base_cost, user.base_currency)}
-										</TableCell>
-										<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-											<Tooltip title="Edit">
-												<IconButton aria-label="Edit" size="small" onClick={() => setEditing(s)}>
-													<EditOutlinedIcon fontSize="small" />
-												</IconButton>
-											</Tooltip>
-											<Tooltip title="Delete">
-												<IconButton aria-label="Delete" size="small" onClick={() => setDeleting(s)}>
-													<DeleteOutlineIcon fontSize="small" />
-												</IconButton>
-											</Tooltip>
-										</TableCell>
-									</TableRow>
+				<TableToolbar
+					summary={`${total} ${total === 1 ? "subscription" : "subscriptions"}`}
+					filters={
+						<>
+							<SearchField
+								value={search.q ?? ""}
+								placeholder="Search name, vendor, category"
+								onChange={(q) =>
+									navigate({ search: (p) => ({ ...p, page: 1, q: q || undefined }) })
+								}
+							/>
+							<TextField
+								select
+								size="small"
+								label="Status"
+								value={search.status ?? ""}
+								onChange={(e) =>
+									navigate({
+										search: (p) => ({
+											...p,
+											page: 1,
+											status: (e.target.value || undefined) as SubscriptionStatus | undefined,
+										}),
+									})
+								}
+								sx={{ minWidth: { sm: 140 } }}
+							>
+								<MenuItem value="">All statuses</MenuItem>
+								{SUBSCRIPTION_STATUSES.map((st) => (
+									<MenuItem key={st} value={st}>
+										{SUBSCRIPTION_STATUS_LABELS[st]}
+									</MenuItem>
 								))}
-							</TableBody>
-						</Table>
-					</TableContainer>
+							</TextField>
+							<TextField
+								select
+								size="small"
+								label="Billing"
+								value={search.interval_unit ?? ""}
+								onChange={(e) =>
+									navigate({
+										search: (p) => ({
+											...p,
+											page: 1,
+											interval_unit: (e.target.value || undefined) as IntervalUnit | undefined,
+										}),
+									})
+								}
+								sx={{ minWidth: { sm: 140 } }}
+							>
+								<MenuItem value="">Any period</MenuItem>
+								{INTERVAL_UNITS.map((u) => (
+									<MenuItem key={u} value={u}>
+										{INTERVAL_UNIT_LABELS[u]}
+									</MenuItem>
+								))}
+							</TextField>
+							{filtered && (
+								<Button
+									color="inherit"
+									onClick={() => navigate({ search: (p) => ({ page: 1, pageSize: p.pageSize }) })}
+								>
+									Clear filters
+								</Button>
+							)}
+						</>
+					}
+				/>
+
+				{items.length === 0 ? (
+					<EmptyState firstRun={!filtered}>
+						{filtered
+							? "No subscriptions match these filters."
+							: 'No subscriptions yet. Add one, or use "Make subscription" on a transaction.'}
+					</EmptyState>
+				) : (
+					<ResponsiveTable
+						rows={items}
+						getKey={(s) => s.id}
+						minWidth={860}
+						head={
+							<TableRow>
+								<TableCell>Name</TableCell>
+								<TableCell>Cost</TableCell>
+								<TableCell>Next due</TableCell>
+								<TableCell>Status</TableCell>
+								<TableCell align="right">Per month</TableCell>
+								<TableCell align="right" sx={{ width: 100 }} />
+							</TableRow>
+						}
+						renderRow={(s) => (
+							<TableRow hover>
+								<TableCell>
+									<Typography variant="body2" sx={{ fontWeight: 500 }}>
+										{s.name}
+									</Typography>
+									<Typography variant="caption" sx={{ color: "text.secondary" }}>
+										{[s.vendor?.name, s.category].filter(Boolean).join(" · ")}
+									</Typography>
+								</TableCell>
+								<TableCell sx={{ whiteSpace: "nowrap" }}>
+									<SubCost s={s} baseCurrency={user.base_currency} />
+								</TableCell>
+								<TableCell sx={{ whiteSpace: "nowrap" }}>
+									<SubNextDue s={s} />
+								</TableCell>
+								<TableCell>
+									<StatusChip s={s} />
+								</TableCell>
+								<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+									{formatMoney(s.monthly_base_cost, user.base_currency)}
+								</TableCell>
+								<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+									<SubActions onEdit={() => setEditing(s)} onDelete={() => setDeleting(s)} />
+								</TableCell>
+							</TableRow>
+						)}
+						renderCard={(s) => (
+							<MobileCard
+								primary={
+									<Typography variant="body2" sx={{ fontWeight: 500 }}>
+										{s.name}
+									</Typography>
+								}
+								secondary={
+									<Typography variant="caption" sx={{ color: "text.secondary" }}>
+										{[s.vendor?.name, s.category].filter(Boolean).join(" · ")}
+									</Typography>
+								}
+								end={<SubCost s={s} baseCurrency={user.base_currency} />}
+								meta={
+									<>
+										<StatusChip s={s} />
+										{s.next_due_date && (
+											<>
+												<Typography variant="caption" sx={{ color: "text.secondary" }}>
+													Next {formatDate(s.next_due_date)}
+												</Typography>
+												<DueChip sub={s} />
+											</>
+										)}
+										<Typography variant="caption" sx={{ color: "text.secondary" }}>
+											{formatMoney(s.monthly_base_cost, user.base_currency)} / month
+										</Typography>
+									</>
+								}
+								actions={
+									<SubActions onEdit={() => setEditing(s)} onDelete={() => setDeleting(s)} />
+								}
+							/>
+						)}
+					/>
 				)}
+
+				<TablePager
+					total={total}
+					page={search.page}
+					pageSize={search.pageSize}
+					onPageChange={setPage}
+					onPageSizeChange={(pageSize) =>
+						navigate({ search: (p) => ({ ...p, page: 1, pageSize }) })
+					}
+				/>
 			</TableCard>
 
 			{editing && (

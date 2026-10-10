@@ -49,14 +49,14 @@ export default function CurrencyChips({
 					disabled={disabled}
 					onChange={(_, code: string | null) => code && onChange(code)}
 					aria-label={label}
-					sx={{ flexWrap: "wrap", gap: 1, "& .MuiToggleButtonGroup-grouped": { borderRadius: 2 } }}
+					sx={{ flexWrap: "wrap", gap: 1, "& .MuiToggleButtonGroup-grouped": { borderRadius: 1 } }}
 				>
 					{chips.map((code) => (
 						<ToggleButton
 							key={code}
 							value={code}
 							color="primary"
-							sx={{ px: 1.5, border: 1, borderColor: "divider", borderRadius: 2 }}
+							sx={{ px: 1.5, border: 1, borderColor: "divider", borderRadius: 1 }}
 						>
 							{code}
 						</ToggleButton>
@@ -69,7 +69,7 @@ export default function CurrencyChips({
 						selected={adding}
 						onChange={() => setAdding((a) => !a)}
 						aria-label="Add another currency"
-						sx={{ border: 1, borderColor: "divider", borderRadius: 2 }}
+						sx={{ border: 1, borderColor: "divider", borderRadius: 1 }}
 					>
 						<AddIcon fontSize="small" />
 					</ToggleButton>
