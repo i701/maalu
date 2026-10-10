@@ -2,6 +2,7 @@ import robotoCss from "@fontsource-variable/roboto/index.css?url";
 import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import Providers from "#/components/Providers";
+import ReactScan from "#/components/ReactScan";
 
 export const Route = createRootRoute({
 	head: () => ({
@@ -23,6 +24,7 @@ export const Route = createRootRoute({
 				<Providers>
 					<Outlet />
 				</Providers>
+				<ReactScan />
 				<Scripts />
 			</body>
 		</html>
