@@ -3,7 +3,7 @@ import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
-import { Fragment, type ReactNode } from "react";
+import { Fragment, type ReactNode, useCallback, useState } from "react";
 
 /**
  * A table with two presentations, chosen by the width of the table's own container (not the
@@ -12,6 +12,10 @@ import { Fragment, type ReactNode } from "react";
  *  - narrow: a list of cards (see MobileCard), so nobody has to scroll horizontally
  *
  * USE THIS FOR EVERY NEW TABLE: always provide both `renderRow` and `renderCard`.
+ *
+ * Before the width is measured (server render, first paint) both views are rendered and CSS picks
+ * one, so nothing flashes. Once measured only the visible view is rendered, which halves the work
+ * every time the rows change.
  *
  * `minWidth` is the container width (px) at which the desktop table fits comfortably; set it a
  * little above the table's natural width.
@@ -35,28 +39,46 @@ export default function ResponsiveTable<T>({
 	minWidth?: number;
 }) {
 	const wide = `@container (min-width: ${minWidth}px)`;
+	// null until measured: render both views and let the container query decide.
+	const [isWide, setIsWide] = useState<boolean | null>(null);
+
+	const measure = useCallback(
+		(el: HTMLDivElement | null) => {
+			if (!el) return;
+			const observer = new ResizeObserver(([entry]) => {
+				if (entry) setIsWide(entry.contentRect.width >= minWidth);
+			});
+			observer.observe(el);
+			return () => observer.disconnect();
+		},
+		[minWidth],
+	);
 
 	return (
-		<Box sx={{ containerType: "inline-size" }}>
-			<Box sx={{ display: "none", [wide]: { display: "block" } }}>
-				<TableContainer>
-					<Table>
-						<TableHead>{head}</TableHead>
-						<TableBody>
-							{rows.map((row) => (
-								<Fragment key={getKey(row)}>{renderRow(row)}</Fragment>
-							))}
-						</TableBody>
-					</Table>
-				</TableContainer>
-			</Box>
-			<Box sx={{ display: "block", [wide]: { display: "none" } }}>
-				{rows.map((row, i) => (
-					<Box key={getKey(row)} sx={{ borderTop: i === 0 ? 0 : 1, borderColor: "divider" }}>
-						{renderCard(row)}
-					</Box>
-				))}
-			</Box>
+		<Box ref={measure} sx={{ containerType: "inline-size" }}>
+			{isWide !== false && (
+				<Box sx={{ display: "none", [wide]: { display: "block" } }}>
+					<TableContainer>
+						<Table>
+							<TableHead>{head}</TableHead>
+							<TableBody>
+								{rows.map((row) => (
+									<Fragment key={getKey(row)}>{renderRow(row)}</Fragment>
+								))}
+							</TableBody>
+						</Table>
+					</TableContainer>
+				</Box>
+			)}
+			{isWide !== true && (
+				<Box sx={{ display: "block", [wide]: { display: "none" } }}>
+					{rows.map((row, i) => (
+						<Box key={getKey(row)} sx={{ borderTop: i === 0 ? 0 : 1, borderColor: "divider" }}>
+							{renderCard(row)}
+						</Box>
+					))}
+				</Box>
+			)}
 		</Box>
 	);
 }
