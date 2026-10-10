@@ -18,6 +18,7 @@ import Typography from "@mui/material/Typography";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
+import ActiveFilters, { type ActiveFilter } from "#/components/ActiveFilters";
 import ConfirmDelete from "#/components/ConfirmDelete";
 import MobileCard from "#/components/MobileCard";
 import EmptyState from "#/components/EmptyState";
@@ -50,6 +51,7 @@ import {
 	PAYMENT_METHODS,
 	PAYMENT_METHOD_LABELS,
 	TRANSACTION_TYPES,
+	TRANSACTION_TYPE_LABELS,
 	type Transaction,
 } from "#/types/api";
 
@@ -288,6 +290,64 @@ function TransactionsPage() {
 		(search.min_amount || search.max_amount ? 1 : 0) +
 		(search.date_from || search.date_to ? 1 : 0);
 
+	const patch = (p: Partial<typeof filterValues>) =>
+		navigate({ search: (prev) => ({ ...prev, page: 1, ...p }) });
+	const clearAll = () => navigate({ search: (p) => ({ page: 1, pageSize: p.pageSize, q: p.q }) });
+
+	const activeFilters: ActiveFilter[] = [];
+	if (search.type)
+		activeFilters.push({
+			key: "type",
+			tone: "primary",
+			label: `Type: ${TRANSACTION_TYPE_LABELS[search.type]}`,
+			onDelete: () => patch({ type: undefined }),
+		});
+	if (search.date_from || search.date_to)
+		activeFilters.push({
+			key: "date",
+			tone: "info",
+			label:
+				search.date_from && search.date_to
+					? `Date: ${formatDate(search.date_from)} – ${formatDate(search.date_to)}`
+					: search.date_from
+						? `Date: from ${formatDate(search.date_from)}`
+						: `Date: until ${formatDate(search.date_to!)}`,
+			onDelete: () => patch({ date_from: undefined, date_to: undefined }),
+		});
+	if (search.account_id)
+		activeFilters.push({
+			key: "account",
+			tone: "success",
+			label: `Account: ${selectedAccount?.label ?? "…"}`,
+			onDelete: () => patch({ account_id: undefined }),
+		});
+	if (search.vendor_id)
+		activeFilters.push({
+			key: "vendor",
+			tone: "warning",
+			label: `Vendor: ${selectedVendor?.label ?? "…"}`,
+			onDelete: () => patch({ vendor_id: undefined }),
+		});
+	if (search.payment_method)
+		activeFilters.push({
+			key: "method",
+			tone: "secondary",
+			label: `Method: ${PAYMENT_METHOD_LABELS[search.payment_method]}`,
+			onDelete: () => patch({ payment_method: undefined }),
+		});
+	if (search.min_amount || search.max_amount)
+		activeFilters.push({
+			key: "amount",
+			tone: "error",
+			label:
+				search.min_amount && search.max_amount
+					? `Amount: ${search.min_amount} – ${search.max_amount} ${user.base_currency}`
+					: search.min_amount
+						? `Amount: ≥ ${search.min_amount} ${user.base_currency}`
+						: `Amount: ≤ ${search.max_amount} ${user.base_currency}`,
+			onDelete: () => patch({ min_amount: undefined, max_amount: undefined }),
+		});
+
 	const filterPanel = (
 		<TransactionFilters
 			filters={filterValues}
@@ -295,8 +355,8 @@ function TransactionsPage() {
 			selectedVendor={selectedVendor}
 			baseCurrency={user.base_currency}
 			activeCount={activeCount}
-			onChange={(patch) => navigate({ search: (p) => ({ ...p, page: 1, ...patch }) })}
-			onClear={() => navigate({ search: (p) => ({ page: 1, pageSize: p.pageSize, q: p.q }) })}
+			onChange={patch}
+			onClear={clearAll}
 		/>
 	);
 
@@ -434,6 +494,13 @@ function TransactionsPage() {
 										</Button>
 									</>
 								}
+							/>
+
+							{/* Wide layouts already show the panel; narrow ones get removable chips. */}
+							<ActiveFilters
+								filters={activeFilters}
+								onClear={clearAll}
+								sx={{ [WIDE]: { display: "none" } }}
 							/>
 
 							{items.length === 0 ? (
