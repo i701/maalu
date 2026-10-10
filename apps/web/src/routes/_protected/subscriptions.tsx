@@ -13,23 +13,23 @@ import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
+import { memo, useState } from "react";
 import { z } from "zod";
 import ConfirmDelete from "#/components/ConfirmDelete";
-import MobileCard from "#/components/MobileCard";
 import EmptyState from "#/components/EmptyState";
+import MobileCard from "#/components/MobileCard";
 import PageHeader from "#/components/PageHeader";
 import PendingOverlay from "#/components/PendingOverlay";
-import TableCard from "#/components/TableCard";
 import ResponsiveTable from "#/components/ResponsiveTable";
 import SearchField from "#/components/SearchField";
 import SubscriptionForm from "#/components/SubscriptionForm";
+import TableCard from "#/components/TableCard";
 import TablePager from "#/components/TablePager";
 import TableToolbar from "#/components/TableToolbar";
 import { daysUntil, formatDate, formatInterval, formatMoney } from "#/lib/format";
 import { useLiveSearch } from "#/lib/live-search";
-import { pageSearch, useClampPage } from "#/lib/pagination";
+import { lastPageIfOutOfRange, pageSearch } from "#/lib/pagination";
 import { unwrap } from "#/lib/unwrap";
 import { listCurrenciesFn } from "#/server/currencies";
 import {
@@ -39,11 +39,11 @@ import {
 } from "#/server/subscriptions";
 import { listVendorsFn } from "#/server/vendors";
 import {
-	INTERVAL_UNITS,
 	INTERVAL_UNIT_LABELS,
-	SUBSCRIPTION_STATUSES,
-	SUBSCRIPTION_STATUS_LABELS,
+	INTERVAL_UNITS,
 	type IntervalUnit,
+	SUBSCRIPTION_STATUS_LABELS,
+	SUBSCRIPTION_STATUSES,
 	type Subscription,
 	type SubscriptionStatus,
 } from "#/types/api";
@@ -66,8 +66,17 @@ export const Route = createFileRoute("/_protected/subscriptions")({
 			listVendorsFn(), // every vendor, for the form's picker
 			listCurrenciesFn(),
 		]);
+		const rows = unwrap(subscriptions);
+		const last = lastPageIfOutOfRange({
+			page: deps.page,
+			pageSize: deps.pageSize,
+			total: rows.total,
+			itemCount: rows.items.length,
+		});
+		// e.g. the last row of the last page was deleted: land on the last page that has rows
+		if (last) throw redirect({ to: "/subscriptions", search: { ...deps, page: last } });
 		return {
-			...unwrap(subscriptions),
+			...rows,
 			summary: unwrap(summary),
 			vendors: unwrap(vendors),
 			currencies,
@@ -93,7 +102,11 @@ function DueChip({ sub }: { sub: Subscription }) {
 	return <Chip size="small" variant="outlined" label={`In ${days}d`} />;
 }
 
-const statusColor = { active: "success", paused: "warning", cancelled: "default" } as const;
+const statusColor = {
+	active: "success",
+	paused: "warning",
+	cancelled: "default",
+} as const;
 
 /** Pieces shared by the desktop row and the mobile card. */
 function SubCost({ s, baseCurrency }: { s: Subscription; baseCurrency: string }) {
@@ -143,30 +156,117 @@ function SubActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => 
 	);
 }
 
+/** The results table, memoised so it only re-renders when the loaded rows change, not on every
+ * keystroke in the filter controls. */
+const SubscriptionsTable = memo(function SubscriptionsTable({
+	items,
+	baseCurrency,
+	onEdit,
+	onDelete,
+}: {
+	items: Subscription[];
+	baseCurrency: string;
+	onEdit: (row: Subscription) => void;
+	onDelete: (row: Subscription) => void;
+}) {
+	return (
+		<ResponsiveTable
+			rows={items}
+			getKey={(s) => s.id}
+			minWidth={860}
+			head={
+				<TableRow>
+					<TableCell>Name</TableCell>
+					<TableCell>Cost</TableCell>
+					<TableCell>Next due</TableCell>
+					<TableCell>Status</TableCell>
+					<TableCell align="right">Per month</TableCell>
+					<TableCell align="right" sx={{ width: 100 }} />
+				</TableRow>
+			}
+			renderRow={(s) => (
+				<TableRow hover>
+					<TableCell>
+						<Typography variant="body2" sx={{ fontWeight: 500 }}>
+							{s.name}
+						</Typography>
+						<Typography variant="caption" sx={{ color: "text.secondary" }}>
+							{[s.vendor?.name, s.category].filter(Boolean).join(" · ")}
+						</Typography>
+					</TableCell>
+					<TableCell sx={{ whiteSpace: "nowrap" }}>
+						<SubCost s={s} baseCurrency={baseCurrency} />
+					</TableCell>
+					<TableCell sx={{ whiteSpace: "nowrap" }}>
+						<SubNextDue s={s} />
+					</TableCell>
+					<TableCell>
+						<StatusChip s={s} />
+					</TableCell>
+					<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+						{formatMoney(s.monthly_base_cost, baseCurrency)}
+					</TableCell>
+					<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+						<SubActions onEdit={() => onEdit(s)} onDelete={() => onDelete(s)} />
+					</TableCell>
+				</TableRow>
+			)}
+			renderCard={(s) => (
+				<MobileCard
+					primary={
+						<Typography variant="body2" sx={{ fontWeight: 500 }}>
+							{s.name}
+						</Typography>
+					}
+					secondary={
+						<Typography variant="caption" sx={{ color: "text.secondary" }}>
+							{[s.vendor?.name, s.category].filter(Boolean).join(" · ")}
+						</Typography>
+					}
+					end={<SubCost s={s} baseCurrency={baseCurrency} />}
+					meta={
+						<>
+							<StatusChip s={s} />
+							{s.next_due_date && (
+								<>
+									<Typography variant="caption" sx={{ color: "text.secondary" }}>
+										Next {formatDate(s.next_due_date)}
+									</Typography>
+									<DueChip sub={s} />
+								</>
+							)}
+							<Typography variant="caption" sx={{ color: "text.secondary" }}>
+								{formatMoney(s.monthly_base_cost, baseCurrency)} / month
+							</Typography>
+						</>
+					}
+					actions={<SubActions onEdit={() => onEdit(s)} onDelete={() => onDelete(s)} />}
+				/>
+			)}
+		/>
+	);
+});
+
 function SubscriptionsPage() {
 	const { items, total, summary, vendors, currencies } = Route.useLoaderData();
 	const { user } = Route.useRouteContext();
 	const [editing, setEditing] = useState<Subscription | "new" | null>(null);
 	const [deleting, setDeleting] = useState<Subscription | null>(null);
-	const committed = Route.useSearch(); // matches the rows on screen
-	const search = useLiveSearch(searchSchema); // matches the controls: updates instantly
+	// The URL as soon as it changes (the loader data lags behind it), so controls feel instant.
+	const search = useLiveSearch(searchSchema);
 	const navigate = Route.useNavigate();
 	const router = useRouter();
 	const prefetchPage = (page: number) => {
 		if (page >= 1 && page <= Math.ceil(total / search.pageSize))
-			void router.preloadRoute({ to: Route.fullPath, search: (p) => ({ ...p, page }) });
+			void router.preloadRoute({
+				to: Route.fullPath,
+				search: (p) => ({ ...p, page }),
+			});
 	};
 
 	const filtered = Boolean(search.q || search.status || search.interval_unit);
 
 	const setPage = (page: number) => navigate({ search: (p) => ({ ...p, page }), replace: true });
-	useClampPage({
-		page: committed.page,
-		pageSize: committed.pageSize,
-		total,
-		itemCount: items.length,
-		setPage,
-	});
 
 	return (
 		<>
@@ -217,7 +317,9 @@ function SubscriptionsPage() {
 									value={search.q ?? ""}
 									placeholder="Search name, vendor, category"
 									onChange={(q) =>
-										navigate({ search: (p) => ({ ...p, page: 1, q: q || undefined }) })
+										navigate({
+											search: (p) => ({ ...p, page: 1, q: q || undefined }),
+										})
 									}
 								/>
 								<TextField
@@ -269,7 +371,11 @@ function SubscriptionsPage() {
 								{filtered && (
 									<Button
 										color="inherit"
-										onClick={() => navigate({ search: (p) => ({ page: 1, pageSize: p.pageSize }) })}
+										onClick={() =>
+											navigate({
+												search: (p) => ({ page: 1, pageSize: p.pageSize }),
+											})
+										}
 									>
 										Clear filters
 									</Button>
@@ -285,81 +391,11 @@ function SubscriptionsPage() {
 								: 'No subscriptions yet. Add one, or use "Make subscription" on a transaction.'}
 						</EmptyState>
 					) : (
-						<ResponsiveTable
-							rows={items}
-							getKey={(s) => s.id}
-							minWidth={860}
-							head={
-								<TableRow>
-									<TableCell>Name</TableCell>
-									<TableCell>Cost</TableCell>
-									<TableCell>Next due</TableCell>
-									<TableCell>Status</TableCell>
-									<TableCell align="right">Per month</TableCell>
-									<TableCell align="right" sx={{ width: 100 }} />
-								</TableRow>
-							}
-							renderRow={(s) => (
-								<TableRow hover>
-									<TableCell>
-										<Typography variant="body2" sx={{ fontWeight: 500 }}>
-											{s.name}
-										</Typography>
-										<Typography variant="caption" sx={{ color: "text.secondary" }}>
-											{[s.vendor?.name, s.category].filter(Boolean).join(" · ")}
-										</Typography>
-									</TableCell>
-									<TableCell sx={{ whiteSpace: "nowrap" }}>
-										<SubCost s={s} baseCurrency={user.base_currency} />
-									</TableCell>
-									<TableCell sx={{ whiteSpace: "nowrap" }}>
-										<SubNextDue s={s} />
-									</TableCell>
-									<TableCell>
-										<StatusChip s={s} />
-									</TableCell>
-									<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-										{formatMoney(s.monthly_base_cost, user.base_currency)}
-									</TableCell>
-									<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-										<SubActions onEdit={() => setEditing(s)} onDelete={() => setDeleting(s)} />
-									</TableCell>
-								</TableRow>
-							)}
-							renderCard={(s) => (
-								<MobileCard
-									primary={
-										<Typography variant="body2" sx={{ fontWeight: 500 }}>
-											{s.name}
-										</Typography>
-									}
-									secondary={
-										<Typography variant="caption" sx={{ color: "text.secondary" }}>
-											{[s.vendor?.name, s.category].filter(Boolean).join(" · ")}
-										</Typography>
-									}
-									end={<SubCost s={s} baseCurrency={user.base_currency} />}
-									meta={
-										<>
-											<StatusChip s={s} />
-											{s.next_due_date && (
-												<>
-													<Typography variant="caption" sx={{ color: "text.secondary" }}>
-														Next {formatDate(s.next_due_date)}
-													</Typography>
-													<DueChip sub={s} />
-												</>
-											)}
-											<Typography variant="caption" sx={{ color: "text.secondary" }}>
-												{formatMoney(s.monthly_base_cost, user.base_currency)} / month
-											</Typography>
-										</>
-									}
-									actions={
-										<SubActions onEdit={() => setEditing(s)} onDelete={() => setDeleting(s)} />
-									}
-								/>
-							)}
+						<SubscriptionsTable
+							items={items}
+							baseCurrency={user.base_currency}
+							onEdit={setEditing}
+							onDelete={setDeleting}
 						/>
 					)}
 

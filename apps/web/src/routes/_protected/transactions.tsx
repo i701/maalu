@@ -3,55 +3,59 @@ import AutorenewIcon from "@mui/icons-material/Autorenew";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
-import Grid from "@mui/material/Grid";
-import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
 import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { memo, useState } from "react";
 import { z } from "zod";
-import ActiveFilters, { type ActiveFilter } from "#/components/ActiveFilters";
+import ActiveFilters from "#/components/ActiveFilters";
 import ConfirmDelete from "#/components/ConfirmDelete";
-import MobileCard from "#/components/MobileCard";
 import EmptyState from "#/components/EmptyState";
 import ExportButton from "#/components/ExportButton";
 import FiltersDrawer from "#/components/FiltersDrawer";
 import MakeSubscriptionDialog from "#/components/MakeSubscriptionDialog";
+import MobileCard from "#/components/MobileCard";
 import PageHeader from "#/components/PageHeader";
 import PendingOverlay from "#/components/PendingOverlay";
-import Reveal from "#/components/Reveal";
-import TableCard from "#/components/TableCard";
 import ResponsiveTable from "#/components/ResponsiveTable";
 import SearchField from "#/components/SearchField";
+import TableCard from "#/components/TableCard";
 import TablePager from "#/components/TablePager";
 import TableToolbar from "#/components/TableToolbar";
 import TransactionFilters from "#/components/TransactionFilters";
 import TransactionForm from "#/components/TransactionForm";
+import TransactionTotals from "#/components/TransactionTotals";
 import { formatDate, formatMoney } from "#/lib/format";
 import { useLiveSearch } from "#/lib/live-search";
-import { useLastDefined } from "#/lib/motion";
-import { pageSearch, useClampPage } from "#/lib/pagination";
+import { lastPageIfOutOfRange, pageSearch } from "#/lib/pagination";
+import {
+	buildActiveFilters,
+	countActiveFilters,
+	hasAnyFilter,
+	pickFilterValues,
+	type TransactionFilterValues,
+} from "#/lib/transaction-filters";
 import { unwrap } from "#/lib/unwrap";
+import { getAccountFn, listAccountsFn } from "#/server/accounts";
+import { listCurrenciesFn } from "#/server/currencies";
+import { listSubscriptionsFn } from "#/server/subscriptions";
 import {
 	deleteTransactionFn,
 	getTransactionTotalsFn,
 	listTransactionsFn,
 } from "#/server/transactions";
-import { getAccountFn, listAccountsFn } from "#/server/accounts";
-import { listCurrenciesFn } from "#/server/currencies";
-import { listSubscriptionsFn } from "#/server/subscriptions";
 import { getVendorFn, listVendorsFn } from "#/server/vendors";
 import {
 	ACCOUNT_GROUP_LABELS,
-	PAYMENT_METHODS,
 	PAYMENT_METHOD_LABELS,
+	PAYMENT_METHODS,
 	TRANSACTION_TYPES,
-	TRANSACTION_TYPE_LABELS,
 	type Transaction,
 } from "#/types/api";
 
@@ -119,8 +123,17 @@ export const Route = createFileRoute("/_protected/transactions")({
 				deps.vendor_id ? getVendorFn({ data: { id: deps.vendor_id } }) : Promise.resolve(null),
 				deps.account_id ? getAccountFn({ data: { id: deps.account_id } }) : Promise.resolve(null),
 			]);
+		const rows = unwrap(transactions);
+		const last = lastPageIfOutOfRange({
+			page: deps.page,
+			pageSize: deps.pageSize,
+			total: rows.total,
+			itemCount: rows.items.length,
+		});
+		// e.g. the last row of the last page was deleted: land on the last page that has rows
+		if (last) throw redirect({ to: "/transactions", search: { ...deps, page: last } });
 		return {
-			...unwrap(transactions),
+			...rows,
 			totals: totals ? unwrap(totals) : null,
 			vendors: unwrap(vendors),
 			subscriptions: unwrap(subscriptions),
@@ -355,115 +368,38 @@ function TransactionsPage() {
 		selectedAccount,
 	} = Route.useLoaderData();
 	const { user } = Route.useRouteContext();
-	const committed = Route.useSearch(); // matches the rows on screen
-	const search = useLiveSearch(searchSchema); // matches the controls: updates instantly
+	// The URL as soon as it changes (the loader data lags behind it), so controls feel instant.
+	const search = useLiveSearch(searchSchema);
 	const navigate = Route.useNavigate();
 	const router = useRouter();
 	const prefetchPage = (page: number) => {
 		if (page >= 1 && page <= Math.ceil(total / search.pageSize))
-			void router.preloadRoute({ to: Route.fullPath, search: (p) => ({ ...p, page }) });
+			void router.preloadRoute({
+				to: Route.fullPath,
+				search: (p) => ({ ...p, page }),
+			});
 	};
 	const [editing, setEditing] = useState<Transaction | "new" | null>(null);
 	const [deleting, setDeleting] = useState<Transaction | null>(null);
 	const [converting, setConverting] = useState<Transaction | null>(null);
 
-	const shownTotals = useLastDefined(totals); // keeps content while the cards close
-
 	const setPage = (page: number) => navigate({ search: (p) => ({ ...p, page }), replace: true });
-	useClampPage({
-		page: committed.page,
-		pageSize: committed.pageSize,
-		total,
-		itemCount: items.length,
-		setPage,
-	});
 
-	const filtered = Boolean(
-		search.q ||
-		search.type ||
-		search.payment_method ||
-		search.vendor_id ||
-		search.account_id ||
-		search.min_amount ||
-		search.max_amount ||
-		search.date_from ||
-		search.date_to,
-	);
+	const filtered = hasAnyFilter(search);
+	const filterValues = pickFilterValues(search);
+	const activeCount = countActiveFilters(search);
 
-	const filterValues = {
-		type: search.type,
-		payment_method: search.payment_method,
-		account_id: search.account_id,
-		vendor_id: search.vendor_id,
-		min_amount: search.min_amount,
-		max_amount: search.max_amount,
-		date_from: search.date_from,
-		date_to: search.date_to,
-	};
-	// How many structured filters are on (an amount range counts once). Search is separate.
-	const activeCount =
-		[search.type, search.payment_method, search.account_id, search.vendor_id].filter(Boolean)
-			.length +
-		(search.min_amount || search.max_amount ? 1 : 0) +
-		(search.date_from || search.date_to ? 1 : 0);
-
-	const patch = (p: Partial<typeof filterValues>) =>
+	const patch = (p: Partial<TransactionFilterValues>) =>
 		navigate({ search: (prev) => ({ ...prev, page: 1, ...p }) });
 	const clearAll = () => navigate({ search: (p) => ({ page: 1, pageSize: p.pageSize, q: p.q }) });
 
-	const activeFilters: ActiveFilter[] = [];
-	if (search.type)
-		activeFilters.push({
-			key: "type",
-			tone: "primary",
-			label: `Type: ${TRANSACTION_TYPE_LABELS[search.type]}`,
-			onDelete: () => patch({ type: undefined }),
-		});
-	if (search.date_from || search.date_to)
-		activeFilters.push({
-			key: "date",
-			tone: "info",
-			label:
-				search.date_from && search.date_to
-					? `Date: ${formatDate(search.date_from)} – ${formatDate(search.date_to)}`
-					: search.date_from
-						? `Date: from ${formatDate(search.date_from)}`
-						: `Date: until ${formatDate(search.date_to!)}`,
-			onDelete: () => patch({ date_from: undefined, date_to: undefined }),
-		});
-	if (search.account_id)
-		activeFilters.push({
-			key: "account",
-			tone: "success",
-			label: `Account: ${selectedAccount?.label ?? "…"}`,
-			onDelete: () => patch({ account_id: undefined }),
-		});
-	if (search.vendor_id)
-		activeFilters.push({
-			key: "vendor",
-			tone: "warning",
-			label: `Vendor: ${selectedVendor?.label ?? "…"}`,
-			onDelete: () => patch({ vendor_id: undefined }),
-		});
-	if (search.payment_method)
-		activeFilters.push({
-			key: "method",
-			tone: "secondary",
-			label: `Method: ${PAYMENT_METHOD_LABELS[search.payment_method]}`,
-			onDelete: () => patch({ payment_method: undefined }),
-		});
-	if (search.min_amount || search.max_amount)
-		activeFilters.push({
-			key: "amount",
-			tone: "error",
-			label:
-				search.min_amount && search.max_amount
-					? `Amount: ${search.min_amount} – ${search.max_amount} ${user.base_currency}`
-					: search.min_amount
-						? `Amount: ≥ ${search.min_amount} ${user.base_currency}`
-						: `Amount: ≤ ${search.max_amount} ${user.base_currency}`,
-			onDelete: () => patch({ min_amount: undefined, max_amount: undefined }),
-		});
+	const activeFilters = buildActiveFilters({
+		filters: filterValues,
+		selectedAccount,
+		selectedVendor,
+		baseCurrency: user.base_currency,
+		patch,
+	});
 
 	const filterPanel = (
 		<TransactionFilters
@@ -495,14 +431,20 @@ function TransactionsPage() {
 						display: "grid",
 						gap: 2,
 						gridTemplateColumns: "minmax(0, 1fr)",
-						[WIDE]: { gridTemplateColumns: `${ASIDE_WIDTH}px minmax(0, 1fr)`, alignItems: "start" },
+						[WIDE]: {
+							gridTemplateColumns: `${ASIDE_WIDTH}px minmax(0, 1fr)`,
+							alignItems: "start",
+						},
 					}}
 				>
 					{/* Filter panel beside the table on wide layouts (hidden otherwise). */}
 					<Box
 						component="aside"
 						aria-label="Filters"
-						sx={{ display: "none", [WIDE]: { display: "block", position: "sticky", top: 88 } }}
+						sx={{
+							display: "none",
+							[WIDE]: { display: "block", position: "sticky", top: 88 },
+						}}
 					>
 						<Card>
 							<CardContent sx={{ p: 2.5 }}>{filterPanel}</CardContent>
@@ -510,79 +452,36 @@ function TransactionsPage() {
 					</Box>
 
 					<Box sx={{ minWidth: 0 }}>
-						{/* The cards open/close smoothly instead of popping in and shoving the table down. */}
 						<PendingOverlay>
-							<Reveal in={Boolean(totals)}>
-								{shownTotals && (
-									<Grid container spacing={2} sx={{ pb: 2 }}>
-										<Grid size={{ xs: 12, sm: 6 }}>
-											<Card>
-												<CardContent>
-													<Typography variant="body2" sx={{ color: "text.secondary" }}>
-														Income in these results
-													</Typography>
-													<Typography
-														variant="h2"
-														component="p"
-														sx={{ mt: 0.5, color: "success.main" }}
-													>
-														{formatMoney(shownTotals.income, shownTotals.currency)}
-													</Typography>
-												</CardContent>
-											</Card>
-										</Grid>
-										<Grid size={{ xs: 12, sm: 6 }}>
-											<Card>
-												<CardContent>
-													<Typography variant="body2" sx={{ color: "text.secondary" }}>
-														Expense in these results
-													</Typography>
-													<Typography
-														variant="h2"
-														component="p"
-														sx={{ mt: 0.5, color: "error.main" }}
-													>
-														{formatMoney(shownTotals.expense, shownTotals.currency)}
-													</Typography>
-												</CardContent>
-											</Card>
-										</Grid>
-									</Grid>
-								)}
-							</Reveal>
+							<TransactionTotals totals={totals} />
 
 							<TableCard>
 								<TableToolbar
 									summary={`${total} ${total === 1 ? "transaction" : "transactions"}`}
-									actions={
-										<ExportButton
-											filters={{
-												q: search.q,
-												type: search.type,
-												payment_method: search.payment_method,
-												vendor_id: search.vendor_id,
-												account_id: search.account_id,
-												min_amount: search.min_amount,
-												max_amount: search.max_amount,
-												date_from: search.date_from,
-												date_to: search.date_to,
-											}}
-										/>
-									}
+									actions={<ExportButton filters={{ q: search.q, ...filterValues }} />}
 									filters={
 										<>
 											<SearchField
 												value={search.q ?? ""}
 												placeholder="Search category, vendor, note…"
 												onChange={(q) =>
-													navigate({ search: (p) => ({ ...p, page: 1, q: q || undefined }) })
+													navigate({
+														search: (p) => ({
+															...p,
+															page: 1,
+															q: q || undefined,
+														}),
+													})
 												}
 											/>
 											{/* Only on narrow layouts: wide ones show the panel beside the table. */}
 											<FiltersDrawer
 												activeCount={activeCount}
 												total={total}
-												sx={{ display: "inline-flex", [WIDE]: { display: "none" } }}
+												sx={{
+													display: "inline-flex",
+													[WIDE]: { display: "none" },
+												}}
 											>
 												{filterPanel}
 											</FiltersDrawer>

@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { z } from "zod";
 
 export const PAGE_SIZES = [10, 20, 50];
@@ -19,25 +18,19 @@ export const pageSearch = {
 export type PageResult<T> = { items: T[]; total: number };
 
 /**
- * After deleting the last row of the last page the current page is out of range. Jump back to the
- * last page that still has rows.
+ * After deleting the last row of the last page the current page is out of range. Returns the last
+ * page that still has rows, or null when the page is fine. Call it in a route loader and redirect.
  */
-export function useClampPage({
+export function lastPageIfOutOfRange({
 	page,
 	pageSize,
 	total,
 	itemCount,
-	setPage,
 }: {
 	page: number;
 	pageSize: number;
 	total: number;
 	itemCount: number;
-	setPage: (page: number) => void;
-}) {
-	useEffect(() => {
-		if (itemCount === 0 && total > 0 && page > 1) {
-			setPage(Math.max(1, Math.ceil(total / pageSize)));
-		}
-	}, [itemCount, total, page, pageSize, setPage]);
+}): number | null {
+	return itemCount === 0 && total > 0 && page > 1 ? Math.max(1, Math.ceil(total / pageSize)) : null;
 }
