@@ -11,7 +11,6 @@ import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
 import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
-import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
@@ -208,22 +207,21 @@ function TxActions({
 	return (
 		<>
 			{t.type === "expense" && !t.subscription && (
-				<Tooltip title="Make subscription">
-					<IconButton aria-label="Make subscription" size="small" onClick={onConvert}>
-						<AutorenewIcon fontSize="small" />
-					</IconButton>
-				</Tooltip>
+				<IconButton
+					aria-label="Make subscription"
+					title="Make subscription"
+					size="small"
+					onClick={onConvert}
+				>
+					<AutorenewIcon fontSize="small" />
+				</IconButton>
 			)}
-			<Tooltip title="Edit">
-				<IconButton aria-label="Edit" size="small" onClick={onEdit}>
-					<EditOutlinedIcon fontSize="small" />
-				</IconButton>
-			</Tooltip>
-			<Tooltip title="Delete">
-				<IconButton aria-label="Delete" size="small" onClick={onDelete}>
-					<DeleteOutlineIcon fontSize="small" />
-				</IconButton>
-			</Tooltip>
+			<IconButton aria-label="Edit" title="Edit" size="small" onClick={onEdit}>
+				<EditOutlinedIcon fontSize="small" />
+			</IconButton>
+			<IconButton aria-label="Delete" title="Delete" size="small" onClick={onDelete}>
+				<DeleteOutlineIcon fontSize="small" />
+			</IconButton>
 		</>
 	);
 }

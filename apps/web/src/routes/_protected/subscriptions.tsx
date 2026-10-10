@@ -12,7 +12,6 @@ import Stack from "@mui/material/Stack";
 import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import TextField from "@mui/material/TextField";
-import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
@@ -130,16 +129,12 @@ function StatusChip({ s }: { s: Subscription }) {
 function SubActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
 	return (
 		<>
-			<Tooltip title="Edit">
-				<IconButton aria-label="Edit" size="small" onClick={onEdit}>
-					<EditOutlinedIcon fontSize="small" />
-				</IconButton>
-			</Tooltip>
-			<Tooltip title="Delete">
-				<IconButton aria-label="Delete" size="small" onClick={onDelete}>
-					<DeleteOutlineIcon fontSize="small" />
-				</IconButton>
-			</Tooltip>
+			<IconButton aria-label="Edit" title="Edit" size="small" onClick={onEdit}>
+				<EditOutlinedIcon fontSize="small" />
+			</IconButton>
+			<IconButton aria-label="Delete" title="Delete" size="small" onClick={onDelete}>
+				<DeleteOutlineIcon fontSize="small" />
+			</IconButton>
 		</>
 	);
 }
