@@ -18,6 +18,7 @@ import { Route as ProtectedProfileRouteImport } from './routes/_protected/profil
 import { Route as ProtectedSubscriptionsRouteImport } from './routes/_protected/subscriptions'
 import { Route as ProtectedTransactionsRouteImport } from './routes/_protected/transactions'
 import { Route as ProtectedVendorsRouteImport } from './routes/_protected/vendors'
+import { Route as ApiExportTransactionsRouteImport } from './routes/api.export.transactions'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -63,6 +64,11 @@ const ProtectedVendorsRoute = ProtectedVendorsRouteImport.update({
   path: '/vendors',
   getParentRoute: () => ProtectedRoute,
 } as any)
+const ApiExportTransactionsRoute = ApiExportTransactionsRouteImport.update({
+  id: '/api/export/transactions',
+  path: '/api/export/transactions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/subscriptions': typeof ProtectedSubscriptionsRoute
   '/transactions': typeof ProtectedTransactionsRoute
   '/vendors': typeof ProtectedVendorsRoute
+  '/api/export/transactions': typeof ApiExportTransactionsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/subscriptions': typeof ProtectedSubscriptionsRoute
   '/transactions': typeof ProtectedTransactionsRoute
   '/vendors': typeof ProtectedVendorsRoute
+  '/api/export/transactions': typeof ApiExportTransactionsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/_protected/subscriptions': typeof ProtectedSubscriptionsRoute
   '/_protected/transactions': typeof ProtectedTransactionsRoute
   '/_protected/vendors': typeof ProtectedVendorsRoute
+  '/api/export/transactions': typeof ApiExportTransactionsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/subscriptions'
     | '/transactions'
     | '/vendors'
+    | '/api/export/transactions'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/subscriptions'
     | '/transactions'
     | '/vendors'
+    | '/api/export/transactions'
   id:
     | '__root__'
     | '/'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/_protected/subscriptions'
     | '/_protected/transactions'
     | '/_protected/vendors'
+    | '/api/export/transactions'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -135,6 +147,7 @@ export interface RootRouteChildren {
   ProtectedRoute: typeof ProtectedRouteWithChildren
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
+  ApiExportTransactionsRoute: typeof ApiExportTransactionsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -202,6 +215,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedVendorsRouteImport
       parentRoute: typeof ProtectedRoute
     }
+    '/api/export/transactions': {
+      id: '/api/export/transactions'
+      path: '/api/export/transactions'
+      fullPath: '/api/export/transactions'
+      preLoaderRoute: typeof ApiExportTransactionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -230,6 +250,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProtectedRoute: ProtectedRouteWithChildren,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
+  ApiExportTransactionsRoute: ApiExportTransactionsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
