@@ -28,6 +28,7 @@ import { logoutFn } from "#/server/auth";
 import type { SessionUser } from "#/utils/session";
 import Brand from "./Brand";
 import ColorModeToggle from "./ColorModeToggle";
+import NavigationProgress from "./NavigationProgress";
 import { NavLink } from "./RouterLinks";
 
 const DRAWER_WIDTH = 272;
@@ -188,6 +189,7 @@ export default function AppShell({ user, children }: { user: SessionUser; childr
 
 	return (
 		<Box sx={{ display: "flex", minHeight: "100vh" }}>
+			<NavigationProgress />
 			<AppBar
 				position="fixed"
 				sx={{

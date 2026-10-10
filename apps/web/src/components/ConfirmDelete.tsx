@@ -5,9 +5,11 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
+import { useLastDefined } from "#/lib/motion";
 import { useAction } from "#/lib/use-action";
 import type { ApiResult } from "#/types/api";
 import { useNotify } from "./Notify";
+import Reveal from "./Reveal";
 
 export default function ConfirmDelete({
 	title,
@@ -22,17 +24,18 @@ export default function ConfirmDelete({
 }) {
 	const { run, pending, error } = useAction();
 	const notify = useNotify();
+	const shownError = useLastDefined(error); // keeps the text while the alert closes
 
 	return (
 		<Dialog open onClose={onClose} maxWidth="xs" aria-labelledby="confirm-title">
 			<DialogTitle id="confirm-title">{title}</DialogTitle>
 			<DialogContent>
 				<DialogContentText>{message}</DialogContentText>
-				{error && (
+				<Reveal in={Boolean(error)}>
 					<Alert severity="error" sx={{ mt: 2 }}>
-						{error}
+						{shownError}
 					</Alert>
-				)}
+				</Reveal>
 			</DialogContent>
 			<DialogActions sx={{ px: 3, pb: 2 }}>
 				<Button onClick={onClose} color="inherit">

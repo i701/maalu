@@ -1,12 +1,15 @@
+import { keyframes } from "@emotion/react";
 import Alert from "@mui/material/Alert";
 import Autocomplete from "@mui/material/Autocomplete";
+import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
-import { useState } from "react";
+import { Fragment, type ComponentProps, useState } from "react";
 import { SUGGESTED_PAYMENT_METHOD } from "#/lib/accounts";
+import { EASE_OUT, useLastDefined } from "#/lib/motion";
 import { useAction } from "#/lib/use-action";
 import { createTransactionFn, updateTransactionFn } from "#/server/transactions";
 import {
@@ -25,7 +28,64 @@ import {
 import CurrencyField from "./CurrencyField";
 import FormDialog from "./FormDialog";
 import { useNotify } from "./Notify";
+import Reveal from "./Reveal";
 import VendorField from "./VendorField";
+
+type CellSize = ComponentProps<typeof Grid>["size"];
+
+const cellIn = keyframes`from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; }`;
+const cellFade = keyframes`from { opacity: 0; } to { opacity: 1; }`;
+
+/**
+ * A form cell. Row spacing is padding inside the cell (the grid only spaces columns), so a cell
+ * wrapped in <RevealCell> takes no space at all while hidden. `fadeIn` plays a short entrance when
+ * the cell mounts, used when switching transaction type swaps the whole set of fields.
+ */
+function Cell({
+	size,
+	fadeIn = false,
+	children,
+}: {
+	size: CellSize;
+	fadeIn?: boolean;
+	children: React.ReactNode;
+}) {
+	return (
+		<Grid
+			size={size}
+			sx={{
+				pb: 2,
+				...(fadeIn && {
+					animation: `${cellIn} 160ms ${EASE_OUT} both`,
+					"@media (prefers-reduced-motion: reduce)": {
+						animation: `${cellFade} 120ms ${EASE_OUT} both`,
+					},
+				}),
+			}}
+		>
+			{children}
+		</Grid>
+	);
+}
+
+/** A cell that opens and closes smoothly instead of popping in and shoving the form around. */
+function RevealCell({
+	size,
+	show,
+	children,
+}: {
+	size: CellSize;
+	show: boolean;
+	children: React.ReactNode;
+}) {
+	return (
+		<Grid size={size}>
+			<Reveal in={show}>
+				<Box sx={{ pb: 2 }}>{children}</Box>
+			</Reveal>
+		</Grid>
+	);
+}
 
 const today = () => {
 	const d = new Date();
@@ -82,6 +142,8 @@ export default function TransactionForm({
 		.filter((s) => s.status !== "cancelled" || s.id === transaction?.subscription?.id)
 		.map((s) => ({ id: s.id, name: s.name }));
 
+	const [switched, setSwitched] = useState(false); // true once the user has changed the type
+	const shownTo = useLastDefined(toAccount); // keeps its currency while the field closes
 	const effectiveCurrency = account ? account.currency : currency;
 	const foreign =
 		effectiveCurrency.length === 3 && effectiveCurrency.toUpperCase() !== baseCurrency;
@@ -96,6 +158,7 @@ export default function TransactionForm({
 
 	function changeType(next: TransactionType) {
 		setType(next);
+		setSwitched(true);
 		if (next !== "expense") setSubscription(null);
 		setLocalError(null);
 	}
@@ -206,8 +269,8 @@ export default function TransactionForm({
 			onSubmit={submit}
 			onClose={onClose}
 		>
-			<Grid container spacing={2}>
-				<Grid size={12}>
+			<Grid container columnSpacing={2}>
+				<Cell size={12}>
 					<ToggleButtonGroup
 						exclusive
 						fullWidth
@@ -222,11 +285,11 @@ export default function TransactionForm({
 							</ToggleButton>
 						))}
 					</ToggleButtonGroup>
-				</Grid>
+				</Cell>
 
 				{isTransfer ? (
-					<>
-						<Grid size={{ xs: 12, sm: 6 }}>
+					<Fragment key="transfer">
+						<Cell size={{ xs: 12, sm: 6 }} fadeIn={switched}>
 							<TextField
 								select
 								label="From"
@@ -236,8 +299,8 @@ export default function TransactionForm({
 							>
 								{accountOptions(toAccountId)}
 							</TextField>
-						</Grid>
-						<Grid size={{ xs: 12, sm: 6 }}>
+						</Cell>
+						<Cell size={{ xs: 12, sm: 6 }} fadeIn={switched}>
 							<TextField
 								select
 								label="To"
@@ -247,15 +310,13 @@ export default function TransactionForm({
 							>
 								{accountOptions(accountId)}
 							</TextField>
-						</Grid>
-						{accounts.length < 2 && (
-							<Grid size={12}>
-								<Alert severity="info">
-									Add at least two accounts on the Accounts page to make a transfer.
-								</Alert>
-							</Grid>
-						)}
-						<Grid size={{ xs: 12, sm: crossCurrency ? 6 : 12 }}>
+						</Cell>
+						<RevealCell size={12} show={accounts.length < 2}>
+							<Alert severity="info">
+								Add at least two accounts on the Accounts page to make a transfer.
+							</Alert>
+						</RevealCell>
+						<Cell size={{ xs: 12, sm: crossCurrency ? 6 : 12 }} fadeIn={switched}>
 							<TextField
 								label={account ? `Amount (${account.currency})` : "Amount"}
 								name="amount"
@@ -266,24 +327,22 @@ export default function TransactionForm({
 								autoFocus
 								slotProps={{ htmlInput: { inputMode: "decimal" } }}
 							/>
-						</Grid>
-						{crossCurrency && toAccount && (
-							<Grid size={{ xs: 12, sm: 6 }}>
-								<TextField
-									label={`Amount received (${toAccount.currency})`}
-									name="to_amount"
-									defaultValue={transaction?.to_amount ?? ""}
-									placeholder="10.00"
-									helperText="Different currencies: enter what arrived"
-									required
-									slotProps={{ htmlInput: { inputMode: "decimal" } }}
-								/>
-							</Grid>
-						)}
-					</>
+						</Cell>
+						<RevealCell size={{ xs: 12, sm: 6 }} show={Boolean(crossCurrency && toAccount)}>
+							<TextField
+								label={`Amount received (${shownTo?.currency ?? ""})`}
+								name="to_amount"
+								defaultValue={transaction?.to_amount ?? ""}
+								placeholder="10.00"
+								helperText="Different currencies: enter what arrived"
+								required
+								slotProps={{ htmlInput: { inputMode: "decimal" } }}
+							/>
+						</RevealCell>
+					</Fragment>
 				) : (
-					<>
-						<Grid size={12}>
+					<Fragment key="ordinary">
+						<Cell size={12} fadeIn={switched}>
 							<TextField
 								label="Amount"
 								name="amount"
@@ -294,9 +353,9 @@ export default function TransactionForm({
 								autoFocus
 								slotProps={{ htmlInput: { inputMode: "decimal" } }}
 							/>
-						</Grid>
+						</Cell>
 
-						<Grid size={12}>
+						<Cell size={12} fadeIn={switched}>
 							<TextField
 								select
 								label="Account"
@@ -311,9 +370,9 @@ export default function TransactionForm({
 								<MenuItem value="">None</MenuItem>
 								{accountOptions()}
 							</TextField>
-						</Grid>
+						</Cell>
 
-						<Grid size={{ xs: 12, sm: 6 }}>
+						<Cell size={{ xs: 12, sm: 6 }} fadeIn={switched}>
 							{account ? (
 								<TextField
 									key="currency-locked"
@@ -332,9 +391,9 @@ export default function TransactionForm({
 									required
 								/>
 							)}
-						</Grid>
+						</Cell>
 
-						<Grid size={{ xs: 12, sm: 6 }}>
+						<Cell size={{ xs: 12, sm: 6 }} fadeIn={switched}>
 							{foreign ? (
 								<TextField
 									key={`rate-${effectiveCurrency}`}
@@ -355,9 +414,9 @@ export default function TransactionForm({
 									disabled
 								/>
 							)}
-						</Grid>
+						</Cell>
 
-						<Grid size={{ xs: 12, sm: 6 }}>
+						<Cell size={{ xs: 12, sm: 6 }} fadeIn={switched}>
 							<TextField
 								select
 								label="Payment method"
@@ -372,9 +431,9 @@ export default function TransactionForm({
 									</MenuItem>
 								))}
 							</TextField>
-						</Grid>
+						</Cell>
 
-						<Grid size={{ xs: 12, sm: 6 }}>
+						<Cell size={{ xs: 12, sm: 6 }} fadeIn={switched}>
 							<TextField
 								label="Category"
 								name="category"
@@ -384,11 +443,11 @@ export default function TransactionForm({
 								required
 								slotProps={{ htmlInput: { maxLength: 100 } }}
 							/>
-						</Grid>
-					</>
+						</Cell>
+					</Fragment>
 				)}
 
-				<Grid size={{ xs: 12, sm: isTransfer ? 12 : 6 }}>
+				<Cell size={{ xs: 12, sm: isTransfer ? 12 : 6 }}>
 					<TextField
 						label="Date"
 						name="transaction_date"
@@ -397,35 +456,31 @@ export default function TransactionForm({
 						required
 						slotProps={{ inputLabel: { shrink: true } }}
 					/>
-				</Grid>
+				</Cell>
 
-				{!isTransfer && (
-					<Grid size={{ xs: 12, sm: 6 }}>
-						<VendorField vendors={vendors} defaultValue={transaction?.vendor?.name ?? ""} />
-					</Grid>
-				)}
+				<RevealCell size={{ xs: 12, sm: 6 }} show={!isTransfer}>
+					<VendorField vendors={vendors} defaultValue={transaction?.vendor?.name ?? ""} />
+				</RevealCell>
 
-				{type === "expense" && (
-					<Grid size={12}>
-						<Autocomplete
-							options={subscriptionOptions}
-							value={subscription}
-							onChange={(_, v) => setSubscription(v)}
-							getOptionLabel={(o) => o.name}
-							isOptionEqualToValue={(a, b) => a.id === b.id}
-							noOptionsText="No subscriptions yet"
-							renderInput={(params) => (
-								<TextField
-									{...params}
-									label="Subscription"
-									helperText="Optional. Marks this as a payment for a recurring charge"
-								/>
-							)}
-						/>
-					</Grid>
-				)}
+				<RevealCell size={12} show={type === "expense"}>
+					<Autocomplete
+						options={subscriptionOptions}
+						value={subscription}
+						onChange={(_, v) => setSubscription(v)}
+						getOptionLabel={(o) => o.name}
+						isOptionEqualToValue={(a, b) => a.id === b.id}
+						noOptionsText="No subscriptions yet"
+						renderInput={(params) => (
+							<TextField
+								{...params}
+								label="Subscription"
+								helperText="Optional. Marks this as a payment for a recurring charge"
+							/>
+						)}
+					/>
+				</RevealCell>
 
-				<Grid size={12}>
+				<Cell size={12}>
 					<TextField
 						label="Description"
 						name="description"
@@ -433,7 +488,7 @@ export default function TransactionForm({
 						multiline
 						minRows={2}
 					/>
-				</Grid>
+				</Cell>
 			</Grid>
 		</FormDialog>
 	);

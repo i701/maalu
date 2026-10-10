@@ -7,6 +7,8 @@ import DialogTitle from "@mui/material/DialogTitle";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import type { FormEvent, ReactNode } from "react";
+import { useLastDefined } from "#/lib/motion";
+import Reveal from "./Reveal";
 
 /** Form dialog following the MUI "form dialog" pattern: the Paper is the <form>. */
 export default function FormDialog({
@@ -27,6 +29,7 @@ export default function FormDialog({
 	maxWidth?: "xs" | "sm" | "md";
 }) {
 	const theme = useTheme();
+	const shownError = useLastDefined(error); // keeps the text while the alert closes
 	const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
 	return (
@@ -47,11 +50,11 @@ export default function FormDialog({
 			<DialogTitle id="form-dialog-title">{title}</DialogTitle>
 			<DialogContent dividers={fullScreen}>
 				<div style={{ paddingTop: 8 }}>{children}</div>
-				{error && (
+				<Reveal in={Boolean(error)}>
 					<Alert severity="error" sx={{ mt: 2 }}>
-						{error}
+						{shownError}
 					</Alert>
-				)}
+				</Reveal>
 			</DialogContent>
 			<DialogActions sx={{ px: 3, pb: 2 }}>
 				<Button onClick={onClose} color="inherit">
