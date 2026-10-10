@@ -9,7 +9,7 @@ import TextField from "@mui/material/TextField";
 import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 import ConfirmDelete from "#/components/ConfirmDelete";
@@ -90,6 +90,11 @@ function VendorsPage() {
 	const committed = Route.useSearch(); // matches the rows on screen
 	const search = useLiveSearch(searchSchema); // matches the controls: updates instantly
 	const navigate = Route.useNavigate();
+	const router = useRouter();
+	const prefetchPage = (page: number) => {
+		if (page >= 1 && page <= Math.ceil(total / search.pageSize))
+			void router.preloadRoute({ to: Route.fullPath, search: (p) => ({ ...p, page }) });
+	};
 	const [editing, setEditing] = useState<Vendor | "new" | null>(null);
 	const [deleting, setDeleting] = useState<Vendor | null>(null);
 
@@ -241,6 +246,7 @@ function VendorsPage() {
 					)}
 
 					<TablePager
+						onPrefetch={prefetchPage}
 						total={total}
 						page={search.page}
 						pageSize={search.pageSize}

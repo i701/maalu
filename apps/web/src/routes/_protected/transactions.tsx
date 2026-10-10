@@ -12,7 +12,7 @@ import IconButton from "@mui/material/IconButton";
 import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 import ActiveFilters, { type ActiveFilter } from "#/components/ActiveFilters";
@@ -244,6 +244,11 @@ function TransactionsPage() {
 	const committed = Route.useSearch(); // matches the rows on screen
 	const search = useLiveSearch(searchSchema); // matches the controls: updates instantly
 	const navigate = Route.useNavigate();
+	const router = useRouter();
+	const prefetchPage = (page: number) => {
+		if (page >= 1 && page <= Math.ceil(total / search.pageSize))
+			void router.preloadRoute({ to: Route.fullPath, search: (p) => ({ ...p, page }) });
+	};
 	const [editing, setEditing] = useState<Transaction | "new" | null>(null);
 	const [deleting, setDeleting] = useState<Transaction | null>(null);
 	const [converting, setConverting] = useState<Transaction | null>(null);
@@ -583,6 +588,7 @@ function TransactionsPage() {
 								)}
 
 								<TablePager
+									onPrefetch={prefetchPage}
 									total={total}
 									page={search.page}
 									pageSize={search.pageSize}

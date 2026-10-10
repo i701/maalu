@@ -10,7 +10,9 @@ export function getRouter() {
 		routeTree,
 		scrollRestoration: true,
 		defaultPreload: "intent",
-		defaultPreloadStaleTime: 0,
+		// A preloaded page (e.g. the next page of results) stays usable briefly, so hovering the
+		// pager really does make the click instant.
+		defaultPreloadStaleTime: 15_000,
 		// Revalidation policy: loader data is reusable for 30s (instant back/forward), but anything
 		// stale or invalidated (every mutation invalidates everything) is reloaded *before* the
 		// page renders, so you never see old data flash while a refresh is in flight.

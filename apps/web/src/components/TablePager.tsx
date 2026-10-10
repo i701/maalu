@@ -8,6 +8,7 @@ export default function TablePager({
 	pageSize,
 	onPageChange,
 	onPageSizeChange,
+	onPrefetch,
 }: {
 	total: number;
 	/** 1-based */
@@ -15,6 +16,8 @@ export default function TablePager({
 	pageSize: number;
 	onPageChange: (page: number) => void;
 	onPageSizeChange: (pageSize: number) => void;
+	/** Warm up another page while the user is about to ask for it (hovering or focusing its button). */
+	onPrefetch?: (page: number) => void;
 }) {
 	// Nothing to page through: hide it rather than show "1-4 of 4".
 	if (total <= PAGE_SIZES[0]) return null;
@@ -31,6 +34,18 @@ export default function TablePager({
 			labelRowsPerPage="Rows"
 			showFirstButton
 			showLastButton
+			slotProps={{
+				actions: {
+					previousButton: {
+						onMouseEnter: () => onPrefetch?.(page - 1),
+						onFocus: () => onPrefetch?.(page - 1),
+					},
+					nextButton: {
+						onMouseEnter: () => onPrefetch?.(page + 1),
+						onFocus: () => onPrefetch?.(page + 1),
+					},
+				},
+			}}
 			sx={{
 				borderTop: 1,
 				borderColor: "divider",

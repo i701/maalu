@@ -13,7 +13,7 @@ import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 import ConfirmDelete from "#/components/ConfirmDelete";
@@ -151,6 +151,11 @@ function SubscriptionsPage() {
 	const committed = Route.useSearch(); // matches the rows on screen
 	const search = useLiveSearch(searchSchema); // matches the controls: updates instantly
 	const navigate = Route.useNavigate();
+	const router = useRouter();
+	const prefetchPage = (page: number) => {
+		if (page >= 1 && page <= Math.ceil(total / search.pageSize))
+			void router.preloadRoute({ to: Route.fullPath, search: (p) => ({ ...p, page }) });
+	};
 
 	const filtered = Boolean(search.q || search.status || search.interval_unit);
 
@@ -359,6 +364,7 @@ function SubscriptionsPage() {
 					)}
 
 					<TablePager
+						onPrefetch={prefetchPage}
 						total={total}
 						page={search.page}
 						pageSize={search.pageSize}
