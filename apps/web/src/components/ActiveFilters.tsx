@@ -1,7 +1,6 @@
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
-import { alpha } from "@mui/material/styles";
 
 type Tone = "primary" | "secondary" | "success" | "warning" | "info" | "error";
 
@@ -31,16 +30,21 @@ export default function ActiveFilters({
 					size="small"
 					label={f.label}
 					onDelete={f.onDelete}
-					sx={(t) => ({
-						bgcolor: alpha(t.palette[f.tone].main, 0.1),
-						color: t.palette[f.tone].dark,
-						"& .MuiChip-deleteIcon": {
-							color: "inherit",
-							opacity: 0.6,
-							"&:hover": { color: "inherit", opacity: 1 },
-						},
-						"&.Mui-focusVisible": { bgcolor: alpha(t.palette[f.tone].main, 0.2) },
-					})}
+					sx={(t) => {
+						const main = `var(--mui-palette-${f.tone}-main)`;
+						return {
+							// CSS variables, not t.palette (always the light scheme), so dark mode tints correctly
+							bgcolor: `color-mix(in srgb, ${main} 10%, transparent)`,
+							color: `${f.tone}.dark`,
+							...t.applyStyles("dark", { color: `${f.tone}.light` }),
+							"& .MuiChip-deleteIcon": {
+								color: "inherit",
+								opacity: 0.6,
+								"&:hover": { color: "inherit", opacity: 1 },
+							},
+							"&.Mui-focusVisible": { bgcolor: `color-mix(in srgb, ${main} 20%, transparent)` },
+						};
+					}}
 				/>
 			))}
 			{filters.length > 1 && (
