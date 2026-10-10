@@ -3,7 +3,6 @@ import AutorenewIcon from "@mui/icons-material/Autorenew";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import TuneIcon from "@mui/icons-material/Tune";
-import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -405,15 +404,33 @@ function TransactionsPage() {
 										<Button
 											variant="outlined"
 											color="inherit"
-											startIcon={
-												<Badge badgeContent={activeCount} color="primary">
-													<TuneIcon />
-												</Badge>
-											}
+											startIcon={<TuneIcon />}
 											onClick={() => setFiltersOpen(true)}
 											sx={{ display: "inline-flex", [WIDE]: { display: "none" } }}
 										>
 											Filters
+											{activeCount > 0 && (
+												<Box
+													component="span"
+													sx={{
+														ml: 1,
+														minWidth: 20,
+														height: 20,
+														px: 0.75,
+														display: "inline-flex",
+														alignItems: "center",
+														justifyContent: "center",
+														borderRadius: "10px",
+														bgcolor: "primary.main",
+														color: "primary.contrastText",
+														fontSize: 12,
+														fontWeight: 600,
+														lineHeight: 1,
+													}}
+												>
+													{activeCount}
+												</Box>
+											)}
 										</Button>
 									</>
 								}
