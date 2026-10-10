@@ -73,6 +73,13 @@ test-api:
 build-web:
     pnpm --filter @maalu/web build
 
+# ── Seed data ───────────────────────────────────────────
+
+# Fill the DB with realistic random data for the demo user (replaces only that user's data).
+# Usage: just seed        just seed 600
+seed transactions="250":
+    cd apps/api && uv run python -m app.seed {{transactions}}
+
 # ── Database migrations ─────────────────────────────────
 
 # Create a new migration: just migration "add accounts"
