@@ -19,6 +19,7 @@ Requires [uv](https://docs.astral.sh/uv/), [just](https://just.systems) and Dock
 ```bash
 just install   # uv sync
 just db-up     # Postgres via docker compose
+just db-admin  # + pgweb, a read-only web UI for the database (http://localhost:8081, dev only)
 just migrate   # alembic upgrade head
 cp apps/web/.env.example apps/web/.env   # set SESSION_SECRET (openssl rand -hex 32)
 just dev       # API :8000 (/docs) + web :3000

@@ -15,5 +15,20 @@ services:
       timeout: 3s
       retries: 10
 
+  # Read-only web UI for browsing the database. DEV ONLY: it sits behind the "dev-tools" profile,
+  # so a plain `docker compose up` never starts it; run `just db-admin`. Bound to localhost, and
+  # --readonly makes pgweb refuse any statement that writes.
+  pgweb:
+    profiles: ["dev-tools"]
+    image: sosedoff/pgweb:0.17.0
+    command: ["--readonly"]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGWEB_DATABASE_URL: postgres://maalu:maalu@db:5432/maalu?sslmode=disable
+    ports:
+      - "127.0.0.1:8081:8081"
+
 volumes:
   maalu-pgdata:

@@ -12,8 +12,13 @@ install:
 db-up:
     docker compose up -d --wait db
 
+# Read-only DB browser (pgweb, dev only) at http://localhost:8081
+db-admin: db-up
+    docker compose --profile dev-tools up -d pgweb
+    @echo "pgweb (read-only): http://localhost:8081"
+
 db-down:
-    docker compose down
+    docker compose --profile dev-tools down
 
 # ── Run ─────────────────────────────────────────────────
 
