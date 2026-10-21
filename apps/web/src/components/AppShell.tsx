@@ -55,17 +55,34 @@ const SECTIONS = [
 	},
 ] as const;
 
-// Full-bleed rows: no rounding, hover spans the whole width, and the active row gets a
-// left-edge indicator plus a chevron.
+// Inset rows with a subtle radius. The active row gets a tint, a short glowing bar near its left
+// edge, and a chevron. The inset is 12px + 16px of padding, so icons line up with the brand logo.
 const navItemSx = {
-	px: 3.5,
+	position: "relative",
+	width: "auto",
+	mx: 1.5,
+	my: 0.25,
+	px: 2,
 	py: 1.25,
-	borderRadius: 0,
-	borderLeft: "3px solid transparent",
+	borderRadius: 1,
 	"& .nav-chevron": { display: "none", color: "text.secondary" },
+	"&::before": {
+		content: '""',
+		position: "absolute",
+		left: 6,
+		top: "50%",
+		height: 20,
+		width: 3,
+		borderRadius: 3,
+		transform: "translateY(-50%)",
+		bgcolor: "primary.main",
+		// Soft halo in the accent colour (CSS variable, so it follows light/dark).
+		boxShadow: "0 0 8px 1px color-mix(in srgb, var(--mui-palette-primary-main) 55%, transparent)",
+		opacity: 0,
+	},
 	"&.Mui-selected": {
-		borderLeftColor: "primary.main",
 		bgcolor: "action.selected",
+		"&::before": { opacity: 1 },
 		"& .nav-chevron": { display: "block" },
 		"& .MuiListItemText-primary": { fontWeight: 600 },
 	},
@@ -162,7 +179,16 @@ export default function AppShell({ user, children }: { user: SessionUser; childr
 				aria-expanded={accountOpen}
 				aria-controls="account-panel"
 				onClick={() => setAccountOpen((o) => !o)}
-				sx={{ flex: "none", px: 3.5, py: 2, gap: 1.5, borderRadius: 0 }}
+				sx={{
+					flex: "none",
+					width: "auto",
+					mx: 1.5,
+					mb: 1,
+					px: 2,
+					py: 1.5,
+					gap: 1.5,
+					borderRadius: 1,
+				}}
 			>
 				<Avatar sx={{ bgcolor: "primary.main", width: 40, height: 40 }}>
 					{user.email[0].toUpperCase()}
