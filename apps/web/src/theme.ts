@@ -47,6 +47,83 @@ const theme = createTheme({
 	shadows,
 	components: {
 		MuiTextField: { defaultProps: { fullWidth: true } },
+		// Pressable buttons, after mui.com's own: a darker edge, a highlight along the top and shade
+		// along the bottom, and a short drop. Pressing swaps the shade for an inner shadow, so the
+		// button reads as pushed in. Buttons are the only thing that gets this depth. Colours come
+		// from CSS variables (`t.vars`) and `applyStyles("dark")`, so they follow the colour mode.
+		MuiButton: {
+			defaultProps: { disableElevation: true },
+			styleOverrides: {
+				root: {
+					transition: `background-color 120ms ${EASE_OUT}, box-shadow 120ms ${EASE_OUT}, border-color 120ms ${EASE_OUT}`,
+				},
+				contained: ({ theme: t, ownerState }) => {
+					const color = ownerState.color;
+					if (!color || color === "inherit") return {};
+					const c = t.vars.palette[color];
+					return {
+						border: `1px solid ${c.dark}`,
+						textShadow: "0 1px 1px rgba(0 0 0 / 0.25)",
+						boxShadow: `rgba(${c.lightChannel} / 0.5) 0 1px 0 inset, rgba(${c.darkChannel} / 0.4) 0 -1px 0 1px inset, rgba(0 0 0 / 0.1) 0 2px 4px 0`,
+						"&:hover": {
+							backgroundColor: c.dark,
+							boxShadow: `rgba(${c.lightChannel} / 0.3) 0 1px 0 inset, rgba(0 0 0 / 0.2) 0 -1px 0 1px inset, rgba(0 0 0 / 0.1) 0 2px 4px 0`,
+						},
+						"&:active": {
+							backgroundColor: c.dark,
+							boxShadow: "rgba(0 0 0 / 0.35) 0 1px 2px 1px inset",
+						},
+						"&.Mui-disabled": {
+							backgroundColor: t.vars.palette.action.disabledBackground,
+							color: t.vars.palette.action.disabled,
+							borderColor: "transparent",
+							boxShadow: "none",
+							textShadow: "none",
+						},
+					};
+				},
+				outlined: ({ theme: t, ownerState }) => {
+					const text = "var(--mui-palette-text-primary)";
+					const paper = t.vars.palette.background.paper;
+					// Coloured outlined buttons keep MUI's coloured edge; neutral ones get a soft grey one.
+					const neutralEdge =
+						!ownerState.color || ownerState.color === "inherit"
+							? {
+									borderColor: `color-mix(in srgb, ${text} 23%, transparent)`,
+									"&:hover": { borderColor: `color-mix(in srgb, ${text} 40%, transparent)` },
+								}
+							: {};
+					return {
+						backgroundColor: paper,
+						boxShadow:
+							"rgba(255 255 255 / 1) 0 1px 0 1px inset, rgba(0 0 0 / 0.05) 0 -1px 0 1px inset, rgba(0 0 0 / 0.08) 0 1px 2px 0",
+						...neutralEdge,
+						"&:hover": {
+							...("&:hover" in neutralEdge ? neutralEdge["&:hover"] : {}),
+							backgroundColor: `color-mix(in srgb, ${text} 4%, ${paper})`,
+						},
+						"&:active": {
+							backgroundColor: `color-mix(in srgb, ${text} 7%, ${paper})`,
+							boxShadow: "rgba(0 0 0 / 0.15) 0 1px 2px 0 inset",
+						},
+						"&.Mui-disabled": { boxShadow: "none" },
+						// The white top highlight would glow on a dark surface: keep the edge and the press.
+						...t.applyStyles("dark", {
+							backgroundColor: "transparent",
+							boxShadow: "none",
+							"&:hover": {
+								...("&:hover" in neutralEdge ? neutralEdge["&:hover"] : {}),
+								backgroundColor: `color-mix(in srgb, ${text} 8%, transparent)`,
+							},
+							"&:active": {
+								backgroundColor: `color-mix(in srgb, ${text} 12%, transparent)`,
+								boxShadow: "rgba(0 0 0 / 0.4) 0 1px 2px 0 inset",
+							},
+						}),
+					};
+				},
+			},
+		},
 		// Surfaces get their depth from the shadow ring, not a border/outline.
 		MuiCard: { defaultProps: { elevation: 1 } },
 		MuiAppBar: { defaultProps: { elevation: 0, color: "inherit" } },
