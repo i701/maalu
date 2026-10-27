@@ -2,12 +2,12 @@ import { keyframes } from "@emotion/react";
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import type { ComponentProps, ReactNode } from "react";
-import { EASE_OUT } from "#/lib/motion";
+import { SPRING } from "#/lib/motion";
 import Reveal from "../Reveal";
 
 export type CellSize = ComponentProps<typeof Grid>["size"];
 
-const cellIn = keyframes`from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; }`;
+const cellIn = keyframes`from { transform: translateY(4px); } to { transform: none; }`;
 const cellFade = keyframes`from { opacity: 0; } to { opacity: 1; }`;
 
 /**
@@ -30,9 +30,9 @@ export function Cell({
 			sx={{
 				pb: 2,
 				...(fadeIn && {
-					animation: `${cellIn} 160ms ${EASE_OUT} both`,
+					animation: `${cellIn} ${SPRING.spatialFast} both, ${cellFade} ${SPRING.effectsFast} both`,
 					"@media (prefers-reduced-motion: reduce)": {
-						animation: `${cellFade} 120ms ${EASE_OUT} both`,
+						animation: `${cellFade} ${SPRING.effectsFast} both`,
 					},
 				}),
 			}}

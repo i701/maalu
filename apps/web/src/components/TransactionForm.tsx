@@ -5,6 +5,7 @@ import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import { type FormEvent, useState } from "react";
 import { SUGGESTED_PAYMENT_METHOD } from "#/lib/accounts";
+import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
 import {
 	TRANSACTION_TYPES,
@@ -55,6 +56,7 @@ export default function TransactionForm({
 	onClose: () => void;
 }) {
 	const { run, pending, error } = useAction();
+	const sheet = useSheet(onClose);
 	const notify = useNotify();
 	const [localError, setLocalError] = useState<string | null>(null);
 
@@ -110,7 +112,7 @@ export default function TransactionForm({
 		setLocalError(null);
 		if (await run(request.send)) {
 			notify(request.success);
-			onClose();
+			sheet.close();
 		}
 	}
 
@@ -120,7 +122,7 @@ export default function TransactionForm({
 			error={localError ?? error}
 			pending={pending}
 			onSubmit={submit}
-			onClose={onClose}
+			sheet={sheet}
 		>
 			<Grid container columnSpacing={2}>
 				<Cell size={12}>

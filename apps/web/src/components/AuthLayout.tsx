@@ -17,7 +17,14 @@ export default function AuthLayout({
 	children: ReactNode;
 }) {
 	return (
-		<Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", py: 4 }}>
+		<Box
+			sx={{
+				minHeight: "100vh",
+				display: "flex",
+				alignItems: "center",
+				py: 4,
+			}}
+		>
 			<Box sx={{ position: "absolute", top: 12, right: 12 }}>
 				<ColorModeToggle />
 			</Box>

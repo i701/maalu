@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect, useState } from "react";
-import { DURATION, EASE_OUT, useReducedMotion } from "#/lib/motion";
+import { SPRING, useReducedMotion } from "#/lib/motion";
 
 /**
  * Smoothly shows/hides content that would otherwise pop in and shove everything below it. The
@@ -32,7 +32,6 @@ export default function Reveal({ in: show, children }: { in: boolean; children: 
 	}, [show]);
 
 	const open = show && armed;
-	const ms = reduced ? 120 : DURATION.reveal;
 
 	return (
 		<div
@@ -41,12 +40,16 @@ export default function Reveal({ in: show, children }: { in: boolean; children: 
 				gridTemplateRows: open ? "1fr" : "0fr",
 				opacity: open ? 1 : 0,
 				transition: reduced
-					? `opacity ${ms}ms ${EASE_OUT}`
-					: `grid-template-rows ${ms}ms ${EASE_OUT}, opacity ${ms}ms ${EASE_OUT}`,
+					? `opacity ${SPRING.effects}`
+					: `grid-template-rows ${SPRING.spatial}, opacity ${SPRING.effects}`,
 			}}
 			onTransitionEnd={(e) => {
 				// Fully closed: unmount the content and reset for the next open.
-				if (e.target === e.currentTarget && !show) {
+				if (
+					e.target === e.currentTarget &&
+					!show &&
+					(reduced || e.propertyName === "grid-template-rows")
+				) {
 					setPresent(false);
 					setArmed(false);
 				}

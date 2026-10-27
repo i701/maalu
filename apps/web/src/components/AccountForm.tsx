@@ -2,6 +2,7 @@ import Grid from "@mui/material/Grid";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import { useState } from "react";
+import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
 import { createAccountFn, updateAccountFn } from "#/server/accounts";
 import { ACCOUNT_GROUPS, ACCOUNT_GROUP_LABELS, type Account, type AccountGroup } from "#/types/api";
@@ -25,6 +26,7 @@ export default function AccountForm({
 	onClose: () => void;
 }) {
 	const { run, pending, error } = useAction();
+	const sheet = useSheet(onClose);
 	const notify = useNotify();
 	const [currency, setCurrency] = useState(account?.currency ?? baseCurrency);
 	const foreign = currency !== baseCurrency;
@@ -52,7 +54,7 @@ export default function AccountForm({
 		);
 		if (ok) {
 			notify(account ? "Account updated" : "Account added");
-			onClose();
+			sheet.close();
 		}
 	}
 
@@ -62,7 +64,7 @@ export default function AccountForm({
 			error={error}
 			pending={pending}
 			onSubmit={submit}
-			onClose={onClose}
+			sheet={sheet}
 		>
 			<Grid container spacing={2}>
 				<Grid size={{ xs: 12, sm: 5 }}>

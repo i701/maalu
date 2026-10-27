@@ -6,10 +6,12 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import { useLastDefined } from "#/lib/motion";
+import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
 import type { ApiResult } from "#/types/api";
 import { useNotify } from "./Notify";
 import Reveal from "./Reveal";
+import SheetHandle from "./SheetHandle";
 
 export default function ConfirmDelete({
 	title,
@@ -24,10 +26,18 @@ export default function ConfirmDelete({
 }) {
 	const { run, pending, error } = useAction();
 	const notify = useNotify();
+	const sheet = useSheet(onClose);
 	const shownError = useLastDefined(error); // keeps the text while the alert closes
 
 	return (
-		<Dialog open onClose={onClose} maxWidth="xs" aria-labelledby="confirm-title">
+		<Dialog
+			open={sheet.open}
+			onClose={sheet.close}
+			maxWidth="xs"
+			aria-labelledby="confirm-title"
+			slotProps={{ transition: { onExited: sheet.onExited } }}
+		>
+			<SheetHandle />
 			<DialogTitle id="confirm-title">{title}</DialogTitle>
 			<DialogContent>
 				<DialogContentText>{message}</DialogContentText>
@@ -38,7 +48,7 @@ export default function ConfirmDelete({
 				</Reveal>
 			</DialogContent>
 			<DialogActions sx={{ px: 3, pb: 2 }}>
-				<Button onClick={onClose} color="inherit">
+				<Button onClick={sheet.close} color="inherit">
 					Cancel
 				</Button>
 				<Button
@@ -48,7 +58,7 @@ export default function ConfirmDelete({
 					onClick={async () => {
 						if (await run(onConfirm)) {
 							notify("Deleted");
-							onClose();
+							sheet.close();
 						}
 					}}
 				>

@@ -1,6 +1,7 @@
 import Grid from "@mui/material/Grid";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
+import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
 import { createVendorFn, updateVendorFn } from "#/server/vendors";
 import type { Vendor } from "#/types/api";
@@ -19,6 +20,7 @@ export default function VendorForm({
 	onClose: () => void;
 }) {
 	const { run, pending, error } = useAction();
+	const sheet = useSheet(onClose);
 	const notify = useNotify();
 
 	async function submit(e: React.FormEvent<HTMLFormElement>) {
@@ -42,7 +44,7 @@ export default function VendorForm({
 		);
 		if (ok) {
 			notify(vendor ? "Vendor updated" : "Vendor added");
-			onClose();
+			sheet.close();
 		}
 	}
 
@@ -52,7 +54,7 @@ export default function VendorForm({
 			error={error}
 			pending={pending}
 			onSubmit={submit}
-			onClose={onClose}
+			sheet={sheet}
 		>
 			<Grid container spacing={2}>
 				<Grid size={12}>

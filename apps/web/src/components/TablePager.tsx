@@ -47,8 +47,6 @@ export default function TablePager({
 				},
 			}}
 			sx={{
-				borderTop: 1,
-				borderColor: "divider",
 				// Keep it on one line on phones: drop the label and spacer.
 				"& .MuiTablePagination-selectLabel": { display: { xs: "none", sm: "block" } },
 				"& .MuiTablePagination-toolbar": { flexWrap: "wrap", justifyContent: "flex-end" },

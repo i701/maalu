@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 /** One record in the narrow (card) view of a ResponsiveTable. Keep it to the same facts as the
  * desktop row: a title, the key figure on the right, a line of tags/meta, and the actions. */
 export default function MobileCard({
+	leading,
 	primary,
 	secondary,
 	end,
@@ -12,6 +13,8 @@ export default function MobileCard({
 	meta,
 	actions,
 }: {
+	/** A shaped icon tile at the left (see ShapeTile), the card's "media". */
+	leading?: ReactNode;
 	/** Main label (e.g. the vendor name). */
 	primary: ReactNode;
 	/** Smaller line under it. */
@@ -26,29 +29,32 @@ export default function MobileCard({
 	actions?: ReactNode;
 }) {
 	return (
-		<Box sx={{ p: 2 }}>
-			<Stack direction="row" spacing={2} sx={{ justifyContent: "space-between" }}>
-				<Box sx={{ minWidth: 0 }}>
-					{primary}
-					{secondary}
-				</Box>
-				{(end || endSecondary) && (
-					<Box sx={{ textAlign: "right", flexShrink: 0 }}>
-						{end}
-						{endSecondary}
+		<Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5, p: 1.5 }}>
+			{leading}
+			<Box sx={{ flex: 1, minWidth: 0 }}>
+				<Stack direction="row" spacing={2} sx={{ justifyContent: "space-between" }}>
+					<Box sx={{ minWidth: 0 }}>
+						{primary}
+						{secondary}
 					</Box>
+					{(end || endSecondary) && (
+						<Box sx={{ textAlign: "right", flexShrink: 0 }}>
+							{end}
+							{endSecondary}
+						</Box>
+					)}
+				</Stack>
+				{meta && (
+					<Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 1, mt: 1 }}>
+						{meta}
+					</Stack>
 				)}
-			</Stack>
-			{meta && (
-				<Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 1, mt: 1 }}>
-					{meta}
-				</Stack>
-			)}
-			{actions && (
-				<Stack direction="row" sx={{ justifyContent: "flex-end", mt: 0.5, mx: -0.5 }}>
-					{actions}
-				</Stack>
-			)}
+				{actions && (
+					<Stack direction="row" sx={{ justifyContent: "flex-end", mt: 0.5, mx: -0.5 }}>
+						{actions}
+					</Stack>
+				)}
+			</Box>
 		</Box>
 	);
 }

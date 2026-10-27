@@ -1,5 +1,5 @@
 import RefreshIcon from "@mui/icons-material/Refresh";
-import CircularProgress from "@mui/material/CircularProgress";
+import LoadingIndicator from "./LoadingIndicator";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import { useRouter } from "@tanstack/react-router";
@@ -23,7 +23,7 @@ export default function RefreshButton() {
 		<Tooltip title="Refresh">
 			<span>
 				<IconButton aria-label="Refresh" onClick={refresh} disabled={pending}>
-					{pending ? <CircularProgress size={20} /> : <RefreshIcon />}
+					{pending ? <LoadingIndicator size={24} color="inherit" /> : <RefreshIcon />}
 				</IconButton>
 			</span>
 		</Tooltip>

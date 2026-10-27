@@ -1,6 +1,6 @@
 import LinearProgress from "@mui/material/LinearProgress";
 import { useRouterState } from "@tanstack/react-router";
-import { DURATION, EASE_OUT } from "#/lib/motion";
+import { EFFECTS_MS, SPRING } from "#/lib/motion";
 
 /**
  * A thin bar at the very top while a page is loading. Pages reload *before* they render (so you
@@ -24,8 +24,8 @@ export default function NavigationProgress() {
 				visibility: loading ? "visible" : "hidden",
 				// In: wait, then fade. Out: fade immediately, then hide (stops the animation).
 				transition: loading
-					? `opacity ${DURATION.fade}ms ${EASE_OUT} ${DURATION.fade}ms, visibility 0s linear 0s`
-					: `opacity ${DURATION.fade}ms ${EASE_OUT} 0s, visibility 0s linear ${DURATION.fade}ms`,
+					? `opacity ${SPRING.effects} 150ms, visibility 0s linear 0s`
+					: `opacity ${SPRING.effects} 0s, visibility 0s linear ${EFFECTS_MS}ms`,
 				"@media (prefers-reduced-motion: reduce)": {
 					"& .MuiLinearProgress-bar": { animationDuration: "3s" },
 				},

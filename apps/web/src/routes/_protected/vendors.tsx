@@ -4,10 +4,8 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
-import MenuItem from "@mui/material/MenuItem";
 import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { memo, useState } from "react";
@@ -19,21 +17,22 @@ import PageHeader from "#/components/PageHeader";
 import PendingOverlay from "#/components/PendingOverlay";
 import ResponsiveTable from "#/components/ResponsiveTable";
 import SearchField from "#/components/SearchField";
+import ChipFilter from "#/components/ChipFilter";
+import ShapeTile from "#/components/ShapeTile";
+import Symbol from "#/components/Symbol";
+import TonalChip from "#/components/TonalChip";
 import TableCard from "#/components/TableCard";
 import TablePager from "#/components/TablePager";
 import TableToolbar from "#/components/TableToolbar";
 import VendorForm from "#/components/VendorForm";
+import { LOCALITY_ACCENT } from "#/lib/accents";
+import { ACCENT } from "#/lib/m3";
 import { useLiveSearch } from "#/lib/live-search";
 import { lastPageIfOutOfRange, pageSearch } from "#/lib/pagination";
 import { unwrap } from "#/lib/unwrap";
 import { listCurrenciesFn } from "#/server/currencies";
 import { deleteVendorFn, listVendorsPageFn } from "#/server/vendors";
-import {
-	VENDOR_LOCALITIES,
-	VENDOR_LOCALITY_LABELS,
-	type Vendor,
-	type VendorLocality,
-} from "#/types/api";
+import { VENDOR_LOCALITIES, VENDOR_LOCALITY_LABELS, type Vendor } from "#/types/api";
 
 const searchSchema = z.object({
 	...pageSearch,
@@ -73,9 +72,8 @@ const dash = (
 function LocalChip({ vendor }: { vendor: Vendor }) {
 	if (vendor.is_local == null) return null;
 	return (
-		<Chip
-			size="small"
-			color={vendor.is_local ? "success" : "warning"}
+		<TonalChip
+			accent={vendor.is_local ? LOCALITY_ACCENT.local : LOCALITY_ACCENT.foreign}
 			label={vendor.is_local ? "Local" : "Foreign"}
 		/>
 	);
@@ -142,6 +140,21 @@ const VendorsTable = memo(function VendorsTable({
 			)}
 			renderCard={(v) => (
 				<MobileCard
+					leading={
+						<ShapeTile
+							shape={3}
+							size={52}
+							accent={
+								v.is_local == null
+									? ACCENT.slate
+									: v.is_local
+										? LOCALITY_ACCENT.local
+										: LOCALITY_ACCENT.foreign
+							}
+						>
+							<Symbol name="storefront" size={24} filled />
+						</ShapeTile>
+					}
 					primary={
 						<Typography variant="body2" sx={{ fontWeight: 500 }}>
 							{v.name}
@@ -198,6 +211,10 @@ function VendorsPage() {
 		<>
 			<PageHeader
 				title="Vendors"
+				symbol="storefront"
+				accent="orange"
+				shape={3}
+				stats={[{ symbol: "storefront", label: `${total} ${total === 1 ? "vendor" : "vendors"}` }]}
 				description="Shops, people and companies you pay."
 				action={
 					<Button variant="contained" startIcon={<AddIcon />} onClick={() => setEditing("new")}>
@@ -209,6 +226,23 @@ function VendorsPage() {
 			<PendingOverlay>
 				<TableCard>
 					<TableToolbar
+						chips={
+							<ChipFilter
+								allLabel="All types"
+								value={search.locality}
+								options={VENDOR_LOCALITIES.map((v) => ({
+									value: v,
+									label: VENDOR_LOCALITY_LABELS[v],
+									accent:
+										v === "local"
+											? LOCALITY_ACCENT.local
+											: v === "foreign"
+												? LOCALITY_ACCENT.foreign
+												: undefined,
+								}))}
+								onChange={(locality) => navigate({ search: (p) => ({ ...p, page: 1, locality }) })}
+							/>
+						}
 						summary={`${total} ${total === 1 ? "vendor" : "vendors"}`}
 						filters={
 							<>
@@ -221,29 +255,6 @@ function VendorsPage() {
 										})
 									}
 								/>
-								<TextField
-									select
-									size="small"
-									label="Type"
-									value={search.locality ?? ""}
-									onChange={(e) =>
-										navigate({
-											search: (p) => ({
-												...p,
-												page: 1,
-												locality: (e.target.value || undefined) as VendorLocality | undefined,
-											}),
-										})
-									}
-									sx={{ minWidth: { sm: 150 } }}
-								>
-									<MenuItem value="">All types</MenuItem>
-									{VENDOR_LOCALITIES.map((l) => (
-										<MenuItem key={l} value={l}>
-											{VENDOR_LOCALITY_LABELS[l]}
-										</MenuItem>
-									))}
-								</TextField>
 								{filtered && (
 									<Button
 										color="inherit"
@@ -261,7 +272,12 @@ function VendorsPage() {
 					/>
 
 					{items.length === 0 ? (
-						<EmptyState firstRun={!filtered}>
+						<EmptyState
+							firstRun={!filtered}
+							symbol={filtered ? "search" : "storefront"}
+							accent={filtered ? "slate" : "orange"}
+							shape={3}
+						>
 							{filtered
 								? "No vendors match these filters."
 								: "No vendors yet. They're also created automatically when you name one on a transaction."}

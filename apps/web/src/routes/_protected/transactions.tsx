@@ -25,6 +25,9 @@ import PageHeader from "#/components/PageHeader";
 import PendingOverlay from "#/components/PendingOverlay";
 import ResponsiveTable from "#/components/ResponsiveTable";
 import SearchField from "#/components/SearchField";
+import ShapeTile from "#/components/ShapeTile";
+import Symbol from "#/components/Symbol";
+import TonalChip from "#/components/TonalChip";
 import TableCard from "#/components/TableCard";
 import TablePager from "#/components/TablePager";
 import TableToolbar from "#/components/TableToolbar";
@@ -32,6 +35,8 @@ import TransactionFilters from "#/components/TransactionFilters";
 import TransactionForm from "#/components/TransactionForm";
 import TransactionTotals from "#/components/TransactionTotals";
 import { formatDate, formatMoney } from "#/lib/format";
+import { PAYMENT_ACCENT, TRANSFER_ACCENT } from "#/lib/accents";
+import { ACCENT } from "#/lib/m3";
 import { useLiveSearch } from "#/lib/live-search";
 import { lastPageIfOutOfRange, pageSearch } from "#/lib/pagination";
 import {
@@ -165,11 +170,30 @@ function txSubtitle(t: Transaction) {
 		.join(" · ");
 }
 
+const TYPE_TILE = {
+	income: { symbol: "arrow_downward", accent: ACCENT.green, shape: 1 },
+	expense: { symbol: "arrow_upward", accent: ACCENT.pink, shape: 4 },
+	transfer: { symbol: "payments", accent: ACCENT.blue, shape: 0 },
+} as const;
+
+/** The card's coloured, shaped icon: income green, expense pink, transfer blue. */
+function TxTile({ type }: { type: Transaction["type"] }) {
+	const k = TYPE_TILE[type];
+	return (
+		<ShapeTile shape={k.shape} size={52} accent={k.accent}>
+			<Symbol name={k.symbol} size={24} filled />
+		</ShapeTile>
+	);
+}
+
 function TxMethodChip({ t }: { t: Transaction }) {
 	return t.type === "transfer" ? (
-		<Chip size="small" color="info" label="Transfer" />
+		<TonalChip accent={TRANSFER_ACCENT} label="Transfer" />
 	) : (
-		<Chip size="small" label={PAYMENT_METHOD_LABELS[t.payment_method]} />
+		<TonalChip
+			accent={PAYMENT_ACCENT[t.payment_method]}
+			label={PAYMENT_METHOD_LABELS[t.payment_method]}
+		/>
 	);
 }
 
@@ -314,6 +338,7 @@ const TransactionsTable = memo(function TransactionsTable({
 			)}
 			renderCard={(t) => (
 				<MobileCard
+					leading={<TxTile type={t.type} />}
 					primary={
 						<Typography variant="body2" sx={{ fontWeight: 500 }}>
 							{txTitle(t)}
@@ -354,6 +379,19 @@ const TransactionsTable = memo(function TransactionsTable({
 		/>
 	);
 });
+
+/** The frosted pills in the page hero: how many transactions, and how many filters are on. */
+function heroStats(total: number, activeCount: number) {
+	const pills = [
+		{ symbol: "receipt_long", label: `${total} ${total === 1 ? "transaction" : "transactions"}` },
+	];
+	if (activeCount > 0)
+		pills.push({
+			symbol: "tune",
+			label: `${activeCount} ${activeCount === 1 ? "filter" : "filters"}`,
+		});
+	return pills;
+}
 
 function TransactionsPage() {
 	const {
@@ -417,7 +455,11 @@ function TransactionsPage() {
 		<>
 			<PageHeader
 				title="Transactions"
+				symbol="receipt_long"
+				accent="blue"
+				shape={0}
 				description={`Amounts are totalled in ${user.base_currency}.`}
+				stats={heroStats(total, activeCount)}
 				action={
 					<Button variant="contained" startIcon={<AddIcon />} onClick={() => setEditing("new")}>
 						Add transaction
@@ -497,7 +539,12 @@ function TransactionsPage() {
 								/>
 
 								{items.length === 0 ? (
-									<EmptyState firstRun={!filtered}>
+									<EmptyState
+										firstRun={!filtered}
+										symbol={filtered ? "search" : "receipt_long"}
+										accent={filtered ? "slate" : "blue"}
+										shape={0}
+									>
 										{filtered
 											? "No transactions match these filters."
 											: "No transactions yet. Add your first one."}

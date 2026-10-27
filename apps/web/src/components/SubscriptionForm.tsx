@@ -2,6 +2,7 @@ import Grid from "@mui/material/Grid";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import { useState } from "react";
+import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
 import { createSubscriptionFn, updateSubscriptionFn } from "#/server/subscriptions";
 import {
@@ -41,6 +42,7 @@ export default function SubscriptionForm({
 	onClose: () => void;
 }) {
 	const { run, pending, error } = useAction();
+	const sheet = useSheet(onClose);
 	const notify = useNotify();
 	const [currency, setCurrency] = useState(subscription?.currency ?? baseCurrency);
 	const foreign = currency.length === 3 && currency.toUpperCase() !== baseCurrency;
@@ -86,7 +88,7 @@ export default function SubscriptionForm({
 		);
 		if (ok) {
 			notify(subscription ? "Subscription updated" : "Subscription added");
-			onClose();
+			sheet.close();
 		}
 	}
 
@@ -96,7 +98,7 @@ export default function SubscriptionForm({
 			error={error}
 			pending={pending}
 			onSubmit={submit}
-			onClose={onClose}
+			sheet={sheet}
 		>
 			<Grid container spacing={2}>
 				<Grid size={12}>

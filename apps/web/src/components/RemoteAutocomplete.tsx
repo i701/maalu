@@ -1,5 +1,5 @@
 import Autocomplete from "@mui/material/Autocomplete";
-import CircularProgress from "@mui/material/CircularProgress";
+import LoadingIndicator from "./LoadingIndicator";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
@@ -122,7 +122,7 @@ export default function RemoteAutocomplete({
 							...params.slotProps.input,
 							endAdornment: (
 								<>
-									{open && loading && <CircularProgress size={16} />}
+									{open && loading && <LoadingIndicator size={20} />}
 									{params.slotProps.input.endAdornment}
 								</>
 							),

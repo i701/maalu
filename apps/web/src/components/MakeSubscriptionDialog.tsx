@@ -3,6 +3,7 @@ import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { formatDate, formatMoney } from "#/lib/format";
+import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
 import { createSubscriptionFromTransactionFn } from "#/server/subscriptions";
 import { INTERVAL_UNITS, type IntervalUnit, type Transaction } from "#/types/api";
@@ -18,6 +19,7 @@ export default function MakeSubscriptionDialog({
 	onClose: () => void;
 }) {
 	const { run, pending, error } = useAction();
+	const sheet = useSheet(onClose);
 	const notify = useNotify();
 	const defaultName = transaction.vendor?.name ?? transaction.category;
 
@@ -36,7 +38,7 @@ export default function MakeSubscriptionDialog({
 		);
 		if (ok) {
 			notify("Subscription created from transaction");
-			onClose();
+			sheet.close();
 		}
 	}
 
@@ -46,7 +48,7 @@ export default function MakeSubscriptionDialog({
 			error={error}
 			pending={pending}
 			onSubmit={submit}
-			onClose={onClose}
+			sheet={sheet}
 			maxWidth="xs"
 		>
 			<Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>

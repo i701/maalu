@@ -2,48 +2,74 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
+import { useViewMode } from "#/lib/view-mode";
 import RefreshButton from "./RefreshButton";
+import ViewToggle from "./ViewToggle";
 
 /** Row above a table: filters on the left, the result count and a refresh button on the right.
  * Stacks vertically on narrow screens. */
 export default function TableToolbar({
 	filters,
+	chips,
 	summary,
 	actions,
+	viewToggle = true,
 }: {
 	filters?: ReactNode;
+	/** Rows of filter chips under the search line (see ChipFilter). */
+	chips?: ReactNode;
 	/** Extra buttons next to refresh, e.g. Export. */
 	actions?: ReactNode;
 	/** e.g. "12 vendors" */
 	summary: ReactNode;
+	/** Show the Cards / Table toggle (lists that have both views). */
+	viewToggle?: boolean;
 }) {
+	const cards = useViewMode() === "cards";
 	return (
-		<Stack
-			direction={{ xs: "column", sm: "row" }}
-			spacing={{ xs: 1.5, sm: 2 }}
-			sx={{ p: 2, alignItems: { xs: "stretch", sm: "center" } }}
-		>
-			{filters && (
+		<>
+			<Stack
+				direction={{ xs: "column", sm: "row" }}
+				spacing={{ xs: 1.5, sm: 2 }}
+				sx={{ p: cards ? 0 : 2, py: cards ? 2 : 2, alignItems: { xs: "stretch", sm: "center" } }}
+			>
+				{filters && (
+					<Stack
+						direction={{ xs: "column", sm: "row" }}
+						spacing={{ xs: 1.5, sm: 2 }}
+						useFlexGap
+						sx={{ flexWrap: "wrap", alignItems: { xs: "stretch", sm: "center" } }}
+					>
+						{filters}
+					</Stack>
+				)}
+				<Box sx={{ flexGrow: 1, display: { xs: "none", sm: "block" } }} />
 				<Stack
-					direction={{ xs: "column", sm: "row" }}
-					spacing={{ xs: 1.5, sm: 2 }}
-					useFlexGap
-					sx={{ flexWrap: "wrap", alignItems: { xs: "stretch", sm: "center" } }}
+					direction="row"
+					sx={{
+						alignItems: "center",
+						justifyContent: { xs: "flex-end", sm: "space-between" },
+						flexWrap: "wrap",
+						gap: 1,
+						flexShrink: 0,
+					}}
 				>
-					{filters}
+					<Typography
+						variant="body2"
+						sx={{ color: "text.secondary", display: { xs: "none", sm: "block" } }}
+					>
+						{summary}
+					</Typography>
+					{viewToggle && <ViewToggle />}
+					{actions}
+					<RefreshButton />
+				</Stack>
+			</Stack>
+			{chips && (
+				<Stack spacing={1} sx={{ px: cards ? 0 : 2, pb: 2 }}>
+					{chips}
 				</Stack>
 			)}
-			<Box sx={{ flexGrow: 1, display: { xs: "none", sm: "block" } }} />
-			<Stack
-				direction="row"
-				sx={{ alignItems: "center", justifyContent: "space-between", gap: 1, flexShrink: 0 }}
-			>
-				<Typography variant="body2" sx={{ color: "text.secondary" }}>
-					{summary}
-				</Typography>
-				{actions}
-				<RefreshButton />
-			</Stack>
-		</Stack>
+		</>
 	);
 }

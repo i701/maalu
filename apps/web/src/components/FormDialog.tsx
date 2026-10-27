@@ -4,19 +4,20 @@ import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
-import { useTheme } from "@mui/material/styles";
-import useMediaQuery from "@mui/material/useMediaQuery";
 import type { FormEvent, ReactNode } from "react";
 import { useLastDefined } from "#/lib/motion";
+import type { Sheet } from "#/lib/sheet";
 import Reveal from "./Reveal";
+import SheetHandle from "./SheetHandle";
 
-/** Form dialog following the MUI "form dialog" pattern: the Paper is the <form>. */
+/** Form dialog following the MUI "form dialog" pattern (the Paper is the <form>), shown as a
+ * bottom sheet (see the theme's Dialog overrides). */
 export default function FormDialog({
 	title,
 	error,
 	pending,
 	onSubmit,
-	onClose,
+	sheet,
 	children,
 	maxWidth = "sm",
 }: {
@@ -24,22 +25,21 @@ export default function FormDialog({
 	error: string | null;
 	pending: boolean;
 	onSubmit: (e: FormEvent<HTMLFormElement>) => void;
-	onClose: () => void;
+	/** From useSheet(onClose): drives the slide-in and slide-out. */
+	sheet: Sheet;
 	children: ReactNode;
 	maxWidth?: "xs" | "sm" | "md";
 }) {
-	const theme = useTheme();
 	const shownError = useLastDefined(error); // keeps the text while the alert closes
-	const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
 	return (
 		<Dialog
-			open
-			onClose={onClose}
+			open={sheet.open}
+			onClose={sheet.close}
 			maxWidth={maxWidth}
-			fullScreen={fullScreen}
 			aria-labelledby="form-dialog-title"
 			slotProps={{
+				transition: { onExited: sheet.onExited },
 				paper: {
 					component: "form",
 					onSubmit: (e: FormEvent<HTMLDivElement>) =>
@@ -47,8 +47,9 @@ export default function FormDialog({
 				},
 			}}
 		>
+			<SheetHandle />
 			<DialogTitle id="form-dialog-title">{title}</DialogTitle>
-			<DialogContent dividers={fullScreen}>
+			<DialogContent>
 				<div style={{ paddingTop: 8 }}>{children}</div>
 				<Reveal in={Boolean(error)}>
 					<Alert severity="error" sx={{ mt: 2 }}>
@@ -57,7 +58,7 @@ export default function FormDialog({
 				</Reveal>
 			</DialogContent>
 			<DialogActions sx={{ px: 3, pb: 2 }}>
-				<Button onClick={onClose} color="inherit">
+				<Button onClick={sheet.close} color="inherit">
 					Cancel
 				</Button>
 				<Button type="submit" variant="contained" loading={pending}>

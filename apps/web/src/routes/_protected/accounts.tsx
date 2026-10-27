@@ -1,36 +1,35 @@
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
 import Grid from "@mui/material/Grid";
 import IconButton from "@mui/material/IconButton";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableHead from "@mui/material/TableHead";
-import TableRow from "@mui/material/TableRow";
-import Tooltip from "@mui/material/Tooltip";
+import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { createFileRoute } from "@tanstack/react-router";
-import { Fragment, useState } from "react";
+import { useState } from "react";
 import { z } from "zod";
 import AccountForm from "#/components/AccountForm";
 import ConfirmDelete from "#/components/ConfirmDelete";
 import EmptyState from "#/components/EmptyState";
 import PageHeader from "#/components/PageHeader";
+import MobileCard from "#/components/MobileCard";
 import PendingOverlay from "#/components/PendingOverlay";
+import ShapeTile from "#/components/ShapeTile";
+import Symbol from "#/components/Symbol";
+import StatCard from "#/components/StatCard";
 import SearchField from "#/components/SearchField";
 import TableCard from "#/components/TableCard";
 import TableToolbar from "#/components/TableToolbar";
 import { formatMoney, sumDecimals } from "#/lib/format";
 import { useLiveSearch } from "#/lib/live-search";
+import { ACCENT } from "#/lib/m3";
+import { staggerChildren } from "#/lib/motion";
 import { unwrap } from "#/lib/unwrap";
 import { deleteAccountFn, getAccountSummaryFn, listAccountsFn } from "#/server/accounts";
 import { listCurrenciesFn } from "#/server/currencies";
-import { ACCOUNT_GROUP_LABELS, ACCOUNT_GROUPS, type Account } from "#/types/api";
+import { ACCOUNT_GROUP_LABELS, ACCOUNT_GROUPS, type Account, type AccountGroup } from "#/types/api";
 
 const searchSchema = z.object({
 	// coerce: the router parses a typed ?q=2026 as a number, which should still be a search
@@ -59,22 +58,22 @@ export const Route = createFileRoute("/_protected/accounts")({
 	component: AccountsPage,
 });
 
-const isNegative = (amount: string) => amount.startsWith("-");
+/** Icon, colour and blob shape for each account type's cards. */
+const GROUP_TILE: Record<AccountGroup, { symbol: string; accent: string; shape: number }> = {
+	cash: { symbol: "payments", accent: ACCENT.green, shape: 1 },
+	accounts: { symbol: "account_balance", accent: ACCENT.blue, shape: 0 },
+	card: { symbol: "credit_card", accent: ACCENT.orange, shape: 3 },
+	debit_card: { symbol: "credit_card", accent: ACCENT.violet, shape: 2 },
+	savings: { symbol: "savings", accent: ACCENT.lime, shape: 5 },
+	prepaid: { symbol: "sell", accent: ACCENT.pink, shape: 4 },
+	investments: { symbol: "savings", accent: ACCENT.amber, shape: 6 },
+	overdrafts: { symbol: "info", accent: ACCENT.pink, shape: 7 },
+	loan: { symbol: "receipt_long", accent: ACCENT.orange, shape: 3 },
+	insurance: { symbol: "verified", accent: ACCENT.slate, shape: 2 },
+	others: { symbol: "category", accent: ACCENT.slate, shape: 0 },
+};
 
-function SummaryCard({ label, value, color }: { label: string; value: string; color?: string }) {
-	return (
-		<Card>
-			<CardContent>
-				<Typography variant="body2" sx={{ color: "text.secondary" }}>
-					{label}
-				</Typography>
-				<Typography variant="h2" component="p" sx={{ mt: 0.5, color }}>
-					{value}
-				</Typography>
-			</CardContent>
-		</Card>
-	);
-}
+const isNegative = (amount: string) => amount.startsWith("-");
 
 function AccountsPage() {
 	const { accounts, everyAccount, summary, currencies } = Route.useLoaderData();
@@ -94,6 +93,16 @@ function AccountsPage() {
 		<>
 			<PageHeader
 				title="Accounts"
+				symbol="account_balance"
+				accent="green"
+				shape={1}
+				stats={[
+					{
+						symbol: "account_balance",
+						label: `${accounts.length} ${accounts.length === 1 ? "account" : "accounts"}`,
+					},
+					{ symbol: "savings", label: `Net ${formatMoney(summary.total, summary.currency)}` },
+				]}
 				description="Wallets, bank accounts, cards and loans. Balances follow the transactions you link to them."
 				action={
 					<Button variant="contained" startIcon={<AddIcon />} onClick={() => setEditing("new")}>
@@ -102,33 +111,40 @@ function AccountsPage() {
 				}
 			/>
 
-			<Grid container spacing={2} sx={{ mb: 3 }}>
+			<Grid container spacing={2} sx={{ mb: 3, ...staggerChildren() }}>
 				<Grid size={{ xs: 12, sm: 4 }}>
-					<SummaryCard
+					<StatCard
 						label="Assets"
 						value={formatMoney(summary.assets, summary.currency)}
-						color="success.main"
+						gradient="emerald"
+						icon="account_balance"
+						shape={0}
 					/>
 				</Grid>
 				<Grid size={{ xs: 12, sm: 4 }}>
-					<SummaryCard
+					<StatCard
 						label="Liabilities"
 						value={formatMoney(summary.liabilities, summary.currency)}
-						color="error.main"
+						gradient="rose"
+						icon="credit_card"
+						shape={3}
 					/>
 				</Grid>
 				<Grid size={{ xs: 12, sm: 4 }}>
-					<SummaryCard
+					<StatCard
 						label="Total"
 						value={formatMoney(summary.total, summary.currency)}
-						color={isNegative(summary.total) ? "error.main" : undefined}
+						gradient={isNegative(summary.total) ? "rose" : "navy"}
+						icon="savings"
+						shape={6}
 					/>
 				</Grid>
 			</Grid>
 
 			<PendingOverlay>
-				<TableCard>
+				<TableCard flat>
 					<TableToolbar
+						viewToggle={false}
 						summary={`${accounts.length} ${accounts.length === 1 ? "account" : "accounts"}`}
 						filters={
 							<SearchField
@@ -140,49 +156,74 @@ function AccountsPage() {
 					/>
 
 					{accounts.length === 0 ? (
-						<EmptyState firstRun={!search.q}>
+						<EmptyState
+							firstRun={!search.q}
+							symbol={search.q ? "search" : "account_balance"}
+							accent={search.q ? "slate" : "green"}
+							shape={1}
+						>
 							{search.q
 								? "No accounts match this search."
 								: "No accounts yet. Add your wallet or bank account to start tracking balances."}
 						</EmptyState>
 					) : (
-						<TableContainer>
-							<Table>
-								<TableHead>
-									<TableRow>
-										<TableCell>Account</TableCell>
-										<TableCell align="right">Balance</TableCell>
-										<TableCell align="right" sx={{ width: 100 }} />
-									</TableRow>
-								</TableHead>
-								<TableBody>
-									{groups.map(({ group, items }) => (
-										<Fragment key={group}>
-											<TableRow sx={{ bgcolor: "action.hover" }}>
-												<TableCell sx={{ fontWeight: 600 }}>
-													{ACCOUNT_GROUP_LABELS[group]}
-												</TableCell>
-												<TableCell align="right" sx={{ fontWeight: 600, whiteSpace: "nowrap" }}>
-													{formatMoney(
-														sumDecimals(items.map((a) => a.base_balance)),
-														user.base_currency,
-													)}
-												</TableCell>
-												<TableCell />
-											</TableRow>
-											{items.map((a) => (
-												<TableRow key={a.id} hover>
-													<TableCell>
+						<Box sx={{ display: "grid", gap: 3 }}>
+							{groups.map(({ group, items }) => (
+								<Box key={group}>
+									<Stack
+										direction="row"
+										sx={{ alignItems: "baseline", justifyContent: "space-between", mb: 1, px: 0.5 }}
+									>
+										<Typography variant="subtitle1">{ACCOUNT_GROUP_LABELS[group]}</Typography>
+										<Typography variant="body2" sx={{ color: "text.secondary" }}>
+											{formatMoney(
+												sumDecimals(items.map((a) => a.base_balance)),
+												user.base_currency,
+											)}
+										</Typography>
+									</Stack>
+									<Box
+										sx={{
+											display: "grid",
+											gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 340px), 1fr))",
+											gap: 1,
+											...staggerChildren(),
+										}}
+									>
+										{items.map((a) => (
+											<Box
+												key={a.id}
+												sx={{
+													bgcolor: "var(--md-sys-color-surface-container-low)",
+													borderRadius: "var(--shape-xl)",
+													transition:
+														"transform var(--spring-spatial-fast-dur) var(--spring-spatial-fast)",
+													"&:active": { transform: "scale(.97)" },
+												}}
+											>
+												<MobileCard
+													leading={
+														<ShapeTile
+															shape={GROUP_TILE[group].shape}
+															size={52}
+															accent={GROUP_TILE[group].accent}
+														>
+															<Symbol name={GROUP_TILE[group].symbol} size={24} filled />
+														</ShapeTile>
+													}
+													primary={
 														<Typography variant="body2" sx={{ fontWeight: 500 }}>
 															{a.name}
 														</Typography>
-														{a.description && (
+													}
+													secondary={
+														a.description && (
 															<Typography variant="caption" sx={{ color: "text.secondary" }}>
 																{a.description}
 															</Typography>
-														)}
-													</TableCell>
-													<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+														)
+													}
+													end={
 														<Typography
 															variant="body2"
 															sx={{
@@ -192,40 +233,42 @@ function AccountsPage() {
 														>
 															{formatMoney(a.balance, a.currency)}
 														</Typography>
-														{a.currency !== user.base_currency && (
+													}
+													endSecondary={
+														a.currency !== user.base_currency && (
 															<Typography variant="caption" sx={{ color: "text.secondary" }}>
 																≈ {formatMoney(a.base_balance, user.base_currency)} @{" "}
 																{Number(a.exchange_rate)}
 															</Typography>
-														)}
-													</TableCell>
-													<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-														<Tooltip title="Edit">
+														)
+													}
+													actions={
+														<>
 															<IconButton
 																aria-label="Edit"
+																title="Edit"
 																size="small"
 																onClick={() => setEditing(a)}
 															>
 																<EditOutlinedIcon fontSize="small" />
 															</IconButton>
-														</Tooltip>
-														<Tooltip title="Delete">
 															<IconButton
 																aria-label="Delete"
+																title="Delete"
 																size="small"
 																onClick={() => setDeleting(a)}
 															>
 																<DeleteOutlineIcon fontSize="small" />
 															</IconButton>
-														</Tooltip>
-													</TableCell>
-												</TableRow>
-											))}
-										</Fragment>
-									))}
-								</TableBody>
-							</Table>
-						</TableContainer>
+														</>
+													}
+												/>
+											</Box>
+										))}
+									</Box>
+								</Box>
+							))}
+						</Box>
 					)}
 				</TableCard>
 			</PendingOverlay>

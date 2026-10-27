@@ -1,8 +1,9 @@
-import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
 import Slide, { type SlideProps } from "@mui/material/Slide";
 import type { TransitionProps } from "@mui/material/transitions";
 import Snackbar from "@mui/material/Snackbar";
-import { EASE_OUT } from "#/lib/motion";
+import SnackbarContent from "@mui/material/SnackbarContent";
+import Symbol from "./Symbol";
 import {
 	type ComponentType,
 	createContext,
@@ -14,9 +15,15 @@ import {
 
 type Notify = (message: string, severity?: "success" | "error") => void;
 
-/** Slides up from the bottom edge (and back down on exit) instead of MUI's default scale-grow. */
+/** Slides up from the bottom edge on the default spatial spring (and back down on exit). */
 function SlideUp(props: SlideProps) {
-	return <Slide {...props} direction="up" easing={{ enter: EASE_OUT, exit: EASE_OUT }} />;
+	return (
+		<Slide
+			{...props}
+			direction="up"
+			easing={{ enter: "var(--spring-spatial-default)", exit: "var(--ease-emph-accel)" }}
+		/>
+	);
 }
 
 const NotifyContext = createContext<Notify>(() => {});
@@ -43,13 +50,44 @@ export function NotifyProvider({ children }: { children: ReactNode }) {
 				autoHideDuration={4000}
 				onClose={(_, reason) => reason !== "clickaway" && setState((s) => ({ ...s, open: false }))}
 				anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+				// Clear the bottom navigation bar.
+				sx={{
+					bottom: {
+						xs: "calc(96px + env(safe-area-inset-bottom)) !important",
+						md: "calc(96px + env(safe-area-inset-bottom)) !important",
+					},
+				}}
 				// Enter and leave through the same bottom edge it is anchored to.
 				slots={{ transition: SlideUp as ComponentType<TransitionProps> }}
-				transitionDuration={{ enter: 300, exit: 200 }}
+				transitionDuration={{ enter: 484, exit: 200 }}
 			>
-				<Alert severity={state.severity} variant="filled" sx={{ width: "100%" }}>
-					{state.message}
-				</Alert>
+				<SnackbarContent
+					// The demo's snackbar: the inverse surface, 8px corners, a soft lift and a coloured
+					// status icon.
+					message={
+						<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+							<Symbol
+								name={state.severity === "error" ? "close" : "check"}
+								size={20}
+								filled
+								sx={{
+									color:
+										state.severity === "error"
+											? "var(--md-sys-color-error)"
+											: "var(--md-sys-color-inverse-primary)",
+								}}
+							/>
+							{state.message}
+						</Box>
+					}
+					sx={{
+						borderRadius: "var(--shape-sm)",
+						bgcolor: "var(--md-sys-color-inverse-surface)",
+						color: "var(--md-sys-color-inverse-on-surface)",
+						boxShadow: "var(--elev-3)",
+						"& .MuiSnackbarContent-message": { py: 0.25 },
+					}}
+				/>
 			</Snackbar>
 		</NotifyContext.Provider>
 	);

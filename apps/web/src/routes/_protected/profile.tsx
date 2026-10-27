@@ -3,7 +3,6 @@ import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
-import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
@@ -51,7 +50,7 @@ function ProfilePage() {
 							</Typography>
 						</div>
 					</Stack>
-					<Stack divider={<Divider flexItem />} component="dl" sx={{ m: 0 }}>
+					<Stack spacing={1.5} component="dl" sx={{ m: 0 }}>
 						{rows.map(([label, value]) => (
 							<Stack key={label} direction="row" sx={{ py: 1.5, justifyContent: "space-between" }}>
 								<Typography component="dt" variant="body2" sx={{ color: "text.secondary" }}>

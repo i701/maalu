@@ -1,7 +1,7 @@
-import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import { useState } from "react";
+import FilterChip from "./FilterChip";
 
 type Range = { from?: string; to?: string };
 
@@ -71,12 +71,10 @@ export default function DateRangeField({
 				{presets().map(({ label, range }) => {
 					const active = value.from === range.from && value.to === range.to;
 					return (
-						<Chip
+						<FilterChip
 							key={label}
-							size="small"
 							label={label}
-							color={active ? "primary" : "default"}
-							variant={active ? "filled" : "outlined"}
+							selected={active}
 							onClick={() => onChange(active ? {} : range)}
 						/>
 					);

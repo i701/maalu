@@ -1,13 +1,11 @@
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import MenuItem from "@mui/material/MenuItem";
-import Radio from "@mui/material/Radio";
-import RadioGroup from "@mui/material/RadioGroup";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
+import { ACCENT } from "#/lib/m3";
 import { searchAccountsFn } from "#/server/accounts";
 import { searchVendorsFn } from "#/server/vendors";
 import {
@@ -21,6 +19,7 @@ import {
 } from "#/types/api";
 import AmountRangeField from "./AmountRangeField";
 import DateRangeField from "./DateRangeField";
+import FilterChip from "./FilterChip";
 import RemoteAutocomplete, { type RemoteOption } from "./RemoteAutocomplete";
 
 /** The structured (non-text) filters, as they appear in the URL. */
@@ -33,6 +32,17 @@ export type TransactionFilterValues = {
 	max_amount?: string;
 	date_from?: string;
 	date_to?: string;
+};
+
+const TYPE_SYMBOL: Record<TransactionType, string> = {
+	income: "arrow_downward",
+	expense: "arrow_upward",
+	transfer: "payments",
+};
+const TYPE_ACCENT: Record<TransactionType, string> = {
+	income: ACCENT.green,
+	expense: ACCENT.pink,
+	transfer: ACCENT.blue,
 };
 
 // Stable module-level functions: the autocompletes re-fetch when `search` changes identity.
@@ -100,23 +110,24 @@ export default function TransactionFilters({
 			</Stack>
 
 			<Section title="Type">
-				<RadioGroup
-					value={filters.type ?? ""}
-					onChange={(e) =>
-						onChange({ type: (e.target.value || undefined) as TransactionType | undefined })
-					}
-					aria-label="Transaction type"
-				>
-					<FormControlLabel value="" control={<Radio size="small" />} label="All" />
+				<Stack direction="row" useFlexGap sx={{ flexWrap: "wrap", gap: 1 }}>
+					<FilterChip
+						label="All"
+						symbol="apps"
+						selected={!filters.type}
+						onClick={() => onChange({ type: undefined })}
+					/>
 					{TRANSACTION_TYPES.map((t) => (
-						<FormControlLabel
+						<FilterChip
 							key={t}
-							value={t}
-							control={<Radio size="small" />}
 							label={TRANSACTION_TYPE_LABELS[t]}
+							symbol={TYPE_SYMBOL[t]}
+							accent={TYPE_ACCENT[t]}
+							selected={filters.type === t}
+							onClick={() => onChange({ type: filters.type === t ? undefined : t })}
 						/>
 					))}
-				</RadioGroup>
+				</Stack>
 			</Section>
 
 			<Section title="Date">

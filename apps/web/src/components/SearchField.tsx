@@ -45,18 +45,35 @@ export default function SearchField({
 	return (
 		<TextField
 			size="small"
+			hiddenLabel
 			type="search"
 			value={text}
 			onChange={(e) => setText(e.target.value)}
 			placeholder={placeholder}
 			aria-label={placeholder}
-			sx={{ maxWidth: { sm: 320 } }}
+			sx={{
+				minWidth: { sm: 320 },
+				maxWidth: { sm: 440 },
+				// The demo's search bar: a 56px pill on the highest container with a soft lift. It
+				// has no label, so hiddenLabel stops MUI reserving room for one.
+				"& .MuiFilledInput-root": {
+					borderRadius: "var(--shape-full)",
+					minHeight: 56,
+					pl: 2.25,
+					pr: 1,
+					boxShadow: "var(--elev-3)",
+					"&.Mui-focused": {
+						boxShadow: "var(--elev-2), inset 0 0 0 2px var(--md-sys-color-primary)",
+					},
+				},
+				"& .MuiFilledInput-input": { py: 1.75, fontSize: 16 },
+			}}
 			slotProps={{
 				htmlInput: { maxLength: 100 },
 				input: {
 					startAdornment: (
 						<InputAdornment position="start">
-							<SearchIcon fontSize="small" />
+							<SearchIcon />
 						</InputAdornment>
 					),
 					endAdornment: text ? (

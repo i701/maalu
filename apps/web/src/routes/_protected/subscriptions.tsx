@@ -2,16 +2,12 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import Button from "@mui/material/Button";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
 import Chip from "@mui/material/Chip";
 import Grid from "@mui/material/Grid";
 import IconButton from "@mui/material/IconButton";
-import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { memo, useState } from "react";
@@ -21,14 +17,21 @@ import EmptyState from "#/components/EmptyState";
 import MobileCard from "#/components/MobileCard";
 import PageHeader from "#/components/PageHeader";
 import PendingOverlay from "#/components/PendingOverlay";
+import StatCard from "#/components/StatCard";
 import ResponsiveTable from "#/components/ResponsiveTable";
 import SearchField from "#/components/SearchField";
 import SubscriptionForm from "#/components/SubscriptionForm";
+import ChipFilter from "#/components/ChipFilter";
+import ShapeTile from "#/components/ShapeTile";
+import Symbol from "#/components/Symbol";
+import TonalChip from "#/components/TonalChip";
 import TableCard from "#/components/TableCard";
 import TablePager from "#/components/TablePager";
 import TableToolbar from "#/components/TableToolbar";
 import { daysUntil, formatDate, formatInterval, formatMoney } from "#/lib/format";
+import { STATUS_ACCENT } from "#/lib/accents";
 import { useLiveSearch } from "#/lib/live-search";
+import { staggerChildren } from "#/lib/motion";
 import { lastPageIfOutOfRange, pageSearch } from "#/lib/pagination";
 import { unwrap } from "#/lib/unwrap";
 import { listCurrenciesFn } from "#/server/currencies";
@@ -41,11 +44,9 @@ import { listVendorsFn } from "#/server/vendors";
 import {
 	INTERVAL_UNIT_LABELS,
 	INTERVAL_UNITS,
-	type IntervalUnit,
 	SUBSCRIPTION_STATUS_LABELS,
 	SUBSCRIPTION_STATUSES,
 	type Subscription,
-	type SubscriptionStatus,
 } from "#/types/api";
 
 const searchSchema = z.object({
@@ -102,12 +103,6 @@ function DueChip({ sub }: { sub: Subscription }) {
 	return <Chip size="small" variant="outlined" label={`In ${days}d`} />;
 }
 
-const statusColor = {
-	active: "success",
-	paused: "warning",
-	cancelled: "default",
-} as const;
-
 /** Pieces shared by the desktop row and the mobile card. */
 function SubCost({ s, baseCurrency }: { s: Subscription; baseCurrency: string }) {
 	return (
@@ -139,7 +134,7 @@ function SubNextDue({ s }: { s: Subscription }) {
 
 function StatusChip({ s }: { s: Subscription }) {
 	return (
-		<Chip size="small" color={statusColor[s.status]} label={SUBSCRIPTION_STATUS_LABELS[s.status]} />
+		<TonalChip accent={STATUS_ACCENT[s.status]} label={SUBSCRIPTION_STATUS_LABELS[s.status]} />
 	);
 }
 
@@ -213,6 +208,11 @@ const SubscriptionsTable = memo(function SubscriptionsTable({
 			)}
 			renderCard={(s) => (
 				<MobileCard
+					leading={
+						<ShapeTile shape={2} size={52} accent={STATUS_ACCENT[s.status]}>
+							<Symbol name="event_repeat" size={24} filled />
+						</ShapeTile>
+					}
 					primary={
 						<Typography variant="body2" sx={{ fontWeight: 500 }}>
 							{s.name}
@@ -272,6 +272,16 @@ function SubscriptionsPage() {
 		<>
 			<PageHeader
 				title="Subscriptions"
+				symbol="event_repeat"
+				accent="violet"
+				shape={2}
+				stats={[
+					{ symbol: "event_repeat", label: `${summary.active_count} active` },
+					{
+						symbol: "payments",
+						label: `${formatMoney(summary.monthly_base_total, summary.currency)} / month`,
+					},
+				]}
 				description="Recurring charges. Link a transaction to a subscription to mark it paid."
 				action={
 					<Button variant="contained" startIcon={<AddIcon />} onClick={() => setEditing("new")}>
@@ -280,36 +290,55 @@ function SubscriptionsPage() {
 				}
 			/>
 
-			<Grid container spacing={2} sx={{ mb: 3 }}>
+			<Grid container spacing={2} sx={{ mb: 3, ...staggerChildren() }}>
 				<Grid size={{ xs: 12, sm: 6, md: 4 }}>
-					<Card>
-						<CardContent>
-							<Typography variant="body2" sx={{ color: "text.secondary" }}>
-								Monthly total
-							</Typography>
-							<Typography variant="h2" component="p" sx={{ mt: 0.5 }}>
-								{formatMoney(summary.monthly_base_total, summary.currency)}
-							</Typography>
-						</CardContent>
-					</Card>
+					<StatCard
+						label="Monthly total"
+						value={formatMoney(summary.monthly_base_total, summary.currency)}
+						gradient="violet"
+						icon="payments"
+						shape={2}
+					/>
 				</Grid>
 				<Grid size={{ xs: 12, sm: 6, md: 4 }}>
-					<Card>
-						<CardContent>
-							<Typography variant="body2" sx={{ color: "text.secondary" }}>
-								Active subscriptions
-							</Typography>
-							<Typography variant="h2" component="p" sx={{ mt: 0.5 }}>
-								{summary.active_count}
-							</Typography>
-						</CardContent>
-					</Card>
+					<StatCard
+						label="Active subscriptions"
+						value={String(summary.active_count)}
+						tone="primary"
+						icon="event_repeat"
+						shape={5}
+					/>
 				</Grid>
 			</Grid>
 
 			<PendingOverlay>
 				<TableCard>
 					<TableToolbar
+						chips={
+							<>
+								<ChipFilter
+									allLabel="All statuses"
+									value={search.status}
+									options={SUBSCRIPTION_STATUSES.map((v) => ({
+										value: v,
+										label: SUBSCRIPTION_STATUS_LABELS[v],
+										accent: STATUS_ACCENT[v],
+									}))}
+									onChange={(status) => navigate({ search: (p) => ({ ...p, page: 1, status }) })}
+								/>
+								<ChipFilter
+									allLabel="Any period"
+									value={search.interval_unit}
+									options={INTERVAL_UNITS.map((v) => ({
+										value: v,
+										label: INTERVAL_UNIT_LABELS[v],
+									}))}
+									onChange={(interval_unit) =>
+										navigate({ search: (p) => ({ ...p, page: 1, interval_unit }) })
+									}
+								/>
+							</>
+						}
 						summary={`${total} ${total === 1 ? "subscription" : "subscriptions"}`}
 						filters={
 							<>
@@ -322,52 +351,6 @@ function SubscriptionsPage() {
 										})
 									}
 								/>
-								<TextField
-									select
-									size="small"
-									label="Status"
-									value={search.status ?? ""}
-									onChange={(e) =>
-										navigate({
-											search: (p) => ({
-												...p,
-												page: 1,
-												status: (e.target.value || undefined) as SubscriptionStatus | undefined,
-											}),
-										})
-									}
-									sx={{ minWidth: { sm: 140 } }}
-								>
-									<MenuItem value="">All statuses</MenuItem>
-									{SUBSCRIPTION_STATUSES.map((st) => (
-										<MenuItem key={st} value={st}>
-											{SUBSCRIPTION_STATUS_LABELS[st]}
-										</MenuItem>
-									))}
-								</TextField>
-								<TextField
-									select
-									size="small"
-									label="Billing"
-									value={search.interval_unit ?? ""}
-									onChange={(e) =>
-										navigate({
-											search: (p) => ({
-												...p,
-												page: 1,
-												interval_unit: (e.target.value || undefined) as IntervalUnit | undefined,
-											}),
-										})
-									}
-									sx={{ minWidth: { sm: 140 } }}
-								>
-									<MenuItem value="">Any period</MenuItem>
-									{INTERVAL_UNITS.map((u) => (
-										<MenuItem key={u} value={u}>
-											{INTERVAL_UNIT_LABELS[u]}
-										</MenuItem>
-									))}
-								</TextField>
 								{filtered && (
 									<Button
 										color="inherit"
@@ -385,7 +368,12 @@ function SubscriptionsPage() {
 					/>
 
 					{items.length === 0 ? (
-						<EmptyState firstRun={!filtered}>
+						<EmptyState
+							firstRun={!filtered}
+							symbol={filtered ? "search" : "event_repeat"}
+							accent={filtered ? "slate" : "violet"}
+							shape={2}
+						>
 							{filtered
 								? "No subscriptions match these filters."
 								: 'No subscriptions yet. Add one, or use "Make subscription" on a transaction.'}
