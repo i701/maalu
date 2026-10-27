@@ -1,6 +1,6 @@
 /**
  * Material 3 colour roles: neutral (grey) surfaces, so the page reads as clean white or black, with
- * teal kept as the primary accent only. One source for both the MUI palette
+ * MUI's default blue as the primary accent only (a theme picker can replace it later). One source for both the MUI palette
  * (theme.ts) and the `--md-sys-color-*` CSS variables used for roles MUI has no slot for, such as
  * the surface containers and the secondary/tertiary containers.
  *
@@ -57,11 +57,11 @@ export const M3_LIGHT: Roles = {
 	inverseOnSurface: "#f1f0f4",
 	outline: "#77777b",
 	outlineVariant: "#c9c9cd",
-	primary: "#006972",
+	primary: "#1976d2",
 	onPrimary: "#ffffff",
-	primaryContainer: "#9df0fa",
-	onPrimaryContainer: "#004f56",
-	inversePrimary: "#81d3de",
+	primaryContainer: "#d3e4ff",
+	onPrimaryContainer: "#001c3b",
+	inversePrimary: "#a5c8ff",
 	secondary: "#5d5e62",
 	onSecondary: "#ffffff",
 	secondaryContainer: "#e4e4e8",
@@ -92,11 +92,11 @@ export const M3_DARK: Roles = {
 	inverseOnSurface: "#2f3033",
 	outline: "#8e8e93",
 	outlineVariant: "#3b3b40",
-	primary: "#81d3de",
-	onPrimary: "#00363b",
-	primaryContainer: "#004f56",
-	onPrimaryContainer: "#9df0fa",
-	inversePrimary: "#006972",
+	primary: "#90caf9",
+	onPrimary: "#0b2e4f",
+	primaryContainer: "#0d4a8a",
+	onPrimaryContainer: "#d3e4ff",
+	inversePrimary: "#1976d2",
 	secondary: "#c4c4c8",
 	onSecondary: "#2e2e32",
 	secondaryContainer: "#38383d",
@@ -135,8 +135,8 @@ export type Accent = keyof typeof ACCENT;
 
 /** Deep two-stop gradients for stat cards: dark enough for white text in light and dark mode. */
 export const GRADIENT = {
-	teal: ["#0e6d7b", "#054c55"],
-	navy: ["#24406b", "#0e6370"],
+	blue: ["#1565c0", "#0d3c78"],
+	navy: ["#24406b", "#0e4a8f"],
 	emerald: ["#0f8a64", "#04483a"],
 	rose: ["#b3263f", "#5f0f26"],
 	violet: ["#6d4bd1", "#35207f"],

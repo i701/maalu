@@ -23,7 +23,7 @@ import Symbol from "./Symbol";
 export default function StatCard({
 	label,
 	value,
-	gradient = "teal",
+	gradient = "blue",
 	tone,
 	icon,
 	shape = 0,

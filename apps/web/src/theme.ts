@@ -119,9 +119,9 @@ const theme = createTheme({
 			defaultProps: { disableUnderline: true },
 			styleOverrides: {
 				root: {
-					// M3 filled field: 12px top corners, 4px bottom, a hairline underline that thickens
-					// and turns primary on focus.
-					borderRadius: "var(--shape-md) var(--shape-md) var(--shape-xs) var(--shape-xs)",
+					// Filled field: 8px top corners and a square bottom, with a hairline underline that
+					// thickens and turns primary on focus.
+					borderRadius: "var(--shape-sm) var(--shape-sm) 0 0",
 					backgroundColor: "var(--md-sys-color-surface-container-highest)",
 					boxShadow: "inset 0 -1px 0 var(--md-sys-color-on-surface-variant)",
 					transition:
