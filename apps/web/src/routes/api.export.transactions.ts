@@ -7,6 +7,7 @@ const FILTERS = [
 	"type",
 	"payment_method",
 	"vendor_id",
+	"category_id",
 	"account_id",
 	"subscription_id",
 	"currency",

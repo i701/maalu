@@ -11,6 +11,7 @@ import {
 	TRANSACTION_TYPES,
 	TRANSACTION_TYPE_LABELS,
 	type Account,
+	type Category,
 	type PaymentMethod,
 	type Subscription,
 	type Transaction,
@@ -41,6 +42,7 @@ const TYPE_COLOR = { income: "success", expense: "error", transfer: "info" } as 
 export default function TransactionForm({
 	transaction,
 	vendors,
+	categories,
 	subscriptions,
 	accounts,
 	currencies,
@@ -50,6 +52,7 @@ export default function TransactionForm({
 	/** undefined = create a new transaction */
 	transaction?: Transaction;
 	vendors: Vendor[];
+	categories: Category[];
 	subscriptions: Subscription[];
 	accounts: Account[];
 	currencies: string[];
@@ -175,6 +178,7 @@ export default function TransactionForm({
 						transaction={transaction}
 						switched={switched}
 						splits={splits}
+						categories={categories}
 					/>
 				)}
 

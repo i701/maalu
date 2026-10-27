@@ -11,12 +11,14 @@ import {
 	PAYMENT_METHOD_LABELS,
 	SUBSCRIPTION_STATUSES,
 	SUBSCRIPTION_STATUS_LABELS,
+	type Category,
 	type IntervalUnit,
 	type PaymentMethod,
 	type Subscription,
 	type SubscriptionStatus,
 	type Vendor,
 } from "#/types/api";
+import CategoryField from "./CategoryField";
 import CurrencyField from "./CurrencyField";
 import FormDialog from "./FormDialog";
 import { useNotify } from "./Notify";
@@ -30,6 +32,7 @@ const today = () => {
 export default function SubscriptionForm({
 	subscription,
 	vendors,
+	categories,
 	currencies,
 	baseCurrency,
 	onClose,
@@ -37,6 +40,7 @@ export default function SubscriptionForm({
 	/** undefined = create a new subscription */
 	subscription?: Subscription;
 	vendors: Vendor[];
+	categories: Category[];
 	currencies: string[];
 	baseCurrency: string;
 	onClose: () => void;
@@ -222,12 +226,10 @@ export default function SubscriptionForm({
 				</Grid>
 
 				<Grid size={{ xs: 12, sm: 6 }}>
-					<TextField
-						label="Category"
+					<CategoryField
+						categories={categories}
 						name="category"
-						defaultValue={subscription?.category}
-						required
-						slotProps={{ htmlInput: { maxLength: 100 } }}
+						defaultValue={subscription?.category ?? ""}
 					/>
 				</Grid>
 

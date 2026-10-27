@@ -7,6 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.enums import IntervalUnit, PaymentMethod, SubscriptionStatus
 from app.models.base import Base
+from app.models.category import Category
 from app.models.vendor import Vendor
 
 
@@ -45,7 +46,8 @@ class Subscription(Base):
     base_amount: Mapped[Decimal] = mapped_column(Numeric(19, 4))
 
     payment_method: Mapped[PaymentMethod] = mapped_column(_str_enum(PaymentMethod))
-    category: Mapped[str] = mapped_column(String(100))
+    category_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("categories.id"), index=True)
+    category_ref: Mapped[Category] = relationship(lazy="joined")
 
     interval_unit: Mapped[IntervalUnit] = mapped_column(_str_enum(IntervalUnit))
     interval_count: Mapped[int] = mapped_column(Integer, default=1)
@@ -58,3 +60,7 @@ class Subscription(Base):
         server_default=func.now(),
         default=lambda: datetime.now(UTC),
     )
+
+    @property
+    def category(self) -> str:
+        return self.category_ref.name

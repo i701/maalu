@@ -8,7 +8,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.allocation import allocate_base
 from app.enums import PaymentMethod, TransactionType
 from app.export import EXPORT_LIMIT, build_workbook
-from app.models import Account, Subscription, Transaction, TransactionSplit, User, Vendor
+from app.models import (
+    Account,
+    Category,
+    Subscription,
+    Transaction,
+    TransactionSplit,
+    User,
+    Vendor,
+)
 from app.schemas import (
     CategoryTotal,
     CategoryTotals,
@@ -18,12 +26,12 @@ from app.schemas import (
     TransactionUpdate,
 )
 from app.services.account import AccountCurrencyMismatchError, AccountNotFoundError
+from app.services.category import CategoryService
 from app.services.errors import TransactionRuleError
 from app.services.money import BASE_AMOUNT_QUANTUM, price_in_base
 from app.services.subscription import SubscriptionNotFoundError
 from app.services.vendor import VendorNotFoundError, VendorService
 
-TRANSFER_CATEGORY = "Transfer"
 # Transfers have no payment method of their own; this fills the required column.
 TRANSFER_PAYMENT_METHOD = PaymentMethod.OTHER
 
@@ -45,6 +53,7 @@ class TransactionService:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
         self.vendors = VendorService(db)
+        self.categories = CategoryService(db)
 
     async def _resolve_vendor(
         self, user_id: uuid.UUID, vendor_id: uuid.UUID | None, vendor_name: str | None
@@ -141,19 +150,25 @@ class TransactionService:
             "to_amount": None,
         }
 
-    @staticmethod
-    def _build_splits(splits: list[SplitInput]) -> list[TransactionSplit]:
-        return [
-            TransactionSplit(
-                position=position,
-                name=s.name,
-                quantity=s.quantity,
-                category=s.category,
-                amount=s.amount,
-                tax_amount=s.tax_amount,
+    async def _build_splits(
+        self, user_id: uuid.UUID, splits: list[SplitInput]
+    ) -> list[TransactionSplit]:
+        resolved: dict[str, Category] = {}
+        lines = []
+        for position, s in enumerate(splits):
+            if s.category not in resolved:
+                resolved[s.category] = await self.categories.get_or_create(user_id, s.category)
+            lines.append(
+                TransactionSplit(
+                    position=position,
+                    name=s.name,
+                    quantity=s.quantity,
+                    category_ref=resolved[s.category],
+                    amount=s.amount,
+                    tax_amount=s.tax_amount,
+                )
             )
-            for position, s in enumerate(splits)
-        ]
+        return lines
 
     @staticmethod
     def _check_splits(transaction: Transaction) -> None:
@@ -166,7 +181,7 @@ class TransactionService:
             raise TransactionRuleError(
                 f"The items add up to {total:,} but the total is {transaction.amount:,}"
             )
-        transaction.category = max(transaction.splits, key=lambda s: s.amount).category
+        transaction.category_ref = max(transaction.splits, key=lambda s: s.amount).category_ref
 
     async def create(self, user_id: uuid.UUID, data: TransactionCreate) -> Transaction:
         base = await self._base_currency(user_id)
@@ -187,8 +202,11 @@ class TransactionService:
             user_id=user_id,
             type=data.type,
             amount=data.amount,
-            category=TRANSFER_CATEGORY if is_transfer else data.category or "",
-            splits=self._build_splits(data.splits) if data.splits else [],
+            # a split transaction without its own category takes the biggest item's (_check_splits)
+            category_ref=await self.categories.get_or_create(user_id, data.category)
+            if data.category and not is_transfer and not data.splits
+            else None,
+            splits=await self._build_splits(user_id, data.splits) if data.splits else [],
             payment_method=TRANSFER_PAYMENT_METHOD if is_transfer else data.payment_method,
             description=data.description,
             transaction_date=data.transaction_date,
@@ -212,6 +230,7 @@ class TransactionService:
         vendor_id: uuid.UUID | None,
         subscription_id: uuid.UUID | None,
         account_id: uuid.UUID | None,
+        category_id: uuid.UUID | None,
         payment_method: PaymentMethod | None,
         currency: str | None,
         q: str | None = None,
@@ -240,11 +259,13 @@ class TransactionService:
             term = q.strip()
             conditions.append(
                 or_(
-                    Transaction.category.icontains(term, autoescape=True),
+                    Transaction.category_ref.has(Category.name.icontains(term, autoescape=True)),
                     Transaction.splits.any(
                         or_(
                             TransactionSplit.name.icontains(term, autoescape=True),
-                            TransactionSplit.category.icontains(term, autoescape=True),
+                            TransactionSplit.category_ref.has(
+                                Category.name.icontains(term, autoescape=True)
+                            ),
                         )
                     ),
                     Transaction.description.icontains(term, autoescape=True),
@@ -266,6 +287,13 @@ class TransactionService:
             conditions.append(
                 or_(Transaction.account_id == account_id, Transaction.to_account_id == account_id)
             )
+        if category_id is not None:  # the transaction's own category, or any of its items'
+            conditions.append(
+                or_(
+                    Transaction.category_id == category_id,
+                    Transaction.splits.any(TransactionSplit.category_id == category_id),
+                )
+            )
         if currency is not None:
             conditions.append(Transaction.currency == currency.upper())
         if payment_method is not None:
@@ -280,6 +308,7 @@ class TransactionService:
         vendor_id: uuid.UUID | None = None,
         subscription_id: uuid.UUID | None = None,
         account_id: uuid.UUID | None = None,
+        category_id: uuid.UUID | None = None,
         payment_method: PaymentMethod | None = None,
         currency: str | None = None,
         q: str | None = None,
@@ -296,6 +325,7 @@ class TransactionService:
             vendor_id=vendor_id,
             subscription_id=subscription_id,
             account_id=account_id,
+            category_id=category_id,
             payment_method=payment_method,
             currency=currency,
             q=q,
@@ -321,6 +351,7 @@ class TransactionService:
         vendor_id: uuid.UUID | None = None,
         subscription_id: uuid.UUID | None = None,
         account_id: uuid.UUID | None = None,
+        category_id: uuid.UUID | None = None,
         payment_method: PaymentMethod | None = None,
         currency: str | None = None,
         q: str | None = None,
@@ -335,6 +366,7 @@ class TransactionService:
             vendor_id=vendor_id,
             subscription_id=subscription_id,
             account_id=account_id,
+            category_id=category_id,
             payment_method=payment_method,
             currency=currency,
             q=q,
@@ -353,6 +385,7 @@ class TransactionService:
         vendor_id: uuid.UUID | None = None,
         subscription_id: uuid.UUID | None = None,
         account_id: uuid.UUID | None = None,
+        category_id: uuid.UUID | None = None,
         payment_method: PaymentMethod | None = None,
         currency: str | None = None,
         q: str | None = None,
@@ -368,6 +401,7 @@ class TransactionService:
             vendor_id=vendor_id,
             subscription_id=subscription_id,
             account_id=account_id,
+            category_id=category_id,
             payment_method=payment_method,
             currency=currency,
             q=q,
@@ -376,21 +410,40 @@ class TransactionService:
             date_from=date_from,
             date_to=date_to,
         )
+        money = Transaction.type.in_([TransactionType.INCOME, TransactionType.EXPENSE])
         stmt = (
             select(Transaction.type, func.sum(Transaction.base_amount))
-            .where(
-                *conditions, Transaction.type.in_([TransactionType.INCOME, TransactionType.EXPENSE])
-            )
+            .where(*conditions, money)
             .group_by(Transaction.type)
         )
+        if category_id is not None:
+            # Only the part of a split transaction that is in this category counts, not all of it.
+            stmt = stmt.where(~Transaction.splits.any())
         sums = {
             kind: Decimal(str(total or 0)) for kind, total in (await self.db.execute(stmt)).all()
         }
+        if category_id is not None:
+            for kind, _category, share in await self._split_shares(conditions, money, category_id):
+                sums[kind] = sums.get(kind, Decimal(0)) + share
         return TransactionTotals(
             income=sums.get(TransactionType.INCOME, Decimal(0)),
             expense=sums.get(TransactionType.EXPENSE, Decimal(0)),
             currency=await self._base_currency(user_id),
         )
+
+    async def _split_shares(
+        self, conditions: list, money, category_id: uuid.UUID | None
+    ) -> list[tuple[TransactionType, Category, Decimal]]:
+        """(type, category, base-currency share) of every item of the matching split
+        transactions, or only of the items in `category_id` when given."""
+        stmt = select(Transaction).where(*conditions, money, Transaction.splits.any())
+        out = []
+        for t in (await self.db.scalars(stmt)).all():
+            shares = allocate_base(t.base_amount, t.amount, [s.amount for s in t.splits])
+            for line, share in zip(t.splits, shares, strict=True):
+                if category_id is None or line.category_id == category_id:
+                    out.append((t.type, line.category_ref, share))
+        return out
 
     async def category_totals_for_user(
         self,
@@ -400,6 +453,7 @@ class TransactionService:
         vendor_id: uuid.UUID | None = None,
         subscription_id: uuid.UUID | None = None,
         account_id: uuid.UUID | None = None,
+        category_id: uuid.UUID | None = None,
         payment_method: PaymentMethod | None = None,
         currency: str | None = None,
         q: str | None = None,
@@ -419,6 +473,7 @@ class TransactionService:
             vendor_id=vendor_id,
             subscription_id=subscription_id,
             account_id=account_id,
+            category_id=category_id,
             payment_method=payment_method,
             currency=currency,
             q=q,
@@ -428,37 +483,44 @@ class TransactionService:
             date_to=date_to,
         )
         money = Transaction.type.in_([TransactionType.INCOME, TransactionType.EXPENSE])
-        totals: dict[tuple[TransactionType, str], list] = {}
+        totals: dict[tuple[TransactionType, uuid.UUID], list] = {}
 
-        def add(kind: TransactionType, category: str, amount: Decimal, count: int = 1) -> None:
-            entry = totals.setdefault((kind, category), [Decimal(0), 0])
-            entry[0] += amount
-            entry[1] += count
+        def add(kind: TransactionType, category: Category, amount: Decimal, count: int) -> None:
+            entry = totals.setdefault((kind, category.id), [category, Decimal(0), 0])
+            entry[1] += amount
+            entry[2] += count
 
         plain = (
             select(
                 Transaction.type,
-                Transaction.category,
+                Category,
                 func.sum(Transaction.base_amount),
                 func.count(Transaction.id),
             )
+            .join(Category, Category.id == Transaction.category_id)
             .where(*conditions, money, ~Transaction.splits.any())
-            .group_by(Transaction.type, Transaction.category)
+            .group_by(Transaction.type, Category.id)
         )
         for kind, category, total, count in (await self.db.execute(plain)).all():
             add(kind, category, Decimal(str(total or 0)), count)
 
+        # A split transaction counts once toward each category its items are in.
+        touched: dict[tuple[TransactionType, uuid.UUID, uuid.UUID], bool] = {}
         split_stmt = select(Transaction).where(*conditions, money, Transaction.splits.any())
         for t in (await self.db.scalars(split_stmt)).all():
             shares = allocate_base(t.base_amount, t.amount, [s.amount for s in t.splits])
-            counted: set[str] = set()
             for line, share in zip(t.splits, shares, strict=True):
-                add(t.type, line.category, share, 0 if line.category in counted else 1)
-                counted.add(line.category)
+                if category_id is not None and line.category_id != category_id:
+                    continue
+                first = (t.type, t.id, line.category_id) not in touched
+                touched[(t.type, t.id, line.category_id)] = True
+                add(t.type, line.category_ref, share, 1 if first else 0)
 
         rows = [
-            CategoryTotal(type=kind, category=category, total=total, count=count)
-            for (kind, category), (total, count) in totals.items()
+            CategoryTotal(
+                type=kind, category_id=category.id, category=category.name, total=total, count=count
+            )
+            for (kind, _), (category, total, count) in totals.items()
         ]
         rows.sort(key=lambda r: (r.type.value, -r.total, r.category))
         return CategoryTotals(currency=await self._base_currency(user_id), categories=rows)
@@ -471,6 +533,7 @@ class TransactionService:
         vendor_id: uuid.UUID | None = None,
         subscription_id: uuid.UUID | None = None,
         account_id: uuid.UUID | None = None,
+        category_id: uuid.UUID | None = None,
         payment_method: PaymentMethod | None = None,
         currency: str | None = None,
         q: str | None = None,
@@ -488,6 +551,7 @@ class TransactionService:
             "vendor_id": vendor_id,
             "subscription_id": subscription_id,
             "account_id": account_id,
+            "category_id": category_id,
             "payment_method": payment_method,
             "currency": currency,
             "q": q,
@@ -514,6 +578,7 @@ class TransactionService:
             base_currency=await self._base_currency(user_id),
             filter_labels=await self._filter_labels(user_id, **filters),
             generated_on=date.today(),
+            category_id=category_id,
         )
 
     async def _filter_labels(
@@ -524,6 +589,7 @@ class TransactionService:
         vendor_id: uuid.UUID | None,
         subscription_id: uuid.UUID | None,
         account_id: uuid.UUID | None,
+        category_id: uuid.UUID | None,
         payment_method: PaymentMethod | None,
         currency: str | None,
         q: str | None,
@@ -548,6 +614,9 @@ class TransactionService:
         if account_id is not None:
             account = await self._resolve_account_or_none(user_id, account_id)
             labels.append(f"Account: {account.name if account else 'unknown'}")
+        if category_id is not None:
+            category = await self.categories.get(user_id, category_id)
+            labels.append(f"Category: {category.name if category else 'unknown'}")
         if subscription_id is not None:
             labels.append("Subscription: selected")
         if min_amount is not None or max_amount is not None:
@@ -627,7 +696,9 @@ class TransactionService:
         # Replacing the lines (explicit null removes the split).
         if "splits" in changes:
             new_splits = changes.pop("splits")
-            transaction.splits = self._build_splits(data.splits) if new_splits else []
+            transaction.splits = (
+                await self._build_splits(user_id, data.splits) if new_splits else []
+            )
 
         # Type-specific housekeeping when the kind of transaction changes.
         if is_transfer:
@@ -636,7 +707,7 @@ class TransactionService:
             transaction.subscription = None
             changes.pop("category", None)
             changes.pop("payment_method", None)
-            transaction.category = TRANSFER_CATEGORY
+            transaction.category_ref = None
             transaction.payment_method = TRANSFER_PAYMENT_METHOD
         elif old_type is TransactionType.TRANSFER:
             if "category" not in changes and not data.splits:
@@ -646,6 +717,9 @@ class TransactionService:
         elif new_type is not TransactionType.EXPENSE:
             transaction.subscription = None  # income can't be a subscription payment
 
+        name = changes.pop("category", None)
+        if name is not None and not transaction.splits:  # a split one follows its biggest item
+            transaction.category_ref = await self.categories.get_or_create(user_id, name)
         for field, value in changes.items():
             setattr(transaction, field, value)
         self._check_splits(transaction)

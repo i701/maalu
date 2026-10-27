@@ -115,6 +115,7 @@ export type Subscription = {
 	base_amount: string;
 	payment_method: PaymentMethod;
 	category: string;
+	category_id: string;
 	interval_unit: IntervalUnit;
 	interval_count: number;
 	start_date: string;
@@ -161,12 +162,23 @@ export type AccountSummary = {
 };
 
 // Money fields are decimal *strings* end to end; never parse them into floats for math.
+/** A category. Transactions, split items and subscriptions point at one; names are unique per user ignoring case. */
+export type Category = {
+	id: string;
+	name: string;
+	created_at: string;
+	/** Transactions in this category, or with an item in it */
+	transaction_count: number;
+	subscription_count: number;
+};
+
 /** One item of a split transaction. `amount` is the line total paid, tax included. */
 export type TransactionSplit = {
 	id: string;
 	name: string;
 	quantity: string;
 	category: string;
+	category_id: string;
 	amount: string;
 	tax_amount: string | null;
 };
@@ -183,6 +195,8 @@ export type Transaction = {
 	base_amount: string;
 	payment_method: PaymentMethod;
 	category: string;
+	/** Null for transfers, which have no category */
+	category_id: string | null;
 	description: string | null;
 	transaction_date: string;
 	/** Optional breakdown by item and category; adds up to `amount`. `category` is the biggest line's. */
@@ -198,6 +212,7 @@ export type Transaction = {
 /** Income or expense in one category (base currency). A split transaction counts under each of its items' categories. */
 export type CategoryTotal = {
 	type: "income" | "expense";
+	category_id: string;
 	category: string;
 	total: string;
 	count: number;

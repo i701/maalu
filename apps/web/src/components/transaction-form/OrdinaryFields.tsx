@@ -7,10 +7,12 @@ import {
 	PAYMENT_METHODS,
 	PAYMENT_METHOD_LABELS,
 	type Account,
+	type Category,
 	type PaymentMethod,
 	type Transaction,
 	type TransactionType,
 } from "#/types/api";
+import CategoryField from "../CategoryField";
 import CurrencyField from "../CurrencyField";
 import { Cell, RevealCell } from "./Cells";
 import SplitEditor from "./SplitEditor";
@@ -34,6 +36,7 @@ export default function OrdinaryFields({
 	transaction,
 	switched,
 	splits,
+	categories,
 }: {
 	type: TransactionType;
 	accounts: Account[];
@@ -51,6 +54,7 @@ export default function OrdinaryFields({
 	transaction?: Transaction;
 	switched: boolean;
 	splits: SplitsState;
+	categories: Category[];
 }) {
 	const account = accounts.find((a) => a.id === accountId) ?? null;
 
@@ -160,14 +164,12 @@ export default function OrdinaryFields({
 						label="Split by item and category"
 					/>
 				) : (
-					<TextField
-						label="Category"
+					<CategoryField
+						categories={categories}
 						name="category"
 						defaultValue={
 							transaction && transaction.type !== "transfer" ? transaction.category : ""
 						}
-						required
-						slotProps={{ htmlInput: { maxLength: 100 } }}
 					/>
 				)}
 			</Cell>
@@ -182,7 +184,7 @@ export default function OrdinaryFields({
 			)}
 
 			<RevealCell size={12} show={splits.enabled}>
-				<SplitEditor splits={splits} currency={effectiveCurrency} />
+				<SplitEditor splits={splits} currency={effectiveCurrency} categories={categories} />
 			</RevealCell>
 		</Fragment>
 	);

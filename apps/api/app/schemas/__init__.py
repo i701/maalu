@@ -5,6 +5,12 @@ from app.schemas.account import (
     AccountSummary,
     AccountUpdate,
 )
+from app.schemas.category import (
+    CategoryCreate,
+    CategoryMerge,
+    CategoryResponse,
+    CategoryUpdate,
+)
 from app.schemas.subscription import (
     SubscriptionCreate,
     SubscriptionFromTransaction,
@@ -32,8 +38,12 @@ __all__ = [
     "AccountResponse",
     "AccountSummary",
     "AccountUpdate",
+    "CategoryCreate",
+    "CategoryMerge",
+    "CategoryResponse",
     "CategoryTotal",
     "CategoryTotals",
+    "CategoryUpdate",
     "SplitInput",
     "SplitResponse",
     "SubscriptionCreate",

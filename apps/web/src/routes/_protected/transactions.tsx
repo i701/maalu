@@ -57,6 +57,7 @@ import {
 	getTransactionTotalsFn,
 	listTransactionsFn,
 } from "#/server/transactions";
+import { getCategoryFn, listCategoriesFn } from "#/server/categories";
 import { getVendorFn, listVendorsFn } from "#/server/vendors";
 import {
 	ACCOUNT_GROUP_LABELS,
@@ -93,6 +94,7 @@ const searchSchema = z.object({
 	type: z.enum(TRANSACTION_TYPES).optional().catch(undefined),
 	payment_method: z.enum(PAYMENT_METHODS).optional().catch(undefined),
 	vendor_id: z.uuid().optional().catch(undefined),
+	category_id: z.uuid().optional().catch(undefined),
 	account_id: z.uuid().optional().catch(undefined),
 	min_amount: decimal,
 	max_amount: decimal,
@@ -112,6 +114,7 @@ export const Route = createFileRoute("/_protected/transactions")({
 				deps.type ||
 				deps.payment_method ||
 				deps.vendor_id ||
+				deps.category_id ||
 				deps.account_id ||
 				deps.min_amount ||
 				deps.max_amount ||
@@ -126,7 +129,9 @@ export const Route = createFileRoute("/_protected/transactions")({
 			currencies,
 			totals,
 			categories,
+			allCategories,
 			vendor,
+			category,
 			account,
 		] = await Promise.all([
 			listTransactionsFn({ data: deps }),
@@ -137,7 +142,9 @@ export const Route = createFileRoute("/_protected/transactions")({
 			wantsTotals ? getTransactionTotalsFn({ data: deps }) : Promise.resolve(null),
 			wantsTotals ? getCategoryTotalsFn({ data: deps }) : Promise.resolve(null),
 			// Names of the picked vendor/account, so the filter boxes show them without a list fetch.
+			listCategoriesFn(),
 			deps.vendor_id ? getVendorFn({ data: { id: deps.vendor_id } }) : Promise.resolve(null),
+			deps.category_id ? getCategoryFn({ data: { id: deps.category_id } }) : Promise.resolve(null),
 			deps.account_id ? getAccountFn({ data: { id: deps.account_id } }) : Promise.resolve(null),
 		]);
 		const rows = unwrap(transactions);
@@ -157,7 +164,9 @@ export const Route = createFileRoute("/_protected/transactions")({
 			subscriptions: unwrap(subscriptions),
 			accounts: unwrap(accounts),
 			currencies,
+			allCategories: unwrap(allCategories),
 			selectedVendor: vendor?.ok ? { id: vendor.data.id, label: vendor.data.name } : null,
+			selectedCategory: category?.ok ? { id: category.data.id, label: category.data.name } : null,
 			selectedAccount: account?.ok
 				? {
 						id: account.data.id,
@@ -428,6 +437,8 @@ function TransactionsPage() {
 		accounts,
 		currencies,
 		selectedVendor,
+		selectedCategory,
+		allCategories,
 		selectedAccount,
 	} = Route.useLoaderData();
 	const { user } = Route.useRouteContext();
@@ -460,6 +471,7 @@ function TransactionsPage() {
 		filters: filterValues,
 		selectedAccount,
 		selectedVendor,
+		selectedCategory,
 		baseCurrency: user.base_currency,
 		patch,
 	});
@@ -469,6 +481,7 @@ function TransactionsPage() {
 			filters={filterValues}
 			selectedAccount={selectedAccount}
 			selectedVendor={selectedVendor}
+			selectedCategory={selectedCategory}
 			baseCurrency={user.base_currency}
 			activeCount={activeCount}
 			onChange={patch}
@@ -605,6 +618,7 @@ function TransactionsPage() {
 				<TransactionForm
 					transaction={editing === "new" ? undefined : editing}
 					vendors={vendors}
+					categories={allCategories}
 					subscriptions={subscriptions}
 					accounts={accounts}
 					currencies={currencies}

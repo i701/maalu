@@ -6,7 +6,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.enums import IntervalUnit, SubscriptionStatus, TransactionType
-from app.models import Subscription, Transaction, User, Vendor
+from app.models import Category, Subscription, Transaction, User, Vendor
 from app.schedule import MONTHLY_QUANTUM, monthly_cost, next_due_date
 from app.schemas import (
     SubscriptionCreate,
@@ -16,6 +16,7 @@ from app.schemas import (
     SubscriptionUpdate,
     VendorResponse,
 )
+from app.services.category import CategoryService
 from app.services.errors import TransactionRuleError
 from app.services.money import price_in_base
 from app.services.vendor import VendorNotFoundError, VendorService
@@ -39,6 +40,7 @@ class SubscriptionService:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
         self.vendors = VendorService(db)
+        self.categories = CategoryService(db)
 
     async def _base_currency(self, user_id: uuid.UUID) -> str:
         user = await self.db.get(User, user_id)
@@ -76,7 +78,7 @@ class SubscriptionService:
             conditions.append(
                 or_(
                     Subscription.name.icontains(term, autoescape=True),
-                    Subscription.category.icontains(term, autoescape=True),
+                    Subscription.category_ref.has(Category.name.icontains(term, autoescape=True)),
                     Subscription.vendor.has(Vendor.name.icontains(term, autoescape=True)),
                 )
             )
@@ -121,7 +123,9 @@ class SubscriptionService:
         return await self.db.scalar(stmt)
 
     async def create(self, user_id: uuid.UUID, data: SubscriptionCreate) -> Subscription:
-        fields = data.model_dump(exclude={"vendor_id", "vendor_name", "currency", "exchange_rate"})
+        fields = data.model_dump(
+            exclude={"vendor_id", "vendor_name", "currency", "exchange_rate", "category"}
+        )
         base = await self._base_currency(user_id)
         currency = data.currency or base
         rate, base_amount = price_in_base(data.amount, currency, data.exchange_rate, base)
@@ -129,6 +133,7 @@ class SubscriptionService:
         subscription = Subscription(
             user_id=user_id,
             vendor=vendor,
+            category_ref=await self.categories.get_or_create(user_id, data.category),
             currency=currency,
             exchange_rate=rate,
             base_amount=base_amount,
@@ -161,6 +166,10 @@ class SubscriptionService:
                 amount, currency, rate, base
             )
 
+        if (name := changes.pop("category", None)) is not None:
+            subscription.category_ref = await self.categories.get_or_create(
+                subscription.user_id, name
+            )
         for field, value in changes.items():
             setattr(subscription, field, value)
         await self.db.flush()
@@ -200,7 +209,7 @@ class SubscriptionService:
             exchange_rate=transaction.exchange_rate,
             base_amount=transaction.base_amount,
             payment_method=transaction.payment_method,
-            category=transaction.category,
+            category_ref=transaction.category_ref,
             interval_unit=data.interval_unit,
             interval_count=data.interval_count,
             start_date=transaction.transaction_date,
@@ -242,6 +251,7 @@ class SubscriptionService:
                     base_amount=s.base_amount,
                     payment_method=s.payment_method,
                     category=s.category,
+                    category_id=s.category_id,
                     interval_unit=s.interval_unit,
                     interval_count=s.interval_count,
                     start_date=s.start_date,

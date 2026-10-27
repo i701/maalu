@@ -20,6 +20,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.enums import PaymentMethod, TransactionType
 from app.models.account import Account
 from app.models.base import Base
+from app.models.category import Category
 from app.models.subscription import Subscription
 from app.models.vendor import Vendor
 
@@ -83,7 +84,12 @@ class Transaction(Base):
             values_callable=lambda e: [m.value for m in e],
         )
     )
-    category: Mapped[str] = mapped_column(String(100), index=True)
+    # What it was for. For a split transaction this is the category of the biggest line; transfers
+    # have none. A category in use can't be deleted (the service refuses): merge it instead.
+    category_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("categories.id"), index=True, default=None
+    )
+    category_ref: Mapped[Category | None] = relationship(lazy="joined")
     description: Mapped[str | None] = mapped_column(Text, default=None)
     # Optional breakdown of `amount` by item and category (a shopping trip that mixes groceries and
     # snacks). When present the lines add up exactly to `amount`, and `category` above is the
@@ -95,6 +101,11 @@ class Transaction(Base):
         back_populates="transaction",
     )
     transaction_date: Mapped[date] = mapped_column(Date)
+
+    @property
+    def category(self) -> str:
+        return self.category_ref.name if self.category_ref else "Transfer"
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -115,7 +126,13 @@ class TransactionSplit(Base):
     position: Mapped[int] = mapped_column(Integer)
     name: Mapped[str] = mapped_column(String(200))
     quantity: Mapped[Decimal] = mapped_column(Numeric(12, 3), default=Decimal(1))
-    category: Mapped[str] = mapped_column(String(100))
+    category_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("categories.id"), index=True)
+    category_ref: Mapped[Category] = relationship(lazy="joined")
+
+    @property
+    def category(self) -> str:
+        return self.category_ref.name
+
     # What this line cost in the transaction's currency, tax included, so the lines add up to the
     # transaction's amount. `tax_amount` is the part of it that is tax (GST), when known.
     amount: Mapped[Decimal] = mapped_column(Numeric(19, 4))

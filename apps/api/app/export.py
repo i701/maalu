@@ -1,6 +1,7 @@
 """Build an .xlsx workbook of transactions. Pure functions: no database, no HTTP."""
 
 import io
+import uuid
 from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
@@ -104,6 +105,7 @@ def build_workbook(
     base_currency: str,
     filter_labels: Sequence[str],
     generated_on: date,
+    category_id: uuid.UUID | None = None,
 ) -> bytes:
     """Transactions (one row each, real numbers and dates), Items (the lines of split
     transactions, when there are any), By category and Summary."""
@@ -123,27 +125,33 @@ def build_workbook(
 
     income = expense = Decimal(0)
     item_rows: list[list[tuple]] = []
-    category_totals: dict[tuple[str, str], list] = {}
+    category_totals: dict[tuple[str, uuid.UUID], list] = {}
     for t in rows:
-        if t.type is TransactionType.INCOME:
-            income += t.base_amount
-        elif t.type is TransactionType.EXPENSE:
-            expense += t.base_amount
-
         is_transfer = t.type is TransactionType.TRANSFER
         if not is_transfer:
-            seen: set[str] = set()
-            lines = t.splits or []
-            shares = allocate_base(t.base_amount, t.amount, [s.amount for s in lines])
-            if not lines:
-                entry = category_totals.setdefault((t.type.value, t.category), [Decimal(0), 0])
-                entry[0] += t.base_amount
-                entry[1] += 1
-            for line, share in zip(lines, shares, strict=True):
-                entry = category_totals.setdefault((t.type.value, line.category), [Decimal(0), 0])
-                entry[0] += share
-                entry[1] += 0 if line.category in seen else 1
-                seen.add(line.category)
+            # Each (category, share of the base amount) the transaction counts toward. Filtering by
+            # a category counts only that category's part of a split transaction.
+            lines = t.splits
+            if lines:
+                shares = allocate_base(t.base_amount, t.amount, [s.amount for s in lines])
+                parts = [
+                    (line.category_ref, share) for line, share in zip(lines, shares, strict=True)
+                ]
+            else:
+                parts = [(t.category_ref, t.base_amount)]
+            counted: set[uuid.UUID] = set()
+            for category, share in parts:
+                if category_id is not None and category.id != category_id:
+                    continue
+                if t.type is TransactionType.INCOME:
+                    income += share
+                else:
+                    expense += share
+                entry = category_totals.setdefault((t.type.value, category.id), [category, 0, 0])
+                entry[1] += share
+                entry[2] += 0 if category.id in counted else 1
+                counted.add(category.id)
+            for line, share in zip(lines, [p[1] for p in parts], strict=True) if lines else []:
                 item_rows.append(
                     [
                         (t.transaction_date, "yyyy-mm-dd"),
@@ -188,18 +196,20 @@ def build_workbook(
     if item_rows:
         _write_rows(wb.create_sheet("Items"), _ITEM_COLUMNS, item_rows, base_currency)
 
-    by_category = sorted(category_totals.items(), key=lambda kv: (kv[0][0], -kv[1][0], kv[0][1]))
+    by_category = sorted(
+        category_totals.items(), key=lambda kv: (kv[0][0], -kv[1][1], kv[1][0].name)
+    )
     _write_rows(
         wb.create_sheet("By category"),
         _CATEGORY_COLUMNS,
         [
             [
                 (kind.capitalize(), None),
-                (category, None),
+                (category.name, None),
                 (count, None),
                 (_num(total), _MONEY),
             ]
-            for (kind, category), (total, count) in by_category
+            for (kind, _), (category, total, count) in by_category
         ],
         base_currency,
     )

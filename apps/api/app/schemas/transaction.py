@@ -46,6 +46,7 @@ class SplitResponse(BaseModel):
     name: str
     quantity: Decimal
     category: str
+    category_id: uuid.UUID
     amount: Decimal
     tax_amount: Decimal | None
 
@@ -165,6 +166,7 @@ class TransactionResponse(BaseModel):
     to_amount: Decimal | None
     payment_method: PaymentMethod
     category: str
+    category_id: uuid.UUID | None
     description: str | None
     transaction_date: date
     splits: list[SplitResponse]
@@ -180,6 +182,7 @@ class TransactionResponse(BaseModel):
 
 class CategoryTotal(BaseModel):
     type: TransactionType
+    category_id: uuid.UUID
     category: str
     total: Decimal = Field(description="In your base currency")
     count: int = Field(description="Transactions with money in this category")

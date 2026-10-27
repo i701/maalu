@@ -4,6 +4,12 @@ from app.services.account import (
     AccountNotFoundError,
     AccountService,
 )
+from app.services.category import (
+    CategoryInUseError,
+    CategoryNameTakenError,
+    CategoryNotFoundError,
+    CategoryService,
+)
 from app.services.errors import TransactionRuleError
 from app.services.money import ExchangeRateRequiredError
 from app.services.subscription import (
@@ -21,6 +27,10 @@ __all__ = [
     "AccountHasTransactionsError",
     "AccountNotFoundError",
     "AccountService",
+    "CategoryInUseError",
+    "CategoryNameTakenError",
+    "CategoryNotFoundError",
+    "CategoryService",
     "EmailAlreadyRegisteredError",
     "ExchangeRateRequiredError",
     "SubscriptionNotFoundError",

@@ -95,6 +95,7 @@ class SubscriptionResponse(BaseModel):
     base_amount: Decimal
     payment_method: PaymentMethod
     category: str
+    category_id: uuid.UUID
     interval_unit: IntervalUnit
     interval_count: int
     start_date: date

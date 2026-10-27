@@ -9,6 +9,8 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { memo, useCallback } from "react";
 import { formatMoney } from "#/lib/format";
+import type { Category } from "#/types/api";
+import CategoryField from "../CategoryField";
 import { newRow, type LineAmount, type SplitRow, type TaxMode } from "#/lib/splits";
 import type { SplitsState } from "./useSplits";
 
@@ -22,6 +24,7 @@ const Row = memo(function Row({
 	row,
 	line,
 	currency,
+	categories,
 	canRemove,
 	onChange,
 	onRemove,
@@ -29,6 +32,7 @@ const Row = memo(function Row({
 	row: SplitRow;
 	line: LineAmount | null;
 	currency: string;
+	categories: Category[];
 	canRemove: boolean;
 	onChange: (key: string, changes: Partial<SplitRow>) => void;
 	onRemove: (key: string) => void;
@@ -83,12 +87,11 @@ const Row = memo(function Row({
 					/>
 				</Grid>
 				<Grid size={{ xs: 12, sm: 6 }}>
-					<TextField
-						label="Category"
-						value={row.category}
-						onChange={(e) => onChange(row.key, { category: e.target.value })}
-						slotProps={{ htmlInput: { maxLength: 100 } }}
-						required
+					<CategoryField
+						categories={categories}
+						defaultValue={row.category}
+						helper={false}
+						onValueChange={(category) => onChange(row.key, { category })}
 					/>
 				</Grid>
 			</Grid>
@@ -109,9 +112,11 @@ const Row = memo(function Row({
 export default function SplitEditor({
 	splits,
 	currency,
+	categories,
 }: {
 	splits: SplitsState;
 	currency: string;
+	categories: Category[];
 }) {
 	const { rows, setRows, mode, setMode, rate, setRate, lines, total } = splits;
 	const change = useCallback(
@@ -162,6 +167,7 @@ export default function SplitEditor({
 					row={row}
 					line={lines[i]}
 					currency={currency}
+					categories={categories}
 					canRemove={rows.length > 1}
 					onChange={change}
 					onRemove={remove}

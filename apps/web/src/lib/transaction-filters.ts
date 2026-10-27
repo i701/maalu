@@ -14,6 +14,7 @@ export type TransactionFilterValues = {
 	payment_method?: PaymentMethod;
 	account_id?: string;
 	vendor_id?: string;
+	category_id?: string;
 	min_amount?: string;
 	max_amount?: string;
 	date_from?: string;
@@ -29,6 +30,7 @@ export function pickFilterValues(s: TransactionFilterValues): TransactionFilterV
 		payment_method: s.payment_method,
 		account_id: s.account_id,
 		vendor_id: s.vendor_id,
+		category_id: s.category_id,
 		min_amount: s.min_amount,
 		max_amount: s.max_amount,
 		date_from: s.date_from,
@@ -44,7 +46,7 @@ export function hasAnyFilter(s: TransactionSearch): boolean {
 /** How many structured filters are on (a range counts once). Text search is separate. */
 export function countActiveFilters(s: TransactionFilterValues): number {
 	return (
-		[s.type, s.payment_method, s.account_id, s.vendor_id].filter(Boolean).length +
+		[s.type, s.payment_method, s.account_id, s.vendor_id, s.category_id].filter(Boolean).length +
 		(s.min_amount || s.max_amount ? 1 : 0) +
 		(s.date_from || s.date_to ? 1 : 0)
 	);
@@ -65,12 +67,14 @@ export function buildActiveFilters({
 	filters,
 	selectedAccount,
 	selectedVendor,
+	selectedCategory,
 	baseCurrency,
 	patch,
 }: {
 	filters: TransactionFilterValues;
 	selectedAccount: RemoteOption | null;
 	selectedVendor: RemoteOption | null;
+	selectedCategory: RemoteOption | null;
 	baseCurrency: string;
 	patch: (changes: Partial<TransactionFilterValues>) => void;
 }): ActiveFilter[] {
@@ -102,6 +106,13 @@ export function buildActiveFilters({
 			tone: "warning",
 			label: `Vendor: ${selectedVendor?.label ?? "…"}`,
 			onDelete: () => patch({ vendor_id: undefined }),
+		});
+	if (filters.category_id)
+		chips.push({
+			key: "category",
+			tone: "info",
+			label: `Category: ${selectedCategory?.label ?? "…"}`,
+			onDelete: () => patch({ category_id: undefined }),
 		});
 	if (filters.payment_method)
 		chips.push({

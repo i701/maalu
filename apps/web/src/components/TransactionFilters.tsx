@@ -7,6 +7,7 @@ import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import { ACCENT } from "#/lib/m3";
 import { searchAccountsFn } from "#/server/accounts";
+import { searchCategoriesFn } from "#/server/categories";
 import { searchVendorsFn } from "#/server/vendors";
 import {
 	ACCOUNT_GROUP_LABELS,
@@ -28,6 +29,7 @@ export type TransactionFilterValues = {
 	payment_method?: PaymentMethod;
 	account_id?: string;
 	vendor_id?: string;
+	category_id?: string;
 	min_amount?: string;
 	max_amount?: string;
 	date_from?: string;
@@ -49,6 +51,11 @@ const TYPE_ACCENT: Record<TransactionType, string> = {
 async function searchVendorOptions(q: string): Promise<RemoteOption[]> {
 	const res = await searchVendorsFn({ data: { q } });
 	return res.ok ? res.data.map((v) => ({ id: v.id, label: v.name })) : [];
+}
+
+async function searchCategoryOptions(q: string): Promise<RemoteOption[]> {
+	const res = await searchCategoriesFn({ data: { q } });
+	return res.ok ? res.data.map((c) => ({ id: c.id, label: c.name })) : [];
 }
 
 async function searchAccountOptions(q: string): Promise<RemoteOption[]> {
@@ -82,6 +89,7 @@ export default function TransactionFilters({
 	filters,
 	selectedAccount,
 	selectedVendor,
+	selectedCategory,
 	baseCurrency,
 	activeCount,
 	onChange,
@@ -90,6 +98,7 @@ export default function TransactionFilters({
 	filters: TransactionFilterValues;
 	selectedAccount: RemoteOption | null;
 	selectedVendor: RemoteOption | null;
+	selectedCategory: RemoteOption | null;
 	baseCurrency: string;
 	activeCount: number;
 	/** Merge a change into the filters; `undefined` removes one. */
@@ -151,6 +160,14 @@ export default function TransactionFilters({
 				selected={selectedVendor}
 				search={searchVendorOptions}
 				onChange={(option) => onChange({ vendor_id: option?.id })}
+			/>
+
+			<RemoteAutocomplete
+				label="Category"
+				placeholder="Search categories"
+				selected={selectedCategory}
+				search={searchCategoryOptions}
+				onChange={(option) => onChange({ category_id: option?.id })}
 			/>
 
 			<Section title="Payment method">

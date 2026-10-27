@@ -40,6 +40,7 @@ import {
 	getSubscriptionSummaryFn,
 	listSubscriptionsPageFn,
 } from "#/server/subscriptions";
+import { listCategoriesFn } from "#/server/categories";
 import { listVendorsFn } from "#/server/vendors";
 import {
 	INTERVAL_UNIT_LABELS,
@@ -61,10 +62,11 @@ export const Route = createFileRoute("/_protected/subscriptions")({
 	validateSearch: searchSchema,
 	loaderDeps: ({ search }) => search,
 	loader: async ({ deps }) => {
-		const [subscriptions, summary, vendors, currencies] = await Promise.all([
+		const [subscriptions, summary, vendors, categories, currencies] = await Promise.all([
 			listSubscriptionsPageFn({ data: deps }),
 			getSubscriptionSummaryFn(),
 			listVendorsFn(), // every vendor, for the form's picker
+			listCategoriesFn(),
 			listCurrenciesFn(),
 		]);
 		const rows = unwrap(subscriptions);
@@ -80,6 +82,7 @@ export const Route = createFileRoute("/_protected/subscriptions")({
 			...rows,
 			summary: unwrap(summary),
 			vendors: unwrap(vendors),
+			categories: unwrap(categories),
 			currencies,
 		};
 	},
@@ -248,7 +251,7 @@ const SubscriptionsTable = memo(function SubscriptionsTable({
 });
 
 function SubscriptionsPage() {
-	const { items, total, summary, vendors, currencies } = Route.useLoaderData();
+	const { items, total, summary, vendors, categories, currencies } = Route.useLoaderData();
 	const { user } = Route.useRouteContext();
 	const [editing, setEditing] = useState<Subscription | "new" | null>(null);
 	const [deleting, setDeleting] = useState<Subscription | null>(null);
@@ -404,6 +407,7 @@ function SubscriptionsPage() {
 				<SubscriptionForm
 					subscription={editing === "new" ? undefined : editing}
 					vendors={vendors}
+					categories={categories}
 					currencies={currencies}
 					baseCurrency={user.base_currency}
 					onClose={() => setEditing(null)}
