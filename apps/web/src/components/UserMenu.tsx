@@ -10,6 +10,10 @@ import { logoutFn } from "#/server/auth";
 import type { SessionUser } from "#/utils/session";
 import Symbol from "./Symbol";
 
+// Generated avatar, for now. A fixed non-personal seed, so every user gets the same picture and
+// nothing about them is sent. The first letter of the email shows if it can't load (offline, blocked).
+const AVATAR_URL = "https://api.dicebear.com/10.x/glass/svg?seed=Maalu";
+
 /** The signed-in user's avatar; opens a menu with the profile page and sign out. */
 export default function UserMenu({ user }: { user: SessionUser }) {
 	const router = useRouter();
@@ -31,7 +35,12 @@ export default function UserMenu({ user }: { user: SessionUser }) {
 				onClick={(e) => setAnchor(e.currentTarget)}
 				sx={{ borderRadius: "var(--shape-full)" }}
 			>
-				<Avatar sx={{ bgcolor: "primary.main", width: 40, height: 40 }}>
+				<Avatar
+					src={AVATAR_URL}
+					alt=""
+					slotProps={{ img: { referrerPolicy: "no-referrer" } }}
+					sx={{ bgcolor: "primary.main", width: 40, height: 40 }}
+				>
 					{user.email[0].toUpperCase()}
 				</Avatar>
 			</ButtonBase>

@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import Container from "@mui/material/Container";
 import { TOP_BAR_HEIGHT } from "#/lib/nav";
 import type { SessionUser } from "#/utils/session";
 import Brand from "./Brand";
@@ -14,20 +15,29 @@ export default function TopBar({ user }: { user: SessionUser }) {
 			sx={{
 				position: "fixed",
 				inset: "0 0 auto 0",
-				display: "flex",
-				alignItems: "center",
-				justifyContent: "space-between",
 				height: TOP_BAR_HEIGHT,
 				px: { xs: 2, md: 3 },
 				bgcolor: "background.default",
 				zIndex: (t) => t.zIndex.appBar,
 			}}
 		>
-			<Brand />
-			<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-				<ColorModeToggle />
-				<UserMenu user={user} />
-			</Box>
+			{/* Same cap and gutters as the page content in AppShell, so the bar lines up with it. */}
+			<Container
+				maxWidth="xl"
+				disableGutters
+				sx={{
+					height: "100%",
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "space-between",
+				}}
+			>
+				<Brand />
+				<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+					<ColorModeToggle />
+					<UserMenu user={user} />
+				</Box>
+			</Container>
 		</Box>
 	);
 }
