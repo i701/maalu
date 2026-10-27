@@ -34,6 +34,7 @@ import TableToolbar from "#/components/TableToolbar";
 import TransactionFilters from "#/components/TransactionFilters";
 import TransactionForm from "#/components/TransactionForm";
 import TransactionTotals from "#/components/TransactionTotals";
+import CategoryBreakdown from "#/components/CategoryBreakdown";
 import { formatDate, formatMoney } from "#/lib/format";
 import { PAYMENT_ACCENT, TRANSFER_ACCENT } from "#/lib/accents";
 import { ACCENT } from "#/lib/m3";
@@ -52,6 +53,7 @@ import { listCurrenciesFn } from "#/server/currencies";
 import { listSubscriptionsFn } from "#/server/subscriptions";
 import {
 	deleteTransactionFn,
+	getCategoryTotalsFn,
 	getTransactionTotalsFn,
 	listTransactionsFn,
 } from "#/server/transactions";
@@ -116,18 +118,28 @@ export const Route = createFileRoute("/_protected/transactions")({
 				deps.date_from ||
 				deps.date_to,
 			) && deps.type !== "transfer";
-		const [transactions, vendors, subscriptions, accounts, currencies, totals, vendor, account] =
-			await Promise.all([
-				listTransactionsFn({ data: deps }),
-				listVendorsFn(),
-				listSubscriptionsFn(),
-				listAccountsFn(),
-				listCurrenciesFn(),
-				wantsTotals ? getTransactionTotalsFn({ data: deps }) : Promise.resolve(null),
-				// Names of the picked vendor/account, so the filter boxes show them without a list fetch.
-				deps.vendor_id ? getVendorFn({ data: { id: deps.vendor_id } }) : Promise.resolve(null),
-				deps.account_id ? getAccountFn({ data: { id: deps.account_id } }) : Promise.resolve(null),
-			]);
+		const [
+			transactions,
+			vendors,
+			subscriptions,
+			accounts,
+			currencies,
+			totals,
+			categories,
+			vendor,
+			account,
+		] = await Promise.all([
+			listTransactionsFn({ data: deps }),
+			listVendorsFn(),
+			listSubscriptionsFn(),
+			listAccountsFn(),
+			listCurrenciesFn(),
+			wantsTotals ? getTransactionTotalsFn({ data: deps }) : Promise.resolve(null),
+			wantsTotals ? getCategoryTotalsFn({ data: deps }) : Promise.resolve(null),
+			// Names of the picked vendor/account, so the filter boxes show them without a list fetch.
+			deps.vendor_id ? getVendorFn({ data: { id: deps.vendor_id } }) : Promise.resolve(null),
+			deps.account_id ? getAccountFn({ data: { id: deps.account_id } }) : Promise.resolve(null),
+		]);
 		const rows = unwrap(transactions);
 		const last = lastPageIfOutOfRange({
 			page: deps.page,
@@ -140,6 +152,7 @@ export const Route = createFileRoute("/_protected/transactions")({
 		return {
 			...rows,
 			totals: totals ? unwrap(totals) : null,
+			categories: categories ? unwrap(categories) : null,
 			vendors: unwrap(vendors),
 			subscriptions: unwrap(subscriptions),
 			accounts: unwrap(accounts),
@@ -161,11 +174,22 @@ export const Route = createFileRoute("/_protected/transactions")({
 function txTitle(t: Transaction) {
 	return t.type === "transfer"
 		? `${t.account?.name ?? "Deleted account"} → ${t.to_account?.name ?? "Deleted account"}`
-		: (t.vendor?.name ?? t.category);
+		: (t.vendor?.name ?? (t.splits.length > 1 ? "Split purchase" : t.category));
+}
+
+/** The category, or every category a split transaction touches. */
+function txCategories(t: Transaction) {
+	return t.splits.length > 1
+		? [...new Set(t.splits.map((s) => s.category))].join(", ")
+		: t.category;
 }
 
 function txSubtitle(t: Transaction) {
-	return (t.type === "transfer" ? [t.description] : [t.vendor ? t.category : null, t.description])
+	return (
+		t.type === "transfer"
+			? [t.description]
+			: [t.vendor || t.splits.length > 1 ? txCategories(t) : null, t.description]
+	)
 		.filter(Boolean)
 		.join(" · ");
 }
@@ -398,6 +422,7 @@ function TransactionsPage() {
 		items,
 		total,
 		totals,
+		categories,
 		vendors,
 		subscriptions,
 		accounts,
@@ -496,6 +521,7 @@ function TransactionsPage() {
 					<Box sx={{ minWidth: 0 }}>
 						<PendingOverlay>
 							<TransactionTotals totals={totals} />
+							<CategoryBreakdown categories={categories} />
 
 							<TableCard>
 								<TableToolbar

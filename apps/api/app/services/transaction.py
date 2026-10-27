@@ -5,10 +5,18 @@ from decimal import Decimal
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.allocation import allocate_base
 from app.enums import PaymentMethod, TransactionType
 from app.export import EXPORT_LIMIT, build_workbook
-from app.models import Account, Subscription, Transaction, User, Vendor
-from app.schemas import TransactionCreate, TransactionTotals, TransactionUpdate
+from app.models import Account, Subscription, Transaction, TransactionSplit, User, Vendor
+from app.schemas import (
+    CategoryTotal,
+    CategoryTotals,
+    SplitInput,
+    TransactionCreate,
+    TransactionTotals,
+    TransactionUpdate,
+)
 from app.services.account import AccountCurrencyMismatchError, AccountNotFoundError
 from app.services.errors import TransactionRuleError
 from app.services.money import BASE_AMOUNT_QUANTUM, price_in_base
@@ -133,6 +141,33 @@ class TransactionService:
             "to_amount": None,
         }
 
+    @staticmethod
+    def _build_splits(splits: list[SplitInput]) -> list[TransactionSplit]:
+        return [
+            TransactionSplit(
+                position=position,
+                name=s.name,
+                quantity=s.quantity,
+                category=s.category,
+                amount=s.amount,
+                tax_amount=s.tax_amount,
+            )
+            for position, s in enumerate(splits)
+        ]
+
+    @staticmethod
+    def _check_splits(transaction: Transaction) -> None:
+        """If the transaction is split, its lines must add up to the amount, and its own category
+        follows the biggest line so category filters and the list keep working."""
+        if not transaction.splits:
+            return
+        total = sum((s.amount for s in transaction.splits), Decimal(0))
+        if total != transaction.amount:
+            raise TransactionRuleError(
+                f"The items add up to {total:,} but the total is {transaction.amount:,}"
+            )
+        transaction.category = max(transaction.splits, key=lambda s: s.amount).category
+
     async def create(self, user_id: uuid.UUID, data: TransactionCreate) -> Transaction:
         base = await self._base_currency(user_id)
         account = await self._resolve_account(user_id, data.account_id)
@@ -152,7 +187,8 @@ class TransactionService:
             user_id=user_id,
             type=data.type,
             amount=data.amount,
-            category=TRANSFER_CATEGORY if is_transfer else data.category,
+            category=TRANSFER_CATEGORY if is_transfer else data.category or "",
+            splits=self._build_splits(data.splits) if data.splits else [],
             payment_method=TRANSFER_PAYMENT_METHOD if is_transfer else data.payment_method,
             description=data.description,
             transaction_date=data.transaction_date,
@@ -162,6 +198,7 @@ class TransactionService:
             subscription=await self._resolve_subscription(user_id, data.subscription_id),
             **money,
         )
+        self._check_splits(transaction)
         self.db.add(transaction)
         await self.db.flush()
         await self.db.refresh(transaction)
@@ -204,6 +241,12 @@ class TransactionService:
             conditions.append(
                 or_(
                     Transaction.category.icontains(term, autoescape=True),
+                    Transaction.splits.any(
+                        or_(
+                            TransactionSplit.name.icontains(term, autoescape=True),
+                            TransactionSplit.category.icontains(term, autoescape=True),
+                        )
+                    ),
                     Transaction.description.icontains(term, autoescape=True),
                     Transaction.vendor.has(Vendor.name.icontains(term, autoescape=True)),
                     Transaction.subscription.has(
@@ -348,6 +391,77 @@ class TransactionService:
             expense=sums.get(TransactionType.EXPENSE, Decimal(0)),
             currency=await self._base_currency(user_id),
         )
+
+    async def category_totals_for_user(
+        self,
+        user_id: uuid.UUID,
+        *,
+        transaction_type: TransactionType | None = None,
+        vendor_id: uuid.UUID | None = None,
+        subscription_id: uuid.UUID | None = None,
+        account_id: uuid.UUID | None = None,
+        payment_method: PaymentMethod | None = None,
+        currency: str | None = None,
+        q: str | None = None,
+        min_amount: Decimal | None = None,
+        max_amount: Decimal | None = None,
+        date_from: date | None = None,
+        date_to: date | None = None,
+    ) -> CategoryTotals:
+        """Income and expense per category (base currency) for the rows the same filters would list.
+
+        Plain transactions count under their own category. A split transaction counts under each
+        of its lines' categories, with its base amount shared out in proportion to the lines.
+        """
+        conditions = self._conditions(
+            user_id,
+            transaction_type=transaction_type,
+            vendor_id=vendor_id,
+            subscription_id=subscription_id,
+            account_id=account_id,
+            payment_method=payment_method,
+            currency=currency,
+            q=q,
+            min_amount=min_amount,
+            max_amount=max_amount,
+            date_from=date_from,
+            date_to=date_to,
+        )
+        money = Transaction.type.in_([TransactionType.INCOME, TransactionType.EXPENSE])
+        totals: dict[tuple[TransactionType, str], list] = {}
+
+        def add(kind: TransactionType, category: str, amount: Decimal, count: int = 1) -> None:
+            entry = totals.setdefault((kind, category), [Decimal(0), 0])
+            entry[0] += amount
+            entry[1] += count
+
+        plain = (
+            select(
+                Transaction.type,
+                Transaction.category,
+                func.sum(Transaction.base_amount),
+                func.count(Transaction.id),
+            )
+            .where(*conditions, money, ~Transaction.splits.any())
+            .group_by(Transaction.type, Transaction.category)
+        )
+        for kind, category, total, count in (await self.db.execute(plain)).all():
+            add(kind, category, Decimal(str(total or 0)), count)
+
+        split_stmt = select(Transaction).where(*conditions, money, Transaction.splits.any())
+        for t in (await self.db.scalars(split_stmt)).all():
+            shares = allocate_base(t.base_amount, t.amount, [s.amount for s in t.splits])
+            counted: set[str] = set()
+            for line, share in zip(t.splits, shares, strict=True):
+                add(t.type, line.category, share, 0 if line.category in counted else 1)
+                counted.add(line.category)
+
+        rows = [
+            CategoryTotal(type=kind, category=category, total=total, count=count)
+            for (kind, category), (total, count) in totals.items()
+        ]
+        rows.sort(key=lambda r: (r.type.value, -r.total, r.category))
+        return CategoryTotals(currency=await self._base_currency(user_id), categories=rows)
 
     async def export_xlsx(
         self,
@@ -510,8 +624,14 @@ class TransactionService:
         transaction.account = account
         transaction.to_account = to_account
 
+        # Replacing the lines (explicit null removes the split).
+        if "splits" in changes:
+            new_splits = changes.pop("splits")
+            transaction.splits = self._build_splits(data.splits) if new_splits else []
+
         # Type-specific housekeeping when the kind of transaction changes.
         if is_transfer:
+            transaction.splits = []
             transaction.vendor = None
             transaction.subscription = None
             changes.pop("category", None)
@@ -519,7 +639,7 @@ class TransactionService:
             transaction.category = TRANSFER_CATEGORY
             transaction.payment_method = TRANSFER_PAYMENT_METHOD
         elif old_type is TransactionType.TRANSFER:
-            if "category" not in changes:
+            if "category" not in changes and not data.splits:
                 raise TransactionRuleError("Choose a category for this transaction")
             if "payment_method" not in changes:
                 raise TransactionRuleError("Choose a payment method for this transaction")
@@ -528,6 +648,7 @@ class TransactionService:
 
         for field, value in changes.items():
             setattr(transaction, field, value)
+        self._check_splits(transaction)
         await self.db.flush()
         await self.db.refresh(transaction)
         return transaction

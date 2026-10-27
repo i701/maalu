@@ -42,7 +42,7 @@ async def test_downloads_an_xlsx_with_sensible_headers(client: AsyncClient, auth
     disposition = resp.headers["content-disposition"]
     assert disposition.startswith("attachment;")
     assert f"maalu-transactions-{date.today().isoformat()}.xlsx" in disposition
-    assert wb.sheetnames == ["Transactions", "Summary"]
+    assert wb.sheetnames == ["Transactions", "By category", "Summary"]
     header = rows(wb)[0]
     assert header[0] == "Date"
     assert "Amount (MVR)" in header
@@ -190,3 +190,31 @@ def test_workbook_builder_handles_no_rows():
     )
     wb = load_workbook(io.BytesIO(data))
     assert len(list(wb["Transactions"].iter_rows(values_only=True))) == 1
+
+
+async def test_split_transactions_get_an_items_sheet_and_category_report(client: AsyncClient, auth):
+    lines = [
+        {"name": "Eggs", "quantity": "6", "category": "Groceries", "amount": "60"},
+        {"name": "Snickers", "category": "Junk food", "amount": "10.50", "tax_amount": "0.78"},
+    ]
+    await client.post(TX, json=body(amount="70.50", splits=lines), headers=auth)
+    await client.post(TX, json=body(amount="30", category="Groceries"), headers=auth)
+    _, wb = await download(client, auth)
+    assert wb.sheetnames == ["Transactions", "Items", "By category", "Summary"]
+
+    header, *data = rows(wb)
+    split_row = next(r for r in data if r[header.index("Amount")] == pytest.approx(70.5))
+    assert split_row[header.index("Category")] == "Groceries, Junk food"
+
+    items_header, *items = list(wb["Items"].iter_rows(values_only=True))
+    by_item = {
+        r[items_header.index("Item")]: dict(zip(items_header, r, strict=True)) for r in items
+    }
+    assert by_item["Eggs"]["Quantity"] == pytest.approx(6)
+    assert by_item["Snickers"]["GST"] == pytest.approx(0.78)
+    assert by_item["Snickers"]["Category"] == "Junk food"
+
+    report = {(r[0], r[1]): r for r in list(wb["By category"].iter_rows(values_only=True))[1:]}
+    assert report[("Expense", "Groceries")][3] == pytest.approx(90)  # 60 + the plain 30
+    assert report[("Expense", "Groceries")][2] == 2
+    assert report[("Expense", "Junk food")][3] == pytest.approx(10.5)

@@ -23,6 +23,7 @@ import VendorField from "./VendorField";
 import { Cell, RevealCell } from "./transaction-form/Cells";
 import OrdinaryFields from "./transaction-form/OrdinaryFields";
 import TransferFields from "./transaction-form/TransferFields";
+import { useSplits } from "./transaction-form/useSplits";
 import {
 	buildTransactionRequest,
 	initialValues,
@@ -59,6 +60,7 @@ export default function TransactionForm({
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
 	const [localError, setLocalError] = useState<string | null>(null);
+	const splits = useSplits(transaction);
 
 	const initial = initialValues(transaction, baseCurrency);
 	const [type, setType] = useState<TransactionType>(initial.type);
@@ -107,6 +109,7 @@ export default function TransactionForm({
 			crossCurrency: Boolean(crossCurrency),
 			foreign,
 			subscription,
+			splits: type !== "transfer" && splits.enabled ? splits : null,
 		});
 		if ("error" in request) return setLocalError(request.error);
 		setLocalError(null);
@@ -171,6 +174,7 @@ export default function TransactionForm({
 						onPaymentMethodChange={setPaymentMethod}
 						transaction={transaction}
 						switched={switched}
+						splits={splits}
 					/>
 				)}
 

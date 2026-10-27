@@ -2,7 +2,19 @@ import uuid
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
-from sqlalchemy import Date, DateTime, Enum, ForeignKey, Index, Numeric, String, Text, Uuid, func
+from sqlalchemy import (
+    Date,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    Uuid,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.enums import PaymentMethod, TransactionType
@@ -73,9 +85,38 @@ class Transaction(Base):
     )
     category: Mapped[str] = mapped_column(String(100), index=True)
     description: Mapped[str | None] = mapped_column(Text, default=None)
+    # Optional breakdown of `amount` by item and category (a shopping trip that mixes groceries and
+    # snacks). When present the lines add up exactly to `amount`, and `category` above is the
+    # category of the biggest line.
+    splits: Mapped[list["TransactionSplit"]] = relationship(
+        lazy="selectin",
+        cascade="all, delete-orphan",
+        order_by="TransactionSplit.position",
+        back_populates="transaction",
+    )
     transaction_date: Mapped[date] = mapped_column(Date)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         default=lambda: datetime.now(UTC),
     )
+
+
+class TransactionSplit(Base):
+    """One line of a split transaction: an item (or group of items) in a single category."""
+
+    __tablename__ = "transaction_splits"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    transaction_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("transactions.id", ondelete="CASCADE"), index=True
+    )
+    transaction: Mapped[Transaction] = relationship(back_populates="splits")
+    position: Mapped[int] = mapped_column(Integer)
+    name: Mapped[str] = mapped_column(String(200))
+    quantity: Mapped[Decimal] = mapped_column(Numeric(12, 3), default=Decimal(1))
+    category: Mapped[str] = mapped_column(String(100))
+    # What this line cost in the transaction's currency, tax included, so the lines add up to the
+    # transaction's amount. `tax_amount` is the part of it that is tax (GST), when known.
+    amount: Mapped[Decimal] = mapped_column(Numeric(19, 4))
+    tax_amount: Mapped[Decimal | None] = mapped_column(Numeric(19, 4), default=None)

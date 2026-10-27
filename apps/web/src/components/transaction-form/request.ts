@@ -1,4 +1,6 @@
+import { toScaled } from "#/lib/decimal";
 import { createTransactionFn, updateTransactionFn } from "#/server/transactions";
+import type { SplitsState } from "./useSplits";
 import type {
 	Account,
 	PaymentMethod,
@@ -23,6 +25,8 @@ type State = {
 	crossCurrency: boolean;
 	foreign: boolean;
 	subscription: SubRef | null;
+	/** The item table, when it is switched on (not for transfers). */
+	splits: SplitsState | null;
 };
 
 const text = (f: FormData, k: string) => String(f.get(k) ?? "").trim();
@@ -52,18 +56,44 @@ function transferRequest(f: FormData, s: State): TransactionRequest {
 	};
 }
 
+/** The rows as the API wants them, or a message (a string) about the first thing wrong with them. */
+function splitPayload(splits: SplitsState) {
+	const { rows, lines, mode, rate } = splits;
+	if (mode !== "none" && !(Number(rate) > 0 && toScaled(rate, 4) !== null))
+		return "Enter the GST rate, for example 8";
+	const payload = [];
+	for (const [i, row] of rows.entries()) {
+		const line = lines[i];
+		const label = row.name.trim() || `Item ${i + 1}`;
+		if (!row.name.trim()) return `Item ${i + 1} needs a name`;
+		if (!row.category.trim()) return `${label} needs a category`;
+		if (!line) return `${label} needs a quantity and a price`;
+		payload.push({
+			name: row.name.trim(),
+			quantity: row.quantity.trim(),
+			category: row.category.trim(),
+			amount: line.amount,
+			tax_amount: line.tax,
+		});
+	}
+	return payload;
+}
+
 function ordinaryRequest(f: FormData, s: State): TransactionRequest {
 	const { transaction, accountId, account, subscription } = s;
 	const description = text(f, "description");
 	const vendorName = text(f, "vendor");
+	const split = s.splits ? splitPayload(s.splits) : null;
+	if (typeof split === "string") return { error: split };
 	const base = {
 		type: s.type,
-		amount: text(f, "amount"),
+		// With items, the amount is their total and the category comes from the biggest item.
+		amount: s.splits ? s.splits.total : text(f, "amount"),
 		transaction_date: text(f, "transaction_date"),
 		currency: account ? account.currency : text(f, "currency").toUpperCase(),
 		exchange_rate: s.foreign ? text(f, "exchange_rate") : undefined,
 		payment_method: text(f, "payment_method") as PaymentMethod,
-		category: text(f, "category"),
+		...(split ? { splits: split } : { category: text(f, "category") }),
 	};
 
 	if (!transaction) {
@@ -90,6 +120,8 @@ function ordinaryRequest(f: FormData, s: State): TransactionRequest {
 					id: transaction.id,
 					changes: {
 						...base,
+						// switching the items off on a split transaction removes them
+						...(!split && transaction.splits.length > 0 ? { splits: null } : {}),
 						description: description || null,
 						// changed -> link / unlink; unchanged -> omit
 						...(accountId === (transaction.account?.id ?? "")

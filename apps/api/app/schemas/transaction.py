@@ -17,6 +17,39 @@ Amount = Annotated[Decimal, Field(gt=0, max_digits=19, decimal_places=4)]
 Category = Annotated[str, Field(min_length=1, max_length=100)]
 
 
+class SplitInput(BaseModel):
+    """One line of a split transaction. `amount` is the line total paid, tax included."""
+
+    name: str = Field(min_length=1, max_length=200)
+    quantity: Decimal = Field(default=Decimal(1), gt=0, max_digits=12, decimal_places=3)
+    category: Category
+    amount: Amount
+    tax_amount: Decimal | None = Field(
+        default=None,
+        ge=0,
+        max_digits=19,
+        decimal_places=4,
+        description="The part of `amount` that is tax (GST), when known.",
+    )
+
+    @model_validator(mode="after")
+    def _tax_within_amount(self):
+        if self.tax_amount is not None and self.tax_amount > self.amount:
+            raise ValueError("tax_amount can't be more than the line amount")
+        return self
+
+
+class SplitResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    name: str
+    quantity: Decimal
+    category: str
+    amount: Decimal
+    tax_amount: Decimal | None
+
+
 class TransactionCreate(VendorRef):
     """Income and expense need a category and payment method. A transfer needs a from-account and
     a to-account, plus `to_amount` when the two accounts use different currencies."""
@@ -27,6 +60,12 @@ class TransactionCreate(VendorRef):
     category: Category | None = None
     description: str | None = None
     transaction_date: date
+    splits: list[SplitInput] | None = Field(
+        default=None,
+        min_length=1,
+        description="Optional breakdown by item and category. The line amounts must add up to "
+        "`amount`; `category` is then taken from the biggest line, so it can be left out.",
+    )
     subscription_id: uuid.UUID | None = None
     account_id: uuid.UUID | None = Field(
         default=None,
@@ -58,8 +97,10 @@ class TransactionCreate(VendorRef):
                 raise ValueError("Choose two different accounts")
             if self.vendor_id or self.vendor_name or self.subscription_id:
                 raise ValueError("Transfers can't have a vendor or subscription")
+            if self.splits:
+                raise ValueError("Transfers can't be split")
             return self
-        if not self.category:
+        if not self.category and not self.splits:
             raise ValueError("category is required")
         if self.payment_method is None:
             raise ValueError("payment_method is required")
@@ -90,6 +131,11 @@ class TransactionUpdate(VendorRef):
     category: Category | None = None
     description: str | None = None
     transaction_date: date | None = None
+    splits: list[SplitInput] | None = Field(
+        default=None,
+        min_length=1,
+        description="Replaces all the lines. Explicit null removes the split.",
+    )
 
     @field_validator(
         "type",
@@ -121,6 +167,7 @@ class TransactionResponse(BaseModel):
     category: str
     description: str | None
     transaction_date: date
+    splits: list[SplitResponse]
     currency: str
     exchange_rate: Decimal
     base_amount: Decimal
@@ -129,6 +176,22 @@ class TransactionResponse(BaseModel):
     account: AccountRef | None
     to_account: AccountRef | None
     created_at: datetime
+
+
+class CategoryTotal(BaseModel):
+    type: TransactionType
+    category: str
+    total: Decimal = Field(description="In your base currency")
+    count: int = Field(description="Transactions with money in this category")
+
+
+class CategoryTotals(BaseModel):
+    """Income and expense per category, in your base currency. A split transaction counts toward
+    each of its items' categories, so its lines are not lumped under one. Transfers are not
+    counted."""
+
+    currency: str
+    categories: list[CategoryTotal]
 
 
 class TransactionTotals(BaseModel):

@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
 	PAYMENT_METHODS,
 	TRANSACTION_TYPES,
+	type CategoryTotals,
 	type Transaction,
 	type TransactionTotals,
 } from "#/types/api";
@@ -23,6 +24,21 @@ const exchangeRate = z
 	.refine((v) => Number(v) > 0, "Rate must be greater than 0");
 const currency = z.string().regex(/^[A-Za-z]{3}$/, "Use a 3-letter currency code");
 
+const splitSchema = z.object({
+	name: z.string().trim().min(1).max(200),
+	quantity: z
+		.string()
+		.regex(/^\d+(\.\d{1,3})?$/)
+		.refine((v) => Number(v) > 0),
+	category: z.string().trim().min(1).max(100),
+	amount,
+	tax_amount: z
+		.string()
+		.regex(/^\d+(\.\d{1,4})?$/)
+		.nullable()
+		.optional(),
+});
+
 const createSchema = z.object({
 	type: z.enum(TRANSACTION_TYPES),
 	amount,
@@ -33,6 +49,7 @@ const createSchema = z.object({
 	category: z.string().trim().min(1).max(100).optional(),
 	description: z.string().nullable().optional(),
 	transaction_date: z.iso.date(),
+	splits: z.array(splitSchema).min(1).optional(),
 	vendor_name: z.string().trim().min(1).max(200).optional(),
 	subscription_id: z.uuid().optional(),
 	account_id: z.uuid().optional(),
@@ -51,6 +68,7 @@ const updateSchema = z.object({
 			subscription_id: z.uuid().nullable().optional(), // explicit null unlinks the subscription
 			account_id: z.uuid().nullable().optional(), // explicit null unlinks the account
 			to_account_id: z.uuid().nullable().optional(),
+			splits: z.array(splitSchema).min(1).nullable().optional(), // explicit null removes the split
 		}),
 });
 
@@ -116,6 +134,26 @@ export const getTransactionTotalsFn = createServerFn({ method: "GET" })
 	.validator(listSchema.omit({ page: true, pageSize: true }))
 	.handler(async ({ data }) =>
 		apiRequest<TransactionTotals>("/transactions/summary", {
+			query: {
+				type: data.type,
+				payment_method: data.payment_method,
+				vendor_id: data.vendor_id,
+				account_id: data.account_id,
+				currency: data.currency,
+				q: data.q,
+				min_amount: data.min_amount,
+				max_amount: data.max_amount,
+				date_from: data.date_from,
+				date_to: data.date_to,
+			},
+		}),
+	);
+
+/** Income / expense per category (base currency) for the same filters as the list. */
+export const getCategoryTotalsFn = createServerFn({ method: "GET" })
+	.validator(listSchema.omit({ page: true, pageSize: true }))
+	.handler(async ({ data }) =>
+		apiRequest<CategoryTotals>("/transactions/categories", {
 			query: {
 				type: data.type,
 				payment_method: data.payment_method,

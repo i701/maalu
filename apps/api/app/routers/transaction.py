@@ -10,6 +10,7 @@ from app.enums import PaymentMethod, TransactionType
 from app.export import XLSX_MEDIA_TYPE
 from app.pagination import MAX_LIMIT, set_total
 from app.schemas import (
+    CategoryTotals,
     TransactionCreate,
     TransactionResponse,
     TransactionTotals,
@@ -219,6 +220,55 @@ async def transaction_totals(
     _check_range(min_amount, max_amount)
     _check_dates(date_from, date_to)
     return await service.totals_for_user(
+        user_id,
+        transaction_type=transaction_type,
+        vendor_id=vendor_id,
+        subscription_id=subscription_id,
+        account_id=account_id,
+        payment_method=payment_method,
+        currency=currency,
+        q=q,
+        min_amount=min_amount,
+        max_amount=max_amount,
+        date_from=date_from,
+        date_to=date_to,
+    )
+
+
+@router.get("/categories", response_model=CategoryTotals)
+async def category_totals(
+    user_id: CurrentUserId,
+    service: TransactionServiceDep,
+    vendor_id: uuid.UUID | None = None,
+    subscription_id: uuid.UUID | None = None,
+    account_id: uuid.UUID | None = None,
+    payment_method: PaymentMethod | None = None,
+    transaction_type: Annotated[TransactionType | None, Query(alias="type")] = None,
+    currency: str | None = None,
+    q: Annotated[
+        str | None,
+        Query(
+            max_length=100,
+            description="Search category, description, vendor, subscription, accounts",
+        ),
+    ] = None,
+    min_amount: Annotated[
+        Decimal | None,
+        Query(ge=0, max_digits=19, decimal_places=4, description="Base currency, inclusive"),
+    ] = None,
+    max_amount: Annotated[
+        Decimal | None,
+        Query(ge=0, max_digits=19, decimal_places=4, description="Base currency, inclusive"),
+    ] = None,
+    date_from: Annotated[date | None, Query(description="Inclusive, YYYY-MM-DD")] = None,
+    date_to: Annotated[date | None, Query(description="Inclusive, YYYY-MM-DD")] = None,
+):
+    """Income and expense per category (in your base currency) of the transactions matching the
+    same filters as the list. A split transaction counts toward each of its items' categories.
+    Transfers are not counted."""
+    _check_range(min_amount, max_amount)
+    _check_dates(date_from, date_to)
+    return await service.category_totals_for_user(
         user_id,
         transaction_type=transaction_type,
         vendor_id=vendor_id,

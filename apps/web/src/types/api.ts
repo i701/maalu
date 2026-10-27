@@ -161,6 +161,16 @@ export type AccountSummary = {
 };
 
 // Money fields are decimal *strings* end to end; never parse them into floats for math.
+/** One item of a split transaction. `amount` is the line total paid, tax included. */
+export type TransactionSplit = {
+	id: string;
+	name: string;
+	quantity: string;
+	category: string;
+	amount: string;
+	tax_amount: string | null;
+};
+
 export type Transaction = {
 	id: string;
 	type: TransactionType;
@@ -175,6 +185,8 @@ export type Transaction = {
 	category: string;
 	description: string | null;
 	transaction_date: string;
+	/** Optional breakdown by item and category; adds up to `amount`. `category` is the biggest line's. */
+	splits: TransactionSplit[];
 	vendor: Vendor | null;
 	subscription: { id: string; name: string } | null;
 	account: AccountRef | null;
@@ -182,6 +194,15 @@ export type Transaction = {
 	to_account: AccountRef | null;
 	created_at: string;
 };
+
+/** Income or expense in one category (base currency). A split transaction counts under each of its items' categories. */
+export type CategoryTotal = {
+	type: "income" | "expense";
+	category: string;
+	total: string;
+	count: number;
+};
+export type CategoryTotals = { currency: string; categories: CategoryTotal[] };
 
 /** Income and expense totals of the filtered transactions, in the user's base currency. */
 export type TransactionTotals = { income: string; expense: string; currency: string };

@@ -1,4 +1,6 @@
+import FormControlLabel from "@mui/material/FormControlLabel";
 import MenuItem from "@mui/material/MenuItem";
+import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import { Fragment } from "react";
 import {
@@ -10,7 +12,9 @@ import {
 	type TransactionType,
 } from "#/types/api";
 import CurrencyField from "../CurrencyField";
-import { Cell } from "./Cells";
+import { Cell, RevealCell } from "./Cells";
+import SplitEditor from "./SplitEditor";
+import type { SplitsState } from "./useSplits";
 import { accountMenuItems } from "./accountMenuItems";
 
 /** The fields for an income or expense: amount, account, currency and rate, method, category. */
@@ -29,6 +33,7 @@ export default function OrdinaryFields({
 	onPaymentMethodChange,
 	transaction,
 	switched,
+	splits,
 }: {
 	type: TransactionType;
 	accounts: Account[];
@@ -45,22 +50,34 @@ export default function OrdinaryFields({
 	onPaymentMethodChange: (method: PaymentMethod) => void;
 	transaction?: Transaction;
 	switched: boolean;
+	splits: SplitsState;
 }) {
 	const account = accounts.find((a) => a.id === accountId) ?? null;
 
 	return (
 		<Fragment>
 			<Cell size={12} fadeIn={switched}>
-				<TextField
-					label="Amount"
-					name="amount"
-					defaultValue={transaction?.amount}
-					placeholder="12.50"
-					helperText={type === "income" ? "Money received" : "Money spent"}
-					required
-					autoFocus
-					slotProps={{ htmlInput: { inputMode: "decimal" } }}
-				/>
+				{splits.enabled ? (
+					<TextField
+						key="amount-total"
+						label="Amount"
+						value={splits.total}
+						helperText="The total of the items below"
+						disabled
+					/>
+				) : (
+					<TextField
+						key="amount-typed"
+						label="Amount"
+						name="amount"
+						defaultValue={transaction?.amount}
+						placeholder="12.50"
+						helperText={type === "income" ? "Money received" : "Money spent"}
+						required
+						autoFocus
+						slotProps={{ htmlInput: { inputMode: "decimal" } }}
+					/>
+				)}
 			</Cell>
 
 			<Cell size={12} fadeIn={switched}>
@@ -137,14 +154,36 @@ export default function OrdinaryFields({
 			</Cell>
 
 			<Cell size={{ xs: 12, sm: 6 }} fadeIn={switched}>
-				<TextField
-					label="Category"
-					name="category"
-					defaultValue={transaction && transaction.type !== "transfer" ? transaction.category : ""}
-					required
-					slotProps={{ htmlInput: { maxLength: 100 } }}
-				/>
+				{splits.enabled ? (
+					<FormControlLabel
+						control={<Switch checked onChange={() => splits.setEnabled(false)} />}
+						label="Split by item and category"
+					/>
+				) : (
+					<TextField
+						label="Category"
+						name="category"
+						defaultValue={
+							transaction && transaction.type !== "transfer" ? transaction.category : ""
+						}
+						required
+						slotProps={{ htmlInput: { maxLength: 100 } }}
+					/>
+				)}
 			</Cell>
+
+			{!splits.enabled && (
+				<Cell size={12} fadeIn={switched}>
+					<FormControlLabel
+						control={<Switch checked={false} onChange={() => splits.setEnabled(true)} />}
+						label="Split by item and category"
+					/>
+				</Cell>
+			)}
+
+			<RevealCell size={12} show={splits.enabled}>
+				<SplitEditor splits={splits} currency={effectiveCurrency} />
+			</RevealCell>
 		</Fragment>
 	);
 }

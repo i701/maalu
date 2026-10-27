@@ -9,6 +9,7 @@ from openpyxl import Workbook
 from openpyxl.cell import WriteOnlyCell
 from openpyxl.styles import Alignment, Font
 
+from app.allocation import allocate_base
 from app.enums import TransactionType
 from app.models import Transaction
 
@@ -39,6 +40,50 @@ _COLUMNS = [
 ]
 
 
+# The Items sheet: one row per line of a split transaction.
+_ITEM_COLUMNS = [
+    ("Date", 12),
+    ("Type", 10),
+    ("Vendor", 22),
+    ("Item", 28),
+    ("Category", 18),
+    ("Quantity", 10),
+    ("Amount", 14),
+    ("GST", 12),
+    ("Currency", 9),
+    ("Amount ({base})", 16),
+]
+_CATEGORY_COLUMNS = [("Type", 10), ("Category", 24), ("Transactions", 14), ("Total ({base})", 16)]
+
+
+def _categories(t: Transaction) -> str | None:
+    """A transaction's category; for a split one, every category it touches."""
+    if t.splits:
+        return ", ".join(dict.fromkeys(s.category for s in t.splits))
+    return t.category
+
+
+def _write_rows(ws, columns, rows, base_currency: str) -> None:
+    """A header row, then `rows` of (value, number_format) pairs, on a write-only sheet."""
+    ws.freeze_panes = "A2"
+    for i, (_, width) in enumerate(columns):
+        ws.column_dimensions[chr(ord("A") + i)].width = width
+    header = []
+    for name, _ in columns:
+        cell = WriteOnlyCell(ws, value=name.format(base=base_currency))
+        cell.font = _BOLD
+        header.append(cell)
+    ws.append(header)
+    for values in rows:
+        out = []
+        for value, number_format in values:
+            cell = WriteOnlyCell(ws, value=value)
+            if number_format:
+                cell.number_format = number_format
+            out.append(cell)
+        ws.append(out)
+
+
 def _num(value: Decimal | None) -> float | None:
     return float(value) if value is not None else None
 
@@ -60,7 +105,8 @@ def build_workbook(
     filter_labels: Sequence[str],
     generated_on: date,
 ) -> bytes:
-    """Two sheets: Transactions (one row each, real numbers and dates) and Summary."""
+    """Transactions (one row each, real numbers and dates), Items (the lines of split
+    transactions, when there are any), By category and Summary."""
     wb = Workbook(write_only=True)  # streams rows to disk-light XML: fine for tens of thousands
 
     ws = wb.create_sheet("Transactions")
@@ -76,6 +122,8 @@ def build_workbook(
     ws.append(header)
 
     income = expense = Decimal(0)
+    item_rows: list[list[tuple]] = []
+    category_totals: dict[tuple[str, str], list] = {}
     for t in rows:
         if t.type is TransactionType.INCOME:
             income += t.base_amount
@@ -83,10 +131,37 @@ def build_workbook(
             expense += t.base_amount
 
         is_transfer = t.type is TransactionType.TRANSFER
+        if not is_transfer:
+            seen: set[str] = set()
+            lines = t.splits or []
+            shares = allocate_base(t.base_amount, t.amount, [s.amount for s in lines])
+            if not lines:
+                entry = category_totals.setdefault((t.type.value, t.category), [Decimal(0), 0])
+                entry[0] += t.base_amount
+                entry[1] += 1
+            for line, share in zip(lines, shares, strict=True):
+                entry = category_totals.setdefault((t.type.value, line.category), [Decimal(0), 0])
+                entry[0] += share
+                entry[1] += 0 if line.category in seen else 1
+                seen.add(line.category)
+                item_rows.append(
+                    [
+                        (t.transaction_date, "yyyy-mm-dd"),
+                        (t.type.value.capitalize(), None),
+                        (t.vendor.name if t.vendor else None, None),
+                        (line.name, None),
+                        (line.category, None),
+                        (_num(line.quantity), "0.###"),
+                        (_num(line.amount), _MONEY),
+                        (_num(line.tax_amount), _MONEY),
+                        (t.currency, None),
+                        (_num(share), _MONEY),
+                    ]
+                )
         values = [
             (t.transaction_date, "yyyy-mm-dd"),
             (t.type.value.capitalize(), None),
-            (None if is_transfer else t.category, None),
+            (None if is_transfer else _categories(t), None),
             (t.vendor.name if t.vendor else None, None),
             (t.description, None),
             (t.account.name if t.account else None, None),
@@ -109,6 +184,25 @@ def build_workbook(
         ws.append(out)
 
     ws.auto_filter.ref = f"A1:{chr(ord('A') + len(_COLUMNS) - 1)}{len(rows) + 1}"
+
+    if item_rows:
+        _write_rows(wb.create_sheet("Items"), _ITEM_COLUMNS, item_rows, base_currency)
+
+    by_category = sorted(category_totals.items(), key=lambda kv: (kv[0][0], -kv[1][0], kv[0][1]))
+    _write_rows(
+        wb.create_sheet("By category"),
+        _CATEGORY_COLUMNS,
+        [
+            [
+                (kind.capitalize(), None),
+                (category, None),
+                (count, None),
+                (_num(total), _MONEY),
+            ]
+            for (kind, category), (total, count) in by_category
+        ],
+        base_currency,
+    )
 
     summary = wb.create_sheet("Summary")
     summary.column_dimensions["A"].width = 22
