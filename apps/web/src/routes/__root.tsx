@@ -1,4 +1,5 @@
 import robotoCss from "@fontsource-variable/roboto/index.css?url";
+import m3Css from "#/styles/m3.css?url";
 import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import Providers from "#/components/Providers";
@@ -11,7 +12,10 @@ export const Route = createRootRoute({
 			{ name: "viewport", content: "width=device-width, initial-scale=1" },
 			{ title: "Maalu" },
 		],
-		links: [{ rel: "stylesheet", href: robotoCss }],
+		links: [
+			{ rel: "stylesheet", href: robotoCss },
+			{ rel: "stylesheet", href: m3Css },
+		],
 	}),
 	component: () => (
 		<html lang="en" suppressHydrationWarning>

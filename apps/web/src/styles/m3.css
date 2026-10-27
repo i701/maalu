@@ -1,0 +1,331 @@
+/*
+ * Material 3 Expressive motion and shape tokens. Colour roles live in src/lib/m3.ts.
+ *
+ * Spatial springs drive position, size and shape and overshoot slightly; effects springs drive
+ * colour and opacity and don't. They are CSS linear() approximations of the spring tokens.
+ */
+/* Material Symbols Rounded (Apache-2.0), the subset served by Google Fonts: weights 400-500 and the
+ * FILL axis, so icons can animate from outlined to filled. */
+@font-face {
+	font-family: "Material Symbols Rounded";
+	font-weight: 400 500;
+	font-display: block;
+	src: url(../assets/material-symbols-rounded.woff2) format("woff2");
+}
+
+:root {
+	--spring-spatial-fast: linear(
+		0,
+		0.0371,
+		0.1309,
+		0.2582,
+		0.4002,
+		0.5427,
+		0.6755,
+		0.7921,
+		0.8891,
+		0.9655,
+		1.0219,
+		1.0602,
+		1.083,
+		1.0934,
+		1.0941,
+		1.088,
+		1.0776,
+		1.0647,
+		1.0511,
+		1.0379,
+		1.0259,
+		1.0156,
+		1.0072,
+		1.0008,
+		0.9962,
+		0.9932,
+		0.9916,
+		0.991,
+		0.9913,
+		0.992,
+		0.9931,
+		0.9944,
+		0.9957,
+		0.9969,
+		0.998,
+		0.9989,
+		0.9996,
+		1.0001,
+		1.0005,
+		1.0007,
+		1
+	);
+	--spring-spatial-fast-dur: 0.409s;
+	--spring-spatial-default: linear(
+		0,
+		0.0245,
+		0.0863,
+		0.1708,
+		0.267,
+		0.3668,
+		0.4644,
+		0.5561,
+		0.6394,
+		0.7131,
+		0.7769,
+		0.831,
+		0.8758,
+		0.9123,
+		0.9413,
+		0.964,
+		0.9811,
+		0.9938,
+		1.0028,
+		1.0088,
+		1.0125,
+		1.0145,
+		1.0151,
+		1.0149,
+		1.0141,
+		1.0128,
+		1.0114,
+		1.0099,
+		1.0084,
+		1.007,
+		1.0057,
+		1.0046,
+		1.0036,
+		1.0027,
+		1.002,
+		1.0014,
+		1.001,
+		1.0006,
+		1.0003,
+		1.0001,
+		1
+	);
+	--spring-spatial-default-dur: 0.484s;
+	--spring-spatial-slow: linear(
+		0,
+		0.0233,
+		0.0823,
+		0.1634,
+		0.2563,
+		0.3533,
+		0.4488,
+		0.5392,
+		0.622,
+		0.696,
+		0.7606,
+		0.8158,
+		0.8621,
+		0.9003,
+		0.9311,
+		0.9554,
+		0.9743,
+		0.9885,
+		0.9988,
+		1.006,
+		1.0107,
+		1.0135,
+		1.0149,
+		1.0152,
+		1.0147,
+		1.0137,
+		1.0124,
+		1.011,
+		1.0095,
+		1.0081,
+		1.0068,
+		1.0055,
+		1.0044,
+		1.0035,
+		1.0027,
+		1.002,
+		1.0014,
+		1.001,
+		1.0006,
+		1.0003,
+		1
+	);
+	--spring-spatial-slow-dur: 0.649s;
+	--spring-effects-fast: linear(
+		0,
+		0.0384,
+		0.1263,
+		0.2349,
+		0.347,
+		0.4533,
+		0.549,
+		0.6323,
+		0.703,
+		0.762,
+		0.8106,
+		0.8501,
+		0.882,
+		0.9075,
+		0.9277,
+		0.9437,
+		0.9563,
+		0.9662,
+		0.9739,
+		0.9799,
+		0.9845,
+		0.9881,
+		0.9909,
+		0.993,
+		0.9947,
+		0.9959,
+		0.9969,
+		0.9976,
+		0.9982,
+		0.9986,
+		0.999,
+		0.9992,
+		0.9994,
+		0.9996,
+		0.9997,
+		0.9997,
+		0.9998,
+		0.9999,
+		0.9999,
+		0.9999,
+		1
+	);
+	--spring-effects-fast-dur: 0.199s;
+	--spring-effects-default: linear(
+		0,
+		0.0326,
+		0.1089,
+		0.2057,
+		0.3083,
+		0.4082,
+		0.5005,
+		0.5831,
+		0.6551,
+		0.7168,
+		0.7689,
+		0.8125,
+		0.8486,
+		0.8782,
+		0.9024,
+		0.922,
+		0.9379,
+		0.9507,
+		0.9609,
+		0.9691,
+		0.9756,
+		0.9808,
+		0.9849,
+		0.9881,
+		0.9907,
+		0.9927,
+		0.9943,
+		0.9955,
+		0.9965,
+		0.9973,
+		0.9979,
+		0.9984,
+		0.9987,
+		0.999,
+		0.9992,
+		0.9994,
+		0.9995,
+		0.9996,
+		0.9997,
+		0.9998,
+		1
+	);
+	--spring-effects-default-dur: 0.28s;
+
+	/* Shape scale (M3 corner tokens) */
+	--shape-xs: 4px;
+	--shape-sm: 8px;
+	--shape-md: 12px;
+	--shape-lg: 16px;
+	--shape-lg-inc: 20px;
+	--shape-xl: 28px;
+	--shape-xl-inc: 32px;
+	--shape-xxl: 36px;
+	--shape-full: 999px;
+
+	/* Elevation (M3 keeps shadows light and leans on tonal surfaces instead) */
+	--elev-1: 0 1px 2px #00000029, 0 1px 3px 1px #00000012;
+	--elev-2: 0 1px 2px #00000029, 0 2px 6px 2px #00000017;
+	--elev-3: 0 4px 8px 3px #00000017, 0 1px 3px #00000029;
+
+	/* Emphasized easing, for non-spring transitions */
+	--ease-emph: cubic-bezier(0.2, 0, 0, 1);
+	--ease-emph-decel: cubic-bezier(0.05, 0.7, 0.1, 1);
+	--ease-emph-accel: cubic-bezier(0.3, 0, 0.8, 0.15);
+}
+
+/*
+ * Entrance for lists: items rise a little and fade in, one after another (see staggerChildren in
+ * lib/motion.ts, which sets the delays). Plain CSS, it plays when an item is first mounted, so it
+ * runs when new data arrives and not on a refresh of the same rows.
+ */
+/* Position and opacity animate separately so each takes its own spring: spatial for movement,
+ * effects for opacity (see lib/motion.ts SPRING). */
+@keyframes rise-in {
+	from {
+		transform: translateY(14px);
+	}
+	to {
+		transform: none;
+	}
+}
+@keyframes rise-in-fade {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+/*
+ * Keyboard focus ring, after Material Web's <md-focus-ring>: a 3px outline in the secondary colour,
+ * 2px outside the element, shown only for keyboard focus (:focus-visible). On focus it grows to 8px
+ * in the first quarter of 600ms and settles back to 3px on the emphasized easing. `outline` follows
+ * the element's border-radius, so the ring is as round as the control (plus the offset), including
+ * while its shape is morphing. Needed because the ripple is off, which was the only focus cue.
+ *
+ * Opt out with data-no-ring when a component draws its own (the nav pill). List-like rows get an
+ * inward ring so it isn't clipped.
+ */
+@keyframes focus-ring {
+	0% {
+		outline-width: 0;
+	}
+	25% {
+		outline-width: 8px;
+	}
+	100% {
+		outline-width: 3px;
+	}
+}
+.MuiButtonBase-root:focus-visible:not([data-no-ring]),
+.MuiLink-root:focus-visible {
+	outline: 3px solid var(--md-sys-color-secondary);
+	outline-offset: 2px;
+	animation: focus-ring 600ms var(--ease-emph);
+}
+.MuiMenuItem-root:focus-visible,
+.MuiListItemButton-root:focus-visible {
+	outline-offset: -3px;
+}
+@media (prefers-reduced-motion: reduce) {
+	.MuiButtonBase-root:focus-visible:not([data-no-ring]),
+	.MuiLink-root:focus-visible {
+		animation: none;
+	}
+}
+
+/* Loading indicator under reduced motion: it holds still and breathes instead of morphing. */
+@keyframes loading-pulse {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.45;
+	}
+}
