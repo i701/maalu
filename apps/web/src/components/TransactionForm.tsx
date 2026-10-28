@@ -4,7 +4,6 @@ import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import { type FormEvent, useState } from "react";
-import { SUGGESTED_PAYMENT_METHOD } from "#/lib/accounts";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
 import {
@@ -12,37 +11,40 @@ import {
 	TRANSACTION_TYPE_LABELS,
 	type Account,
 	type Category,
-	type PaymentMethod,
 	type Subscription,
 	type Transaction,
+	type TransactionTemplate,
 	type TransactionType,
 	type Vendor,
 } from "#/types/api";
 import FormDialog from "./FormDialog";
 import { useNotify } from "./Notify";
+import SaveTemplateDialog from "./SaveTemplateDialog";
 import VendorField from "./VendorField";
 import { Cell, RevealCell } from "./transaction-form/Cells";
+import FormFooter from "./transaction-form/FormFooter";
 import OrdinaryFields from "./transaction-form/OrdinaryFields";
+import TemplatePicker from "./transaction-form/TemplatePicker";
 import TransferFields from "./transaction-form/TransferFields";
-import { warningAfterExpense } from "./transaction-form/budget-warning";
+import { messageAfterSave } from "./transaction-form/budget-warning";
+import { useFormFields } from "./transaction-form/useFormFields";
 import { useSplits } from "./transaction-form/useSplits";
 import {
 	accountChoices,
+	buildTemplateRequest,
 	buildTransactionRequest,
-	initialValues,
+	seedAfterSave,
+	seedFromTemplate,
 	subscriptionChoices,
-	type SubRef,
+	type TransactionSeed,
 } from "./transaction-form/request";
-
-const today = () => {
-	const d = new Date();
-	return new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
-};
 
 const TYPE_COLOR = { income: "success", expense: "error", transfer: "info" } as const;
 
 export default function TransactionForm({
 	transaction,
+	seed: startSeed,
+	templates,
 	vendors,
 	categories,
 	subscriptions,
@@ -53,6 +55,10 @@ export default function TransactionForm({
 }: {
 	/** undefined = create a new transaction */
 	transaction?: Transaction;
+	/** Pre-fills a new transaction, for example a duplicate of an existing one. */
+	seed?: TransactionSeed;
+	/** Saved starting points to choose from when adding a transaction. */
+	templates: TransactionTemplate[];
 	vendors: Vendor[];
 	categories: Category[];
 	subscriptions: Subscription[];
@@ -65,187 +71,204 @@ export default function TransactionForm({
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
 	const [localError, setLocalError] = useState<string | null>(null);
-	const splits = useSplits(transaction);
-	// The day the form is for: the exchange-rate suggestion follows it.
-	const [date, setDate] = useState(transaction?.transaction_date ?? today());
-
+	const [another, setAnother] = useState(false);
+	const [savingTemplate, setSavingTemplate] = useState<FormData | null>(null);
 	const accounts = accountChoices(activeAccounts, transaction);
-	const initial = initialValues(transaction, baseCurrency);
-	const [type, setType] = useState<TransactionType>(initial.type);
-	const isTransfer = type === "transfer";
-
-	// Income / expense: an optional account locks the currency to the account's and suggests a
-	// payment method. Transfer: a from-account and a to-account.
-	const [accountId, setAccountId] = useState(initial.accountId);
-	const [toAccountId, setToAccountId] = useState(initial.toAccountId);
-	const account = accounts.find((a) => a.id === accountId) ?? null;
-	const toAccount = accounts.find((a) => a.id === toAccountId) ?? null;
-	const [currency, setCurrency] = useState(initial.currency);
-	const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(initial.paymentMethod);
-	// Only expenses can belong to a subscription.
-	const [subscription, setSubscription] = useState<SubRef | null>(initial.subscription);
+	const fields = useFormFields({ transaction, startSeed, accounts, baseCurrency });
+	const {
+		seed,
+		type,
+		isTransfer,
+		accountId,
+		toAccountId,
+		account,
+		toAccount,
+		currency,
+		effectiveCurrency,
+		foreign,
+		crossCurrency,
+		paymentMethod,
+		subscription,
+		date,
+		switched,
+	} = fields;
+	const splits = useSplits(seed);
 	const subscriptionOptions = subscriptionChoices(subscriptions, transaction);
 
-	const [switched, setSwitched] = useState(false); // true once the user has changed the type
-	const effectiveCurrency = account ? account.currency : currency;
-	const foreign =
-		effectiveCurrency.length === 3 && effectiveCurrency.toUpperCase() !== baseCurrency;
-	const crossCurrency =
-		isTransfer && account && toAccount && account.currency !== toAccount.currency;
-
-	function pickAccount(id: string) {
-		setAccountId(id);
-		const picked = accounts.find((a) => a.id === id);
-		if (picked && !isTransfer) setPaymentMethod(SUGGESTED_PAYMENT_METHOD[picked.group]);
-	}
-
 	function changeType(next: TransactionType) {
-		setType(next);
-		setSwitched(true);
-		if (next !== "expense") setSubscription(null);
+		fields.changeType(next);
 		setLocalError(null);
 	}
+
+	function fillFrom(next: TransactionSeed) {
+		fields.fillFrom(next);
+		splits.reset();
+		setLocalError(null);
+	}
+
+	const formState = () => ({
+		type,
+		transaction,
+		accountId,
+		toAccountId,
+		account,
+		toAccount,
+		crossCurrency,
+		foreign,
+		subscription,
+		splits: type !== "transfer" && splits.enabled ? splits : null,
+	});
 
 	async function submit(e: FormEvent<HTMLFormElement>) {
 		e.preventDefault();
 		const form = new FormData(e.currentTarget); // read now: the event is gone after an await
-		const request = buildTransactionRequest(form, {
-			type,
-			transaction,
-			accountId,
-			toAccountId,
-			account,
-			crossCurrency: Boolean(crossCurrency),
-			foreign,
-			subscription,
-			splits: type !== "transfer" && splits.enabled ? splits : null,
-		});
+		const request = buildTransactionRequest(form, formState());
 		if ("error" in request) return setLocalError(request.error);
 		setLocalError(null);
 		if (await run(request.send)) {
-			// An expense may have pushed a budget limit close or over: say so in the same message.
-			const warning =
-				type === "expense"
-					? await warningAfterExpense({
-							date: String(form.get("transaction_date") ?? ""),
-							categories: splits.enabled
-								? splits.rows.map((r) => r.category)
-								: [String(form.get("category") ?? "")],
-						})
-					: null;
-			notify(
-				warning ? `${request.success}. ${warning}` : request.success,
-				warning ? "warning" : "success",
-			);
-			sheet.close();
+			const message = await messageAfterSave({
+				success: request.success,
+				type,
+				form,
+				itemCategories: splits.enabled ? splits.rows.map((r) => r.category) : null,
+			});
+			notify(message.text, message.severity);
+			if (another && !transaction) {
+				fillFrom(seedAfterSave(form, formState()));
+				// the form was cleared: put the cursor back on the amount, ready for the next one
+				requestAnimationFrame(() =>
+					document.querySelector<HTMLInputElement>('input[name="amount"]')?.focus(),
+				);
+			} else sheet.close();
 		}
 	}
 
 	return (
-		<FormDialog
-			title={transaction ? "Edit transaction" : "Add transaction"}
-			error={localError ?? error}
-			pending={pending}
-			onSubmit={submit}
-			sheet={sheet}
-		>
-			<Grid container columnSpacing={2}>
-				<Cell size={12}>
-					<ToggleButtonGroup
-						exclusive
-						fullWidth
-						size="small"
-						value={type}
-						onChange={(_, next: TransactionType | null) => next && changeType(next)}
-						aria-label="Transaction type"
-					>
-						{TRANSACTION_TYPES.map((t) => (
-							<ToggleButton key={t} value={t} color={TYPE_COLOR[t]} sx={{ py: 1 }}>
-								{TRANSACTION_TYPE_LABELS[t]}
-							</ToggleButton>
-						))}
-					</ToggleButtonGroup>
-				</Cell>
+		<>
+			<FormDialog
+				title={transaction ? "Edit transaction" : "Add transaction"}
+				error={localError ?? error}
+				pending={pending}
+				onSubmit={submit}
+				sheet={sheet}
+			>
+				<Grid container columnSpacing={2} key={fields.round}>
+					{!transaction && templates.length > 0 && (
+						<Cell size={12}>
+							<TemplatePicker templates={templates} onPick={(t) => fillFrom(seedFromTemplate(t))} />
+						</Cell>
+					)}
+					<Cell size={12}>
+						<ToggleButtonGroup
+							exclusive
+							fullWidth
+							size="small"
+							value={type}
+							onChange={(_, next: TransactionType | null) => next && changeType(next)}
+							aria-label="Transaction type"
+						>
+							{TRANSACTION_TYPES.map((t) => (
+								<ToggleButton key={t} value={t} color={TYPE_COLOR[t]} sx={{ py: 1 }}>
+									{TRANSACTION_TYPE_LABELS[t]}
+								</ToggleButton>
+							))}
+						</ToggleButtonGroup>
+					</Cell>
 
-				{isTransfer ? (
-					<TransferFields
-						key="transfer"
-						accounts={accounts}
-						accountId={accountId}
-						toAccountId={toAccountId}
-						onPickAccount={pickAccount}
-						onPickToAccount={setToAccountId}
-						crossCurrency={Boolean(crossCurrency)}
-						transaction={transaction}
-						switched={switched}
-					/>
-				) : (
-					<OrdinaryFields
-						key="ordinary"
-						type={type}
-						accounts={accounts}
-						accountId={accountId}
-						onPickAccount={pickAccount}
-						currencies={currencies}
-						currency={currency}
-						onCurrencyChange={setCurrency}
-						effectiveCurrency={effectiveCurrency}
-						foreign={foreign}
-						baseCurrency={baseCurrency}
-						paymentMethod={paymentMethod}
-						onPaymentMethodChange={setPaymentMethod}
-						transaction={transaction}
-						switched={switched}
-						splits={splits}
-						date={date}
-						categories={categories}
-					/>
-				)}
+					{isTransfer ? (
+						<TransferFields
+							key="transfer"
+							accounts={accounts}
+							accountId={accountId}
+							toAccountId={toAccountId}
+							onPickAccount={fields.pickAccount}
+							onPickToAccount={fields.setToAccountId}
+							crossCurrency={crossCurrency}
+							seed={seed}
+							switched={switched}
+						/>
+					) : (
+						<OrdinaryFields
+							key="ordinary"
+							type={type}
+							accounts={accounts}
+							accountId={accountId}
+							onPickAccount={fields.pickAccount}
+							currencies={currencies}
+							currency={currency}
+							onCurrencyChange={fields.setCurrency}
+							effectiveCurrency={effectiveCurrency}
+							foreign={foreign}
+							baseCurrency={baseCurrency}
+							paymentMethod={paymentMethod}
+							onPaymentMethodChange={fields.setPaymentMethod}
+							seed={seed}
+							switched={switched}
+							splits={splits}
+							date={date}
+							categories={categories}
+						/>
+					)}
 
-				<Cell size={{ xs: 12, sm: isTransfer ? 12 : 6 }}>
-					<TextField
-						label="Date"
-						name="transaction_date"
-						type="date"
-						value={date}
-						onChange={(e) => setDate(e.target.value)}
-						required
-						slotProps={{ inputLabel: { shrink: true } }}
-					/>
-				</Cell>
+					<Cell size={{ xs: 12, sm: isTransfer ? 12 : 6 }}>
+						<TextField
+							label="Date"
+							name="transaction_date"
+							type="date"
+							value={date}
+							onChange={(e) => fields.setDate(e.target.value)}
+							required
+							slotProps={{ inputLabel: { shrink: true } }}
+						/>
+					</Cell>
 
-				<RevealCell size={{ xs: 12, sm: 6 }} show={!isTransfer}>
-					<VendorField vendors={vendors} defaultValue={transaction?.vendor?.name ?? ""} />
-				</RevealCell>
+					<RevealCell size={{ xs: 12, sm: 6 }} show={!isTransfer}>
+						<VendorField vendors={vendors} defaultValue={seed?.vendorName ?? ""} />
+					</RevealCell>
 
-				<RevealCell size={12} show={type === "expense"}>
-					<Autocomplete
-						options={subscriptionOptions}
-						value={subscription}
-						onChange={(_, v) => setSubscription(v)}
-						getOptionLabel={(o) => o.name}
-						isOptionEqualToValue={(a, b) => a.id === b.id}
-						noOptionsText="No subscriptions yet"
-						renderInput={(params) => (
-							<TextField
-								{...params}
-								label="Subscription"
-								helperText="Optional. Marks this as a payment for a recurring charge"
-							/>
-						)}
-					/>
-				</RevealCell>
+					<RevealCell size={12} show={type === "expense"}>
+						<Autocomplete
+							options={subscriptionOptions}
+							value={subscription}
+							onChange={(_, v) => fields.setSubscription(v)}
+							getOptionLabel={(o) => o.name}
+							isOptionEqualToValue={(a, b) => a.id === b.id}
+							noOptionsText="No subscriptions yet"
+							renderInput={(params) => (
+								<TextField
+									{...params}
+									label="Subscription"
+									helperText="Optional. Marks this as a payment for a recurring charge"
+								/>
+							)}
+						/>
+					</RevealCell>
 
-				<Cell size={12}>
-					<TextField
-						label="Description"
-						name="description"
-						defaultValue={transaction?.description ?? ""}
-						multiline
-						minRows={2}
-					/>
-				</Cell>
-			</Grid>
-		</FormDialog>
+					<Cell size={12}>
+						<TextField
+							label="Description"
+							name="description"
+							defaultValue={seed?.description ?? ""}
+							multiline
+							minRows={2}
+						/>
+					</Cell>
+
+					<Cell size={12}>
+						<FormFooter
+							another={transaction ? undefined : another}
+							onAnotherChange={setAnother}
+							onSaveTemplate={setSavingTemplate}
+						/>
+					</Cell>
+				</Grid>
+			</FormDialog>
+			{savingTemplate && (
+				<SaveTemplateDialog
+					build={(name) => buildTemplateRequest(savingTemplate, formState(), name)}
+					onClose={() => setSavingTemplate(null)}
+				/>
+			)}
+		</>
 	);
 }

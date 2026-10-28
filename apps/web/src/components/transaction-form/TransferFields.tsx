@@ -2,9 +2,10 @@ import Alert from "@mui/material/Alert";
 import TextField from "@mui/material/TextField";
 import { Fragment } from "react";
 import { useLastDefined } from "#/lib/motion";
-import type { AccountRef, Transaction } from "#/types/api";
+import type { AccountRef } from "#/types/api";
 import { Cell, RevealCell } from "./Cells";
 import { accountMenuItems } from "./accountMenuItems";
+import type { TransactionSeed } from "./request";
 
 /** The fields that differ for a transfer: from / to accounts, the amount and what arrived. */
 export default function TransferFields({
@@ -14,7 +15,7 @@ export default function TransferFields({
 	onPickAccount,
 	onPickToAccount,
 	crossCurrency,
-	transaction,
+	seed,
 	switched,
 }: {
 	accounts: AccountRef[];
@@ -23,7 +24,7 @@ export default function TransferFields({
 	onPickAccount: (id: string) => void;
 	onPickToAccount: (id: string) => void;
 	crossCurrency: boolean;
-	transaction?: Transaction;
+	seed?: TransactionSeed;
 	switched: boolean;
 }) {
 	const account = accounts.find((a) => a.id === accountId) ?? null;
@@ -63,7 +64,7 @@ export default function TransferFields({
 				<TextField
 					label={account ? `Amount (${account.currency})` : "Amount"}
 					name="amount"
-					defaultValue={transaction?.amount}
+					defaultValue={seed?.amount}
 					placeholder="100.00"
 					helperText="Taken out of the From account"
 					required
@@ -75,7 +76,7 @@ export default function TransferFields({
 				<TextField
 					label={`Amount received (${shownTo?.currency ?? ""})`}
 					name="to_amount"
-					defaultValue={transaction?.to_amount ?? ""}
+					defaultValue={seed?.to_amount ?? ""}
 					placeholder="10.00"
 					helperText="Different currencies: enter what arrived"
 					required

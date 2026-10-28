@@ -9,7 +9,6 @@ import {
 	type AccountRef,
 	type Category,
 	type PaymentMethod,
-	type Transaction,
 	type TransactionType,
 } from "#/types/api";
 import CategoryField from "../CategoryField";
@@ -17,6 +16,7 @@ import CurrencyField from "../CurrencyField";
 import RateField from "../RateField";
 import { Cell, RevealCell } from "./Cells";
 import SplitEditor from "./SplitEditor";
+import type { TransactionSeed } from "./request";
 import type { SplitsState } from "./useSplits";
 import { accountMenuItems } from "./accountMenuItems";
 
@@ -34,7 +34,7 @@ export default function OrdinaryFields({
 	baseCurrency,
 	paymentMethod,
 	onPaymentMethodChange,
-	transaction,
+	seed,
 	switched,
 	splits,
 	categories,
@@ -53,7 +53,7 @@ export default function OrdinaryFields({
 	baseCurrency: string;
 	paymentMethod: PaymentMethod;
 	onPaymentMethodChange: (method: PaymentMethod) => void;
-	transaction?: Transaction;
+	seed?: TransactionSeed;
 	switched: boolean;
 	splits: SplitsState;
 	categories: Category[];
@@ -78,7 +78,7 @@ export default function OrdinaryFields({
 						key="amount-typed"
 						label="Amount"
 						name="amount"
-						defaultValue={transaction?.amount}
+						defaultValue={seed?.amount}
 						placeholder="12.50"
 						helperText={type === "income" ? "Money received" : "Money spent"}
 						required
@@ -129,7 +129,7 @@ export default function OrdinaryFields({
 						to={baseCurrency}
 						on={date}
 						label={`Rate: 1 ${effectiveCurrency} = ? ${baseCurrency}`}
-						initial={transaction?.currency === effectiveCurrency ? transaction.exchange_rate : ""}
+						initial={seed?.currency === effectiveCurrency ? seed.exchange_rate : ""}
 					/>
 				) : (
 					<TextField
@@ -168,9 +168,7 @@ export default function OrdinaryFields({
 					<CategoryField
 						categories={categories}
 						name="category"
-						defaultValue={
-							transaction && transaction.type !== "transfer" ? transaction.category : ""
-						}
+						defaultValue={seed && seed.type !== "transfer" ? seed.category : ""}
 					/>
 				)}
 			</Cell>

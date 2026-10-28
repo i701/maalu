@@ -2136,6 +2136,259 @@
         "title": "SubscriptionUpdate",
         "type": "object"
       },
+      "TemplateCreate": {
+        "description": "Everything but the name and type is optional: a template pre-fills whatever it has.",
+        "properties": {
+          "account_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Its currency is used. For a transfer: the account it leaves.",
+            "title": "Account Id"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Left out when it differs every time",
+            "title": "Amount"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "By name: found or created",
+            "title": "Category"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z]{3}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Defaults to your base currency; ignored with an account",
+            "title": "Currency"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "payment_method": {
+            "$ref": "#/components/schemas/PaymentMethod",
+            "default": "other"
+          },
+          "to_account_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Transfers only",
+            "title": "To Account Id"
+          },
+          "type": {
+            "$ref": "#/components/schemas/TransactionType"
+          },
+          "vendor_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor Id"
+          },
+          "vendor_name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor Name"
+          }
+        },
+        "required": [
+          "name",
+          "type"
+        ],
+        "title": "TemplateCreate",
+        "type": "object"
+      },
+      "TemplateResponse": {
+        "properties": {
+          "account": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AccountRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "payment_method": {
+            "$ref": "#/components/schemas/PaymentMethod"
+          },
+          "to_account": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AccountRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "type": {
+            "$ref": "#/components/schemas/TransactionType"
+          },
+          "vendor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type",
+          "amount",
+          "currency",
+          "payment_method",
+          "category",
+          "vendor",
+          "description",
+          "account",
+          "to_account",
+          "created_at"
+        ],
+        "title": "TemplateResponse",
+        "type": "object"
+      },
+      "TemplateUpdate": {
+        "description": "Rename. To change what a template fills in, delete it and save it again.",
+        "properties": {
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "TemplateUpdate",
+        "type": "object"
+      },
       "Token": {
         "properties": {
           "access_token": {
@@ -5175,6 +5428,268 @@
         "summary": "Update Subscription",
         "tags": [
           "subscriptions"
+        ]
+      }
+    },
+    "/api/v1/templates": {
+      "get": {
+        "description": "All templates by name, or one page with `limit`/`offset`. The total is in `X-Total-Count`.",
+        "operationId": "list_templates_api_v1_templates_get",
+        "parameters": [
+          {
+            "description": "Omit for all rows",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 200,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Omit for all rows",
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TemplateResponse"
+                  },
+                  "title": "Response List Templates Api V1 Templates Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List Templates",
+        "tags": [
+          "templates"
+        ]
+      },
+      "post": {
+        "description": "Save a starting point for a transaction. Choosing it later pre-fills the form.",
+        "operationId": "create_template_api_v1_templates_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TemplateCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Create Template",
+        "tags": [
+          "templates"
+        ]
+      }
+    },
+    "/api/v1/templates/{template_id}": {
+      "delete": {
+        "operationId": "delete_template_api_v1_templates__template_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "template_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Template Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Delete Template",
+        "tags": [
+          "templates"
+        ]
+      },
+      "get": {
+        "operationId": "get_template_api_v1_templates__template_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "template_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Template Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Get Template",
+        "tags": [
+          "templates"
+        ]
+      },
+      "patch": {
+        "operationId": "rename_template_api_v1_templates__template_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "template_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Template Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TemplateUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Rename Template",
+        "tags": [
+          "templates"
         ]
       }
     },

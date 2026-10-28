@@ -26,6 +26,7 @@ export default defineConfig(({ mode }) => {
 					"Autorenew",
 					"ChevronRight",
 					"Clear",
+					"ContentCopyOutlined",
 					"DarkMode",
 					"DeleteForeverOutlined",
 					"DeleteOutlined",

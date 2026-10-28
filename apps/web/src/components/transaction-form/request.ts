@@ -1,4 +1,5 @@
 import { toScaled } from "#/lib/decimal";
+import type { TemplateDraft } from "#/server/templates";
 import { createTransactionFn, updateTransactionFn } from "#/server/transactions";
 import type { SplitsState } from "./useSplits";
 import type {
@@ -7,8 +8,119 @@ import type {
 	PaymentMethod,
 	Subscription,
 	Transaction,
+	TransactionTemplate,
 	TransactionType,
 } from "#/types/api";
+
+/** What the form starts from when it is not editing a transaction: a duplicate of one, a template,
+ * or what was just saved ("Add another"). Only the fields the form pre-fills. */
+export type TransactionSeed = Pick<
+	Transaction,
+	| "type"
+	| "amount"
+	| "to_amount"
+	| "payment_method"
+	| "category"
+	| "description"
+	| "splits"
+	| "currency"
+	| "exchange_rate"
+	| "subscription"
+	| "account"
+	| "to_account"
+> & { vendorName: string };
+
+/** "45.0000" as "45", "12.5000" as "12.5": the API sends four decimals, a person types fewer. */
+const trimZeros = (amount: string) =>
+	amount.includes(".") ? amount.replace(/\.?0+$/, "") : amount;
+
+/** The same details as an existing transaction, as the start of a new one. The rate is left empty
+ * so the market rate for the new date is suggested instead of reusing the old one. */
+export function seedFromTransaction(t: Transaction): TransactionSeed {
+	return {
+		type: t.type,
+		amount: trimZeros(t.amount),
+		to_amount: t.to_amount && trimZeros(t.to_amount),
+		payment_method: t.payment_method,
+		category: t.category,
+		description: t.description,
+		splits: t.splits,
+		currency: t.currency,
+		exchange_rate: "",
+		subscription: t.subscription,
+		account: t.account,
+		to_account: t.to_account,
+		vendorName: t.vendor?.name ?? "",
+	};
+}
+
+export function seedFromTemplate(t: TransactionTemplate): TransactionSeed {
+	return {
+		type: t.type,
+		amount: t.amount ? trimZeros(t.amount) : "",
+		to_amount: null,
+		payment_method: t.payment_method,
+		category: t.category ?? "",
+		description: t.description,
+		splits: [],
+		currency: t.currency,
+		exchange_rate: "",
+		subscription: null,
+		account: t.account,
+		to_account: t.to_account,
+		vendorName: t.vendor ?? "",
+	};
+}
+
+/** After "Add another": keep where the money goes (account, category, vendor, method), clear what
+ * differs every time (the amount and the note). */
+export function seedAfterSave(f: FormData, s: State): TransactionSeed {
+	const keepItems = s.type !== "transfer" && !s.splits;
+	return {
+		type: s.type,
+		amount: "",
+		to_amount: null,
+		payment_method: (text(f, "payment_method") || "cash") as PaymentMethod,
+		category: keepItems ? text(f, "category") : "",
+		description: null,
+		splits: [],
+		currency: s.account?.currency ?? text(f, "currency").toUpperCase(),
+		exchange_rate: "",
+		subscription: s.subscription,
+		account: s.account,
+		to_account: s.type === "transfer" ? s.toAccount : null,
+		vendorName: s.type === "transfer" ? "" : text(f, "vendor"),
+	};
+}
+
+/** The form's current values as a template, or a message about what is missing. */
+export function buildTemplateRequest(
+	f: FormData,
+	s: State,
+	name: string,
+): { error: string } | { draft: TemplateDraft } {
+	const transfer = s.type === "transfer";
+	if (transfer && (!s.accountId || !s.toAccountId))
+		return { error: "Choose both accounts first: a transfer template needs them" };
+	const amount = text(f, "amount");
+	const category = text(f, "category");
+	const vendor = text(f, "vendor");
+	const description = text(f, "description");
+	const currency = text(f, "currency");
+	return {
+		draft: {
+			name,
+			type: s.type,
+			amount: s.splits || !amount || Number(amount) <= 0 ? undefined : amount,
+			...(transfer ? {} : { payment_method: text(f, "payment_method") as PaymentMethod }),
+			...(!transfer && !s.splits && category ? { category } : {}),
+			...(!transfer && vendor ? { vendor_name: vendor } : {}),
+			...(description ? { description } : {}),
+			...(s.accountId ? { account_id: s.accountId } : currency ? { currency } : {}),
+			...(transfer && s.toAccountId ? { to_account_id: s.toAccountId } : {}),
+		},
+	};
+}
 
 export type SubRef = { id: string; name: string };
 
@@ -23,6 +135,7 @@ type State = {
 	accountId: string;
 	toAccountId: string;
 	account: AccountRef | null;
+	toAccount: AccountRef | null;
 	crossCurrency: boolean;
 	foreign: boolean;
 	subscription: SubRef | null;
@@ -149,15 +262,15 @@ export function buildTransactionRequest(form: FormData, state: State): Transacti
 }
 
 /** Starting values for the controlled fields: the edited transaction's, or sensible defaults. */
-export function initialValues(transaction: Transaction | undefined, baseCurrency: string) {
-	const ordinary = transaction && transaction.type !== "transfer" ? transaction : undefined;
+export function initialValues(seed: TransactionSeed | undefined, baseCurrency: string) {
+	const ordinary = seed && seed.type !== "transfer" ? seed : undefined;
 	return {
-		type: transaction?.type ?? ("expense" as TransactionType),
-		accountId: transaction?.account?.id ?? "",
-		toAccountId: transaction?.to_account?.id ?? "",
+		type: seed?.type ?? ("expense" as TransactionType),
+		accountId: seed?.account?.id ?? "",
+		toAccountId: seed?.to_account?.id ?? "",
 		currency: ordinary?.currency ?? baseCurrency,
 		paymentMethod: ordinary?.payment_method ?? ("cash" as PaymentMethod),
-		subscription: transaction?.subscription ?? null,
+		subscription: seed?.subscription ?? null,
 	};
 }
 

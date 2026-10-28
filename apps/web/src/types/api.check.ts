@@ -23,6 +23,7 @@ import type {
 	PaymentMethod,
 	Subscription,
 	SubscriptionStatus,
+	TransactionTemplate,
 	SubscriptionSummary,
 	Transaction,
 	TransactionSplit,
@@ -64,4 +65,5 @@ export type ApiShapes = [
 	Sends<MonthlyStats, Api["MonthlyResponse"]>,
 	Sends<BalanceTrend, Api["BalanceTrendResponse"]>,
 	Sends<MarketRate, Api["MarketRateResponse"]>,
+	Sends<TransactionTemplate, Api["TemplateResponse"]>,
 ];

@@ -511,6 +511,49 @@ export interface paths {
         patch: operations["update_subscription_api_v1_subscriptions__subscription_id__patch"];
         trace?: never;
     };
+    "/api/v1/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Templates
+         * @description All templates by name, or one page with `limit`/`offset`. The total is in `X-Total-Count`.
+         */
+        get: operations["list_templates_api_v1_templates_get"];
+        put?: never;
+        /**
+         * Create Template
+         * @description Save a starting point for a transaction. Choosing it later pre-fills the form.
+         */
+        post: operations["create_template_api_v1_templates_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/templates/{template_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Template */
+        get: operations["get_template_api_v1_templates__template_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Template */
+        delete: operations["delete_template_api_v1_templates__template_id__delete"];
+        options?: never;
+        head?: never;
+        /** Rename Template */
+        patch: operations["rename_template_api_v1_templates__template_id__patch"];
+        trace?: never;
+    };
     "/api/v1/transactions": {
         parameters: {
             query?: never;
@@ -1602,6 +1645,85 @@ export interface components {
             vendor_id?: string | null;
             /** Vendor Name */
             vendor_name?: string | null;
+        };
+        /**
+         * TemplateCreate
+         * @description Everything but the name and type is optional: a template pre-fills whatever it has.
+         */
+        TemplateCreate: {
+            /**
+             * Account Id
+             * @description Its currency is used. For a transfer: the account it leaves.
+             */
+            account_id?: string | null;
+            /**
+             * Amount
+             * @description Left out when it differs every time
+             */
+            amount?: number | string | null;
+            /**
+             * Category
+             * @description By name: found or created
+             */
+            category?: string | null;
+            /**
+             * Currency
+             * @description Defaults to your base currency; ignored with an account
+             */
+            currency?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Name */
+            name: string;
+            /** @default other */
+            payment_method: components["schemas"]["PaymentMethod"];
+            /**
+             * To Account Id
+             * @description Transfers only
+             */
+            to_account_id?: string | null;
+            type: components["schemas"]["TransactionType"];
+            /** Vendor Id */
+            vendor_id?: string | null;
+            /** Vendor Name */
+            vendor_name?: string | null;
+        };
+        /** TemplateResponse */
+        TemplateResponse: {
+            account: components["schemas"]["AccountRef"] | null;
+            /** Amount */
+            amount: string | null;
+            /** Category */
+            category: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Currency */
+            currency: string;
+            /** Description */
+            description: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            payment_method: components["schemas"]["PaymentMethod"];
+            to_account: components["schemas"]["AccountRef"] | null;
+            type: components["schemas"]["TransactionType"];
+            /** Vendor */
+            vendor: string | null;
+        };
+        /**
+         * TemplateUpdate
+         * @description Rename. To change what a template fills in, delete it and save it again.
+         */
+        TemplateUpdate: {
+            /** Name */
+            name: string;
         };
         /** Token */
         Token: {
@@ -3127,6 +3249,167 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SubscriptionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_templates_api_v1_templates_get: {
+        parameters: {
+            query?: {
+                /** @description Omit for all rows */
+                limit?: number | null;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TemplateResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_template_api_v1_templates_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TemplateCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TemplateResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_template_api_v1_templates__template_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TemplateResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_template_api_v1_templates__template_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rename_template_api_v1_templates__template_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TemplateUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TemplateResponse"];
                 };
             };
             /** @description Validation Error */

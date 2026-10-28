@@ -7,12 +7,12 @@ import {
 	type SplitRow,
 	type TaxMode,
 } from "#/lib/splits";
-import type { Transaction } from "#/types/api";
+import type { TransactionSeed } from "./request";
 
 /** State of the "split by item and category" table. Editing an existing split transaction starts
  * with its rows (exact totals kept); a new one starts with two empty rows when switched on. */
-export function useSplits(transaction: Transaction | undefined) {
-	const saved = transaction && transaction.type !== "transfer" ? transaction.splits : [];
+export function useSplits(seed: TransactionSeed | undefined) {
+	const saved = seed && seed.type !== "transfer" ? seed.splits : [];
 	const [enabled, setEnabled] = useState(saved.length > 0);
 	const [rows, setRows] = useState<SplitRow[]>(() =>
 		saved.length > 0 ? rowsFromSplits(saved) : [newRow(), newRow()],
@@ -33,9 +33,18 @@ export function useSplits(transaction: Transaction | undefined) {
 	const lines = useMemo(() => rows.map((r) => lineAmount(r, mode, rate)), [rows, mode, rate]);
 	const total = useMemo(() => splitTotal(lines), [lines]);
 
+	/** Back to the switched-off state with empty rows, for when the form is cleared. */
+	const reset = () => {
+		setEnabled(false);
+		setRows([newRow(), newRow()]);
+		setModeState("none");
+		setRate("");
+	};
+
 	return {
 		enabled,
 		setEnabled,
+		reset,
 		rows,
 		setRows,
 		mode,

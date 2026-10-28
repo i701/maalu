@@ -213,6 +213,24 @@ export type Transaction = {
 	deleted_at: string | null;
 };
 
+/** A saved starting point for a transaction: choosing it pre-fills the form. */
+export type TransactionTemplate = {
+	id: string;
+	name: string;
+	type: TransactionType;
+	/** Null when the amount differs every time. */
+	amount: string | null;
+	currency: string;
+	payment_method: PaymentMethod;
+	category: string | null;
+	vendor: string | null;
+	description: string | null;
+	account: AccountRef | null;
+	/** Transfers only. */
+	to_account: AccountRef | null;
+	created_at: string;
+};
+
 /** Income or expense in one category (base currency). A split transaction counts under each of its items' categories. */
 export type CategoryTotal = {
 	type: "income" | "expense";

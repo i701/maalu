@@ -19,6 +19,7 @@ import { Route as ProtectedCategoriesRouteImport } from './routes/_protected/cat
 import { Route as ProtectedDashboardRouteImport } from './routes/_protected/dashboard'
 import { Route as ProtectedProfileRouteImport } from './routes/_protected/profile'
 import { Route as ProtectedSubscriptionsRouteImport } from './routes/_protected/subscriptions'
+import { Route as ProtectedTemplatesRouteImport } from './routes/_protected/templates'
 import { Route as ProtectedTransactionsRouteImport } from './routes/_protected/transactions'
 import { Route as ProtectedTrashRouteImport } from './routes/_protected/trash'
 import { Route as ProtectedVendorsRouteImport } from './routes/_protected/vendors'
@@ -73,6 +74,11 @@ const ProtectedSubscriptionsRoute = ProtectedSubscriptionsRouteImport.update({
   path: '/subscriptions',
   getParentRoute: () => ProtectedRoute,
 } as any)
+const ProtectedTemplatesRoute = ProtectedTemplatesRouteImport.update({
+  id: '/templates',
+  path: '/templates',
+  getParentRoute: () => ProtectedRoute,
+} as any)
 const ProtectedTransactionsRoute = ProtectedTransactionsRouteImport.update({
   id: '/transactions',
   path: '/transactions',
@@ -104,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof ProtectedDashboardRoute
   '/profile': typeof ProtectedProfileRoute
   '/subscriptions': typeof ProtectedSubscriptionsRoute
+  '/templates': typeof ProtectedTemplatesRoute
   '/transactions': typeof ProtectedTransactionsRoute
   '/trash': typeof ProtectedTrashRoute
   '/vendors': typeof ProtectedVendorsRoute
@@ -119,6 +126,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof ProtectedDashboardRoute
   '/profile': typeof ProtectedProfileRoute
   '/subscriptions': typeof ProtectedSubscriptionsRoute
+  '/templates': typeof ProtectedTemplatesRoute
   '/transactions': typeof ProtectedTransactionsRoute
   '/trash': typeof ProtectedTrashRoute
   '/vendors': typeof ProtectedVendorsRoute
@@ -136,6 +144,7 @@ export interface FileRoutesById {
   '/_protected/dashboard': typeof ProtectedDashboardRoute
   '/_protected/profile': typeof ProtectedProfileRoute
   '/_protected/subscriptions': typeof ProtectedSubscriptionsRoute
+  '/_protected/templates': typeof ProtectedTemplatesRoute
   '/_protected/transactions': typeof ProtectedTransactionsRoute
   '/_protected/trash': typeof ProtectedTrashRoute
   '/_protected/vendors': typeof ProtectedVendorsRoute
@@ -153,6 +162,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/profile'
     | '/subscriptions'
+    | '/templates'
     | '/transactions'
     | '/trash'
     | '/vendors'
@@ -168,6 +178,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/profile'
     | '/subscriptions'
+    | '/templates'
     | '/transactions'
     | '/trash'
     | '/vendors'
@@ -184,6 +195,7 @@ export interface FileRouteTypes {
     | '/_protected/dashboard'
     | '/_protected/profile'
     | '/_protected/subscriptions'
+    | '/_protected/templates'
     | '/_protected/transactions'
     | '/_protected/trash'
     | '/_protected/vendors'
@@ -270,6 +282,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedSubscriptionsRouteImport
       parentRoute: typeof ProtectedRoute
     }
+    '/_protected/templates': {
+      id: '/_protected/templates'
+      path: '/templates'
+      fullPath: '/templates'
+      preLoaderRoute: typeof ProtectedTemplatesRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
     '/_protected/transactions': {
       id: '/_protected/transactions'
       path: '/transactions'
@@ -308,6 +327,7 @@ interface ProtectedRouteChildren {
   ProtectedDashboardRoute: typeof ProtectedDashboardRoute
   ProtectedProfileRoute: typeof ProtectedProfileRoute
   ProtectedSubscriptionsRoute: typeof ProtectedSubscriptionsRoute
+  ProtectedTemplatesRoute: typeof ProtectedTemplatesRoute
   ProtectedTransactionsRoute: typeof ProtectedTransactionsRoute
   ProtectedTrashRoute: typeof ProtectedTrashRoute
   ProtectedVendorsRoute: typeof ProtectedVendorsRoute
@@ -320,6 +340,7 @@ const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedDashboardRoute: ProtectedDashboardRoute,
   ProtectedProfileRoute: ProtectedProfileRoute,
   ProtectedSubscriptionsRoute: ProtectedSubscriptionsRoute,
+  ProtectedTemplatesRoute: ProtectedTemplatesRoute,
   ProtectedTransactionsRoute: ProtectedTransactionsRoute,
   ProtectedTrashRoute: ProtectedTrashRoute,
   ProtectedVendorsRoute: ProtectedVendorsRoute,

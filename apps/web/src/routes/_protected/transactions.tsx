@@ -1,6 +1,7 @@
 import AddIcon from "@mui/icons-material/Add";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
+import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -12,7 +13,7 @@ import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
-import { memo, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { z } from "zod";
 import ActiveFilters from "#/components/ActiveFilters";
 import ConfirmDelete from "#/components/ConfirmDelete";
@@ -33,6 +34,7 @@ import TablePager from "#/components/TablePager";
 import TableToolbar from "#/components/TableToolbar";
 import TransactionFilters from "#/components/TransactionFilters";
 import TransactionForm from "#/components/TransactionForm";
+import { seedFromTransaction } from "#/components/transaction-form/request";
 import TransactionTotals from "#/components/TransactionTotals";
 import BudgetAlert from "#/components/BudgetAlert";
 import CategoryBreakdown from "#/components/CategoryBreakdown";
@@ -52,6 +54,7 @@ import { unwrap } from "#/lib/unwrap";
 import { getAccountFn, listAccountsFn } from "#/server/accounts";
 import { listCurrenciesFn } from "#/server/currencies";
 import { listSubscriptionsFn } from "#/server/subscriptions";
+import { listTemplatesFn } from "#/server/templates";
 import {
 	deleteTransactionFn,
 	getCategoryTotalsFn,
@@ -128,6 +131,7 @@ export const Route = createFileRoute("/_protected/transactions")({
 			vendors,
 			subscriptions,
 			accounts,
+			templates,
 			currencies,
 			totals,
 			categories,
@@ -141,6 +145,7 @@ export const Route = createFileRoute("/_protected/transactions")({
 			listVendorsFn(),
 			listSubscriptionsFn(),
 			listAccountsFn(),
+			listTemplatesFn(),
 			listCurrenciesFn(),
 			wantsTotals ? getTransactionTotalsFn({ data: deps }) : Promise.resolve(null),
 			wantsTotals ? getCategoryTotalsFn({ data: deps }) : Promise.resolve(null),
@@ -168,6 +173,7 @@ export const Route = createFileRoute("/_protected/transactions")({
 			vendors: unwrap(vendors),
 			subscriptions: unwrap(subscriptions),
 			accounts: unwrap(accounts),
+			templates: unwrap(templates),
 			currencies,
 			allCategories: unwrap(allCategories),
 			budget: budget.ok ? budget.data : null,
@@ -274,11 +280,13 @@ function TxAmount({ t, baseCurrency }: { t: Transaction; baseCurrency: string })
 function TxActions({
 	t,
 	onConvert,
+	onDuplicate,
 	onEdit,
 	onDelete,
 }: {
 	t: Transaction;
 	onConvert: () => void;
+	onDuplicate: () => void;
 	onEdit: () => void;
 	onDelete: () => void;
 }) {
@@ -294,6 +302,9 @@ function TxActions({
 					<AutorenewIcon fontSize="small" />
 				</IconButton>
 			)}
+			<IconButton aria-label="Duplicate" title="Duplicate" size="small" onClick={onDuplicate}>
+				<ContentCopyOutlinedIcon fontSize="small" />
+			</IconButton>
 			<IconButton aria-label="Edit" title="Edit" size="small" onClick={onEdit}>
 				<EditOutlinedIcon fontSize="small" />
 			</IconButton>
@@ -310,12 +321,14 @@ const TransactionsTable = memo(function TransactionsTable({
 	items,
 	baseCurrency,
 	onConvert,
+	onDuplicate,
 	onEdit,
 	onDelete,
 }: {
 	items: Transaction[];
 	baseCurrency: string;
 	onConvert: (t: Transaction) => void;
+	onDuplicate: (t: Transaction) => void;
 	onEdit: (t: Transaction) => void;
 	onDelete: (t: Transaction) => void;
 }) {
@@ -369,6 +382,7 @@ const TransactionsTable = memo(function TransactionsTable({
 						<TxActions
 							t={t}
 							onConvert={() => onConvert(t)}
+							onDuplicate={() => onDuplicate(t)}
 							onEdit={() => onEdit(t)}
 							onDelete={() => onDelete(t)}
 						/>
@@ -409,6 +423,7 @@ const TransactionsTable = memo(function TransactionsTable({
 						<TxActions
 							t={t}
 							onConvert={() => onConvert(t)}
+							onDuplicate={() => onDuplicate(t)}
 							onEdit={() => onEdit(t)}
 							onDelete={() => onDelete(t)}
 						/>
@@ -441,6 +456,7 @@ function TransactionsPage() {
 		vendors,
 		subscriptions,
 		accounts,
+		templates,
 		currencies,
 		selectedVendor,
 		selectedCategory,
@@ -461,6 +477,12 @@ function TransactionsPage() {
 			});
 	};
 	const [editing, setEditing] = useState<Transaction | "new" | null>(null);
+	// Set while adding a transaction that starts as a copy of an existing one.
+	const [copyOf, setCopyOf] = useState<Transaction | null>(null);
+	const duplicate = useCallback((t: Transaction) => {
+		setCopyOf(t);
+		setEditing("new");
+	}, []);
 	const [deleting, setDeleting] = useState<Transaction | null>(null);
 	const [converting, setConverting] = useState<Transaction | null>(null);
 
@@ -602,6 +624,7 @@ function TransactionsPage() {
 										items={items}
 										baseCurrency={user.base_currency}
 										onConvert={setConverting}
+										onDuplicate={duplicate}
 										onEdit={setEditing}
 										onDelete={setDeleting}
 									/>
@@ -626,13 +649,18 @@ function TransactionsPage() {
 			{editing && (
 				<TransactionForm
 					transaction={editing === "new" ? undefined : editing}
+					seed={editing === "new" && copyOf ? seedFromTransaction(copyOf) : undefined}
+					templates={templates}
 					vendors={vendors}
 					categories={allCategories}
 					subscriptions={subscriptions}
 					accounts={accounts}
 					currencies={currencies}
 					baseCurrency={user.base_currency}
-					onClose={() => setEditing(null)}
+					onClose={() => {
+						setEditing(null);
+						setCopyOf(null);
+					}}
 				/>
 			)}
 			{converting && (
