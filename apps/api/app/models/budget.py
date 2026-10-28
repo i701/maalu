@@ -79,6 +79,10 @@ class BudgetLineCategory(Base):
     line_id: Mapped[uuid.UUID] = mapped_column(
         Uuid, ForeignKey("budget_lines.id", ondelete="CASCADE"), index=True
     )
-    category_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("categories.id"), index=True)
+    # Cascade, so deleting a user (whose categories and lines go together) doesn't trip over the
+    # order the rows are removed in. The service refuses to delete a category a line still uses.
+    category_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("categories.id", ondelete="CASCADE"), index=True
+    )
     line: Mapped[BudgetLine] = relationship(back_populates="category_links")
     category: Mapped[Category] = relationship(lazy="joined")
