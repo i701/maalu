@@ -8,7 +8,6 @@ class PaymentMethod(StrEnum):
     BANK_TRANSFER = "bank_transfer"
     DEBIT_CARD = "debit_card"
     CREDIT_CARD = "credit_card"
-    PAYPAL = "paypal"
     OTHER = "other"
 
 

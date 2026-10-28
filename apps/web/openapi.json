@@ -1531,7 +1531,6 @@
           "bank_transfer",
           "debit_card",
           "credit_card",
-          "paypal",
           "other"
         ],
         "title": "PaymentMethod",

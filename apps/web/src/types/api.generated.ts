@@ -1396,7 +1396,7 @@ export interface components {
          * @description Stored as VARCHAR (not a native DB enum), so adding a member needs no migration.
          * @enum {string}
          */
-        PaymentMethod: "cash" | "bank_transfer" | "debit_card" | "credit_card" | "paypal" | "other";
+        PaymentMethod: "cash" | "bank_transfer" | "debit_card" | "credit_card" | "other";
         /**
          * SplitInput
          * @description One line of a split transaction. `amount` is the line total paid, tax included.

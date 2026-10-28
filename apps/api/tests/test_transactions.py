@@ -59,11 +59,13 @@ async def test_payment_method_update_and_filter(client: AsyncClient, auth: dict[
     tid = (await client.post(URL, json=PAYLOAD, headers=auth)).json()["id"]
     await client.post(URL, json={**PAYLOAD, "payment_method": "cash"}, headers=auth)
 
-    patched = await client.patch(f"{URL}/{tid}", json={"payment_method": "paypal"}, headers=auth)
-    assert patched.json()["payment_method"] == "paypal"
+    patched = await client.patch(
+        f"{URL}/{tid}", json={"payment_method": "debit_card"}, headers=auth
+    )
+    assert patched.json()["payment_method"] == "debit_card"
 
-    only_paypal = await client.get(URL, params={"payment_method": "paypal"}, headers=auth)
-    assert [t["id"] for t in only_paypal.json()] == [tid]
+    only_debit = await client.get(URL, params={"payment_method": "debit_card"}, headers=auth)
+    assert [t["id"] for t in only_debit.json()] == [tid]
 
 
 async def test_required_fields_cannot_be_nulled(client: AsyncClient, auth: dict[str, str]):

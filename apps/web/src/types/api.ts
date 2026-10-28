@@ -21,7 +21,6 @@ export const PAYMENT_METHODS = [
 	"bank_transfer",
 	"debit_card",
 	"credit_card",
-	"paypal",
 	"other",
 ] as const;
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
@@ -31,7 +30,6 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
 	bank_transfer: "Bank transfer",
 	debit_card: "Debit card",
 	credit_card: "Credit card",
-	paypal: "PayPal",
 	other: "Other",
 };
 

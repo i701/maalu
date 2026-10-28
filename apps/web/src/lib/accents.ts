@@ -7,7 +7,6 @@ export const PAYMENT_ACCENT: Record<PaymentMethod, string> = {
 	bank_transfer: ACCENT.blue,
 	debit_card: ACCENT.violet,
 	credit_card: ACCENT.orange,
-	paypal: ACCENT.pink,
 	other: ACCENT.slate,
 };
 
