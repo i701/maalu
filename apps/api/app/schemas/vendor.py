@@ -39,7 +39,11 @@ class VendorUpdate(_VendorDetails):
 
 
 class VendorResponse(_VendorDetails):
-    model_config = ConfigDict(from_attributes=True)
+    # Every field is always sent (null when empty), so the schema says so: clients can then rely on
+    # the keys being there instead of treating them as optional.
+    model_config = ConfigDict(
+        from_attributes=True, json_schema_serialization_defaults_required=True
+    )
 
     id: uuid.UUID
     name: str

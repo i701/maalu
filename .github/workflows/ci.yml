@@ -15,10 +15,11 @@ concurrency:
 
 jobs:
   api:
-    name: API (ruff)
+    name: API (ruff, OpenAPI schema)
     runs-on: ubuntu-latest
     env:
       UV_FROZEN: "1" # fail if uv.lock is out of date instead of silently re-resolving
+      SECRET_KEY: ci-not-a-secret # the app needs one to start (here only to print its OpenAPI schema)
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
@@ -26,6 +27,7 @@ jobs:
           enable-cache: true
       - uses: extractions/setup-just@v4
       - run: just check-api # ruff check + ruff format --check
+      - run: just check-openapi # the committed OpenAPI schema (apps/web/openapi.json) is current
 
   web:
     name: Web (oxfmt, oxlint, tsc, unit tests)
@@ -42,3 +44,4 @@ jobs:
       - uses: extractions/setup-just@v4
       - run: just check-web # oxfmt --check, oxlint, tsc --noEmit
       - run: just test-web # vitest: the pure helpers in src/lib
+      - run: just check-generated-types # src/types/api.generated.ts matches the committed schema

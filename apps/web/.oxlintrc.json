@@ -5,7 +5,14 @@
 		"correctness": "error",
 		"suspicious": "warn"
 	},
-	"ignorePatterns": ["src/routeTree.gen.ts", ".output", "dist", "node_modules"],
+	"ignorePatterns": [
+		"src/routeTree.gen.ts",
+		"src/types/api.generated.ts",
+		"openapi.json",
+		".output",
+		"dist",
+		"node_modules"
+	],
 	"rules": {
 		"react/react-in-jsx-scope": "off"
 	}

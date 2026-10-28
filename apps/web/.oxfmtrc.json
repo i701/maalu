@@ -2,5 +2,12 @@
 	"$schema": "./node_modules/oxfmt/configuration_schema.json",
 	"useTabs": true,
 	"singleQuote": false,
-	"ignorePatterns": ["src/routeTree.gen.ts", ".output", "dist", "node_modules"]
+	"ignorePatterns": [
+		"src/routeTree.gen.ts",
+		"src/types/api.generated.ts",
+		"openapi.json",
+		".output",
+		"dist",
+		"node_modules"
+	]
 }

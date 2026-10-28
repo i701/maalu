@@ -42,12 +42,28 @@ fmt-web:
     pnpm --filter @maalu/web fmt
     pnpm --filter @maalu/web lint:fix
 
+# Regenerate the web app's API types: the API's OpenAPI schema, then TypeScript types from it
+# (needs network the first time, to fetch the generator). Run after changing an API schema.
+api-types:
+    uv run --directory apps/api python -m app.openapi ../web/openapi.json
+    pnpm --filter @maalu/web gen:api
+
 # CI-style checks for everything
 check: check-api check-web
 
 check-api:
     uv run ruff check .
     uv run ruff format --check .
+
+# The committed OpenAPI schema must match the API (CI, API job)
+check-openapi:
+    uv run --directory apps/api python -m app.openapi ../web/openapi.json
+    git diff --exit-code apps/web/openapi.json
+
+# The generated TypeScript types must match the committed schema (CI, web job)
+check-generated-types:
+    pnpm --filter @maalu/web gen:api
+    git diff --exit-code apps/web/src/types/api.generated.ts
 
 check-web:
     pnpm --filter @maalu/web fmt:check

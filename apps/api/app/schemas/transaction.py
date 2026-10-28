@@ -1,7 +1,7 @@
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -181,7 +181,7 @@ class TransactionResponse(BaseModel):
 
 
 class CategoryTotal(BaseModel):
-    type: TransactionType
+    type: Literal["income", "expense"]  # transfers have no category, so are never reported
     category_id: uuid.UUID
     category: str
     total: Decimal = Field(description="In your base currency")

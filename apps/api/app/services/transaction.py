@@ -518,11 +518,15 @@ class TransactionService:
 
         rows = [
             CategoryTotal(
-                type=kind, category_id=category.id, category=category.name, total=total, count=count
+                type=kind.value,
+                category_id=category.id,
+                category=category.name,
+                total=total,
+                count=count,
             )
             for (kind, _), (category, total, count) in totals.items()
         ]
-        rows.sort(key=lambda r: (r.type.value, -r.total, r.category))
+        rows.sort(key=lambda r: (r.type, -r.total, r.category))
         return CategoryTotals(currency=await self._base_currency(user_id), categories=rows)
 
     async def export_xlsx(
