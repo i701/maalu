@@ -2,7 +2,7 @@ import { createTheme } from "@mui/material/styles";
 import { createElement } from "react";
 import LoadingIndicator from "#/components/LoadingIndicator";
 import SheetTransition from "#/components/SheetTransition";
-import { M3_DARK, M3_LIGHT, colorVars } from "#/lib/m3";
+import { CHART_DARK, CHART_LIGHT, M3_DARK, M3_LIGHT, chartVars, colorVars } from "#/lib/m3";
 import { EASE_OUT } from "#/lib/motion";
 
 /**
@@ -99,13 +99,16 @@ const theme = createTheme({
 		MuiCssBaseline: {
 			styleOverrides: {
 				// Roles MUI has no slot for (surface containers, secondary/tertiary containers...).
-				":root": colorVars(M3_LIGHT),
+				":root": { ...colorVars(M3_LIGHT), ...chartVars(CHART_LIGHT) },
 				// MUI marks the chosen mode with `data-dark` / `data-light` on <html> (the "data"
 				// colorSchemeSelector). In "system" mode it sets neither and relies on the media
 				// query, so dark must also apply when the OS is dark and no mode attribute is set.
-				"[data-dark]": colorVars(M3_DARK),
+				"[data-dark]": { ...colorVars(M3_DARK), ...chartVars(CHART_DARK) },
 				"@media (prefers-color-scheme: dark)": {
-					":root:not([data-light]):not([data-dark])": colorVars(M3_DARK),
+					":root:not([data-light]):not([data-dark])": {
+						...colorVars(M3_DARK),
+						...chartVars(CHART_DARK),
+					},
 				},
 			},
 		},

@@ -296,3 +296,11 @@ export type Goal = {
 	/** Newest first; empty for an account-linked goal */
 	entries: GoalEntry[];
 };
+
+/** Income and expense of one calendar month, in the base currency. */
+export type MonthlyPoint = { month: string; income: string; expense: string };
+export type MonthlyStats = { currency: string; months: MonthlyPoint[] };
+
+/** What the accounts were worth at the end of a day, in the base currency. */
+export type BalancePoint = { date: string; assets: string; liabilities: string; total: string };
+export type BalanceTrend = { currency: string; points: BalancePoint[] };

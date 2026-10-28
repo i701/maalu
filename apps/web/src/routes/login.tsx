@@ -14,7 +14,7 @@ import { getSessionFn, loginFn } from "#/server/auth";
 export const Route = createFileRoute("/login")({
 	validateSearch: z.object({ redirect: z.string().optional().catch(undefined) }),
 	beforeLoad: async () => {
-		if (await getSessionFn()) throw redirect({ to: "/transactions" });
+		if (await getSessionFn()) throw redirect({ to: "/dashboard" });
 	},
 	component: LoginPage,
 });

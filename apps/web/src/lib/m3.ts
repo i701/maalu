@@ -143,3 +143,19 @@ export const GRADIENT = {
 	amber: ["#b45309", "#6b2d04"],
 } as const;
 export type Gradient = keyof typeof GRADIENT;
+
+/**
+ * Chart colours, validated with the dataviz palette checker (lightness band, colour-blind
+ * separation of the income/expense pair, contrast). Dark mode has its own, darker steps: the
+ * same hues do not fit its lightness band. Income and expense are green and orange rather than
+ * green and red, because red/green fail for deutan colour vision.
+ */
+export const CHART_LIGHT = { income: "#10B981", expense: "#F97316", line: "#3B82F6" } as const;
+export const CHART_DARK = { income: "#059669", expense: "#EA580C", line: "#3B82F6" } as const;
+
+/** `{ "--chart-income": "#10B981", ... }` */
+export function chartVars(colors: Record<string, string>): Record<string, string> {
+	return Object.fromEntries(
+		Object.entries(colors).map(([name, value]) => [`--chart-${name}`, value]),
+	);
+}

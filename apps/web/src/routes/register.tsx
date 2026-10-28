@@ -13,7 +13,7 @@ import { listCurrenciesFn } from "#/server/currencies";
 
 export const Route = createFileRoute("/register")({
 	beforeLoad: async () => {
-		if (await getSessionFn()) throw redirect({ to: "/transactions" });
+		if (await getSessionFn()) throw redirect({ to: "/dashboard" });
 	},
 	loader: async () => ({ currencies: await listCurrenciesFn() }),
 	component: RegisterPage,
@@ -40,7 +40,7 @@ function RegisterPage() {
 			});
 			if (!res.ok) return setError(res.error);
 			router.clearCache();
-			await router.navigate({ to: "/transactions" });
+			await router.navigate({ to: "/dashboard" });
 		} catch (err) {
 			setError(err instanceof Error ? err.message : "Check your details and try again");
 		} finally {

@@ -16,6 +16,7 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProtectedAccountsRouteImport } from './routes/_protected/accounts'
 import { Route as ProtectedBudgetRouteImport } from './routes/_protected/budget'
 import { Route as ProtectedCategoriesRouteImport } from './routes/_protected/categories'
+import { Route as ProtectedDashboardRouteImport } from './routes/_protected/dashboard'
 import { Route as ProtectedProfileRouteImport } from './routes/_protected/profile'
 import { Route as ProtectedSubscriptionsRouteImport } from './routes/_protected/subscriptions'
 import { Route as ProtectedTransactionsRouteImport } from './routes/_protected/transactions'
@@ -56,6 +57,11 @@ const ProtectedCategoriesRoute = ProtectedCategoriesRouteImport.update({
   path: '/categories',
   getParentRoute: () => ProtectedRoute,
 } as any)
+const ProtectedDashboardRoute = ProtectedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => ProtectedRoute,
+} as any)
 const ProtectedProfileRoute = ProtectedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -89,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/accounts': typeof ProtectedAccountsRoute
   '/budget': typeof ProtectedBudgetRoute
   '/categories': typeof ProtectedCategoriesRoute
+  '/dashboard': typeof ProtectedDashboardRoute
   '/profile': typeof ProtectedProfileRoute
   '/subscriptions': typeof ProtectedSubscriptionsRoute
   '/transactions': typeof ProtectedTransactionsRoute
@@ -102,6 +109,7 @@ export interface FileRoutesByTo {
   '/accounts': typeof ProtectedAccountsRoute
   '/budget': typeof ProtectedBudgetRoute
   '/categories': typeof ProtectedCategoriesRoute
+  '/dashboard': typeof ProtectedDashboardRoute
   '/profile': typeof ProtectedProfileRoute
   '/subscriptions': typeof ProtectedSubscriptionsRoute
   '/transactions': typeof ProtectedTransactionsRoute
@@ -117,6 +125,7 @@ export interface FileRoutesById {
   '/_protected/accounts': typeof ProtectedAccountsRoute
   '/_protected/budget': typeof ProtectedBudgetRoute
   '/_protected/categories': typeof ProtectedCategoriesRoute
+  '/_protected/dashboard': typeof ProtectedDashboardRoute
   '/_protected/profile': typeof ProtectedProfileRoute
   '/_protected/subscriptions': typeof ProtectedSubscriptionsRoute
   '/_protected/transactions': typeof ProtectedTransactionsRoute
@@ -132,6 +141,7 @@ export interface FileRouteTypes {
     | '/accounts'
     | '/budget'
     | '/categories'
+    | '/dashboard'
     | '/profile'
     | '/subscriptions'
     | '/transactions'
@@ -145,6 +155,7 @@ export interface FileRouteTypes {
     | '/accounts'
     | '/budget'
     | '/categories'
+    | '/dashboard'
     | '/profile'
     | '/subscriptions'
     | '/transactions'
@@ -159,6 +170,7 @@ export interface FileRouteTypes {
     | '/_protected/accounts'
     | '/_protected/budget'
     | '/_protected/categories'
+    | '/_protected/dashboard'
     | '/_protected/profile'
     | '/_protected/subscriptions'
     | '/_protected/transactions'
@@ -225,6 +237,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedCategoriesRouteImport
       parentRoute: typeof ProtectedRoute
     }
+    '/_protected/dashboard': {
+      id: '/_protected/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof ProtectedDashboardRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
     '/_protected/profile': {
       id: '/_protected/profile'
       path: '/profile'
@@ -267,6 +286,7 @@ interface ProtectedRouteChildren {
   ProtectedAccountsRoute: typeof ProtectedAccountsRoute
   ProtectedBudgetRoute: typeof ProtectedBudgetRoute
   ProtectedCategoriesRoute: typeof ProtectedCategoriesRoute
+  ProtectedDashboardRoute: typeof ProtectedDashboardRoute
   ProtectedProfileRoute: typeof ProtectedProfileRoute
   ProtectedSubscriptionsRoute: typeof ProtectedSubscriptionsRoute
   ProtectedTransactionsRoute: typeof ProtectedTransactionsRoute
@@ -277,6 +297,7 @@ const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedAccountsRoute: ProtectedAccountsRoute,
   ProtectedBudgetRoute: ProtectedBudgetRoute,
   ProtectedCategoriesRoute: ProtectedCategoriesRoute,
+  ProtectedDashboardRoute: ProtectedDashboardRoute,
   ProtectedProfileRoute: ProtectedProfileRoute,
   ProtectedSubscriptionsRoute: ProtectedSubscriptionsRoute,
   ProtectedTransactionsRoute: ProtectedTransactionsRoute,

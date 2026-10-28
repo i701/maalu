@@ -25,6 +25,14 @@ export type NavDestination = {
  * lists the ones marked `bottom`. */
 export const NAV_ITEMS: readonly NavDestination[] = [
 	{
+		to: "/dashboard",
+		label: "Dashboard",
+		symbol: "grid_view",
+		accent: "lime",
+		group: "money",
+		bottom: true,
+	},
+	{
 		to: "/transactions",
 		label: "Transactions",
 		symbol: "receipt_long",
@@ -56,14 +64,7 @@ export const NAV_ITEMS: readonly NavDestination[] = [
 		group: "plan",
 		bottom: true,
 	},
-	{
-		to: "/vendors",
-		label: "Vendors",
-		symbol: "storefront",
-		accent: "orange",
-		group: "organise",
-		bottom: true,
-	},
+	{ to: "/vendors", label: "Vendors", symbol: "storefront", accent: "orange", group: "organise" },
 	{ to: "/categories", label: "Categories", symbol: "category", accent: "pink", group: "organise" },
 ];
 
