@@ -178,6 +178,9 @@ class TransactionResponse(BaseModel):
     account: AccountRef | None
     to_account: AccountRef | None
     created_at: datetime
+    deleted_at: datetime | None = Field(
+        description="When it was moved to the trash; null for a live transaction"
+    )
 
 
 class CategoryTotal(BaseModel):

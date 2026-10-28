@@ -149,6 +149,8 @@ export type Account = {
 	/** Balance valued in your base currency. */
 	base_balance: string;
 	transaction_count: number;
+	/** When it was archived; null for an account in use. */
+	archived_at: string | null;
 	created_at: string;
 };
 
@@ -209,6 +211,8 @@ export type Transaction = {
 	/** Transfers only: the destination account (`account` is the source). */
 	to_account: AccountRef | null;
 	created_at: string;
+	/** When it was moved to the trash; null for a live transaction. */
+	deleted_at: string | null;
 };
 
 /** Income or expense in one category (base currency). A split transaction counts under each of its items' categories. */

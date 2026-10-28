@@ -81,6 +81,9 @@ class AccountResponse(BaseModel):
     balance: Decimal
     base_balance: Decimal = Field(description="Balance valued in your base currency")
     transaction_count: int
+    archived_at: datetime | None = Field(
+        description="When it was archived; null for an account in use"
+    )
     created_at: datetime
 
 

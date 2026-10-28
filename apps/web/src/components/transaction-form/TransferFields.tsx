@@ -2,7 +2,7 @@ import Alert from "@mui/material/Alert";
 import TextField from "@mui/material/TextField";
 import { Fragment } from "react";
 import { useLastDefined } from "#/lib/motion";
-import type { Account, Transaction } from "#/types/api";
+import type { AccountRef, Transaction } from "#/types/api";
 import { Cell, RevealCell } from "./Cells";
 import { accountMenuItems } from "./accountMenuItems";
 
@@ -17,7 +17,7 @@ export default function TransferFields({
 	transaction,
 	switched,
 }: {
-	accounts: Account[];
+	accounts: AccountRef[];
 	accountId: string;
 	toAccountId: string;
 	onPickAccount: (id: string) => void;

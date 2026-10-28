@@ -96,6 +96,7 @@ class BudgetService:
         each of its items' categories, with its base amount shared out by `allocate_base`."""
         conditions = [
             Transaction.user_id == user_id,
+            Transaction.deleted_at.is_(None),
             Transaction.type == TransactionType.EXPENSE,
             Transaction.transaction_date >= start,
             Transaction.transaction_date <= end,

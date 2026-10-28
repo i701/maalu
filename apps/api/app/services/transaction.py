@@ -1,5 +1,5 @@
 import uuid
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 from sqlalchemy import func, or_, select
@@ -81,14 +81,21 @@ class TransactionService:
         return subscription
 
     async def _resolve_account(
-        self, user_id: uuid.UUID, account_id: uuid.UUID | None
+        self,
+        user_id: uuid.UUID,
+        account_id: uuid.UUID | None,
+        *,
+        keep_archived: bool = False,
     ) -> Account | None:
+        """`keep_archived` lets a transaction stay in an account that was archived after it."""
         if account_id is None:
             return None
         stmt = select(Account).where(Account.id == account_id, Account.user_id == user_id)
         account = await self.db.scalar(stmt)
         if account is None:
             raise AccountNotFoundError
+        if account.archived_at is not None and not keep_archived:
+            raise TransactionRuleError(f'"{account.name}" is archived. Unarchive it to use it')
         return account
 
     async def _base_currency(self, user_id: uuid.UUID) -> str:
@@ -238,6 +245,7 @@ class TransactionService:
         max_amount: Decimal | None = None,
         date_from: date | None = None,
         date_to: date | None = None,
+        trashed: bool = False,
     ) -> list:
         """Filters shared by the list, the count and the totals, so they always agree.
 
@@ -246,7 +254,10 @@ class TransactionService:
         matched literally, not as wildcards. The amount range compares `base_amount` (your base
         currency), so transactions in different currencies are comparable. Dates are inclusive.
         """
-        conditions = [Transaction.user_id == user_id]
+        conditions = [
+            Transaction.user_id == user_id,
+            Transaction.deleted_at.is_not(None) if trashed else Transaction.deleted_at.is_(None),
+        ]
         if min_amount is not None:
             conditions.append(Transaction.base_amount >= min_amount)
         if max_amount is not None:
@@ -641,9 +652,42 @@ class TransactionService:
 
     async def get(self, user_id: uuid.UUID, transaction_id: uuid.UUID) -> Transaction | None:
         stmt = select(Transaction).where(
-            Transaction.id == transaction_id, Transaction.user_id == user_id
+            Transaction.id == transaction_id,
+            Transaction.user_id == user_id,
+            Transaction.deleted_at.is_(None),
         )
         return await self.db.scalar(stmt)
+
+    async def get_trashed(
+        self, user_id: uuid.UUID, transaction_id: uuid.UUID
+    ) -> Transaction | None:
+        stmt = select(Transaction).where(
+            Transaction.id == transaction_id,
+            Transaction.user_id == user_id,
+            Transaction.deleted_at.is_not(None),
+        )
+        return await self.db.scalar(stmt)
+
+    async def list_trashed(
+        self, user_id: uuid.UUID, *, limit: int | None = None, offset: int = 0
+    ) -> list[Transaction]:
+        """The trash, most recently deleted first."""
+        stmt = (
+            select(Transaction)
+            .where(*self._trash_conditions(user_id))
+            .order_by(Transaction.deleted_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        return list((await self.db.scalars(stmt)).all())
+
+    async def count_trashed(self, user_id: uuid.UUID) -> int:
+        stmt = select(func.count(Transaction.id)).where(*self._trash_conditions(user_id))
+        return (await self.db.scalar(stmt)) or 0
+
+    @staticmethod
+    def _trash_conditions(user_id: uuid.UUID) -> list:
+        return [Transaction.user_id == user_id, Transaction.deleted_at.is_not(None)]
 
     async def update(self, transaction: Transaction, data: TransactionUpdate) -> Transaction:
         changes = data.model_dump(exclude_unset=True)
@@ -665,10 +709,16 @@ class TransactionService:
                 raise TransactionRuleError("Only expenses can belong to a subscription")
         account = transaction.account
         if "account_id" in changes:
-            account = await self._resolve_account(user_id, changes.pop("account_id"))
+            new_id = changes.pop("account_id")
+            account = await self._resolve_account(
+                user_id, new_id, keep_archived=new_id == transaction.account_id
+            )
         to_account = transaction.to_account
         if "to_account_id" in changes:
-            to_account = await self._resolve_account(user_id, changes.pop("to_account_id"))
+            new_id = changes.pop("to_account_id")
+            to_account = await self._resolve_account(
+                user_id, new_id, keep_archived=new_id == transaction.to_account_id
+            )
         if not is_transfer:
             to_account = None  # only transfers have a destination
 
@@ -731,6 +781,17 @@ class TransactionService:
         await self.db.refresh(transaction)
         return transaction
 
+    async def trash(self, transaction: Transaction) -> None:
+        """Move to the trash: hidden and uncounted, but recoverable."""
+        transaction.deleted_at = datetime.now(UTC)
+        await self.db.flush()
+
+    async def restore(self, transaction: Transaction) -> Transaction:
+        transaction.deleted_at = None
+        await self.db.flush()
+        return transaction
+
     async def delete(self, transaction: Transaction) -> None:
+        """Delete for good (used from the trash)."""
         await self.db.delete(transaction)
         await self.db.flush()

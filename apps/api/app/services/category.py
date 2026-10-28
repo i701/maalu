@@ -106,7 +106,8 @@ class CategoryService:
 
     async def usage(self, user_id: uuid.UUID) -> dict[uuid.UUID, tuple[int, int, int]]:
         """(transactions, subscriptions, budget lines) per category id. A transaction counts once
-        for each category it touches: its own, or any of its items'."""
+        for each category it touches: its own, or any of its items'. Trashed transactions count:
+        they still point at the category, so it can't be deleted while they do."""
         touches = union_all(
             select(Transaction.id.label("tid"), Transaction.category_id.label("cid")).where(
                 Transaction.user_id == user_id

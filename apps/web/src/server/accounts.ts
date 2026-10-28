@@ -25,11 +25,16 @@ const updateSchema = z.object({
 	changes: createSchema.partial(),
 });
 
-/** Every account, or only those whose name or description contains `q`. */
+/** Every account in use, or only those whose name or description contains `q`. `archived` lists
+ * the archived ones instead. */
 export const listAccountsFn = createServerFn({ method: "GET" })
-	.validator(z.object({ q: z.string().max(100).optional() }).optional())
+	.validator(
+		z.object({ q: z.string().max(100).optional(), archived: z.boolean().optional() }).optional(),
+	)
 	.handler(async ({ data }) =>
-		apiRequest<Account[]>("/accounts", { query: data?.q ? { q: data.q } : undefined }),
+		apiRequest<Account[]>("/accounts", {
+			query: { q: data?.q || undefined, archived: data?.archived ? "true" : undefined },
+		}),
 	);
 
 /** Server-side search for pickers/autocompletes: matches name and description. */
@@ -56,6 +61,18 @@ export const updateAccountFn = createServerFn({ method: "POST" })
 	.validator(updateSchema)
 	.handler(async ({ data }) =>
 		apiRequest<Account>(`/accounts/${data.id}`, { method: "PATCH", body: data.changes }),
+	);
+
+export const archiveAccountFn = createServerFn({ method: "POST" })
+	.validator(z.object({ id: z.uuid() }))
+	.handler(async ({ data }) =>
+		apiRequest<Account>(`/accounts/${data.id}/archive`, { method: "POST" }),
+	);
+
+export const unarchiveAccountFn = createServerFn({ method: "POST" })
+	.validator(z.object({ id: z.uuid() }))
+	.handler(async ({ data }) =>
+		apiRequest<Account>(`/accounts/${data.id}/unarchive`, { method: "POST" }),
 	);
 
 export const deleteAccountFn = createServerFn({ method: "POST" })

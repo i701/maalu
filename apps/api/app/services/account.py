@@ -1,4 +1,5 @@
 import uuid
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from sqlalchemy import case, func, or_, select
@@ -36,10 +37,14 @@ class AccountService:
         return user.base_currency
 
     @staticmethod
-    def _conditions(user_id: uuid.UUID, q: str | None) -> list:
+    def _conditions(user_id: uuid.UUID, q: str | None, archived: bool = False) -> list:
         """Filters shared by the list and the count. `q` is a case-insensitive "contains" over
-        name and description; %, _ and backslash in it are matched literally."""
-        conditions = [Account.user_id == user_id]
+        name and description; %, _ and backslash in it are matched literally. Archived accounts are
+        left out unless `archived` asks for exactly those."""
+        conditions = [
+            Account.user_id == user_id,
+            Account.archived_at.is_not(None) if archived else Account.archived_at.is_(None),
+        ]
         if q and q.strip():
             term = q.strip()
             conditions.append(
@@ -55,16 +60,19 @@ class AccountService:
         user_id: uuid.UUID,
         *,
         q: str | None = None,
+        archived: bool = False,
         limit: int | None = None,
         offset: int = 0,
     ) -> list[Account]:
-        stmt = select(Account).where(*self._conditions(user_id, q)).order_by(Account.name)
+        stmt = select(Account).where(*self._conditions(user_id, q, archived)).order_by(Account.name)
         if limit is not None:
             stmt = stmt.limit(limit).offset(offset)
         return list((await self.db.scalars(stmt)).all())
 
-    async def count_for_user(self, user_id: uuid.UUID, *, q: str | None = None) -> int:
-        stmt = select(func.count(Account.id)).where(*self._conditions(user_id, q))
+    async def count_for_user(
+        self, user_id: uuid.UUID, *, q: str | None = None, archived: bool = False
+    ) -> int:
+        stmt = select(func.count(Account.id)).where(*self._conditions(user_id, q, archived))
         return (await self.db.scalar(stmt)) or 0
 
     async def get(self, user_id: uuid.UUID, account_id: uuid.UUID) -> Account | None:
@@ -91,9 +99,22 @@ class AccountService:
 
     async def _transaction_count(self, account_id: uuid.UUID) -> int:
         stmt = select(func.count(Transaction.id)).where(
-            or_(Transaction.account_id == account_id, Transaction.to_account_id == account_id)
+            or_(Transaction.account_id == account_id, Transaction.to_account_id == account_id),
+            Transaction.deleted_at.is_(None),
         )
         return (await self.db.scalar(stmt)) or 0
+
+    async def archive(self, account: Account) -> Account:
+        """Close the account: it leaves the overview and pickers but keeps its history."""
+        if account.archived_at is None:
+            account.archived_at = datetime.now(UTC)
+            await self.db.flush()
+        return account
+
+    async def unarchive(self, account: Account) -> Account:
+        account.archived_at = None
+        await self.db.flush()
+        return account
 
     async def update(self, account: Account, data: AccountUpdate) -> Account:
         changes = data.model_dump(exclude_unset=True)
@@ -140,7 +161,7 @@ class AccountService:
             )
             direct = (
                 select(Transaction.account_id, func.sum(signed), func.count(Transaction.id))
-                .where(Transaction.account_id.in_(ids))
+                .where(Transaction.account_id.in_(ids), Transaction.deleted_at.is_(None))
                 .group_by(Transaction.account_id)
             )
             for account_id, total, count in (await self.db.execute(direct)).all():
@@ -153,7 +174,7 @@ class AccountService:
                     func.sum(Transaction.to_amount),
                     func.count(Transaction.id),
                 )
-                .where(Transaction.to_account_id.in_(ids))
+                .where(Transaction.to_account_id.in_(ids), Transaction.deleted_at.is_(None))
                 .group_by(Transaction.to_account_id)
             )
             for account_id, total, count in (await self.db.execute(incoming)).all():
@@ -176,6 +197,7 @@ class AccountService:
                     balance=balance,
                     base_balance=(balance * a.exchange_rate).quantize(BASE_AMOUNT_QUANTUM),
                     transaction_count=count,
+                    archived_at=a.archived_at,
                     created_at=a.created_at,
                 )
             )

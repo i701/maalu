@@ -99,6 +99,9 @@ async def test_delete_only_when_unused(client: AsyncClient, auth: dict[str, str]
     assert (await client.delete(f"{CAT}/{fuel}", headers=auth)).status_code == 409
     assert (await client.delete(f"{CAT}/{unused}", headers=auth)).status_code == 204
     await client.delete(f"{TX}/{tid}", headers=auth)
+    # In the trash it still points at the category, so that can't go yet.
+    assert (await client.delete(f"{CAT}/{fuel}", headers=auth)).status_code == 409
+    await client.delete(f"{TX}/{tid}/permanent", headers=auth)
     assert (await client.delete(f"{CAT}/{fuel}", headers=auth)).status_code == 204
 
 

@@ -640,8 +640,10 @@ function TransactionsPage() {
 			)}
 			{deleting && (
 				<ConfirmDelete
-					title="Delete transaction"
-					message={`Delete this ${formatMoney(deleting.amount, deleting.currency)} transaction? This can't be undone.`}
+					title="Move to trash"
+					message={`Move this ${formatMoney(deleting.amount, deleting.currency)} transaction to the trash? It stops counting toward your totals, and you can restore it from the Trash page.`}
+					confirmLabel="Move to trash"
+					doneMessage="Moved to trash"
 					onConfirm={() => deleteTransactionFn({ data: { id: deleting.id } })}
 					onClose={() => setDeleting(null)}
 				/>

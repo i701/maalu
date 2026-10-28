@@ -1,8 +1,8 @@
 import MenuItem from "@mui/material/MenuItem";
-import { ACCOUNT_GROUP_LABELS, type Account } from "#/types/api";
+import { ACCOUNT_GROUP_LABELS, type AccountRef } from "#/types/api";
 
 /** <MenuItem>s for an account <TextField select>, optionally leaving one account out. */
-export function accountMenuItems(accounts: Account[], exclude?: string) {
+export function accountMenuItems(accounts: AccountRef[], exclude?: string) {
 	return accounts
 		.filter((a) => a.id !== exclude)
 		.map((a) => (

@@ -37,6 +37,9 @@ class Account(Base):
     # Used to value the account in the overview; editable to revalue it.
     exchange_rate: Mapped[Decimal] = mapped_column(Numeric(19, 8))
     description: Mapped[str | None] = mapped_column(Text, default=None)
+    # Set when the account is archived: closed, hidden from pickers and the overview, and left out
+    # of the totals, but its transactions stay in the history. Reversible.
+    archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

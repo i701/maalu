@@ -101,6 +101,11 @@ class Transaction(Base):
         back_populates="transaction",
     )
     transaction_date: Mapped[date] = mapped_column(Date)
+    # Set when the transaction is moved to the trash. A trashed row is hidden everywhere and
+    # counts toward nothing (balances, budgets, stats) until it is restored or deleted for good.
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), index=True, default=None
+    )
 
     @property
     def category(self) -> str:

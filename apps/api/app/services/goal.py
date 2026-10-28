@@ -72,6 +72,7 @@ class GoalService:
         """Money that moved into the account by transfer in a period, less what moved out, in the
         base currency. Income, expenses and interest are not contributions."""
         conditions = [
+            Transaction.deleted_at.is_(None),
             Transaction.type == TransactionType.TRANSFER,
             Transaction.transaction_date >= start,
             Transaction.transaction_date <= end,
@@ -173,6 +174,8 @@ class GoalService:
         )
         if account is None:
             raise AccountNotFoundError
+        if account.archived_at is not None:
+            raise GoalRuleError(f'"{account.name}" is archived. Unarchive it to follow it')
         if account.group in LIABILITY_GROUPS:
             raise GoalRuleError("A goal can't follow a card, overdraft or loan")
         stmt = select(Goal.id).where(Goal.account_id == account_id)

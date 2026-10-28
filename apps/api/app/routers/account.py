@@ -40,11 +40,15 @@ async def list_accounts(
     response: Response,
     page: PageDep,
     q: Annotated[str | None, Query(max_length=100, description="Search name, description")] = None,
+    archived: Annotated[bool, Query(description="List the archived accounts instead")] = False,
 ):
-    """All accounts, or one page with `limit`/`offset`, optionally searched by name. The total
-    number of matches, ignoring paging, is in `X-Total-Count`. Built for autocomplete pickers."""
-    set_total(response, await service.count_for_user(user_id, q=q))
-    accounts = await service.list_for_user(user_id, q=q, limit=page.limit, offset=page.offset)
+    """All accounts in use, or one page with `limit`/`offset`, optionally searched by name. The
+    total number of matches, ignoring paging, is in `X-Total-Count`. Built for autocomplete
+    pickers. Archived accounts are left out unless `archived=true`."""
+    set_total(response, await service.count_for_user(user_id, q=q, archived=archived))
+    accounts = await service.list_for_user(
+        user_id, q=q, archived=archived, limit=page.limit, offset=page.offset
+    )
     return await service.present(accounts)
 
 
@@ -83,6 +87,28 @@ async def update_account(
             "Currency can't change while transactions are linked to this account",
         ) from None
     return await _present_one(service, account)
+
+
+@router.post("/{account_id}/archive", response_model=AccountResponse)
+async def archive_account(
+    account_id: uuid.UUID, user_id: CurrentUserId, service: AccountServiceDep
+):
+    """Close an account you no longer use. Its transactions stay in the history, but it leaves
+    the overview, the totals and the pickers. Undo with `unarchive`."""
+    account = await service.get(user_id, account_id)
+    if account is None:
+        raise _NOT_FOUND
+    return await _present_one(service, await service.archive(account))
+
+
+@router.post("/{account_id}/unarchive", response_model=AccountResponse)
+async def unarchive_account(
+    account_id: uuid.UUID, user_id: CurrentUserId, service: AccountServiceDep
+):
+    account = await service.get(user_id, account_id)
+    if account is None:
+        raise _NOT_FOUND
+    return await _present_one(service, await service.unarchive(account))
 
 
 @router.delete("/{account_id}", status_code=status.HTTP_204_NO_CONTENT)

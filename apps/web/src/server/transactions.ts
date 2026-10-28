@@ -188,6 +188,36 @@ export const updateTransactionFn = createServerFn({ method: "POST" })
 		}),
 	);
 
+/** Moves the transaction to the trash; it can be restored from there. */
 export const deleteTransactionFn = createServerFn({ method: "POST" })
 	.validator(z.object({ id: z.uuid() }))
 	.handler(async ({ data }) => apiRequest<void>(`/transactions/${data.id}`, { method: "DELETE" }));
+
+export const listTrashFn = createServerFn({ method: "GET" })
+	.validator(z.object({ page: z.number().int().min(1), pageSize: z.number().int().min(1) }))
+	.handler(async ({ data }) => {
+		const res = await apiRequest<Transaction[]>("/transactions/trash", {
+			query: { limit: data.pageSize, offset: (data.page - 1) * data.pageSize },
+		});
+		if (!res.ok) return res;
+		return {
+			ok: true as const,
+			data: {
+				items: res.data,
+				total: res.total ?? res.data.length,
+			} satisfies PageResult<Transaction>,
+		};
+	});
+
+export const restoreTransactionFn = createServerFn({ method: "POST" })
+	.validator(z.object({ id: z.uuid() }))
+	.handler(async ({ data }) =>
+		apiRequest<Transaction>(`/transactions/${data.id}/restore`, { method: "POST" }),
+	);
+
+/** Deletes for good: only a transaction already in the trash. */
+export const deleteTransactionPermanentlyFn = createServerFn({ method: "POST" })
+	.validator(z.object({ id: z.uuid() }))
+	.handler(async ({ data }) =>
+		apiRequest<void>(`/transactions/${data.id}/permanent`, { method: "DELETE" }),
+	);

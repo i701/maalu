@@ -6,7 +6,7 @@ import { Fragment } from "react";
 import {
 	PAYMENT_METHODS,
 	PAYMENT_METHOD_LABELS,
-	type Account,
+	type AccountRef,
 	type Category,
 	type PaymentMethod,
 	type Transaction,
@@ -41,7 +41,7 @@ export default function OrdinaryFields({
 	date,
 }: {
 	type: TransactionType;
-	accounts: Account[];
+	accounts: AccountRef[];
 	accountId: string;
 	onPickAccount: (id: string) => void;
 	currencies: string[];

@@ -2,6 +2,7 @@ import { MORPH_TRANSITION, morph } from "#/lib/shape";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Grid from "@mui/material/Grid";
@@ -12,10 +13,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 import AccountForm from "#/components/AccountForm";
+import ArchivedAccounts from "#/components/ArchivedAccounts";
 import ConfirmDelete from "#/components/ConfirmDelete";
 import EmptyState from "#/components/EmptyState";
 import PageHeader from "#/components/PageHeader";
 import MobileCard from "#/components/MobileCard";
+import { useNotify } from "#/components/Notify";
 import PendingOverlay from "#/components/PendingOverlay";
 import ShapeTile from "#/components/ShapeTile";
 import Symbol from "#/components/Symbol";
@@ -28,7 +31,13 @@ import { useLiveSearch } from "#/lib/live-search";
 import { ACCENT } from "#/lib/m3";
 import { staggerChildren } from "#/lib/motion";
 import { unwrap } from "#/lib/unwrap";
-import { deleteAccountFn, getAccountSummaryFn, listAccountsFn } from "#/server/accounts";
+import { useAction } from "#/lib/use-action";
+import {
+	archiveAccountFn,
+	deleteAccountFn,
+	getAccountSummaryFn,
+	listAccountsFn,
+} from "#/server/accounts";
 import { listCurrenciesFn } from "#/server/currencies";
 import { ACCOUNT_GROUP_LABELS, ACCOUNT_GROUPS, type Account, type AccountGroup } from "#/types/api";
 
@@ -41,16 +50,18 @@ export const Route = createFileRoute("/_protected/accounts")({
 	validateSearch: searchSchema,
 	loaderDeps: ({ search }) => search,
 	loader: async ({ deps }) => {
-		const [accounts, summary, currencies] = await Promise.all([
+		const [accounts, summary, currencies, archived] = await Promise.all([
 			listAccountsFn({ data: { q: deps.q } }),
 			getAccountSummaryFn(),
 			listCurrenciesFn(),
+			listAccountsFn({ data: { archived: true } }),
 		]);
 		const found = unwrap(accounts);
 		// The form offers the currencies of *all* your accounts, so a search must not narrow them.
 		const everyAccount = deps.q ? unwrap(await listAccountsFn()) : found;
 		return {
 			accounts: found,
+			archived: unwrap(archived),
 			everyAccount,
 			summary: unwrap(summary),
 			currencies,
@@ -76,8 +87,28 @@ const GROUP_TILE: Record<AccountGroup, { symbol: string; accent: string; shape: 
 
 const isNegative = (amount: string) => amount.startsWith("-");
 
+/** Closes the account straight away: nothing is lost and "Archived" below brings it back. */
+function ArchiveButton({ account }: { account: Account }) {
+	const { run, pending } = useAction();
+	const notify = useNotify();
+	return (
+		<IconButton
+			aria-label="Archive"
+			title="Archive"
+			size="small"
+			disabled={pending}
+			onClick={async () => {
+				if (await run(() => archiveAccountFn({ data: { id: account.id } })))
+					notify(`"${account.name}" archived. You'll find it under Archived`);
+			}}
+		>
+			<Inventory2OutlinedIcon fontSize="small" />
+		</IconButton>
+	);
+}
+
 function AccountsPage() {
-	const { accounts, everyAccount, summary, currencies } = Route.useLoaderData();
+	const { accounts, archived, everyAccount, summary, currencies } = Route.useLoaderData();
 	// The URL as soon as it changes (the loader data lags behind it), so the box feels instant.
 	const search = useLiveSearch(searchSchema);
 	const navigate = Route.useNavigate();
@@ -252,6 +283,7 @@ function AccountsPage() {
 															>
 																<EditOutlinedIcon fontSize="small" />
 															</IconButton>
+															<ArchiveButton account={a} />
 															<IconButton
 																aria-label="Delete"
 																title="Delete"
@@ -271,6 +303,10 @@ function AccountsPage() {
 						</Box>
 					)}
 				</TableCard>
+			</PendingOverlay>
+
+			<PendingOverlay>
+				<ArchivedAccounts accounts={archived} onDelete={setDeleting} />
 			</PendingOverlay>
 
 			{editing && (

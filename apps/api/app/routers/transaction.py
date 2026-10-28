@@ -8,7 +8,7 @@ from fastapi import APIRouter, HTTPException, Query, Response, status
 from app.dependencies import CurrentUserId, TransactionServiceDep
 from app.enums import PaymentMethod, TransactionType
 from app.export import XLSX_MEDIA_TYPE
-from app.pagination import MAX_LIMIT, set_total
+from app.pagination import MAX_LIMIT, PageDep, set_total
 from app.schemas import (
     CategoryTotals,
     TransactionCreate,
@@ -292,6 +292,16 @@ async def category_totals(
     )
 
 
+# Declared before "/{transaction_id}" so "trash" isn't parsed as an id.
+@router.get("/trash", response_model=list[TransactionResponse])
+async def list_trash(
+    user_id: CurrentUserId, service: TransactionServiceDep, response: Response, page: PageDep
+):
+    """Deleted transactions, most recently deleted first. They count toward nothing."""
+    set_total(response, await service.count_trashed(user_id))
+    return await service.list_trashed(user_id, limit=page.limit, offset=page.offset)
+
+
 @router.get("/{transaction_id}", response_model=TransactionResponse)
 async def get_transaction(
     transaction_id: uuid.UUID, user_id: CurrentUserId, service: TransactionServiceDep
@@ -335,8 +345,31 @@ async def update_transaction(
 async def delete_transaction(
     transaction_id: uuid.UUID, user_id: CurrentUserId, service: TransactionServiceDep
 ):
+    """Move to the trash. It can be restored until it is deleted for good."""
     transaction = await service.get(user_id, transaction_id)
     if transaction is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Transaction not found")
+    await service.trash(transaction)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/{transaction_id}/restore", response_model=TransactionResponse)
+async def restore_transaction(
+    transaction_id: uuid.UUID, user_id: CurrentUserId, service: TransactionServiceDep
+):
+    transaction = await service.get_trashed(user_id, transaction_id)
+    if transaction is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Transaction not found in the trash")
+    return await service.restore(transaction)
+
+
+@router.delete("/{transaction_id}/permanent", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_transaction_permanently(
+    transaction_id: uuid.UUID, user_id: CurrentUserId, service: TransactionServiceDep
+):
+    """Delete for good. Only a transaction already in the trash can be."""
+    transaction = await service.get_trashed(user_id, transaction_id)
+    if transaction is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Transaction not found in the trash")
     await service.delete(transaction)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

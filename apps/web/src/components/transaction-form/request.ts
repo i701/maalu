@@ -3,6 +3,7 @@ import { createTransactionFn, updateTransactionFn } from "#/server/transactions"
 import type { SplitsState } from "./useSplits";
 import type {
 	Account,
+	AccountRef,
 	PaymentMethod,
 	Subscription,
 	Transaction,
@@ -21,7 +22,7 @@ type State = {
 	transaction?: Transaction;
 	accountId: string;
 	toAccountId: string;
-	account: Account | null;
+	account: AccountRef | null;
 	crossCurrency: boolean;
 	foreign: boolean;
 	subscription: SubRef | null;
@@ -158,6 +159,19 @@ export function initialValues(transaction: Transaction | undefined, baseCurrency
 		paymentMethod: ordinary?.payment_method ?? ("cash" as PaymentMethod),
 		subscription: transaction?.subscription ?? null,
 	};
+}
+
+/** Accounts to offer. The ones the transaction is already in may have been archived since (so are
+ * absent from the list); keep them, so editing the transaction doesn't blank its account. */
+export function accountChoices(
+	accounts: Account[],
+	transaction: Transaction | undefined,
+): AccountRef[] {
+	const choices: AccountRef[] = accounts;
+	const own = [transaction?.account, transaction?.to_account].filter(
+		(a): a is AccountRef => a != null && !accounts.some((x) => x.id === a.id),
+	);
+	return [...choices, ...own];
 }
 
 /** Subscriptions to offer. The linked one may be cancelled (so absent from the list); keep it. */

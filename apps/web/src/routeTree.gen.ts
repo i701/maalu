@@ -20,6 +20,7 @@ import { Route as ProtectedDashboardRouteImport } from './routes/_protected/dash
 import { Route as ProtectedProfileRouteImport } from './routes/_protected/profile'
 import { Route as ProtectedSubscriptionsRouteImport } from './routes/_protected/subscriptions'
 import { Route as ProtectedTransactionsRouteImport } from './routes/_protected/transactions'
+import { Route as ProtectedTrashRouteImport } from './routes/_protected/trash'
 import { Route as ProtectedVendorsRouteImport } from './routes/_protected/vendors'
 import { Route as ApiExportTransactionsRouteImport } from './routes/api.export.transactions'
 
@@ -77,6 +78,11 @@ const ProtectedTransactionsRoute = ProtectedTransactionsRouteImport.update({
   path: '/transactions',
   getParentRoute: () => ProtectedRoute,
 } as any)
+const ProtectedTrashRoute = ProtectedTrashRouteImport.update({
+  id: '/trash',
+  path: '/trash',
+  getParentRoute: () => ProtectedRoute,
+} as any)
 const ProtectedVendorsRoute = ProtectedVendorsRouteImport.update({
   id: '/vendors',
   path: '/vendors',
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProtectedProfileRoute
   '/subscriptions': typeof ProtectedSubscriptionsRoute
   '/transactions': typeof ProtectedTransactionsRoute
+  '/trash': typeof ProtectedTrashRoute
   '/vendors': typeof ProtectedVendorsRoute
   '/api/export/transactions': typeof ApiExportTransactionsRoute
 }
@@ -113,6 +120,7 @@ export interface FileRoutesByTo {
   '/profile': typeof ProtectedProfileRoute
   '/subscriptions': typeof ProtectedSubscriptionsRoute
   '/transactions': typeof ProtectedTransactionsRoute
+  '/trash': typeof ProtectedTrashRoute
   '/vendors': typeof ProtectedVendorsRoute
   '/api/export/transactions': typeof ApiExportTransactionsRoute
 }
@@ -129,6 +137,7 @@ export interface FileRoutesById {
   '/_protected/profile': typeof ProtectedProfileRoute
   '/_protected/subscriptions': typeof ProtectedSubscriptionsRoute
   '/_protected/transactions': typeof ProtectedTransactionsRoute
+  '/_protected/trash': typeof ProtectedTrashRoute
   '/_protected/vendors': typeof ProtectedVendorsRoute
   '/api/export/transactions': typeof ApiExportTransactionsRoute
 }
@@ -145,6 +154,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/subscriptions'
     | '/transactions'
+    | '/trash'
     | '/vendors'
     | '/api/export/transactions'
   fileRoutesByTo: FileRoutesByTo
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/subscriptions'
     | '/transactions'
+    | '/trash'
     | '/vendors'
     | '/api/export/transactions'
   id:
@@ -174,6 +185,7 @@ export interface FileRouteTypes {
     | '/_protected/profile'
     | '/_protected/subscriptions'
     | '/_protected/transactions'
+    | '/_protected/trash'
     | '/_protected/vendors'
     | '/api/export/transactions'
   fileRoutesById: FileRoutesById
@@ -265,6 +277,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedTransactionsRouteImport
       parentRoute: typeof ProtectedRoute
     }
+    '/_protected/trash': {
+      id: '/_protected/trash'
+      path: '/trash'
+      fullPath: '/trash'
+      preLoaderRoute: typeof ProtectedTrashRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
     '/_protected/vendors': {
       id: '/_protected/vendors'
       path: '/vendors'
@@ -290,6 +309,7 @@ interface ProtectedRouteChildren {
   ProtectedProfileRoute: typeof ProtectedProfileRoute
   ProtectedSubscriptionsRoute: typeof ProtectedSubscriptionsRoute
   ProtectedTransactionsRoute: typeof ProtectedTransactionsRoute
+  ProtectedTrashRoute: typeof ProtectedTrashRoute
   ProtectedVendorsRoute: typeof ProtectedVendorsRoute
 }
 
@@ -301,6 +321,7 @@ const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedProfileRoute: ProtectedProfileRoute,
   ProtectedSubscriptionsRoute: ProtectedSubscriptionsRoute,
   ProtectedTransactionsRoute: ProtectedTransactionsRoute,
+  ProtectedTrashRoute: ProtectedTrashRoute,
   ProtectedVendorsRoute: ProtectedVendorsRoute,
 }
 

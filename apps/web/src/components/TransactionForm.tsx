@@ -27,6 +27,7 @@ import TransferFields from "./transaction-form/TransferFields";
 import { warningAfterExpense } from "./transaction-form/budget-warning";
 import { useSplits } from "./transaction-form/useSplits";
 import {
+	accountChoices,
 	buildTransactionRequest,
 	initialValues,
 	subscriptionChoices,
@@ -45,7 +46,7 @@ export default function TransactionForm({
 	vendors,
 	categories,
 	subscriptions,
-	accounts,
+	accounts: activeAccounts,
 	currencies,
 	baseCurrency,
 	onClose,
@@ -68,6 +69,7 @@ export default function TransactionForm({
 	// The day the form is for: the exchange-rate suggestion follows it.
 	const [date, setDate] = useState(transaction?.transaction_date ?? today());
 
+	const accounts = accountChoices(activeAccounts, transaction);
 	const initial = initialValues(transaction, baseCurrency);
 	const [type, setType] = useState<TransactionType>(initial.type);
 	const isTransfer = type === "transfer";

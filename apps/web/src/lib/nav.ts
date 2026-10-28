@@ -66,6 +66,7 @@ export const NAV_ITEMS: readonly NavDestination[] = [
 	},
 	{ to: "/vendors", label: "Vendors", symbol: "storefront", accent: "orange", group: "organise" },
 	{ to: "/categories", label: "Categories", symbol: "category", accent: "pink", group: "organise" },
+	{ to: "/trash", label: "Trash", symbol: "delete", accent: "slate", group: "organise" },
 ];
 
 export const BOTTOM_NAV_ITEMS = NAV_ITEMS.filter((item) => item.bottom);

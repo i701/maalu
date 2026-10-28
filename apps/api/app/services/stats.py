@@ -49,6 +49,7 @@ class StatsService:
             )
             .where(
                 Transaction.user_id == user_id,
+                Transaction.deleted_at.is_(None),
                 Transaction.type.in_([TransactionType.INCOME, TransactionType.EXPENSE]),
                 Transaction.transaction_date >= first,
                 Transaction.transaction_date <= end,
@@ -83,7 +84,11 @@ class StatsService:
             raise StatsRangeError(f"The range can't be longer than {MAX_TREND_DAYS} days")
 
         accounts = list(
-            (await self.db.scalars(select(Account).where(Account.user_id == user_id))).all()
+            (
+                await self.db.scalars(
+                    select(Account).where(Account.user_id == user_id, Account.archived_at.is_(None))
+                )
+            ).all()
         )
         ids = [a.id for a in accounts]
         signed = case(
@@ -97,20 +102,32 @@ class StatsService:
         if ids:
             before_direct = (
                 select(Transaction.account_id, func.sum(signed))
-                .where(Transaction.account_id.in_(ids), Transaction.transaction_date < start)
+                .where(
+                    Transaction.account_id.in_(ids),
+                    Transaction.deleted_at.is_(None),
+                    Transaction.transaction_date < start,
+                )
                 .group_by(Transaction.account_id)
             )
             for account_id, total in (await self.db.execute(before_direct)).all():
                 balance[account_id] += Decimal(str(total or 0))
             before_incoming = (
                 select(Transaction.to_account_id, func.sum(Transaction.to_amount))
-                .where(Transaction.to_account_id.in_(ids), Transaction.transaction_date < start)
+                .where(
+                    Transaction.to_account_id.in_(ids),
+                    Transaction.deleted_at.is_(None),
+                    Transaction.transaction_date < start,
+                )
                 .group_by(Transaction.to_account_id)
             )
             for account_id, total in (await self.db.execute(before_incoming)).all():
                 balance[account_id] += Decimal(str(total or 0))
 
-            within = (Transaction.transaction_date >= start, Transaction.transaction_date <= end)
+            within = (
+                Transaction.deleted_at.is_(None),
+                Transaction.transaction_date >= start,
+                Transaction.transaction_date <= end,
+            )
             direct = (
                 select(Transaction.account_id, Transaction.transaction_date, func.sum(signed))
                 .where(Transaction.account_id.in_(ids), *within)

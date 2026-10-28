@@ -18,11 +18,17 @@ export default function ConfirmDelete({
 	message,
 	onConfirm,
 	onClose,
+	confirmLabel = "Delete",
+	doneMessage = "Deleted",
 }: {
 	title: string;
 	message: string;
 	onConfirm: () => Promise<ApiResult<void>>;
 	onClose: () => void;
+	/** The red button, for example "Move to trash". */
+	confirmLabel?: string;
+	/** What the confirmation toast says. */
+	doneMessage?: string;
 }) {
 	const { run, pending, error } = useAction();
 	const notify = useNotify();
@@ -57,12 +63,12 @@ export default function ConfirmDelete({
 					loading={pending}
 					onClick={async () => {
 						if (await run(onConfirm)) {
-							notify("Deleted");
+							notify(doneMessage);
 							sheet.close();
 						}
 					}}
 				>
-					Delete
+					{confirmLabel}
 				</Button>
 			</DialogActions>
 		</Dialog>
