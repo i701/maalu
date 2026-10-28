@@ -18,6 +18,7 @@ from app.schemas.category import (
     CategoryResponse,
     CategoryUpdate,
 )
+from app.schemas.goal import GoalCreate, GoalEntryCreate, GoalResponse, GoalUpdate
 from app.schemas.subscription import (
     SubscriptionCreate,
     SubscriptionFromTransaction,
@@ -56,6 +57,10 @@ __all__ = [
     "CategoryTotal",
     "CategoryTotals",
     "CategoryUpdate",
+    "GoalCreate",
+    "GoalEntryCreate",
+    "GoalResponse",
+    "GoalUpdate",
     "SplitInput",
     "SplitResponse",
     "SubscriptionCreate",

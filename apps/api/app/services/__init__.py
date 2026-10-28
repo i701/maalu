@@ -12,6 +12,13 @@ from app.services.category import (
     CategoryService,
 )
 from app.services.errors import TransactionRuleError
+from app.services.goal import (
+    GoalAccountTakenError,
+    GoalEntryNotFoundError,
+    GoalNotFoundError,
+    GoalRuleError,
+    GoalService,
+)
 from app.services.money import ExchangeRateRequiredError
 from app.services.subscription import (
     SubscriptionNotFoundError,
@@ -37,6 +44,11 @@ __all__ = [
     "CategoryService",
     "EmailAlreadyRegisteredError",
     "ExchangeRateRequiredError",
+    "GoalAccountTakenError",
+    "GoalEntryNotFoundError",
+    "GoalNotFoundError",
+    "GoalRuleError",
+    "GoalService",
     "SubscriptionNotFoundError",
     "SubscriptionService",
     "TransactionAlreadyLinkedError",

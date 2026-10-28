@@ -12,6 +12,7 @@ from app.services import (
     AccountService,
     BudgetService,
     CategoryService,
+    GoalService,
     SubscriptionService,
     TransactionService,
     UserService,
@@ -39,6 +40,10 @@ def get_budget_service(db: DbSession) -> BudgetService:
     return BudgetService(db)
 
 
+def get_goal_service(db: DbSession) -> GoalService:
+    return GoalService(db)
+
+
 def get_category_service(db: DbSession) -> CategoryService:
     return CategoryService(db)
 
@@ -55,6 +60,7 @@ UserServiceDep = Annotated[UserService, Depends(get_user_service)]
 TransactionServiceDep = Annotated[TransactionService, Depends(get_transaction_service)]
 VendorServiceDep = Annotated[VendorService, Depends(get_vendor_service)]
 BudgetServiceDep = Annotated[BudgetService, Depends(get_budget_service)]
+GoalServiceDep = Annotated[GoalService, Depends(get_goal_service)]
 CategoryServiceDep = Annotated[CategoryService, Depends(get_category_service)]
 AccountServiceDep = Annotated[AccountService, Depends(get_account_service)]
 SubscriptionServiceDep = Annotated[SubscriptionService, Depends(get_subscription_service)]
