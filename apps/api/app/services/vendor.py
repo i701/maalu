@@ -1,11 +1,11 @@
 import uuid
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.enums import VendorLocality
-from app.models import Vendor
+from app.models import Subscription, Transaction, TransactionTemplate, Vendor
 from app.schemas import VendorCreate, VendorUpdate
 from app.services.category import CategoryService
 from app.services.tag import TagService
@@ -146,6 +146,32 @@ class VendorService:
             raise VendorNameTakenError from exc
         await self.db.refresh(vendor)
         return vendor
+
+    async def merge(self, source: Vendor, target: Vendor) -> Vendor:
+        """Move everything from `source` to `target`, then delete `source`.
+
+        Transactions (trashed ones too), subscriptions and templates follow. Details the target
+        lacks (address, contact, currency, local or foreign, usual category and tags) are taken
+        from the source; what the target already has is kept.
+        """
+        if source.id == target.id:
+            raise VendorNameTakenError
+        for model in (Transaction, Subscription, TransactionTemplate):
+            await self.db.execute(
+                update(model).where(model.vendor_id == source.id).values(vendor_id=target.id)
+            )
+        for field in ("address", "contact", "currency", "is_local"):
+            if getattr(target, field) is None and getattr(source, field) is not None:
+                setattr(target, field, getattr(source, field))
+        if target.default_category_ref is None:
+            target.default_category_ref = source.default_category_ref
+        if not target.default_tags:
+            target.default_tags = list(source.default_tags)
+        await self.db.flush()
+        await self.db.delete(source)
+        await self.db.flush()
+        await self.db.refresh(target)
+        return target
 
     async def delete(self, vendor: Vendor) -> None:
         await self.db.delete(vendor)

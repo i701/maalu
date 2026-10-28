@@ -50,7 +50,7 @@ from app.schemas.transaction import (
     TransactionUpdate,
 )
 from app.schemas.user import Token, UserCreate, UserResponse, UserUpdate
-from app.schemas.vendor import VendorCreate, VendorResponse, VendorUpdate
+from app.schemas.vendor import VendorCreate, VendorMerge, VendorResponse, VendorUpdate
 
 __all__ = [
     "MAX_TAGS",
@@ -102,6 +102,7 @@ __all__ = [
     "UserResponse",
     "UserUpdate",
     "VendorCreate",
+    "VendorMerge",
     "VendorResponse",
     "VendorUpdate",
 ]

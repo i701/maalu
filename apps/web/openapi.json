@@ -3396,6 +3396,21 @@
         "title": "VendorLocality",
         "type": "string"
       },
+      "VendorMerge": {
+        "properties": {
+          "into_id": {
+            "description": "The vendor that takes over everything in this one",
+            "format": "uuid",
+            "title": "Into Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "into_id"
+        ],
+        "title": "VendorMerge",
+        "type": "object"
+      },
       "VendorResponse": {
         "properties": {
           "address": {
@@ -8235,6 +8250,65 @@
           }
         ],
         "summary": "Update Vendor",
+        "tags": [
+          "vendors"
+        ]
+      }
+    },
+    "/api/v1/vendors/{vendor_id}/merge": {
+      "post": {
+        "description": "Move every transaction, subscription and template of this vendor to another one, fill in\nthe details the other lacks, then delete this one.",
+        "operationId": "merge_vendor_api_v1_vendors__vendor_id__merge_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "vendor_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Vendor Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VendorMerge"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Merge Vendor",
         "tags": [
           "vendors"
         ]

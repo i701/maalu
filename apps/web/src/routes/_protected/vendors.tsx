@@ -13,6 +13,7 @@ import { memo, useState } from "react";
 import { z } from "zod";
 import ConfirmDelete from "#/components/ConfirmDelete";
 import EmptyState from "#/components/EmptyState";
+import MergeVendorDialog from "#/components/MergeVendorDialog";
 import MobileCard from "#/components/MobileCard";
 import PageHeader from "#/components/PageHeader";
 import PendingOverlay from "#/components/PendingOverlay";
@@ -85,11 +86,27 @@ function LocalChip({ vendor }: { vendor: Vendor }) {
 	);
 }
 
-function VendorActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
+function VendorActions({
+	onEdit,
+	onMerge,
+	onDelete,
+}: {
+	onEdit: () => void;
+	onMerge: () => void;
+	onDelete: () => void;
+}) {
 	return (
 		<>
 			<IconButton aria-label="Edit" title="Edit" size="small" onClick={onEdit}>
 				<EditOutlinedIcon fontSize="small" />
+			</IconButton>
+			<IconButton
+				aria-label="Merge into another vendor"
+				title="Merge"
+				size="small"
+				onClick={onMerge}
+			>
+				<Symbol name="sort" size={20} />
 			</IconButton>
 			<IconButton aria-label="Delete" title="Delete" size="small" onClick={onDelete}>
 				<DeleteOutlineIcon fontSize="small" />
@@ -103,10 +120,12 @@ function VendorActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () 
 const VendorsTable = memo(function VendorsTable({
 	items,
 	onEdit,
+	onMerge,
 	onDelete,
 }: {
 	items: Vendor[];
 	onEdit: (row: Vendor) => void;
+	onMerge: (row: Vendor) => void;
 	onDelete: (row: Vendor) => void;
 }) {
 	return (
@@ -141,7 +160,11 @@ const VendorsTable = memo(function VendorsTable({
 						</Typography>
 					</TableCell>
 					<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-						<VendorActions onEdit={() => onEdit(v)} onDelete={() => onDelete(v)} />
+						<VendorActions
+							onEdit={() => onEdit(v)}
+							onMerge={() => onMerge(v)}
+							onDelete={() => onDelete(v)}
+						/>
 					</TableCell>
 				</TableRow>
 			)}
@@ -191,7 +214,13 @@ const VendorsTable = memo(function VendorsTable({
 							</>
 						)
 					}
-					actions={<VendorActions onEdit={() => onEdit(v)} onDelete={() => onDelete(v)} />}
+					actions={
+						<VendorActions
+							onEdit={() => onEdit(v)}
+							onMerge={() => onMerge(v)}
+							onDelete={() => onDelete(v)}
+						/>
+					}
 				/>
 			)}
 		/>
@@ -211,6 +240,59 @@ function UsualFor({ vendor }: { vendor: Vendor }) {
 	);
 }
 
+/** The Local / Foreign / Not set filter chips. */
+const LOCALITY_OPTIONS = VENDOR_LOCALITIES.map((v) => ({
+	value: v,
+	label: VENDOR_LOCALITY_LABELS[v],
+	accent:
+		v === "local" ? LOCALITY_ACCENT.local : v === "foreign" ? LOCALITY_ACCENT.foreign : undefined,
+}));
+
+/** The row above the table: locality chips, search, and a way to clear them. */
+function VendorToolbar({ total }: { total: number }) {
+	const search = useLiveSearch(searchSchema);
+	const navigate = Route.useNavigate();
+	const filtered = Boolean(search.q || search.locality);
+	return (
+		<TableToolbar
+			chips={
+				<ChipFilter
+					allLabel="All types"
+					value={search.locality}
+					options={LOCALITY_OPTIONS}
+					onChange={(locality) => navigate({ search: (p) => ({ ...p, page: 1, locality }) })}
+				/>
+			}
+			summary={`${total} ${total === 1 ? "vendor" : "vendors"}`}
+			filters={
+				<>
+					<SearchField
+						value={search.q ?? ""}
+						placeholder="Search name, contact, address"
+						onChange={(q) =>
+							navigate({
+								search: (p) => ({ ...p, page: 1, q: q || undefined }),
+							})
+						}
+					/>
+					{filtered && (
+						<Button
+							color="inherit"
+							onClick={() =>
+								navigate({
+									search: (p) => ({ page: 1, pageSize: p.pageSize }),
+								})
+							}
+						>
+							Clear filters
+						</Button>
+					)}
+				</>
+			}
+		/>
+	);
+}
+
 function VendorsPage() {
 	const { items, total, currencies, categories, tags } = Route.useLoaderData();
 	// The URL as soon as it changes (the loader data lags behind it), so controls feel instant.
@@ -225,6 +307,7 @@ function VendorsPage() {
 			});
 	};
 	const [editing, setEditing] = useState<Vendor | "new" | null>(null);
+	const [merging, setMerging] = useState<Vendor | null>(null);
 	const [deleting, setDeleting] = useState<Vendor | null>(null);
 
 	const filtered = Boolean(search.q || search.locality);
@@ -249,51 +332,7 @@ function VendorsPage() {
 
 			<PendingOverlay>
 				<TableCard>
-					<TableToolbar
-						chips={
-							<ChipFilter
-								allLabel="All types"
-								value={search.locality}
-								options={VENDOR_LOCALITIES.map((v) => ({
-									value: v,
-									label: VENDOR_LOCALITY_LABELS[v],
-									accent:
-										v === "local"
-											? LOCALITY_ACCENT.local
-											: v === "foreign"
-												? LOCALITY_ACCENT.foreign
-												: undefined,
-								}))}
-								onChange={(locality) => navigate({ search: (p) => ({ ...p, page: 1, locality }) })}
-							/>
-						}
-						summary={`${total} ${total === 1 ? "vendor" : "vendors"}`}
-						filters={
-							<>
-								<SearchField
-									value={search.q ?? ""}
-									placeholder="Search name, contact, address"
-									onChange={(q) =>
-										navigate({
-											search: (p) => ({ ...p, page: 1, q: q || undefined }),
-										})
-									}
-								/>
-								{filtered && (
-									<Button
-										color="inherit"
-										onClick={() =>
-											navigate({
-												search: (p) => ({ page: 1, pageSize: p.pageSize }),
-											})
-										}
-									>
-										Clear filters
-									</Button>
-								)}
-							</>
-						}
-					/>
+					<VendorToolbar total={total} />
 
 					{items.length === 0 ? (
 						<EmptyState
@@ -307,7 +346,12 @@ function VendorsPage() {
 								: "No vendors yet. They're also created automatically when you name one on a transaction."}
 						</EmptyState>
 					) : (
-						<VendorsTable items={items} onEdit={setEditing} onDelete={setDeleting} />
+						<VendorsTable
+							items={items}
+							onEdit={setEditing}
+							onMerge={setMerging}
+							onDelete={setDeleting}
+						/>
 					)}
 
 					<TablePager
@@ -332,6 +376,7 @@ function VendorsPage() {
 					onClose={() => setEditing(null)}
 				/>
 			)}
+			{merging && <MergeVendorDialog vendor={merging} onClose={() => setMerging(null)} />}
 			{deleting && (
 				<ConfirmDelete
 					title="Delete vendor"

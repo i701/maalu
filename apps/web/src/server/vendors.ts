@@ -65,6 +65,16 @@ export const listVendorsPageFn = createServerFn({ method: "GET" })
 		};
 	});
 
+/** Moves everything of the vendor to another one, then deletes it. */
+export const mergeVendorFn = createServerFn({ method: "POST" })
+	.validator(z.object({ id: z.uuid(), into_id: z.uuid() }))
+	.handler(async ({ data }) =>
+		apiRequest<Vendor>(`/vendors/${data.id}/merge`, {
+			method: "POST",
+			body: { into_id: data.into_id },
+		}),
+	);
+
 /** Server-side search for pickers/autocompletes: matches name, contact and address. */
 export const searchVendorsFn = createServerFn({ method: "GET" })
 	.validator(z.object({ q: z.string().max(100).default("") }))

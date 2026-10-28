@@ -7,7 +7,7 @@ from app.dependencies import CurrentUserId, VendorServiceDep
 from app.enums import VendorLocality
 from app.models import Vendor
 from app.pagination import PageDep, set_total
-from app.schemas import VendorCreate, VendorResponse, VendorUpdate
+from app.schemas import VendorCreate, VendorMerge, VendorResponse, VendorUpdate
 from app.services import VendorNameTakenError
 
 router = APIRouter(prefix="/vendors", tags=["vendors"])
@@ -65,6 +65,19 @@ async def update_vendor(
         return await service.update(vendor, data)
     except VendorNameTakenError:
         raise _NAME_TAKEN from None
+
+
+@router.post("/{vendor_id}/merge", response_model=VendorResponse)
+async def merge_vendor(
+    vendor_id: uuid.UUID, data: VendorMerge, user_id: CurrentUserId, service: VendorServiceDep
+):
+    """Move every transaction, subscription and template of this vendor to another one, fill in
+    the details the other lacks, then delete this one."""
+    source = await _get_or_404(service, user_id, vendor_id)
+    target = await _get_or_404(service, user_id, data.into_id)
+    if source.id == target.id:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Choose a different vendor")
+    return await service.merge(source, target)
 
 
 @router.delete("/{vendor_id}", status_code=status.HTTP_204_NO_CONTENT)

@@ -59,6 +59,10 @@ class VendorUpdate(_VendorDetails):
         return v
 
 
+class VendorMerge(BaseModel):
+    into_id: uuid.UUID = Field(description="The vendor that takes over everything in this one")
+
+
 class VendorResponse(_VendorDetails):
     # Every field is always sent (null when empty), so the schema says so: clients can then rely on
     # the keys being there instead of treating them as optional.

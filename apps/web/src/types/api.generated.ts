@@ -851,6 +851,27 @@ export interface paths {
         patch: operations["update_vendor_api_v1_vendors__vendor_id__patch"];
         trace?: never;
     };
+    "/api/v1/vendors/{vendor_id}/merge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Merge Vendor
+         * @description Move every transaction, subscription and template of this vendor to another one, fill in
+         *     the details the other lacks, then delete this one.
+         */
+        post: operations["merge_vendor_api_v1_vendors__vendor_id__merge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -2151,6 +2172,15 @@ export interface components {
          * @enum {string}
          */
         VendorLocality: "local" | "foreign" | "unknown";
+        /** VendorMerge */
+        VendorMerge: {
+            /**
+             * Into Id
+             * Format: uuid
+             * @description The vendor that takes over everything in this one
+             */
+            into_id: string;
+        };
         /** VendorResponse */
         VendorResponse: {
             /** Address */
@@ -4440,6 +4470,41 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["VendorUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VendorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    merge_vendor_api_v1_vendors__vendor_id__merge_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                vendor_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VendorMerge"];
             };
         };
         responses: {
