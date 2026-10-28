@@ -57,7 +57,7 @@ async def _fetch(url: str) -> list[str]:
     """Return the currency codes the source knows about.
 
     The source is a rates feed (rows of `{base, quote, rate, date}`). We keep only the `base` and
-    `quote` codes; rates are deliberately ignored; users always enter their own exchange rate.
+    `quote` codes; rates are not read here (see services/exchange_rate.py for the suggested rate).
     """
     async with httpx.AsyncClient(timeout=5.0) as client:
         response = await client.get(url)

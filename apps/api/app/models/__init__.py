@@ -2,6 +2,7 @@ from app.models.account import Account
 from app.models.base import Base
 from app.models.budget import Budget, BudgetLine, BudgetLineCategory
 from app.models.category import Category
+from app.models.exchange_rate import ExchangeRate
 from app.models.goal import Goal, GoalEntry
 from app.models.subscription import Subscription
 from app.models.transaction import Transaction, TransactionSplit
@@ -15,6 +16,7 @@ __all__ = [
     "BudgetLine",
     "BudgetLineCategory",
     "Category",
+    "ExchangeRate",
     "Goal",
     "GoalEntry",
     "Subscription",
