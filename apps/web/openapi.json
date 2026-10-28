@@ -2136,6 +2136,120 @@
         "title": "SubscriptionUpdate",
         "type": "object"
       },
+      "TagCreate": {
+        "properties": {
+          "name": {
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "TagCreate",
+        "type": "object"
+      },
+      "TagMerge": {
+        "properties": {
+          "into_id": {
+            "description": "The tag that takes over everything in this one",
+            "format": "uuid",
+            "title": "Into Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "into_id"
+        ],
+        "title": "TagMerge",
+        "type": "object"
+      },
+      "TagRef": {
+        "description": "Compact form embedded in transaction and template responses.",
+        "properties": {
+          "color": {
+            "description": "One of the accent colour names: blue, green, orange...",
+            "title": "Color",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "color"
+        ],
+        "title": "TagRef",
+        "type": "object"
+      },
+      "TagResponse": {
+        "properties": {
+          "color": {
+            "description": "One of the accent colour names: blue, green, orange...",
+            "title": "Color",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "template_count": {
+            "default": 0,
+            "title": "Template Count",
+            "type": "integer"
+          },
+          "transaction_count": {
+            "default": 0,
+            "description": "Transactions (not in the trash) with it",
+            "title": "Transaction Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "color",
+          "created_at"
+        ],
+        "title": "TagResponse",
+        "type": "object"
+      },
+      "TagUpdate": {
+        "description": "Rename. Every transaction and template with the tag follows.",
+        "properties": {
+          "name": {
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "TagUpdate",
+        "type": "object"
+      },
       "TemplateCreate": {
         "description": "Everything but the name and type is optional: a template pre-fills whatever it has.",
         "properties": {
@@ -2215,6 +2329,17 @@
           "payment_method": {
             "$ref": "#/components/schemas/PaymentMethod",
             "default": "other"
+          },
+          "tags": {
+            "description": "By name: found or created",
+            "items": {
+              "maxLength": 50,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 10,
+            "title": "Tags",
+            "type": "array"
           },
           "to_account_id": {
             "anyOf": [
@@ -2331,6 +2456,13 @@
           "payment_method": {
             "$ref": "#/components/schemas/PaymentMethod"
           },
+          "tags": {
+            "items": {
+              "$ref": "#/components/schemas/TagRef"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
           "to_account": {
             "anyOf": [
               {
@@ -2368,6 +2500,7 @@
           "description",
           "account",
           "to_account",
+          "tags",
           "created_at"
         ],
         "title": "TemplateResponse",
@@ -2526,6 +2659,24 @@
               }
             ],
             "title": "Subscription Id"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "maxLength": 50,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "maxItems": 10,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Tags by name, found or created. They belong to the whole transaction.",
+            "title": "Tags"
           },
           "to_account_id": {
             "anyOf": [
@@ -2697,6 +2848,13 @@
               }
             ]
           },
+          "tags": {
+            "items": {
+              "$ref": "#/components/schemas/TagRef"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
           "to_account": {
             "anyOf": [
               {
@@ -2755,6 +2913,7 @@
           "subscription",
           "account",
           "to_account",
+          "tags",
           "created_at",
           "deleted_at"
         ],
@@ -2912,6 +3071,24 @@
               }
             ],
             "title": "Subscription Id"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "maxLength": 50,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "maxItems": 10,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Replaces all the tags. An empty list or null removes them.",
+            "title": "Tags"
           },
           "to_account_id": {
             "anyOf": [
@@ -5431,6 +5608,347 @@
         ]
       }
     },
+    "/api/v1/tags": {
+      "get": {
+        "description": "All tags by name, or one page with `limit`/`offset`, optionally searched. The total number\nof matches, ignoring paging, is in `X-Total-Count`.",
+        "operationId": "list_tags_api_v1_tags_get",
+        "parameters": [
+          {
+            "description": "Search the name",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Search the name",
+              "title": "Q"
+            }
+          },
+          {
+            "description": "Omit for all rows",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 200,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Omit for all rows",
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TagResponse"
+                  },
+                  "title": "Response List Tags Api V1 Tags Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List Tags",
+        "tags": [
+          "tags"
+        ]
+      },
+      "post": {
+        "description": "Tags are also created by name when you put them on a transaction.",
+        "operationId": "create_tag_api_v1_tags_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TagCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Create Tag",
+        "tags": [
+          "tags"
+        ]
+      }
+    },
+    "/api/v1/tags/{tag_id}": {
+      "delete": {
+        "description": "Removes the tag from every transaction and template that has it. Nothing else changes.",
+        "operationId": "delete_tag_api_v1_tags__tag_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tag_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tag Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Delete Tag",
+        "tags": [
+          "tags"
+        ]
+      },
+      "get": {
+        "operationId": "get_tag_api_v1_tags__tag_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tag_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tag Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Get Tag",
+        "tags": [
+          "tags"
+        ]
+      },
+      "patch": {
+        "operationId": "rename_tag_api_v1_tags__tag_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tag_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tag Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TagUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Rename Tag",
+        "tags": [
+          "tags"
+        ]
+      }
+    },
+    "/api/v1/tags/{tag_id}/merge": {
+      "post": {
+        "description": "Give everything with this tag the other one instead, then delete this one.",
+        "operationId": "merge_tag_api_v1_tags__tag_id__merge_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tag_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tag Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TagMerge"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Merge Tag",
+        "tags": [
+          "tags"
+        ]
+      }
+    },
     "/api/v1/templates": {
       "get": {
         "description": "All templates by name, or one page with `limit`/`offset`. The total is in `X-Total-Count`.",
@@ -5767,6 +6285,44 @@
             }
           },
           {
+            "description": "Repeat to filter by several tags; see `tag_match`",
+            "in": "query",
+            "name": "tag_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Repeat to filter by several tags; see `tag_match`",
+              "title": "Tag Id"
+            }
+          },
+          {
+            "description": "`any`: has at least one of the tags. `all`: has every one.",
+            "in": "query",
+            "name": "tag_match",
+            "required": false,
+            "schema": {
+              "default": "any",
+              "description": "`any`: has at least one of the tags. `all`: has every one.",
+              "enum": [
+                "any",
+                "all"
+              ],
+              "title": "Tag Match",
+              "type": "string"
+            }
+          },
+          {
             "in": "query",
             "name": "payment_method",
             "required": false,
@@ -6094,6 +6650,44 @@
             }
           },
           {
+            "description": "Repeat to filter by several tags; see `tag_match`",
+            "in": "query",
+            "name": "tag_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Repeat to filter by several tags; see `tag_match`",
+              "title": "Tag Id"
+            }
+          },
+          {
+            "description": "`any`: has at least one of the tags. `all`: has every one.",
+            "in": "query",
+            "name": "tag_match",
+            "required": false,
+            "schema": {
+              "default": "any",
+              "description": "`any`: has at least one of the tags. `all`: has every one.",
+              "enum": [
+                "any",
+                "all"
+              ],
+              "title": "Tag Match",
+              "type": "string"
+            }
+          },
+          {
             "in": "query",
             "name": "payment_method",
             "required": false,
@@ -6350,6 +6944,44 @@
             }
           },
           {
+            "description": "Repeat to filter by several tags; see `tag_match`",
+            "in": "query",
+            "name": "tag_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Repeat to filter by several tags; see `tag_match`",
+              "title": "Tag Id"
+            }
+          },
+          {
+            "description": "`any`: has at least one of the tags. `all`: has every one.",
+            "in": "query",
+            "name": "tag_match",
+            "required": false,
+            "schema": {
+              "default": "any",
+              "description": "`any`: has at least one of the tags. `all`: has every one.",
+              "enum": [
+                "any",
+                "all"
+              ],
+              "title": "Tag Match",
+              "type": "string"
+            }
+          },
+          {
             "in": "query",
             "name": "payment_method",
             "required": false,
@@ -6599,6 +7231,44 @@
                 }
               ],
               "title": "Category Id"
+            }
+          },
+          {
+            "description": "Repeat to filter by several tags; see `tag_match`",
+            "in": "query",
+            "name": "tag_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Repeat to filter by several tags; see `tag_match`",
+              "title": "Tag Id"
+            }
+          },
+          {
+            "description": "`any`: has at least one of the tags. `all`: has every one.",
+            "in": "query",
+            "name": "tag_match",
+            "required": false,
+            "schema": {
+              "default": "any",
+              "description": "`any`: has at least one of the tags. `all`: has every one.",
+              "enum": [
+                "any",
+                "all"
+              ],
+              "title": "Tag Match",
+              "type": "string"
             }
           },
           {

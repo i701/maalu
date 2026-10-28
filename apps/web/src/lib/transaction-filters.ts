@@ -15,6 +15,8 @@ export type TransactionFilterValues = {
 	account_id?: string;
 	vendor_id?: string;
 	category_id?: string;
+	tag_ids?: string[];
+	tag_match?: "any" | "all";
 	min_amount?: string;
 	max_amount?: string;
 	date_from?: string;
@@ -31,6 +33,8 @@ export function pickFilterValues(s: TransactionFilterValues): TransactionFilterV
 		account_id: s.account_id,
 		vendor_id: s.vendor_id,
 		category_id: s.category_id,
+		tag_ids: s.tag_ids,
+		tag_match: s.tag_match,
 		min_amount: s.min_amount,
 		max_amount: s.max_amount,
 		date_from: s.date_from,
@@ -47,6 +51,7 @@ export function hasAnyFilter(s: TransactionSearch): boolean {
 export function countActiveFilters(s: TransactionFilterValues): number {
 	return (
 		[s.type, s.payment_method, s.account_id, s.vendor_id, s.category_id].filter(Boolean).length +
+		(s.tag_ids?.length ? 1 : 0) +
 		(s.min_amount || s.max_amount ? 1 : 0) +
 		(s.date_from || s.date_to ? 1 : 0)
 	);
@@ -62,12 +67,18 @@ function amountLabel(min: string | undefined, max: string | undefined, currency:
 	return min ? `≥ ${min} ${currency}` : `≤ ${max ?? ""} ${currency}`;
 }
 
+/** The names of the tags with these ids, in order; ids that no longer exist are skipped. */
+export function tagNamesOf(ids: string[] | undefined, tags: { id: string; name: string }[]) {
+	return (ids ?? []).flatMap((id) => tags.find((t) => t.id === id)?.name ?? []);
+}
+
 /** One removable chip per active filter, for narrow layouts where the panel is hidden. */
 export function buildActiveFilters({
 	filters,
 	selectedAccount,
 	selectedVendor,
 	selectedCategory,
+	tagNames,
 	baseCurrency,
 	patch,
 }: {
@@ -75,6 +86,8 @@ export function buildActiveFilters({
 	selectedAccount: RemoteOption | null;
 	selectedVendor: RemoteOption | null;
 	selectedCategory: RemoteOption | null;
+	/** Names of the tags in the filter, in order. */
+	tagNames: string[];
 	baseCurrency: string;
 	patch: (changes: Partial<TransactionFilterValues>) => void;
 }): ActiveFilter[] {
@@ -113,6 +126,13 @@ export function buildActiveFilters({
 			tone: "info",
 			label: `Category: ${selectedCategory?.label ?? "…"}`,
 			onDelete: () => patch({ category_id: undefined }),
+		});
+	if (filters.tag_ids?.length)
+		chips.push({
+			key: "tags",
+			tone: "secondary",
+			label: `Tags: ${tagNames.join(filters.tag_match === "all" ? " + " : " or ") || "…"}`,
+			onDelete: () => patch({ tag_ids: undefined, tag_match: undefined }),
 		});
 	if (filters.payment_method)
 		chips.push({

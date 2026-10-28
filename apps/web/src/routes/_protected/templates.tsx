@@ -19,6 +19,7 @@ import TableCard from "#/components/TableCard";
 import TablePager from "#/components/TablePager";
 import TableToolbar from "#/components/TableToolbar";
 import TemplateRenameDialog from "#/components/TemplateRenameDialog";
+import { TagChips } from "#/components/TagChip";
 import TonalChip from "#/components/TonalChip";
 import { PAYMENT_ACCENT } from "#/lib/accents";
 import { formatMoney } from "#/lib/format";
@@ -69,6 +70,7 @@ function Fills({ template: t }: { template: TransactionTemplate }) {
 			{t.category && <TonalChip accent={ACCENT.pink} label={t.category} />}
 			{t.vendor && <TonalChip accent={ACCENT.orange} label={t.vendor} />}
 			{where && <TonalChip accent={ACCENT.green} label={where} />}
+			<TagChips tags={t.tags} />
 		</>
 	);
 }

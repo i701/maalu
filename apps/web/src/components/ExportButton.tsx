@@ -4,7 +4,11 @@ import { useState } from "react";
 import { useNotify } from "./Notify";
 
 /** Downloads the current (filtered) transactions as an Excel file. */
-export default function ExportButton({ filters }: { filters: Record<string, string | undefined> }) {
+export default function ExportButton({
+	filters,
+}: {
+	filters: Record<string, string | string[] | undefined>;
+}) {
 	const [busy, setBusy] = useState(false);
 	const notify = useNotify();
 
@@ -12,7 +16,10 @@ export default function ExportButton({ filters }: { filters: Record<string, stri
 		setBusy(true);
 		try {
 			const params = new URLSearchParams();
-			for (const [key, value] of Object.entries(filters)) if (value) params.set(key, value);
+			for (const [key, value] of Object.entries(filters)) {
+				if (Array.isArray(value)) for (const v of value) params.append(key, v);
+				else if (value) params.set(key, value);
+			}
 			const res = await fetch(`/api/export/transactions?${params}`);
 			if (!res.ok) {
 				const body = await res.json().catch(() => null);

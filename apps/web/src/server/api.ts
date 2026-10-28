@@ -24,7 +24,8 @@ function errorMessage(body: FastApiError | null, fallback: string): string {
 type RequestOptions = {
 	method?: "GET" | "POST" | "PATCH" | "DELETE";
 	body?: unknown;
-	query?: Record<string, string | number | undefined>;
+	/** An array repeats the key (`tag_id=a&tag_id=b`). */
+	query?: Record<string, string | number | string[] | undefined>;
 	/** Skip the bearer token (login/register). */
 	anonymous?: boolean;
 	form?: URLSearchParams;
@@ -53,7 +54,8 @@ export async function apiRequest<T>(
 
 	const url = new URL(`/api/v1${path}`, API_URL());
 	for (const [k, v] of Object.entries(opts.query ?? {})) {
-		if (v !== undefined && v !== "") url.searchParams.set(k, String(v));
+		if (Array.isArray(v)) for (const item of v) url.searchParams.append(k, item);
+		else if (v !== undefined && v !== "") url.searchParams.set(k, String(v));
 	}
 
 	let body: BodyInit | undefined;

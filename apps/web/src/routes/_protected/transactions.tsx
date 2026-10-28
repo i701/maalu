@@ -28,6 +28,7 @@ import ResponsiveTable from "#/components/ResponsiveTable";
 import SearchField from "#/components/SearchField";
 import ShapeTile from "#/components/ShapeTile";
 import Symbol from "#/components/Symbol";
+import { TagChips } from "#/components/TagChip";
 import TonalChip from "#/components/TonalChip";
 import TableCard from "#/components/TableCard";
 import TablePager from "#/components/TablePager";
@@ -45,6 +46,7 @@ import { useLiveSearch } from "#/lib/live-search";
 import { lastPageIfOutOfRange, pageSearch } from "#/lib/pagination";
 import {
 	buildActiveFilters,
+	tagNamesOf,
 	countActiveFilters,
 	hasAnyFilter,
 	pickFilterValues,
@@ -63,6 +65,7 @@ import {
 } from "#/server/transactions";
 import { getBudgetFn } from "#/server/budget";
 import { getCategoryFn, listCategoriesFn } from "#/server/categories";
+import { listTagsFn } from "#/server/tags";
 import { getVendorFn, listVendorsFn } from "#/server/vendors";
 import {
 	ACCOUNT_GROUP_LABELS,
@@ -100,6 +103,8 @@ const searchSchema = z.object({
 	payment_method: z.enum(PAYMENT_METHODS).optional().catch(undefined),
 	vendor_id: z.uuid().optional().catch(undefined),
 	category_id: z.uuid().optional().catch(undefined),
+	tag_ids: z.array(z.uuid()).max(10).optional().catch(undefined),
+	tag_match: z.enum(["any", "all"]).optional().catch(undefined),
 	account_id: z.uuid().optional().catch(undefined),
 	min_amount: decimal,
 	max_amount: decimal,
@@ -120,6 +125,7 @@ export const Route = createFileRoute("/_protected/transactions")({
 				deps.payment_method ||
 				deps.vendor_id ||
 				deps.category_id ||
+				deps.tag_ids?.length ||
 				deps.account_id ||
 				deps.min_amount ||
 				deps.max_amount ||
@@ -132,6 +138,7 @@ export const Route = createFileRoute("/_protected/transactions")({
 			subscriptions,
 			accounts,
 			templates,
+			allTags,
 			currencies,
 			totals,
 			categories,
@@ -146,6 +153,7 @@ export const Route = createFileRoute("/_protected/transactions")({
 			listSubscriptionsFn(),
 			listAccountsFn(),
 			listTemplatesFn(),
+			listTagsFn(),
 			listCurrenciesFn(),
 			wantsTotals ? getTransactionTotalsFn({ data: deps }) : Promise.resolve(null),
 			wantsTotals ? getCategoryTotalsFn({ data: deps }) : Promise.resolve(null),
@@ -174,6 +182,7 @@ export const Route = createFileRoute("/_protected/transactions")({
 			subscriptions: unwrap(subscriptions),
 			accounts: unwrap(accounts),
 			templates: unwrap(templates),
+			allTags: unwrap(allTags),
 			currencies,
 			allCategories: unwrap(allCategories),
 			budget: budget.ok ? budget.data : null,
@@ -363,6 +372,11 @@ const TransactionsTable = memo(function TransactionsTable({
 								<TxSubscriptionChip t={t} />
 							</Box>
 						)}
+						{t.tags.length > 0 && (
+							<Box sx={{ mt: 0.5, display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+								<TagChips tags={t.tags} />
+							</Box>
+						)}
 					</TableCell>
 					<TableCell>
 						<TxMethodChip t={t} />
@@ -417,6 +431,7 @@ const TransactionsTable = memo(function TransactionsTable({
 								</Typography>
 							)}
 							<TxSubscriptionChip t={t} />
+							<TagChips tags={t.tags} />
 						</>
 					}
 					actions={
@@ -457,6 +472,7 @@ function TransactionsPage() {
 		subscriptions,
 		accounts,
 		templates,
+		allTags,
 		currencies,
 		selectedVendor,
 		selectedCategory,
@@ -501,6 +517,7 @@ function TransactionsPage() {
 		selectedAccount,
 		selectedVendor,
 		selectedCategory,
+		tagNames: tagNamesOf(filterValues.tag_ids, allTags),
 		baseCurrency: user.base_currency,
 		patch,
 	});
@@ -511,6 +528,7 @@ function TransactionsPage() {
 			selectedAccount={selectedAccount}
 			selectedVendor={selectedVendor}
 			selectedCategory={selectedCategory}
+			tags={allTags}
 			baseCurrency={user.base_currency}
 			activeCount={activeCount}
 			onChange={patch}
@@ -651,6 +669,7 @@ function TransactionsPage() {
 					transaction={editing === "new" ? undefined : editing}
 					seed={editing === "new" && copyOf ? seedFromTransaction(copyOf) : undefined}
 					templates={templates}
+					tags={allTags}
 					vendors={vendors}
 					categories={allCategories}
 					subscriptions={subscriptions}

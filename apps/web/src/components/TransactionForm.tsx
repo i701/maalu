@@ -12,6 +12,7 @@ import {
 	type Account,
 	type Category,
 	type Subscription,
+	type Tag,
 	type Transaction,
 	type TransactionTemplate,
 	type TransactionType,
@@ -20,6 +21,7 @@ import {
 import FormDialog from "./FormDialog";
 import { useNotify } from "./Notify";
 import SaveTemplateDialog from "./SaveTemplateDialog";
+import TagsField from "./TagsField";
 import VendorField from "./VendorField";
 import { Cell, RevealCell } from "./transaction-form/Cells";
 import FormFooter from "./transaction-form/FormFooter";
@@ -45,6 +47,7 @@ export default function TransactionForm({
 	transaction,
 	seed: startSeed,
 	templates,
+	tags,
 	vendors,
 	categories,
 	subscriptions,
@@ -59,6 +62,8 @@ export default function TransactionForm({
 	seed?: TransactionSeed;
 	/** Saved starting points to choose from when adding a transaction. */
 	templates: TransactionTemplate[];
+	/** Every existing tag, to pick from. */
+	tags: Tag[];
 	vendors: Vendor[];
 	categories: Category[];
 	subscriptions: Subscription[];
@@ -243,6 +248,10 @@ export default function TransactionForm({
 							)}
 						/>
 					</RevealCell>
+
+					<Cell size={12}>
+						<TagsField tags={tags} defaultValue={seed?.tags ?? []} />
+					</Cell>
 
 					<Cell size={12}>
 						<TextField

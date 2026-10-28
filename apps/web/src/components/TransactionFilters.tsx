@@ -16,12 +16,14 @@ import {
 	TRANSACTION_TYPES,
 	TRANSACTION_TYPE_LABELS,
 	type PaymentMethod,
+	type Tag,
 	type TransactionType,
 } from "#/types/api";
 import AmountRangeField from "./AmountRangeField";
 import DateRangeField from "./DateRangeField";
 import FilterChip from "./FilterChip";
 import RemoteAutocomplete, { type RemoteOption } from "./RemoteAutocomplete";
+import TagFilter from "./TagFilter";
 
 /** The structured (non-text) filters, as they appear in the URL. */
 export type TransactionFilterValues = {
@@ -30,6 +32,8 @@ export type TransactionFilterValues = {
 	account_id?: string;
 	vendor_id?: string;
 	category_id?: string;
+	tag_ids?: string[];
+	tag_match?: "any" | "all";
 	min_amount?: string;
 	max_amount?: string;
 	date_from?: string;
@@ -90,6 +94,7 @@ export default function TransactionFilters({
 	selectedAccount,
 	selectedVendor,
 	selectedCategory,
+	tags,
 	baseCurrency,
 	activeCount,
 	onChange,
@@ -99,6 +104,8 @@ export default function TransactionFilters({
 	selectedAccount: RemoteOption | null;
 	selectedVendor: RemoteOption | null;
 	selectedCategory: RemoteOption | null;
+	/** Every tag, to pick from. */
+	tags: Tag[];
 	baseCurrency: string;
 	activeCount: number;
 	/** Merge a change into the filters; `undefined` removes one. */
@@ -168,6 +175,18 @@ export default function TransactionFilters({
 				selected={selectedCategory}
 				search={searchCategoryOptions}
 				onChange={(option) => onChange({ category_id: option?.id })}
+			/>
+
+			<TagFilter
+				tags={tags}
+				selectedIds={filters.tag_ids ?? []}
+				match={filters.tag_match ?? "any"}
+				onChange={(ids, match) =>
+					onChange({
+						tag_ids: ids.length > 0 ? ids : undefined,
+						tag_match: ids.length > 1 && match === "all" ? "all" : undefined,
+					})
+				}
 			/>
 
 			<Section title="Payment method">

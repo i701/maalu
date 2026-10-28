@@ -23,6 +23,8 @@ import type {
 	PaymentMethod,
 	Subscription,
 	SubscriptionStatus,
+	Tag,
+	TagRef,
 	TransactionTemplate,
 	SubscriptionSummary,
 	Transaction,
@@ -66,4 +68,6 @@ export type ApiShapes = [
 	Sends<BalanceTrend, Api["BalanceTrendResponse"]>,
 	Sends<MarketRate, Api["MarketRateResponse"]>,
 	Sends<TransactionTemplate, Api["TemplateResponse"]>,
+	Sends<Tag, Api["TagResponse"]>,
+	Sends<TagRef, Api["TagRef"]>,
 ];

@@ -28,7 +28,7 @@ export type TransactionSeed = Pick<
 	| "subscription"
 	| "account"
 	| "to_account"
-> & { vendorName: string };
+> & { vendorName: string; tags: string[] };
 
 /** "45.0000" as "45", "12.5000" as "12.5": the API sends four decimals, a person types fewer. */
 const trimZeros = (amount: string) =>
@@ -51,6 +51,7 @@ export function seedFromTransaction(t: Transaction): TransactionSeed {
 		account: t.account,
 		to_account: t.to_account,
 		vendorName: t.vendor?.name ?? "",
+		tags: t.tags.map((x) => x.name),
 	};
 }
 
@@ -69,6 +70,7 @@ export function seedFromTemplate(t: TransactionTemplate): TransactionSeed {
 		account: t.account,
 		to_account: t.to_account,
 		vendorName: t.vendor ?? "",
+		tags: t.tags.map((x) => x.name),
 	};
 }
 
@@ -90,6 +92,7 @@ export function seedAfterSave(f: FormData, s: State): TransactionSeed {
 		account: s.account,
 		to_account: s.type === "transfer" ? s.toAccount : null,
 		vendorName: s.type === "transfer" ? "" : text(f, "vendor"),
+		tags: tagNames(f),
 	};
 }
 
@@ -116,6 +119,7 @@ export function buildTemplateRequest(
 			...(!transfer && !s.splits && category ? { category } : {}),
 			...(!transfer && vendor ? { vendor_name: vendor } : {}),
 			...(description ? { description } : {}),
+			...(tagNames(f).length > 0 ? { tags: tagNames(f) } : {}),
 			...(s.accountId ? { account_id: s.accountId } : currency ? { currency } : {}),
 			...(transfer && s.toAccountId ? { to_account_id: s.toAccountId } : {}),
 		},
@@ -144,6 +148,7 @@ type State = {
 };
 
 const text = (f: FormData, k: string) => String(f.get(k) ?? "").trim();
+const tagNames = (f: FormData) => f.getAll("tags").map((v) => String(v));
 
 function transferRequest(f: FormData, s: State): TransactionRequest {
 	const { transaction, accountId, toAccountId } = s;
@@ -164,9 +169,14 @@ function transferRequest(f: FormData, s: State): TransactionRequest {
 		send: () =>
 			transaction
 				? updateTransactionFn({
-						data: { id: transaction.id, changes: { ...fields, description: description || null } },
+						data: {
+							id: transaction.id,
+							changes: { ...fields, description: description || null, tags: tagNames(f) },
+						},
 					})
-				: createTransactionFn({ data: { ...fields, description: description || undefined } }),
+				: createTransactionFn({
+						data: { ...fields, description: description || undefined, tags: tagNames(f) },
+					}),
 	};
 }
 
@@ -221,6 +231,7 @@ function ordinaryRequest(f: FormData, s: State): TransactionRequest {
 						vendor_name: vendorName || undefined,
 						subscription_id: subscription?.id,
 						account_id: accountId || undefined,
+						tags: tagNames(f),
 					},
 				}),
 		};
@@ -237,6 +248,7 @@ function ordinaryRequest(f: FormData, s: State): TransactionRequest {
 						// switching the items off on a split transaction removes them
 						...(!split && transaction.splits.length > 0 ? { splits: null } : {}),
 						description: description || null,
+						tags: tagNames(f), // replaces the tags: an empty list removes them
 						// changed -> link / unlink; unchanged -> omit
 						...(accountId === (transaction.account?.id ?? "")
 							? {}

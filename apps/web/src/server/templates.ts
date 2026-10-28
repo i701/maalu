@@ -19,6 +19,7 @@ const createSchema = z.object({
 	category: z.string().trim().min(1).max(100).optional(),
 	vendor_name: z.string().trim().min(1).max(200).optional(),
 	description: z.string().max(1000).optional(),
+	tags: z.array(z.string().trim().min(1).max(50)).max(10).optional(),
 	account_id: z.uuid().optional(),
 	to_account_id: z.uuid().optional(),
 	currency: z

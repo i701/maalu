@@ -55,6 +55,7 @@ const createSchema = z.object({
 	account_id: z.uuid().optional(),
 	to_account_id: z.uuid().optional(),
 	to_amount: amount.optional(),
+	tags: z.array(z.string().trim().min(1).max(50)).max(10).optional(),
 });
 
 const updateSchema = z.object({
@@ -83,6 +84,8 @@ const listSchema = z.object({
 	payment_method: z.enum(PAYMENT_METHODS).optional(),
 	vendor_id: z.uuid().optional(),
 	category_id: z.uuid().optional(),
+	tag_ids: z.array(z.uuid()).max(10).optional(),
+	tag_match: z.enum(["any", "all"]).optional(),
 	account_id: z.uuid().optional(),
 	currency: currency.optional(),
 	q: z.string().max(100).optional(),
@@ -111,6 +114,8 @@ export const listTransactionsFn = createServerFn({ method: "GET" })
 				payment_method: data.payment_method,
 				vendor_id: data.vendor_id,
 				category_id: data.category_id,
+				tag_id: data.tag_ids,
+				tag_match: data.tag_match,
 				account_id: data.account_id,
 				currency: data.currency,
 				q: data.q,
@@ -141,6 +146,8 @@ export const getTransactionTotalsFn = createServerFn({ method: "GET" })
 				payment_method: data.payment_method,
 				vendor_id: data.vendor_id,
 				category_id: data.category_id,
+				tag_id: data.tag_ids,
+				tag_match: data.tag_match,
 				account_id: data.account_id,
 				currency: data.currency,
 				q: data.q,
@@ -162,6 +169,8 @@ export const getCategoryTotalsFn = createServerFn({ method: "GET" })
 				payment_method: data.payment_method,
 				vendor_id: data.vendor_id,
 				category_id: data.category_id,
+				tag_id: data.tag_ids,
+				tag_match: data.tag_match,
 				account_id: data.account_id,
 				currency: data.currency,
 				q: data.q,

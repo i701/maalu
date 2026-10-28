@@ -8,6 +8,7 @@ const FILTERS = [
 	"payment_method",
 	"vendor_id",
 	"category_id",
+	"tag_match",
 	"account_id",
 	"subscription_id",
 	"currency",
@@ -40,6 +41,8 @@ export const Route = createFileRoute("/api/export/transactions")({
 					const value = incoming.get(key);
 					if (value) url.searchParams.set(key, value);
 				}
+				// Several tags arrive as repeated tag_ids and go on as repeated tag_id.
+				for (const id of incoming.getAll("tag_ids")) url.searchParams.append("tag_id", id);
 
 				let upstream: Response;
 				try {

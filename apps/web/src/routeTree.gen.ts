@@ -19,6 +19,7 @@ import { Route as ProtectedCategoriesRouteImport } from './routes/_protected/cat
 import { Route as ProtectedDashboardRouteImport } from './routes/_protected/dashboard'
 import { Route as ProtectedProfileRouteImport } from './routes/_protected/profile'
 import { Route as ProtectedSubscriptionsRouteImport } from './routes/_protected/subscriptions'
+import { Route as ProtectedTagsRouteImport } from './routes/_protected/tags'
 import { Route as ProtectedTemplatesRouteImport } from './routes/_protected/templates'
 import { Route as ProtectedTransactionsRouteImport } from './routes/_protected/transactions'
 import { Route as ProtectedTrashRouteImport } from './routes/_protected/trash'
@@ -74,6 +75,11 @@ const ProtectedSubscriptionsRoute = ProtectedSubscriptionsRouteImport.update({
   path: '/subscriptions',
   getParentRoute: () => ProtectedRoute,
 } as any)
+const ProtectedTagsRoute = ProtectedTagsRouteImport.update({
+  id: '/tags',
+  path: '/tags',
+  getParentRoute: () => ProtectedRoute,
+} as any)
 const ProtectedTemplatesRoute = ProtectedTemplatesRouteImport.update({
   id: '/templates',
   path: '/templates',
@@ -110,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof ProtectedDashboardRoute
   '/profile': typeof ProtectedProfileRoute
   '/subscriptions': typeof ProtectedSubscriptionsRoute
+  '/tags': typeof ProtectedTagsRoute
   '/templates': typeof ProtectedTemplatesRoute
   '/transactions': typeof ProtectedTransactionsRoute
   '/trash': typeof ProtectedTrashRoute
@@ -126,6 +133,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof ProtectedDashboardRoute
   '/profile': typeof ProtectedProfileRoute
   '/subscriptions': typeof ProtectedSubscriptionsRoute
+  '/tags': typeof ProtectedTagsRoute
   '/templates': typeof ProtectedTemplatesRoute
   '/transactions': typeof ProtectedTransactionsRoute
   '/trash': typeof ProtectedTrashRoute
@@ -144,6 +152,7 @@ export interface FileRoutesById {
   '/_protected/dashboard': typeof ProtectedDashboardRoute
   '/_protected/profile': typeof ProtectedProfileRoute
   '/_protected/subscriptions': typeof ProtectedSubscriptionsRoute
+  '/_protected/tags': typeof ProtectedTagsRoute
   '/_protected/templates': typeof ProtectedTemplatesRoute
   '/_protected/transactions': typeof ProtectedTransactionsRoute
   '/_protected/trash': typeof ProtectedTrashRoute
@@ -162,6 +171,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/profile'
     | '/subscriptions'
+    | '/tags'
     | '/templates'
     | '/transactions'
     | '/trash'
@@ -178,6 +188,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/profile'
     | '/subscriptions'
+    | '/tags'
     | '/templates'
     | '/transactions'
     | '/trash'
@@ -195,6 +206,7 @@ export interface FileRouteTypes {
     | '/_protected/dashboard'
     | '/_protected/profile'
     | '/_protected/subscriptions'
+    | '/_protected/tags'
     | '/_protected/templates'
     | '/_protected/transactions'
     | '/_protected/trash'
@@ -282,6 +294,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedSubscriptionsRouteImport
       parentRoute: typeof ProtectedRoute
     }
+    '/_protected/tags': {
+      id: '/_protected/tags'
+      path: '/tags'
+      fullPath: '/tags'
+      preLoaderRoute: typeof ProtectedTagsRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
     '/_protected/templates': {
       id: '/_protected/templates'
       path: '/templates'
@@ -327,6 +346,7 @@ interface ProtectedRouteChildren {
   ProtectedDashboardRoute: typeof ProtectedDashboardRoute
   ProtectedProfileRoute: typeof ProtectedProfileRoute
   ProtectedSubscriptionsRoute: typeof ProtectedSubscriptionsRoute
+  ProtectedTagsRoute: typeof ProtectedTagsRoute
   ProtectedTemplatesRoute: typeof ProtectedTemplatesRoute
   ProtectedTransactionsRoute: typeof ProtectedTransactionsRoute
   ProtectedTrashRoute: typeof ProtectedTrashRoute
@@ -340,6 +360,7 @@ const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedDashboardRoute: ProtectedDashboardRoute,
   ProtectedProfileRoute: ProtectedProfileRoute,
   ProtectedSubscriptionsRoute: ProtectedSubscriptionsRoute,
+  ProtectedTagsRoute: ProtectedTagsRoute,
   ProtectedTemplatesRoute: ProtectedTemplatesRoute,
   ProtectedTransactionsRoute: ProtectedTransactionsRoute,
   ProtectedTrashRoute: ProtectedTrashRoute,

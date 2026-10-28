@@ -208,9 +208,21 @@ export type Transaction = {
 	account: AccountRef | null;
 	/** Transfers only: the destination account (`account` is the source). */
 	to_account: AccountRef | null;
+	tags: TagRef[];
 	created_at: string;
 	/** When it was moved to the trash; null for a live transaction. */
 	deleted_at: string | null;
+};
+
+/** A label that cuts across categories ("Trip"). The colour is one of the accent names, assigned
+ * automatically. */
+export type TagRef = { id: string; name: string; color: string };
+
+export type Tag = TagRef & {
+	created_at: string;
+	/** Transactions (not in the trash) with the tag. */
+	transaction_count: number;
+	template_count: number;
 };
 
 /** A saved starting point for a transaction: choosing it pre-fills the form. */
@@ -228,6 +240,7 @@ export type TransactionTemplate = {
 	account: AccountRef | null;
 	/** Transfers only. */
 	to_account: AccountRef | null;
+	tags: TagRef[];
 	created_at: string;
 };
 

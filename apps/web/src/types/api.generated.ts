@@ -511,6 +511,73 @@ export interface paths {
         patch: operations["update_subscription_api_v1_subscriptions__subscription_id__patch"];
         trace?: never;
     };
+    "/api/v1/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Tags
+         * @description All tags by name, or one page with `limit`/`offset`, optionally searched. The total number
+         *     of matches, ignoring paging, is in `X-Total-Count`.
+         */
+        get: operations["list_tags_api_v1_tags_get"];
+        put?: never;
+        /**
+         * Create Tag
+         * @description Tags are also created by name when you put them on a transaction.
+         */
+        post: operations["create_tag_api_v1_tags_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tags/{tag_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Tag */
+        get: operations["get_tag_api_v1_tags__tag_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Tag
+         * @description Removes the tag from every transaction and template that has it. Nothing else changes.
+         */
+        delete: operations["delete_tag_api_v1_tags__tag_id__delete"];
+        options?: never;
+        head?: never;
+        /** Rename Tag */
+        patch: operations["rename_tag_api_v1_tags__tag_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/tags/{tag_id}/merge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Merge Tag
+         * @description Give everything with this tag the other one instead, then delete this one.
+         */
+        post: operations["merge_tag_api_v1_tags__tag_id__merge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/templates": {
         parameters: {
             query?: never;
@@ -1646,6 +1713,77 @@ export interface components {
             /** Vendor Name */
             vendor_name?: string | null;
         };
+        /** TagCreate */
+        TagCreate: {
+            /** Name */
+            name: string;
+        };
+        /** TagMerge */
+        TagMerge: {
+            /**
+             * Into Id
+             * Format: uuid
+             * @description The tag that takes over everything in this one
+             */
+            into_id: string;
+        };
+        /**
+         * TagRef
+         * @description Compact form embedded in transaction and template responses.
+         */
+        TagRef: {
+            /**
+             * Color
+             * @description One of the accent colour names: blue, green, orange...
+             */
+            color: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+        };
+        /** TagResponse */
+        TagResponse: {
+            /**
+             * Color
+             * @description One of the accent colour names: blue, green, orange...
+             */
+            color: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /**
+             * Template Count
+             * @default 0
+             */
+            template_count: number;
+            /**
+             * Transaction Count
+             * @description Transactions (not in the trash) with it
+             * @default 0
+             */
+            transaction_count: number;
+        };
+        /**
+         * TagUpdate
+         * @description Rename. Every transaction and template with the tag follows.
+         */
+        TagUpdate: {
+            /** Name */
+            name: string;
+        };
         /**
          * TemplateCreate
          * @description Everything but the name and type is optional: a template pre-fills whatever it has.
@@ -1677,6 +1815,11 @@ export interface components {
             name: string;
             /** @default other */
             payment_method: components["schemas"]["PaymentMethod"];
+            /**
+             * Tags
+             * @description By name: found or created
+             */
+            tags?: string[];
             /**
              * To Account Id
              * @description Transfers only
@@ -1712,6 +1855,8 @@ export interface components {
             /** Name */
             name: string;
             payment_method: components["schemas"]["PaymentMethod"];
+            /** Tags */
+            tags: components["schemas"]["TagRef"][];
             to_account: components["schemas"]["AccountRef"] | null;
             type: components["schemas"]["TransactionType"];
             /** Vendor */
@@ -1774,6 +1919,11 @@ export interface components {
             /** Subscription Id */
             subscription_id?: string | null;
             /**
+             * Tags
+             * @description Tags by name, found or created. They belong to the whole transaction.
+             */
+            tags?: string[] | null;
+            /**
              * To Account Id
              * @description Transfers only: the account the money arrives in.
              */
@@ -1833,6 +1983,8 @@ export interface components {
             /** Splits */
             splits: components["schemas"]["SplitResponse"][];
             subscription: components["schemas"]["SubscriptionRef"] | null;
+            /** Tags */
+            tags: components["schemas"]["TagRef"][];
             to_account: components["schemas"]["AccountRef"] | null;
             /** To Amount */
             to_amount: string | null;
@@ -1891,6 +2043,11 @@ export interface components {
             splits?: components["schemas"]["SplitInput"][] | null;
             /** Subscription Id */
             subscription_id?: string | null;
+            /**
+             * Tags
+             * @description Replaces all the tags. An empty list or null removes them.
+             */
+            tags?: string[] | null;
             /** To Account Id */
             to_account_id?: string | null;
             /** To Amount */
@@ -3262,6 +3419,204 @@ export interface operations {
             };
         };
     };
+    list_tags_api_v1_tags_get: {
+        parameters: {
+            query?: {
+                /** @description Search the name */
+                q?: string | null;
+                /** @description Omit for all rows */
+                limit?: number | null;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TagResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_tag_api_v1_tags_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TagCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TagResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_tag_api_v1_tags__tag_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tag_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TagResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_tag_api_v1_tags__tag_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tag_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rename_tag_api_v1_tags__tag_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tag_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TagUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TagResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    merge_tag_api_v1_tags__tag_id__merge_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tag_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TagMerge"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TagResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_templates_api_v1_templates_get: {
         parameters: {
             query?: {
@@ -3430,6 +3785,10 @@ export interface operations {
                 subscription_id?: string | null;
                 account_id?: string | null;
                 category_id?: string | null;
+                /** @description Repeat to filter by several tags; see `tag_match` */
+                tag_id?: string[] | null;
+                /** @description `any`: has at least one of the tags. `all`: has every one. */
+                tag_match?: "any" | "all";
                 payment_method?: components["schemas"]["PaymentMethod"] | null;
                 type?: components["schemas"]["TransactionType"] | null;
                 currency?: string | null;
@@ -3512,6 +3871,10 @@ export interface operations {
                 subscription_id?: string | null;
                 account_id?: string | null;
                 category_id?: string | null;
+                /** @description Repeat to filter by several tags; see `tag_match` */
+                tag_id?: string[] | null;
+                /** @description `any`: has at least one of the tags. `all`: has every one. */
+                tag_match?: "any" | "all";
                 payment_method?: components["schemas"]["PaymentMethod"] | null;
                 type?: components["schemas"]["TransactionType"] | null;
                 currency?: string | null;
@@ -3559,6 +3922,10 @@ export interface operations {
                 subscription_id?: string | null;
                 account_id?: string | null;
                 category_id?: string | null;
+                /** @description Repeat to filter by several tags; see `tag_match` */
+                tag_id?: string[] | null;
+                /** @description `any`: has at least one of the tags. `all`: has every one. */
+                tag_match?: "any" | "all";
                 payment_method?: components["schemas"]["PaymentMethod"] | null;
                 type?: components["schemas"]["TransactionType"] | null;
                 currency?: string | null;
@@ -3606,6 +3973,10 @@ export interface operations {
                 subscription_id?: string | null;
                 account_id?: string | null;
                 category_id?: string | null;
+                /** @description Repeat to filter by several tags; see `tag_match` */
+                tag_id?: string[] | null;
+                /** @description `any`: has at least one of the tags. `all`: has every one. */
+                tag_match?: "any" | "all";
                 payment_method?: components["schemas"]["PaymentMethod"] | null;
                 type?: components["schemas"]["TransactionType"] | null;
                 currency?: string | null;

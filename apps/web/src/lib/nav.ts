@@ -66,6 +66,7 @@ export const NAV_ITEMS: readonly NavDestination[] = [
 	},
 	{ to: "/vendors", label: "Vendors", symbol: "storefront", accent: "orange", group: "organise" },
 	{ to: "/categories", label: "Categories", symbol: "category", accent: "pink", group: "organise" },
+	{ to: "/tags", label: "Tags", symbol: "sell", accent: "violet", group: "organise" },
 	{ to: "/templates", label: "Templates", symbol: "bookmark", accent: "lime", group: "organise" },
 	{ to: "/trash", label: "Trash", symbol: "delete", accent: "slate", group: "organise" },
 ];

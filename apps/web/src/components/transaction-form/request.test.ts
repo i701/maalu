@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { Transaction, TransactionTemplate } from "#/types/api";
-import { buildTemplateRequest, seedFromTemplate, seedFromTransaction } from "./request";
+import {
+	buildTemplateRequest,
+	seedAfterSave,
+	seedFromTemplate,
+	seedFromTransaction,
+} from "./request";
 
 const template: TransactionTemplate = {
 	id: "t1",
@@ -14,6 +19,7 @@ const template: TransactionTemplate = {
 	description: "Fish",
 	account: null,
 	to_account: null,
+	tags: [{ id: "g1", name: "Food", color: "blue" }],
 	created_at: "2026-03-01T00:00:00Z",
 };
 
@@ -25,6 +31,7 @@ describe("seedFromTemplate", () => {
 			amount: "120",
 			category: "Groceries",
 			vendorName: "Male Fish Market",
+			tags: ["Food"],
 			payment_method: "cash",
 			exchange_rate: "",
 			splits: [],
@@ -57,6 +64,7 @@ describe("seedFromTransaction", () => {
 			subscription: null,
 			account: null,
 			to_account: null,
+			tags: [{ id: "g1", name: "Trip", color: "blue" }],
 			vendor: { name: "Shell" },
 		} as unknown as Transaction;
 		const seed = seedFromTransaction(t);
@@ -64,6 +72,7 @@ describe("seedFromTransaction", () => {
 		expect(seed.amount).toBe("30.5");
 		expect(seed.vendorName).toBe("Shell");
 		expect(seed.currency).toBe("USD");
+		expect(seed.tags).toEqual(["Trip"]);
 	});
 });
 
@@ -135,5 +144,47 @@ describe("buildTemplateRequest", () => {
 		).toEqual({
 			draft: { name: "t", type: "transfer", amount: "5", account_id: "a", to_account_id: "b" },
 		});
+	});
+});
+
+const withTags = (...tags: string[]) => {
+	const f = new FormData();
+	f.set("category", "Misc");
+	f.set("payment_method", "cash");
+	f.set("currency", "MVR");
+	for (const t of tags) f.append("tags", t);
+	return f;
+};
+
+describe("tags", () => {
+	const expenseState = {
+		type: "expense",
+		accountId: "",
+		toAccountId: "",
+		account: null,
+		toAccount: null,
+		crossCurrency: false,
+		foreign: false,
+		subscription: null,
+		splits: null,
+	} as Parameters<typeof buildTemplateRequest>[1];
+
+	it("saves every typed tag on a template, and none when there are none", () => {
+		expect(buildTemplateRequest(withTags("Trip", "Need"), expenseState, "t")).toMatchObject({
+			draft: { tags: ["Trip", "Need"] },
+		});
+		expect(buildTemplateRequest(withTags(), expenseState, "t")).not.toHaveProperty("draft.tags");
+	});
+
+	it("keeps the tags for the next entry after Add another", () => {
+		expect(seedAfterSave(withTags("Trip"), expenseState).tags).toEqual(["Trip"]);
+	});
+
+	it("starts a template-based entry with the template's tags", () => {
+		const seed = seedFromTemplate({
+			...template,
+			tags: [{ id: "1", name: "Trip", color: "blue" }],
+		});
+		expect(seed.tags).toEqual(["Trip"]);
 	});
 });
