@@ -14,6 +14,7 @@ import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProtectedAccountsRouteImport } from './routes/_protected/accounts'
+import { Route as ProtectedBudgetRouteImport } from './routes/_protected/budget'
 import { Route as ProtectedCategoriesRouteImport } from './routes/_protected/categories'
 import { Route as ProtectedProfileRouteImport } from './routes/_protected/profile'
 import { Route as ProtectedSubscriptionsRouteImport } from './routes/_protected/subscriptions'
@@ -43,6 +44,11 @@ const RegisterRoute = RegisterRouteImport.update({
 const ProtectedAccountsRoute = ProtectedAccountsRouteImport.update({
   id: '/accounts',
   path: '/accounts',
+  getParentRoute: () => ProtectedRoute,
+} as any)
+const ProtectedBudgetRoute = ProtectedBudgetRouteImport.update({
+  id: '/budget',
+  path: '/budget',
   getParentRoute: () => ProtectedRoute,
 } as any)
 const ProtectedCategoriesRoute = ProtectedCategoriesRouteImport.update({
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/accounts': typeof ProtectedAccountsRoute
+  '/budget': typeof ProtectedBudgetRoute
   '/categories': typeof ProtectedCategoriesRoute
   '/profile': typeof ProtectedProfileRoute
   '/subscriptions': typeof ProtectedSubscriptionsRoute
@@ -93,6 +100,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/accounts': typeof ProtectedAccountsRoute
+  '/budget': typeof ProtectedBudgetRoute
   '/categories': typeof ProtectedCategoriesRoute
   '/profile': typeof ProtectedProfileRoute
   '/subscriptions': typeof ProtectedSubscriptionsRoute
@@ -107,6 +115,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/_protected/accounts': typeof ProtectedAccountsRoute
+  '/_protected/budget': typeof ProtectedBudgetRoute
   '/_protected/categories': typeof ProtectedCategoriesRoute
   '/_protected/profile': typeof ProtectedProfileRoute
   '/_protected/subscriptions': typeof ProtectedSubscriptionsRoute
@@ -121,6 +130,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/accounts'
+    | '/budget'
     | '/categories'
     | '/profile'
     | '/subscriptions'
@@ -133,6 +143,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/accounts'
+    | '/budget'
     | '/categories'
     | '/profile'
     | '/subscriptions'
@@ -146,6 +157,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/_protected/accounts'
+    | '/_protected/budget'
     | '/_protected/categories'
     | '/_protected/profile'
     | '/_protected/subscriptions'
@@ -199,6 +211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedAccountsRouteImport
       parentRoute: typeof ProtectedRoute
     }
+    '/_protected/budget': {
+      id: '/_protected/budget'
+      path: '/budget'
+      fullPath: '/budget'
+      preLoaderRoute: typeof ProtectedBudgetRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
     '/_protected/categories': {
       id: '/_protected/categories'
       path: '/categories'
@@ -246,6 +265,7 @@ declare module '@tanstack/react-router' {
 
 interface ProtectedRouteChildren {
   ProtectedAccountsRoute: typeof ProtectedAccountsRoute
+  ProtectedBudgetRoute: typeof ProtectedBudgetRoute
   ProtectedCategoriesRoute: typeof ProtectedCategoriesRoute
   ProtectedProfileRoute: typeof ProtectedProfileRoute
   ProtectedSubscriptionsRoute: typeof ProtectedSubscriptionsRoute
@@ -255,6 +275,7 @@ interface ProtectedRouteChildren {
 
 const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedAccountsRoute: ProtectedAccountsRoute,
+  ProtectedBudgetRoute: ProtectedBudgetRoute,
   ProtectedCategoriesRoute: ProtectedCategoriesRoute,
   ProtectedProfileRoute: ProtectedProfileRoute,
   ProtectedSubscriptionsRoute: ProtectedSubscriptionsRoute,

@@ -70,6 +70,16 @@ export default function UserMenu({ user }: { user: SessionUser }) {
 					<Symbol name="person" size={22} />
 					Profile
 				</MenuItem>
+				<MenuItem
+					onClick={() => {
+						setAnchor(null);
+						void router.navigate({ to: "/categories", search: { page: 1, pageSize: 20 } });
+					}}
+					sx={{ gap: 1.5 }}
+				>
+					<Symbol name="category" size={22} />
+					Categories
+				</MenuItem>
 				<MenuItem onClick={logout} sx={{ gap: 1.5 }}>
 					<Symbol name="logout" size={22} />
 					Sign out

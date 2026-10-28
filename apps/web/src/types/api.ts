@@ -170,6 +170,8 @@ export type Category = {
 	/** Transactions in this category, or with an item in it */
 	transaction_count: number;
 	subscription_count: number;
+	/** Budget lines that include this category */
+	budget_line_count: number;
 };
 
 /** One item of a split transaction. `amount` is the line total paid, tax included. */
@@ -221,3 +223,45 @@ export type CategoryTotals = { currency: string; categories: CategoryTotal[] };
 
 /** Income and expense totals of the filtered transactions, in the user's base currency. */
 export type TransactionTotals = { income: string; expense: string; currency: string };
+
+export type BudgetStatus = "ok" | "warning" | "over";
+
+export type BudgetLine = {
+	id: string;
+	name: string;
+	categories: { id: string; name: string }[];
+	/** The limit for each period */
+	amount: string;
+	rollover: boolean;
+	/** This line's own warning level, when it has one */
+	warn_percent: number | null;
+	/** Unspent money carried in from earlier periods */
+	carried: string;
+	/** Expenses in the line's categories this period, in the base currency */
+	activity: string;
+	/** amount + carried - activity (negative when over) */
+	available: string;
+	/** Share of (amount + carried) already spent, rounded down */
+	percent: number;
+	status: BudgetStatus;
+};
+
+export type Budget = {
+	currency: string;
+	/** Day of the month a period starts (1-28; 1 = calendar months) */
+	period_start_day: number;
+	/** Default level at which a line is flagged as close to its limit */
+	warn_percent: number;
+	/** `end` is inclusive */
+	period: { start: string; end: string; is_current: boolean };
+	lines: BudgetLine[];
+	totals: {
+		amount: string;
+		activity: string;
+		available: string;
+		percent: number;
+		status: BudgetStatus;
+	};
+	/** Lines that are close to their limit or over it */
+	attention: number;
+};
