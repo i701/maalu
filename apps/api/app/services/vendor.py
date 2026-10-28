@@ -7,6 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.enums import VendorLocality
 from app.models import Vendor
 from app.schemas import VendorCreate, VendorUpdate
+from app.services.category import CategoryService
+from app.services.tag import TagService
 
 
 class VendorNotFoundError(Exception):
@@ -24,6 +26,8 @@ def normalize_name(name: str) -> str:
 class VendorService:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
+        self.categories = CategoryService(db)
+        self.tags = TagService(db)
 
     @staticmethod
     def _conditions(user_id: uuid.UUID, q: str | None, locality: VendorLocality | None) -> list:
@@ -91,7 +95,13 @@ class VendorService:
             user_id=user_id,
             name=" ".join(data.name.split()),
             normalized_name=normalize_name(data.name),
-            **data.model_dump(exclude={"name"}),
+            **data.model_dump(exclude={"name", "default_category", "default_tags"}),
+            default_category_ref=(
+                await self.categories.get_or_create(user_id, data.default_category)
+                if data.default_category
+                else None
+            ),
+            default_tags=await self.tags.resolve_many(user_id, data.default_tags),
         )
         try:
             # Savepoint: a name clash doesn't poison the outer transaction.
@@ -100,6 +110,7 @@ class VendorService:
                 await self.db.flush()
         except IntegrityError as exc:
             raise VendorNameTakenError from exc
+        await self.db.refresh(vendor)  # reload the tags in their sorted order
         return vendor
 
     async def get_or_create(self, user_id: uuid.UUID, name: str) -> Vendor:
@@ -118,6 +129,14 @@ class VendorService:
         if (name := changes.pop("name", None)) is not None:
             vendor.name = " ".join(name.split())
             vendor.normalized_name = normalize_name(name)
+        if "default_category" in changes:
+            name = changes.pop("default_category")
+            vendor.default_category_ref = (
+                await self.categories.get_or_create(vendor.user_id, name) if name else None
+            )
+        if "default_tags" in changes:
+            tags = changes.pop("default_tags") or []
+            vendor.default_tags = await self.tags.resolve_many(vendor.user_id, tags)
         for field, value in changes.items():
             setattr(vendor, field, value)
         try:
@@ -125,6 +144,7 @@ class VendorService:
                 await self.db.flush()
         except IntegrityError as exc:
             raise VendorNameTakenError from exc
+        await self.db.refresh(vendor)
         return vendor
 
     async def delete(self, vendor: Vendor) -> None:

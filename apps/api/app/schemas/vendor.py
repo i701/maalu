@@ -2,8 +2,17 @@ import uuid
 from datetime import datetime
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, StringConstraints, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    field_validator,
+    model_validator,
+)
 
+from app.schemas.category import CategoryName
+from app.schemas.tag import TagNames, TagRef
 from app.schemas.types import CurrencyCode
 
 VendorName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
@@ -23,12 +32,24 @@ class _VendorDetails(BaseModel):
 
 class VendorCreate(_VendorDetails):
     name: VendorName
+    default_category: CategoryName | None = Field(
+        default=None, description="By name: found or created. Pre-filled when you pick the vendor."
+    )
+    default_tags: TagNames = Field(
+        default_factory=list, description="By name: found or created. Pre-filled likewise."
+    )
 
 
 class VendorUpdate(_VendorDetails):
     """Partial update: only provided fields change. Send null to clear an optional field."""
 
     name: VendorName | None = None
+    default_category: CategoryName | None = Field(
+        default=None, description="Explicit null clears it."
+    )
+    default_tags: TagNames | None = Field(
+        default=None, description="Replaces the list. An empty list or null clears it."
+    )
 
     @field_validator("name")
     @classmethod
@@ -47,6 +68,8 @@ class VendorResponse(_VendorDetails):
 
     id: uuid.UUID
     name: str
+    default_category: str | None
+    default_tags: list[TagRef]
     created_at: datetime
 
 

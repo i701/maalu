@@ -31,6 +31,7 @@ import TransferFields from "./transaction-form/TransferFields";
 import { messageAfterSave } from "./transaction-form/budget-warning";
 import { useFormFields } from "./transaction-form/useFormFields";
 import { useSplits } from "./transaction-form/useSplits";
+import { useVendorDefaults } from "./transaction-form/useVendorDefaults";
 import {
 	accountChoices,
 	buildTemplateRequest,
@@ -98,6 +99,7 @@ export default function TransactionForm({
 		switched,
 	} = fields;
 	const splits = useSplits(seed);
+	const vendorDefaults = useVendorDefaults(vendors, seed, !splits.enabled);
 	const subscriptionOptions = subscriptionChoices(subscriptions, transaction);
 
 	function changeType(next: TransactionType) {
@@ -107,6 +109,7 @@ export default function TransactionForm({
 
 	function fillFrom(next: TransactionSeed) {
 		fields.fillFrom(next);
+		vendorDefaults.reset(next);
 		splits.reset();
 		setLocalError(null);
 	}
@@ -212,6 +215,11 @@ export default function TransactionForm({
 							splits={splits}
 							date={date}
 							categories={categories}
+							category={{
+								defaultValue: vendorDefaults.categoryDefault,
+								remountKey: vendorDefaults.categoryKey,
+								onChange: vendorDefaults.onCategoryChange,
+							}}
 						/>
 					)}
 
@@ -228,7 +236,11 @@ export default function TransactionForm({
 					</Cell>
 
 					<RevealCell size={{ xs: 12, sm: 6 }} show={!isTransfer}>
-						<VendorField vendors={vendors} defaultValue={seed?.vendorName ?? ""} />
+						<VendorField
+							vendors={vendors}
+							defaultValue={seed?.vendorName ?? ""}
+							onValueChange={vendorDefaults.onVendorChange}
+						/>
 					</RevealCell>
 
 					<RevealCell size={12} show={type === "expense"}>
@@ -250,7 +262,12 @@ export default function TransactionForm({
 					</RevealCell>
 
 					<Cell size={12}>
-						<TagsField tags={tags} defaultValue={seed?.tags ?? []} />
+						<TagsField
+							key={vendorDefaults.tagsKey}
+							tags={tags}
+							defaultValue={vendorDefaults.tagsDefault}
+							onChange={vendorDefaults.onTagsChange}
+						/>
 					</Cell>
 
 					<Cell size={12}>

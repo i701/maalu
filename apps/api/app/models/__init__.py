@@ -5,7 +5,7 @@ from app.models.category import Category
 from app.models.exchange_rate import ExchangeRate
 from app.models.goal import Goal, GoalEntry
 from app.models.subscription import Subscription
-from app.models.tag import Tag, template_tags, transaction_tags
+from app.models.tag import Tag, template_tags, transaction_tags, vendor_tags
 from app.models.template import TransactionTemplate
 from app.models.transaction import Transaction, TransactionSplit
 from app.models.user import User
@@ -30,4 +30,5 @@ __all__ = [
     "Vendor",
     "template_tags",
     "transaction_tags",
+    "vendor_tags",
 ]

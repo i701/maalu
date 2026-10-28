@@ -4,19 +4,26 @@ import TextField from "@mui/material/TextField";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
 import { createVendorFn, updateVendorFn } from "#/server/vendors";
-import type { Vendor } from "#/types/api";
+import type { Category, Tag, Vendor } from "#/types/api";
+import CategoryField from "./CategoryField";
 import CurrencyField from "./CurrencyField";
 import FormDialog from "./FormDialog";
 import { useNotify } from "./Notify";
+import TagsField from "./TagsField";
 
 export default function VendorForm({
 	vendor,
 	currencies,
+	categories,
+	tags,
 	onClose,
 }: {
 	/** undefined = create a new vendor */
 	vendor?: Vendor;
 	currencies: string[];
+	/** Every category and tag, to pick the defaults from. */
+	categories: Category[];
+	tags: Tag[];
 	onClose: () => void;
 }) {
 	const { run, pending, error } = useAction();
@@ -35,6 +42,8 @@ export default function VendorForm({
 			is_local: local === "" ? null : local === "true",
 			currency: text("currency") ? text("currency").toUpperCase() : null,
 			contact: text("contact") || null,
+			default_category: text("default_category") || null,
+			default_tags: f.getAll("default_tags").map(String),
 		};
 
 		const ok = await run(() =>
@@ -86,6 +95,23 @@ export default function VendorForm({
 						currencies={currencies}
 						defaultValue={vendor?.currency ?? ""}
 						helperText="Optional"
+					/>
+				</Grid>
+				<Grid size={{ xs: 12, sm: 6 }}>
+					<CategoryField
+						categories={categories}
+						name="default_category"
+						label="Usual category"
+						required={false}
+						defaultValue={vendor?.default_category ?? ""}
+					/>
+				</Grid>
+				<Grid size={{ xs: 12, sm: 6 }}>
+					<TagsField
+						tags={tags}
+						name="default_tags"
+						label="Usual tags"
+						defaultValue={vendor?.default_tags.map((t) => t.name) ?? []}
 					/>
 				</Grid>
 				<Grid size={12}>

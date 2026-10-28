@@ -99,6 +99,9 @@ export type Vendor = {
 	is_local: boolean | null;
 	currency: string | null;
 	contact: string | null;
+	/** What a transaction with this vendor usually is: the form pre-fills them when it is picked. */
+	default_category: string | null;
+	default_tags: TagRef[];
 	created_at: string;
 };
 

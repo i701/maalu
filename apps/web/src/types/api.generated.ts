@@ -2113,6 +2113,16 @@ export interface components {
             contact?: string | null;
             /** Currency */
             currency?: string | null;
+            /**
+             * Default Category
+             * @description By name: found or created. Pre-filled when you pick the vendor.
+             */
+            default_category?: string | null;
+            /**
+             * Default Tags
+             * @description By name: found or created. Pre-filled likewise.
+             */
+            default_tags?: string[];
             /** Is Local */
             is_local?: boolean | null;
             /** Name */
@@ -2137,6 +2147,10 @@ export interface components {
             created_at: string;
             /** Currency */
             currency: string | null;
+            /** Default Category */
+            default_category: string | null;
+            /** Default Tags */
+            default_tags: components["schemas"]["TagRef"][];
             /**
              * Id
              * Format: uuid
@@ -2158,6 +2172,16 @@ export interface components {
             contact?: string | null;
             /** Currency */
             currency?: string | null;
+            /**
+             * Default Category
+             * @description Explicit null clears it.
+             */
+            default_category?: string | null;
+            /**
+             * Default Tags
+             * @description Replaces the list. An empty list or null clears it.
+             */
+            default_tags?: string[] | null;
             /** Is Local */
             is_local?: boolean | null;
             /** Name */

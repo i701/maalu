@@ -38,6 +38,7 @@ export default function OrdinaryFields({
 	switched,
 	splits,
 	categories,
+	category,
 	date,
 }: {
 	type: TransactionType;
@@ -57,6 +58,8 @@ export default function OrdinaryFields({
 	switched: boolean;
 	splits: SplitsState;
 	categories: Category[];
+	/** The category field: remounted with a new default when a vendor fills it in. */
+	category: { defaultValue: string; remountKey: number; onChange: (value: string) => void };
 	/** The transaction date, which the suggested exchange rate is looked up for */
 	date: string;
 }) {
@@ -166,9 +169,11 @@ export default function OrdinaryFields({
 					/>
 				) : (
 					<CategoryField
+						key={category.remountKey}
 						categories={categories}
 						name="category"
-						defaultValue={seed && seed.type !== "transfer" ? seed.category : ""}
+						defaultValue={category.defaultValue}
+						onValueChange={category.onChange}
 					/>
 				)}
 			</Cell>

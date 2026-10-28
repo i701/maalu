@@ -1,6 +1,7 @@
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
@@ -20,6 +21,7 @@ import SearchField from "#/components/SearchField";
 import ChipFilter from "#/components/ChipFilter";
 import ShapeTile from "#/components/ShapeTile";
 import Symbol from "#/components/Symbol";
+import { TagChips } from "#/components/TagChip";
 import TonalChip from "#/components/TonalChip";
 import TableCard from "#/components/TableCard";
 import TablePager from "#/components/TablePager";
@@ -30,7 +32,9 @@ import { ACCENT } from "#/lib/m3";
 import { useLiveSearch } from "#/lib/live-search";
 import { lastPageIfOutOfRange, pageSearch } from "#/lib/pagination";
 import { unwrap } from "#/lib/unwrap";
+import { listCategoriesFn } from "#/server/categories";
 import { listCurrenciesFn } from "#/server/currencies";
+import { listTagsFn } from "#/server/tags";
 import { deleteVendorFn, listVendorsPageFn } from "#/server/vendors";
 import { VENDOR_LOCALITIES, VENDOR_LOCALITY_LABELS, type Vendor } from "#/types/api";
 
@@ -45,9 +49,11 @@ export const Route = createFileRoute("/_protected/vendors")({
 	validateSearch: searchSchema,
 	loaderDeps: ({ search }) => search,
 	loader: async ({ deps }) => {
-		const [vendors, currencies] = await Promise.all([
+		const [vendors, currencies, categories, tags] = await Promise.all([
 			listVendorsPageFn({ data: deps }),
 			listCurrenciesFn(),
+			listCategoriesFn(),
+			listTagsFn(),
 		]);
 		const rows = unwrap(vendors);
 		const last = lastPageIfOutOfRange({
@@ -58,7 +64,7 @@ export const Route = createFileRoute("/_protected/vendors")({
 		});
 		// e.g. the last row of the last page was deleted: land on the last page that has rows
 		if (last) throw redirect({ to: "/vendors", search: { ...deps, page: last } });
-		return { ...rows, currencies };
+		return { ...rows, currencies, categories: unwrap(categories), tags: unwrap(tags) };
 	},
 	component: VendorsPage,
 });
@@ -124,6 +130,7 @@ const VendorsTable = memo(function VendorsTable({
 						<Typography variant="body2" sx={{ fontWeight: 500 }}>
 							{v.name}
 						</Typography>
+						<UsualFor vendor={v} />
 					</TableCell>
 					<TableCell>{v.is_local == null ? dash : <LocalChip vendor={v} />}</TableCell>
 					<TableCell>{v.currency ?? dash}</TableCell>
@@ -169,9 +176,13 @@ const VendorsTable = memo(function VendorsTable({
 					}
 					end={v.currency && <Chip size="small" variant="outlined" label={v.currency} />}
 					meta={
-						(v.is_local != null || v.address) && (
+						(v.is_local != null ||
+							v.address ||
+							v.default_category ||
+							v.default_tags.length > 0) && (
 							<>
-								<LocalChip vendor={v} />
+								{v.is_local != null && <LocalChip vendor={v} />}
+								<UsualFor vendor={v} />
 								{v.address && (
 									<Typography variant="caption" sx={{ color: "text.secondary" }}>
 										{v.address}
@@ -187,8 +198,21 @@ const VendorsTable = memo(function VendorsTable({
 	);
 });
 
+/** The category and tags a transaction with this vendor usually gets, as small chips. */
+function UsualFor({ vendor }: { vendor: Vendor }) {
+	if (!vendor.default_category && vendor.default_tags.length === 0) return null;
+	return (
+		<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 0.5 }}>
+			{vendor.default_category && (
+				<TonalChip accent={ACCENT.pink} label={vendor.default_category} />
+			)}
+			<TagChips tags={vendor.default_tags} />
+		</Box>
+	);
+}
+
 function VendorsPage() {
-	const { items, total, currencies } = Route.useLoaderData();
+	const { items, total, currencies, categories, tags } = Route.useLoaderData();
 	// The URL as soon as it changes (the loader data lags behind it), so controls feel instant.
 	const search = useLiveSearch(searchSchema);
 	const navigate = Route.useNavigate();
@@ -303,6 +327,8 @@ function VendorsPage() {
 				<VendorForm
 					vendor={editing === "new" ? undefined : editing}
 					currencies={currencies}
+					categories={categories}
+					tags={tags}
 					onClose={() => setEditing(null)}
 				/>
 			)}

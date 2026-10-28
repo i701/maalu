@@ -18,11 +18,16 @@ export default function TagsField({
 	tags,
 	defaultValue = [],
 	name = "tags",
+	label = "Tags",
+	onChange,
 }: {
 	/** Every existing tag, to pick from */
 	tags: Tag[];
 	defaultValue?: string[];
 	name?: string;
+	label?: string;
+	/** Called with the tags after every change. */
+	onChange?: (names: string[]) => void;
 }) {
 	const [value, setValue] = useState<string[]>(defaultValue);
 	const known = new Map(tags.map((t) => [t.name.toLowerCase(), t]));
@@ -42,7 +47,9 @@ export default function TagsField({
 					const unique = next
 						.map((v) => clean(v))
 						.filter((v) => v && !seen.has(v.toLowerCase()) && seen.add(v.toLowerCase()));
-					setValue(unique.slice(0, MAX_TAGS));
+					const limited = unique.slice(0, MAX_TAGS);
+					setValue(limited);
+					onChange?.(limited);
 				}}
 				renderValue={(values, getItemProps) =>
 					values.map((v, index) => {
@@ -65,7 +72,7 @@ export default function TagsField({
 				renderInput={(params) => (
 					<TextField
 						{...params}
-						label="Tags"
+						label={label}
 						slotProps={{
 							...params.slotProps,
 							htmlInput: { ...params.slotProps.htmlInput, maxLength: 50 },

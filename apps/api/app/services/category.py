@@ -11,6 +11,8 @@ from app.models import (
     Subscription,
     Transaction,
     TransactionSplit,
+    TransactionTemplate,
+    Vendor,
 )
 from app.schemas import CategoryResponse
 
@@ -168,10 +170,15 @@ class CategoryService:
         """Move everything from `source` to `target`, then delete `source`."""
         if source.id == target.id:
             raise CategoryNameTakenError
-        for model in (Transaction, TransactionSplit, Subscription):
+        for model in (Transaction, TransactionSplit, Subscription, TransactionTemplate):
             await self.db.execute(
                 update(model).where(model.category_id == source.id).values(category_id=target.id)
             )
+        await self.db.execute(
+            update(Vendor)
+            .where(Vendor.default_category_id == source.id)
+            .values(default_category_id=target.id)
+        )
         # A budget line holding both categories would end up with the target twice: drop the
         # source's link there, move the others.
         already = select(BudgetLineCategory.line_id).where(

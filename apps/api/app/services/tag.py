@@ -5,7 +5,7 @@ from sqlalchemy import Uuid, delete, func, insert, literal, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Tag, Transaction, template_tags, transaction_tags
+from app.models import Tag, Transaction, template_tags, transaction_tags, vendor_tags
 from app.models.tag import TAG_COLORS
 from app.schemas import TagResponse
 from app.services.category import normalize_name
@@ -159,7 +159,11 @@ class TagService:
         """Give everything tagged `source` the `target` tag instead, then delete `source`."""
         if source.id == target.id:
             raise TagNameTakenError
-        for link, owner in ((transaction_tags, "transaction_id"), (template_tags, "template_id")):
+        for link, owner in (
+            (transaction_tags, "transaction_id"),
+            (template_tags, "template_id"),
+            (vendor_tags, "vendor_id"),
+        ):
             owner_col = link.c[owner]
             # Skip what already has the target, so no row ends up with it twice.
             already = select(owner_col).where(link.c.tag_id == target.id)

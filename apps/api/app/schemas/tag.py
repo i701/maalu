@@ -12,6 +12,9 @@ TagMatch = Literal["any", "all"]
 # The most tags one transaction or template can have.
 MAX_TAGS = 10
 
+# Tag names on a request.
+TagNames = Annotated[list[TagName], Field(max_length=MAX_TAGS)]
+
 
 class TagCreate(BaseModel):
     name: TagName

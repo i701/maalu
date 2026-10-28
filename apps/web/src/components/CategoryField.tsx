@@ -18,7 +18,7 @@ export default function CategoryField({
 	label?: string;
 	required?: boolean;
 	helper?: boolean;
-	onValueChange?: (value: string) => void;
+	onValueChange?: (value: string, fromUser: boolean) => void;
 }) {
 	return (
 		<NamePickerField

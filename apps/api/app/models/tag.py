@@ -48,6 +48,18 @@ transaction_tags = Table(
     Column("tag_id", Uuid, ForeignKey("tags.id", ondelete="CASCADE"), primary_key=True, index=True),
 )
 
+vendor_tags = Table(
+    "vendor_tags",
+    Base.metadata,
+    Column(
+        "vendor_id",
+        Uuid,
+        ForeignKey("vendors.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+    Column("tag_id", Uuid, ForeignKey("tags.id", ondelete="CASCADE"), primary_key=True, index=True),
+)
+
 template_tags = Table(
     "template_tags",
     Base.metadata,

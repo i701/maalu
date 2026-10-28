@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from app.enums import PaymentMethod, TransactionType
 from app.schemas.account import AccountRef
 from app.schemas.subscription import SubscriptionRef
-from app.schemas.tag import MAX_TAGS, TagName, TagRef
+from app.schemas.tag import TagNames, TagRef
 from app.schemas.types import CurrencyCode, ExchangeRate
 from app.schemas.vendor import VendorRef, VendorResponse
 
@@ -16,7 +16,6 @@ from app.schemas.vendor import VendorRef, VendorResponse
 # Always positive: `type` decides whether money comes in or goes out.
 Amount = Annotated[Decimal, Field(gt=0, max_digits=19, decimal_places=4)]
 Category = Annotated[str, Field(min_length=1, max_length=100)]
-TagNames = Annotated[list[TagName], Field(max_length=MAX_TAGS)]
 
 
 class SplitInput(BaseModel):

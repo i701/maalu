@@ -8,11 +8,13 @@ export default function VendorField({
 	defaultValue = "",
 	name = "vendor",
 	label = "Vendor",
+	onValueChange,
 }: {
 	vendors: Vendor[];
 	defaultValue?: string;
 	name?: string;
 	label?: string;
+	onValueChange?: (value: string, fromUser: boolean) => void;
 }) {
 	return (
 		<NamePickerField
@@ -22,6 +24,7 @@ export default function VendorField({
 			name={name}
 			defaultValue={defaultValue}
 			maxLength={200}
+			onValueChange={onValueChange}
 		/>
 	);
 }

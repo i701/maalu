@@ -16,9 +16,15 @@ const vendorFields = {
 	contact: z.string().max(255).nullable(),
 };
 
+const defaults = {
+	default_category: z.string().trim().min(1).max(100).nullable(),
+	default_tags: z.array(z.string().trim().min(1).max(50)).max(10),
+};
+
 const createSchema = z.object({
 	name: z.string().trim().min(1).max(200),
 	...vendorFields,
+	...defaults,
 });
 const updateSchema = z.object({
 	id: z.uuid(),

@@ -39,7 +39,8 @@ export default function NamePickerField({
 	maxLength: number;
 	/** Show the helper line under the input; off in tight spaces such as table rows */
 	helper?: boolean;
-	onValueChange?: (value: string) => void;
+	/** `fromUser` is false when the field sets its own starting value (no event behind it). */
+	onValueChange?: (value: string, fromUser: boolean) => void;
 }) {
 	const [text, setText] = useState(defaultValue);
 	const typed = text.trim().replace(/\s+/g, " ");
@@ -51,9 +52,9 @@ export default function NamePickerField({
 			autoSelect
 			options={names}
 			defaultValue={defaultValue}
-			onInputChange={(_, value) => {
+			onInputChange={(event, value) => {
 				setText(value);
-				onValueChange?.(value);
+				onValueChange?.(value, Boolean(event));
 			}}
 			filterOptions={(options, params) => {
 				const filtered = filter(options, params);

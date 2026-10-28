@@ -3304,6 +3304,31 @@
             ],
             "title": "Currency"
           },
+          "default_category": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "By name: found or created. Pre-filled when you pick the vendor.",
+            "title": "Default Category"
+          },
+          "default_tags": {
+            "description": "By name: found or created. Pre-filled likewise.",
+            "items": {
+              "maxLength": 50,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 10,
+            "title": "Default Tags",
+            "type": "array"
+          },
           "is_local": {
             "anyOf": [
               {
@@ -3381,6 +3406,24 @@
             ],
             "title": "Currency"
           },
+          "default_category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Category"
+          },
+          "default_tags": {
+            "items": {
+              "$ref": "#/components/schemas/TagRef"
+            },
+            "title": "Default Tags",
+            "type": "array"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -3409,6 +3452,8 @@
           "contact",
           "id",
           "name",
+          "default_category",
+          "default_tags",
           "created_at"
         ],
         "title": "VendorResponse",
@@ -3452,6 +3497,38 @@
               }
             ],
             "title": "Currency"
+          },
+          "default_category": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Explicit null clears it.",
+            "title": "Default Category"
+          },
+          "default_tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "maxLength": 50,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "maxItems": 10,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Replaces the list. An empty list or null clears it.",
+            "title": "Default Tags"
           },
           "is_local": {
             "anyOf": [

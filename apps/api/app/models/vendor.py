@@ -2,9 +2,11 @@ import uuid
 from datetime import UTC, datetime
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text, UniqueConstraint, Uuid, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+from app.models.category import Category
+from app.models.tag import Tag, vendor_tags
 
 
 class Vendor(Base):
@@ -29,8 +31,21 @@ class Vendor(Base):
     currency: Mapped[str | None] = mapped_column(String(3), default=None)
     # Free text: phone, email, contact person...
     contact: Mapped[str | None] = mapped_column(String(255), default=None)
+    # What a transaction with this vendor usually is: the form pre-fills these when the vendor is
+    # picked. Only a convenience, so deleting the category just clears it.
+    default_category_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("categories.id", ondelete="SET NULL"), index=True, default=None
+    )
+    default_category_ref: Mapped[Category | None] = relationship(lazy="joined")
+    default_tags: Mapped[list[Tag]] = relationship(
+        secondary=vendor_tags, lazy="selectin", order_by=Tag.normalized_name
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         default=lambda: datetime.now(UTC),
     )
+
+    @property
+    def default_category(self) -> str | None:
+        return self.default_category_ref.name if self.default_category_ref else None
