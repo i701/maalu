@@ -28,7 +28,7 @@ jobs:
       - run: just check-api # ruff check + ruff format --check
 
   web:
-    name: Web (oxfmt, oxlint, tsc)
+    name: Web (oxfmt, oxlint, tsc, unit tests)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -41,3 +41,4 @@ jobs:
           cache: true
       - uses: extractions/setup-just@v4
       - run: just check-web # oxfmt --check, oxlint, tsc --noEmit
+      - run: just test-web # vitest: the pure helpers in src/lib

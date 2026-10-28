@@ -67,10 +67,14 @@ lint-api:
 lint-web:
     pnpm --filter @maalu/web lint
 
-test: test-api
+test: test-api test-web
 
 test-api:
     cd apps/api && uv run pytest
+
+# Unit tests for the web app's pure helpers (money maths, charts, budget); no browser, no API
+test-web:
+    pnpm --filter @maalu/web test
 
 # ── Build ───────────────────────────────────────────────
 
