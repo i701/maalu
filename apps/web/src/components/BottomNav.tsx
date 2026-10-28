@@ -1,10 +1,10 @@
 import Box from "@mui/material/Box";
-import { BOTTOM_BAR_HEIGHT, NAV_ITEMS } from "#/lib/nav";
+import { BOTTOM_BAR_HEIGHT, BOTTOM_NAV_ITEMS } from "#/lib/nav";
 import NavItem from "./NavItem";
 
 /**
- * The bottom navigation bar, on every screen size: a flush, full-width tonal band with no border.
- * On wide screens the items stay grouped in the centre rather than spreading across the page.
+ * The bottom navigation bar on narrow screens: a flush, full-width tonal band with no border,
+ * holding only the destinations marked `bottom` in lib/nav.ts. Wide screens use the sidebar.
  */
 export default function BottomNav() {
 	return (
@@ -12,6 +12,8 @@ export default function BottomNav() {
 			component="nav"
 			aria-label="Main"
 			sx={{
+				// wide screens have the sidebar instead
+				display: { xs: "block", md: "none" },
 				position: "fixed",
 				inset: "auto 0 0 0",
 				zIndex: (t) => t.zIndex.appBar,
@@ -24,14 +26,14 @@ export default function BottomNav() {
 			<Box
 				sx={{
 					display: "grid",
-					gridTemplateColumns: `repeat(${NAV_ITEMS.length}, 1fr)`,
+					gridTemplateColumns: `repeat(${BOTTOM_NAV_ITEMS.length}, 1fr)`,
 					alignItems: "start",
 					maxWidth: 640,
 					mx: "auto",
 					px: 1,
 				}}
 			>
-				{NAV_ITEMS.map((item) => (
+				{BOTTOM_NAV_ITEMS.map((item) => (
 					<NavItem key={item.to} {...item} />
 				))}
 			</Box>

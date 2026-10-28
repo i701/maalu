@@ -265,3 +265,34 @@ export type Budget = {
 	/** Lines that are close to their limit or over it */
 	attention: number;
 };
+
+/** Money set aside for a goal (positive) or taken back out (negative), in the base currency. */
+export type GoalEntry = { id: string; entry_date: string; amount: string; note: string | null };
+
+export type Goal = {
+	id: string;
+	name: string;
+	/** Your base currency: every amount on a goal is in it */
+	currency: string;
+	target_amount: string;
+	target_date: string | null;
+	/** What you plan to put aside each budget period */
+	monthly_amount: string | null;
+	/** "account" follows a savings account's balance; "manual" is a log of money set aside */
+	mode: "account" | "manual";
+	account: AccountRef | null;
+	saved: string;
+	/** Never below zero */
+	remaining: string;
+	percent: number;
+	reached: boolean;
+	/** Whole months to the target date, 0 once it has passed, null without a date */
+	months_left: number | null;
+	needed_per_month: string | null;
+	/** For the budget period asked about, when a monthly plan is set */
+	period_planned: string | null;
+	period_contributed: string | null;
+	period_status: "funded" | "pending" | null;
+	/** Newest first; empty for an account-linked goal */
+	entries: GoalEntry[];
+};

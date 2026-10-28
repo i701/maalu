@@ -1,20 +1,20 @@
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
-import { TOP_BAR_HEIGHT } from "#/lib/nav";
+import { SIDEBAR_WIDTH, TOP_BAR_HEIGHT } from "#/lib/nav";
 import type { SessionUser } from "#/utils/session";
 import Brand from "./Brand";
 import ColorModeToggle from "./ColorModeToggle";
 import UserMenu from "./UserMenu";
 
-/** The top bar: the logo and name on the left, colour mode and account on the right. Tonal, with
- * no border. */
+/** The top bar: the app name on the left (narrow screens; the sidebar has it otherwise), colour
+ * mode and account on the right. Tonal, with no border. */
 export default function TopBar({ user }: { user: SessionUser }) {
 	return (
 		<Box
 			component="header"
 			sx={{
 				position: "fixed",
-				inset: "0 0 auto 0",
+				inset: { xs: "0 0 auto 0", md: `0 0 auto ${SIDEBAR_WIDTH}px` },
 				height: TOP_BAR_HEIGHT,
 				px: { xs: 2, md: 3 },
 				bgcolor: "background.default",
@@ -32,8 +32,10 @@ export default function TopBar({ user }: { user: SessionUser }) {
 					justifyContent: "space-between",
 				}}
 			>
-				<Brand />
-				<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+				<Box sx={{ display: { md: "none" } }}>
+					<Brand />
+				</Box>
+				<Box sx={{ display: "flex", alignItems: "center", gap: 0.5, ml: "auto" }}>
 					<ColorModeToggle />
 					<UserMenu user={user} />
 				</Box>

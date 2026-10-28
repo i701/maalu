@@ -14,13 +14,16 @@ import ConfirmDelete from "#/components/ConfirmDelete";
 import EmptyState from "#/components/EmptyState";
 import PageHeader from "#/components/PageHeader";
 import PendingOverlay from "#/components/PendingOverlay";
+import SavingsGoals from "#/components/SavingsGoals";
 import Symbol from "#/components/Symbol";
 import { addDays } from "#/lib/budget";
 import { formatDate } from "#/lib/format";
 import { staggerChildren } from "#/lib/motion";
 import { unwrap } from "#/lib/unwrap";
 import { deleteBudgetLineFn, getBudgetFn } from "#/server/budget";
+import { listAccountsFn } from "#/server/accounts";
 import { listCategoriesFn } from "#/server/categories";
+import { listGoalsFn } from "#/server/goals";
 import type { BudgetLine } from "#/types/api";
 
 const searchSchema = z.object({
@@ -32,17 +35,24 @@ export const Route = createFileRoute("/_protected/budget")({
 	validateSearch: searchSchema,
 	loaderDeps: ({ search }) => search,
 	loader: async ({ deps }) => {
-		const [budget, categories] = await Promise.all([
+		const [budget, categories, goals, accounts] = await Promise.all([
 			getBudgetFn({ data: { on: deps.on } }),
 			listCategoriesFn(),
+			listGoalsFn({ data: { on: deps.on } }),
+			listAccountsFn(),
 		]);
-		return { budget: unwrap(budget), categories: unwrap(categories) };
+		return {
+			budget: unwrap(budget),
+			categories: unwrap(categories),
+			goals: unwrap(goals),
+			accounts: unwrap(accounts),
+		};
 	},
 	component: BudgetPage,
 });
 
 function BudgetPage() {
-	const { budget, categories } = Route.useLoaderData();
+	const { budget, categories, goals, accounts } = Route.useLoaderData();
 	const navigate = Route.useNavigate();
 	const [editing, setEditing] = useState<BudgetLine | "new" | null>(null);
 	const [deleting, setDeleting] = useState<BudgetLine | null>(null);
@@ -145,6 +155,10 @@ function BudgetPage() {
 						</Box>
 					</>
 				)}
+			</PendingOverlay>
+
+			<PendingOverlay>
+				<SavingsGoals goals={goals} accounts={accounts} currency={budget.currency} />
 			</PendingOverlay>
 
 			{editing && (

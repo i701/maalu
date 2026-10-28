@@ -62,7 +62,8 @@ export function NotifyProvider({ children }: { children: ReactNode }) {
 				sx={{
 					bottom: {
 						xs: "calc(96px + env(safe-area-inset-bottom)) !important",
-						md: "calc(96px + env(safe-area-inset-bottom)) !important",
+						// no bottom bar on wide screens
+						md: "24px !important",
 					},
 				}}
 				// Enter and leave through the same bottom edge it is anchored to.
