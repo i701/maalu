@@ -22,6 +22,7 @@ from app.models.account import Account
 from app.models.base import Base
 from app.models.category import Category
 from app.models.subscription import Subscription
+from app.models.tag import Tag, transaction_tags
 from app.models.vendor import Vendor
 
 
@@ -101,6 +102,10 @@ class Transaction(Base):
         back_populates="transaction",
     )
     transaction_date: Mapped[date] = mapped_column(Date)
+    # Labels that cut across categories. Belong to the whole transaction, not to its items.
+    tags: Mapped[list[Tag]] = relationship(
+        secondary=transaction_tags, lazy="selectin", order_by=Tag.normalized_name
+    )
     # Set when the transaction is moved to the trash. A trashed row is hidden everywhere and
     # counts toward nothing (balances, budgets, stats) until it is restored or deleted for good.
     deleted_at: Mapped[datetime | None] = mapped_column(

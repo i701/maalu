@@ -7,7 +7,8 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
 from app.enums import PaymentMethod, TransactionType
 from app.schemas.account import AccountRef
-from app.schemas.transaction import Amount, Category
+from app.schemas.tag import TagRef
+from app.schemas.transaction import Amount, Category, TagNames
 from app.schemas.types import CurrencyCode
 from app.schemas.vendor import VendorRef
 
@@ -25,6 +26,7 @@ class TemplateCreate(VendorRef):
     payment_method: PaymentMethod = PaymentMethod.OTHER
     category: Category | None = Field(default=None, description="By name: found or created")
     description: str | None = None
+    tags: TagNames = Field(default_factory=list, description="By name: found or created")
     account_id: uuid.UUID | None = Field(
         default=None, description="Its currency is used. For a transfer: the account it leaves."
     )
@@ -54,4 +56,5 @@ class TemplateResponse(BaseModel):
     description: str | None
     account: AccountRef | None
     to_account: AccountRef | None
+    tags: list[TagRef]
     created_at: datetime

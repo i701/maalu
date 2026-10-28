@@ -11,6 +11,7 @@ from app.export import XLSX_MEDIA_TYPE
 from app.pagination import MAX_LIMIT, PageDep, set_total
 from app.schemas import (
     CategoryTotals,
+    TagMatch,
     TransactionCreate,
     TransactionResponse,
     TransactionTotals,
@@ -86,6 +87,13 @@ async def list_transactions(
     subscription_id: uuid.UUID | None = None,
     account_id: uuid.UUID | None = None,
     category_id: uuid.UUID | None = None,
+    tag_id: Annotated[
+        list[uuid.UUID] | None,
+        Query(description="Repeat to filter by several tags; see `tag_match`"),
+    ] = None,
+    tag_match: Annotated[
+        TagMatch, Query(description="`any`: has at least one of the tags. `all`: has every one.")
+    ] = "any",
     payment_method: PaymentMethod | None = None,
     transaction_type: Annotated[TransactionType | None, Query(alias="type")] = None,
     currency: str | None = None,
@@ -117,6 +125,8 @@ async def list_transactions(
         "subscription_id": subscription_id,
         "account_id": account_id,
         "category_id": category_id,
+        "tag_ids": tag_id,
+        "tag_match": tag_match,
         "payment_method": payment_method,
         "currency": currency,
         "q": q,
@@ -139,6 +149,13 @@ async def export_transactions(
     subscription_id: uuid.UUID | None = None,
     account_id: uuid.UUID | None = None,
     category_id: uuid.UUID | None = None,
+    tag_id: Annotated[
+        list[uuid.UUID] | None,
+        Query(description="Repeat to filter by several tags; see `tag_match`"),
+    ] = None,
+    tag_match: Annotated[
+        TagMatch, Query(description="`any`: has at least one of the tags. `all`: has every one.")
+    ] = "any",
     payment_method: PaymentMethod | None = None,
     transaction_type: Annotated[TransactionType | None, Query(alias="type")] = None,
     currency: str | None = None,
@@ -172,6 +189,8 @@ async def export_transactions(
             subscription_id=subscription_id,
             account_id=account_id,
             category_id=category_id,
+            tag_ids=tag_id,
+            tag_match=tag_match,
             payment_method=payment_method,
             currency=currency,
             q=q,
@@ -199,6 +218,13 @@ async def transaction_totals(
     subscription_id: uuid.UUID | None = None,
     account_id: uuid.UUID | None = None,
     category_id: uuid.UUID | None = None,
+    tag_id: Annotated[
+        list[uuid.UUID] | None,
+        Query(description="Repeat to filter by several tags; see `tag_match`"),
+    ] = None,
+    tag_match: Annotated[
+        TagMatch, Query(description="`any`: has at least one of the tags. `all`: has every one.")
+    ] = "any",
     payment_method: PaymentMethod | None = None,
     transaction_type: Annotated[TransactionType | None, Query(alias="type")] = None,
     currency: str | None = None,
@@ -231,6 +257,8 @@ async def transaction_totals(
         subscription_id=subscription_id,
         account_id=account_id,
         category_id=category_id,
+        tag_ids=tag_id,
+        tag_match=tag_match,
         payment_method=payment_method,
         currency=currency,
         q=q,
@@ -249,6 +277,13 @@ async def category_totals(
     subscription_id: uuid.UUID | None = None,
     account_id: uuid.UUID | None = None,
     category_id: uuid.UUID | None = None,
+    tag_id: Annotated[
+        list[uuid.UUID] | None,
+        Query(description="Repeat to filter by several tags; see `tag_match`"),
+    ] = None,
+    tag_match: Annotated[
+        TagMatch, Query(description="`any`: has at least one of the tags. `all`: has every one.")
+    ] = "any",
     payment_method: PaymentMethod | None = None,
     transaction_type: Annotated[TransactionType | None, Query(alias="type")] = None,
     currency: str | None = None,
@@ -282,6 +317,8 @@ async def category_totals(
         subscription_id=subscription_id,
         account_id=account_id,
         category_id=category_id,
+        tag_ids=tag_id,
+        tag_match=tag_match,
         payment_method=payment_method,
         currency=currency,
         q=q,

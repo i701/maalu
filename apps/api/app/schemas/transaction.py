@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from app.enums import PaymentMethod, TransactionType
 from app.schemas.account import AccountRef
 from app.schemas.subscription import SubscriptionRef
+from app.schemas.tag import MAX_TAGS, TagName, TagRef
 from app.schemas.types import CurrencyCode, ExchangeRate
 from app.schemas.vendor import VendorRef, VendorResponse
 
@@ -15,6 +16,7 @@ from app.schemas.vendor import VendorRef, VendorResponse
 # Always positive: `type` decides whether money comes in or goes out.
 Amount = Annotated[Decimal, Field(gt=0, max_digits=19, decimal_places=4)]
 Category = Annotated[str, Field(min_length=1, max_length=100)]
+TagNames = Annotated[list[TagName], Field(max_length=MAX_TAGS)]
 
 
 class SplitInput(BaseModel):
@@ -68,6 +70,10 @@ class TransactionCreate(VendorRef):
         "`amount`; `category` is then taken from the biggest line, so it can be left out.",
     )
     subscription_id: uuid.UUID | None = None
+    tags: TagNames | None = Field(
+        default=None,
+        description="Tags by name, found or created. They belong to the whole transaction.",
+    )
     account_id: uuid.UUID | None = Field(
         default=None,
         description="Income/expense: optional, and the transaction uses its currency. "
@@ -137,6 +143,9 @@ class TransactionUpdate(VendorRef):
         min_length=1,
         description="Replaces all the lines. Explicit null removes the split.",
     )
+    tags: TagNames | None = Field(
+        default=None, description="Replaces all the tags. An empty list or null removes them."
+    )
 
     @field_validator(
         "type",
@@ -177,6 +186,7 @@ class TransactionResponse(BaseModel):
     subscription: SubscriptionRef | None
     account: AccountRef | None
     to_account: AccountRef | None
+    tags: list[TagRef]
     created_at: datetime
     deleted_at: datetime | None = Field(
         description="When it was moved to the trash; null for a live transaction"

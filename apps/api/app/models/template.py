@@ -19,6 +19,7 @@ from app.enums import PaymentMethod, TransactionType
 from app.models.account import Account
 from app.models.base import Base
 from app.models.category import Category
+from app.models.tag import Tag, template_tags
 from app.models.vendor import Vendor
 
 
@@ -82,6 +83,9 @@ class TransactionTemplate(Base):
     )
     to_account: Mapped[Account | None] = relationship(lazy="joined", foreign_keys=[to_account_id])
     description: Mapped[str | None] = mapped_column(Text, default=None)
+    tags: Mapped[list[Tag]] = relationship(
+        secondary=template_tags, lazy="selectin", order_by=Tag.normalized_name
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

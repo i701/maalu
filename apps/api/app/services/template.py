@@ -10,6 +10,7 @@ from app.schemas import TemplateCreate
 from app.services.account import AccountNotFoundError
 from app.services.category import CategoryService, normalize_name
 from app.services.errors import TransactionRuleError
+from app.services.tag import TagService
 from app.services.vendor import VendorNotFoundError, VendorService
 
 
@@ -28,6 +29,7 @@ class TemplateService:
         self.db = db
         self.vendors = VendorService(db)
         self.categories = CategoryService(db)
+        self.tags = TagService(db)
 
     async def list_for_user(
         self, user_id: uuid.UUID, *, limit: int | None = None, offset: int = 0
@@ -102,6 +104,7 @@ class TemplateService:
             account=account,
             to_account=to_account,
             description=data.description,
+            tags=await self.tags.resolve_many(user_id, data.tags),
         )
         return await self._save(template)
 

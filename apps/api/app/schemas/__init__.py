@@ -27,6 +27,16 @@ from app.schemas.subscription import (
     SubscriptionSummary,
     SubscriptionUpdate,
 )
+from app.schemas.tag import (
+    MAX_TAGS,
+    TagCreate,
+    TagMatch,
+    TagMerge,
+    TagName,
+    TagRef,
+    TagResponse,
+    TagUpdate,
+)
 from app.schemas.template import TemplateCreate, TemplateResponse, TemplateUpdate
 from app.schemas.transaction import (
     CategoryTotal,
@@ -42,6 +52,7 @@ from app.schemas.user import Token, UserCreate, UserResponse
 from app.schemas.vendor import VendorCreate, VendorResponse, VendorUpdate
 
 __all__ = [
+    "MAX_TAGS",
     "AccountCreate",
     "AccountRef",
     "AccountResponse",
@@ -70,6 +81,13 @@ __all__ = [
     "SubscriptionResponse",
     "SubscriptionSummary",
     "SubscriptionUpdate",
+    "TagCreate",
+    "TagMatch",
+    "TagMerge",
+    "TagName",
+    "TagRef",
+    "TagResponse",
+    "TagUpdate",
     "TemplateCreate",
     "TemplateResponse",
     "TemplateUpdate",

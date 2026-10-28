@@ -15,6 +15,7 @@ from app.services import (
     GoalService,
     StatsService,
     SubscriptionService,
+    TagService,
     TemplateService,
     TransactionService,
     UserService,
@@ -62,6 +63,10 @@ def get_subscription_service(db: DbSession) -> SubscriptionService:
     return SubscriptionService(db)
 
 
+def get_tag_service(db: DbSession) -> TagService:
+    return TagService(db)
+
+
 def get_template_service(db: DbSession) -> TemplateService:
     return TemplateService(db)
 
@@ -75,6 +80,7 @@ GoalServiceDep = Annotated[GoalService, Depends(get_goal_service)]
 CategoryServiceDep = Annotated[CategoryService, Depends(get_category_service)]
 AccountServiceDep = Annotated[AccountService, Depends(get_account_service)]
 SubscriptionServiceDep = Annotated[SubscriptionService, Depends(get_subscription_service)]
+TagServiceDep = Annotated[TagService, Depends(get_tag_service)]
 TemplateServiceDep = Annotated[TemplateService, Depends(get_template_service)]
 
 

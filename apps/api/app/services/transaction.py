@@ -12,6 +12,7 @@ from app.models import (
     Account,
     Category,
     Subscription,
+    Tag,
     Transaction,
     TransactionSplit,
     User,
@@ -21,6 +22,7 @@ from app.schemas import (
     CategoryTotal,
     CategoryTotals,
     SplitInput,
+    TagMatch,
     TransactionCreate,
     TransactionTotals,
     TransactionUpdate,
@@ -30,6 +32,7 @@ from app.services.category import CategoryService
 from app.services.errors import TransactionRuleError
 from app.services.money import BASE_AMOUNT_QUANTUM, price_in_base
 from app.services.subscription import SubscriptionNotFoundError
+from app.services.tag import TagService
 from app.services.vendor import VendorNotFoundError, VendorService
 
 # Transfers have no payment method of their own; this fills the required column.
@@ -54,6 +57,7 @@ class TransactionService:
         self.db = db
         self.vendors = VendorService(db)
         self.categories = CategoryService(db)
+        self.tags = TagService(db)
 
     async def _resolve_vendor(
         self, user_id: uuid.UUID, vendor_id: uuid.UUID | None, vendor_name: str | None
@@ -221,6 +225,7 @@ class TransactionService:
             to_account=to_account,
             vendor=await self._resolve_vendor(user_id, data.vendor_id, data.vendor_name),
             subscription=await self._resolve_subscription(user_id, data.subscription_id),
+            tags=await self.tags.resolve_many(user_id, data.tags or []),
             **money,
         )
         self._check_splits(transaction)
@@ -238,6 +243,8 @@ class TransactionService:
         subscription_id: uuid.UUID | None,
         account_id: uuid.UUID | None,
         category_id: uuid.UUID | None,
+        tag_ids: list[uuid.UUID] | None = None,
+        tag_match: TagMatch = "any",
         payment_method: PaymentMethod | None,
         currency: str | None,
         q: str | None = None,
@@ -286,6 +293,7 @@ class TransactionService:
                     ),
                     Transaction.account.has(Account.name.icontains(term, autoescape=True)),
                     Transaction.to_account.has(Account.name.icontains(term, autoescape=True)),
+                    Transaction.tags.any(Tag.name.icontains(term, autoescape=True)),
                 )
             )
         if transaction_type is not None:
@@ -305,6 +313,11 @@ class TransactionService:
                     Transaction.splits.any(TransactionSplit.category_id == category_id),
                 )
             )
+        if tag_ids:
+            if tag_match == "all":  # every one of the tags
+                conditions.extend(Transaction.tags.any(Tag.id == tag_id) for tag_id in tag_ids)
+            else:  # any one of them
+                conditions.append(Transaction.tags.any(Tag.id.in_(tag_ids)))
         if currency is not None:
             conditions.append(Transaction.currency == currency.upper())
         if payment_method is not None:
@@ -320,6 +333,8 @@ class TransactionService:
         subscription_id: uuid.UUID | None = None,
         account_id: uuid.UUID | None = None,
         category_id: uuid.UUID | None = None,
+        tag_ids: list[uuid.UUID] | None = None,
+        tag_match: TagMatch = "any",
         payment_method: PaymentMethod | None = None,
         currency: str | None = None,
         q: str | None = None,
@@ -337,6 +352,8 @@ class TransactionService:
             subscription_id=subscription_id,
             account_id=account_id,
             category_id=category_id,
+            tag_ids=tag_ids,
+            tag_match=tag_match,
             payment_method=payment_method,
             currency=currency,
             q=q,
@@ -363,6 +380,8 @@ class TransactionService:
         subscription_id: uuid.UUID | None = None,
         account_id: uuid.UUID | None = None,
         category_id: uuid.UUID | None = None,
+        tag_ids: list[uuid.UUID] | None = None,
+        tag_match: TagMatch = "any",
         payment_method: PaymentMethod | None = None,
         currency: str | None = None,
         q: str | None = None,
@@ -378,6 +397,8 @@ class TransactionService:
             subscription_id=subscription_id,
             account_id=account_id,
             category_id=category_id,
+            tag_ids=tag_ids,
+            tag_match=tag_match,
             payment_method=payment_method,
             currency=currency,
             q=q,
@@ -397,6 +418,8 @@ class TransactionService:
         subscription_id: uuid.UUID | None = None,
         account_id: uuid.UUID | None = None,
         category_id: uuid.UUID | None = None,
+        tag_ids: list[uuid.UUID] | None = None,
+        tag_match: TagMatch = "any",
         payment_method: PaymentMethod | None = None,
         currency: str | None = None,
         q: str | None = None,
@@ -413,6 +436,8 @@ class TransactionService:
             subscription_id=subscription_id,
             account_id=account_id,
             category_id=category_id,
+            tag_ids=tag_ids,
+            tag_match=tag_match,
             payment_method=payment_method,
             currency=currency,
             q=q,
@@ -465,6 +490,8 @@ class TransactionService:
         subscription_id: uuid.UUID | None = None,
         account_id: uuid.UUID | None = None,
         category_id: uuid.UUID | None = None,
+        tag_ids: list[uuid.UUID] | None = None,
+        tag_match: TagMatch = "any",
         payment_method: PaymentMethod | None = None,
         currency: str | None = None,
         q: str | None = None,
@@ -485,6 +512,8 @@ class TransactionService:
             subscription_id=subscription_id,
             account_id=account_id,
             category_id=category_id,
+            tag_ids=tag_ids,
+            tag_match=tag_match,
             payment_method=payment_method,
             currency=currency,
             q=q,
@@ -549,6 +578,8 @@ class TransactionService:
         subscription_id: uuid.UUID | None = None,
         account_id: uuid.UUID | None = None,
         category_id: uuid.UUID | None = None,
+        tag_ids: list[uuid.UUID] | None = None,
+        tag_match: TagMatch = "any",
         payment_method: PaymentMethod | None = None,
         currency: str | None = None,
         q: str | None = None,
@@ -567,6 +598,8 @@ class TransactionService:
             "subscription_id": subscription_id,
             "account_id": account_id,
             "category_id": category_id,
+            "tag_ids": tag_ids,
+            "tag_match": tag_match,
             "payment_method": payment_method,
             "currency": currency,
             "q": q,
@@ -605,6 +638,8 @@ class TransactionService:
         subscription_id: uuid.UUID | None,
         account_id: uuid.UUID | None,
         category_id: uuid.UUID | None,
+        tag_ids: list[uuid.UUID] | None = None,
+        tag_match: TagMatch = "any",
         payment_method: PaymentMethod | None,
         currency: str | None,
         q: str | None,
@@ -632,6 +667,12 @@ class TransactionService:
         if category_id is not None:
             category = await self.categories.get(user_id, category_id)
             labels.append(f"Category: {category.name if category else 'unknown'}")
+        if tag_ids:
+            names = []
+            for tag_id in tag_ids:
+                tag = await self.tags.get(user_id, tag_id)
+                names.append(tag.name if tag else "unknown")
+            labels.append(f"Tag: {(' and ' if tag_match == 'all' else ' or ').join(names)}")
         if subscription_id is not None:
             labels.append("Subscription: selected")
         if min_amount is not None or max_amount is not None:
@@ -697,6 +738,8 @@ class TransactionService:
         is_transfer = new_type is TransactionType.TRANSFER
 
         # Links. An explicit null unlinks.
+        if "tags" in changes:
+            transaction.tags = await self.tags.resolve_many(user_id, changes.pop("tags") or [])
         if "vendor_id" in changes or "vendor_name" in changes:
             transaction.vendor = await self._resolve_vendor(
                 user_id, changes.pop("vendor_id", None), changes.pop("vendor_name", None)
