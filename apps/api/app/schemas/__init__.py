@@ -27,6 +27,7 @@ from app.schemas.subscription import (
     SubscriptionSummary,
     SubscriptionUpdate,
 )
+from app.schemas.template import TemplateCreate, TemplateResponse, TemplateUpdate
 from app.schemas.transaction import (
     CategoryTotal,
     CategoryTotals,
@@ -69,6 +70,9 @@ __all__ = [
     "SubscriptionResponse",
     "SubscriptionSummary",
     "SubscriptionUpdate",
+    "TemplateCreate",
+    "TemplateResponse",
+    "TemplateUpdate",
     "Token",
     "TransactionCreate",
     "TransactionResponse",

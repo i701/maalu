@@ -27,6 +27,11 @@ from app.services.subscription import (
     TransactionAlreadyLinkedError,
     TransactionNotFoundError,
 )
+from app.services.template import (
+    TemplateNameTakenError,
+    TemplateNotFoundError,
+    TemplateService,
+)
 from app.services.transaction import TransactionService
 from app.services.user import EmailAlreadyRegisteredError, UserService
 from app.services.vendor import VendorNameTakenError, VendorNotFoundError, VendorService
@@ -54,6 +59,9 @@ __all__ = [
     "StatsService",
     "SubscriptionNotFoundError",
     "SubscriptionService",
+    "TemplateNameTakenError",
+    "TemplateNotFoundError",
+    "TemplateService",
     "TransactionAlreadyLinkedError",
     "TransactionNotFoundError",
     "TransactionRuleError",
