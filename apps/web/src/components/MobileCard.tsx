@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 /** One record in the narrow (card) view of a ResponsiveTable. Keep it to the same facts as the
  * desktop row: a title, the key figure on the right, a line of tags/meta, and the actions. */
 export default function MobileCard({
+	select,
 	leading,
 	primary,
 	secondary,
@@ -13,6 +14,8 @@ export default function MobileCard({
 	meta,
 	actions,
 }: {
+	/** A checkbox at the far left, when the list can be selected. */
+	select?: ReactNode;
 	/** A shaped icon tile at the left (see ShapeTile), the card's "media". */
 	leading?: ReactNode;
 	/** Main label (e.g. the vendor name). */
@@ -30,6 +33,7 @@ export default function MobileCard({
 }) {
 	return (
 		<Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5, p: 1.5 }}>
+			{select}
 			{leading}
 			<Box sx={{ flex: 1, minWidth: 0 }}>
 				<Stack direction="row" spacing={2} sx={{ justifyContent: "space-between" }}>

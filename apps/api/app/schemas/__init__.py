@@ -40,6 +40,10 @@ from app.schemas.tag import (
 )
 from app.schemas.template import TemplateCreate, TemplateResponse, TemplateUpdate
 from app.schemas.transaction import (
+    BulkIds,
+    BulkResult,
+    BulkSkipped,
+    BulkUpdate,
     CategoryTotal,
     CategoryTotals,
     SplitInput,
@@ -64,6 +68,10 @@ __all__ = [
     "BudgetLineUpdate",
     "BudgetResponse",
     "BudgetSettingsUpdate",
+    "BulkIds",
+    "BulkResult",
+    "BulkSkipped",
+    "BulkUpdate",
     "CategoryCreate",
     "CategoryMerge",
     "CategoryResponse",

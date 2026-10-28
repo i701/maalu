@@ -7,6 +7,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
+import Checkbox from "@mui/material/Checkbox";
 import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
 import TableCell from "@mui/material/TableCell";
@@ -16,6 +17,7 @@ import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { memo, useCallback, useState } from "react";
 import { z } from "zod";
 import ActiveFilters from "#/components/ActiveFilters";
+import BulkEditDialog from "#/components/BulkEditDialog";
 import ConfirmDelete from "#/components/ConfirmDelete";
 import EmptyState from "#/components/EmptyState";
 import ExportButton from "#/components/ExportButton";
@@ -23,6 +25,7 @@ import FiltersDrawer from "#/components/FiltersDrawer";
 import MakeSubscriptionDialog from "#/components/MakeSubscriptionDialog";
 import MobileCard from "#/components/MobileCard";
 import PageHeader from "#/components/PageHeader";
+import SelectionBar from "#/components/SelectionBar";
 import PendingOverlay from "#/components/PendingOverlay";
 import ResponsiveTable from "#/components/ResponsiveTable";
 import SearchField from "#/components/SearchField";
@@ -52,12 +55,15 @@ import {
 	pickFilterValues,
 	type TransactionFilterValues,
 } from "#/lib/transaction-filters";
+import { transactionCount } from "#/lib/bulk-message";
+import { type SelectionState, useSelection } from "#/lib/selection";
 import { unwrap } from "#/lib/unwrap";
 import { getAccountFn, listAccountsFn } from "#/server/accounts";
 import { listCurrenciesFn } from "#/server/currencies";
 import { listSubscriptionsFn } from "#/server/subscriptions";
 import { listTemplatesFn } from "#/server/templates";
 import {
+	bulkTrashFn,
 	deleteTransactionFn,
 	getCategoryTotalsFn,
 	getTransactionTotalsFn,
@@ -73,7 +79,10 @@ import {
 	PAYMENT_METHOD_LABELS,
 	PAYMENT_METHODS,
 	TRANSACTION_TYPES,
+	type Category,
+	type Tag,
 	type Transaction,
+	type Vendor,
 } from "#/types/api";
 
 /** Amounts are stored positive; the type decides the sign shown and the colour. */
@@ -332,6 +341,10 @@ function TxActions({
  * a filter control updates (the controls follow the URL instantly; the rows follow the loader). */
 const TransactionsTable = memo(function TransactionsTable({
 	items,
+	selected,
+	selectionState,
+	onToggle,
+	onToggleAll,
 	baseCurrency,
 	onConvert,
 	onDuplicate,
@@ -339,6 +352,10 @@ const TransactionsTable = memo(function TransactionsTable({
 	onDelete,
 }: {
 	items: Transaction[];
+	selected: ReadonlySet<string>;
+	selectionState: SelectionState;
+	onToggle: (id: string) => void;
+	onToggleAll: () => void;
 	baseCurrency: string;
 	onConvert: (t: Transaction) => void;
 	onDuplicate: (t: Transaction) => void;
@@ -352,6 +369,15 @@ const TransactionsTable = memo(function TransactionsTable({
 			minWidth={820}
 			head={
 				<TableRow>
+					<TableCell padding="checkbox">
+						<Checkbox
+							size="small"
+							checked={selectionState === "all"}
+							indeterminate={selectionState === "some"}
+							onChange={onToggleAll}
+							slotProps={{ input: { "aria-label": "Select all transactions on this page" } }}
+						/>
+					</TableCell>
 					<TableCell>Date</TableCell>
 					<TableCell>Details</TableCell>
 					<TableCell>Method</TableCell>
@@ -360,7 +386,15 @@ const TransactionsTable = memo(function TransactionsTable({
 				</TableRow>
 			}
 			renderRow={(t) => (
-				<TableRow hover>
+				<TableRow hover selected={selected.has(t.id)}>
+					<TableCell padding="checkbox">
+						<Checkbox
+							size="small"
+							checked={selected.has(t.id)}
+							onChange={() => onToggle(t.id)}
+							slotProps={{ input: { "aria-label": `Select ${txTitle(t)}` } }}
+						/>
+					</TableCell>
 					<TableCell sx={{ whiteSpace: "nowrap", color: "text.secondary" }}>
 						{formatDate(t.transaction_date)}
 					</TableCell>
@@ -409,6 +443,15 @@ const TransactionsTable = memo(function TransactionsTable({
 			)}
 			renderCard={(t) => (
 				<MobileCard
+					select={
+						<Checkbox
+							size="small"
+							checked={selected.has(t.id)}
+							onChange={() => onToggle(t.id)}
+							slotProps={{ input: { "aria-label": `Select ${txTitle(t)}` } }}
+							sx={{ ml: -0.75, mt: 0.5, alignSelf: "flex-start" }}
+						/>
+					}
 					leading={<TxTile type={t.type} />}
 					primary={
 						<Typography variant="body2" sx={{ fontWeight: 500 }}>
@@ -452,6 +495,94 @@ const TransactionsTable = memo(function TransactionsTable({
 		/>
 	);
 });
+
+/** The table with row selection: a bar for the selected rows, and the dialogs for what it offers. */
+function TransactionList({
+	items,
+	baseCurrency,
+	categories,
+	vendors,
+	tags,
+	onConvert,
+	onDuplicate,
+	onEdit,
+	onDelete,
+}: {
+	items: Transaction[];
+	baseCurrency: string;
+	categories: Category[];
+	vendors: Vendor[];
+	tags: Tag[];
+	onConvert: (t: Transaction) => void;
+	onDuplicate: (t: Transaction) => void;
+	onEdit: (t: Transaction) => void;
+	onDelete: (t: Transaction) => void;
+}) {
+	const selection = useSelection(items.map((t) => t.id));
+	// The ids the open dialog is about, fixed when it opened (the selection resets once rows move).
+	const [editing, setEditing] = useState<string[] | null>(null);
+	const [deleting, setDeleting] = useState<string[] | null>(null);
+
+	return (
+		<>
+			<SelectionBar count={selection.selectedIds.length} onClear={selection.clear}>
+				<Button
+					size="small"
+					color="inherit"
+					startIcon={<EditOutlinedIcon />}
+					onClick={() => setEditing(selection.selectedIds)}
+				>
+					Edit
+				</Button>
+				<Button
+					size="small"
+					color="inherit"
+					startIcon={<DeleteOutlineIcon />}
+					onClick={() => setDeleting(selection.selectedIds)}
+				>
+					Move to trash
+				</Button>
+			</SelectionBar>
+			<TransactionsTable
+				items={items}
+				baseCurrency={baseCurrency}
+				selected={selection.selected}
+				selectionState={selection.state}
+				onToggle={selection.toggle}
+				onToggleAll={selection.toggleAll}
+				onConvert={onConvert}
+				onDuplicate={onDuplicate}
+				onEdit={onEdit}
+				onDelete={onDelete}
+			/>
+			{editing && (
+				<BulkEditDialog
+					ids={editing}
+					categories={categories}
+					vendors={vendors}
+					tags={tags}
+					onClose={() => setEditing(null)}
+					onDone={selection.clear}
+				/>
+			)}
+			{deleting && (
+				<ConfirmDelete
+					title="Move to trash"
+					message={`Move ${transactionCount(deleting.length)} to the trash? They stop counting toward your totals, and you can restore them from the Trash page.`}
+					confirmLabel="Move to trash"
+					doneMessage={`Moved ${transactionCount(deleting.length)} to the trash`}
+					onConfirm={async () => {
+						const res = await bulkTrashFn({ data: { ids: deleting } });
+						if (!res.ok) return res;
+						selection.clear();
+						return { ok: true as const, data: undefined };
+					}}
+					onClose={() => setDeleting(null)}
+				/>
+			)}
+		</>
+	);
+}
 
 /** The frosted pills in the page hero: how many transactions, and how many filters are on. */
 function heroStats(total: number, activeCount: number) {
@@ -643,9 +774,12 @@ function TransactionsPage() {
 											: "No transactions yet. Add your first one."}
 									</EmptyState>
 								) : (
-									<TransactionsTable
+									<TransactionList
 										items={items}
 										baseCurrency={user.base_currency}
+										categories={allCategories}
+										vendors={vendors}
+										tags={allTags}
 										onConvert={setConverting}
 										onDuplicate={duplicate}
 										onEdit={setEditing}

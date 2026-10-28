@@ -643,6 +643,87 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/transactions/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Bulk Update Transactions
+         * @description Change the same things on up to 500 transactions. Where a field does not apply (a category
+         *     on a transfer), that transaction is left alone and listed in `skipped`.
+         */
+        patch: operations["bulk_update_transactions_api_v1_transactions_bulk_patch"];
+        trace?: never;
+    };
+    "/api/v1/transactions/bulk/purge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bulk Purge Transactions
+         * @description Delete transactions for good. Only ones already in the trash.
+         */
+        post: operations["bulk_purge_transactions_api_v1_transactions_bulk_purge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/transactions/bulk/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bulk Restore Transactions
+         * @description Bring transactions back from the trash.
+         */
+        post: operations["bulk_restore_transactions_api_v1_transactions_bulk_restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/transactions/bulk/trash": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bulk Trash Transactions
+         * @description Move up to 500 transactions to the trash.
+         */
+        post: operations["bulk_trash_transactions_api_v1_transactions_bulk_trash_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/transactions/categories": {
         parameters: {
             query?: never;
@@ -1216,6 +1297,67 @@ export interface components {
              * @enum {string}
              */
             status: "ok" | "warning" | "over";
+        };
+        /** BulkIds */
+        BulkIds: {
+            /** Ids */
+            ids: string[];
+        };
+        /** BulkResult */
+        BulkResult: {
+            /**
+             * Skipped
+             * @description The ones that were not, with the reason
+             */
+            skipped: components["schemas"]["BulkSkipped"][];
+            /**
+             * Updated
+             * @description How many transactions were changed
+             */
+            updated: number;
+        };
+        /** BulkSkipped */
+        BulkSkipped: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Reason */
+            reason: string;
+        };
+        /**
+         * BulkUpdate
+         * @description Change the same things on many transactions. Only the fields you send change.
+         *
+         *     What does not apply to a transaction is left alone: transfers have no category, vendor or
+         *     payment method, and a split transaction takes its category from its items. A transaction
+         *     where nothing could be applied is reported in `skipped`.
+         */
+        BulkUpdate: {
+            /**
+             * Add Tags
+             * @description Tags to add, by name
+             */
+            add_tags?: string[];
+            /**
+             * Category
+             * @description By name: found or created
+             */
+            category?: string | null;
+            /** Ids */
+            ids: string[];
+            payment_method?: components["schemas"]["PaymentMethod"] | null;
+            /**
+             * Remove Tags
+             * @description Tags to remove, by name
+             */
+            remove_tags?: string[];
+            /**
+             * Vendor Name
+             * @description By name: found or created
+             */
+            vendor_name?: string | null;
         };
         /** CategoryCreate */
         CategoryCreate: {
@@ -3922,6 +4064,138 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TransactionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bulk_update_transactions_api_v1_transactions_bulk_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bulk_purge_transactions_api_v1_transactions_bulk_purge_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkIds"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bulk_restore_transactions_api_v1_transactions_bulk_restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkIds"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bulk_trash_transactions_api_v1_transactions_bulk_trash_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkIds"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkResult"];
                 };
             };
             /** @description Validation Error */

@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
 	PAYMENT_METHODS,
 	TRANSACTION_TYPES,
+	type BulkResult,
 	type CategoryTotals,
 	type Transaction,
 	type TransactionTotals,
@@ -201,6 +202,43 @@ export const updateTransactionFn = createServerFn({ method: "POST" })
 export const deleteTransactionFn = createServerFn({ method: "POST" })
 	.validator(z.object({ id: z.uuid() }))
 	.handler(async ({ data }) => apiRequest<void>(`/transactions/${data.id}`, { method: "DELETE" }));
+
+const bulkIds = z.object({ ids: z.array(z.uuid()).min(1).max(500) });
+
+/** Move many transactions to the trash. */
+export const bulkTrashFn = createServerFn({ method: "POST" })
+	.validator(bulkIds)
+	.handler(async ({ data }) =>
+		apiRequest<BulkResult>("/transactions/bulk/trash", { method: "POST", body: data }),
+	);
+
+export const bulkRestoreFn = createServerFn({ method: "POST" })
+	.validator(bulkIds)
+	.handler(async ({ data }) =>
+		apiRequest<BulkResult>("/transactions/bulk/restore", { method: "POST", body: data }),
+	);
+
+/** Delete many for good: only ones already in the trash. */
+export const bulkPurgeFn = createServerFn({ method: "POST" })
+	.validator(bulkIds)
+	.handler(async ({ data }) =>
+		apiRequest<BulkResult>("/transactions/bulk/purge", { method: "POST", body: data }),
+	);
+
+/** Change the same things on many transactions; only the fields sent change. */
+export const bulkUpdateFn = createServerFn({ method: "POST" })
+	.validator(
+		bulkIds.extend({
+			category: z.string().trim().min(1).max(100).optional(),
+			vendor_name: z.string().trim().min(1).max(200).optional(),
+			payment_method: z.enum(PAYMENT_METHODS).optional(),
+			add_tags: z.array(z.string().trim().min(1).max(50)).max(10).optional(),
+			remove_tags: z.array(z.string().trim().min(1).max(50)).max(10).optional(),
+		}),
+	)
+	.handler(async ({ data }) =>
+		apiRequest<BulkResult>("/transactions/bulk", { method: "PATCH", body: data }),
+	);
 
 export const listTrashFn = createServerFn({ method: "GET" })
 	.validator(z.object({ page: z.number().int().min(1), pageSize: z.number().int().min(1) }))

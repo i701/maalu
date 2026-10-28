@@ -19,6 +19,9 @@ from app.models import (
     Vendor,
 )
 from app.schemas import (
+    BulkResult,
+    BulkSkipped,
+    BulkUpdate,
     CategoryTotal,
     CategoryTotals,
     SplitInput,
@@ -28,7 +31,7 @@ from app.schemas import (
     TransactionUpdate,
 )
 from app.services.account import AccountCurrencyMismatchError, AccountNotFoundError
-from app.services.category import CategoryService
+from app.services.category import CategoryService, normalize_name
 from app.services.errors import TransactionRuleError
 from app.services.money import BASE_AMOUNT_QUANTUM, price_in_base
 from app.services.subscription import SubscriptionNotFoundError
@@ -48,6 +51,15 @@ MONEY_KEYS = {
     "to_account_id",
     "to_amount",
 }
+
+
+def _not_applicable(t: Transaction, data: BulkUpdate) -> str:
+    """Why nothing in a bulk update could be applied to this transaction."""
+    if t.type is TransactionType.TRANSFER:
+        return "A transfer has no category, vendor or payment method"
+    if data.category and t.splits and not (data.vendor_name or data.payment_method):
+        return "A split transaction takes its category from its items"
+    return "Nothing to change"
 
 
 class TransactionService:
@@ -833,6 +845,87 @@ class TransactionService:
         transaction.deleted_at = None
         await self.db.flush()
         return transaction
+
+    async def _bulk_rows(
+        self, user_id: uuid.UUID, ids: list[uuid.UUID], *, trashed: bool
+    ) -> tuple[list[Transaction], list[BulkSkipped]]:
+        """The transactions with these ids that are live (or in the trash), and a "not found"
+        entry for each id that is neither yours nor in that state."""
+        wanted = list(dict.fromkeys(ids))  # without repeats, in order
+        stmt = select(Transaction).where(
+            Transaction.user_id == user_id,
+            Transaction.id.in_(wanted),
+            Transaction.deleted_at.is_not(None) if trashed else Transaction.deleted_at.is_(None),
+        )
+        rows = {t.id: t for t in (await self.db.scalars(stmt)).all()}
+        missing = [
+            BulkSkipped(id=i, reason="Not found" + (" in the trash" if trashed else ""))
+            for i in wanted
+            if i not in rows
+        ]
+        return [rows[i] for i in wanted if i in rows], missing
+
+    async def bulk_trash(self, user_id: uuid.UUID, ids: list[uuid.UUID]) -> BulkResult:
+        rows, skipped = await self._bulk_rows(user_id, ids, trashed=False)
+        now = datetime.now(UTC)
+        for t in rows:
+            t.deleted_at = now
+        await self.db.flush()
+        return BulkResult(updated=len(rows), skipped=skipped)
+
+    async def bulk_restore(self, user_id: uuid.UUID, ids: list[uuid.UUID]) -> BulkResult:
+        rows, skipped = await self._bulk_rows(user_id, ids, trashed=True)
+        for t in rows:
+            t.deleted_at = None
+        await self.db.flush()
+        return BulkResult(updated=len(rows), skipped=skipped)
+
+    async def bulk_purge(self, user_id: uuid.UUID, ids: list[uuid.UUID]) -> BulkResult:
+        """Delete for good: only what is already in the trash."""
+        rows, skipped = await self._bulk_rows(user_id, ids, trashed=True)
+        for t in rows:
+            await self.db.delete(t)
+        await self.db.flush()
+        return BulkResult(updated=len(rows), skipped=skipped)
+
+    async def bulk_update(self, user_id: uuid.UUID, data: BulkUpdate) -> BulkResult:
+        rows, skipped = await self._bulk_rows(user_id, data.ids, trashed=False)
+        category = (
+            await self.categories.get_or_create(user_id, data.category) if data.category else None
+        )
+        vendor = (
+            await self.vendors.get_or_create(user_id, data.vendor_name)
+            if data.vendor_name
+            else None
+        )
+        to_add = await self.tags.resolve_many(user_id, data.add_tags)
+        to_remove = {normalize_name(n) for n in data.remove_tags}
+
+        updated = 0
+        for t in rows:
+            applied = False
+            transfer = t.type is TransactionType.TRANSFER
+            if not transfer:
+                if category is not None and not t.splits:
+                    t.category_ref = category
+                    applied = True
+                if vendor is not None:
+                    t.vendor = vendor
+                    applied = True
+                if data.payment_method is not None:
+                    t.payment_method = data.payment_method
+                    applied = True
+            if to_add or to_remove:
+                kept = [x for x in t.tags if x.normalized_name not in to_remove]
+                have = {x.id for x in kept}
+                t.tags = [*kept, *(x for x in to_add if x.id not in have)]
+                applied = True
+            if applied:
+                updated += 1
+            else:
+                skipped.append(BulkSkipped(id=t.id, reason=_not_applicable(t, data)))
+        await self.db.flush()
+        return BulkResult(updated=updated, skipped=skipped)
 
     async def delete(self, transaction: Transaction) -> None:
         """Delete for good (used from the trash)."""

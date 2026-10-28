@@ -10,7 +10,7 @@ from app.schemas.account import AccountRef
 from app.schemas.subscription import SubscriptionRef
 from app.schemas.tag import TagNames, TagRef
 from app.schemas.types import CurrencyCode, ExchangeRate
-from app.schemas.vendor import VendorRef, VendorResponse
+from app.schemas.vendor import VendorName, VendorRef, VendorResponse
 
 # Decimal in, Decimal out: JSON serialises as a string, so no float rounding on the wire.
 # Always positive: `type` decides whether money comes in or goes out.
@@ -190,6 +190,51 @@ class TransactionResponse(BaseModel):
     deleted_at: datetime | None = Field(
         description="When it was moved to the trash; null for a live transaction"
     )
+
+
+# The most transactions one bulk request can touch.
+MAX_BULK = 500
+
+
+class BulkIds(BaseModel):
+    ids: list[uuid.UUID] = Field(min_length=1, max_length=MAX_BULK)
+
+
+class BulkUpdate(BulkIds):
+    """Change the same things on many transactions. Only the fields you send change.
+
+    What does not apply to a transaction is left alone: transfers have no category, vendor or
+    payment method, and a split transaction takes its category from its items. A transaction
+    where nothing could be applied is reported in `skipped`.
+    """
+
+    category: Category | None = Field(default=None, description="By name: found or created")
+    vendor_name: VendorName | None = Field(default=None, description="By name: found or created")
+    payment_method: PaymentMethod | None = None
+    add_tags: TagNames = Field(default_factory=list, description="Tags to add, by name")
+    remove_tags: TagNames = Field(default_factory=list, description="Tags to remove, by name")
+
+    @model_validator(mode="after")
+    def _something_to_change(self):
+        if not (
+            self.category
+            or self.vendor_name
+            or self.payment_method
+            or self.add_tags
+            or self.remove_tags
+        ):
+            raise ValueError("Choose something to change")
+        return self
+
+
+class BulkSkipped(BaseModel):
+    id: uuid.UUID
+    reason: str
+
+
+class BulkResult(BaseModel):
+    updated: int = Field(description="How many transactions were changed")
+    skipped: list[BulkSkipped] = Field(description="The ones that were not, with the reason")
 
 
 class CategoryTotal(BaseModel):

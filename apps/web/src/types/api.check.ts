@@ -11,6 +11,7 @@ import type {
 	AccountRef,
 	AccountSummary,
 	BalanceTrend,
+	BulkResult,
 	Budget,
 	BudgetLine,
 	Category,
@@ -69,5 +70,6 @@ export type ApiShapes = [
 	Sends<MarketRate, Api["MarketRateResponse"]>,
 	Sends<TransactionTemplate, Api["TemplateResponse"]>,
 	Sends<Tag, Api["TagResponse"]>,
+	Sends<BulkResult, Api["BulkResult"]>,
 	Sends<TagRef, Api["TagRef"]>,
 ];

@@ -219,6 +219,12 @@ export type Transaction = {
 	deleted_at: string | null;
 };
 
+/** What a bulk action did: how many it changed, and the ones it left alone with the reason. */
+export type BulkResult = {
+	updated: number;
+	skipped: { id: string; reason: string }[];
+};
+
 /** A label that cuts across categories ("Trip"). The colour is one of the accent names, assigned
  * automatically. */
 export type TagRef = { id: string; name: string; color: string };

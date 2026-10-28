@@ -10,6 +10,9 @@ from app.enums import PaymentMethod, TransactionType
 from app.export import XLSX_MEDIA_TYPE
 from app.pagination import MAX_LIMIT, PageDep, set_total
 from app.schemas import (
+    BulkIds,
+    BulkResult,
+    BulkUpdate,
     CategoryTotals,
     TagMatch,
     TransactionCreate,
@@ -327,6 +330,40 @@ async def category_totals(
         date_from=date_from,
         date_to=date_to,
     )
+
+
+# The bulk routes are declared before "/{transaction_id}" so "bulk" isn't parsed as an id.
+@router.patch("/bulk", response_model=BulkResult)
+async def bulk_update_transactions(
+    data: BulkUpdate, user_id: CurrentUserId, service: TransactionServiceDep
+):
+    """Change the same things on up to 500 transactions. Where a field does not apply (a category
+    on a transfer), that transaction is left alone and listed in `skipped`."""
+    return await service.bulk_update(user_id, data)
+
+
+@router.post("/bulk/trash", response_model=BulkResult)
+async def bulk_trash_transactions(
+    data: BulkIds, user_id: CurrentUserId, service: TransactionServiceDep
+):
+    """Move up to 500 transactions to the trash."""
+    return await service.bulk_trash(user_id, data.ids)
+
+
+@router.post("/bulk/restore", response_model=BulkResult)
+async def bulk_restore_transactions(
+    data: BulkIds, user_id: CurrentUserId, service: TransactionServiceDep
+):
+    """Bring transactions back from the trash."""
+    return await service.bulk_restore(user_id, data.ids)
+
+
+@router.post("/bulk/purge", response_model=BulkResult)
+async def bulk_purge_transactions(
+    data: BulkIds, user_id: CurrentUserId, service: TransactionServiceDep
+):
+    """Delete transactions for good. Only ones already in the trash."""
+    return await service.bulk_purge(user_id, data.ids)
 
 
 # Declared before "/{transaction_id}" so "trash" isn't parsed as an id.
