@@ -10,6 +10,7 @@ from app.models import User
 from app.security import decode_access_token
 from app.services import (
     AccountService,
+    BudgetService,
     CategoryService,
     SubscriptionService,
     TransactionService,
@@ -34,6 +35,10 @@ def get_vendor_service(db: DbSession) -> VendorService:
     return VendorService(db)
 
 
+def get_budget_service(db: DbSession) -> BudgetService:
+    return BudgetService(db)
+
+
 def get_category_service(db: DbSession) -> CategoryService:
     return CategoryService(db)
 
@@ -49,6 +54,7 @@ def get_subscription_service(db: DbSession) -> SubscriptionService:
 UserServiceDep = Annotated[UserService, Depends(get_user_service)]
 TransactionServiceDep = Annotated[TransactionService, Depends(get_transaction_service)]
 VendorServiceDep = Annotated[VendorService, Depends(get_vendor_service)]
+BudgetServiceDep = Annotated[BudgetService, Depends(get_budget_service)]
 CategoryServiceDep = Annotated[CategoryService, Depends(get_category_service)]
 AccountServiceDep = Annotated[AccountService, Depends(get_account_service)]
 SubscriptionServiceDep = Annotated[SubscriptionService, Depends(get_subscription_service)]

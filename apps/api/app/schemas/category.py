@@ -33,3 +33,4 @@ class CategoryResponse(BaseModel):
         default=0, description="Transactions that are in this category, or have an item that is"
     )
     subscription_count: int = 0
+    budget_line_count: int = 0

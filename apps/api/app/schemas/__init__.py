@@ -5,6 +5,13 @@ from app.schemas.account import (
     AccountSummary,
     AccountUpdate,
 )
+from app.schemas.budget import (
+    BudgetLineCreate,
+    BudgetLineResponse,
+    BudgetLineUpdate,
+    BudgetResponse,
+    BudgetSettingsUpdate,
+)
 from app.schemas.category import (
     CategoryCreate,
     CategoryMerge,
@@ -38,6 +45,11 @@ __all__ = [
     "AccountResponse",
     "AccountSummary",
     "AccountUpdate",
+    "BudgetLineCreate",
+    "BudgetLineResponse",
+    "BudgetLineUpdate",
+    "BudgetResponse",
+    "BudgetSettingsUpdate",
     "CategoryCreate",
     "CategoryMerge",
     "CategoryResponse",

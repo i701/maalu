@@ -1,10 +1,17 @@
 import uuid
 
-from sqlalchemy import func, select, union_all, update
+from sqlalchemy import delete, func, select, union_all, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Category, Subscription, Transaction, TransactionSplit
+from app.models import (
+    BudgetLine,
+    BudgetLineCategory,
+    Category,
+    Subscription,
+    Transaction,
+    TransactionSplit,
+)
 from app.schemas import CategoryResponse
 
 
@@ -97,9 +104,9 @@ class CategoryService:
             raise CategoryNameTakenError from exc
         return category
 
-    async def usage(self, user_id: uuid.UUID) -> dict[uuid.UUID, tuple[int, int]]:
-        """(transactions, subscriptions) per category id. A transaction counts once for each
-        category it touches: its own, or any of its items'."""
+    async def usage(self, user_id: uuid.UUID) -> dict[uuid.UUID, tuple[int, int, int]]:
+        """(transactions, subscriptions, budget lines) per category id. A transaction counts once
+        for each category it touches: its own, or any of its items'."""
         touches = union_all(
             select(Transaction.id.label("tid"), Transaction.category_id.label("cid")).where(
                 Transaction.user_id == user_id
@@ -123,8 +130,18 @@ class CategoryService:
                 )
             ).all()
         )
-        ids = set(transactions) | set(subscriptions)
-        return {i: (transactions.get(i, 0), subscriptions.get(i, 0)) for i in ids}
+        lines = dict(
+            (
+                await self.db.execute(
+                    select(BudgetLineCategory.category_id, func.count())
+                    .join(BudgetLine, BudgetLine.id == BudgetLineCategory.line_id)
+                    .where(BudgetLine.user_id == user_id)
+                    .group_by(BudgetLineCategory.category_id)
+                )
+            ).all()
+        )
+        ids = set(transactions) | set(subscriptions) | set(lines)
+        return {i: (transactions.get(i, 0), subscriptions.get(i, 0), lines.get(i, 0)) for i in ids}
 
     async def present(
         self, user_id: uuid.UUID, categories: list[Category]
@@ -133,7 +150,7 @@ class CategoryService:
         usage = await self.usage(user_id)
         out = []
         for c in categories:
-            tx, subs = usage.get(c.id, (0, 0))
+            tx, subs, budget_lines = usage.get(c.id, (0, 0, 0))
             out.append(
                 CategoryResponse(
                     id=c.id,
@@ -141,6 +158,7 @@ class CategoryService:
                     created_at=c.created_at,
                     transaction_count=tx,
                     subscription_count=subs,
+                    budget_line_count=budget_lines,
                 )
             )
         return out
@@ -153,13 +171,29 @@ class CategoryService:
             await self.db.execute(
                 update(model).where(model.category_id == source.id).values(category_id=target.id)
             )
+        # A budget line holding both categories would end up with the target twice: drop the
+        # source's link there, move the others.
+        already = select(BudgetLineCategory.line_id).where(
+            BudgetLineCategory.category_id == target.id
+        )
+        await self.db.execute(
+            delete(BudgetLineCategory).where(
+                BudgetLineCategory.category_id == source.id,
+                BudgetLineCategory.line_id.in_(already),
+            )
+        )
+        await self.db.execute(
+            update(BudgetLineCategory)
+            .where(BudgetLineCategory.category_id == source.id)
+            .values(category_id=target.id)
+        )
         await self.db.delete(source)
         await self.db.flush()
         return target
 
     async def delete(self, user_id: uuid.UUID, category: Category) -> None:
-        tx, subs = (await self.usage(user_id)).get(category.id, (0, 0))
-        if tx or subs:
+        used = (await self.usage(user_id)).get(category.id, (0, 0, 0))
+        if any(used):
             raise CategoryInUseError
         await self.db.delete(category)
         await self.db.flush()

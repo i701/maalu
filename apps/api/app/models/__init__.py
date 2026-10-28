@@ -1,5 +1,6 @@
 from app.models.account import Account
 from app.models.base import Base
+from app.models.budget import Budget, BudgetLine, BudgetLineCategory
 from app.models.category import Category
 from app.models.subscription import Subscription
 from app.models.transaction import Transaction, TransactionSplit
@@ -9,6 +10,9 @@ from app.models.vendor import Vendor
 __all__ = [
     "Account",
     "Base",
+    "Budget",
+    "BudgetLine",
+    "BudgetLineCategory",
     "Category",
     "Subscription",
     "Transaction",
