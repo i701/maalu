@@ -65,6 +65,8 @@ export default function TransactionForm({
 	const notify = useNotify();
 	const [localError, setLocalError] = useState<string | null>(null);
 	const splits = useSplits(transaction);
+	// The day the form is for: the exchange-rate suggestion follows it.
+	const [date, setDate] = useState(transaction?.transaction_date ?? today());
 
 	const initial = initialValues(transaction, baseCurrency);
 	const [type, setType] = useState<TransactionType>(initial.type);
@@ -193,6 +195,7 @@ export default function TransactionForm({
 						transaction={transaction}
 						switched={switched}
 						splits={splits}
+						date={date}
 						categories={categories}
 					/>
 				)}
@@ -202,7 +205,8 @@ export default function TransactionForm({
 						label="Date"
 						name="transaction_date"
 						type="date"
-						defaultValue={transaction?.transaction_date ?? today()}
+						value={date}
+						onChange={(e) => setDate(e.target.value)}
 						required
 						slotProps={{ inputLabel: { shrink: true } }}
 					/>

@@ -14,6 +14,7 @@ import {
 } from "#/types/api";
 import CategoryField from "../CategoryField";
 import CurrencyField from "../CurrencyField";
+import RateField from "../RateField";
 import { Cell, RevealCell } from "./Cells";
 import SplitEditor from "./SplitEditor";
 import type { SplitsState } from "./useSplits";
@@ -37,6 +38,7 @@ export default function OrdinaryFields({
 	switched,
 	splits,
 	categories,
+	date,
 }: {
 	type: TransactionType;
 	accounts: Account[];
@@ -55,6 +57,8 @@ export default function OrdinaryFields({
 	switched: boolean;
 	splits: SplitsState;
 	categories: Category[];
+	/** The transaction date, which the suggested exchange rate is looked up for */
+	date: string;
 }) {
 	const account = accounts.find((a) => a.id === accountId) ?? null;
 
@@ -119,16 +123,13 @@ export default function OrdinaryFields({
 
 			<Cell size={{ xs: 12, sm: 6 }} fadeIn={switched}>
 				{foreign ? (
-					<TextField
+					<RateField
 						key={`rate-${effectiveCurrency}`}
+						from={effectiveCurrency}
+						to={baseCurrency}
+						on={date}
 						label={`Rate: 1 ${effectiveCurrency} = ? ${baseCurrency}`}
-						name="exchange_rate"
-						defaultValue={
-							transaction?.currency === effectiveCurrency ? transaction.exchange_rate : ""
-						}
-						placeholder="15.42"
-						required
-						slotProps={{ htmlInput: { inputMode: "decimal" } }}
+						initial={transaction?.currency === effectiveCurrency ? transaction.exchange_rate : ""}
 					/>
 				) : (
 					<TextField

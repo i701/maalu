@@ -304,3 +304,16 @@ export type MonthlyStats = { currency: string; months: MonthlyPoint[] };
 /** What the accounts were worth at the end of a day, in the base currency. */
 export type BalancePoint = { date: string; assets: string; liabilities: string; total: string };
 export type BalanceTrend = { currency: string; points: BalancePoint[] };
+
+/** A market exchange rate offered as a suggestion; the rate you save is the one you confirm. */
+export type MarketRate = {
+	base: string;
+	quote: string;
+	/** Units of `quote` per 1 unit of `base`, as a decimal string */
+	rate: string;
+	/** The day the rate is for; earlier than `requested_date` when that day had no data */
+	rate_date: string;
+	requested_date: string;
+	exact: boolean;
+	source: string;
+};

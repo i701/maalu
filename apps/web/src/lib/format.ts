@@ -61,3 +61,14 @@ export function sumDecimals(values: string[]): string {
 	const fraction = digits.slice(-SCALE).replace(/0+$/, "").padEnd(2, "0");
 	return `${negative ? "-" : ""}${whole}.${fraction}`;
 }
+
+/** Today's date as YYYY-MM-DD in the user's own time zone (not UTC, which can be a day off). */
+export function todayIso(): string {
+	const d = new Date();
+	return new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
+}
+
+/** "15.39920000" -> "15.3992": a rate without its trailing zeros. */
+export function trimRate(rate: string): string {
+	return rate.includes(".") ? rate.replace(/0+$/, "").replace(/\.$/, "") : rate;
+}

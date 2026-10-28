@@ -2,12 +2,14 @@ import Grid from "@mui/material/Grid";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import { useState } from "react";
+import { todayIso } from "#/lib/format";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
 import { createAccountFn, updateAccountFn } from "#/server/accounts";
 import { ACCOUNT_GROUPS, ACCOUNT_GROUP_LABELS, type Account, type AccountGroup } from "#/types/api";
 import CurrencyChips from "./CurrencyChips";
 import FormDialog from "./FormDialog";
+import RateField from "./RateField";
 import { useNotify } from "./Notify";
 
 export default function AccountForm({
@@ -122,15 +124,14 @@ export default function AccountForm({
 
 				{foreign && (
 					<Grid size={12}>
-						<TextField
-							key="rate-input"
+						<RateField
+							key={`rate-${currency}`}
+							from={currency}
+							to={baseCurrency}
+							on={todayIso()}
 							label={`Rate: 1 ${currency} = ? ${baseCurrency}`}
-							name="exchange_rate"
-							defaultValue={account?.currency === currency ? account.exchange_rate : ""}
-							placeholder="15.42"
-							helperText="Enter your own rate. Used to value this account in your base currency."
-							required
-							slotProps={{ htmlInput: { inputMode: "decimal" } }}
+							initial={account?.currency === currency ? account.exchange_rate : ""}
+							hint="Used to value this account in your base currency."
 						/>
 					</Grid>
 				)}

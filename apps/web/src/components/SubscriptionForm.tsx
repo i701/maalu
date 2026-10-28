@@ -22,6 +22,7 @@ import CategoryField from "./CategoryField";
 import CurrencyField from "./CurrencyField";
 import FormDialog from "./FormDialog";
 import { useNotify } from "./Notify";
+import RateField from "./RateField";
 import VendorField from "./VendorField";
 
 const today = () => {
@@ -49,6 +50,8 @@ export default function SubscriptionForm({
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
 	const [currency, setCurrency] = useState(subscription?.currency ?? baseCurrency);
+	// The first billing date: the exchange-rate suggestion follows it.
+	const [startDate, setStartDate] = useState(subscription?.start_date ?? today());
 	const foreign = currency.length === 3 && currency.toUpperCase() !== baseCurrency;
 
 	async function submit(e: React.FormEvent<HTMLFormElement>) {
@@ -142,15 +145,13 @@ export default function SubscriptionForm({
 
 				{foreign && (
 					<Grid size={12}>
-						<TextField
-							key="rate-input"
+						<RateField
+							key={`rate-${currency}`}
+							from={currency}
+							to={baseCurrency}
+							on={startDate}
 							label={`Rate: 1 ${currency} = ? ${baseCurrency}`}
-							name="exchange_rate"
-							defaultValue={subscription?.currency === currency ? subscription.exchange_rate : ""}
-							placeholder="15.42"
-							helperText="Enter your own rate"
-							required
-							slotProps={{ htmlInput: { inputMode: "decimal" } }}
+							initial={subscription?.currency === currency ? subscription.exchange_rate : ""}
 						/>
 					</Grid>
 				)}
@@ -186,7 +187,8 @@ export default function SubscriptionForm({
 						label="First billing date"
 						name="start_date"
 						type="date"
-						defaultValue={subscription?.start_date ?? today()}
+						value={startDate}
+						onChange={(e) => setStartDate(e.target.value)}
 						helperText="Anchors the schedule, e.g. the 1st of each month"
 						required
 						slotProps={{ inputLabel: { shrink: true } }}
