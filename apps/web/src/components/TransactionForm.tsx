@@ -24,6 +24,7 @@ import VendorField from "./VendorField";
 import { Cell, RevealCell } from "./transaction-form/Cells";
 import OrdinaryFields from "./transaction-form/OrdinaryFields";
 import TransferFields from "./transaction-form/TransferFields";
+import { warningAfterExpense } from "./transaction-form/budget-warning";
 import { useSplits } from "./transaction-form/useSplits";
 import {
 	buildTransactionRequest,
@@ -103,7 +104,8 @@ export default function TransactionForm({
 
 	async function submit(e: FormEvent<HTMLFormElement>) {
 		e.preventDefault();
-		const request = buildTransactionRequest(new FormData(e.currentTarget), {
+		const form = new FormData(e.currentTarget); // read now: the event is gone after an await
+		const request = buildTransactionRequest(form, {
 			type,
 			transaction,
 			accountId,
@@ -117,7 +119,20 @@ export default function TransactionForm({
 		if ("error" in request) return setLocalError(request.error);
 		setLocalError(null);
 		if (await run(request.send)) {
-			notify(request.success);
+			// An expense may have pushed a budget limit close or over: say so in the same message.
+			const warning =
+				type === "expense"
+					? await warningAfterExpense({
+							date: String(form.get("transaction_date") ?? ""),
+							categories: splits.enabled
+								? splits.rows.map((r) => r.category)
+								: [String(form.get("category") ?? "")],
+						})
+					: null;
+			notify(
+				warning ? `${request.success}. ${warning}` : request.success,
+				warning ? "warning" : "success",
+			);
 			sheet.close();
 		}
 	}

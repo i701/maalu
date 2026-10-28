@@ -13,7 +13,8 @@ import {
 	useState,
 } from "react";
 
-type Notify = (message: string, severity?: "success" | "error") => void;
+type Severity = "success" | "error" | "warning";
+type Notify = (message: string, severity?: Severity) => void;
 
 /** Slides up from the bottom edge on the default spatial spring (and back down on exit). */
 function SlideUp(props: SlideProps) {
@@ -26,6 +27,12 @@ function SlideUp(props: SlideProps) {
 	);
 }
 
+const ICON: Record<Severity, { name: string; color: string }> = {
+	success: { name: "check", color: "var(--md-sys-color-inverse-primary)" },
+	error: { name: "close", color: "var(--md-sys-color-error)" },
+	warning: { name: "warning", color: "#facc15" },
+};
+
 const NotifyContext = createContext<Notify>(() => {});
 
 export const useNotify = () => useContext(NotifyContext);
@@ -33,7 +40,7 @@ export const useNotify = () => useContext(NotifyContext);
 export function NotifyProvider({ children }: { children: ReactNode }) {
 	const [state, setState] = useState<{
 		message: string;
-		severity: "success" | "error";
+		severity: Severity;
 		open: boolean;
 	}>({ message: "", severity: "success", open: false });
 
@@ -47,7 +54,8 @@ export function NotifyProvider({ children }: { children: ReactNode }) {
 			{children}
 			<Snackbar
 				open={state.open}
-				autoHideDuration={4000}
+				// a warning carries information worth reading, so it stays a little longer
+				autoHideDuration={state.severity === "warning" ? 7000 : 4000}
 				onClose={(_, reason) => reason !== "clickaway" && setState((s) => ({ ...s, open: false }))}
 				anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
 				// Clear the bottom navigation bar.
@@ -67,15 +75,10 @@ export function NotifyProvider({ children }: { children: ReactNode }) {
 					message={
 						<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
 							<Symbol
-								name={state.severity === "error" ? "close" : "check"}
+								name={ICON[state.severity].name}
 								size={20}
 								filled
-								sx={{
-									color:
-										state.severity === "error"
-											? "var(--md-sys-color-error)"
-											: "var(--md-sys-color-inverse-primary)",
-								}}
+								sx={{ color: ICON[state.severity].color }}
 							/>
 							{state.message}
 						</Box>

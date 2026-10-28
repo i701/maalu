@@ -34,6 +34,7 @@ import TableToolbar from "#/components/TableToolbar";
 import TransactionFilters from "#/components/TransactionFilters";
 import TransactionForm from "#/components/TransactionForm";
 import TransactionTotals from "#/components/TransactionTotals";
+import BudgetAlert from "#/components/BudgetAlert";
 import CategoryBreakdown from "#/components/CategoryBreakdown";
 import { formatDate, formatMoney } from "#/lib/format";
 import { PAYMENT_ACCENT, TRANSFER_ACCENT } from "#/lib/accents";
@@ -57,6 +58,7 @@ import {
 	getTransactionTotalsFn,
 	listTransactionsFn,
 } from "#/server/transactions";
+import { getBudgetFn } from "#/server/budget";
 import { getCategoryFn, listCategoriesFn } from "#/server/categories";
 import { getVendorFn, listVendorsFn } from "#/server/vendors";
 import {
@@ -133,6 +135,7 @@ export const Route = createFileRoute("/_protected/transactions")({
 			vendor,
 			category,
 			account,
+			budget,
 		] = await Promise.all([
 			listTransactionsFn({ data: deps }),
 			listVendorsFn(),
@@ -146,6 +149,8 @@ export const Route = createFileRoute("/_protected/transactions")({
 			deps.vendor_id ? getVendorFn({ data: { id: deps.vendor_id } }) : Promise.resolve(null),
 			deps.category_id ? getCategoryFn({ data: { id: deps.category_id } }) : Promise.resolve(null),
 			deps.account_id ? getAccountFn({ data: { id: deps.account_id } }) : Promise.resolve(null),
+			// for the "limits needing attention" strip; the page works without it
+			getBudgetFn({ data: {} }),
 		]);
 		const rows = unwrap(transactions);
 		const last = lastPageIfOutOfRange({
@@ -165,6 +170,7 @@ export const Route = createFileRoute("/_protected/transactions")({
 			accounts: unwrap(accounts),
 			currencies,
 			allCategories: unwrap(allCategories),
+			budget: budget.ok ? budget.data : null,
 			selectedVendor: vendor?.ok ? { id: vendor.data.id, label: vendor.data.name } : null,
 			selectedCategory: category?.ok ? { id: category.data.id, label: category.data.name } : null,
 			selectedAccount: account?.ok
@@ -439,6 +445,7 @@ function TransactionsPage() {
 		selectedVendor,
 		selectedCategory,
 		allCategories,
+		budget,
 		selectedAccount,
 	} = Route.useLoaderData();
 	const { user } = Route.useRouteContext();
@@ -504,6 +511,8 @@ function TransactionsPage() {
 					</Button>
 				}
 			/>
+
+			<BudgetAlert budget={budget} />
 
 			<Box sx={{ containerType: "inline-size" }}>
 				<Box
