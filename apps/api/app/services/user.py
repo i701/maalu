@@ -4,9 +4,11 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import User
-from app.schemas import UserCreate
+from app.models import Account, User
+from app.schemas import UserCreate, UserUpdate
 from app.security import DUMMY_HASH, hash_password, verify_password
+from app.services.account import AccountNotFoundError
+from app.services.errors import TransactionRuleError
 
 
 class EmailAlreadyRegisteredError(Exception):
@@ -44,4 +46,22 @@ class UserService:
             return None
         if not verify_password(password, user.hashed_password) or not user.is_active:
             return None
+        return user
+
+    async def update(self, user: User, data: UserUpdate) -> User:
+        changes = data.model_dump(exclude_unset=True)
+        if "default_account_id" in changes:
+            account_id = changes["default_account_id"]
+            if account_id is not None:
+                account = await self.db.scalar(
+                    select(Account).where(Account.id == account_id, Account.user_id == user.id)
+                )
+                if account is None:
+                    raise AccountNotFoundError
+                if account.archived_at is not None:
+                    raise TransactionRuleError(
+                        f'"{account.name}" is archived. Unarchive it to use it'
+                    )
+            user.default_account_id = account_id
+        await self.db.flush()
         return user

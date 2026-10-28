@@ -2,7 +2,7 @@ import uuid
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from sqlalchemy import case, func, or_, select
+from sqlalchemy import case, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.enums import LIABILITY_GROUPS, TransactionType
@@ -108,6 +108,12 @@ class AccountService:
         """Close the account: it leaves the overview and pickers but keeps its history."""
         if account.archived_at is None:
             account.archived_at = datetime.now(UTC)
+            # An archived account can't be where a new transaction starts.
+            await self.db.execute(
+                update(User)
+                .where(User.id == account.user_id, User.default_account_id == account.id)
+                .values(default_account_id=None)
+            )
             await self.db.flush()
         return account
 

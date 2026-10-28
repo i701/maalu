@@ -49,6 +49,7 @@ export default function TransactionForm({
 	seed: startSeed,
 	templates,
 	tags,
+	defaultAccountId,
 	vendors,
 	categories,
 	subscriptions,
@@ -65,6 +66,8 @@ export default function TransactionForm({
 	templates: TransactionTemplate[];
 	/** Every existing tag, to pick from. */
 	tags: Tag[];
+	/** The account a new transaction starts in, if you set one. */
+	defaultAccountId?: string | null;
 	vendors: Vendor[];
 	categories: Category[];
 	subscriptions: Subscription[];
@@ -80,7 +83,13 @@ export default function TransactionForm({
 	const [another, setAnother] = useState(false);
 	const [savingTemplate, setSavingTemplate] = useState<FormData | null>(null);
 	const accounts = accountChoices(activeAccounts, transaction);
-	const fields = useFormFields({ transaction, startSeed, accounts, baseCurrency });
+	const fields = useFormFields({
+		transaction,
+		startSeed,
+		accounts,
+		baseCurrency,
+		defaultAccount: activeAccounts.find((a) => a.id === defaultAccountId),
+	});
 	const {
 		seed,
 		type,

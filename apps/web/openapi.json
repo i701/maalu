@@ -3206,6 +3206,18 @@
             "title": "Created At",
             "type": "string"
           },
+          "default_account_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Account Id"
+          },
           "email": {
             "format": "email",
             "title": "Email",
@@ -3221,9 +3233,30 @@
           "id",
           "email",
           "base_currency",
+          "default_account_id",
           "created_at"
         ],
         "title": "UserResponse",
+        "type": "object"
+      },
+      "UserUpdate": {
+        "description": "Partial update of your settings: only provided fields change.",
+        "properties": {
+          "default_account_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The account a new transaction starts in. Explicit null clears it.",
+            "title": "Default Account Id"
+          }
+        },
+        "title": "UserUpdate",
         "type": "object"
       },
       "ValidationError": {
@@ -7860,6 +7893,51 @@
           }
         ],
         "summary": "Read Me",
+        "tags": [
+          "auth"
+        ]
+      },
+      "patch": {
+        "description": "Change your settings. Only the provided fields change.",
+        "operationId": "update_me_api_v1_users_me_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Update Me",
         "tags": [
           "auth"
         ]

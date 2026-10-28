@@ -70,6 +70,11 @@ export const getSessionFn = createServerFn({ method: "GET" }).handler(async () =
 	return { user };
 });
 
+/** Change your settings. Only the fields sent change; `null` clears the default account. */
+export const updateMeFn = createServerFn({ method: "POST" })
+	.validator(z.object({ default_account_id: z.uuid().nullable() }))
+	.handler(async ({ data }) => apiRequest<User>("/users/me", { method: "PATCH", body: data }));
+
 export const getMeFn = createServerFn({ method: "GET" }).handler(async () =>
 	apiRequest<User>("/users/me"),
 );

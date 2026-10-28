@@ -49,7 +49,7 @@ from app.schemas.transaction import (
     TransactionTotals,
     TransactionUpdate,
 )
-from app.schemas.user import Token, UserCreate, UserResponse
+from app.schemas.user import Token, UserCreate, UserResponse, UserUpdate
 from app.schemas.vendor import VendorCreate, VendorResponse, VendorUpdate
 
 __all__ = [
@@ -100,6 +100,7 @@ __all__ = [
     "TransactionUpdate",
     "UserCreate",
     "UserResponse",
+    "UserUpdate",
     "VendorCreate",
     "VendorResponse",
     "VendorUpdate",

@@ -16,17 +16,20 @@ export function useFormFields({
 	startSeed,
 	accounts,
 	baseCurrency,
+	defaultAccount,
 }: {
 	transaction: Transaction | undefined;
 	startSeed: TransactionSeed | undefined;
 	accounts: AccountRef[];
 	baseCurrency: string;
+	/** Where a new transaction starts, when there is one and it is still in use. */
+	defaultAccount?: AccountRef;
 }) {
 	const [filled, setFilled] = useState({
 		seed: transaction ? seedFromTransaction(transaction) : startSeed,
 		round: 0,
 	});
-	const initial = initialValues(filled.seed, baseCurrency);
+	const initial = initialValues(filled.seed, baseCurrency, defaultAccount);
 	const [type, setType] = useState<TransactionType>(initial.type);
 	// Income / expense: an optional account locks the currency to the account's and suggests a
 	// payment method. Transfer: a from-account and a to-account.

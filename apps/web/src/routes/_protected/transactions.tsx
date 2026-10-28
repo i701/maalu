@@ -65,6 +65,7 @@ import {
 } from "#/server/transactions";
 import { getBudgetFn } from "#/server/budget";
 import { getCategoryFn, listCategoriesFn } from "#/server/categories";
+import { getMeFn } from "#/server/auth";
 import { listTagsFn } from "#/server/tags";
 import { getVendorFn, listVendorsFn } from "#/server/vendors";
 import {
@@ -139,6 +140,7 @@ export const Route = createFileRoute("/_protected/transactions")({
 			accounts,
 			templates,
 			allTags,
+			me,
 			currencies,
 			totals,
 			categories,
@@ -154,6 +156,7 @@ export const Route = createFileRoute("/_protected/transactions")({
 			listAccountsFn(),
 			listTemplatesFn(),
 			listTagsFn(),
+			getMeFn(),
 			listCurrenciesFn(),
 			wantsTotals ? getTransactionTotalsFn({ data: deps }) : Promise.resolve(null),
 			wantsTotals ? getCategoryTotalsFn({ data: deps }) : Promise.resolve(null),
@@ -183,6 +186,7 @@ export const Route = createFileRoute("/_protected/transactions")({
 			accounts: unwrap(accounts),
 			templates: unwrap(templates),
 			allTags: unwrap(allTags),
+			defaultAccountId: me.ok ? me.data.default_account_id : null,
 			currencies,
 			allCategories: unwrap(allCategories),
 			budget: budget.ok ? budget.data : null,
@@ -473,6 +477,7 @@ function TransactionsPage() {
 		accounts,
 		templates,
 		allTags,
+		defaultAccountId,
 		currencies,
 		selectedVendor,
 		selectedCategory,
@@ -670,6 +675,7 @@ function TransactionsPage() {
 					seed={editing === "new" && copyOf ? seedFromTransaction(copyOf) : undefined}
 					templates={templates}
 					tags={allTags}
+					defaultAccountId={defaultAccountId}
 					vendors={vendors}
 					categories={allCategories}
 					subscriptions={subscriptions}

@@ -800,7 +800,11 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Update Me
+         * @description Change your settings. Only the provided fields change.
+         */
+        patch: operations["update_me_api_v1_users_me_patch"];
         trace?: never;
     };
     "/api/v1/vendors": {
@@ -2081,6 +2085,8 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** Default Account Id */
+            default_account_id: string | null;
             /**
              * Email
              * Format: email
@@ -2091,6 +2097,17 @@ export interface components {
              * Format: uuid
              */
             id: string;
+        };
+        /**
+         * UserUpdate
+         * @description Partial update of your settings: only provided fields change.
+         */
+        UserUpdate: {
+            /**
+             * Default Account Id
+             * @description The account a new transaction starts in. Explicit null clears it.
+             */
+            default_account_id?: string | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -4245,6 +4262,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+        };
+    };
+    update_me_api_v1_users_me_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

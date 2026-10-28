@@ -89,6 +89,8 @@ export type User = {
 	id: string;
 	email: string;
 	base_currency: string;
+	/** The account a new transaction starts in; null for none. */
+	default_account_id: string | null;
 	created_at: string;
 };
 

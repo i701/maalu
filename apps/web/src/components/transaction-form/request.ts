@@ -1,3 +1,4 @@
+import { SUGGESTED_PAYMENT_METHOD } from "#/lib/accounts";
 import { toScaled } from "#/lib/decimal";
 import type { TemplateDraft } from "#/server/templates";
 import { createTransactionFn, updateTransactionFn } from "#/server/transactions";
@@ -274,7 +275,21 @@ export function buildTransactionRequest(form: FormData, state: State): Transacti
 }
 
 /** Starting values for the controlled fields: the edited transaction's, or sensible defaults. */
-export function initialValues(seed: TransactionSeed | undefined, baseCurrency: string) {
+export function initialValues(
+	seed: TransactionSeed | undefined,
+	baseCurrency: string,
+	/** Where a brand-new transaction starts (no seed). */
+	defaultAccount?: AccountRef,
+) {
+	if (!seed && defaultAccount)
+		return {
+			type: "expense" as TransactionType,
+			accountId: defaultAccount.id,
+			toAccountId: "",
+			currency: defaultAccount.currency,
+			paymentMethod: SUGGESTED_PAYMENT_METHOD[defaultAccount.group],
+			subscription: null,
+		};
 	const ordinary = seed && seed.type !== "transfer" ? seed : undefined;
 	return {
 		type: seed?.type ?? ("expense" as TransactionType),

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Transaction, TransactionTemplate } from "#/types/api";
 import {
 	buildTemplateRequest,
+	initialValues,
 	seedAfterSave,
 	seedFromTemplate,
 	seedFromTransaction,
@@ -186,5 +187,31 @@ describe("tags", () => {
 			tags: [{ id: "1", name: "Trip", color: "blue" }],
 		});
 		expect(seed.tags).toEqual(["Trip"]);
+	});
+});
+
+describe("initialValues", () => {
+	const card = { id: "acc-1", name: "Visa", group: "card", currency: "USD" } as const;
+
+	it("starts a new transaction in the default account, with its currency and method", () => {
+		expect(initialValues(undefined, "MVR", card)).toMatchObject({
+			type: "expense",
+			accountId: "acc-1",
+			currency: "USD",
+			paymentMethod: "credit_card",
+		});
+	});
+
+	it("starts empty without a default account", () => {
+		expect(initialValues(undefined, "MVR")).toMatchObject({
+			accountId: "",
+			currency: "MVR",
+			paymentMethod: "cash",
+		});
+	});
+
+	it("never overrides what a seed says", () => {
+		const seed = seedFromTemplate({ ...template, account: null, currency: "MVR" });
+		expect(initialValues(seed, "MVR", card)).toMatchObject({ accountId: "", currency: "MVR" });
 	});
 });

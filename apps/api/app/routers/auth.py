@@ -4,9 +4,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app.dependencies import CurrentUser, UserServiceDep
-from app.schemas import Token, UserCreate, UserResponse
+from app.schemas import Token, UserCreate, UserResponse, UserUpdate
 from app.security import create_access_token
-from app.services import EmailAlreadyRegisteredError
+from app.services import (
+    AccountNotFoundError,
+    EmailAlreadyRegisteredError,
+    TransactionRuleError,
+)
 
 router = APIRouter(tags=["auth"])
 
@@ -35,3 +39,14 @@ async def login(form: Annotated[OAuth2PasswordRequestForm, Depends()], users: Us
 @router.get("/users/me", response_model=UserResponse)
 async def read_me(user: CurrentUser):
     return user
+
+
+@router.patch("/users/me", response_model=UserResponse)
+async def update_me(data: UserUpdate, user: CurrentUser, users: UserServiceDep):
+    """Change your settings. Only the provided fields change."""
+    try:
+        return await users.update(user, data)
+    except AccountNotFoundError:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Account not found") from None
+    except TransactionRuleError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
