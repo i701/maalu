@@ -1,3 +1,4 @@
+import { morph } from "#/lib/shape";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import Box from "@mui/material/Box";
@@ -70,7 +71,7 @@ const GoalCard = memo(function GoalCard({
 		<Box
 			sx={{
 				p: 2.5,
-				borderRadius: "var(--shape-xl)",
+				...morph("xl"),
 				bgcolor: "var(--md-sys-color-surface-container-low)",
 			}}
 		>

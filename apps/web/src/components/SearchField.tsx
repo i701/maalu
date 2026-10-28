@@ -1,3 +1,4 @@
+import { morph } from "#/lib/shape";
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
 import IconButton from "@mui/material/IconButton";
@@ -57,7 +58,10 @@ export default function SearchField({
 				// The demo's search bar: a 56px pill on the highest container with a soft lift. It
 				// has no label, so hiddenLabel stops MUI reserving room for one.
 				"& .MuiFilledInput-root": {
-					borderRadius: "var(--shape-full)",
+					...morph("xl", "md"),
+					// the morph's spring, then the field's own colour and shadow easing
+					transition:
+						"border-radius var(--spring-spatial-fast-dur) var(--spring-spatial-fast), background-color var(--spring-effects-fast-dur) var(--spring-effects-fast), box-shadow var(--spring-effects-fast-dur) var(--spring-effects-fast)",
 					minHeight: 56,
 					pl: 2.25,
 					pr: 1,

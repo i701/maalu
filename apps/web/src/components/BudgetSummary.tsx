@@ -1,3 +1,4 @@
+import { morph } from "#/lib/shape";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { STATUS_COLOR, STATUS_LABEL, unsigned } from "#/lib/budget";
@@ -18,7 +19,7 @@ export default function BudgetSummary({ budget }: { budget: Budget }) {
 			sx={{
 				mb: 2,
 				p: 2.5,
-				borderRadius: "var(--shape-xl)",
+				...morph("xl"),
 				bgcolor: "var(--md-sys-color-surface-container-low)",
 			}}
 		>

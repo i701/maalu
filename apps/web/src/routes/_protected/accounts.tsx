@@ -1,3 +1,4 @@
+import { MORPH_TRANSITION, morph } from "#/lib/shape";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
@@ -195,9 +196,8 @@ function AccountsPage() {
 												key={a.id}
 												sx={{
 													bgcolor: "var(--md-sys-color-surface-container-low)",
-													borderRadius: "var(--shape-xl)",
-													transition:
-														"transform var(--spring-spatial-fast-dur) var(--spring-spatial-fast)",
+													...morph("xl"),
+													transition: `${MORPH_TRANSITION}, transform var(--spring-spatial-fast-dur) var(--spring-spatial-fast)`,
 													"&:active": { transform: "scale(.97)" },
 												}}
 											>

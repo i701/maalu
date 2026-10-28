@@ -1,3 +1,4 @@
+import { morph } from "#/lib/shape";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Table from "@mui/material/Table";
@@ -35,7 +36,7 @@ export default function ChartCard({
 			sx={{
 				p: 2.5,
 				minWidth: 0,
-				borderRadius: "var(--shape-xl)",
+				...morph("xl"),
 				bgcolor: "var(--md-sys-color-surface-container-low)",
 			}}
 		>

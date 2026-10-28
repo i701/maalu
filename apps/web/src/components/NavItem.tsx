@@ -2,6 +2,7 @@ import ButtonBase, { type ButtonBaseProps } from "@mui/material/ButtonBase";
 import { createLink } from "@tanstack/react-router";
 import { forwardRef } from "react";
 import { ACCENT, type Accent } from "#/lib/m3";
+import { MORPH_TRANSITION } from "#/lib/shape";
 import { SYMBOL_FILLED } from "#/lib/symbols";
 import Symbol from "./Symbol";
 
@@ -54,8 +55,8 @@ export default function NavItem({
 					placeItems: "center",
 					width: 56,
 					height: 32,
-					borderRadius: "var(--shape-full)",
-					transition: "transform var(--spring-spatial-fast-dur) var(--spring-spatial-fast)",
+					borderRadius: "var(--shape-lg)",
+					transition: `${MORPH_TRANSITION}, transform var(--spring-spatial-fast-dur) var(--spring-spatial-fast)`,
 				},
 				"& .nav-pill::before": {
 					content: '""',
@@ -82,6 +83,8 @@ export default function NavItem({
 				},
 				"&:active .nav-pill": { transform: "scale(.94)" },
 				"@media (hover: hover) and (pointer: fine)": {
+					// the shape morph (lib/shape.ts), on the pill rather than the whole tap target
+					"&:hover .nav-pill": { borderRadius: "var(--shape-sm)" },
 					"&:hover .nav-pill::before": { opacity: 0.5, transform: "scaleX(.8)" },
 					"&:hover .sym": { fontVariationSettings: SYMBOL_FILLED },
 				},
@@ -96,6 +99,7 @@ export default function NavItem({
 				},
 				// The ring goes on the pill, not the whole 96x64 target (see styles/m3.css).
 				"&:focus-visible .nav-pill": {
+					borderRadius: "var(--shape-sm)",
 					outline: "3px solid var(--md-sys-color-secondary)",
 					outlineOffset: 2,
 					animation: "focus-ring 600ms var(--ease-emph)",

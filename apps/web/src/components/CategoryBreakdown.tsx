@@ -1,3 +1,4 @@
+import { morph } from "#/lib/shape";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Reveal from "#/components/Reveal";
@@ -93,7 +94,7 @@ export default function CategoryBreakdown({ categories }: { categories: Category
 						display: "grid",
 						gap: 2.5,
 						gridTemplateColumns: { xs: "1fr", md: both ? "1fr 1fr" : "1fr" },
-						borderRadius: "var(--shape-xl)",
+						...morph("xl"),
 						bgcolor: "var(--md-sys-color-surface-container-low)",
 					}}
 				>

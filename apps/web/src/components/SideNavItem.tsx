@@ -2,6 +2,7 @@ import ButtonBase, { type ButtonBaseProps } from "@mui/material/ButtonBase";
 import { createLink } from "@tanstack/react-router";
 import { forwardRef } from "react";
 import { ACCENT, type Accent } from "#/lib/m3";
+import { MORPH_TRANSITION, morph } from "#/lib/shape";
 import { SYMBOL_FILLED } from "#/lib/symbols";
 import Symbol from "./Symbol";
 
@@ -38,14 +39,13 @@ export default function SideNavItem({
 				width: "100%",
 				height: 48,
 				px: 2,
-				borderRadius: "var(--shape-full)",
+				...morph("24px", "md"),
 				"--accent": ACCENT[accent],
 				color: "var(--md-sys-color-on-surface-variant)",
 				fontSize: 14,
 				fontWeight: 500,
 				letterSpacing: "0.01em",
-				transition:
-					"background-color var(--spring-effects-default-dur) var(--spring-effects-default), transform var(--spring-spatial-fast-dur) var(--spring-spatial-fast)",
+				transition: `${MORPH_TRANSITION}, background-color var(--spring-effects-default-dur) var(--spring-effects-default), transform var(--spring-spatial-fast-dur) var(--spring-spatial-fast)`,
 				"&:active": { transform: "scale(.98)" },
 				"@media (hover: hover) and (pointer: fine)": {
 					"&:hover": {

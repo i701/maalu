@@ -1,3 +1,4 @@
+import { morph } from "#/lib/shape";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { memo } from "react";
@@ -55,7 +56,7 @@ const BudgetGoalsCard = memo(function BudgetGoalsCard({
 			sx={{
 				p: 2.5,
 				minWidth: 0,
-				borderRadius: "var(--shape-xl)",
+				...morph("xl"),
 				bgcolor: "var(--md-sys-color-surface-container-low)",
 			}}
 		>

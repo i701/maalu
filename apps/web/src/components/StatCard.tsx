@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { GRADIENT, type Gradient } from "#/lib/m3";
+import { MORPH_TRANSITION, morph } from "#/lib/shape";
 
 /** Solid tonal containers (adapt to light and dark), like the site's cyan and lavender tiles. */
 const TONAL = {
@@ -48,16 +49,14 @@ export default function StatCard({
 				p: 2.5,
 				height: "100%",
 				color: fg,
-				borderRadius: "var(--shape-xl)",
+				...morph("xl"),
 				background: tone ? TONAL[tone].bg : `linear-gradient(135deg, ${from}, ${to})`,
-				transition: "transform var(--spring-spatial-default-dur) var(--spring-spatial-default)",
+				transition: `${MORPH_TRANSITION}, transform var(--spring-spatial-default-dur) var(--spring-spatial-default)`,
 				"&:active": { transform: "scale(.97)" }, // the site's .press
 				"@media (hover: hover) and (pointer: fine)": {
-					"&:hover": { transform: "translateY(-2px)" },
 					"&:hover .shape-bg": { transform: "rotate(30deg) scale(1.06)" },
 					"&:hover .sym": { fontVariationSettings: '"FILL" 1, "wght" 500, "GRAD" 0, "opsz" 24' },
 				},
-				"@media (prefers-reduced-motion: reduce)": { "&:hover": { transform: "none" } },
 			}}
 		>
 			<Box sx={{ minWidth: 0, flexGrow: 1 }}>

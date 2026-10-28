@@ -1,3 +1,4 @@
+import { morph } from "#/lib/shape";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
@@ -17,7 +18,7 @@ export default function MetricCard({
 			sx={{
 				p: 2.5,
 				minWidth: 0,
-				borderRadius: "var(--shape-xl)",
+				...morph("xl"),
 				bgcolor: "var(--md-sys-color-surface-container-low)",
 				// On a narrow screen the label and value share a row, so three figures don't take a screen
 				display: { xs: "grid", lg: "block" },

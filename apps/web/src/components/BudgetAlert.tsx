@@ -1,3 +1,4 @@
+import { morph } from "#/lib/shape";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { describeLine, linesNeedingAttention, STATUS_COLOR } from "#/lib/budget";
@@ -25,7 +26,7 @@ export default function BudgetAlert({ budget }: { budget: Budget | null }) {
 				mb: 2,
 				px: 2,
 				py: 1.25,
-				borderRadius: "var(--shape-lg)",
+				...morph("lg"),
 				bgcolor: `color-mix(in oklab, ${color} 16%, var(--md-sys-color-surface-container-low))`,
 			}}
 		>

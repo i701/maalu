@@ -4,6 +4,7 @@ import LoadingIndicator from "#/components/LoadingIndicator";
 import SheetTransition from "#/components/SheetTransition";
 import { CHART_DARK, CHART_LIGHT, M3_DARK, M3_LIGHT, chartVars, colorVars } from "#/lib/m3";
 import { EASE_OUT } from "#/lib/motion";
+import { morph } from "#/lib/shape";
 
 /**
  * Material 3 Expressive. Colour roles come from `lib/m3.ts`, shape and springs
@@ -46,10 +47,15 @@ const SEGMENT_TINT = (color: "success" | "error" | "info") =>
 const SPATIAL_FAST = "var(--spring-spatial-fast-dur) var(--spring-spatial-fast)";
 const EFFECTS_FAST = "var(--spring-effects-fast-dur) var(--spring-effects-fast)";
 
-// A pressable: springs toward a squarer corner and a hair smaller while held.
-const pressable = (pressedRadius: string) =>
+// A pressable: springs toward a squarer corner under the pointer or focus, and a hair smaller
+// and squarer again while held.
+const pressable = (hoverRadius: string, pressedRadius: string) =>
 	({
 		transition: `border-radius ${SPATIAL_FAST}, transform ${SPATIAL_FAST}, background-color ${EFFECTS_FAST}, box-shadow ${EFFECTS_FAST}, border-color ${EFFECTS_FAST}`,
+		// the shape morph (lib/shape.ts): less rounded under the pointer or keyboard focus, and
+		// squarer still while held
+		"@media (hover: hover) and (pointer: fine)": { "&:hover": { borderRadius: hoverRadius } },
+		"&:focus-visible": { borderRadius: hoverRadius },
 		"&:active": { borderRadius: pressedRadius, transform: "scale(.97)", transitionDelay: ".11s" },
 		// No springing shapes or scaling for people who ask for less motion; colour still eases.
 		"@media (prefers-reduced-motion: reduce)": {
@@ -156,12 +162,34 @@ const theme = createTheme({
 						fontWeight: 500,
 						transition:
 							"border-radius var(--spring-spatial-fast-dur) var(--spring-spatial-fast), background-color var(--spring-effects-default-dur) var(--spring-effects-default)",
-						"&:first-of-type": { borderRadius: "var(--shape-full) 6px 6px var(--shape-full)" },
-						"&:last-of-type": { borderRadius: "6px var(--shape-full) var(--shape-full) 6px" },
+						// Outer ends rest at half the 36px height (not fully round), so the morph below
+						// starts moving at once.
+						"&:first-of-type": { borderRadius: "18px 6px 6px 18px" },
+						"&:last-of-type": { borderRadius: "6px 18px 18px 6px" },
+						// The shape morph (lib/shape.ts): one step less rounded under the pointer or focus.
+						"@media (pointer: fine) and (hover: hover)": {
+							"&:hover": { borderRadius: "var(--shape-xs)" },
+							"&:first-of-type:hover": {
+								borderRadius: "var(--shape-md) var(--shape-xs) var(--shape-xs) var(--shape-md)",
+							},
+							"&:last-of-type:hover": {
+								borderRadius: "var(--shape-xs) var(--shape-md) var(--shape-md) var(--shape-xs)",
+							},
+						},
+						"&:focus-visible": { borderRadius: "var(--shape-xs)" },
+						"&:first-of-type:focus-visible": {
+							borderRadius: "var(--shape-md) var(--shape-xs) var(--shape-xs) var(--shape-md)",
+						},
+						"&:last-of-type:focus-visible": {
+							borderRadius: "var(--shape-xs) var(--shape-md) var(--shape-md) var(--shape-xs)",
+						},
 						"&.Mui-selected, &.Mui-selected:hover": {
-							borderRadius: "var(--shape-full)",
+							borderRadius: "18px",
 							backgroundColor: "var(--md-sys-color-secondary-container)",
 							color: "var(--md-sys-color-on-secondary-container)",
+						},
+						"&.Mui-selected:hover, &.Mui-selected:focus-visible": {
+							borderRadius: "var(--shape-md)",
 						},
 						"&.Mui-selected.MuiToggleButton-success": SEGMENT_TINT("success"),
 						"&.Mui-selected.Mui-error": SEGMENT_TINT("error"), // MUI marks a selected error toggle with Mui-error
@@ -175,7 +203,7 @@ const theme = createTheme({
 		// Cards sit a tonal step above the page instead of casting a shadow.
 		MuiCard: {
 			defaultProps: { elevation: 0 },
-			styleOverrides: { root: { borderRadius: "var(--shape-xl)" } },
+			styleOverrides: { root: { ...morph("xl") } },
 		},
 		MuiAppBar: { defaultProps: { elevation: 0, color: "inherit" } },
 		MuiDrawer: {
@@ -266,16 +294,24 @@ const theme = createTheme({
 				loadingIndicator: createElement(LoadingIndicator, { size: 24, color: "inherit" }),
 			},
 			styleOverrides: {
+				// A pill rests at half its height, not at "fully round" (999px), so the corners start
+				// moving the moment the spring does.
 				root: {
-					borderRadius: "var(--shape-full)",
-					...pressable("var(--shape-md)"),
+					borderRadius: "var(--shape-lg-inc)",
+					...pressable("var(--shape-md)", "var(--shape-sm)"),
 				},
-				sizeSmall: { minHeight: 32, paddingInline: 12, fontSize: 13 },
+				sizeSmall: {
+					minHeight: 32,
+					paddingInline: 12,
+					fontSize: 13,
+					borderRadius: "var(--shape-lg)",
+				},
 				sizeMedium: { minHeight: 40, paddingInline: 16 },
 				sizeLarge: {
 					minHeight: 56,
 					paddingInline: 24,
 					fontSize: 16,
+					borderRadius: "var(--shape-xl)",
 					"&:active": { borderRadius: "var(--shape-lg)" },
 				},
 				contained: {
@@ -294,9 +330,9 @@ const theme = createTheme({
 		MuiIconButton: {
 			styleOverrides: {
 				root: {
-					...pressable("var(--shape-md)"),
+					...pressable("var(--shape-md)", "var(--shape-sm)"),
 					"&:active": {
-						borderRadius: "var(--shape-md)",
+						borderRadius: "var(--shape-sm)",
 						transform: "scale(.94)",
 						transitionDelay: ".11s",
 					},
