@@ -20,6 +20,7 @@ from app.services.goal import (
     GoalService,
 )
 from app.services.money import ExchangeRateRequiredError
+from app.services.stats import StatsRangeError, StatsService
 from app.services.subscription import (
     SubscriptionNotFoundError,
     SubscriptionService,
@@ -49,6 +50,8 @@ __all__ = [
     "GoalNotFoundError",
     "GoalRuleError",
     "GoalService",
+    "StatsRangeError",
+    "StatsService",
     "SubscriptionNotFoundError",
     "SubscriptionService",
     "TransactionAlreadyLinkedError",

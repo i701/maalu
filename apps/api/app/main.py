@@ -8,6 +8,7 @@ from app.routers import (
     category,
     currency,
     goal,
+    stats,
     subscription,
     transaction,
     vendor,
@@ -24,6 +25,7 @@ def create_app() -> FastAPI:
     app.include_router(auth.router, prefix="/api/v1")
     app.include_router(transaction.router, prefix="/api/v1")
     app.include_router(account.router, prefix="/api/v1")
+    app.include_router(stats.router, prefix="/api/v1")
     app.include_router(goal.router, prefix="/api/v1")
     app.include_router(budget.router, prefix="/api/v1")
     app.include_router(category.router, prefix="/api/v1")
