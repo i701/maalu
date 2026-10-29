@@ -7,7 +7,7 @@ import { SYMBOL_FILLED } from "#/lib/symbols";
 import Symbol from "./Symbol";
 
 const Anchor = forwardRef<HTMLAnchorElement, ButtonBaseProps<"a">>((props, ref) => (
-	<ButtonBase ref={ref} component="a" {...props} />
+	<ButtonBase ref={ref} component="a" focusRipple {...props} />
 ));
 const NavAnchor = createLink(Anchor);
 
@@ -32,7 +32,7 @@ export default function NavItem({
 }) {
 	return (
 		<NavAnchor
-			data-no-ring
+			centerRipple
 			to={to}
 			onClick={onClick}
 			activeProps={{ "aria-current": "page" }}
@@ -97,14 +97,21 @@ export default function NavItem({
 					"& .sym": { fontVariationSettings: SYMBOL_FILLED },
 					"& .nav-label": { fontWeight: 700 },
 				},
-				// The ring goes on the pill, not the whole 96x64 target (see styles/m3.css).
-				"&:focus-visible .nav-pill": {
-					borderRadius: "var(--shape-sm)",
-					outline: "3px solid var(--md-sys-color-secondary)",
-					outlineOffset: 2,
-					animation: "focus-ring 600ms var(--ease-emph)",
-					"@media (prefers-reduced-motion: reduce)": { animation: "none" },
+				// Keyboard focus reads like hover: the pill grows and the icon fills, while MUI's ripple pulses.
+				"&:focus-visible .nav-pill": { borderRadius: "var(--shape-sm)" },
+				"&:focus-visible .nav-pill::before": { opacity: 0.5, transform: "scaleX(.8)" },
+				"&:focus-visible .sym": { fontVariationSettings: SYMBOL_FILLED },
+				// The ripple belongs on the pill, not the whole 96x64 target, in the destination's colour.
+				"& .MuiTouchRipple-root": {
+					inset: "auto",
+					top: 6,
+					left: "50%",
+					width: 56,
+					height: 32,
+					ml: "-28px",
+					borderRadius: "var(--shape-lg)",
 				},
+				"& .MuiTouchRipple-root .MuiTouchRipple-child": { bgcolor: "var(--accent)" },
 			}}
 		>
 			<span className="nav-pill">

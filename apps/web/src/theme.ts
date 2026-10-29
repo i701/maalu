@@ -287,7 +287,6 @@ const theme = createTheme({
 			},
 		},
 		// Buttons: pills at rest that spring toward a squarer corner and shrink slightly when pressed.
-		MuiButtonBase: { defaultProps: { disableRipple: true } },
 		MuiButton: {
 			defaultProps: {
 				disableElevation: true,

@@ -7,7 +7,7 @@ import { SYMBOL_FILLED } from "#/lib/symbols";
 import Symbol from "./Symbol";
 
 const Anchor = forwardRef<HTMLAnchorElement, ButtonBaseProps<"a">>((props, ref) => (
-	<ButtonBase ref={ref} component="a" {...props} />
+	<ButtonBase ref={ref} component="a" focusRipple {...props} />
 ));
 const SideAnchor = createLink(Anchor);
 
@@ -47,6 +47,12 @@ export default function SideNavItem({
 				letterSpacing: "0.01em",
 				transition: `${MORPH_TRANSITION}, background-color var(--spring-effects-default-dur) var(--spring-effects-default), transform var(--spring-spatial-fast-dur) var(--spring-spatial-fast)`,
 				"&:active": { transform: "scale(.98)" },
+				"& .MuiTouchRipple-root .MuiTouchRipple-child": { bgcolor: "var(--accent)" },
+				// Keyboard focus reads like hover (MUI's ripple pulses on top of it).
+				"&:focus-visible": {
+					bgcolor: "color-mix(in oklab, var(--accent) 12%, transparent)",
+					"& .sym": { fontVariationSettings: SYMBOL_FILLED },
+				},
 				"@media (hover: hover) and (pointer: fine)": {
 					"&:hover": {
 						bgcolor: "color-mix(in oklab, var(--accent) 12%, transparent)",

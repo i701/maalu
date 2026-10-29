@@ -282,42 +282,9 @@
 }
 
 /*
- * Keyboard focus ring, after Material Web's <md-focus-ring>: a 3px outline in the secondary colour,
- * 2px outside the element, shown only for keyboard focus (:focus-visible). On focus it grows to 8px
- * in the first quarter of 600ms and settles back to 3px on the emphasized easing. `outline` follows
- * the element's border-radius, so the ring is as round as the control (plus the offset), including
- * while its shape is morphing. Needed because the ripple is off, which was the only focus cue.
- *
- * Opt out with data-no-ring when a component draws its own (the nav pill). List-like rows get an
- * inward ring so it isn't clipped.
+ * Keyboard focus is MUI's own: the ripple pulses on the focused control (ButtonBase), nav items
+ * also take their hover tint, and links keep the browser's outline. There is no custom focus ring.
  */
-@keyframes focus-ring {
-	0% {
-		outline-width: 0;
-	}
-	25% {
-		outline-width: 8px;
-	}
-	100% {
-		outline-width: 3px;
-	}
-}
-.MuiButtonBase-root:focus-visible:not([data-no-ring]),
-.MuiLink-root:focus-visible {
-	outline: 3px solid var(--md-sys-color-secondary);
-	outline-offset: 2px;
-	animation: focus-ring 600ms var(--ease-emph);
-}
-.MuiMenuItem-root:focus-visible,
-.MuiListItemButton-root:focus-visible {
-	outline-offset: -3px;
-}
-@media (prefers-reduced-motion: reduce) {
-	.MuiButtonBase-root:focus-visible:not([data-no-ring]),
-	.MuiLink-root:focus-visible {
-		animation: none;
-	}
-}
 
 /* Loading indicator under reduced motion: it holds still and breathes instead of morphing. */
 @keyframes loading-pulse {
