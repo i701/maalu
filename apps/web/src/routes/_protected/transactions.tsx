@@ -32,6 +32,7 @@ import SearchField from "#/components/SearchField";
 import ShapeTile from "#/components/ShapeTile";
 import Symbol from "#/components/Symbol";
 import { TagChips } from "#/components/TagChip";
+import { txSubtitle, txTitle } from "#/lib/tx-display";
 import TonalChip from "#/components/TonalChip";
 import TableCard from "#/components/TableCard";
 import TablePager from "#/components/TablePager";
@@ -41,6 +42,7 @@ import TransactionForm from "#/components/TransactionForm";
 import { seedFromTransaction } from "#/components/transaction-form/request";
 import TransactionTotals from "#/components/TransactionTotals";
 import BudgetAlert from "#/components/BudgetAlert";
+import UpcomingCard from "#/components/UpcomingCard";
 import CategoryBreakdown from "#/components/CategoryBreakdown";
 import { formatDate, formatMoney } from "#/lib/format";
 import { PAYMENT_ACCENT, TRANSFER_ACCENT } from "#/lib/accents";
@@ -63,6 +65,7 @@ import { listCurrenciesFn } from "#/server/currencies";
 import { listSubscriptionsFn } from "#/server/subscriptions";
 import { listTemplatesFn } from "#/server/templates";
 import {
+	listUpcomingFn,
 	bulkTrashFn,
 	deleteTransactionFn,
 	getCategoryTotalsFn,
@@ -150,6 +153,7 @@ export const Route = createFileRoute("/_protected/transactions")({
 			templates,
 			allTags,
 			me,
+			upcoming,
 			currencies,
 			totals,
 			categories,
@@ -166,6 +170,7 @@ export const Route = createFileRoute("/_protected/transactions")({
 			listTemplatesFn(),
 			listTagsFn(),
 			getMeFn(),
+			listUpcomingFn(),
 			listCurrenciesFn(),
 			wantsTotals ? getTransactionTotalsFn({ data: deps }) : Promise.resolve(null),
 			wantsTotals ? getCategoryTotalsFn({ data: deps }) : Promise.resolve(null),
@@ -196,6 +201,7 @@ export const Route = createFileRoute("/_protected/transactions")({
 			templates: unwrap(templates),
 			allTags: unwrap(allTags),
 			defaultAccountId: me.ok ? me.data.default_account_id : null,
+			upcoming: unwrap(upcoming),
 			currencies,
 			allCategories: unwrap(allCategories),
 			budget: budget.ok ? budget.data : null,
@@ -214,29 +220,6 @@ export const Route = createFileRoute("/_protected/transactions")({
 });
 
 /** Pieces shared by the desktop row and the mobile card, so both always show the same facts. */
-function txTitle(t: Transaction) {
-	return t.type === "transfer"
-		? `${t.account?.name ?? "Deleted account"} → ${t.to_account?.name ?? "Deleted account"}`
-		: (t.vendor?.name ?? (t.splits.length > 1 ? "Split purchase" : t.category));
-}
-
-/** The category, or every category a split transaction touches. */
-function txCategories(t: Transaction) {
-	return t.splits.length > 1
-		? [...new Set(t.splits.map((s) => s.category))].join(", ")
-		: t.category;
-}
-
-function txSubtitle(t: Transaction) {
-	return (
-		t.type === "transfer"
-			? [t.description]
-			: [t.vendor || t.splits.length > 1 ? txCategories(t) : null, t.description]
-	)
-		.filter(Boolean)
-		.join(" · ");
-}
-
 const TYPE_TILE = {
 	income: { symbol: "arrow_downward", accent: ACCENT.green, shape: 1 },
 	expense: { symbol: "arrow_upward", accent: ACCENT.pink, shape: 4 },
@@ -585,7 +568,7 @@ function TransactionList({
 }
 
 /** The frosted pills in the page hero: how many transactions, and how many filters are on. */
-function heroStats(total: number, activeCount: number) {
+function heroStats(total: number, activeCount: number, upcoming: number) {
 	const pills = [
 		{ symbol: "receipt_long", label: `${total} ${total === 1 ? "transaction" : "transactions"}` },
 	];
@@ -594,6 +577,7 @@ function heroStats(total: number, activeCount: number) {
 			symbol: "tune",
 			label: `${activeCount} ${activeCount === 1 ? "filter" : "filters"}`,
 		});
+	if (upcoming > 0) pills.push({ symbol: "calendar_month", label: `${upcoming} upcoming` });
 	return pills;
 }
 
@@ -609,6 +593,7 @@ function TransactionsPage() {
 		templates,
 		allTags,
 		defaultAccountId,
+		upcoming,
 		currencies,
 		selectedVendor,
 		selectedCategory,
@@ -680,7 +665,7 @@ function TransactionsPage() {
 				accent="blue"
 				shape={0}
 				description={`Amounts are totalled in ${user.base_currency}.`}
-				stats={heroStats(total, activeCount)}
+				stats={heroStats(total, activeCount, upcoming.length)}
 				action={
 					<Button variant="contained" startIcon={<AddIcon />} onClick={() => setEditing("new")}>
 						Add transaction
@@ -689,6 +674,8 @@ function TransactionsPage() {
 			/>
 
 			<BudgetAlert budget={budget} />
+
+			<UpcomingCard items={upcoming} onEdit={setEditing} onDelete={setDeleting} />
 
 			<Box sx={{ containerType: "inline-size" }}>
 				<Box

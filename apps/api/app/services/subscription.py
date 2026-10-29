@@ -191,7 +191,7 @@ class SubscriptionService:
         stmt = select(Transaction).where(
             Transaction.id == transaction_id,
             Transaction.user_id == user_id,
-            Transaction.deleted_at.is_(None),
+            Transaction.live(),
         )
         transaction = await self.db.scalar(stmt)
         if transaction is None:
@@ -228,7 +228,7 @@ class SubscriptionService:
             return {}
         stmt = (
             select(Transaction.subscription_id, func.max(Transaction.transaction_date))
-            .where(Transaction.subscription_id.in_(ids), Transaction.deleted_at.is_(None))
+            .where(Transaction.subscription_id.in_(ids), Transaction.counted())
             .group_by(Transaction.subscription_id)
         )
         return dict((await self.db.execute(stmt)).all())

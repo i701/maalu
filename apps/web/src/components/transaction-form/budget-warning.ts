@@ -26,15 +26,18 @@ export async function messageAfterSave({
 	type,
 	form,
 	itemCategories,
+	planned,
 }: {
 	success: string;
 	type: TransactionType;
 	form: FormData;
 	/** The categories of the items, when the transaction is split. */
 	itemCategories: string[] | null;
+	/** A planned expense counts toward nothing yet, so it cannot push a limit. */
+	planned: boolean;
 }): Promise<{ text: string; severity: "success" | "warning" }> {
 	const warning =
-		type === "expense"
+		type === "expense" && !planned
 			? await warningAfterExpense({
 					date: String(form.get("transaction_date") ?? ""),
 					categories: itemCategories ?? [String(form.get("category") ?? "")],

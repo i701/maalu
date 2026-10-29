@@ -118,7 +118,7 @@ class TagService:
                 await self.db.execute(
                     select(transaction_tags.c.tag_id, func.count())
                     .join(Transaction, Transaction.id == transaction_tags.c.transaction_id)
-                    .where(Transaction.user_id == user_id, Transaction.deleted_at.is_(None))
+                    .where(Transaction.user_id == user_id, Transaction.live())
                     .group_by(transaction_tags.c.tag_id)
                 )
             ).all()

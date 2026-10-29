@@ -214,6 +214,8 @@ export type Transaction = {
 	/** Transfers only: the destination account (`account` is the source). */
 	to_account: AccountRef | null;
 	tags: TagRef[];
+	/** Something coming up that has not happened yet: it counts toward nothing until it is posted. */
+	planned: boolean;
 	created_at: string;
 	/** When it was moved to the trash; null for a live transaction. */
 	deleted_at: string | null;

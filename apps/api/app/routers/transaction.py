@@ -14,6 +14,7 @@ from app.schemas import (
     BulkResult,
     BulkUpdate,
     CategoryTotals,
+    PostPlanned,
     TagMatch,
     TransactionCreate,
     TransactionResponse,
@@ -25,6 +26,7 @@ from app.services import (
     AccountNotFoundError,
     ExchangeRateRequiredError,
     SubscriptionNotFoundError,
+    TransactionNotPlannedError,
     TransactionRuleError,
     VendorNotFoundError,
 )
@@ -117,6 +119,9 @@ async def list_transactions(
     ] = None,
     date_from: Annotated[date | None, Query(description="Inclusive, YYYY-MM-DD")] = None,
     date_to: Annotated[date | None, Query(description="Inclusive, YYYY-MM-DD")] = None,
+    planned: Annotated[
+        bool, Query(description="List the planned (upcoming) ones instead, soonest first")
+    ] = False,
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
 ):
@@ -137,6 +142,7 @@ async def list_transactions(
         "max_amount": max_amount,
         "date_from": date_from,
         "date_to": date_to,
+        "planned": planned,
     }
     _check_range(min_amount, max_amount)
     _check_dates(date_from, date_to)
@@ -425,6 +431,26 @@ async def delete_transaction(
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Transaction not found")
     await service.trash(transaction)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/{transaction_id}/post", response_model=TransactionResponse)
+async def post_planned_transaction(
+    transaction_id: uuid.UUID,
+    user_id: CurrentUserId,
+    service: TransactionServiceDep,
+    data: PostPlanned | None = None,
+):
+    """Mark a planned transaction as paid: from now on it counts. Send the actual date or amount if
+    they differ from the plan."""
+    transaction = await service.get(user_id, transaction_id)
+    if transaction is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Transaction not found")
+    try:
+        return await service.post(transaction, data or PostPlanned())
+    except TransactionNotPlannedError:
+        raise HTTPException(status.HTTP_409_CONFLICT, "This transaction is not planned") from None
+    except TransactionRuleError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
 
 
 @router.post("/{transaction_id}/restore", response_model=TransactionResponse)

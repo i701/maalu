@@ -72,7 +72,7 @@ class GoalService:
         """Money that moved into the account by transfer in a period, less what moved out, in the
         base currency. Income, expenses and interest are not contributions."""
         conditions = [
-            Transaction.deleted_at.is_(None),
+            Transaction.counted(),
             Transaction.type == TransactionType.TRANSFER,
             Transaction.transaction_date >= start,
             Transaction.transaction_date <= end,

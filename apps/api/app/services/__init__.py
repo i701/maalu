@@ -11,7 +11,7 @@ from app.services.category import (
     CategoryNotFoundError,
     CategoryService,
 )
-from app.services.errors import TransactionRuleError
+from app.services.errors import TransactionNotPlannedError, TransactionRuleError
 from app.services.goal import (
     GoalAccountTakenError,
     GoalEntryNotFoundError,
@@ -68,6 +68,7 @@ __all__ = [
     "TemplateService",
     "TransactionAlreadyLinkedError",
     "TransactionNotFoundError",
+    "TransactionNotPlannedError",
     "TransactionRuleError",
     "TransactionService",
     "UserService",

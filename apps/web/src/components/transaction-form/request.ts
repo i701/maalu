@@ -144,6 +144,8 @@ type State = {
 	crossCurrency: boolean;
 	foreign: boolean;
 	subscription: SubRef | null;
+	/** Coming up, not happened yet: counts toward nothing until it is marked as paid. */
+	planned: boolean;
 	/** The item table, when it is switched on (not for transfers). */
 	splits: SplitsState | null;
 };
@@ -164,9 +166,14 @@ function transferRequest(f: FormData, s: State): TransactionRequest {
 		account_id: accountId,
 		to_account_id: toAccountId,
 		to_amount: s.crossCurrency ? text(f, "to_amount") : undefined,
+		planned: s.planned,
 	};
 	return {
-		success: transaction ? "Transfer updated" : "Transfer added",
+		success: transaction
+			? "Transfer updated"
+			: s.planned
+				? "Planned transfer added"
+				: "Transfer added",
 		send: () =>
 			transaction
 				? updateTransactionFn({
@@ -218,12 +225,13 @@ function ordinaryRequest(f: FormData, s: State): TransactionRequest {
 		currency: account ? account.currency : text(f, "currency").toUpperCase(),
 		exchange_rate: s.foreign ? text(f, "exchange_rate") : undefined,
 		payment_method: text(f, "payment_method") as PaymentMethod,
+		planned: s.planned,
 		...(split ? { splits: split } : { category: text(f, "category") }),
 	};
 
 	if (!transaction) {
 		return {
-			success: "Transaction added",
+			success: s.planned ? "Planned transaction added" : "Transaction added",
 			send: () =>
 				createTransactionFn({
 					data: {

@@ -49,7 +49,7 @@ class StatsService:
             )
             .where(
                 Transaction.user_id == user_id,
-                Transaction.deleted_at.is_(None),
+                Transaction.counted(),
                 Transaction.type.in_([TransactionType.INCOME, TransactionType.EXPENSE]),
                 Transaction.transaction_date >= first,
                 Transaction.transaction_date <= end,
@@ -104,7 +104,7 @@ class StatsService:
                 select(Transaction.account_id, func.sum(signed))
                 .where(
                     Transaction.account_id.in_(ids),
-                    Transaction.deleted_at.is_(None),
+                    Transaction.counted(),
                     Transaction.transaction_date < start,
                 )
                 .group_by(Transaction.account_id)
@@ -115,7 +115,7 @@ class StatsService:
                 select(Transaction.to_account_id, func.sum(Transaction.to_amount))
                 .where(
                     Transaction.to_account_id.in_(ids),
-                    Transaction.deleted_at.is_(None),
+                    Transaction.counted(),
                     Transaction.transaction_date < start,
                 )
                 .group_by(Transaction.to_account_id)
@@ -124,7 +124,7 @@ class StatsService:
                 balance[account_id] += Decimal(str(total or 0))
 
             within = (
-                Transaction.deleted_at.is_(None),
+                Transaction.counted(),
                 Transaction.transaction_date >= start,
                 Transaction.transaction_date <= end,
             )

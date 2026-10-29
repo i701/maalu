@@ -3,6 +3,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 
 from sqlalchemy import (
+    Boolean,
     Date,
     DateTime,
     Enum,
@@ -13,6 +14,8 @@ from sqlalchemy import (
     String,
     Text,
     Uuid,
+    and_,
+    false,
     func,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -106,11 +109,28 @@ class Transaction(Base):
     tags: Mapped[list[Tag]] = relationship(
         secondary=transaction_tags, lazy="selectin", order_by=Tag.normalized_name
     )
+    # Something coming up that has not happened yet (rent due next month). It is listed under
+    # "upcoming" but counts toward nothing (balances, budgets, totals, stats) until it is posted,
+    # which just turns this off.
+    planned: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default=false(), index=True
+    )
     # Set when the transaction is moved to the trash. A trashed row is hidden everywhere and
     # counts toward nothing (balances, budgets, stats) until it is restored or deleted for good.
     deleted_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), index=True, default=None
     )
+
+    @classmethod
+    def live(cls):
+        """Not in the trash. Planned ones are live too."""
+        return cls.deleted_at.is_(None)
+
+    @classmethod
+    def counted(cls):
+        """What counts toward money: not in the trash and not just planned. Use this for balances,
+        budgets, goals, totals and stats; use `live()` for anything that only needs the row."""
+        return and_(cls.deleted_at.is_(None), cls.planned.is_(False))
 
     @property
     def category(self) -> str:

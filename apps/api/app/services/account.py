@@ -100,7 +100,7 @@ class AccountService:
     async def _transaction_count(self, account_id: uuid.UUID) -> int:
         stmt = select(func.count(Transaction.id)).where(
             or_(Transaction.account_id == account_id, Transaction.to_account_id == account_id),
-            Transaction.deleted_at.is_(None),
+            Transaction.live(),
         )
         return (await self.db.scalar(stmt)) or 0
 
@@ -167,7 +167,7 @@ class AccountService:
             )
             direct = (
                 select(Transaction.account_id, func.sum(signed), func.count(Transaction.id))
-                .where(Transaction.account_id.in_(ids), Transaction.deleted_at.is_(None))
+                .where(Transaction.account_id.in_(ids), Transaction.counted())
                 .group_by(Transaction.account_id)
             )
             for account_id, total, count in (await self.db.execute(direct)).all():
@@ -180,7 +180,7 @@ class AccountService:
                     func.sum(Transaction.to_amount),
                     func.count(Transaction.id),
                 )
-                .where(Transaction.to_account_id.in_(ids), Transaction.deleted_at.is_(None))
+                .where(Transaction.to_account_id.in_(ids), Transaction.counted())
                 .group_by(Transaction.to_account_id)
             )
             for account_id, total, count in (await self.db.execute(incoming)).all():

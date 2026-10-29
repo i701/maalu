@@ -1677,6 +1677,42 @@
         "title": "PaymentMethod",
         "type": "string"
       },
+      "PostPlanned": {
+        "description": "Turn a planned transaction into a real one. Both fields are optional: leave one out to keep\nit as planned.",
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What it actually came to",
+            "title": "Amount"
+          },
+          "transaction_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The day it actually happened",
+            "title": "Transaction Date"
+          }
+        },
+        "title": "PostPlanned",
+        "type": "object"
+      },
       "SplitInput": {
         "description": "One line of a split transaction. `amount` is the line total paid, tax included.",
         "properties": {
@@ -2773,6 +2809,12 @@
               }
             ]
           },
+          "planned": {
+            "default": false,
+            "description": "Something coming up that has not happened yet. It counts toward nothing until it is posted.",
+            "title": "Planned",
+            "type": "boolean"
+          },
           "splits": {
             "anyOf": [
               {
@@ -2972,6 +3014,10 @@
           "payment_method": {
             "$ref": "#/components/schemas/PaymentMethod"
           },
+          "planned": {
+            "title": "Planned",
+            "type": "boolean"
+          },
           "splits": {
             "items": {
               "$ref": "#/components/schemas/SplitResponse"
@@ -3046,6 +3092,7 @@
           "category_id",
           "description",
           "transaction_date",
+          "planned",
           "splits",
           "currency",
           "exchange_rate",
@@ -3184,6 +3231,17 @@
                 "type": "null"
               }
             ]
+          },
+          "planned": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planned"
           },
           "splits": {
             "anyOf": [
@@ -6738,6 +6796,18 @@
             }
           },
           {
+            "description": "List the planned (upcoming) ones instead, soonest first",
+            "in": "query",
+            "name": "planned",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "List the planned (upcoming) ones instead, soonest first",
+              "title": "Planned",
+              "type": "boolean"
+            }
+          },
+          {
             "in": "query",
             "name": "limit",
             "required": false,
@@ -8163,6 +8233,72 @@
           }
         ],
         "summary": "Delete Transaction Permanently",
+        "tags": [
+          "transactions"
+        ]
+      }
+    },
+    "/api/v1/transactions/{transaction_id}/post": {
+      "post": {
+        "description": "Mark a planned transaction as paid: from now on it counts. Send the actual date or amount if\nthey differ from the plan.",
+        "operationId": "post_planned_transaction_api_v1_transactions__transaction_id__post_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "transaction_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Transaction Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/PostPlanned"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Data"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Post Planned Transaction",
         "tags": [
           "transactions"
         ]

@@ -24,6 +24,7 @@ from app.schemas import (
     BulkUpdate,
     CategoryTotal,
     CategoryTotals,
+    PostPlanned,
     SplitInput,
     TagMatch,
     TransactionCreate,
@@ -32,7 +33,7 @@ from app.schemas import (
 )
 from app.services.account import AccountCurrencyMismatchError, AccountNotFoundError
 from app.services.category import CategoryService, normalize_name
-from app.services.errors import TransactionRuleError
+from app.services.errors import TransactionNotPlannedError, TransactionRuleError
 from app.services.money import BASE_AMOUNT_QUANTUM, price_in_base
 from app.services.subscription import SubscriptionNotFoundError
 from app.services.tag import TagService
@@ -233,6 +234,7 @@ class TransactionService:
             payment_method=TRANSFER_PAYMENT_METHOD if is_transfer else data.payment_method,
             description=data.description,
             transaction_date=data.transaction_date,
+            planned=data.planned,
             account=account,
             to_account=to_account,
             vendor=await self._resolve_vendor(user_id, data.vendor_id, data.vendor_name),
@@ -265,6 +267,7 @@ class TransactionService:
         date_from: date | None = None,
         date_to: date | None = None,
         trashed: bool = False,
+        planned: bool = False,
     ) -> list:
         """Filters shared by the list, the count and the totals, so they always agree.
 
@@ -277,6 +280,10 @@ class TransactionService:
             Transaction.user_id == user_id,
             Transaction.deleted_at.is_not(None) if trashed else Transaction.deleted_at.is_(None),
         ]
+        if not trashed:
+            # The list and everything computed from it shows posted transactions; planned ones are
+            # their own list ("upcoming") and never counted.
+            conditions.append(Transaction.planned.is_(planned))
         if min_amount is not None:
             conditions.append(Transaction.base_amount >= min_amount)
         if max_amount is not None:
@@ -354,6 +361,7 @@ class TransactionService:
         max_amount: Decimal | None = None,
         date_from: date | None = None,
         date_to: date | None = None,
+        planned: bool = False,
         limit: int = 50,
         offset: int = 0,
     ) -> list[Transaction]:
@@ -373,14 +381,15 @@ class TransactionService:
             max_amount=max_amount,
             date_from=date_from,
             date_to=date_to,
+            planned=planned,
         )
-        stmt = (
-            select(Transaction)
-            .where(*conditions)
-            .order_by(Transaction.transaction_date.desc(), Transaction.created_at.desc())
-            .limit(limit)
-            .offset(offset)
+        # Upcoming ones read soonest first; the rest newest first.
+        order = (
+            (Transaction.transaction_date, Transaction.created_at)
+            if planned
+            else (Transaction.transaction_date.desc(), Transaction.created_at.desc())
         )
+        stmt = select(Transaction).where(*conditions).order_by(*order).limit(limit).offset(offset)
         return list((await self.db.scalars(stmt)).all())
 
     async def count_for_user(
@@ -401,6 +410,7 @@ class TransactionService:
         max_amount: Decimal | None = None,
         date_from: date | None = None,
         date_to: date | None = None,
+        planned: bool = False,
     ) -> int:
         conditions = self._conditions(
             user_id,
@@ -418,6 +428,7 @@ class TransactionService:
             max_amount=max_amount,
             date_from=date_from,
             date_to=date_to,
+            planned=planned,
         )
         return (await self.db.scalar(select(func.count(Transaction.id)).where(*conditions))) or 0
 
@@ -840,6 +851,18 @@ class TransactionService:
         """Move to the trash: hidden and uncounted, but recoverable."""
         transaction.deleted_at = datetime.now(UTC)
         await self.db.flush()
+
+    async def post(self, transaction: Transaction, data: PostPlanned) -> Transaction:
+        """Turn a planned transaction into a real one, from now on counted. The date and amount
+        can be corrected on the way (a bill is rarely exactly what was planned)."""
+        if not transaction.planned:
+            raise TransactionNotPlannedError
+        changes: dict = {"planned": False}
+        if data.transaction_date is not None:
+            changes["transaction_date"] = data.transaction_date
+        if data.amount is not None:
+            changes["amount"] = data.amount
+        return await self.update(transaction, TransactionUpdate(**changes))
 
     async def restore(self, transaction: Transaction) -> Transaction:
         transaction.deleted_at = None

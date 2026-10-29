@@ -24,6 +24,7 @@ export default defineConfig(({ mode }) => {
 					"AccountBalanceWallet",
 					"Add",
 					"Autorenew",
+					"Check",
 					"ChevronRight",
 					"Clear",
 					"ContentCopyOutlined",

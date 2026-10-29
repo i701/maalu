@@ -850,6 +850,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/transactions/{transaction_id}/post": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Post Planned Transaction
+         * @description Mark a planned transaction as paid: from now on it counts. Send the actual date or amount if
+         *     they differ from the plan.
+         */
+        post: operations["post_planned_transaction_api_v1_transactions__transaction_id__post_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/transactions/{transaction_id}/restore": {
         parameters: {
             query?: never;
@@ -1675,6 +1696,23 @@ export interface components {
          */
         PaymentMethod: "cash" | "bank_transfer" | "debit_card" | "credit_card" | "other";
         /**
+         * PostPlanned
+         * @description Turn a planned transaction into a real one. Both fields are optional: leave one out to keep
+         *     it as planned.
+         */
+        PostPlanned: {
+            /**
+             * Amount
+             * @description What it actually came to
+             */
+            amount?: number | string | null;
+            /**
+             * Transaction Date
+             * @description The day it actually happened
+             */
+            transaction_date?: string | null;
+        };
+        /**
          * SplitInput
          * @description One line of a split transaction. `amount` is the line total paid, tax included.
          */
@@ -2079,6 +2117,12 @@ export interface components {
             exchange_rate?: number | string | null;
             payment_method?: components["schemas"]["PaymentMethod"] | null;
             /**
+             * Planned
+             * @description Something coming up that has not happened yet. It counts toward nothing until it is posted.
+             * @default false
+             */
+            planned: boolean;
+            /**
              * Splits
              * @description Optional breakdown by item and category. The line amounts must add up to `amount`; `category` is then taken from the biggest line, so it can be left out.
              */
@@ -2147,6 +2191,8 @@ export interface components {
              */
             id: string;
             payment_method: components["schemas"]["PaymentMethod"];
+            /** Planned */
+            planned: boolean;
             /** Splits */
             splits: components["schemas"]["SplitResponse"][];
             subscription: components["schemas"]["SubscriptionRef"] | null;
@@ -2203,6 +2249,8 @@ export interface components {
             /** Exchange Rate */
             exchange_rate?: number | string | null;
             payment_method?: components["schemas"]["PaymentMethod"] | null;
+            /** Planned */
+            planned?: boolean | null;
             /**
              * Splits
              * @description Replaces all the lines. Explicit null removes the split.
@@ -4015,6 +4063,8 @@ export interface operations {
                 date_from?: string | null;
                 /** @description Inclusive, YYYY-MM-DD */
                 date_to?: string | null;
+                /** @description List the planned (upcoming) ones instead, soonest first */
+                planned?: boolean;
                 limit?: number;
                 offset?: number;
             };
@@ -4507,6 +4557,41 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_planned_transaction_api_v1_transactions__transaction_id__post_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transaction_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PostPlanned"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransactionResponse"];
+                };
             };
             /** @description Validation Error */
             422: {

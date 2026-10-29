@@ -3,3 +3,7 @@ class TransactionRuleError(Exception):
 
     The message is safe to show to the user; the API turns it into a 422.
     """
+
+
+class TransactionNotPlannedError(Exception):
+    """Posting a transaction that is not planned (it already counts)."""

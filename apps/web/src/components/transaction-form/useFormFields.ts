@@ -1,12 +1,8 @@
 import { useState } from "react";
 import { SUGGESTED_PAYMENT_METHOD } from "#/lib/accounts";
+import { isFuture, localToday } from "#/lib/planned";
 import type { AccountRef, PaymentMethod, Transaction, TransactionType } from "#/types/api";
 import { initialValues, seedFromTransaction, type SubRef, type TransactionSeed } from "./request";
-
-const today = () => {
-	const d = new Date();
-	return new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
-};
 
 /** The controlled fields of the transaction form (type, accounts, currency, method, subscription,
  * date) and what follows from them. The other fields are uncontrolled and start from `seed`;
@@ -40,8 +36,12 @@ export function useFormFields({
 	// Only expenses can belong to a subscription.
 	const [subscription, setSubscription] = useState<SubRef | null>(initial.subscription);
 	// The day the form is for: the exchange-rate suggestion follows it.
-	const [date, setDate] = useState(transaction?.transaction_date ?? today());
+	const [date, setDate] = useState(transaction?.transaction_date ?? localToday());
 	const [switched, setSwitched] = useState(false); // true once the user has changed the type
+	// Planned: coming up, not happened yet. It turns on by itself when the date is in the future,
+	// until you set it yourself (an existing transaction keeps what it has).
+	const [planned, setPlannedState] = useState(transaction?.planned ?? false);
+	const [plannedChosen, setPlannedChosen] = useState(Boolean(transaction));
 
 	const isTransfer = type === "transfer";
 	const account = accounts.find((a) => a.id === accountId) ?? null;
@@ -52,6 +52,16 @@ export function useFormFields({
 	const crossCurrency = Boolean(
 		isTransfer && account && toAccount && account.currency !== toAccount.currency,
 	);
+
+	function changeDate(next: string) {
+		setDate(next);
+		if (!plannedChosen) setPlannedState(isFuture(next, localToday()));
+	}
+
+	function setPlanned(on: boolean) {
+		setPlannedState(on);
+		setPlannedChosen(true);
+	}
 
 	function pickAccount(id: string) {
 		setAccountId(id);
@@ -98,7 +108,9 @@ export function useFormFields({
 		subscription,
 		setSubscription,
 		date,
-		setDate,
+		changeDate,
+		planned,
+		setPlanned,
 		switched,
 		pickAccount,
 		changeType,

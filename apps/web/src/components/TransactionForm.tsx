@@ -1,8 +1,11 @@
 import Autocomplete from "@mui/material/Autocomplete";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import Grid from "@mui/material/Grid";
+import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import Typography from "@mui/material/Typography";
 import { type FormEvent, useState } from "react";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
@@ -105,6 +108,7 @@ export default function TransactionForm({
 		paymentMethod,
 		subscription,
 		date,
+		planned,
 		switched,
 	} = fields;
 	const splits = useSplits(seed);
@@ -133,6 +137,7 @@ export default function TransactionForm({
 		crossCurrency,
 		foreign,
 		subscription,
+		planned,
 		splits: type !== "transfer" && splits.enabled ? splits : null,
 	});
 
@@ -148,6 +153,7 @@ export default function TransactionForm({
 				type,
 				form,
 				itemCategories: splits.enabled ? splits.rows.map((r) => r.category) : null,
+				planned,
 			});
 			notify(message.text, message.severity);
 			if (another && !transaction) {
@@ -238,7 +244,7 @@ export default function TransactionForm({
 							name="transaction_date"
 							type="date"
 							value={date}
-							onChange={(e) => fields.setDate(e.target.value)}
+							onChange={(e) => fields.changeDate(e.target.value)}
 							required
 							slotProps={{ inputLabel: { shrink: true } }}
 						/>
@@ -251,6 +257,20 @@ export default function TransactionForm({
 							onValueChange={vendorDefaults.onVendorChange}
 						/>
 					</RevealCell>
+
+					<Cell size={12}>
+						<FormControlLabel
+							control={<Switch checked={planned} onChange={(_, on) => fields.setPlanned(on)} />}
+							label="Planned"
+						/>
+						<Typography
+							variant="caption"
+							component="p"
+							sx={{ color: "text.secondary", mt: -0.5, mb: 1 }}
+						>
+							Coming up, not happened yet. It counts toward nothing until you mark it as paid.
+						</Typography>
+					</Cell>
 
 					<RevealCell size={12} show={type === "expense"}>
 						<Autocomplete

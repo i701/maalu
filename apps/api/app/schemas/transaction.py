@@ -62,6 +62,11 @@ class TransactionCreate(VendorRef):
     category: Category | None = None
     description: str | None = None
     transaction_date: date
+    planned: bool = Field(
+        default=False,
+        description="Something coming up that has not happened yet. It counts toward nothing "
+        "until it is posted.",
+    )
     splits: list[SplitInput] | None = Field(
         default=None,
         min_length=1,
@@ -137,6 +142,7 @@ class TransactionUpdate(VendorRef):
     category: Category | None = None
     description: str | None = None
     transaction_date: date | None = None
+    planned: bool | None = None
     splits: list[SplitInput] | None = Field(
         default=None,
         min_length=1,
@@ -154,6 +160,7 @@ class TransactionUpdate(VendorRef):
         "payment_method",
         "category",
         "transaction_date",
+        "planned",
     )
     @classmethod
     def _required_fields_not_null(cls, v):
@@ -177,6 +184,7 @@ class TransactionResponse(BaseModel):
     category_id: uuid.UUID | None
     description: str | None
     transaction_date: date
+    planned: bool
     splits: list[SplitResponse]
     currency: str
     exchange_rate: Decimal
@@ -225,6 +233,14 @@ class BulkUpdate(BulkIds):
         ):
             raise ValueError("Choose something to change")
         return self
+
+
+class PostPlanned(BaseModel):
+    """Turn a planned transaction into a real one. Both fields are optional: leave one out to keep
+    it as planned."""
+
+    transaction_date: date | None = Field(default=None, description="The day it actually happened")
+    amount: Amount | None = Field(default=None, description="What it actually came to")
 
 
 class BulkSkipped(BaseModel):

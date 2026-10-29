@@ -57,6 +57,7 @@ const createSchema = z.object({
 	to_account_id: z.uuid().optional(),
 	to_amount: amount.optional(),
 	tags: z.array(z.string().trim().min(1).max(50)).max(10).optional(),
+	planned: z.boolean().optional(),
 });
 
 const updateSchema = z.object({
@@ -238,6 +239,27 @@ export const bulkUpdateFn = createServerFn({ method: "POST" })
 	)
 	.handler(async ({ data }) =>
 		apiRequest<BulkResult>("/transactions/bulk", { method: "PATCH", body: data }),
+	);
+
+/** The planned (upcoming) transactions, soonest first, whatever their date. */
+export const listUpcomingFn = createServerFn({ method: "GET" }).handler(async () =>
+	apiRequest<Transaction[]>("/transactions", { query: { planned: "true", limit: 100 } }),
+);
+
+/** Mark a planned transaction as paid, optionally with the real date and amount. */
+export const postTransactionFn = createServerFn({ method: "POST" })
+	.validator(
+		z.object({
+			id: z.uuid(),
+			transaction_date: z.iso.date().optional(),
+			amount: amount.optional(),
+		}),
+	)
+	.handler(async ({ data }) =>
+		apiRequest<Transaction>(`/transactions/${data.id}/post`, {
+			method: "POST",
+			body: { transaction_date: data.transaction_date, amount: data.amount },
+		}),
 	);
 
 export const listTrashFn = createServerFn({ method: "GET" })
