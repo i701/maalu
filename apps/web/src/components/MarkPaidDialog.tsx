@@ -1,7 +1,7 @@
 import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
 import type { FormEvent } from "react";
-import { formatMoney } from "#/lib/format";
+import { formatMoney, formatTime } from "#/lib/format";
 import { localToday } from "#/lib/planned";
 import { useSheet } from "#/lib/sheet";
 import { txTitle } from "#/lib/tx-display";
@@ -33,7 +33,12 @@ export default function MarkPaidDialog({
 		const text = (k: string) => String(f.get(k) ?? "").trim();
 		const ok = await run(() =>
 			postTransactionFn({
-				data: { id: transaction.id, transaction_date: text("date"), amount: text("amount") },
+				data: {
+					id: transaction.id,
+					transaction_date: text("date"),
+					transaction_time: text("time") || null,
+					amount: text("amount"),
+				},
 			}),
 		);
 		if (ok) {
@@ -63,13 +68,22 @@ export default function MarkPaidDialog({
 						slotProps={{ htmlInput: { inputMode: "decimal" } }}
 					/>
 				</Grid>
-				<Grid size={12}>
+				<Grid size={6}>
 					<TextField
 						label="Paid on"
 						name="date"
 						type="date"
 						defaultValue={localToday()}
 						required
+						slotProps={{ inputLabel: { shrink: true } }}
+					/>
+				</Grid>
+				<Grid size={6}>
+					<TextField
+						label="Time"
+						name="time"
+						type="time"
+						defaultValue={formatTime(transaction.transaction_time) ?? ""}
 						slotProps={{ inputLabel: { shrink: true } }}
 					/>
 				</Grid>

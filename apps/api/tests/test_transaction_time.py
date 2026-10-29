@@ -101,3 +101,14 @@ async def test_export_has_a_time_column(client: AsyncClient, auth):
     rows = list(load_workbook(BytesIO(resp.content))["Transactions"].iter_rows(values_only=True))
     time_col = rows[0].index("Time")
     assert rows[1][time_col].strftime("%H:%M") == "14:30"
+
+
+async def test_posting_can_clear_the_planned_time(client: AsyncClient, auth):
+    t = await add(client, auth, planned=True, transaction_time="18:00:00")
+    kept = await client.post(f"{TX}/{t['id']}/post", json={}, headers=auth)
+    assert kept.json()["transaction_time"] == "18:00:00"
+    u = await add(client, auth, planned=True, transaction_time="18:00:00")
+    cleared = await client.post(
+        f"{TX}/{u['id']}/post", json={"transaction_time": None}, headers=auth
+    )
+    assert cleared.json()["transaction_time"] is None

@@ -873,7 +873,7 @@ class TransactionService:
         changes: dict = {"planned": False}
         if data.transaction_date is not None:
             changes["transaction_date"] = data.transaction_date
-        if data.transaction_time is not None:
+        if "transaction_time" in data.model_fields_set:  # an explicit null clears the time
             changes["transaction_time"] = data.transaction_time
         if data.amount is not None:
             changes["amount"] = data.amount

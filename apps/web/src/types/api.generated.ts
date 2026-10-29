@@ -1697,8 +1697,8 @@ export interface components {
         PaymentMethod: "cash" | "bank_transfer" | "debit_card" | "credit_card" | "other";
         /**
          * PostPlanned
-         * @description Turn a planned transaction into a real one. Both fields are optional: leave one out to keep
-         *     it as planned.
+         * @description Turn a planned transaction into a real one. Every field is optional: leave one out to keep
+         *     it as planned (an explicit `null` time clears the planned one).
          */
         PostPlanned: {
             /**

@@ -242,8 +242,8 @@ class BulkUpdate(BulkIds):
 
 
 class PostPlanned(BaseModel):
-    """Turn a planned transaction into a real one. Both fields are optional: leave one out to keep
-    it as planned."""
+    """Turn a planned transaction into a real one. Every field is optional: leave one out to keep
+    it as planned (an explicit `null` time clears the planned one)."""
 
     transaction_date: date | None = Field(default=None, description="The day it actually happened")
     transaction_time: time | None = Field(default=None, description="The time it happened")

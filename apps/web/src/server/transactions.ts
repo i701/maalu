@@ -23,6 +23,8 @@ const exchangeRate = z
 	.string()
 	.regex(/^\d+(\.\d{1,8})?$/, "Enter a valid rate (max 8 decimals)")
 	.refine((v) => Number(v) > 0, "Rate must be greater than 0");
+// "14:30" from a time input, or "14:30:00" as the API sends it.
+const timeOfDay = z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/);
 const currency = z.string().regex(/^[A-Za-z]{3}$/, "Use a 3-letter currency code");
 
 const splitSchema = z.object({
@@ -50,11 +52,7 @@ const createSchema = z.object({
 	category: z.string().trim().min(1).max(100).optional(),
 	description: z.string().nullable().optional(),
 	transaction_date: z.iso.date(),
-	transaction_time: z
-		.string()
-		.regex(/^\d{2}:\d{2}(:\d{2})?$/)
-		.nullable()
-		.optional(),
+	transaction_time: timeOfDay.nullable().optional(),
 	splits: z.array(splitSchema).min(1).optional(),
 	vendor_name: z.string().trim().min(1).max(200).optional(),
 	subscription_id: z.uuid().optional(),
@@ -257,13 +255,19 @@ export const postTransactionFn = createServerFn({ method: "POST" })
 		z.object({
 			id: z.uuid(),
 			transaction_date: z.iso.date().optional(),
+			// null clears the planned time; leaving it out keeps it
+			transaction_time: timeOfDay.nullable().optional(),
 			amount: amount.optional(),
 		}),
 	)
 	.handler(async ({ data }) =>
 		apiRequest<Transaction>(`/transactions/${data.id}/post`, {
 			method: "POST",
-			body: { transaction_date: data.transaction_date, amount: data.amount },
+			body: {
+				transaction_date: data.transaction_date,
+				transaction_time: data.transaction_time,
+				amount: data.amount,
+			},
 		}),
 	);
 
