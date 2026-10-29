@@ -767,6 +767,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/transactions/ids": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Matching Transaction Ids
+         * @description The ids of every transaction matching the same filters as the list, across all pages, for
+         *     "select everything that matches" before a bulk action. At most 5,000: past that you get a 422
+         *     asking to narrow the filters.
+         */
+        get: operations["matching_transaction_ids_api_v1_transactions_ids_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/transactions/summary": {
         parameters: {
             query?: never;
@@ -800,6 +822,26 @@ export interface paths {
          * @description Deleted transactions, most recently deleted first. They count toward nothing.
          */
         get: operations["list_trash_api_v1_transactions_trash_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/transactions/trash/ids": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Trash Ids
+         * @description The ids of everything in the trash (up to 5,000), for "select all".
+         */
+        get: operations["trash_ids_api_v1_transactions_trash_ids_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4375,6 +4417,58 @@ export interface operations {
             };
         };
     };
+    matching_transaction_ids_api_v1_transactions_ids_get: {
+        parameters: {
+            query?: {
+                vendor_id?: string | null;
+                subscription_id?: string | null;
+                account_id?: string | null;
+                category_id?: string | null;
+                /** @description Repeat to filter by several tags; see `tag_match` */
+                tag_id?: string[] | null;
+                /** @description `any`: has at least one of the tags. `all`: has every one. */
+                tag_match?: "any" | "all";
+                payment_method?: components["schemas"]["PaymentMethod"] | null;
+                type?: components["schemas"]["TransactionType"] | null;
+                currency?: string | null;
+                q?: string | null;
+                /** @description Base currency, inclusive */
+                min_amount?: number | string | null;
+                /** @description Base currency, inclusive */
+                max_amount?: number | string | null;
+                /** @description Inclusive, YYYY-MM-DD */
+                date_from?: string | null;
+                /** @description Inclusive, YYYY-MM-DD */
+                date_to?: string | null;
+                /** @description The planned (upcoming) ones instead */
+                planned?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     transaction_totals_api_v1_transactions_summary_get: {
         parameters: {
             query?: {
@@ -4455,6 +4549,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    trash_ids_api_v1_transactions_trash_ids_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
                 };
             };
         };
@@ -4935,6 +5049,7 @@ type ReadonlyArray<T> = [
 export const pathsApiV1TransactionsGetParametersQueryTag_matchValues: ReadonlyArray<FlattenedDeepRequired<paths>["/api/v1/transactions"]["get"]["parameters"]["query"]["tag_match"]> = ["any", "all"];
 export const pathsApiV1TransactionsCategoriesGetParametersQueryTag_matchValues: ReadonlyArray<FlattenedDeepRequired<paths>["/api/v1/transactions/categories"]["get"]["parameters"]["query"]["tag_match"]> = ["any", "all"];
 export const pathsApiV1TransactionsExportGetParametersQueryTag_matchValues: ReadonlyArray<FlattenedDeepRequired<paths>["/api/v1/transactions/export"]["get"]["parameters"]["query"]["tag_match"]> = ["any", "all"];
+export const pathsApiV1TransactionsIdsGetParametersQueryTag_matchValues: ReadonlyArray<FlattenedDeepRequired<paths>["/api/v1/transactions/ids"]["get"]["parameters"]["query"]["tag_match"]> = ["any", "all"];
 export const pathsApiV1TransactionsSummaryGetParametersQueryTag_matchValues: ReadonlyArray<FlattenedDeepRequired<paths>["/api/v1/transactions/summary"]["get"]["parameters"]["query"]["tag_match"]> = ["any", "all"];
 export const accountGroupValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AccountGroup"]> = ["cash", "accounts", "card", "debit_card", "savings", "prepaid", "investments", "overdrafts", "loan", "insurance", "others"];
 export const budgetLineResponseStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BudgetLineResponse"]["status"]> = ["ok", "warning", "over"];

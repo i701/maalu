@@ -338,6 +338,67 @@ async def category_totals(
     )
 
 
+# Declared before "/{transaction_id}" so "ids" isn't parsed as an id.
+@router.get("/ids", response_model=list[uuid.UUID])
+async def matching_transaction_ids(
+    user_id: CurrentUserId,
+    service: TransactionServiceDep,
+    vendor_id: uuid.UUID | None = None,
+    subscription_id: uuid.UUID | None = None,
+    account_id: uuid.UUID | None = None,
+    category_id: uuid.UUID | None = None,
+    tag_id: Annotated[
+        list[uuid.UUID] | None,
+        Query(description="Repeat to filter by several tags; see `tag_match`"),
+    ] = None,
+    tag_match: Annotated[
+        TagMatch, Query(description="`any`: has at least one of the tags. `all`: has every one.")
+    ] = "any",
+    payment_method: PaymentMethod | None = None,
+    transaction_type: Annotated[TransactionType | None, Query(alias="type")] = None,
+    currency: str | None = None,
+    q: Annotated[str | None, Query(max_length=100)] = None,
+    min_amount: Annotated[
+        Decimal | None,
+        Query(ge=0, max_digits=19, decimal_places=4, description="Base currency, inclusive"),
+    ] = None,
+    max_amount: Annotated[
+        Decimal | None,
+        Query(ge=0, max_digits=19, decimal_places=4, description="Base currency, inclusive"),
+    ] = None,
+    date_from: Annotated[date | None, Query(description="Inclusive, YYYY-MM-DD")] = None,
+    date_to: Annotated[date | None, Query(description="Inclusive, YYYY-MM-DD")] = None,
+    planned: Annotated[bool, Query(description="The planned (upcoming) ones instead")] = False,
+):
+    """The ids of every transaction matching the same filters as the list, across all pages, for
+    "select everything that matches" before a bulk action. At most 5,000: past that you get a 422
+    asking to narrow the filters."""
+    _check_range(min_amount, max_amount)
+    _check_dates(date_from, date_to)
+    try:
+        ids = await service.ids_for_user(
+            user_id,
+            transaction_type=transaction_type,
+            vendor_id=vendor_id,
+            subscription_id=subscription_id,
+            account_id=account_id,
+            category_id=category_id,
+            tag_ids=tag_id,
+            tag_match=tag_match,
+            payment_method=payment_method,
+            currency=currency,
+            q=q,
+            min_amount=min_amount,
+            max_amount=max_amount,
+            date_from=date_from,
+            date_to=date_to,
+            planned=planned,
+        )
+    except TransactionRuleError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
+    return ids
+
+
 # The bulk routes are declared before "/{transaction_id}" so "bulk" isn't parsed as an id.
 @router.patch("/bulk", response_model=BulkResult)
 async def bulk_update_transactions(
@@ -373,6 +434,15 @@ async def bulk_purge_transactions(
 
 
 # Declared before "/{transaction_id}" so "trash" isn't parsed as an id.
+@router.get("/trash/ids", response_model=list[uuid.UUID])
+async def trash_ids(user_id: CurrentUserId, service: TransactionServiceDep):
+    """The ids of everything in the trash (up to 5,000), for "select all"."""
+    try:
+        return await service.trashed_ids(user_id)
+    except TransactionRuleError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
+
+
 @router.get("/trash", response_model=list[TransactionResponse])
 async def list_trash(
     user_id: CurrentUserId, service: TransactionServiceDep, response: Response, page: PageDep

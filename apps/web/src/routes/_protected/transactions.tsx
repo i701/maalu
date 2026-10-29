@@ -25,6 +25,7 @@ import FiltersDrawer from "#/components/FiltersDrawer";
 import MakeSubscriptionDialog from "#/components/MakeSubscriptionDialog";
 import MobileCard from "#/components/MobileCard";
 import PageHeader from "#/components/PageHeader";
+import SelectAllMatching from "#/components/SelectAllMatching";
 import SelectionBar from "#/components/SelectionBar";
 import PendingOverlay from "#/components/PendingOverlay";
 import ResponsiveTable from "#/components/ResponsiveTable";
@@ -56,6 +57,7 @@ import {
 	hasAnyFilter,
 	pickFilterValues,
 	type TransactionFilterValues,
+	type TransactionSearch,
 } from "#/lib/transaction-filters";
 import { transactionCount } from "#/lib/bulk-message";
 import { type SelectionState, useSelection } from "#/lib/selection";
@@ -70,6 +72,7 @@ import {
 	deleteTransactionFn,
 	getCategoryTotalsFn,
 	getTransactionTotalsFn,
+	listMatchingIdsFn,
 	listTransactionsFn,
 } from "#/server/transactions";
 import { getBudgetFn } from "#/server/budget";
@@ -495,12 +498,17 @@ function TransactionList({
 	onDuplicate,
 	onEdit,
 	onDelete,
+	total,
+	search,
 }: {
 	items: Transaction[];
 	baseCurrency: string;
 	categories: Category[];
 	vendors: Vendor[];
 	tags: Tag[];
+	/** How many transactions match the filters, over every page. */
+	total: number;
+	search: TransactionSearch;
 	onConvert: (t: Transaction) => void;
 	onDuplicate: (t: Transaction) => void;
 	onEdit: (t: Transaction) => void;
@@ -513,7 +521,20 @@ function TransactionList({
 
 	return (
 		<>
-			<SelectionBar count={selection.selectedIds.length} onClear={selection.clear}>
+			<SelectionBar
+				count={selection.selectedIds.length}
+				onClear={selection.clear}
+				extra={
+					<SelectAllMatching
+						total={total}
+						pageCount={items.length}
+						state={selection.state}
+						wide={selection.wide}
+						load={() => listMatchingIdsFn({ data: { ...pickFilterValues(search), q: search.q } })}
+						onLoaded={selection.selectAll}
+					/>
+				}
+			>
 				<Button
 					size="small"
 					color="inherit"
@@ -772,6 +793,8 @@ function TransactionsPage() {
 										categories={allCategories}
 										vendors={vendors}
 										tags={allTags}
+										total={total}
+										search={search}
 										onConvert={setConverting}
 										onDuplicate={duplicate}
 										onEdit={setEditing}

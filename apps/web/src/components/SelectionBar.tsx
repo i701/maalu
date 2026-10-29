@@ -8,10 +8,13 @@ import Reveal from "./Reveal";
 export default function SelectionBar({
 	count,
 	onClear,
+	extra,
 	children,
 }: {
 	count: number;
 	onClear: () => void;
+	/** Beside the count, for example an offer to select more. */
+	extra?: ReactNode;
 	/** The actions, as buttons. */
 	children: ReactNode;
 }) {
@@ -34,9 +37,15 @@ export default function SelectionBar({
 					color: "var(--md-sys-color-on-secondary-container)",
 				}}
 			>
-				<Typography variant="body2" sx={{ fontWeight: 600, mr: "auto" }} aria-live="polite">
-					{count} selected
-				</Typography>
+				<Stack
+					direction="row"
+					sx={{ alignItems: "center", flexWrap: "wrap", columnGap: 1.5, mr: "auto" }}
+				>
+					<Typography variant="body2" sx={{ fontWeight: 600 }} aria-live="polite">
+						{count.toLocaleString("en-GB")} selected
+					</Typography>
+					{extra}
+				</Stack>
 				{children}
 				<Button color="inherit" size="small" onClick={onClear}>
 					Clear

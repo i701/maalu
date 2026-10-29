@@ -208,6 +208,8 @@ class TransactionResponse(BaseModel):
 
 # The most transactions one bulk request can touch.
 MAX_BULK = 500
+# The most transactions "select everything that matches" will hand back at once.
+MAX_SELECT_ALL = 5000
 
 
 class BulkIds(BaseModel):

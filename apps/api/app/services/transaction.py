@@ -19,6 +19,7 @@ from app.models import (
     Vendor,
 )
 from app.schemas import (
+    MAX_SELECT_ALL,
     BulkResult,
     BulkSkipped,
     BulkUpdate,
@@ -401,6 +402,23 @@ class TransactionService:
         stmt = select(Transaction).where(*conditions).order_by(*order).limit(limit).offset(offset)
         return list((await self.db.scalars(stmt)).all())
 
+    async def ids_for_user(self, user_id: uuid.UUID, **filters) -> list[uuid.UUID]:
+        """The ids of every transaction the same filters as the list match (not just one page), for
+        "select everything that matches". Raises TransactionRuleError past MAX_SELECT_ALL instead of
+        handing back a part of them."""
+        conditions = self._conditions(user_id, **filters)
+        matches = (await self.db.scalar(select(func.count(Transaction.id)).where(*conditions))) or 0
+        self._check_select_all(matches)
+        return list((await self.db.scalars(select(Transaction.id).where(*conditions))).all())
+
+    @staticmethod
+    def _check_select_all(matches: int) -> None:
+        if matches > MAX_SELECT_ALL:
+            raise TransactionRuleError(
+                f"{matches:,} transactions match; you can select up to {MAX_SELECT_ALL:,} at once. "
+                "Narrow the filters and try again."
+            )
+
     async def count_for_user(
         self,
         user_id: uuid.UUID,
@@ -756,6 +774,12 @@ class TransactionService:
             .limit(limit)
             .offset(offset)
         )
+        return list((await self.db.scalars(stmt)).all())
+
+    async def trashed_ids(self, user_id: uuid.UUID) -> list[uuid.UUID]:
+        """The ids of everything in the trash, for "select all"."""
+        self._check_select_all(await self.count_trashed(user_id))
+        stmt = select(Transaction.id).where(*self._trash_conditions(user_id))
         return list((await self.db.scalars(stmt)).all())
 
     async def count_trashed(self, user_id: uuid.UUID) -> int:

@@ -40,6 +40,7 @@ from app.schemas.tag import (
 )
 from app.schemas.template import TemplateCreate, TemplateResponse, TemplateUpdate
 from app.schemas.transaction import (
+    MAX_SELECT_ALL,
     BulkIds,
     BulkResult,
     BulkSkipped,
@@ -58,6 +59,7 @@ from app.schemas.user import Token, UserCreate, UserResponse, UserUpdate
 from app.schemas.vendor import VendorCreate, VendorMerge, VendorResponse, VendorUpdate
 
 __all__ = [
+    "MAX_SELECT_ALL",
     "MAX_TAGS",
     "AccountCreate",
     "AccountRef",

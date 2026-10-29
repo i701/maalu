@@ -14,6 +14,7 @@ import EmptyState from "#/components/EmptyState";
 import MobileCard from "#/components/MobileCard";
 import { useNotify } from "#/components/Notify";
 import PageHeader from "#/components/PageHeader";
+import SelectAllMatching from "#/components/SelectAllMatching";
 import SelectionBar from "#/components/SelectionBar";
 import PendingOverlay from "#/components/PendingOverlay";
 import ResponsiveTable from "#/components/ResponsiveTable";
@@ -34,6 +35,7 @@ import {
 	bulkPurgeFn,
 	bulkRestoreFn,
 	listTrashFn,
+	listTrashIdsFn,
 	restoreTransactionFn,
 } from "#/server/transactions";
 import { TRANSACTION_TYPE_LABELS, type BulkResult, type Transaction } from "#/types/api";
@@ -204,7 +206,7 @@ const TrashTable = memo(function TrashTable({
 });
 
 /** The trash table with row selection: restore or delete for good, one row or many. */
-function TrashList({ items }: { items: Transaction[] }) {
+function TrashList({ items, total }: { items: Transaction[]; total: number }) {
 	const selection = useSelection(items.map((t) => t.id));
 	const { run, pending } = useAction();
 	const notify = useNotify();
@@ -229,7 +231,20 @@ function TrashList({ items }: { items: Transaction[] }) {
 
 	return (
 		<>
-			<SelectionBar count={selection.selectedIds.length} onClear={selection.clear}>
+			<SelectionBar
+				count={selection.selectedIds.length}
+				onClear={selection.clear}
+				extra={
+					<SelectAllMatching
+						total={total}
+						pageCount={items.length}
+						state={selection.state}
+						wide={selection.wide}
+						load={() => listTrashIdsFn()}
+						onLoaded={selection.selectAll}
+					/>
+				}
+			>
 				<Button
 					size="small"
 					color="inherit"
@@ -305,7 +320,7 @@ function TrashPage() {
 							The trash is empty. A transaction you delete lands here first, so you can get it back.
 						</EmptyState>
 					) : (
-						<TrashList items={items} />
+						<TrashList items={items} total={total} />
 					)}
 
 					<TablePager

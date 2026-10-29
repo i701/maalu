@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
 	PAYMENT_METHODS,
 	TRANSACTION_TYPES,
+	type ApiResult,
 	type BulkResult,
 	type CategoryTotals,
 	type Transaction,
@@ -10,6 +11,7 @@ import {
 } from "#/types/api";
 import type { PageResult } from "#/lib/pagination";
 import { apiRequest } from "./api";
+import { MAX_SELECT_ALL } from "#/lib/selection";
 
 import { DEFAULT_PAGE_SIZE, PAGE_SIZES } from "#/lib/pagination";
 
@@ -108,6 +110,23 @@ const listSchema = z.object({
 	date_to: z.iso.date().optional(),
 });
 
+/** The filters every transaction list endpoint shares, as the API's query parameters. */
+const filterQuery = (data: Omit<z.infer<typeof listSchema>, "page" | "pageSize">) => ({
+	type: data.type,
+	payment_method: data.payment_method,
+	vendor_id: data.vendor_id,
+	category_id: data.category_id,
+	tag_id: data.tag_ids,
+	tag_match: data.tag_match,
+	account_id: data.account_id,
+	currency: data.currency,
+	q: data.q,
+	min_amount: data.min_amount,
+	max_amount: data.max_amount,
+	date_from: data.date_from,
+	date_to: data.date_to,
+});
+
 export const listTransactionsFn = createServerFn({ method: "GET" })
 	.validator(listSchema)
 	.handler(async ({ data }) => {
@@ -115,19 +134,7 @@ export const listTransactionsFn = createServerFn({ method: "GET" })
 			query: {
 				limit: data.pageSize,
 				offset: (data.page - 1) * data.pageSize,
-				type: data.type,
-				payment_method: data.payment_method,
-				vendor_id: data.vendor_id,
-				category_id: data.category_id,
-				tag_id: data.tag_ids,
-				tag_match: data.tag_match,
-				account_id: data.account_id,
-				currency: data.currency,
-				q: data.q,
-				min_amount: data.min_amount,
-				max_amount: data.max_amount,
-				date_from: data.date_from,
-				date_to: data.date_to,
+				...filterQuery(data),
 			},
 		});
 		if (!res.ok) return res;
@@ -146,21 +153,7 @@ export const getTransactionTotalsFn = createServerFn({ method: "GET" })
 	.validator(listSchema.omit({ page: true, pageSize: true }))
 	.handler(async ({ data }) =>
 		apiRequest<TransactionTotals>("/transactions/summary", {
-			query: {
-				type: data.type,
-				payment_method: data.payment_method,
-				vendor_id: data.vendor_id,
-				category_id: data.category_id,
-				tag_id: data.tag_ids,
-				tag_match: data.tag_match,
-				account_id: data.account_id,
-				currency: data.currency,
-				q: data.q,
-				min_amount: data.min_amount,
-				max_amount: data.max_amount,
-				date_from: data.date_from,
-				date_to: data.date_to,
-			},
+			query: filterQuery(data),
 		}),
 	);
 
@@ -169,21 +162,7 @@ export const getCategoryTotalsFn = createServerFn({ method: "GET" })
 	.validator(listSchema.omit({ page: true, pageSize: true }))
 	.handler(async ({ data }) =>
 		apiRequest<CategoryTotals>("/transactions/categories", {
-			query: {
-				type: data.type,
-				payment_method: data.payment_method,
-				vendor_id: data.vendor_id,
-				category_id: data.category_id,
-				tag_id: data.tag_ids,
-				tag_match: data.tag_match,
-				account_id: data.account_id,
-				currency: data.currency,
-				q: data.q,
-				min_amount: data.min_amount,
-				max_amount: data.max_amount,
-				date_from: data.date_from,
-				date_to: data.date_to,
-			},
+			query: filterQuery(data),
 		}),
 	);
 
@@ -207,27 +186,45 @@ export const deleteTransactionFn = createServerFn({ method: "POST" })
 	.validator(z.object({ id: z.uuid() }))
 	.handler(async ({ data }) => apiRequest<void>(`/transactions/${data.id}`, { method: "DELETE" }));
 
-const bulkIds = z.object({ ids: z.array(z.uuid()).min(1).max(500) });
+const bulkIds = z.object({ ids: z.array(z.uuid()).min(1).max(MAX_SELECT_ALL) });
+
+/** The API takes this many ids per bulk request, so a bigger selection goes in several. */
+const BULK_CHUNK = 500;
+
+/** One bulk action over any number of ids (up to what "select all" allows), reported as one result.
+ * Each batch is saved as it goes, so if one fails the earlier ones stay done. */
+async function bulkCall(
+	path: string,
+	method: "POST" | "PATCH",
+	ids: string[],
+	rest: Record<string, unknown> = {},
+): Promise<ApiResult<BulkResult>> {
+	const total: BulkResult = { updated: 0, skipped: [] };
+	for (let i = 0; i < ids.length; i += BULK_CHUNK) {
+		const res = await apiRequest<BulkResult>(path, {
+			method,
+			body: { ...rest, ids: ids.slice(i, i + BULK_CHUNK) },
+		});
+		if (!res.ok) return res;
+		total.updated += res.data.updated;
+		total.skipped.push(...res.data.skipped);
+	}
+	return { ok: true, data: total };
+}
 
 /** Move many transactions to the trash. */
 export const bulkTrashFn = createServerFn({ method: "POST" })
 	.validator(bulkIds)
-	.handler(async ({ data }) =>
-		apiRequest<BulkResult>("/transactions/bulk/trash", { method: "POST", body: data }),
-	);
+	.handler(async ({ data }) => bulkCall("/transactions/bulk/trash", "POST", data.ids));
 
 export const bulkRestoreFn = createServerFn({ method: "POST" })
 	.validator(bulkIds)
-	.handler(async ({ data }) =>
-		apiRequest<BulkResult>("/transactions/bulk/restore", { method: "POST", body: data }),
-	);
+	.handler(async ({ data }) => bulkCall("/transactions/bulk/restore", "POST", data.ids));
 
 /** Delete many for good: only ones already in the trash. */
 export const bulkPurgeFn = createServerFn({ method: "POST" })
 	.validator(bulkIds)
-	.handler(async ({ data }) =>
-		apiRequest<BulkResult>("/transactions/bulk/purge", { method: "POST", body: data }),
-	);
+	.handler(async ({ data }) => bulkCall("/transactions/bulk/purge", "POST", data.ids));
 
 /** Change the same things on many transactions; only the fields sent change. */
 export const bulkUpdateFn = createServerFn({ method: "POST" })
@@ -240,9 +237,21 @@ export const bulkUpdateFn = createServerFn({ method: "POST" })
 			remove_tags: z.array(z.string().trim().min(1).max(50)).max(10).optional(),
 		}),
 	)
-	.handler(async ({ data }) =>
-		apiRequest<BulkResult>("/transactions/bulk", { method: "PATCH", body: data }),
+	.handler(async ({ data: { ids, ...rest } }) =>
+		bulkCall("/transactions/bulk", "PATCH", ids, rest),
 	);
+
+/** The ids of every transaction the filters match, across all pages, for "select all". */
+export const listMatchingIdsFn = createServerFn({ method: "GET" })
+	.validator(listSchema.omit({ page: true, pageSize: true }))
+	.handler(async ({ data }) =>
+		apiRequest<string[]>("/transactions/ids", { query: filterQuery(data) }),
+	);
+
+/** The ids of everything in the trash, for "select all". */
+export const listTrashIdsFn = createServerFn({ method: "GET" }).handler(async () =>
+	apiRequest<string[]>("/transactions/trash/ids"),
+);
 
 /** The planned (upcoming) transactions, soonest first, whatever their date. */
 export const listUpcomingFn = createServerFn({ method: "GET" }).handler(async () =>

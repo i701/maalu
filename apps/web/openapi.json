@@ -7735,6 +7735,315 @@
         ]
       }
     },
+    "/api/v1/transactions/ids": {
+      "get": {
+        "description": "The ids of every transaction matching the same filters as the list, across all pages, for\n\"select everything that matches\" before a bulk action. At most 5,000: past that you get a 422\nasking to narrow the filters.",
+        "operationId": "matching_transaction_ids_api_v1_transactions_ids_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "vendor_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Vendor Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subscription_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subscription Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "account_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Account Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "category_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category Id"
+            }
+          },
+          {
+            "description": "Repeat to filter by several tags; see `tag_match`",
+            "in": "query",
+            "name": "tag_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Repeat to filter by several tags; see `tag_match`",
+              "title": "Tag Id"
+            }
+          },
+          {
+            "description": "`any`: has at least one of the tags. `all`: has every one.",
+            "in": "query",
+            "name": "tag_match",
+            "required": false,
+            "schema": {
+              "default": "any",
+              "description": "`any`: has at least one of the tags. `all`: has every one.",
+              "enum": [
+                "any",
+                "all"
+              ],
+              "title": "Tag Match",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "payment_method",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PaymentMethod"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Payment Method"
+            }
+          },
+          {
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/TransactionType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Type"
+            }
+          },
+          {
+            "in": "query",
+            "name": "currency",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Currency"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "description": "Base currency, inclusive",
+            "in": "query",
+            "name": "min_amount",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 0.0,
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Base currency, inclusive",
+              "title": "Min Amount"
+            }
+          },
+          {
+            "description": "Base currency, inclusive",
+            "in": "query",
+            "name": "max_amount",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 0.0,
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Base currency, inclusive",
+              "title": "Max Amount"
+            }
+          },
+          {
+            "description": "Inclusive, YYYY-MM-DD",
+            "in": "query",
+            "name": "date_from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inclusive, YYYY-MM-DD",
+              "title": "Date From"
+            }
+          },
+          {
+            "description": "Inclusive, YYYY-MM-DD",
+            "in": "query",
+            "name": "date_to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inclusive, YYYY-MM-DD",
+              "title": "Date To"
+            }
+          },
+          {
+            "description": "The planned (upcoming) ones instead",
+            "in": "query",
+            "name": "planned",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "The planned (upcoming) ones instead",
+              "title": "Planned",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "title": "Response Matching Transaction Ids Api V1 Transactions Ids Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Matching Transaction Ids",
+        "tags": [
+          "transactions"
+        ]
+      }
+    },
     "/api/v1/transactions/summary": {
       "get": {
         "description": "Total income and expense (in your base currency) of the transactions matching the same\nfilters as the list. Transfers are not counted.",
@@ -8098,6 +8407,38 @@
           }
         ],
         "summary": "List Trash",
+        "tags": [
+          "transactions"
+        ]
+      }
+    },
+    "/api/v1/transactions/trash/ids": {
+      "get": {
+        "description": "The ids of everything in the trash (up to 5,000), for \"select all\".",
+        "operationId": "trash_ids_api_v1_transactions_trash_ids_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "title": "Response Trash Ids Api V1 Transactions Trash Ids Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Trash Ids",
         "tags": [
           "transactions"
         ]
