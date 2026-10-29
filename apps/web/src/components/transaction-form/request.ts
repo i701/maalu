@@ -163,6 +163,7 @@ function transferRequest(f: FormData, s: State): TransactionRequest {
 		type: s.type,
 		amount: text(f, "amount"),
 		transaction_date: text(f, "transaction_date"),
+		transaction_time: text(f, "transaction_time") || null,
 		account_id: accountId,
 		to_account_id: toAccountId,
 		to_amount: s.crossCurrency ? text(f, "to_amount") : undefined,
@@ -222,6 +223,7 @@ function ordinaryRequest(f: FormData, s: State): TransactionRequest {
 		// With items, the amount is their total and the category comes from the biggest item.
 		amount: s.splits ? s.splits.total : text(f, "amount"),
 		transaction_date: text(f, "transaction_date"),
+		transaction_time: text(f, "transaction_time") || null,
 		currency: account ? account.currency : text(f, "currency").toUpperCase(),
 		exchange_rate: s.foreign ? text(f, "exchange_rate") : undefined,
 		payment_method: text(f, "payment_method") as PaymentMethod,

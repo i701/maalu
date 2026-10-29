@@ -26,6 +26,7 @@ import { useNotify } from "./Notify";
 import SaveTemplateDialog from "./SaveTemplateDialog";
 import TagsField from "./TagsField";
 import VendorField from "./VendorField";
+import { formatTime } from "#/lib/format";
 import { Cell, RevealCell } from "./transaction-form/Cells";
 import FormFooter from "./transaction-form/FormFooter";
 import OrdinaryFields from "./transaction-form/OrdinaryFields";
@@ -238,7 +239,7 @@ export default function TransactionForm({
 						/>
 					)}
 
-					<Cell size={{ xs: 12, sm: isTransfer ? 12 : 6 }}>
+					<Cell size={6}>
 						<TextField
 							label="Date"
 							name="transaction_date"
@@ -250,7 +251,17 @@ export default function TransactionForm({
 						/>
 					</Cell>
 
-					<RevealCell size={{ xs: 12, sm: 6 }} show={!isTransfer}>
+					<Cell size={6}>
+						<TextField
+							label="Time"
+							name="transaction_time"
+							type="time"
+							defaultValue={formatTime(transaction?.transaction_time ?? null) ?? ""}
+							slotProps={{ inputLabel: { shrink: true } }}
+						/>
+					</Cell>
+
+					<RevealCell size={12} show={!isTransfer}>
 						<VendorField
 							vendors={vendors}
 							defaultValue={seed?.vendorName ?? ""}

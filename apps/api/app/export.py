@@ -24,6 +24,7 @@ _BOLD = Font(bold=True)
 # (header, width). "{base}" is replaced with the user's base currency code.
 _COLUMNS = [
     ("Date", 12),
+    ("Time", 8),
     ("Type", 10),
     ("Category", 18),
     ("Vendor", 22),
@@ -169,6 +170,7 @@ def build_workbook(
                 )
         values = [
             (t.transaction_date, "yyyy-mm-dd"),
+            (t.transaction_time, "hh:mm"),
             (t.type.value.capitalize(), None),
             (None if is_transfer else _categories(t), None),
             (t.vendor.name if t.vendor else None, None),

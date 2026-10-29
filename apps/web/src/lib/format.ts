@@ -17,6 +17,17 @@ export function formatDate(iso: string): string {
 	});
 }
 
+/** "14:30:00" (or "14:30") as "14:30"; null stays null. */
+export function formatTime(time: string | null): string | null {
+	return time ? time.slice(0, 5) : null;
+}
+
+/** The date, with the time after it when there is one: "10 Mar 2026, 14:30". */
+export function formatWhen(iso: string, time: string | null): string {
+	const t = formatTime(time);
+	return t ? `${formatDate(iso)}, ${t}` : formatDate(iso);
+}
+
 export const COMMON_CURRENCIES = [
 	"MVR",
 	"USD",

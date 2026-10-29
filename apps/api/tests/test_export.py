@@ -121,9 +121,9 @@ async def test_exports_follow_the_same_filters_as_the_list(client: AsyncClient, 
     _, only_expenses = await download(client, auth, type="expense")
     assert len(rows(only_expenses)) == 3  # header + 2
     _, searched = await download(client, auth, q="lunch")
-    assert [r[2] for r in rows(searched)[1:]] == ["Lunch"]
+    assert [r[3] for r in rows(searched)[1:]] == ["Lunch"]
     _, ranged = await download(client, auth, min_amount="100", max_amount="600")
-    assert [r[2] for r in rows(ranged)[1:]] == ["Rent"]
+    assert [r[3] for r in rows(ranged)[1:]] == ["Rent"]
     _, none = await download(client, auth, q="zzz")
     assert len(rows(none)) == 1  # just the header: still a valid file
 
@@ -151,7 +151,7 @@ async def test_oldest_first(client: AsyncClient, auth):
         TX, json=body(category="Earlier", transaction_date="2026-09-01"), headers=auth
     )
     _, wb = await download(client, auth)
-    assert [r[2] for r in rows(wb)[1:]] == ["Earlier", "Later"]
+    assert [r[3] for r in rows(wb)[1:]] == ["Earlier", "Later"]
 
 
 async def test_refuses_oversized_exports_instead_of_truncating(
@@ -181,7 +181,7 @@ async def test_only_exports_your_own_transactions(client: AsyncClient, auth, sig
     bob = await signup("bob@example.com")
     await client.post(TX, json=body(category="Bobs"), headers=bob)
     _, wb = await download(client, auth)
-    assert [r[2] for r in rows(wb)[1:]] == ["Mine"]
+    assert [r[3] for r in rows(wb)[1:]] == ["Mine"]
 
 
 def test_workbook_builder_handles_no_rows():

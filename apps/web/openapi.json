@@ -1708,6 +1708,19 @@
             ],
             "description": "The day it actually happened",
             "title": "Transaction Date"
+          },
+          "transaction_time": {
+            "anyOf": [
+              {
+                "format": "time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The time it happened",
+            "title": "Transaction Time"
           }
         },
         "title": "PostPlanned",
@@ -2895,6 +2908,19 @@
             "title": "Transaction Date",
             "type": "string"
           },
+          "transaction_time": {
+            "anyOf": [
+              {
+                "format": "time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional time of day, as read on the clock. It only orders one day.",
+            "title": "Transaction Time"
+          },
           "type": {
             "$ref": "#/components/schemas/TransactionType"
           },
@@ -3068,6 +3094,18 @@
             "title": "Transaction Date",
             "type": "string"
           },
+          "transaction_time": {
+            "anyOf": [
+              {
+                "format": "time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transaction Time"
+          },
           "type": {
             "$ref": "#/components/schemas/TransactionType"
           },
@@ -3092,6 +3130,7 @@
           "category_id",
           "description",
           "transaction_date",
+          "transaction_time",
           "planned",
           "splits",
           "currency",
@@ -3327,6 +3366,18 @@
               }
             ],
             "title": "Transaction Date"
+          },
+          "transaction_time": {
+            "anyOf": [
+              {
+                "format": "time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transaction Time"
           },
           "type": {
             "anyOf": [

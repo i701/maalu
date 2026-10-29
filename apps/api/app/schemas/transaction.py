@@ -1,5 +1,5 @@
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, time
 from decimal import Decimal
 from typing import Annotated, Literal
 
@@ -62,6 +62,10 @@ class TransactionCreate(VendorRef):
     category: Category | None = None
     description: str | None = None
     transaction_date: date
+    transaction_time: time | None = Field(
+        default=None,
+        description="Optional time of day, as read on the clock. It only orders one day.",
+    )
     planned: bool = Field(
         default=False,
         description="Something coming up that has not happened yet. It counts toward nothing "
@@ -142,6 +146,7 @@ class TransactionUpdate(VendorRef):
     category: Category | None = None
     description: str | None = None
     transaction_date: date | None = None
+    transaction_time: time | None = None  # explicit null clears
     planned: bool | None = None
     splits: list[SplitInput] | None = Field(
         default=None,
@@ -184,6 +189,7 @@ class TransactionResponse(BaseModel):
     category_id: uuid.UUID | None
     description: str | None
     transaction_date: date
+    transaction_time: time | None
     planned: bool
     splits: list[SplitResponse]
     currency: str
@@ -240,6 +246,7 @@ class PostPlanned(BaseModel):
     it as planned."""
 
     transaction_date: date | None = Field(default=None, description="The day it actually happened")
+    transaction_time: time | None = Field(default=None, description="The time it happened")
     amount: Amount | None = Field(default=None, description="What it actually came to")
 
 

@@ -2,7 +2,7 @@ import { morph } from "#/lib/shape";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { memo } from "react";
-import { formatDate, formatMoney } from "#/lib/format";
+import { formatMoney, formatWhen } from "#/lib/format";
 import { ACCENT } from "#/lib/m3";
 import type { Transaction } from "#/types/api";
 import { RouterButton } from "../RouterLinks";
@@ -72,7 +72,7 @@ const LatestTransactionsCard = memo(function LatestTransactionsCard({
 									</Typography>
 									<Typography noWrap variant="caption" sx={{ color: "text.secondary" }}>
 										{t.type === "transfer" ? "Transfer" : t.category} ·{" "}
-										{formatDate(t.transaction_date)}
+										{formatWhen(t.transaction_date, t.transaction_time)}
 									</Typography>
 								</Box>
 								<Typography

@@ -24,7 +24,7 @@ import TablePager from "#/components/TablePager";
 import TableToolbar from "#/components/TableToolbar";
 import TonalChip from "#/components/TonalChip";
 import { bulkMessage, transactionCount } from "#/lib/bulk-message";
-import { formatDate, formatMoney } from "#/lib/format";
+import { formatDate, formatMoney, formatWhen } from "#/lib/format";
 import { ACCENT } from "#/lib/m3";
 import { lastPageIfOutOfRange, pageSearch } from "#/lib/pagination";
 import { type SelectionState, useSelection } from "#/lib/selection";
@@ -70,7 +70,7 @@ function Summary({ transaction: t }: { transaction: Transaction }) {
 				{title(t)}
 			</Typography>
 			<Typography variant="caption" sx={{ color: "text.secondary" }}>
-				{TRANSACTION_TYPE_LABELS[t.type]} · {formatDate(t.transaction_date)}
+				{TRANSACTION_TYPE_LABELS[t.type]} · {formatWhen(t.transaction_date, t.transaction_time)}
 			</Typography>
 		</>
 	);

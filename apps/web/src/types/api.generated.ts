@@ -1711,6 +1711,11 @@ export interface components {
              * @description The day it actually happened
              */
             transaction_date?: string | null;
+            /**
+             * Transaction Time
+             * @description The time it happened
+             */
+            transaction_time?: string | null;
         };
         /**
          * SplitInput
@@ -2149,6 +2154,11 @@ export interface components {
              * Format: date
              */
             transaction_date: string;
+            /**
+             * Transaction Time
+             * @description Optional time of day, as read on the clock. It only orders one day.
+             */
+            transaction_time?: string | null;
             type: components["schemas"]["TransactionType"];
             /** Vendor Id */
             vendor_id?: string | null;
@@ -2206,6 +2216,8 @@ export interface components {
              * Format: date
              */
             transaction_date: string;
+            /** Transaction Time */
+            transaction_time: string | null;
             type: components["schemas"]["TransactionType"];
             vendor: components["schemas"]["VendorResponse"] | null;
         };
@@ -2269,6 +2281,8 @@ export interface components {
             to_amount?: number | string | null;
             /** Transaction Date */
             transaction_date?: string | null;
+            /** Transaction Time */
+            transaction_time?: string | null;
             type?: components["schemas"]["TransactionType"] | null;
             /** Vendor Id */
             vendor_id?: string | null;

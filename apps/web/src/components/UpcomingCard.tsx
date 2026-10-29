@@ -8,7 +8,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import { ACCENT } from "#/lib/m3";
-import { formatDate, formatMoney } from "#/lib/format";
+import { formatMoney, formatWhen } from "#/lib/format";
 import { dueLabel, isOverdue, localToday } from "#/lib/planned";
 import { txTitle } from "#/lib/tx-display";
 import type { Transaction } from "#/types/api";
@@ -73,7 +73,7 @@ export default function UpcomingCard({
 									</Typography>
 									<Stack direction="row" sx={{ alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
 										<Typography variant="caption" sx={{ color: "text.secondary" }}>
-											{formatDate(t.transaction_date)}
+											{formatWhen(t.transaction_date, t.transaction_time)}
 										</Typography>
 										<TagChips tags={t.tags} />
 									</Stack>

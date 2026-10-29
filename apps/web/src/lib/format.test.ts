@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { sumDecimals, trimRate } from "./format";
+import { formatTime, formatWhen, sumDecimals, trimRate } from "./format";
 
 describe("sumDecimals", () => {
 	it("adds decimal strings exactly", () => {
@@ -42,5 +42,21 @@ describe("trimRate", () => {
 		expect(trimRate("15")).toBe("15");
 		expect(trimRate("0.06489200")).toBe("0.064892");
 		expect(trimRate("100")).toBe("100");
+	});
+});
+
+describe("formatTime and formatWhen", () => {
+	it("keeps hours and minutes", () => {
+		expect(formatTime("14:30:00")).toBe("14:30");
+		expect(formatTime("09:05")).toBe("09:05");
+	});
+
+	it("has nothing to show without a time", () => {
+		expect(formatTime(null)).toBeNull();
+	});
+
+	it("adds the time after the date only when there is one", () => {
+		expect(formatWhen("2026-03-10", "14:30:00")).toBe("10 Mar 2026, 14:30");
+		expect(formatWhen("2026-03-10", null)).toBe("10 Mar 2026");
 	});
 });

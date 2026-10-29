@@ -1,5 +1,5 @@
 import uuid
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, time
 from decimal import Decimal
 
 from sqlalchemy import (
@@ -13,6 +13,7 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
+    Time,
     Uuid,
     and_,
     false,
@@ -105,6 +106,9 @@ class Transaction(Base):
         back_populates="transaction",
     )
     transaction_date: Mapped[date] = mapped_column(Date)
+    # Optional time of day on that date, as the clock on the wall read (no time zone). It only
+    # orders the transactions of one day; the ones without a time come after the ones with one.
+    transaction_time: Mapped[time | None] = mapped_column(Time, default=None)
     # Labels that cut across categories. Belong to the whole transaction, not to its items.
     tags: Mapped[list[Tag]] = relationship(
         secondary=transaction_tags, lazy="selectin", order_by=Tag.normalized_name

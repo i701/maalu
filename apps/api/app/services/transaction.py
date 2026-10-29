@@ -234,6 +234,7 @@ class TransactionService:
             payment_method=TRANSFER_PAYMENT_METHOD if is_transfer else data.payment_method,
             description=data.description,
             transaction_date=data.transaction_date,
+            transaction_time=data.transaction_time,
             planned=data.planned,
             account=account,
             to_account=to_account,
@@ -385,9 +386,17 @@ class TransactionService:
         )
         # Upcoming ones read soonest first; the rest newest first.
         order = (
-            (Transaction.transaction_date, Transaction.created_at)
+            (
+                Transaction.transaction_date,
+                Transaction.transaction_time.asc().nulls_last(),
+                Transaction.created_at,
+            )
             if planned
-            else (Transaction.transaction_date.desc(), Transaction.created_at.desc())
+            else (
+                Transaction.transaction_date.desc(),
+                Transaction.transaction_time.desc().nulls_last(),
+                Transaction.created_at.desc(),
+            )
         )
         stmt = select(Transaction).where(*conditions).order_by(*order).limit(limit).offset(offset)
         return list((await self.db.scalars(stmt)).all())
@@ -641,7 +650,11 @@ class TransactionService:
         stmt = (
             select(Transaction)
             .where(*conditions)
-            .order_by(Transaction.transaction_date, Transaction.created_at)
+            .order_by(
+                Transaction.transaction_date,
+                Transaction.transaction_time.asc().nulls_last(),
+                Transaction.created_at,
+            )
         )
         rows = list((await self.db.scalars(stmt)).all())
         return build_workbook(
@@ -860,6 +873,8 @@ class TransactionService:
         changes: dict = {"planned": False}
         if data.transaction_date is not None:
             changes["transaction_date"] = data.transaction_date
+        if data.transaction_time is not None:
+            changes["transaction_time"] = data.transaction_time
         if data.amount is not None:
             changes["amount"] = data.amount
         return await self.update(transaction, TransactionUpdate(**changes))

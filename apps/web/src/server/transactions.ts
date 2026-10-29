@@ -50,6 +50,11 @@ const createSchema = z.object({
 	category: z.string().trim().min(1).max(100).optional(),
 	description: z.string().nullable().optional(),
 	transaction_date: z.iso.date(),
+	transaction_time: z
+		.string()
+		.regex(/^\d{2}:\d{2}(:\d{2})?$/)
+		.nullable()
+		.optional(),
 	splits: z.array(splitSchema).min(1).optional(),
 	vendor_name: z.string().trim().min(1).max(200).optional(),
 	subscription_id: z.uuid().optional(),

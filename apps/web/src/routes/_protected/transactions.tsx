@@ -44,7 +44,7 @@ import TransactionTotals from "#/components/TransactionTotals";
 import BudgetAlert from "#/components/BudgetAlert";
 import UpcomingCard from "#/components/UpcomingCard";
 import CategoryBreakdown from "#/components/CategoryBreakdown";
-import { formatDate, formatMoney } from "#/lib/format";
+import { formatDate, formatMoney, formatTime, formatWhen } from "#/lib/format";
 import { PAYMENT_ACCENT, TRANSFER_ACCENT } from "#/lib/accents";
 import { ACCENT } from "#/lib/m3";
 import { useLiveSearch } from "#/lib/live-search";
@@ -380,6 +380,11 @@ const TransactionsTable = memo(function TransactionsTable({
 					</TableCell>
 					<TableCell sx={{ whiteSpace: "nowrap", color: "text.secondary" }}>
 						{formatDate(t.transaction_date)}
+						{t.transaction_time && (
+							<Typography variant="caption" sx={{ display: "block" }}>
+								{formatTime(t.transaction_time)}
+							</Typography>
+						)}
 					</TableCell>
 					<TableCell>
 						<Typography variant="body2" sx={{ fontWeight: 500 }}>
@@ -452,7 +457,7 @@ const TransactionsTable = memo(function TransactionsTable({
 					meta={
 						<>
 							<Typography variant="caption" sx={{ color: "text.secondary" }}>
-								{formatDate(t.transaction_date)}
+								{formatWhen(t.transaction_date, t.transaction_time)}
 							</Typography>
 							<TxMethodChip t={t} />
 							{t.type !== "transfer" && t.account && (
