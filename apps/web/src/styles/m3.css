@@ -245,6 +245,7 @@
 	--spring-effects-default-dur: 0.28s;
 
 	/* Shape scale (M3 corner tokens) */
+	--shape-xxs: 2px; /* not an M3 token: the barely rounded top corners of a filled input */
 	--shape-xs: 4px;
 	--shape-sm: 8px;
 	--shape-md: 12px;

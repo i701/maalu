@@ -117,9 +117,31 @@ const theme = createTheme({
 				},
 			},
 		},
-		// Inputs are tonal fields, no outline: a container-coloured block that deepens on hover and gets
-		// a 2px primary ring when focused.
-		MuiTextField: { defaultProps: { fullWidth: true, variant: "filled" } },
+		// Outlined fields with a 4px corner: a hairline border that darkens on hover and gets a 2px
+		// primary ring when focused. The search bar is the one filled field (see SearchField), styled by
+		// the MuiFilledInput override below.
+		MuiTextField: { defaultProps: { fullWidth: true, variant: "outlined" } },
+		MuiOutlinedInput: {
+			styleOverrides: {
+				root: {
+					borderRadius: "var(--shape-xs)",
+					"& .MuiOutlinedInput-notchedOutline": {
+						borderColor:
+							"var(--md-sys-color-outline-variant, var(--md-sys-color-on-surface-variant))",
+					},
+					"&:hover .MuiOutlinedInput-notchedOutline": {
+						borderColor: "var(--md-sys-color-on-surface-variant)",
+					},
+					"&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+						borderColor: "var(--md-sys-color-primary)",
+						borderWidth: 2,
+					},
+					"&.Mui-error .MuiOutlinedInput-notchedOutline": {
+						borderColor: "var(--md-sys-color-error)",
+					},
+				},
+			},
+		},
 		// No fade on the placeholder: with the label inside the field it must be gone at once, not
 		// linger over the label for a moment after load.
 		MuiInputBase: { styleOverrides: { input: { "&::placeholder": { transition: "none" } } } },
@@ -127,9 +149,9 @@ const theme = createTheme({
 			defaultProps: { disableUnderline: true },
 			styleOverrides: {
 				root: {
-					// Filled field: 8px top corners and a square bottom, with a hairline underline that
-					// thickens and turns primary on focus.
-					borderRadius: "var(--shape-sm) var(--shape-sm) 0 0",
+					// Filled field: barely rounded top corners (2px) and a square bottom, with a hairline
+					// underline that thickens and turns primary on focus.
+					borderRadius: "var(--shape-xxs) var(--shape-xxs) 0 0",
 					backgroundColor: "var(--md-sys-color-surface-container-highest)",
 					boxShadow: "inset 0 -1px 0 var(--md-sys-color-on-surface-variant)",
 					transition:

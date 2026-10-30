@@ -45,6 +45,7 @@ export default function SearchField({
 
 	return (
 		<TextField
+			variant="filled"
 			size="small"
 			hiddenLabel
 			type="search"
