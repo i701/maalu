@@ -3,20 +3,10 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Reveal from "#/components/Reveal";
 import { formatMoney } from "#/lib/format";
-import { ACCENT } from "#/lib/m3";
+import { categoryAccent } from "#/lib/categories";
 import { staggerChildren, useLastDefined } from "#/lib/motion";
 import type { CategoryTotal, CategoryTotals } from "#/types/api";
 
-const HUES = [
-	ACCENT.violet,
-	ACCENT.orange,
-	ACCENT.blue,
-	ACCENT.green,
-	ACCENT.pink,
-	ACCENT.amber,
-	ACCENT.lime,
-	ACCENT.slate,
-];
 const MAX_ROWS = 8;
 
 function Section({
@@ -35,7 +25,7 @@ function Section({
 			<Typography variant="subtitle2" sx={{ color: "text.secondary" }}>
 				{title}
 			</Typography>
-			{rows.slice(0, MAX_ROWS).map((row, i) => (
+			{rows.slice(0, MAX_ROWS).map((row) => (
 				<Box key={row.category}>
 					<Box sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
 						<Typography noWrap sx={{ fontSize: 14, fontWeight: 500 }}>
@@ -58,7 +48,7 @@ function Section({
 								height: "100%",
 								width: `${Math.max(2, (Number(row.total) / top) * 100)}%`,
 								borderRadius: "var(--shape-full)",
-								bgcolor: HUES[i % HUES.length],
+								bgcolor: categoryAccent(row.color),
 								transition: "width var(--spring-spatial-default-dur) var(--spring-spatial-default)",
 							}}
 						/>

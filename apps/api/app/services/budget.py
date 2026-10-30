@@ -29,10 +29,14 @@ class BudgetLineNotFoundError(Exception):
 
 
 class BudgetCategoryTakenError(Exception):
-    """A category can only be in one line, or its spending would be counted twice."""
+    """A category can only be in one line, or its spending would be counted twice. A parent covers
+    its sub-categories, so those count too: "Groceries" is taken when "Food" is in another line."""
 
-    def __init__(self, category: str, line: str) -> None:
-        super().__init__(f'"{category}" is already in the "{line}" line')
+    def __init__(self, category: str, line: str, via: str | None = None) -> None:
+        if via is None:
+            super().__init__(f'"{category}" is already in the "{line}" line')
+        else:
+            super().__init__(f'"{category}" is already covered by "{via}" in the "{line}" line')
 
 
 def _percent(activity: Decimal, budgeted: Decimal) -> int:
@@ -119,8 +123,30 @@ class BudgetService:
         return totals
 
     @staticmethod
-    def _spent(line: BudgetLine, by_category: dict[uuid.UUID, Decimal]) -> Decimal:
-        return sum((by_category.get(link.category_id, ZERO) for link in line.category_links), ZERO)
+    def _spent(
+        line: BudgetLine,
+        by_category: dict[uuid.UUID, Decimal],
+        children: dict[uuid.UUID, list[uuid.UUID]],
+    ) -> Decimal:
+        """What the line's categories spent, a parent counting its sub-categories too. Each category
+        counts once, even when the line holds both a parent and one of its children."""
+        covered = set()
+        for link in line.category_links:
+            covered.add(link.category_id)
+            covered.update(children.get(link.category_id, ()))
+        return sum((by_category.get(c, ZERO) for c in covered), ZERO)
+
+    async def _children(self, user_id: uuid.UUID) -> dict[uuid.UUID, list[uuid.UUID]]:
+        """Each parent category's sub-categories."""
+        rows = await self.db.execute(
+            select(Category.parent_id, Category.id).where(
+                Category.user_id == user_id, Category.parent_id.is_not(None)
+            )
+        )
+        out: dict[uuid.UUID, list[uuid.UUID]] = {}
+        for parent_id, child_id in rows.all():
+            out.setdefault(parent_id, []).append(child_id)
+        return out
 
     async def view(self, user_id: uuid.UUID, on: date | None = None) -> BudgetResponse:
         today = date.today()
@@ -130,6 +156,7 @@ class BudgetService:
         lines = await self._lines(user_id)
 
         activity = await self._activity_by_category(user_id, start, end)
+        children = await self._children(user_id)
 
         # Earlier periods only matter for lines that roll their leftovers over.
         history: dict[date, dict[uuid.UUID, Decimal]] = {}
@@ -154,10 +181,10 @@ class BudgetService:
             if line.rollover:
                 cursor = max(period_start(line.start_date, day), oldest)
                 while cursor < start:
-                    left = line.amount + carried - self._spent(line, history[cursor])
+                    left = line.amount + carried - self._spent(line, history[cursor], children)
                     carried = max(ZERO, left)
                     cursor = next_period_start(cursor, day)
-            spent = self._spent(line, activity)
+            spent = self._spent(line, activity, children)
             budgeted = line.amount + carried
             views.append(
                 BudgetLineResponse(
@@ -202,20 +229,31 @@ class BudgetService:
             if category is None:
                 raise CategoryNotFoundError
             resolved.append(category)
+        # A category clashes with another line that holds it, its parent or one of its children.
+        children = await self._children(user_id)
+        related = {c.id: {c.id, c.parent_id, *children.get(c.id, ())} - {None} for c in resolved}
+        every = set().union(*related.values()) if related else set()
         stmt = (
             select(BudgetLine.name, BudgetLineCategory.category_id)
             .join(BudgetLineCategory, BudgetLineCategory.line_id == BudgetLine.id)
-            .where(
-                BudgetLine.user_id == user_id,
-                BudgetLineCategory.category_id.in_([c.id for c in resolved]),
-            )
+            .where(BudgetLine.user_id == user_id, BudgetLineCategory.category_id.in_(every))
         )
         if line_id is not None:
             stmt = stmt.where(BudgetLine.id != line_id)
         taken = {cid: name for name, cid in (await self.db.execute(stmt)).all()}
-        for category in resolved:
-            if category.id in taken:
-                raise BudgetCategoryTakenError(category.name, taken[category.id])
+        if taken:
+            names = dict(
+                (
+                    await self.db.execute(
+                        select(Category.id, Category.name).where(Category.id.in_(taken))
+                    )
+                ).all()
+            )
+            for category in resolved:
+                for other in sorted(related[category.id], key=lambda i: i != category.id):
+                    if other in taken:
+                        via = None if other == category.id else names.get(other)
+                        raise BudgetCategoryTakenError(category.name, taken[other], via)
         return resolved
 
     async def create_line(self, user_id: uuid.UUID, data: BudgetLineCreate) -> BudgetLine:

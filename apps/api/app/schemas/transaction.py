@@ -53,6 +53,7 @@ class SplitResponse(BaseModel):
     quantity: Decimal
     category: str
     category_id: uuid.UUID
+    category_color: str
     amount: Decimal
     tax_amount: Decimal | None
     refund_of_split_id: uuid.UUID | None
@@ -228,6 +229,7 @@ class TransactionResponse(BaseModel):
     payment_method: PaymentMethod
     category: str
     category_id: uuid.UUID | None
+    category_color: str | None = Field(description="The category's accent colour")
     description: str | None
     transaction_date: date
     transaction_time: time | None
@@ -318,6 +320,10 @@ class CategoryTotal(BaseModel):
     type: Literal["income", "expense"]  # transfers have no category, so are never reported
     category_id: uuid.UUID
     category: str
+    color: str = Field(description="The category's accent colour")
+    parent_id: uuid.UUID | None = Field(description="Set on a sub-category")
+    parent: str | None = Field(description="The parent's name")
+    parent_color: str | None = Field(description="The parent's accent colour")
     total: Decimal = Field(description="In your base currency")
     count: int = Field(description="Transactions with money in this category")
 

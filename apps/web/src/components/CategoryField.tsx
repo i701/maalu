@@ -23,6 +23,9 @@ export default function CategoryField({
 	return (
 		<NamePickerField
 			names={categories.map((c) => c.name)}
+			meta={Object.fromEntries(
+				categories.map((c) => [c.name, { color: c.color, parent: c.parent ?? null }]),
+			)}
 			noun="category"
 			label={label}
 			name={name}

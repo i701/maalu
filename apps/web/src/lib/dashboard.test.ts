@@ -69,6 +69,10 @@ const total = (
 	type,
 	category_id: category,
 	category,
+	color: "blue",
+	parent: null,
+	parent_color: null,
+	parent_id: null,
 	total: value,
 	count: 1,
 });

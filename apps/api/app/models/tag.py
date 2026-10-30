@@ -4,11 +4,12 @@ from datetime import UTC, datetime
 from sqlalchemy import Column, DateTime, ForeignKey, String, Table, UniqueConstraint, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.enums import ACCENT_COLORS
 from app.models.base import Base
 
 # The colours a tag can get, assigned automatically (the least used one first). They are the names
 # of the web app's accent colours.
-TAG_COLORS = ("blue", "green", "orange", "violet", "pink", "amber", "lime", "slate")
+TAG_COLORS = ACCENT_COLORS
 
 
 class Tag(Base):

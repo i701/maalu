@@ -2,6 +2,10 @@ import AddIcon from "@mui/icons-material/Add";
 import Autocomplete, { createFilterOptions } from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import { useState } from "react";
+import CategoryDot from "./CategoryDot";
+
+/** What the list shows beside a name: a colour dot, and the parent when it is a sub-category. */
+export type OptionMeta = { color: string; parent: string | null };
 
 type Option = string | { inputValue: string; label: string };
 
@@ -19,6 +23,7 @@ const norm = (s: string) => s.trim().replace(/\s+/g, " ").toLowerCase();
  */
 export default function NamePickerField({
 	names,
+	meta,
 	noun,
 	label,
 	name,
@@ -30,6 +35,8 @@ export default function NamePickerField({
 }: {
 	/** Existing names to pick from */
 	names: string[];
+	/** Per name (same order as `names`): shows sub-categories indented under their parent */
+	meta?: Record<string, OptionMeta>;
 	/** What the names are, for the helper text: "vendor", "category" */
 	noun: string;
 	label: string;
@@ -71,7 +78,7 @@ export default function NamePickerField({
 			renderOption={({ key, ...props }, option) => (
 				<li key={key} {...props}>
 					{typeof option === "string" ? (
-						option
+						<NameOption name={option} meta={meta?.[option]} />
 					) : (
 						<>
 							<AddIcon fontSize="small" sx={{ mr: 1, color: "primary.main" }} />
@@ -103,5 +110,20 @@ export default function NamePickerField({
 				/>
 			)}
 		/>
+	);
+}
+
+/** One existing name: a sub-category is indented, with its parent after it so a search hit still
+ * says where it belongs. */
+function NameOption({ name, meta }: { name: string; meta?: OptionMeta }) {
+	if (!meta) return name;
+	return (
+		<span
+			style={{ display: "flex", alignItems: "center", gap: 8, paddingLeft: meta.parent ? 16 : 0 }}
+		>
+			<CategoryDot color={meta.color} />
+			{name}
+			{meta.parent && <span style={{ fontSize: 12, opacity: 0.6 }}>in {meta.parent}</span>}
+		</span>
 	);
 }

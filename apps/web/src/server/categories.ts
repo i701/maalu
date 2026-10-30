@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZES, type PageResult } from "#/lib/pagination";
+import { ACCENT_NAMES } from "#/lib/categories";
 import type { Category } from "#/types/api";
 import { apiRequest } from "./api";
 
@@ -47,14 +48,24 @@ export const getCategoryFn = createServerFn({ method: "GET" })
 	.validator(z.object({ id: z.uuid() }))
 	.handler(async ({ data }) => apiRequest<Category>(`/categories/${data.id}`));
 
+const color = z.enum(ACCENT_NAMES);
+
 export const createCategoryFn = createServerFn({ method: "POST" })
-	.validator(z.object({ name }))
+	.validator(z.object({ name, color: color.optional(), parent_id: z.uuid().nullish() }))
 	.handler(async ({ data }) => apiRequest<Category>("/categories", { method: "POST", body: data }));
 
-export const renameCategoryFn = createServerFn({ method: "POST" })
-	.validator(z.object({ id: z.uuid(), name }))
-	.handler(async ({ data }) =>
-		apiRequest<Category>(`/categories/${data.id}`, { method: "PATCH", body: { name: data.name } }),
+/** Change a category: only the fields sent change, and `parent_id: null` makes it a top-level one. */
+export const updateCategoryFn = createServerFn({ method: "POST" })
+	.validator(
+		z.object({
+			id: z.uuid(),
+			name: name.optional(),
+			color: color.optional(),
+			parent_id: z.uuid().nullish(),
+		}),
+	)
+	.handler(async ({ data: { id, ...body } }) =>
+		apiRequest<Category>(`/categories/${id}`, { method: "PATCH", body }),
 	);
 
 export const mergeCategoryFn = createServerFn({ method: "POST" })

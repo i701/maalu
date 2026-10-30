@@ -174,6 +174,10 @@ class Transaction(Base):
     def category(self) -> str:
         return self.category_ref.name if self.category_ref else "Transfer"
 
+    @property
+    def category_color(self) -> str | None:
+        return self.category_ref.color if self.category_ref else None
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -200,6 +204,10 @@ class TransactionSplit(Base):
     @property
     def category(self) -> str:
         return self.category_ref.name
+
+    @property
+    def category_color(self) -> str:
+        return self.category_ref.color
 
     # On a refund's line: the item of the purchase this line gives back. Deleting that item (it
     # only goes with its purchase) just unlinks.

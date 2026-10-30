@@ -35,6 +35,7 @@ import ShapeTile from "#/components/ShapeTile";
 import Symbol from "#/components/Symbol";
 import { TagChips } from "#/components/TagChip";
 import { txSubtitle, txTitle } from "#/lib/tx-display";
+import CategoryDot from "#/components/CategoryDot";
 import TonalChip from "#/components/TonalChip";
 import TableCard from "#/components/TableCard";
 import TablePager from "#/components/TablePager";
@@ -237,6 +238,19 @@ const TYPE_TILE = {
 const REFUND_TILE = { symbol: "undo", accent: ACCENT.green, shape: 1 } as const;
 
 /** The card's coloured, shaped icon: income green, expense pink, transfer blue, refund green. */
+/** The line under a transaction's title, led by a dot in its category's colour when it has just one. */
+function TxSubtitle({ t }: { t: Transaction }) {
+	const dot = t.type !== "transfer" && t.splits.length <= 1 && t.category_color;
+	return (
+		<Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+			{dot && <CategoryDot color={dot} size={8} />}
+			<Typography variant="caption" sx={{ color: "text.secondary" }}>
+				{txSubtitle(t)}
+			</Typography>
+		</Box>
+	);
+}
+
 function TxTile({ t }: { t: Transaction }) {
 	const k = isRefund(t) ? REFUND_TILE : TYPE_TILE[t.type];
 	return (
@@ -425,9 +439,7 @@ const TransactionsTable = memo(function TransactionsTable({
 						<Typography variant="body2" sx={{ fontWeight: 500 }}>
 							{txTitle(t)}
 						</Typography>
-						<Typography variant="caption" sx={{ color: "text.secondary" }}>
-							{txSubtitle(t)}
-						</Typography>
+						<TxSubtitle t={t} />
 						{t.subscription && (
 							<Box sx={{ mt: 0.5 }}>
 								<TxSubscriptionChip t={t} />
@@ -487,13 +499,7 @@ const TransactionsTable = memo(function TransactionsTable({
 							{txTitle(t)}
 						</Typography>
 					}
-					secondary={
-						txSubtitle(t) && (
-							<Typography variant="caption" sx={{ color: "text.secondary" }}>
-								{txSubtitle(t)}
-							</Typography>
-						)
-					}
+					secondary={txSubtitle(t) && <TxSubtitle t={t} />}
 					end={<TxAmount t={t} baseCurrency={baseCurrency} />}
 					meta={
 						<>

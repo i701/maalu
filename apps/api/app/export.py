@@ -112,7 +112,7 @@ def build_workbook(
     base_currency: str,
     filter_labels: Sequence[str],
     generated_on: date,
-    category_id: uuid.UUID | None = None,
+    category_ids: list[uuid.UUID] | None = None,
 ) -> bytes:
     """Transactions (one row each, real numbers and dates), Items (the lines of split
     transactions, when there are any), By category and Summary."""
@@ -148,7 +148,7 @@ def build_workbook(
                 parts = [(t.category_ref, t.base_amount)]
             counted: set[uuid.UUID] = set()
             for category, share in parts:
-                if category_id is not None and category.id != category_id:
+                if category_ids is not None and category.id not in category_ids:
                     continue
                 # A refund is money back for spending: it lowers expense and is not income.
                 kind = "expense" if t.refund_of_id else t.type.value

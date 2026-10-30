@@ -399,6 +399,19 @@ class TransactionService:
         await self.db.refresh(transaction)
         return transaction
 
+    async def _family(
+        self, user_id: uuid.UUID, category_id: uuid.UUID | None
+    ) -> list[uuid.UUID] | None:
+        """The category, and its sub-categories when it is a parent: what a filter on it covers."""
+        return None if category_id is None else await self.categories.family(user_id, category_id)
+
+    async def _build_conditions(self, user_id: uuid.UUID, **filters) -> list:
+        """`_conditions` for the same filters, with a category filter widened to its family."""
+        category_id = filters.pop("category_id", None)
+        return self._conditions(
+            user_id, category_ids=await self._family(user_id, category_id), **filters
+        )
+
     @staticmethod
     def _conditions(
         user_id: uuid.UUID,
@@ -407,7 +420,7 @@ class TransactionService:
         vendor_id: uuid.UUID | None,
         subscription_id: uuid.UUID | None,
         account_id: uuid.UUID | None,
-        category_id: uuid.UUID | None,
+        category_ids: list[uuid.UUID] | None,
         tag_ids: list[uuid.UUID] | None = None,
         tag_match: TagMatch = "any",
         payment_method: PaymentMethod | None,
@@ -476,11 +489,11 @@ class TransactionService:
             conditions.append(
                 or_(Transaction.account_id == account_id, Transaction.to_account_id == account_id)
             )
-        if category_id is not None:  # the transaction's own category, or any of its items'
+        if category_ids:  # the transaction's own category, or any of its items' (a parent's family)
             conditions.append(
                 or_(
-                    Transaction.category_id == category_id,
-                    Transaction.splits.any(TransactionSplit.category_id == category_id),
+                    Transaction.category_id.in_(category_ids),
+                    Transaction.splits.any(TransactionSplit.category_id.in_(category_ids)),
                 )
             )
         if tag_ids:
@@ -516,7 +529,7 @@ class TransactionService:
         limit: int = 50,
         offset: int = 0,
     ) -> list[Transaction]:
-        conditions = self._conditions(
+        conditions = await self._build_conditions(
             user_id,
             transaction_type=transaction_type,
             vendor_id=vendor_id,
@@ -555,7 +568,7 @@ class TransactionService:
         """The ids of every transaction the same filters as the list match (not just one page), for
         "select everything that matches". Raises TransactionRuleError past MAX_SELECT_ALL instead of
         handing back a part of them."""
-        conditions = self._conditions(user_id, **filters)
+        conditions = await self._build_conditions(user_id, **filters)
         matches = (await self.db.scalar(select(func.count(Transaction.id)).where(*conditions))) or 0
         self._check_select_all(matches)
         return list((await self.db.scalars(select(Transaction.id).where(*conditions))).all())
@@ -588,7 +601,7 @@ class TransactionService:
         date_to: date | None = None,
         planned: bool = False,
     ) -> int:
-        conditions = self._conditions(
+        conditions = await self._build_conditions(
             user_id,
             transaction_type=transaction_type,
             vendor_id=vendor_id,
@@ -628,7 +641,7 @@ class TransactionService:
         date_to: date | None = None,
     ) -> TransactionTotals:
         """Income and expense totals (base currency) for the rows the same filters would list."""
-        conditions = self._conditions(
+        conditions = await self._build_conditions(
             user_id,
             transaction_type=transaction_type,
             vendor_id=vendor_id,
@@ -645,13 +658,14 @@ class TransactionService:
             date_from=date_from,
             date_to=date_to,
         )
+        ids = await self._family(user_id, category_id)
         money = Transaction.type.in_([TransactionType.INCOME, TransactionType.EXPENSE])
         stmt = (
             select(Transaction.type, Transaction.is_refund(), func.sum(Transaction.base_amount))
             .where(*conditions, money)
             .group_by(Transaction.type, Transaction.is_refund())
         )
-        if category_id is not None:
+        if ids is not None:
             # Only the part of a split transaction that is in this category counts, not all of it.
             stmt = stmt.where(~Transaction.splits.any())
         income = expense = refunded = Decimal(0)
@@ -670,8 +684,8 @@ class TransactionService:
 
         for kind, is_refund, total in (await self.db.execute(stmt)).all():
             put(kind, bool(is_refund), Decimal(str(total or 0)))
-        if category_id is not None:
-            for t, _category, share in await self._split_shares(conditions, money, category_id):
+        if ids is not None:
+            for t, _category, share in await self._split_shares(conditions, money, ids):
                 put(t.type, t.refund_of_id is not None, share)
         return TransactionTotals(
             income=income,
@@ -681,16 +695,16 @@ class TransactionService:
         )
 
     async def _split_shares(
-        self, conditions: list, money, category_id: uuid.UUID | None
+        self, conditions: list, money, category_ids: list[uuid.UUID] | None
     ) -> list[tuple[Transaction, Category, Decimal]]:
         """(transaction, category, base-currency share) of every item of the matching split
-        transactions, or only of the items in `category_id` when given."""
+        transactions, or only of the items in `category_ids` when given."""
         stmt = select(Transaction).where(*conditions, money, Transaction.splits.any())
         out = []
         for t in (await self.db.scalars(stmt)).all():
             shares = allocate_base(t.base_amount, t.amount, [s.amount for s in t.splits])
             for line, share in zip(t.splits, shares, strict=True):
-                if category_id is None or line.category_id == category_id:
+                if category_ids is None or line.category_id in category_ids:
                     out.append((t, line.category_ref, share))
         return out
 
@@ -720,7 +734,7 @@ class TransactionService:
         refund is money back for spending: it counts under the same categories as an expense, taking
         away what it gives back, and is not income.
         """
-        conditions = self._conditions(
+        conditions = await self._build_conditions(
             user_id,
             transaction_type=transaction_type,
             vendor_id=vendor_id,
@@ -739,6 +753,7 @@ class TransactionService:
         )
         money = Transaction.type.in_([TransactionType.INCOME, TransactionType.EXPENSE])
         totals: dict[tuple[TransactionType, uuid.UUID], list] = {}
+        ids = await self._family(user_id, category_id)
 
         def add(kind: TransactionType, category: Category, amount: Decimal, count: int) -> None:
             entry = totals.setdefault((kind, category.id), [category, Decimal(0), 0])
@@ -771,17 +786,32 @@ class TransactionService:
             shares = allocate_base(t.base_amount, t.amount, [s.amount for s in t.splits])
             kind = TransactionType.EXPENSE if t.refund_of_id else t.type
             for line, share in zip(t.splits, shares, strict=True):
-                if category_id is not None and line.category_id != category_id:
+                if ids is not None and line.category_id not in ids:
                     continue
                 first = (kind, t.id, line.category_id) not in touched
                 touched[(kind, t.id, line.category_id)] = True
                 add(kind, line.category_ref, share * t.spending_sign, 1 if first else 0)
 
+        parent_ids = {c.parent_id for c, _total, _count in totals.values() if c.parent_id}
+        parents = {
+            pid: (name, color)
+            for pid, name, color in (
+                await self.db.execute(
+                    select(Category.id, Category.name, Category.color).where(
+                        Category.id.in_(parent_ids)
+                    )
+                )
+            ).all()
+        }
         rows = [
             CategoryTotal(
                 type=kind.value,
                 category_id=category.id,
                 category=category.name,
+                color=category.color,
+                parent_id=category.parent_id,
+                parent=parents.get(category.parent_id, (None, None))[0],
+                parent_color=parents.get(category.parent_id, (None, None))[1],
                 total=total,
                 count=count,
             )
@@ -829,7 +859,8 @@ class TransactionService:
             "date_from": date_from,
             "date_to": date_to,
         }
-        conditions = self._conditions(user_id, **filters)
+        conditions = await self._build_conditions(user_id, **filters)
+        ids = await self._family(user_id, category_id)
         matches = (await self.db.scalar(select(func.count(Transaction.id)).where(*conditions))) or 0
         if matches > EXPORT_LIMIT:
             raise TransactionRuleError(
@@ -851,7 +882,7 @@ class TransactionService:
             base_currency=await self._base_currency(user_id),
             filter_labels=await self._filter_labels(user_id, **filters),
             generated_on=date.today(),
-            category_id=category_id,
+            category_ids=ids,
         )
 
     async def _filter_labels(

@@ -9,6 +9,7 @@ from app.services.category import (
     CategoryInUseError,
     CategoryNameTakenError,
     CategoryNotFoundError,
+    CategoryParentError,
     CategoryService,
 )
 from app.services.errors import TransactionNotPlannedError, TransactionRuleError
@@ -59,6 +60,7 @@ __all__ = [
     "CategoryInUseError",
     "CategoryNameTakenError",
     "CategoryNotFoundError",
+    "CategoryParentError",
     "CategoryService",
     "EmailAlreadyRegisteredError",
     "ExchangeRateRequiredError",

@@ -38,7 +38,13 @@ from app.schemas import (
     UserCreate,
     VendorCreate,
 )
-from app.services import AccountService, SubscriptionService, TransactionService, UserService
+from app.services import (
+    AccountService,
+    CategoryService,
+    SubscriptionService,
+    TransactionService,
+    UserService,
+)
 from app.services.vendor import VendorService
 
 DEMO_EMAIL = "demo@maalu.dev"
@@ -225,6 +231,25 @@ class SeedSummary:
     vendors: int
     subscriptions: int
     transactions: dict[str, int]
+
+
+# Some sub-categories, so the demo shows parents (one is used directly too: Transport).
+CATEGORY_GROUPS = {
+    "Food & drink": ["Groceries", "Dining"],
+    "Transport": ["Fuel"],
+    "Lifestyle": ["Shopping", "Entertainment"],
+}
+
+
+async def _group_categories(db: AsyncSession, uid) -> None:
+    categories = CategoryService(db)
+    for parent_name, children in CATEGORY_GROUPS.items():
+        parent = await categories.get_or_create(uid, parent_name)
+        for name in children:
+            child = await categories.get_by_name(uid, name)
+            if child is not None:
+                child.parent_id = parent.id
+    await db.flush()
 
 
 def _money(value: float) -> Decimal:
@@ -477,6 +502,7 @@ async def seed(
                 )
 
     await db.flush()
+    await _group_categories(db, uid)
     n_vendors = await db.scalar(select(func.count(Vendor.id)).where(Vendor.user_id == uid))
     return SeedSummary(
         user=DEMO_EMAIL,

@@ -12,7 +12,7 @@ from app.schemas import (
     CategoryResponse,
     CategoryUpdate,
 )
-from app.services import CategoryInUseError, CategoryNameTakenError
+from app.services import CategoryInUseError, CategoryNameTakenError, CategoryParentError
 
 router = APIRouter(prefix="/categories", tags=["categories"])
 
@@ -33,9 +33,13 @@ async def create_category(
     data: CategoryCreate, user_id: CurrentUserId, service: CategoryServiceDep
 ):
     try:
-        category = await service.create(user_id, data.name)
+        category = await service.create(
+            user_id, data.name, color=data.color, parent_id=data.parent_id
+        )
     except CategoryNameTakenError:
         raise _NAME_TAKEN from None
+    except CategoryParentError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
     return (await service.present(user_id, [category]))[0]
 
 
@@ -61,7 +65,7 @@ async def get_category(category_id: uuid.UUID, user_id: CurrentUserId, service: 
 
 
 @router.patch("/{category_id}", response_model=CategoryResponse)
-async def rename_category(
+async def update_category(
     category_id: uuid.UUID,
     data: CategoryUpdate,
     user_id: CurrentUserId,
@@ -69,9 +73,11 @@ async def rename_category(
 ):
     category = await _get_or_404(service, user_id, category_id)
     try:
-        await service.rename(category, data.name)
+        await service.update(category, data.model_dump(exclude_unset=True))
     except CategoryNameTakenError:
         raise _NAME_TAKEN from None
+    except CategoryParentError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
     return (await service.present(user_id, [category]))[0]
 
 
@@ -88,7 +94,10 @@ async def merge_category(
     target = await _get_or_404(service, user_id, data.into_id)
     if source.id == target.id:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Choose a different category")
-    await service.merge(source, target)
+    try:
+        await service.merge(source, target)
+    except CategoryParentError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
     return (await service.present(user_id, [target]))[0]
 
 

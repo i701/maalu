@@ -1,9 +1,11 @@
 import uuid
 
-from sqlalchemy import delete, func, select, union_all, update
+from sqlalchemy import delete, func, or_, select, union_all, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased
 
+from app.enums import ACCENT_COLORS
 from app.models import (
     BudgetLine,
     BudgetLineCategory,
@@ -23,6 +25,11 @@ class CategoryNotFoundError(Exception):
 
 class CategoryNameTakenError(Exception):
     pass
+
+
+class CategoryParentError(Exception):
+    """A parent that can't be used (not yours, itself, not top-level) or a category that can't have
+    one. The message is safe to show."""
 
 
 class CategoryInUseError(Exception):
@@ -52,8 +59,18 @@ class CategoryService:
         limit: int | None = None,
         offset: int = 0,
     ) -> list[Category]:
+        # A parent, then its sub-categories, so a tree reads in order (a child with no parent in the
+        # results just stands where its parent would).
+        parent = aliased(Category)
         stmt = (
-            select(Category).where(*self._conditions(user_id, q)).order_by(Category.normalized_name)
+            select(Category)
+            .outerjoin(parent, parent.id == Category.parent_id)
+            .where(*self._conditions(user_id, q))
+            .order_by(
+                func.coalesce(parent.normalized_name, Category.normalized_name),
+                Category.parent_id.is_not(None),
+                Category.normalized_name,
+            )
         )
         if limit is not None:
             stmt = stmt.limit(limit).offset(offset)
@@ -73,9 +90,55 @@ class CategoryService:
         )
         return await self.db.scalar(stmt)
 
-    async def create(self, user_id: uuid.UUID, name: str) -> Category:
+    async def _next_color(self, user_id: uuid.UUID) -> str:
+        """The palette colour the user's categories use least, so neighbours rarely look alike."""
+        rows = await self.db.execute(
+            select(Category.color, func.count())
+            .where(Category.user_id == user_id)
+            .group_by(Category.color)
+        )
+        used = dict(rows.all())
+        return min(ACCENT_COLORS, key=lambda c: (used.get(c, 0), ACCENT_COLORS.index(c)))
+
+    async def _check_parent(
+        self, user_id: uuid.UUID, category: Category | None, parent_id: uuid.UUID
+    ) -> Category:
+        """Whether `parent_id` can be the parent of `category` (None: a new one). One level only."""
+        parent = await self.get(user_id, parent_id)
+        if parent is None:
+            raise CategoryParentError("That parent category was not found")
+        if category is not None and parent.id == category.id:
+            raise CategoryParentError("A category can't be its own parent")
+        if parent.parent_id is not None:
+            raise CategoryParentError(
+                f'"{parent.name}" is a sub-category itself: choose a top-level category'
+            )
+        if category is not None:
+            has_children = await self.db.scalar(
+                select(func.count(Category.id)).where(Category.parent_id == category.id)
+            )
+            if has_children:
+                raise CategoryParentError(
+                    f'"{category.name}" has sub-categories, so it can\'t go under another category'
+                )
+        return parent
+
+    async def create(
+        self,
+        user_id: uuid.UUID,
+        name: str,
+        *,
+        color: str | None = None,
+        parent_id: uuid.UUID | None = None,
+    ) -> Category:
+        if parent_id is not None:
+            await self._check_parent(user_id, None, parent_id)
         category = Category(
-            user_id=user_id, name=" ".join(name.split()), normalized_name=normalize_name(name)
+            user_id=user_id,
+            name=" ".join(name.split()),
+            normalized_name=normalize_name(name),
+            color=color or await self._next_color(user_id),
+            parent_id=parent_id,
         )
         try:
             async with self.db.begin_nested():  # a name clash doesn't poison the outer transaction
@@ -96,15 +159,34 @@ class CategoryService:
             assert category is not None
             return category
 
-    async def rename(self, category: Category, name: str) -> Category:
-        category.name = " ".join(name.split())
-        category.normalized_name = normalize_name(name)
+    async def update(self, category: Category, changes: dict) -> Category:
+        """Apply the fields sent: a new name, colour and/or parent (null removes the parent)."""
+        if "parent_id" in changes:
+            parent_id = changes["parent_id"]
+            if parent_id is not None:
+                await self._check_parent(category.user_id, category, parent_id)
+            category.parent_id = parent_id
+        if "color" in changes:
+            category.color = changes["color"]
+        if "name" in changes:
+            category.name = " ".join(changes["name"].split())
+            category.normalized_name = normalize_name(changes["name"])
         try:
             async with self.db.begin_nested():
                 await self.db.flush()
         except IntegrityError as exc:
             raise CategoryNameTakenError from exc
         return category
+
+    async def family(self, user_id: uuid.UUID, category_id: uuid.UUID) -> list[uuid.UUID]:
+        """A category and its sub-categories: what a filter, a budget line or a total on a parent
+        covers. A sub-category (or one without any) is just itself."""
+        stmt = select(Category.id).where(
+            Category.user_id == user_id,
+            or_(Category.id == category_id, Category.parent_id == category_id),
+        )
+        ids = list((await self.db.scalars(stmt)).all())
+        return ids or [category_id]
 
     async def usage(self, user_id: uuid.UUID) -> dict[uuid.UUID, tuple[int, int, int]]:
         """(transactions, subscriptions, budget lines) per category id. A transaction counts once
@@ -151,6 +233,24 @@ class CategoryService:
     ) -> list[CategoryResponse]:
         """The categories with how much each is used."""
         usage = await self.usage(user_id)
+        children = dict(
+            (
+                await self.db.execute(
+                    select(Category.parent_id, func.count())
+                    .where(Category.user_id == user_id, Category.parent_id.is_not(None))
+                    .group_by(Category.parent_id)
+                )
+            ).all()
+        )
+        parents = dict(
+            (
+                await self.db.execute(
+                    select(Category.id, Category.name).where(
+                        Category.id.in_({c.parent_id for c in categories if c.parent_id})
+                    )
+                )
+            ).all()
+        )
         out = []
         for c in categories:
             tx, subs, budget_lines = usage.get(c.id, (0, 0, 0))
@@ -158,6 +258,10 @@ class CategoryService:
                 CategoryResponse(
                     id=c.id,
                     name=c.name,
+                    color=c.color,
+                    parent_id=c.parent_id,
+                    parent=parents.get(c.parent_id),
+                    child_count=children.get(c.id, 0),
                     created_at=c.created_at,
                     transaction_count=tx,
                     subscription_count=subs,
@@ -170,6 +274,23 @@ class CategoryService:
         """Move everything from `source` to `target`, then delete `source`."""
         if source.id == target.id:
             raise CategoryNameTakenError
+        # One level: the source's sub-categories move under the target, which therefore has to be a
+        # top-level category.
+        has_children = await self.db.scalar(
+            select(func.count(Category.id)).where(Category.parent_id == source.id)
+        )
+        if has_children and target.parent_id not in (None, source.id):
+            raise CategoryParentError(
+                f'"{target.name}" is a sub-category, so "{source.name}"\'s sub-categories can\'t '
+                "move under it. Merge into a top-level category, or move them first"
+            )
+        if target.parent_id == source.id:  # merging a parent into its own child: it takes its place
+            target.parent_id = source.parent_id
+        await self.db.execute(
+            update(Category)
+            .where(Category.parent_id == source.id, Category.id != target.id)
+            .values(parent_id=target.id)
+        )
         for model in (Transaction, TransactionSplit, Subscription, TransactionTemplate):
             await self.db.execute(
                 update(model).where(model.category_id == source.id).values(category_id=target.id)

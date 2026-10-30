@@ -1,5 +1,6 @@
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
@@ -119,8 +120,10 @@ const TemplatesTable = memo(function TemplatesTable({
 							{t.name}
 						</Typography>
 					</TableCell>
-					<TableCell sx={{ display: "flex", gap: 0.75, flexWrap: "wrap", border: 0 }}>
-						<Fills template={t} />
+					<TableCell>
+						<Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
+							<Fills template={t} />
+						</Box>
 					</TableCell>
 					<TableCell align="right">{amount(t)}</TableCell>
 					<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>

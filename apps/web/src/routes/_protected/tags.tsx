@@ -1,6 +1,7 @@
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import TableCell from "@mui/material/TableCell";
@@ -141,8 +142,10 @@ const TagsTable = memo(function TagsTable({
 					<TableCell>
 						<TagName tag={t} />
 					</TableCell>
-					<TableCell sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
-						<Usage tag={t} />
+					<TableCell>
+						<Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
+							<Usage tag={t} />
+						</Box>
 					</TableCell>
 					<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
 						<Actions

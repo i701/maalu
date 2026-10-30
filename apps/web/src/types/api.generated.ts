@@ -470,8 +470,8 @@ export interface paths {
         delete: operations["delete_category_api_v1_categories__category_id__delete"];
         options?: never;
         head?: never;
-        /** Rename Category */
-        patch: operations["rename_category_api_v1_categories__category_id__patch"];
+        /** Update Category */
+        patch: operations["update_category_api_v1_categories__category_id__patch"];
         trace?: never;
     };
     "/api/v1/categories/{category_id}/merge": {
@@ -1653,8 +1653,18 @@ export interface components {
         };
         /** CategoryCreate */
         CategoryCreate: {
+            /**
+             * Color
+             * @description One of the accent colours. Left out, the one you use least.
+             */
+            color?: ("blue" | "green" | "orange" | "violet" | "pink" | "amber" | "lime" | "slate") | null;
             /** Name */
             name: string;
+            /**
+             * Parent Id
+             * @description Makes this a sub-category of that top-level category. One level only.
+             */
+            parent_id?: string | null;
         };
         /** CategoryMerge */
         CategoryMerge: {
@@ -1673,6 +1683,17 @@ export interface components {
              */
             budget_line_count: number;
             /**
+             * Child Count
+             * @description Its sub-categories
+             * @default 0
+             */
+            child_count: number;
+            /**
+             * Color
+             * @description One of the accent colours
+             */
+            color: string;
+            /**
              * Created At
              * Format: date-time
              */
@@ -1684,6 +1705,16 @@ export interface components {
             id: string;
             /** Name */
             name: string;
+            /**
+             * Parent
+             * @description The parent's name
+             */
+            parent?: string | null;
+            /**
+             * Parent Id
+             * @description Set on a sub-category
+             */
+            parent_id?: string | null;
             /**
              * Subscription Count
              * @default 0
@@ -1706,10 +1737,30 @@ export interface components {
              */
             category_id: string;
             /**
+             * Color
+             * @description The category's accent colour
+             */
+            color: string;
+            /**
              * Count
              * @description Transactions with money in this category
              */
             count: number;
+            /**
+             * Parent
+             * @description The parent's name
+             */
+            parent: string | null;
+            /**
+             * Parent Color
+             * @description The parent's accent colour
+             */
+            parent_color: string | null;
+            /**
+             * Parent Id
+             * @description Set on a sub-category
+             */
+            parent_id: string | null;
             /**
              * Total
              * @description In your base currency
@@ -1735,11 +1786,19 @@ export interface components {
         };
         /**
          * CategoryUpdate
-         * @description Rename. Every transaction, item and subscription in the category follows.
+         * @description Partial update: only the fields sent change. A rename carries to every transaction, item and
+         *     subscription in the category. `parent_id: null` makes it a top-level category again.
          */
         CategoryUpdate: {
+            /** Color */
+            color?: ("blue" | "green" | "orange" | "violet" | "pink" | "amber" | "lime" | "slate") | null;
             /** Name */
-            name: string;
+            name?: string | null;
+            /**
+             * Parent Id
+             * @description Its parent (a top-level category without a parent of its own). Explicit null removes the parent. A category with sub-categories can't have one.
+             */
+            parent_id?: string | null;
         };
         /** CurrencyList */
         CurrencyList: {
@@ -2118,6 +2177,8 @@ export interface components {
             amount: string;
             /** Category */
             category: string;
+            /** Category Color */
+            category_color: string;
             /**
              * Category Id
              * Format: uuid
@@ -2576,6 +2637,11 @@ export interface components {
             base_amount: string;
             /** Category */
             category: string;
+            /**
+             * Category Color
+             * @description The category's accent colour
+             */
+            category_color: string | null;
             /** Category Id */
             category_id: string | null;
             /**
@@ -3818,7 +3884,7 @@ export interface operations {
             };
         };
     };
-    rename_category_api_v1_categories__category_id__patch: {
+    update_category_api_v1_categories__category_id__patch: {
         parameters: {
             query?: never;
             header?: never;
@@ -5780,7 +5846,9 @@ export const pathsApiV1TransactionsSummaryGetParametersQueryTag_matchValues: Rea
 export const accountGroupValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AccountGroup"]> = ["cash", "accounts", "card", "debit_card", "savings", "prepaid", "investments", "overdrafts", "loan", "insurance", "others"];
 export const budgetLineResponseStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BudgetLineResponse"]["status"]> = ["ok", "warning", "over"];
 export const budgetTotalsStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BudgetTotals"]["status"]> = ["ok", "warning", "over"];
+export const categoryCreateColorAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CategoryCreate"]["color"]> = ["blue", "green", "orange", "violet", "pink", "amber", "lime", "slate"];
 export const categoryTotalTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CategoryTotal"]["type"]> = ["income", "expense"];
+export const categoryUpdateColorAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CategoryUpdate"]["color"]> = ["blue", "green", "orange", "violet", "pink", "amber", "lime", "slate"];
 export const goalResponseModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GoalResponse"]["mode"]> = ["account", "manual"];
 export const goalResponsePeriod_statusAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GoalResponse"]["period_status"]> = ["funded", "pending"];
 export const intervalUnitValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["IntervalUnit"]> = ["week", "month", "year"];

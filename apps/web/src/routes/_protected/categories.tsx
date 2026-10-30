@@ -1,6 +1,7 @@
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import TableCell from "@mui/material/TableCell";
@@ -9,6 +10,7 @@ import Typography from "@mui/material/Typography";
 import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
 import { memo, useState } from "react";
 import { z } from "zod";
+import CategoryDot from "#/components/CategoryDot";
 import CategoryForm from "#/components/CategoryForm";
 import ConfirmDelete from "#/components/ConfirmDelete";
 import EmptyState from "#/components/EmptyState";
@@ -25,6 +27,7 @@ import TablePager from "#/components/TablePager";
 import TableToolbar from "#/components/TableToolbar";
 import TonalChip from "#/components/TonalChip";
 import { useLiveSearch } from "#/lib/live-search";
+import { categoryAccent } from "#/lib/categories";
 import { ACCENT } from "#/lib/m3";
 import { lastPageIfOutOfRange, pageSearch } from "#/lib/pagination";
 import { unwrap } from "#/lib/unwrap";
@@ -68,6 +71,12 @@ function Usage({ category }: { category: Category }) {
 				accent={ACCENT.blue}
 				label={plural(category.transaction_count, "transaction", "transactions")}
 			/>
+			{category.child_count > 0 && (
+				<TonalChip
+					accent={ACCENT.green}
+					label={plural(category.child_count, "sub-category", "sub-categories")}
+				/>
+			)}
 			{category.subscription_count > 0 && (
 				<TonalChip
 					accent={ACCENT.violet}
@@ -86,9 +95,12 @@ function CategoryName({ category }: { category: Category }) {
 			search={{ category_id: category.id, page: 1, pageSize: 20 }}
 			style={{ color: "inherit", textDecoration: "none" }}
 		>
-			<Typography variant="body2" sx={{ fontWeight: 500 }}>
-				{category.name}
-			</Typography>
+			<Box sx={{ display: "flex", alignItems: "center", gap: 1, pl: category.parent_id ? 3 : 0 }}>
+				<CategoryDot color={category.color} />
+				<Typography variant="body2" sx={{ fontWeight: 500 }}>
+					{category.name}
+				</Typography>
+			</Box>
 		</Link>
 	);
 }
@@ -104,7 +116,7 @@ function Actions({
 }) {
 	return (
 		<>
-			<IconButton aria-label="Rename" title="Rename" size="small" onClick={onRename}>
+			<IconButton aria-label="Edit" title="Edit" size="small" onClick={onRename}>
 				<EditOutlinedIcon fontSize="small" />
 			</IconButton>
 			<IconButton
@@ -150,8 +162,10 @@ const CategoriesTable = memo(function CategoriesTable({
 					<TableCell>
 						<CategoryName category={c} />
 					</TableCell>
-					<TableCell sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
-						<Usage category={c} />
+					<TableCell>
+						<Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
+							<Usage category={c} />
+						</Box>
 					</TableCell>
 					<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
 						<Actions
@@ -165,7 +179,7 @@ const CategoriesTable = memo(function CategoriesTable({
 			renderCard={(c) => (
 				<MobileCard
 					leading={
-						<ShapeTile shape={5} size={52} accent={ACCENT.pink}>
+						<ShapeTile shape={5} size={52} accent={categoryAccent(c.color)}>
 							<Symbol name="category" size={24} filled />
 						</ShapeTile>
 					}
@@ -277,6 +291,7 @@ function CategoriesPage() {
 			{editing && (
 				<CategoryForm
 					category={editing === "new" ? undefined : editing}
+					categories={all}
 					onClose={() => setEditing(null)}
 				/>
 			)}

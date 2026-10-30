@@ -955,11 +955,46 @@
       },
       "CategoryCreate": {
         "properties": {
+          "color": {
+            "anyOf": [
+              {
+                "enum": [
+                  "blue",
+                  "green",
+                  "orange",
+                  "violet",
+                  "pink",
+                  "amber",
+                  "lime",
+                  "slate"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "One of the accent colours. Left out, the one you use least.",
+            "title": "Color"
+          },
           "name": {
             "maxLength": 100,
             "minLength": 1,
             "title": "Name",
             "type": "string"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Makes this a sub-category of that top-level category. One level only.",
+            "title": "Parent Id"
           }
         },
         "required": [
@@ -990,6 +1025,17 @@
             "title": "Budget Line Count",
             "type": "integer"
           },
+          "child_count": {
+            "default": 0,
+            "description": "Its sub-categories",
+            "title": "Child Count",
+            "type": "integer"
+          },
+          "color": {
+            "description": "One of the accent colours",
+            "title": "Color",
+            "type": "string"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -1003,6 +1049,31 @@
           "name": {
             "title": "Name",
             "type": "string"
+          },
+          "parent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The parent's name",
+            "title": "Parent"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Set on a sub-category",
+            "title": "Parent Id"
           },
           "subscription_count": {
             "default": 0,
@@ -1019,6 +1090,7 @@
         "required": [
           "id",
           "name",
+          "color",
           "created_at"
         ],
         "title": "CategoryResponse",
@@ -1035,10 +1107,52 @@
             "title": "Category Id",
             "type": "string"
           },
+          "color": {
+            "description": "The category's accent colour",
+            "title": "Color",
+            "type": "string"
+          },
           "count": {
             "description": "Transactions with money in this category",
             "title": "Count",
             "type": "integer"
+          },
+          "parent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The parent's name",
+            "title": "Parent"
+          },
+          "parent_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The parent's accent colour",
+            "title": "Parent Color"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Set on a sub-category",
+            "title": "Parent Id"
           },
           "total": {
             "description": "In your base currency",
@@ -1058,6 +1172,10 @@
           "type",
           "category_id",
           "category",
+          "color",
+          "parent_id",
+          "parent",
+          "parent_color",
           "total",
           "count"
         ],
@@ -1087,18 +1205,56 @@
         "type": "object"
       },
       "CategoryUpdate": {
-        "description": "Rename. Every transaction, item and subscription in the category follows.",
+        "description": "Partial update: only the fields sent change. A rename carries to every transaction, item and\nsubscription in the category. `parent_id: null` makes it a top-level category again.",
         "properties": {
+          "color": {
+            "anyOf": [
+              {
+                "enum": [
+                  "blue",
+                  "green",
+                  "orange",
+                  "violet",
+                  "pink",
+                  "amber",
+                  "lime",
+                  "slate"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
           "name": {
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Name",
-            "type": "string"
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Its parent (a top-level category without a parent of its own). Explicit null removes the parent. A category with sub-categories can't have one.",
+            "title": "Parent Id"
           }
         },
-        "required": [
-          "name"
-        ],
         "title": "CategoryUpdate",
         "type": "object"
       },
@@ -2005,6 +2161,10 @@
             "title": "Category",
             "type": "string"
           },
+          "category_color": {
+            "title": "Category Color",
+            "type": "string"
+          },
           "category_id": {
             "format": "uuid",
             "title": "Category Id",
@@ -2058,6 +2218,7 @@
           "quantity",
           "category",
           "category_id",
+          "category_color",
           "amount",
           "tax_amount",
           "refund_of_split_id",
@@ -3242,6 +3403,18 @@
             "title": "Category",
             "type": "string"
           },
+          "category_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The category's accent colour",
+            "title": "Category Color"
+          },
           "category_id": {
             "anyOf": [
               {
@@ -3403,6 +3576,7 @@
           "payment_method",
           "category",
           "category_id",
+          "category_color",
           "description",
           "transaction_date",
           "transaction_time",
@@ -5629,7 +5803,7 @@
         ]
       },
       "patch": {
-        "operationId": "rename_category_api_v1_categories__category_id__patch",
+        "operationId": "update_category_api_v1_categories__category_id__patch",
         "parameters": [
           {
             "in": "path",
@@ -5679,7 +5853,7 @@
             "OAuth2PasswordBearer": []
           }
         ],
-        "summary": "Rename Category",
+        "summary": "Update Category",
         "tags": [
           "categories"
         ]

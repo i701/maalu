@@ -1,4 +1,10 @@
 from enum import StrEnum
+from typing import Literal
+
+# The colours a tag or category can have: the names of the web app's accent colours. A new one gets
+# the one its owner uses least, so neighbours rarely look alike.
+ACCENT_COLORS = ("blue", "green", "orange", "violet", "pink", "amber", "lime", "slate")
+AccentColor = Literal["blue", "green", "orange", "violet", "pink", "amber", "lime", "slate"]
 
 
 class PaymentMethod(StrEnum):
