@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     # to open a new instance becomes its owner and sign-up then closes. "open": anyone. "closed": no
     # one (accounts are created another way, for example `just seed`).
     registration: Literal["auto", "open", "closed"] = "auto"
+    # Slows down password guessing, code guessing and sign-up spam (`app/rate_limit.py`). Only turn
+    # it off for local experiments.
+    rate_limit: bool = True
     # Source of the list of world currencies (only the codes are read from it) and of the market
     # exchange rates offered as a suggestion when entering a foreign-currency amount. The rate a
     # user saves is always the one they confirm, never one fetched on their behalf.

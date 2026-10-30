@@ -1,4 +1,5 @@
 import type { ApiResult } from "#/types/api";
+import { getRequestIP } from "@tanstack/react-start/server";
 import { getAppSession } from "#/utils/session";
 
 const API_URL = () => process.env.API_URL ?? "http://localhost:8000";
@@ -39,6 +40,10 @@ export async function apiRequest<T>(
 	opts: RequestOptions = {},
 ): Promise<ApiResult<T>> {
 	const headers: Record<string, string> = {};
+	// The browser never reaches the API, so the API only sees this server. Pass on the visitor's
+	// address so its sign-in limits count per person, not for everyone at once.
+	const visitor = getRequestIP({ xForwardedFor: true });
+	if (visitor) headers["X-Forwarded-For"] = visitor;
 	const session = await getAppSession();
 
 	if (opts.token) {

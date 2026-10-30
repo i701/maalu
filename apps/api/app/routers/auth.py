@@ -1,9 +1,9 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 
-from app import two_factor
+from app import rate_limit, two_factor
 from app.dependencies import CurrentUser, UserServiceDep
 from app.schemas import (
     RecoveryCodes,
@@ -30,6 +30,13 @@ from app.services import (
 )
 
 router = APIRouter(tags=["auth"])
+
+
+def client_ip(request: Request) -> str:
+    """The visitor's address. The web server passes it on in `X-Forwarded-For`, which uvicorn trusts
+    only from `FORWARDED_ALLOW_IPS`, so `request.client` is already the real address."""
+    return request.client.host if request.client else "unknown"
+
 
 WRONG_CODE = "That code is not right"
 LOCKED = "Too many wrong codes. Wait a few minutes and try again"
@@ -60,7 +67,8 @@ async def registration_status(users: UserServiceDep):
 
 
 @router.post("/auth/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-async def register(data: UserCreate, users: UserServiceDep):
+async def register(data: UserCreate, users: UserServiceDep, request: Request):
+    rate_limit.check_register(client_ip(request))
     try:
         return await users.register(data)
     except RegistrationClosedError:
@@ -70,15 +78,22 @@ async def register(data: UserCreate, users: UserServiceDep):
 
 
 @router.post("/auth/login", response_model=Token)
-async def login(form: Annotated[OAuth2PasswordRequestForm, Depends()], users: UserServiceDep):
-    """OAuth2 password flow: send `username` (the email) and `password` as form fields."""
+async def login(
+    form: Annotated[OAuth2PasswordRequestForm, Depends()], users: UserServiceDep, request: Request
+):
+    """OAuth2 password flow: send `username` (the email) and `password` as form fields. Ten wrong
+    passwords for one email, or thirty from one address, in fifteen minutes answer 429."""
+    ip = client_ip(request)
+    rate_limit.check_login(form.username, ip)
     user = await users.authenticate(form.username, form.password)
     if user is None:
+        rate_limit.login_failed(form.username, ip)
         raise HTTPException(
             status.HTTP_401_UNAUTHORIZED,
             "Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    rate_limit.login_succeeded(form.username)
     if user.two_factor_enabled:
         # The password was right: no token yet, only proof of that, to send with a code.
         return Token(two_factor_required=True, challenge_token=create_challenge_token(user.id))
@@ -86,9 +101,11 @@ async def login(form: Annotated[OAuth2PasswordRequestForm, Depends()], users: Us
 
 
 @router.post("/auth/login/2fa", response_model=Token)
-async def login_two_factor(data: TwoFactorChallenge, users: UserServiceDep):
+async def login_two_factor(data: TwoFactorChallenge, users: UserServiceDep, request: Request):
     """The second step of signing in: the challenge from `/auth/login` and a code from the
     authenticator app (or an unused recovery code)."""
+    ip = client_ip(request)
+    rate_limit.check_two_factor(ip)
     invalid = HTTPException(status.HTTP_401_UNAUTHORIZED, "Sign in again")
     user_id = decode_challenge_token(data.challenge_token)
     user = await users.get(user_id) if user_id else None
@@ -99,6 +116,7 @@ async def login_two_factor(data: TwoFactorChallenge, users: UserServiceDep):
     except TwoFactorLockedError:
         raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, LOCKED) from None
     except InvalidTwoFactorCodeError:
+        rate_limit.two_factor_failed(ip)
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, WRONG_CODE) from None
     return Token(access_token=create_access_token(user.id))
 

@@ -4610,7 +4610,7 @@
     },
     "/api/v1/auth/login": {
       "post": {
-        "description": "OAuth2 password flow: send `username` (the email) and `password` as form fields.",
+        "description": "OAuth2 password flow: send `username` (the email) and `password` as form fields. Ten wrong\npasswords for one email, or thirty from one address, in fifteen minutes answer 429.",
         "operationId": "login_api_v1_auth_login_post",
         "requestBody": {
           "content": {

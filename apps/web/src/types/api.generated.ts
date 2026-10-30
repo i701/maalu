@@ -202,7 +202,8 @@ export interface paths {
         put?: never;
         /**
          * Login
-         * @description OAuth2 password flow: send `username` (the email) and `password` as form fields.
+         * @description OAuth2 password flow: send `username` (the email) and `password` as form fields. Ten wrong
+         *     passwords for one email, or thirty from one address, in fifteen minutes answer 429.
          */
         post: operations["login_api_v1_auth_login_post"];
         delete?: never;

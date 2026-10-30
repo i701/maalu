@@ -4,6 +4,8 @@ from collections.abc import AsyncIterator, Awaitable, Callable
 os.environ.setdefault("SECRET_KEY", "test-secret-key-not-for-production-use")
 # most tests register several users; test_registration.py covers the other modes
 os.environ.setdefault("REGISTRATION", "open")
+# tests sign in and register freely; test_rate_limit.py turns the limits on
+os.environ.setdefault("RATE_LIMIT", "false")
 
 import pytest
 from app.database import get_db

@@ -1,6 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 
 from app.config import settings
+from app.rate_limit import RateLimitedError
 from app.routers import (
     account,
     auth,
@@ -19,6 +21,14 @@ from app.routers import (
 
 def create_app() -> FastAPI:
     app = FastAPI(title=settings.app_name, debug=settings.debug)
+
+    @app.exception_handler(RateLimitedError)
+    async def rate_limited(_: Request, exc: RateLimitedError) -> JSONResponse:
+        return JSONResponse(
+            {"detail": exc.message},
+            status_code=429,
+            headers={"Retry-After": str(exc.retry_after)},
+        )
 
     @app.get("/health", tags=["meta"])
     async def health() -> dict[str, str]:

@@ -9,6 +9,7 @@
 #   PORT=3000              (the port the app is published on)
 #   MAALU_VERSION=latest   (a release: 1.2.0, 1.2, sha-abc1234)
 #   REGISTRATION=auto      (auto: only the first account can sign up; open: anyone; closed: no one)
+#   RATE_LIMIT=true        (slows down password and code guessing; leave it on)
 #
 # The session cookie is Secure in these images, so serve the app over HTTPS (or on localhost,
 # which browsers treat as secure).
@@ -37,6 +38,11 @@ services:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-maalu}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-maalu}
       SECRET_KEY: ${SECRET_KEY}
       REGISTRATION: ${REGISTRATION:-auto}
+      RATE_LIMIT: ${RATE_LIMIT:-true}
+      # Only the web container can reach this service (no published port), so trust the visitor's
+      # address it passes on in X-Forwarded-For. Without this every visitor would look like the
+      # web container to the sign-in limits.
+      FORWARDED_ALLOW_IPS: "*"
     depends_on:
       db:
         condition: service_healthy
