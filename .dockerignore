@@ -1,0 +1,14 @@
+# The images are built from the repository root (both apps share the lockfiles there). Keep local
+# state out: secrets, installed dependencies and build output are made inside the image.
+.git
+.github
+.env
+.env.*
+!.env.example
+**/.venv
+**/node_modules
+**/dist
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+apps/api/tests

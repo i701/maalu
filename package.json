@@ -2,5 +2,5 @@
   "name": "maalu",
   "private": true,
   "license": "Apache-2.0",
-  "packageManager": "pnpm@12.10.1"
+  "packageManager": "pnpm@12.16.1"
 }

@@ -33,6 +33,8 @@ To run one test: `cd apps/api && uv run pytest tests/test_transfers.py::test_nam
 
 Env files: `apps/api/.env` (`SECRET_KEY` is required; `DATABASE_URL`) and `apps/web/.env` (`API_URL`, `SESSION_SECRET` of at least 32 chars). Copy them from the `.env.example` files.
 
+Docker images: `apps/api/Dockerfile` and `apps/web/Dockerfile`, both built from the repository root (`docker build -f apps/web/Dockerfile .`), since they need the root lockfiles. `.github/workflows/docker.yml` publishes `ghcr.io/i701/maalu-api` and `maalu-web` for amd64 and arm64: `:latest` and `:sha-<commit>` from main, `:X.Y.Z` and `:X.Y` from a `vX.Y.Z` tag, and pull requests only build. `docker-compose.prod.yml` runs them with Postgres (secrets in a `.env` beside it). The API image runs `alembic upgrade head` before serving. The web image serves the production build with srvx (`pnpm --filter @maalu/web start`), whose `--static` path is relative to the entry file, hence `../client`; the build and production dependencies are plain JS made on the builder's platform. In production the session cookie is `Secure`, so the app needs HTTPS (or localhost).
+
 ## API architecture (`apps/api/app`)
 
 The layers go `models` → `schemas` (Pydantic) → `services` → `routers`, connected in `dependencies.py`:

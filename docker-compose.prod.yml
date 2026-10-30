@@ -1,0 +1,51 @@
+# Runs Maalu from the published images, with its own Postgres:
+#   docker compose -f docker-compose.prod.yml up -d      then open http://localhost:3000
+# Put the secrets in a .env next to this file (docker compose reads it):
+#   SECRET_KEY=...         openssl rand -hex 32  (signs the API's tokens)
+#   SESSION_SECRET=...     openssl rand -hex 32  (encrypts the web session cookie)
+#   POSTGRES_PASSWORD=...  letters and digits only, it goes into a URL
+# MAALU_VERSION picks a release (1.2.0, 1.2, sha-abc1234); it defaults to latest.
+#
+# The session cookie is Secure in these images, so serve the app over HTTPS (or on localhost,
+# which browsers treat as secure).
+name: maalu-prod
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: maalu
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: maalu
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U maalu"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    image: ghcr.io/i701/maalu-api:${MAALU_VERSION:-latest}
+    environment:
+      DATABASE_URL: postgresql+asyncpg://maalu:${POSTGRES_PASSWORD}@db:5432/maalu
+      SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web:
+    image: ghcr.io/i701/maalu-web:${MAALU_VERSION:-latest}
+    environment:
+      API_URL: http://api:8000
+      SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET in .env}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  pgdata:
