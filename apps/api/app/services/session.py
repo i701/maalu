@@ -91,6 +91,11 @@ class SessionService:
         )
         return result.rowcount > 0
 
+    async def end_all(self, user_id: uuid.UUID) -> int:
+        """End every session of the user (after the operator resets their password)."""
+        result = await self.db.execute(delete(UserSession).where(UserSession.user_id == user_id))
+        return result.rowcount
+
     async def end_others(self, user_id: uuid.UUID, keep: uuid.UUID) -> int:
         """End every session of the user except `keep`. Returns how many were ended."""
         result = await self.db.execute(

@@ -39,6 +39,7 @@ async def client() -> AsyncIterator[AsyncClient]:
     app = create_app()
     app.dependency_overrides[get_db] = override_get_db
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
+        c.session_factory = sessions  # type: ignore[attr-defined]  # for tests that need the database
         yield c
     await engine.dispose()
 

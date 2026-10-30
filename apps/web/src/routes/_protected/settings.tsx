@@ -7,6 +7,7 @@ import Typography from "@mui/material/Typography";
 import { createFileRoute } from "@tanstack/react-router";
 import { useNotify } from "#/components/Notify";
 import PageHeader from "#/components/PageHeader";
+import PasswordCard from "#/components/PasswordCard";
 import SessionsCard from "#/components/SessionsCard";
 import TwoFactorSettings from "#/components/TwoFactorSettings";
 import { unwrap } from "#/lib/unwrap";
@@ -58,6 +59,7 @@ function SettingsPage() {
 						</Typography>
 					</CardContent>
 				</Card>
+				<PasswordCard twoFactor={me.two_factor_enabled} />
 				<TwoFactorSettings enabled={me.two_factor_enabled} />
 				<SessionsCard sessions={sessions} />
 			</Stack>

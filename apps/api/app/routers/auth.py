@@ -8,6 +8,7 @@ from app import rate_limit, two_factor
 from app.dependencies import CurrentSession, CurrentUser, SessionServiceDep, UserServiceDep
 from app.schemas import (
     EndedSessions,
+    PasswordChange,
     RecoveryCodes,
     RegistrationStatus,
     SessionResponse,
@@ -26,8 +27,10 @@ from app.services import (
     EmailAlreadyRegisteredError,
     InvalidPasswordError,
     InvalidTwoFactorCodeError,
+    PasswordUnchangedError,
     RegistrationClosedError,
     TransactionRuleError,
+    TwoFactorCodeRequiredError,
     TwoFactorLockedError,
     TwoFactorStateError,
 )
@@ -60,6 +63,14 @@ def _confirm_error(exc: Exception) -> Exception:
             )
         case InvalidTwoFactorCodeError():
             return HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, WRONG_CODE)
+        case TwoFactorCodeRequiredError():
+            return HTTPException(
+                status.HTTP_422_UNPROCESSABLE_CONTENT, "Enter the code from your authenticator app"
+            )
+        case PasswordUnchangedError():
+            return HTTPException(
+                status.HTTP_422_UNPROCESSABLE_CONTENT, "Choose a password you are not using now"
+            )
         case TwoFactorLockedError():
             return HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, LOCKED)
         case TwoFactorStateError():
@@ -235,6 +246,31 @@ async def end_session(session_id: uuid.UUID, user: CurrentUser, sessions: Sessio
     """Sign out one of your sessions. Another user's session is a 404."""
     if not await sessions.end(user.id, session_id):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Session not found")
+
+
+@router.post("/auth/password", status_code=status.HTTP_204_NO_CONTENT)
+async def change_password(
+    data: PasswordChange,
+    request: Request,
+    user: CurrentUser,
+    session: CurrentSession,
+    users: UserServiceDep,
+    sessions: SessionServiceDep,
+):
+    """Change your password. Needs the current one, and a code when two-factor is on. Your other
+    sign-ins end. Wrong current passwords count toward the same limit as signing in, so a stolen
+    session cannot be used to guess the password."""
+    ip = client_ip(request)
+    rate_limit.check_login(user.email, ip)
+    try:
+        await users.change_password(user, data.current_password, data.new_password, data.code)
+    except InvalidPasswordError:
+        rate_limit.login_failed(user.email, ip)
+        raise _confirm_error(InvalidPasswordError()) from None
+    except Exception as exc:
+        raise _confirm_error(exc) from None
+    rate_limit.login_succeeded(user.email)
+    await sessions.end_others(user.id, session.id)
 
 
 @router.get("/users/me", response_model=UserResponse)

@@ -1,9 +1,10 @@
 import TextField from "@mui/material/TextField";
-import { type FormEvent, useState } from "react";
+import type { FormEvent } from "react";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
 import type { ApiResult } from "#/types/api";
 import FormDialog from "./FormDialog";
+import SecondFactorField from "./SecondFactorField";
 
 /** Asks for your password and a code (from the app, or a recovery code) before something that
  * could lock you out of two-factor or weaken it. `send` makes the request. */
@@ -24,7 +25,6 @@ export default function TwoFactorConfirmDialog<T>({
 }) {
 	const { run, pending, error } = useAction();
 	const sheet = useSheet(onClose);
-	const [recovery, setRecovery] = useState(false);
 
 	async function submit(e: FormEvent<HTMLFormElement>) {
 		e.preventDefault();
@@ -62,27 +62,7 @@ export default function TwoFactorConfirmDialog<T>({
 				helperText={help}
 				sx={{ mb: 2 }}
 			/>
-			<TextField
-				key={recovery ? "recovery" : "app"}
-				label={recovery ? "Recovery code" : "Authentication code"}
-				name="code"
-				autoComplete="one-time-code"
-				required
-				slotProps={{
-					htmlInput: recovery
-						? { maxLength: 32, autoCapitalize: "none", spellCheck: false }
-						: { inputMode: "numeric", pattern: "[0-9 ]*", maxLength: 7 },
-				}}
-				helperText={
-					<button
-						type="button"
-						onClick={() => setRecovery((r) => !r)}
-						style={{ all: "unset", cursor: "pointer", textDecoration: "underline" }}
-					>
-						{recovery ? "Use my authenticator app" : "Use a recovery code instead"}
-					</button>
-				}
-			/>
+			<SecondFactorField />
 		</FormDialog>
 	);
 }

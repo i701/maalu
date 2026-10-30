@@ -57,6 +57,7 @@ from app.schemas.transaction import (
 )
 from app.schemas.user import (
     EndedSessions,
+    PasswordChange,
     RecoveryCodes,
     RegistrationStatus,
     SessionResponse,
@@ -99,6 +100,7 @@ __all__ = [
     "GoalEntryCreate",
     "GoalResponse",
     "GoalUpdate",
+    "PasswordChange",
     "PostPlanned",
     "RecoveryCodes",
     "RegistrationStatus",

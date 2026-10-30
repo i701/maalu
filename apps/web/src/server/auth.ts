@@ -158,3 +158,15 @@ export const newRecoveryCodesFn = createServerFn({ method: "POST" })
 	.handler(async ({ data }) =>
 		apiRequest<RecoveryCodes>("/auth/2fa/recovery-codes", { method: "POST", body: data }),
 	);
+
+/** Change your password. Needs the current one, and a code when two-factor is on; the API signs
+ * your other devices out. */
+export const changePasswordFn = createServerFn({ method: "POST" })
+	.validator(
+		z.object({
+			current_password: z.string().min(1).max(128),
+			new_password: z.string().min(8, "Use at least 8 characters").max(128),
+			code: codeField.optional(),
+		}),
+	)
+	.handler(async ({ data }) => apiRequest<void>("/auth/password", { method: "POST", body: data }));

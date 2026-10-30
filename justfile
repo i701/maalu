@@ -112,6 +112,11 @@ seed transactions="250":
 disable-2fa email:
     cd apps/api && uv run python -m app.admin disable-2fa {{email}}
 
+# Set a new password for someone who forgot theirs (asks for it, hidden; signs them out everywhere).
+# In Docker: docker compose -f docker-compose.prod.yml exec -it api python -m app.admin reset-password EMAIL
+reset-password email:
+    cd apps/api && uv run python -m app.admin reset-password {{email}}
+
 # ── Database migrations ─────────────────────────────────
 
 # Create a new migration: just migration "add accounts"

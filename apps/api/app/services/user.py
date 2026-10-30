@@ -38,6 +38,14 @@ class TwoFactorStateError(Exception):
     """Two-factor is already on, or not set up yet. The message is safe to show."""
 
 
+class TwoFactorCodeRequiredError(Exception):
+    """Two-factor is on and the request carried no code."""
+
+
+class PasswordUnchangedError(Exception):
+    """The new password is the same as the current one."""
+
+
 # Wrong codes in a row before the second factor locks, and for how long.
 MAX_CODE_FAILURES = 5
 LOCK_MINUTES = 5
@@ -219,3 +227,23 @@ class UserService:
             RecoveryCode(user_id=user.id, code_hash=two_factor.hash_recovery_code(c)) for c in codes
         )
         return codes
+
+    # --- Passwords ---------------------------------------------------------------------------
+
+    async def change_password(self, user: User, current: str, new: str, code: str | None) -> None:
+        """Change a signed-in user's password. It needs the current password, and a code (or a
+        recovery code) when two-factor is on: someone holding a stolen session who also knows the
+        password must not be able to lock the owner out."""
+        if not verify_password(current, user.hashed_password):
+            raise InvalidPasswordError
+        if user.two_factor_enabled:
+            if not code:
+                raise TwoFactorCodeRequiredError
+            await self.check_second_factor(user, code)
+        if verify_password(new, user.hashed_password):
+            raise PasswordUnchangedError
+        await self.set_password(user, new)
+
+    async def set_password(self, user: User, new: str) -> None:
+        user.hashed_password = hash_password(new)
+        await self.db.flush()
