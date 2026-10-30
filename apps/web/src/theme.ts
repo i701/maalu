@@ -1,7 +1,6 @@
 import { createTheme } from "@mui/material/styles";
 import { createElement } from "react";
 import LoadingIndicator from "#/components/LoadingIndicator";
-import SheetTransition from "#/components/SheetTransition";
 import { CHART_DARK, CHART_LIGHT, M3_DARK, M3_LIGHT, chartVars, colorVars } from "#/lib/m3";
 import { EASE_OUT } from "#/lib/motion";
 import { morph } from "#/lib/shape";
@@ -218,22 +217,18 @@ const theme = createTheme({
 				},
 			},
 		},
-		// Dialogs are bottom sheets, like the filter sheet: they slide up on the spatial spring over a
-		// light scrim, are at most 560px wide and centred on wide screens, round only the top
-		// corners, and scroll inside themselves.
+		// Dialogs are centred M3 dialogs over a light scrim, on MUI's own fade: opacity on a plain
+		// curve, which every browser animates off the main thread (Safari would not keep a long
+		// slide on the linear() spring smooth). They take the width their `maxWidth` allows, keep a
+		// 16px gutter on narrow screens, and scroll inside themselves.
 		MuiDialog: {
-			defaultProps: {
-				transitionDuration: { enter: 484, exit: 250 },
-				slots: { transition: SheetTransition },
-			},
 			styleOverrides: {
 				root: { "& .MuiBackdrop-root": { backgroundColor: "rgb(0 0 0 / 0.32)" } },
-				container: { alignItems: "flex-end" },
 				paper: {
-					margin: 0,
-					width: "min(560px, 100%)",
-					maxHeight: "calc(100dvh - 24px)",
-					borderRadius: "var(--shape-xl) var(--shape-xl) 0 0",
+					margin: 16,
+					width: "calc(100% - 32px)",
+					maxHeight: "calc(100dvh - 32px)",
+					borderRadius: "var(--shape-xl)",
 					backgroundColor: "var(--md-sys-color-surface-container-high)",
 				},
 			},

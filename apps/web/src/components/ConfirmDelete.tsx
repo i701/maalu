@@ -11,7 +11,6 @@ import { useAction } from "#/lib/use-action";
 import type { ApiResult } from "#/types/api";
 import { useNotify } from "./Notify";
 import Reveal from "./Reveal";
-import SheetHandle from "./SheetHandle";
 
 export default function ConfirmDelete({
 	title,
@@ -43,7 +42,6 @@ export default function ConfirmDelete({
 			aria-labelledby="confirm-title"
 			slotProps={{ transition: { onExited: sheet.onExited } }}
 		>
-			<SheetHandle />
 			<DialogTitle id="confirm-title">{title}</DialogTitle>
 			<DialogContent>
 				<DialogContentText>{message}</DialogContentText>

@@ -8,10 +8,9 @@ import type { FormEvent, ReactNode } from "react";
 import { useLastDefined } from "#/lib/motion";
 import type { Sheet } from "#/lib/sheet";
 import Reveal from "./Reveal";
-import SheetHandle from "./SheetHandle";
 
-/** Form dialog following the MUI "form dialog" pattern (the Paper is the <form>), shown as a
- * bottom sheet (see the theme's Dialog overrides). */
+/** Form dialog following the MUI "form dialog" pattern (the Paper is the <form>), styled by the
+ * theme's Dialog overrides. */
 export default function FormDialog({
 	title,
 	error,
@@ -25,7 +24,7 @@ export default function FormDialog({
 	error: string | null;
 	pending: boolean;
 	onSubmit: (e: FormEvent<HTMLFormElement>) => void;
-	/** From useSheet(onClose): drives the slide-in and slide-out. */
+	/** From useSheet(onClose): drives the fade in and out. */
 	sheet: Sheet;
 	children: ReactNode;
 	maxWidth?: "xs" | "sm" | "md";
@@ -47,7 +46,6 @@ export default function FormDialog({
 				},
 			}}
 		>
-			<SheetHandle />
 			<DialogTitle id="form-dialog-title">{title}</DialogTitle>
 			<DialogContent>
 				<div style={{ paddingTop: 8 }}>{children}</div>
