@@ -88,3 +88,25 @@ class RecoveryCodes(BaseModel):
     recovery_codes: list[str] = Field(
         description="Shown once. Each works once in place of an authenticator code."
     )
+
+
+class SessionResponse(BaseModel):
+    """One sign-in of yours, for the list of where you are signed in."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    created_at: datetime
+    last_used_at: datetime
+    expires_at: datetime = Field(description="When it ends if it is not used again.")
+    user_agent: str | None = Field(
+        description="The browser it signed in from, as it reported itself."
+    )
+    ip_address: str | None
+    current: bool = Field(
+        default=False, description="Whether this is the session making the request."
+    )
+
+
+class EndedSessions(BaseModel):
+    ended: int

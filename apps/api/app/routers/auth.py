@@ -1,13 +1,16 @@
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app import rate_limit, two_factor
-from app.dependencies import CurrentUser, UserServiceDep
+from app.dependencies import CurrentSession, CurrentUser, SessionServiceDep, UserServiceDep
 from app.schemas import (
+    EndedSessions,
     RecoveryCodes,
     RegistrationStatus,
+    SessionResponse,
     Token,
     TwoFactorChallenge,
     TwoFactorCode,
@@ -17,7 +20,7 @@ from app.schemas import (
     UserResponse,
     UserUpdate,
 )
-from app.security import create_access_token, create_challenge_token, decode_challenge_token
+from app.security import create_challenge_token, decode_challenge_token
 from app.services import (
     AccountNotFoundError,
     EmailAlreadyRegisteredError,
@@ -36,6 +39,11 @@ def client_ip(request: Request) -> str:
     """The visitor's address. The web server passes it on in `X-Forwarded-For`, which uvicorn trusts
     only from `FORWARDED_ALLOW_IPS`, so `request.client` is already the real address."""
     return request.client.host if request.client else "unknown"
+
+
+async def _start_session(sessions, user_id, request: Request) -> str:
+    """A new sign-in for this device: the token the web app holds from now on."""
+    return await sessions.create(user_id, request.headers.get("user-agent"), client_ip(request))
 
 
 WRONG_CODE = "That code is not right"
@@ -79,7 +87,10 @@ async def register(data: UserCreate, users: UserServiceDep, request: Request):
 
 @router.post("/auth/login", response_model=Token)
 async def login(
-    form: Annotated[OAuth2PasswordRequestForm, Depends()], users: UserServiceDep, request: Request
+    form: Annotated[OAuth2PasswordRequestForm, Depends()],
+    users: UserServiceDep,
+    sessions: SessionServiceDep,
+    request: Request,
 ):
     """OAuth2 password flow: send `username` (the email) and `password` as form fields. Ten wrong
     passwords for one email, or thirty from one address, in fifteen minutes answer 429."""
@@ -97,11 +108,16 @@ async def login(
     if user.two_factor_enabled:
         # The password was right: no token yet, only proof of that, to send with a code.
         return Token(two_factor_required=True, challenge_token=create_challenge_token(user.id))
-    return Token(access_token=create_access_token(user.id))
+    return Token(access_token=await _start_session(sessions, user.id, request))
 
 
 @router.post("/auth/login/2fa", response_model=Token)
-async def login_two_factor(data: TwoFactorChallenge, users: UserServiceDep, request: Request):
+async def login_two_factor(
+    data: TwoFactorChallenge,
+    users: UserServiceDep,
+    sessions: SessionServiceDep,
+    request: Request,
+):
     """The second step of signing in: the challenge from `/auth/login` and a code from the
     authenticator app (or an unused recovery code)."""
     ip = client_ip(request)
@@ -118,7 +134,7 @@ async def login_two_factor(data: TwoFactorChallenge, users: UserServiceDep, requ
     except InvalidTwoFactorCodeError:
         rate_limit.two_factor_failed(ip)
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, WRONG_CODE) from None
-    return Token(access_token=create_access_token(user.id))
+    return Token(access_token=await _start_session(sessions, user.id, request))
 
 
 @router.post("/auth/2fa/setup", response_model=TwoFactorSetup)
@@ -134,11 +150,19 @@ async def two_factor_setup(user: CurrentUser, users: UserServiceDep):
 
 
 @router.post("/auth/2fa/enable", response_model=RecoveryCodes)
-async def two_factor_enable(data: TwoFactorCode, user: CurrentUser, users: UserServiceDep):
+async def two_factor_enable(
+    data: TwoFactorCode,
+    user: CurrentUser,
+    session: CurrentSession,
+    users: UserServiceDep,
+    sessions: SessionServiceDep,
+):
     """Turn two-factor on with a code from the app. The recovery codes in the answer are shown
-    once."""
+    once. Your other sign-ins end: they were made without a second factor."""
     try:
-        return RecoveryCodes(recovery_codes=await users.two_factor_enable(user, data.code))
+        codes = await users.two_factor_enable(user, data.code)
+        await sessions.end_others(user.id, session.id)
+        return RecoveryCodes(recovery_codes=codes)
     except TwoFactorStateError as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from None
     except InvalidTwoFactorCodeError:
@@ -146,24 +170,71 @@ async def two_factor_enable(data: TwoFactorCode, user: CurrentUser, users: UserS
 
 
 @router.post("/auth/2fa/disable", status_code=status.HTTP_204_NO_CONTENT)
-async def two_factor_disable(data: TwoFactorConfirm, user: CurrentUser, users: UserServiceDep):
-    """Turn two-factor off. Needs your password and a code (or a recovery code)."""
+async def two_factor_disable(
+    data: TwoFactorConfirm,
+    user: CurrentUser,
+    session: CurrentSession,
+    users: UserServiceDep,
+    sessions: SessionServiceDep,
+):
+    """Turn two-factor off. Needs your password and a code (or a recovery code). Your other
+    sign-ins end."""
     try:
         await users.two_factor_disable(user, data.password, data.code)
+        await sessions.end_others(user.id, session.id)
     except Exception as exc:
         raise _confirm_error(exc) from None
 
 
 @router.post("/auth/2fa/recovery-codes", response_model=RecoveryCodes)
-async def new_recovery_codes(data: TwoFactorConfirm, user: CurrentUser, users: UserServiceDep):
+async def new_recovery_codes(
+    data: TwoFactorConfirm,
+    user: CurrentUser,
+    session: CurrentSession,
+    users: UserServiceDep,
+    sessions: SessionServiceDep,
+):
     """Make a new set of recovery codes (the old ones stop working), shown once. Needs your
-    password and a code."""
+    password and a code. Your other sign-ins end."""
     try:
-        return RecoveryCodes(
-            recovery_codes=await users.new_recovery_codes(user, data.password, data.code)
-        )
+        codes = await users.new_recovery_codes(user, data.password, data.code)
+        await sessions.end_others(user.id, session.id)
+        return RecoveryCodes(recovery_codes=codes)
     except Exception as exc:
         raise _confirm_error(exc) from None
+
+
+@router.post("/auth/logout", status_code=status.HTTP_204_NO_CONTENT)
+async def logout(session: CurrentSession, sessions: SessionServiceDep):
+    """End this sign-in. The token stops working at once, even if someone copied it."""
+    await sessions.end(session.user_id, session.id)
+
+
+@router.get("/auth/sessions", response_model=list[SessionResponse])
+async def list_sessions(
+    user: CurrentUser, session: CurrentSession, sessions: SessionServiceDep
+) -> list[SessionResponse]:
+    """Where you are signed in, the most recently used first. `current` marks this one."""
+    return [
+        SessionResponse.model_validate(s).model_copy(update={"current": s.id == session.id})
+        for s in await sessions.list_for_user(user.id)
+    ]
+
+
+# declared before `/auth/sessions/{session_id}` so "end-others" is not read as an id
+@router.post("/auth/sessions/end-others", response_model=EndedSessions)
+async def end_other_sessions(
+    user: CurrentUser, session: CurrentSession, sessions: SessionServiceDep
+):
+    """Sign out everywhere else: every session of yours except this one."""
+    return EndedSessions(ended=await sessions.end_others(user.id, session.id))
+
+
+@router.delete("/auth/sessions/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def end_session(session_id: uuid.UUID, user: CurrentUser, sessions: SessionServiceDep):
+    """Sign out one of your sessions. Another user's session is a 404."""
+    if not await sessions.end(user.id, session_id):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Session not found")
 
 
 @router.get("/users/me", response_model=UserResponse)

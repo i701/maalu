@@ -118,7 +118,8 @@ export interface paths {
         put?: never;
         /**
          * Two Factor Disable
-         * @description Turn two-factor off. Needs your password and a code (or a recovery code).
+         * @description Turn two-factor off. Needs your password and a code (or a recovery code). Your other
+         *     sign-ins end.
          */
         post: operations["two_factor_disable_api_v1_auth_2fa_disable_post"];
         delete?: never;
@@ -139,7 +140,7 @@ export interface paths {
         /**
          * Two Factor Enable
          * @description Turn two-factor on with a code from the app. The recovery codes in the answer are shown
-         *     once.
+         *     once. Your other sign-ins end: they were made without a second factor.
          */
         post: operations["two_factor_enable_api_v1_auth_2fa_enable_post"];
         delete?: never;
@@ -160,7 +161,7 @@ export interface paths {
         /**
          * New Recovery Codes
          * @description Make a new set of recovery codes (the old ones stop working), shown once. Needs your
-         *     password and a code.
+         *     password and a code. Your other sign-ins end.
          */
         post: operations["new_recovery_codes_api_v1_auth_2fa_recovery_codes_post"];
         delete?: never;
@@ -233,6 +234,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Logout
+         * @description End this sign-in. The token stops working at once, even if someone copied it.
+         */
+        post: operations["logout_api_v1_auth_logout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/register": {
         parameters: {
             query?: never;
@@ -265,6 +286,66 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Sessions
+         * @description Where you are signed in, the most recently used first. `current` marks this one.
+         */
+        get: operations["list_sessions_api_v1_auth_sessions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/sessions/end-others": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * End Other Sessions
+         * @description Sign out everywhere else: every session of yours except this one.
+         */
+        post: operations["end_other_sessions_api_v1_auth_sessions_end_others_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/sessions/{session_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * End Session
+         * @description Sign out one of your sessions. Another user's session is a 404.
+         */
+        delete: operations["end_session_api_v1_auth_sessions__session_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1643,6 +1724,11 @@ export interface components {
             /** Currencies */
             currencies: string[];
         };
+        /** EndedSessions */
+        EndedSessions: {
+            /** Ended */
+            ended: number;
+        };
         /** GoalAccountRef */
         GoalAccountRef: {
             /** Currency */
@@ -1900,6 +1986,46 @@ export interface components {
              * @description Whether a new account can be created right now.
              */
             open: boolean;
+        };
+        /**
+         * SessionResponse
+         * @description One sign-in of yours, for the list of where you are signed in.
+         */
+        SessionResponse: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Current
+             * @description Whether this is the session making the request.
+             * @default false
+             */
+            current: boolean;
+            /**
+             * Expires At
+             * Format: date-time
+             * @description When it ends if it is not used again.
+             */
+            expires_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Ip Address */
+            ip_address: string | null;
+            /**
+             * Last Used At
+             * Format: date-time
+             */
+            last_used_at: string;
+            /**
+             * User Agent
+             * @description The browser it signed in from, as it reported itself.
+             */
+            user_agent: string | null;
         };
         /**
          * SplitInput
@@ -3131,6 +3257,24 @@ export interface operations {
             };
         };
     };
+    logout_api_v1_auth_logout_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     register_api_v1_auth_register_post: {
         parameters: {
             query?: never;
@@ -3180,6 +3324,75 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RegistrationStatus"];
+                };
+            };
+        };
+    };
+    list_sessions_api_v1_auth_sessions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionResponse"][];
+                };
+            };
+        };
+    };
+    end_other_sessions_api_v1_auth_sessions_end_others_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EndedSessions"];
+                };
+            };
+        };
+    };
+    end_session_api_v1_auth_sessions__session_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

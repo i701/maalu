@@ -9,7 +9,7 @@ import { staggerChildren } from "#/lib/motion";
 import { useViewMode } from "#/lib/view-mode";
 
 /** The fill of a row bar. One step up from the card they sit in, so they show in light mode too. */
-const ROW_FILL = "var(--md-sys-color-surface-container-high)";
+export const ROW_FILL = "var(--md-sys-color-surface-container-high)";
 
 /** The desktop table's rows as separate rounded bars, like the cards of the narrow view: a gap
  * between rows, a tonal fill, and the row's corners on its first and last cell. Hover and selection

@@ -56,8 +56,10 @@ from app.schemas.transaction import (
     TransactionUpdate,
 )
 from app.schemas.user import (
+    EndedSessions,
     RecoveryCodes,
     RegistrationStatus,
+    SessionResponse,
     Token,
     TwoFactorChallenge,
     TwoFactorCode,
@@ -92,6 +94,7 @@ __all__ = [
     "CategoryTotal",
     "CategoryTotals",
     "CategoryUpdate",
+    "EndedSessions",
     "GoalCreate",
     "GoalEntryCreate",
     "GoalResponse",
@@ -99,6 +102,7 @@ __all__ = [
     "PostPlanned",
     "RecoveryCodes",
     "RegistrationStatus",
+    "SessionResponse",
     "SplitInput",
     "SplitResponse",
     "SubscriptionCreate",

@@ -39,6 +39,9 @@ export default function TwoFactorSettings({ enabled }: { enabled: boolean }) {
 						? "Signing in also needs a 6-digit code from your authenticator app, or one of your recovery codes."
 						: "Ask for a 6-digit code from an authenticator app when you sign in, on top of your password."}
 				</Typography>
+				<Typography variant="caption" component="p" sx={{ color: "text.secondary", mb: 2, mt: -1 }}>
+					Turning it on or off, or making new recovery codes, signs out your other devices.
+				</Typography>
 				<Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
 					{enabled ? (
 						<>

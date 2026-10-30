@@ -1,3 +1,5 @@
+import hashlib
+import secrets
 import uuid
 from datetime import UTC, datetime, timedelta
 
@@ -21,14 +23,15 @@ def verify_password(password: str, hashed: str) -> bool:
     return _password_hash.verify(password, hashed)
 
 
-def create_access_token(user_id: uuid.UUID) -> str:
-    now = datetime.now(UTC)
-    claims = {
-        "sub": str(user_id),
-        "iat": now,
-        "exp": now + timedelta(minutes=settings.access_token_expire_minutes),
-    }
-    return jwt.encode(claims, settings.secret_key, algorithm=ALGORITHM)
+def new_session_token() -> tuple[str, str]:
+    """A random bearer token and its hash. Only the hash is stored, so a copy of the database holds
+    nothing that can be used to sign in. 256 random bits need no slow hash."""
+    token = secrets.token_urlsafe(32)
+    return token, hash_session_token(token)
+
+
+def hash_session_token(token: str) -> str:
+    return hashlib.sha256(token.encode()).hexdigest()
 
 
 CHALLENGE_MINUTES = 5
@@ -53,18 +56,6 @@ def _decode(token: str) -> dict | None:
             token, settings.secret_key, algorithms=[ALGORITHM], options={"require": ["exp", "sub"]}
         )
     except jwt.PyJWTError:
-        return None
-
-
-def decode_access_token(token: str) -> uuid.UUID | None:
-    """Return the user id from a valid access token, or None if invalid, expired or not an access
-    token (a challenge token has a scope and is refused here)."""
-    payload = _decode(token)
-    if payload is None or "scope" in payload:
-        return None
-    try:
-        return uuid.UUID(payload["sub"])
-    except ValueError:
         return None
 
 

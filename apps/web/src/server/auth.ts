@@ -8,7 +8,7 @@ import type {
 	User,
 } from "#/types/api";
 import { apiRequest } from "./api";
-import { getAppSession, getChallengeSession, jwtExpiry } from "#/utils/session";
+import { getAppSession, getChallengeSession } from "#/utils/session";
 
 const loginSchema = z.object({
 	email: z.email(),
@@ -26,19 +26,16 @@ async function finishSession(token: string) {
 	const me = await apiRequest<User>("/users/me", { token });
 	if (!me.ok) return me;
 
-	// Cookie lifetime matches the token's, so an expired token can't linger in a live cookie.
-	const expiresAt = jwtExpiry(token);
-	const maxAge = expiresAt ? expiresAt - Math.floor(Date.now() / 1000) : undefined;
-	const session = await getAppSession(maxAge);
+	const session = await getAppSession();
 	await session.update({
 		token,
-		expiresAt,
+		refreshedAt: Date.now(),
 		user: { id: me.data.id, email: me.data.email, base_currency: me.data.base_currency },
 	});
 	return { ok: true as const, data: { twoFactor: false } };
 }
 
-/** Exchange credentials for the API's JWT and store it in the cookie session. With two-factor on
+/** Exchange credentials for a session token and store it in the cookie session. With two-factor on
  * there is no token yet: the proof of the password is kept and `twoFactor` says a code is next. */
 async function startSession(email: string, password: string) {
 	const login = await apiRequest<LoginResult>("/auth/login", {
@@ -98,9 +95,11 @@ export const cancelTwoFactorFn = createServerFn({ method: "POST" }).handler(asyn
 	return { ok: true as const };
 });
 
+/** Sign out: end this session on the API, so its token stops working everywhere, then forget it
+ * here. If the API cannot be reached the cookie is still cleared. */
 export const logoutFn = createServerFn({ method: "POST" }).handler(async () => {
-	const session = await getAppSession();
-	await session.clear();
+	await apiRequest<void>("/auth/logout", { method: "POST" });
+	await (await getAppSession()).clear();
 	return { ok: true as const };
 });
 
@@ -112,9 +111,8 @@ export const getRegistrationFn = createServerFn({ method: "GET" }).handler(async
 
 /** Cookie-only check (no API call). Returns the cached user, never the token. */
 export const getSessionFn = createServerFn({ method: "GET" }).handler(async () => {
-	const { token, expiresAt, user } = (await getAppSession()).data;
+	const { token, user } = (await getAppSession()).data;
 	if (!token || !user) return null;
-	if (expiresAt && expiresAt * 1000 <= Date.now()) return null;
 	return { user };
 });
 

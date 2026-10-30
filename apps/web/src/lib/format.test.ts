@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatTime, formatWhen, sumDecimals, trimRate } from "./format";
+import { formatAgo, formatDate, formatTime, formatWhen, sumDecimals, trimRate } from "./format";
 
 describe("sumDecimals", () => {
 	it("adds decimal strings exactly", () => {
@@ -58,5 +58,29 @@ describe("formatTime and formatWhen", () => {
 	it("adds the time after the date only when there is one", () => {
 		expect(formatWhen("2026-03-10", "14:30:00")).toBe("10 Mar 2026, 14:30");
 		expect(formatWhen("2026-03-10", null)).toBe("10 Mar 2026");
+	});
+});
+
+describe("formatAgo", () => {
+	const now = new Date("2026-10-31T12:00:00Z").getTime();
+	const ago = (seconds: number) => new Date(now - seconds * 1000).toISOString();
+
+	it("says just now under a minute", () => {
+		expect(formatAgo(ago(0), now)).toBe("just now");
+		expect(formatAgo(ago(59), now)).toBe("just now");
+		expect(formatAgo(ago(-30), now)).toBe("just now"); // a clock a little ahead
+	});
+
+	it("counts minutes, hours and days, singular and plural", () => {
+		expect(formatAgo(ago(60), now)).toBe("1 minute ago");
+		expect(formatAgo(ago(5 * 60), now)).toBe("5 minutes ago");
+		expect(formatAgo(ago(60 * 60), now)).toBe("1 hour ago");
+		expect(formatAgo(ago(3 * 3600), now)).toBe("3 hours ago");
+		expect(formatAgo(ago(86400), now)).toBe("1 day ago");
+		expect(formatAgo(ago(12 * 86400), now)).toBe("12 days ago");
+	});
+
+	it("is the date after a month", () => {
+		expect(formatAgo(ago(40 * 86400), now)).toBe(formatDate(ago(40 * 86400)));
 	});
 });

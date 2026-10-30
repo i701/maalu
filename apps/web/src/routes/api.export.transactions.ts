@@ -27,8 +27,8 @@ export const Route = createFileRoute("/api/export/transactions")({
 	server: {
 		handlers: {
 			GET: async ({ request }) => {
-				const { token, expiresAt } = (await getAppSession()).data;
-				if (!token || (expiresAt && expiresAt * 1000 <= Date.now())) {
+				const { token } = (await getAppSession()).data;
+				if (!token) {
 					return Response.json({ detail: "Session expired" }, { status: 401 });
 				}
 

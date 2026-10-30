@@ -20,6 +20,7 @@ from app.services.goal import (
     GoalService,
 )
 from app.services.money import ExchangeRateRequiredError
+from app.services.session import SessionService
 from app.services.stats import StatsRangeError, StatsService
 from app.services.subscription import (
     SubscriptionNotFoundError,
@@ -67,6 +68,7 @@ __all__ = [
     "InvalidPasswordError",
     "InvalidTwoFactorCodeError",
     "RegistrationClosedError",
+    "SessionService",
     "StatsRangeError",
     "StatsService",
     "SubscriptionNotFoundError",

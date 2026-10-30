@@ -7,18 +7,23 @@ import Typography from "@mui/material/Typography";
 import { createFileRoute } from "@tanstack/react-router";
 import { useNotify } from "#/components/Notify";
 import PageHeader from "#/components/PageHeader";
+import SessionsCard from "#/components/SessionsCard";
 import TwoFactorSettings from "#/components/TwoFactorSettings";
 import { unwrap } from "#/lib/unwrap";
 import { useAction } from "#/lib/use-action";
 import { getMeFn, updateMeFn } from "#/server/auth";
+import { listSessionsFn } from "#/server/sessions";
 
 export const Route = createFileRoute("/_protected/settings")({
-	loader: async () => ({ me: unwrap(await getMeFn()) }),
+	loader: async () => {
+		const [me, sessions] = await Promise.all([getMeFn(), listSessionsFn()]);
+		return { me: unwrap(me), sessions: unwrap(sessions) };
+	},
 	component: SettingsPage,
 });
 
 function SettingsPage() {
-	const { me } = Route.useLoaderData();
+	const { me, sessions } = Route.useLoaderData();
 	const { run, pending, error } = useAction();
 	const notify = useNotify();
 
@@ -54,6 +59,7 @@ function SettingsPage() {
 					</CardContent>
 				</Card>
 				<TwoFactorSettings enabled={me.two_factor_enabled} />
+				<SessionsCard sessions={sessions} />
 			</Stack>
 		</>
 	);

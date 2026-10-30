@@ -11,7 +11,9 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://maalu:maalu@localhost:5432/maalu"
     # Required, no default: generate with `openssl rand -hex 32`.
     secret_key: str
-    access_token_expire_minutes: int = 30
+    # How long a sign-in lasts after its last use. Each use (at most once an hour) pushes the end
+    # out again, so a device you use now and then stays signed in and a lost one expires.
+    session_days: int = 30
     # Who may create an account. "auto" (default): only while no account exists, so the first person
     # to open a new instance becomes its owner and sign-up then closes. "open": anyone. "closed": no
     # one (accounts are created another way, for example `just seed`).

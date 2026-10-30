@@ -83,3 +83,20 @@ export function todayIso(): string {
 export function trimRate(rate: string): string {
 	return rate.includes(".") ? rate.replace(/0+$/, "").replace(/\.$/, "") : rate;
 }
+
+const MINUTE = 60;
+const HOUR = 60 * MINUTE;
+const DAY = 24 * HOUR;
+
+const ago = (n: number, unit: string) => `${n} ${unit}${n === 1 ? "" : "s"} ago`;
+
+/** How long ago, for a list of recent activity: "just now", "5 minutes ago", "3 days ago". Past a
+ * month it is the date. `now` is for tests. */
+export function formatAgo(iso: string, now: number = Date.now()): string {
+	const seconds = Math.max(0, Math.round((now - new Date(iso).getTime()) / 1000));
+	if (seconds < MINUTE) return "just now";
+	if (seconds < HOUR) return ago(Math.floor(seconds / MINUTE), "minute");
+	if (seconds < DAY) return ago(Math.floor(seconds / HOUR), "hour");
+	if (seconds < 30 * DAY) return ago(Math.floor(seconds / DAY), "day");
+	return formatDate(iso);
+}

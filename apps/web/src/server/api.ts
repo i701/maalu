@@ -1,6 +1,6 @@
 import type { ApiResult } from "#/types/api";
-import { getRequestIP } from "@tanstack/react-start/server";
-import { getAppSession } from "#/utils/session";
+import { getRequestHeader, getRequestIP } from "@tanstack/react-start/server";
+import { getAppSession, renewSession } from "#/utils/session";
 
 const API_URL = () => process.env.API_URL ?? "http://localhost:8000";
 
@@ -41,16 +41,19 @@ export async function apiRequest<T>(
 ): Promise<ApiResult<T>> {
 	const headers: Record<string, string> = {};
 	// The browser never reaches the API, so the API only sees this server. Pass on the visitor's
-	// address so its sign-in limits count per person, not for everyone at once.
+	// address, so the sign-in limits count per person and not for everyone at once.
 	const visitor = getRequestIP({ xForwardedFor: true });
 	if (visitor) headers["X-Forwarded-For"] = visitor;
+	// And their browser, so the list of sign-ins can say "Firefox on Linux".
+	const browser = getRequestHeader("user-agent");
+	if (browser) headers["User-Agent"] = browser;
 	const session = await getAppSession();
 
 	if (opts.token) {
 		headers.Authorization = `Bearer ${opts.token}`;
 	} else if (!opts.anonymous) {
-		const { token, expiresAt } = session.data;
-		if (!token || (expiresAt && expiresAt * 1000 <= Date.now())) {
+		const { token } = session.data;
+		if (!token) {
 			await session.clear();
 			return { ok: false, status: 401, error: "Session expired" };
 		}
@@ -79,6 +82,7 @@ export async function apiRequest<T>(
 	}
 
 	if (res.status === 401 && !opts.anonymous) await session.clear();
+	if (res.ok && !opts.anonymous && !opts.token) await renewSession(session);
 	if (res.status === 204) return { ok: true, data: undefined as T };
 
 	const json = await res.json().catch(() => null);

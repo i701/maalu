@@ -6,13 +6,13 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.models import User
-from app.security import decode_access_token
+from app.models import User, UserSession
 from app.services import (
     AccountService,
     BudgetService,
     CategoryService,
     GoalService,
+    SessionService,
     StatsService,
     SubscriptionService,
     TagService,
@@ -33,6 +33,10 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 def get_user_service(db: DbSession) -> UserService:
     return UserService(db)
+
+
+def get_session_service(db: DbSession) -> SessionService:
+    return SessionService(db)
 
 
 def get_transaction_service(db: DbSession) -> TransactionService:
@@ -76,6 +80,7 @@ def get_template_service(db: DbSession) -> TemplateService:
 
 
 UserServiceDep = Annotated[UserService, Depends(get_user_service)]
+SessionServiceDep = Annotated[SessionService, Depends(get_session_service)]
 TransactionServiceDep = Annotated[TransactionService, Depends(get_transaction_service)]
 VendorServiceDep = Annotated[VendorService, Depends(get_vendor_service)]
 BudgetServiceDep = Annotated[BudgetService, Depends(get_budget_service)]
@@ -88,24 +93,33 @@ TagServiceDep = Annotated[TagService, Depends(get_tag_service)]
 TemplateServiceDep = Annotated[TemplateService, Depends(get_template_service)]
 
 
+async def get_signed_in(
+    token: Annotated[str, Depends(oauth2_scheme)], sessions: SessionServiceDep
+) -> tuple[UserSession, User]:
+    signed_in = await sessions.authenticate(token)
+    if signed_in is None:
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED,
+            "Invalid or expired session",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return signed_in
+
+
 async def get_current_user(
-    token: Annotated[str, Depends(oauth2_scheme)], users: UserServiceDep
+    signed_in: Annotated[tuple[UserSession, User], Depends(get_signed_in)],
 ) -> User:
-    unauthorized = HTTPException(
-        status.HTTP_401_UNAUTHORIZED,
-        "Invalid or expired token",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    user_id = decode_access_token(token)
-    if user_id is None:
-        raise unauthorized
-    user = await users.get(user_id)
-    if user is None or not user.is_active:
-        raise unauthorized
-    return user
+    return signed_in[1]
+
+
+async def get_current_session(
+    signed_in: Annotated[tuple[UserSession, User], Depends(get_signed_in)],
+) -> UserSession:
+    return signed_in[0]
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+CurrentSession = Annotated[UserSession, Depends(get_current_session)]
 
 
 async def get_current_user_id(user: CurrentUser) -> uuid.UUID:

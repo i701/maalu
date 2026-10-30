@@ -6,19 +6,25 @@ export type SessionUser = {
 	base_currency: string;
 };
 
-// The API's JWT lives only in this encrypted, httpOnly cookie; the browser never sees it.
+// The API's session token lives only in this encrypted, httpOnly cookie; the browser never sees it.
 export type SessionData = {
 	token?: string;
-	/** Unix seconds, taken from the JWT `exp` claim. */
-	expiresAt?: number;
 	user?: SessionUser;
+	/** When the cookie was last re-issued (ms), see `renewSession`. */
+	refreshedAt?: number;
 };
 
-export function getAppSession(maxAge?: number) {
+// How long the cookie lasts after its last renewal. The API decides how long a sign-in really lasts
+// (30 days after its last use by default) and answers 401 when it ends, so this only needs to be
+// longer than that.
+const COOKIE_SECONDS = 90 * 24 * 60 * 60;
+const RENEW_AFTER_MS = 6 * 60 * 60 * 1000;
+
+export function getAppSession() {
 	return openSession<SessionData>({
 		name: "maalu_session",
 		password: process.env.SESSION_SECRET!,
-		maxAge,
+		maxAge: COOKIE_SECONDS,
 		cookie: {
 			httpOnly: true,
 			sameSite: "lax",
@@ -27,14 +33,11 @@ export function getAppSession(maxAge?: number) {
 	});
 }
 
-/** Read `exp` from a JWT payload without verifying it (the API verifies on every call). */
-export function jwtExpiry(token: string): number | undefined {
-	try {
-		const payload = JSON.parse(Buffer.from(token.split(".")[1], "base64url").toString());
-		return typeof payload.exp === "number" ? payload.exp : undefined;
-	} catch {
-		return undefined;
-	}
+/** Re-issues the cookie now and then while it is in use, so a device you keep using stays signed in
+ * as long as the API's session does. It is a rewrite of the same cookie, not a new sign-in. */
+export async function renewSession(session: Awaited<ReturnType<typeof getAppSession>>) {
+	if (Date.now() - (session.data.refreshedAt ?? 0) < RENEW_AFTER_MS) return;
+	await session.update({ refreshedAt: Date.now() });
 }
 
 /** The proof of a right password while the code is still to come. It lives in its own short-lived

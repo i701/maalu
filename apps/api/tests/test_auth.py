@@ -53,15 +53,17 @@ async def test_me(client: AsyncClient, auth: dict[str, str]):
     assert resp.json()["email"] == "alice@example.com"
 
 
-async def test_invalid_and_expired_tokens(client: AsyncClient, signup: Signup):
+async def test_garbage_and_foreign_tokens_are_refused(client: AsyncClient, signup: Signup):
     await signup("alice@example.com")
-    assert (
-        await client.get("/api/v1/users/me", headers={"Authorization": "Bearer garbage"})
-    ).status_code == 401
-    expired = jwt.encode(
-        {"sub": str(uuid.uuid4()), "exp": datetime.now(UTC) - timedelta(minutes=1)},
+    for token in ("garbage", "", jwt_for(uuid.uuid4())):
+        resp = await client.get("/api/v1/users/me", headers={"Authorization": f"Bearer {token}"})
+        assert resp.status_code == 401
+
+
+def jwt_for(user_id: uuid.UUID) -> str:
+    """A signed token. Sessions are looked up, not decoded, so it opens nothing."""
+    return jwt.encode(
+        {"sub": str(user_id), "exp": datetime.now(UTC) + timedelta(days=1)},
         settings.secret_key,
         algorithm=ALGORITHM,
     )
-    resp = await client.get("/api/v1/users/me", headers={"Authorization": f"Bearer {expired}"})
-    assert resp.status_code == 401
