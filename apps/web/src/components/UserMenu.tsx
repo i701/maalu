@@ -14,7 +14,7 @@ import Symbol from "./Symbol";
 // nothing about them is sent. The first letter of the email shows if it can't load (offline, blocked).
 const AVATAR_URL = "https://api.dicebear.com/10.x/glass/svg?seed=Maalu";
 
-/** The signed-in user's avatar; opens a menu with the profile page and sign out. */
+/** The signed-in user's avatar; opens a menu with the profile and settings pages and sign out. */
 export default function UserMenu({ user }: { user: SessionUser }) {
 	const router = useRouter();
 	const [anchor, setAnchor] = useState<HTMLElement | null>(null);
@@ -69,6 +69,16 @@ export default function UserMenu({ user }: { user: SessionUser }) {
 				>
 					<Symbol name="person" size={22} />
 					Profile
+				</MenuItem>
+				<MenuItem
+					onClick={() => {
+						setAnchor(null);
+						void router.navigate({ to: "/settings" });
+					}}
+					sx={{ gap: 1.5 }}
+				>
+					<Symbol name="settings" size={22} />
+					Settings
 				</MenuItem>
 				<MenuItem
 					onClick={() => {

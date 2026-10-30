@@ -2364,6 +2364,8 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /** Start From Template */
+            start_from_template: boolean;
         };
         /**
          * UserUpdate
@@ -2375,6 +2377,12 @@ export interface components {
              * @description The account a new transaction starts in. Explicit null clears it.
              */
             default_account_id?: string | null;
+            /**
+             * Start From Template
+             * @description Whether the transaction form offers to start from a template.
+             * @default true
+             */
+            start_from_template: boolean;
         };
         /** ValidationError */
         ValidationError: {

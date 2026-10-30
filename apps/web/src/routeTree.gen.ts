@@ -18,6 +18,7 @@ import { Route as ProtectedBudgetRouteImport } from './routes/_protected/budget'
 import { Route as ProtectedCategoriesRouteImport } from './routes/_protected/categories'
 import { Route as ProtectedDashboardRouteImport } from './routes/_protected/dashboard'
 import { Route as ProtectedProfileRouteImport } from './routes/_protected/profile'
+import { Route as ProtectedSettingsRouteImport } from './routes/_protected/settings'
 import { Route as ProtectedSubscriptionsRouteImport } from './routes/_protected/subscriptions'
 import { Route as ProtectedTagsRouteImport } from './routes/_protected/tags'
 import { Route as ProtectedTemplatesRouteImport } from './routes/_protected/templates'
@@ -70,6 +71,11 @@ const ProtectedProfileRoute = ProtectedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => ProtectedRoute,
 } as any)
+const ProtectedSettingsRoute = ProtectedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => ProtectedRoute,
+} as any)
 const ProtectedSubscriptionsRoute = ProtectedSubscriptionsRouteImport.update({
   id: '/subscriptions',
   path: '/subscriptions',
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/categories': typeof ProtectedCategoriesRoute
   '/dashboard': typeof ProtectedDashboardRoute
   '/profile': typeof ProtectedProfileRoute
+  '/settings': typeof ProtectedSettingsRoute
   '/subscriptions': typeof ProtectedSubscriptionsRoute
   '/tags': typeof ProtectedTagsRoute
   '/templates': typeof ProtectedTemplatesRoute
@@ -132,6 +139,7 @@ export interface FileRoutesByTo {
   '/categories': typeof ProtectedCategoriesRoute
   '/dashboard': typeof ProtectedDashboardRoute
   '/profile': typeof ProtectedProfileRoute
+  '/settings': typeof ProtectedSettingsRoute
   '/subscriptions': typeof ProtectedSubscriptionsRoute
   '/tags': typeof ProtectedTagsRoute
   '/templates': typeof ProtectedTemplatesRoute
@@ -151,6 +159,7 @@ export interface FileRoutesById {
   '/_protected/categories': typeof ProtectedCategoriesRoute
   '/_protected/dashboard': typeof ProtectedDashboardRoute
   '/_protected/profile': typeof ProtectedProfileRoute
+  '/_protected/settings': typeof ProtectedSettingsRoute
   '/_protected/subscriptions': typeof ProtectedSubscriptionsRoute
   '/_protected/tags': typeof ProtectedTagsRoute
   '/_protected/templates': typeof ProtectedTemplatesRoute
@@ -170,6 +179,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/dashboard'
     | '/profile'
+    | '/settings'
     | '/subscriptions'
     | '/tags'
     | '/templates'
@@ -187,6 +197,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/dashboard'
     | '/profile'
+    | '/settings'
     | '/subscriptions'
     | '/tags'
     | '/templates'
@@ -205,6 +216,7 @@ export interface FileRouteTypes {
     | '/_protected/categories'
     | '/_protected/dashboard'
     | '/_protected/profile'
+    | '/_protected/settings'
     | '/_protected/subscriptions'
     | '/_protected/tags'
     | '/_protected/templates'
@@ -287,6 +299,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedProfileRouteImport
       parentRoute: typeof ProtectedRoute
     }
+    '/_protected/settings': {
+      id: '/_protected/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof ProtectedSettingsRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
     '/_protected/subscriptions': {
       id: '/_protected/subscriptions'
       path: '/subscriptions'
@@ -345,6 +364,7 @@ interface ProtectedRouteChildren {
   ProtectedCategoriesRoute: typeof ProtectedCategoriesRoute
   ProtectedDashboardRoute: typeof ProtectedDashboardRoute
   ProtectedProfileRoute: typeof ProtectedProfileRoute
+  ProtectedSettingsRoute: typeof ProtectedSettingsRoute
   ProtectedSubscriptionsRoute: typeof ProtectedSubscriptionsRoute
   ProtectedTagsRoute: typeof ProtectedTagsRoute
   ProtectedTemplatesRoute: typeof ProtectedTemplatesRoute
@@ -359,6 +379,7 @@ const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedCategoriesRoute: ProtectedCategoriesRoute,
   ProtectedDashboardRoute: ProtectedDashboardRoute,
   ProtectedProfileRoute: ProtectedProfileRoute,
+  ProtectedSettingsRoute: ProtectedSettingsRoute,
   ProtectedSubscriptionsRoute: ProtectedSubscriptionsRoute,
   ProtectedTagsRoute: ProtectedTagsRoute,
   ProtectedTemplatesRoute: ProtectedTemplatesRoute,

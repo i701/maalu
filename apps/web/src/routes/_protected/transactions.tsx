@@ -201,7 +201,8 @@ export const Route = createFileRoute("/_protected/transactions")({
 			vendors: unwrap(vendors),
 			subscriptions: unwrap(subscriptions),
 			accounts: unwrap(accounts),
-			templates: unwrap(templates),
+			// switched off in Settings: no templates to start from (they stay on the Templates page)
+			templates: me.ok && !me.data.start_from_template ? [] : unwrap(templates),
 			allTags: unwrap(allTags),
 			defaultAccountId: me.ok ? me.data.default_account_id : null,
 			upcoming: unwrap(upcoming),

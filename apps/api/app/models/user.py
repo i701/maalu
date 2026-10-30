@@ -21,6 +21,8 @@ class User(Base):
     default_account_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid, ForeignKey("accounts.id", ondelete="SET NULL"), default=None
     )
+    # Whether the transaction form offers "start from a template". Templates stay either way.
+    start_from_template: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

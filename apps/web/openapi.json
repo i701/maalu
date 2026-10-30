@@ -3477,6 +3477,10 @@
             "format": "uuid",
             "title": "Id",
             "type": "string"
+          },
+          "start_from_template": {
+            "title": "Start From Template",
+            "type": "boolean"
           }
         },
         "required": [
@@ -3484,6 +3488,7 @@
           "email",
           "base_currency",
           "default_account_id",
+          "start_from_template",
           "created_at"
         ],
         "title": "UserResponse",
@@ -3504,6 +3509,12 @@
             ],
             "description": "The account a new transaction starts in. Explicit null clears it.",
             "title": "Default Account Id"
+          },
+          "start_from_template": {
+            "default": true,
+            "description": "Whether the transaction form offers to start from a template.",
+            "title": "Start From Template",
+            "type": "boolean"
           }
         },
         "title": "UserUpdate",
