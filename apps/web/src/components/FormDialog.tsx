@@ -19,6 +19,7 @@ export default function FormDialog({
 	sheet,
 	children,
 	maxWidth = "sm",
+	submitLabel = "Save",
 }: {
 	title: string;
 	error: string | null;
@@ -28,6 +29,8 @@ export default function FormDialog({
 	sheet: Sheet;
 	children: ReactNode;
 	maxWidth?: "xs" | "sm" | "md";
+	/** The text of the submit button. */
+	submitLabel?: string;
 }) {
 	const shownError = useLastDefined(error); // keeps the text while the alert closes
 
@@ -60,7 +63,7 @@ export default function FormDialog({
 					Cancel
 				</Button>
 				<Button type="submit" variant="contained" loading={pending}>
-					Save
+					{submitLabel}
 				</Button>
 			</DialogActions>
 		</Dialog>

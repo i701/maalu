@@ -1,8 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import type { RegistrationStatus, User } from "#/types/api";
+import type {
+	LoginResult,
+	RecoveryCodes,
+	RegistrationStatus,
+	TwoFactorSetup,
+	User,
+} from "#/types/api";
 import { apiRequest } from "./api";
-import { jwtExpiry, getAppSession } from "#/utils/session";
+import { getAppSession, getChallengeSession, jwtExpiry } from "#/utils/session";
 
 const loginSchema = z.object({
 	email: z.email(),
@@ -15,16 +21,8 @@ const registerSchema = z.object({
 	base_currency: z.string().regex(/^[A-Za-z]{3}$/, "Use a 3-letter currency code"),
 });
 
-/** Exchange credentials for the API's JWT and store it in the cookie session. */
-async function startSession(email: string, password: string) {
-	const login = await apiRequest<{ access_token: string }>("/auth/login", {
-		method: "POST",
-		anonymous: true,
-		form: new URLSearchParams({ username: email, password }),
-	});
-	if (!login.ok) return login;
-
-	const token = login.data.access_token;
+/** Store the API's token in the cookie session: the user is signed in. */
+async function finishSession(token: string) {
 	const me = await apiRequest<User>("/users/me", { token });
 	if (!me.ok) return me;
 
@@ -37,7 +35,24 @@ async function startSession(email: string, password: string) {
 		expiresAt,
 		user: { id: me.data.id, email: me.data.email, base_currency: me.data.base_currency },
 	});
-	return { ok: true as const, data: null };
+	return { ok: true as const, data: { twoFactor: false } };
+}
+
+/** Exchange credentials for the API's JWT and store it in the cookie session. With two-factor on
+ * there is no token yet: the proof of the password is kept and `twoFactor` says a code is next. */
+async function startSession(email: string, password: string) {
+	const login = await apiRequest<LoginResult>("/auth/login", {
+		method: "POST",
+		anonymous: true,
+		form: new URLSearchParams({ username: email, password }),
+	});
+	if (!login.ok) return login;
+
+	if (login.data.two_factor_required && login.data.challenge_token) {
+		await (await getChallengeSession()).update({ challenge: login.data.challenge_token });
+		return { ok: true as const, data: { twoFactor: true } };
+	}
+	return finishSession(login.data.access_token ?? "");
 }
 
 export const loginFn = createServerFn({ method: "POST" })
@@ -55,6 +70,33 @@ export const registerFn = createServerFn({ method: "POST" })
 		if (!created.ok) return created;
 		return startSession(data.email, data.password);
 	});
+
+/** The second step of signing in: a code from the authenticator app, or a recovery code. */
+export const verifyTwoFactorFn = createServerFn({ method: "POST" })
+	.validator(z.object({ code: z.string().trim().min(6).max(32) }))
+	.handler(async ({ data }) => {
+		const pending = await getChallengeSession();
+		const challenge = pending.data.challenge;
+		if (!challenge) return { ok: false as const, status: 401, error: "Sign in again" };
+		const res = await apiRequest<LoginResult>("/auth/login/2fa", {
+			method: "POST",
+			anonymous: true,
+			body: { challenge_token: challenge, code: data.code },
+		});
+		if (!res.ok) {
+			// Only a dead challenge ends the attempt; a wrong code can be tried again.
+			if (res.error === "Sign in again") await pending.clear();
+			return res;
+		}
+		await pending.clear();
+		return finishSession(res.data.access_token ?? "");
+	});
+
+/** Give up on the code step (back to the password). */
+export const cancelTwoFactorFn = createServerFn({ method: "POST" }).handler(async () => {
+	await (await getChallengeSession()).clear();
+	return { ok: true as const };
+});
 
 export const logoutFn = createServerFn({ method: "POST" }).handler(async () => {
 	const session = await getAppSession();
@@ -89,3 +131,32 @@ export const updateMeFn = createServerFn({ method: "POST" })
 export const getMeFn = createServerFn({ method: "GET" }).handler(async () =>
 	apiRequest<User>("/users/me"),
 );
+
+const codeField = z.string().trim().min(6).max(32);
+
+/** Start setting up an authenticator app: the secret and the QR code to scan. */
+export const startTwoFactorFn = createServerFn({ method: "POST" }).handler(async () =>
+	apiRequest<TwoFactorSetup>("/auth/2fa/setup", { method: "POST" }),
+);
+
+/** Turn two-factor on with a code from the app. Answers with the recovery codes, shown once. */
+export const enableTwoFactorFn = createServerFn({ method: "POST" })
+	.validator(z.object({ code: codeField }))
+	.handler(async ({ data }) =>
+		apiRequest<RecoveryCodes>("/auth/2fa/enable", { method: "POST", body: data }),
+	);
+
+const confirmSchema = z.object({ password: z.string().min(1).max(128), code: codeField });
+
+export const disableTwoFactorFn = createServerFn({ method: "POST" })
+	.validator(confirmSchema)
+	.handler(async ({ data }) =>
+		apiRequest<void>("/auth/2fa/disable", { method: "POST", body: data }),
+	);
+
+/** Make a new set of recovery codes (the old ones stop working), shown once. */
+export const newRecoveryCodesFn = createServerFn({ method: "POST" })
+	.validator(confirmSchema)
+	.handler(async ({ data }) =>
+		apiRequest<RecoveryCodes>("/auth/2fa/recovery-codes", { method: "POST", body: data }),
+	);

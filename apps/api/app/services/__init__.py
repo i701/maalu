@@ -34,7 +34,15 @@ from app.services.template import (
     TemplateService,
 )
 from app.services.transaction import TransactionService
-from app.services.user import EmailAlreadyRegisteredError, RegistrationClosedError, UserService
+from app.services.user import (
+    EmailAlreadyRegisteredError,
+    InvalidPasswordError,
+    InvalidTwoFactorCodeError,
+    RegistrationClosedError,
+    TwoFactorLockedError,
+    TwoFactorStateError,
+    UserService,
+)
 from app.services.vendor import VendorNameTakenError, VendorNotFoundError, VendorService
 
 __all__ = [
@@ -56,6 +64,8 @@ __all__ = [
     "GoalNotFoundError",
     "GoalRuleError",
     "GoalService",
+    "InvalidPasswordError",
+    "InvalidTwoFactorCodeError",
     "RegistrationClosedError",
     "StatsRangeError",
     "StatsService",
@@ -72,6 +82,8 @@ __all__ = [
     "TransactionNotPlannedError",
     "TransactionRuleError",
     "TransactionService",
+    "TwoFactorLockedError",
+    "TwoFactorStateError",
     "UserService",
     "VendorNameTakenError",
     "VendorNotFoundError",

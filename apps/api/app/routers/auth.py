@@ -3,17 +3,54 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
+from app import two_factor
 from app.dependencies import CurrentUser, UserServiceDep
-from app.schemas import RegistrationStatus, Token, UserCreate, UserResponse, UserUpdate
-from app.security import create_access_token
+from app.schemas import (
+    RecoveryCodes,
+    RegistrationStatus,
+    Token,
+    TwoFactorChallenge,
+    TwoFactorCode,
+    TwoFactorConfirm,
+    TwoFactorSetup,
+    UserCreate,
+    UserResponse,
+    UserUpdate,
+)
+from app.security import create_access_token, create_challenge_token, decode_challenge_token
 from app.services import (
     AccountNotFoundError,
     EmailAlreadyRegisteredError,
+    InvalidPasswordError,
+    InvalidTwoFactorCodeError,
     RegistrationClosedError,
     TransactionRuleError,
+    TwoFactorLockedError,
+    TwoFactorStateError,
 )
 
 router = APIRouter(tags=["auth"])
+
+WRONG_CODE = "That code is not right"
+LOCKED = "Too many wrong codes. Wait a few minutes and try again"
+
+
+def _confirm_error(exc: Exception) -> Exception:
+    """The answer to a failed password-and-code check. Never a 401: the web app takes that to mean
+    the session ended."""
+    match exc:
+        case InvalidPasswordError():
+            return HTTPException(
+                status.HTTP_422_UNPROCESSABLE_CONTENT, "That password is not right"
+            )
+        case InvalidTwoFactorCodeError():
+            return HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, WRONG_CODE)
+        case TwoFactorLockedError():
+            return HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, LOCKED)
+        case TwoFactorStateError():
+            return HTTPException(status.HTTP_409_CONFLICT, str(exc))
+        case _:
+            raise exc
 
 
 @router.get("/auth/registration", response_model=RegistrationStatus)
@@ -42,7 +79,73 @@ async def login(form: Annotated[OAuth2PasswordRequestForm, Depends()], users: Us
             "Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    if user.two_factor_enabled:
+        # The password was right: no token yet, only proof of that, to send with a code.
+        return Token(two_factor_required=True, challenge_token=create_challenge_token(user.id))
     return Token(access_token=create_access_token(user.id))
+
+
+@router.post("/auth/login/2fa", response_model=Token)
+async def login_two_factor(data: TwoFactorChallenge, users: UserServiceDep):
+    """The second step of signing in: the challenge from `/auth/login` and a code from the
+    authenticator app (or an unused recovery code)."""
+    invalid = HTTPException(status.HTTP_401_UNAUTHORIZED, "Sign in again")
+    user_id = decode_challenge_token(data.challenge_token)
+    user = await users.get(user_id) if user_id else None
+    if user is None or not user.is_active or not user.two_factor_enabled:
+        raise invalid
+    try:
+        await users.check_second_factor(user, data.code)
+    except TwoFactorLockedError:
+        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, LOCKED) from None
+    except InvalidTwoFactorCodeError:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, WRONG_CODE) from None
+    return Token(access_token=create_access_token(user.id))
+
+
+@router.post("/auth/2fa/setup", response_model=TwoFactorSetup)
+async def two_factor_setup(user: CurrentUser, users: UserServiceDep):
+    """Start setting up an authenticator app: a secret and its QR code (the same ones if setup was
+    already started and not finished). Nothing changes for sign-in until `/auth/2fa/enable` has seen
+    a right code."""
+    try:
+        secret, uri = await users.two_factor_setup(user)
+    except TwoFactorStateError as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from None
+    return TwoFactorSetup(secret=secret, otpauth_uri=uri, qr_data_uri=two_factor.qr_data_uri(uri))
+
+
+@router.post("/auth/2fa/enable", response_model=RecoveryCodes)
+async def two_factor_enable(data: TwoFactorCode, user: CurrentUser, users: UserServiceDep):
+    """Turn two-factor on with a code from the app. The recovery codes in the answer are shown
+    once."""
+    try:
+        return RecoveryCodes(recovery_codes=await users.two_factor_enable(user, data.code))
+    except TwoFactorStateError as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from None
+    except InvalidTwoFactorCodeError:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, WRONG_CODE) from None
+
+
+@router.post("/auth/2fa/disable", status_code=status.HTTP_204_NO_CONTENT)
+async def two_factor_disable(data: TwoFactorConfirm, user: CurrentUser, users: UserServiceDep):
+    """Turn two-factor off. Needs your password and a code (or a recovery code)."""
+    try:
+        await users.two_factor_disable(user, data.password, data.code)
+    except Exception as exc:
+        raise _confirm_error(exc) from None
+
+
+@router.post("/auth/2fa/recovery-codes", response_model=RecoveryCodes)
+async def new_recovery_codes(data: TwoFactorConfirm, user: CurrentUser, users: UserServiceDep):
+    """Make a new set of recovery codes (the old ones stop working), shown once. Needs your
+    password and a code."""
+    try:
+        return RecoveryCodes(
+            recovery_codes=await users.new_recovery_codes(user, data.password, data.code)
+        )
+    except Exception as exc:
+        raise _confirm_error(exc) from None
 
 
 @router.get("/users/me", response_model=UserResponse)

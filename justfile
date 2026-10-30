@@ -105,6 +105,13 @@ build-web:
 seed transactions="250":
     cd apps/api && uv run python -m app.seed {{transactions}}
 
+# ── Accounts ────────────────────────────────────────────
+
+# Turn two-factor off for someone who lost their app and recovery codes (works on the database).
+# In Docker: docker compose -f docker-compose.prod.yml exec api python -m app.admin disable-2fa EMAIL
+disable-2fa email:
+    cd apps/api && uv run python -m app.admin disable-2fa {{email}}
+
 # ── Database migrations ─────────────────────────────────
 
 # Create a new migration: just migration "add accounts"

@@ -55,7 +55,18 @@ from app.schemas.transaction import (
     TransactionTotals,
     TransactionUpdate,
 )
-from app.schemas.user import RegistrationStatus, Token, UserCreate, UserResponse, UserUpdate
+from app.schemas.user import (
+    RecoveryCodes,
+    RegistrationStatus,
+    Token,
+    TwoFactorChallenge,
+    TwoFactorCode,
+    TwoFactorConfirm,
+    TwoFactorSetup,
+    UserCreate,
+    UserResponse,
+    UserUpdate,
+)
 from app.schemas.vendor import VendorCreate, VendorMerge, VendorResponse, VendorUpdate
 
 __all__ = [
@@ -86,6 +97,7 @@ __all__ = [
     "GoalResponse",
     "GoalUpdate",
     "PostPlanned",
+    "RecoveryCodes",
     "RegistrationStatus",
     "SplitInput",
     "SplitResponse",
@@ -111,6 +123,10 @@ __all__ = [
     "TransactionResponse",
     "TransactionTotals",
     "TransactionUpdate",
+    "TwoFactorChallenge",
+    "TwoFactorCode",
+    "TwoFactorConfirm",
+    "TwoFactorSetup",
     "UserCreate",
     "UserResponse",
     "UserUpdate",

@@ -4,6 +4,7 @@ from app.models.budget import Budget, BudgetLine, BudgetLineCategory
 from app.models.category import Category
 from app.models.exchange_rate import ExchangeRate
 from app.models.goal import Goal, GoalEntry
+from app.models.recovery_code import RecoveryCode
 from app.models.subscription import Subscription
 from app.models.tag import Tag, template_tags, transaction_tags, vendor_tags
 from app.models.template import TransactionTemplate
@@ -21,6 +22,7 @@ __all__ = [
     "ExchangeRate",
     "Goal",
     "GoalEntry",
+    "RecoveryCode",
     "Subscription",
     "Tag",
     "Transaction",

@@ -35,7 +35,7 @@ Login goes through server functions to the API; the API's JWT is kept in an encr
 ## Notes
 
 - Money is `Numeric(19, 4)` / `Decimal` end to end and serialised as strings in JSON.
-- Auth: email + password (argon2id), JWT bearer access tokens. `POST /api/v1/auth/register` (includes your primary `base_currency`; by default only the first account can register, see `REGISTRATION` in `apps/api/.env.example`), `POST /api/v1/auth/login` (form fields `username`=email, `password`), `GET /api/v1/users/me`. Set `SECRET_KEY` in `apps/api/.env` (`openssl rand -hex 32`); the Authorize button in `/docs` works.
+- Auth: email + password (argon2id), JWT bearer access tokens. `POST /api/v1/auth/register` (includes your primary `base_currency`; by default only the first account can register, see `REGISTRATION` in `apps/api/.env.example`), `POST /api/v1/auth/login` (form fields `username`=email, `password`), `GET /api/v1/users/me`. Two-factor (authenticator app) can be turned on in Settings; with it on, `POST /api/v1/auth/login` answers with a `challenge_token` and the code goes to `POST /api/v1/auth/login/2fa`. `just disable-2fa EMAIL` turns it off for someone locked out. Set `SECRET_KEY` in `apps/api/.env` (`openssl rand -hex 32`); the Authorize button in `/docs` works.
 
 ## License
 

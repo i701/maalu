@@ -9,7 +9,8 @@ import { z } from "zod";
 import AuthLayout from "#/components/AuthLayout";
 import { RouterLink } from "#/components/RouterLinks";
 import { safeRedirect } from "#/lib/safe-redirect";
-import { getRegistrationFn, getSessionFn, loginFn } from "#/server/auth";
+import TwoFactorStep from "#/components/TwoFactorStep";
+import { cancelTwoFactorFn, getRegistrationFn, getSessionFn, loginFn } from "#/server/auth";
 
 export const Route = createFileRoute("/login")({
 	validateSearch: z.object({ redirect: z.string().optional().catch(undefined) }),
@@ -26,6 +27,19 @@ function LoginPage() {
 	const search = Route.useSearch();
 	const [error, setError] = useState<string | null>(null);
 	const [pending, setPending] = useState(false);
+	// After a right password with two-factor on, the code comes next.
+	const [step, setStep] = useState<"password" | "code">("password");
+
+	function finish() {
+		router.clearCache();
+		router.history.push(safeRedirect(search.redirect));
+	}
+
+	async function backToPassword(message?: string) {
+		await cancelTwoFactorFn();
+		setError(message ?? null);
+		setStep("password");
+	}
 
 	async function submit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault();
@@ -37,13 +51,21 @@ function LoginPage() {
 				data: { email: String(f.get("email")), password: String(f.get("password")) },
 			});
 			if (!res.ok) return setError(res.error);
-			router.clearCache();
-			router.history.push(safeRedirect(search.redirect));
+			if (res.data.twoFactor) return setStep("code");
+			finish();
 		} catch {
 			setError("Enter a valid email and password");
 		} finally {
 			setPending(false);
 		}
+	}
+
+	if (step === "code") {
+		return (
+			<AuthLayout title="Two-factor" subtitle="Enter the code from your authenticator app.">
+				<TwoFactorStep onDone={finish} onBack={backToPassword} />
+			</AuthLayout>
+		);
 	}
 
 	return (

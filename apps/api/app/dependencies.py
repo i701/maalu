@@ -22,7 +22,11 @@ from app.services import (
     VendorService,
 )
 
-DbSession = Annotated[AsyncSession, Depends(get_db)]
+# scope="function": the session commits (or rolls back) as soon as the route returns, **before** the
+# response is sent. Without it FastAPI runs the code after `yield` once the response has gone, so a
+# client that refetches the moment it hears back (the web app does, after every mutation) can read
+# the old data, and a failed commit would never reach the client at all.
+DbSession = Annotated[AsyncSession, Depends(get_db, scope="function")]
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 

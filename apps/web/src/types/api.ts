@@ -89,6 +89,9 @@ export const ACCOUNT_GROUP_LABELS: Record<AccountGroup, string> = {
 
 export type User = Schemas["UserResponse"];
 export type RegistrationStatus = Schemas["RegistrationStatus"];
+export type LoginResult = Schemas["Token"];
+export type TwoFactorSetup = Schemas["TwoFactorSetup"];
+export type RecoveryCodes = Schemas["RecoveryCodes"];
 export type Vendor = Schemas["VendorResponse"];
 export type Subscription = Schemas["SubscriptionResponse"];
 export type SubscriptionSummary = Schemas["SubscriptionSummary"];

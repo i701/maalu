@@ -36,3 +36,18 @@ export function jwtExpiry(token: string): number | undefined {
 		return undefined;
 	}
 }
+
+/** The proof of a right password while the code is still to come. It lives in its own short-lived
+ * encrypted cookie, so the browser never holds it and an abandoned sign-in expires by itself. */
+export function getChallengeSession() {
+	return openSession<{ challenge?: string }>({
+		name: "maalu_2fa",
+		password: process.env.SESSION_SECRET!,
+		maxAge: 5 * 60,
+		cookie: {
+			httpOnly: true,
+			sameSite: "lax",
+			secure: process.env.NODE_ENV === "production",
+		},
+	});
+}

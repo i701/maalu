@@ -107,6 +107,90 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/2fa/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Two Factor Disable
+         * @description Turn two-factor off. Needs your password and a code (or a recovery code).
+         */
+        post: operations["two_factor_disable_api_v1_auth_2fa_disable_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/2fa/enable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Two Factor Enable
+         * @description Turn two-factor on with a code from the app. The recovery codes in the answer are shown
+         *     once.
+         */
+        post: operations["two_factor_enable_api_v1_auth_2fa_enable_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/2fa/recovery-codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * New Recovery Codes
+         * @description Make a new set of recovery codes (the old ones stop working), shown once. Needs your
+         *     password and a code.
+         */
+        post: operations["new_recovery_codes_api_v1_auth_2fa_recovery_codes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/2fa/setup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Two Factor Setup
+         * @description Start setting up an authenticator app: a secret and its QR code (the same ones if setup was
+         *     already started and not finished). Nothing changes for sign-in until `/auth/2fa/enable` has seen
+         *     a right code.
+         */
+        post: operations["two_factor_setup_api_v1_auth_2fa_setup_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/login": {
         parameters: {
             query?: never;
@@ -121,6 +205,27 @@ export interface paths {
          * @description OAuth2 password flow: send `username` (the email) and `password` as form fields.
          */
         post: operations["login_api_v1_auth_login_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/login/2fa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Login Two Factor
+         * @description The second step of signing in: the challenge from `/auth/login` and a code from the
+         *     authenticator app (or an unused recovery code).
+         */
+        post: operations["login_two_factor_api_v1_auth_login_2fa_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1779,6 +1884,14 @@ export interface components {
              */
             transaction_time?: string | null;
         };
+        /** RecoveryCodes */
+        RecoveryCodes: {
+            /**
+             * Recovery Codes
+             * @description Shown once. Each works once in place of an authenticator code.
+             */
+            recovery_codes: string[];
+        };
         /** RegistrationStatus */
         RegistrationStatus: {
             /**
@@ -2152,13 +2265,27 @@ export interface components {
         };
         /** Token */
         Token: {
-            /** Access Token */
-            access_token: string;
+            /**
+             * Access Token
+             * @description The bearer token. Missing while a second factor is still needed.
+             */
+            access_token?: string | null;
+            /**
+             * Challenge Token
+             * @description Proof of the right password, valid for five minutes.
+             */
+            challenge_token?: string | null;
             /**
              * Token Type
              * @default bearer
              */
             token_type: string;
+            /**
+             * Two Factor Required
+             * @description The password was right but a code is needed: send it with `challenge_token` to `/auth/login/2fa`.
+             * @default false
+             */
+            two_factor_required: boolean;
         };
         /**
          * TransactionCreate
@@ -2359,6 +2486,49 @@ export interface components {
             /** Vendor Name */
             vendor_name?: string | null;
         };
+        /** TwoFactorChallenge */
+        TwoFactorChallenge: {
+            /** Challenge Token */
+            challenge_token: string;
+            /**
+             * Code
+             * @description An authenticator code, or a recovery code.
+             */
+            code: string;
+        };
+        /** TwoFactorCode */
+        TwoFactorCode: {
+            /** Code */
+            code: string;
+        };
+        /**
+         * TwoFactorConfirm
+         * @description Proof it is you, for turning two-factor off or making new recovery codes.
+         */
+        TwoFactorConfirm: {
+            /**
+             * Code
+             * @description An authenticator code, or a recovery code.
+             */
+            code: string;
+            /** Password */
+            password: string;
+        };
+        /** TwoFactorSetup */
+        TwoFactorSetup: {
+            /** Otpauth Uri */
+            otpauth_uri: string;
+            /**
+             * Qr Data Uri
+             * @description The QR code of `otpauth_uri`, as an SVG data URI.
+             */
+            qr_data_uri: string;
+            /**
+             * Secret
+             * @description The key to type into an authenticator app by hand.
+             */
+            secret: string;
+        };
         /** UserCreate */
         UserCreate: {
             /** Base Currency */
@@ -2394,6 +2564,11 @@ export interface components {
             id: string;
             /** Start From Template */
             start_from_template: boolean;
+            /**
+             * Two Factor Enabled
+             * @description Whether signing in also needs a code from an authenticator app.
+             */
+            two_factor_enabled: boolean;
         };
         /**
          * UserUpdate
@@ -2772,6 +2947,123 @@ export interface operations {
             };
         };
     };
+    two_factor_disable_api_v1_auth_2fa_disable_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TwoFactorConfirm"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    two_factor_enable_api_v1_auth_2fa_enable_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TwoFactorCode"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecoveryCodes"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    new_recovery_codes_api_v1_auth_2fa_recovery_codes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TwoFactorConfirm"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecoveryCodes"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    two_factor_setup_api_v1_auth_2fa_setup_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TwoFactorSetup"];
+                };
+            };
+        };
+    };
     login_api_v1_auth_login_post: {
         parameters: {
             query?: never;
@@ -2782,6 +3074,39 @@ export interface operations {
         requestBody: {
             content: {
                 "application/x-www-form-urlencoded": components["schemas"]["Body_login_api_v1_auth_login_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Token"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    login_two_factor_api_v1_auth_login_2fa_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TwoFactorChallenge"];
             };
         };
         responses: {

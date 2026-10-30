@@ -1,7 +1,7 @@
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String, Uuid, func
+from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Integer, String, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base
@@ -23,6 +23,17 @@ class User(Base):
     )
     # Whether the transaction form offers "start from a template". Templates stay either way.
     start_from_template: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    # Two-factor (an authenticator app). The secret is kept encrypted (`app/two_factor.py`); it is
+    # set during setup but only counts once `two_factor_enabled` is true.
+    two_factor_secret: Mapped[str | None] = mapped_column(String(255), default=None)
+    two_factor_enabled: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    # The last time step a code was accepted for, so the same code cannot be used twice.
+    two_factor_last_step: Mapped[int | None] = mapped_column(BigInteger, default=None)
+    # Wrong codes in a row; after too many the second factor is locked for a few minutes.
+    two_factor_failures: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    two_factor_locked_until: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), default=None
+    )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
