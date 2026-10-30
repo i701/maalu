@@ -13,6 +13,15 @@
 	src: url(../assets/material-symbols-rounded.woff2) format("woff2");
 }
 
+/* Homemade Apple (Apache-2.0), a handwriting face used for the app name (Brand) and the tagline on
+ * the sign-in and register pages. */
+@font-face {
+	font-family: "Homemade Apple";
+	font-weight: 400;
+	font-display: swap;
+	src: url(../assets/HomemadeApple-Regular.ttf) format("truetype");
+}
+
 :root {
 	--spring-spatial-fast: linear(
 		0,
