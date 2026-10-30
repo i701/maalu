@@ -25,6 +25,7 @@ import { Route as ProtectedTemplatesRouteImport } from './routes/_protected/temp
 import { Route as ProtectedTransactionsRouteImport } from './routes/_protected/transactions'
 import { Route as ProtectedTrashRouteImport } from './routes/_protected/trash'
 import { Route as ProtectedVendorsRouteImport } from './routes/_protected/vendors'
+import { Route as ApiBackupRouteImport } from './routes/api.backup'
 import { Route as ApiExportTransactionsRouteImport } from './routes/api.export.transactions'
 
 const IndexRoute = IndexRouteImport.update({
@@ -106,6 +107,11 @@ const ProtectedVendorsRoute = ProtectedVendorsRouteImport.update({
   path: '/vendors',
   getParentRoute: () => ProtectedRoute,
 } as any)
+const ApiBackupRoute = ApiBackupRouteImport.update({
+  id: '/api/backup',
+  path: '/api/backup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiExportTransactionsRoute = ApiExportTransactionsRouteImport.update({
   id: '/api/export/transactions',
   path: '/api/export/transactions',
@@ -128,6 +134,7 @@ export interface FileRoutesByFullPath {
   '/transactions': typeof ProtectedTransactionsRoute
   '/trash': typeof ProtectedTrashRoute
   '/vendors': typeof ProtectedVendorsRoute
+  '/api/backup': typeof ApiBackupRoute
   '/api/export/transactions': typeof ApiExportTransactionsRoute
 }
 export interface FileRoutesByTo {
@@ -146,6 +153,7 @@ export interface FileRoutesByTo {
   '/transactions': typeof ProtectedTransactionsRoute
   '/trash': typeof ProtectedTrashRoute
   '/vendors': typeof ProtectedVendorsRoute
+  '/api/backup': typeof ApiBackupRoute
   '/api/export/transactions': typeof ApiExportTransactionsRoute
 }
 export interface FileRoutesById {
@@ -166,6 +174,7 @@ export interface FileRoutesById {
   '/_protected/transactions': typeof ProtectedTransactionsRoute
   '/_protected/trash': typeof ProtectedTrashRoute
   '/_protected/vendors': typeof ProtectedVendorsRoute
+  '/api/backup': typeof ApiBackupRoute
   '/api/export/transactions': typeof ApiExportTransactionsRoute
 }
 export interface FileRouteTypes {
@@ -186,6 +195,7 @@ export interface FileRouteTypes {
     | '/transactions'
     | '/trash'
     | '/vendors'
+    | '/api/backup'
     | '/api/export/transactions'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -204,6 +214,7 @@ export interface FileRouteTypes {
     | '/transactions'
     | '/trash'
     | '/vendors'
+    | '/api/backup'
     | '/api/export/transactions'
   id:
     | '__root__'
@@ -223,6 +234,7 @@ export interface FileRouteTypes {
     | '/_protected/transactions'
     | '/_protected/trash'
     | '/_protected/vendors'
+    | '/api/backup'
     | '/api/export/transactions'
   fileRoutesById: FileRoutesById
 }
@@ -231,6 +243,7 @@ export interface RootRouteChildren {
   ProtectedRoute: typeof ProtectedRouteWithChildren
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
+  ApiBackupRoute: typeof ApiBackupRoute
   ApiExportTransactionsRoute: typeof ApiExportTransactionsRoute
 }
 
@@ -348,6 +361,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedVendorsRouteImport
       parentRoute: typeof ProtectedRoute
     }
+    '/api/backup': {
+      id: '/api/backup'
+      path: '/api/backup'
+      fullPath: '/api/backup'
+      preLoaderRoute: typeof ApiBackupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/export/transactions': {
       id: '/api/export/transactions'
       path: '/api/export/transactions'
@@ -397,6 +417,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProtectedRoute: ProtectedRouteWithChildren,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
+  ApiBackupRoute: ApiBackupRoute,
   ApiExportTransactionsRoute: ApiExportTransactionsRoute,
 }
 export const routeTree = rootRouteImport

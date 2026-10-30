@@ -373,6 +373,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/backup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download Backup
+         * @description Everything you own (accounts, transactions, categories, tags, budgets, goals, templates...)
+         *     as one JSON file. It holds no password, sessions or two-factor secret, but it is your
+         *     financial data in plain text: keep it somewhere safe.
+         */
+        get: operations["download_backup_api_v1_backup_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/backup/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restore Backup
+         * @description Restore a backup file (send its contents as the request body) into this account. The account
+         *     must be empty (409 otherwise). Every row gets a new id, and your base currency becomes the
+         *     backup's. Either everything is restored or, on any problem, nothing.
+         */
+        post: operations["restore_backup_api_v1_backup_restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/budget": {
         parameters: {
             query?: never;
@@ -1380,6 +1424,16 @@ export interface components {
             name?: string | null;
             /** Opening Amount */
             opening_amount?: number | string | null;
+        };
+        /** BackupRestored */
+        BackupRestored: {
+            /**
+             * Restored
+             * @description How many rows went into each table
+             */
+            restored: {
+                [key: string]: number;
+            };
         };
         /** BalancePoint */
         BalancePoint: {
@@ -3592,6 +3646,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_backup_api_v1_backup_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The backup file */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    restore_backup_api_v1_backup_restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackupRestored"];
                 };
             };
         };

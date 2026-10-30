@@ -322,6 +322,23 @@
         "title": "AccountUpdate",
         "type": "object"
       },
+      "BackupRestored": {
+        "properties": {
+          "restored": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "description": "How many rows went into each table",
+            "title": "Restored",
+            "type": "object"
+          }
+        },
+        "required": [
+          "restored"
+        ],
+        "title": "BackupRestored",
+        "type": "object"
+      },
       "BalancePoint": {
         "properties": {
           "assets": {
@@ -5330,6 +5347,66 @@
         "summary": "End Session",
         "tags": [
           "auth"
+        ]
+      }
+    },
+    "/api/v1/backup": {
+      "get": {
+        "description": "Everything you own (accounts, transactions, categories, tags, budgets, goals, templates...)\nas one JSON file. It holds no password, sessions or two-factor secret, but it is your\nfinancial data in plain text: keep it somewhere safe.",
+        "operationId": "download_backup_api_v1_backup_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "The backup file"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Download Backup",
+        "tags": [
+          "backup"
+        ]
+      }
+    },
+    "/api/v1/backup/restore": {
+      "post": {
+        "description": "Restore a backup file (send its contents as the request body) into this account. The account\nmust be empty (409 otherwise). Every row gets a new id, and your base currency becomes the\nbackup's. Either everything is restored or, on any problem, nothing.",
+        "operationId": "restore_backup_api_v1_backup_restore_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackupRestored"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Restore Backup",
+        "tags": [
+          "backup"
         ]
       }
     },

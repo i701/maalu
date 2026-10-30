@@ -32,6 +32,7 @@ export default defineConfig(({ mode }) => {
 					"DeleteForeverOutlined",
 					"DeleteOutlined",
 					"Download",
+					"UploadFile",
 					"Inventory2Outlined",
 					"EditOutlined",
 					"ExpandLess",

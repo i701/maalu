@@ -6,6 +6,7 @@ from app.rate_limit import RateLimitedError
 from app.routers import (
     account,
     auth,
+    backup,
     budget,
     category,
     currency,
@@ -46,4 +47,5 @@ def create_app() -> FastAPI:
     app.include_router(vendor.router, prefix="/api/v1")
     app.include_router(subscription.router, prefix="/api/v1")
     app.include_router(currency.router, prefix="/api/v1")
+    app.include_router(backup.router, prefix="/api/v1")
     return app

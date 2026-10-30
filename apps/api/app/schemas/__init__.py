@@ -5,6 +5,7 @@ from app.schemas.account import (
     AccountSummary,
     AccountUpdate,
 )
+from app.schemas.backup import BackupRestored
 from app.schemas.budget import (
     BudgetLineCreate,
     BudgetLineResponse,
@@ -81,6 +82,7 @@ __all__ = [
     "AccountResponse",
     "AccountSummary",
     "AccountUpdate",
+    "BackupRestored",
     "BudgetLineCreate",
     "BudgetLineResponse",
     "BudgetLineUpdate",

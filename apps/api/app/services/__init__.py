@@ -4,6 +4,7 @@ from app.services.account import (
     AccountNotFoundError,
     AccountService,
 )
+from app.services.backup import BackupFormatError, BackupNotEmptyError, BackupService
 from app.services.budget import BudgetCategoryTakenError, BudgetLineNotFoundError, BudgetService
 from app.services.category import (
     CategoryInUseError,
@@ -55,6 +56,9 @@ __all__ = [
     "AccountHasTransactionsError",
     "AccountNotFoundError",
     "AccountService",
+    "BackupFormatError",
+    "BackupNotEmptyError",
+    "BackupService",
     "BudgetCategoryTakenError",
     "BudgetLineNotFoundError",
     "BudgetService",

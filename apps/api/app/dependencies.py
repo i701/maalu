@@ -9,6 +9,7 @@ from app.database import get_db
 from app.models import User, UserSession
 from app.services import (
     AccountService,
+    BackupService,
     BudgetService,
     CategoryService,
     GoalService,
@@ -75,6 +76,10 @@ def get_tag_service(db: DbSession) -> TagService:
     return TagService(db)
 
 
+def get_backup_service(db: DbSession) -> BackupService:
+    return BackupService(db)
+
+
 def get_template_service(db: DbSession) -> TemplateService:
     return TemplateService(db)
 
@@ -91,6 +96,7 @@ AccountServiceDep = Annotated[AccountService, Depends(get_account_service)]
 SubscriptionServiceDep = Annotated[SubscriptionService, Depends(get_subscription_service)]
 TagServiceDep = Annotated[TagService, Depends(get_tag_service)]
 TemplateServiceDep = Annotated[TemplateService, Depends(get_template_service)]
+BackupServiceDep = Annotated[BackupService, Depends(get_backup_service)]
 
 
 async def get_signed_in(
