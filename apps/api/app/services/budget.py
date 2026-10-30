@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.allocation import allocate_base
 from app.budget_period import next_period_start, period_bounds, period_start, previous_period_start
-from app.enums import TransactionType
 from app.models import Budget, BudgetLine, BudgetLineCategory, Category, Transaction, User
 from app.schemas import (
     BudgetLineCreate,
@@ -92,18 +91,19 @@ class BudgetService:
     async def _activity_by_category(
         self, user_id: uuid.UUID, start: date, end: date
     ) -> dict[uuid.UUID, Decimal]:
-        """Expenses per category in a period, in base currency. A split transaction counts under
+        """Spending per category in a period, in base currency: expenses less the refunds that gave
+        money back. A split transaction counts under
         each of its items' categories, with its base amount shared out by `allocate_base`."""
         conditions = [
             Transaction.user_id == user_id,
             Transaction.counted(),
-            Transaction.type == TransactionType.EXPENSE,
+            Transaction.spending(),  # refunds take away what they give back
             Transaction.transaction_date >= start,
             Transaction.transaction_date <= end,
         ]
         totals: dict[uuid.UUID, Decimal] = {}
         plain = (
-            select(Transaction.category_id, func.sum(Transaction.base_amount))
+            select(Transaction.category_id, func.sum(Transaction.spending_base()))
             .where(*conditions, ~Transaction.splits.any())
             .group_by(Transaction.category_id)
         )
@@ -113,7 +113,9 @@ class BudgetService:
         for t in (await self.db.scalars(split_stmt)).all():
             shares = allocate_base(t.base_amount, t.amount, [s.amount for s in t.splits])
             for line, share in zip(t.splits, shares, strict=True):
-                totals[line.category_id] = totals.get(line.category_id, ZERO) + share
+                totals[line.category_id] = (
+                    totals.get(line.category_id, ZERO) + share * t.spending_sign
+                )
         return totals
 
     @staticmethod

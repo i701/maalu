@@ -1791,6 +1791,53 @@
         "title": "RecoveryCodes",
         "type": "object"
       },
+      "RefundOfRef": {
+        "description": "The purchase a refund gives money back for.",
+        "properties": {
+          "amount": {
+            "title": "Amount",
+            "type": "string"
+          },
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "transaction_date": {
+            "format": "date",
+            "title": "Transaction Date",
+            "type": "string"
+          },
+          "vendor_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor Name"
+          }
+        },
+        "required": [
+          "id",
+          "amount",
+          "currency",
+          "category",
+          "transaction_date"
+        ],
+        "title": "RefundOfRef",
+        "type": "object"
+      },
       "RegistrationStatus": {
         "properties": {
           "open": {
@@ -1910,6 +1957,19 @@
             "default": "1",
             "title": "Quantity"
           },
+          "refund_of_split_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "On a refund: the item of the purchase this line gives back. Its name and category are then taken from that item.",
+            "title": "Refund Of Split Id"
+          },
           "tax_amount": {
             "anyOf": [
               {
@@ -1963,6 +2023,23 @@
             "title": "Quantity",
             "type": "string"
           },
+          "refund_of_split_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refund Of Split Id"
+          },
+          "refunded_amount": {
+            "description": "How much of this item the refunds so far have given back.",
+            "title": "Refunded Amount",
+            "type": "string"
+          },
           "tax_amount": {
             "anyOf": [
               {
@@ -1982,7 +2059,9 @@
           "category",
           "category_id",
           "amount",
-          "tax_amount"
+          "tax_amount",
+          "refund_of_split_id",
+          "refunded_amount"
         ],
         "title": "SplitResponse",
         "type": "object"
@@ -2995,6 +3074,19 @@
             "title": "Planned",
             "type": "boolean"
           },
+          "refund_of_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Income only: makes this a refund of that expense. It gives back part of what that purchase cost, in its currency and category, and counts as money back toward that spending, not as income. A purchase with items needs `splits` that name the items being refunded.",
+            "title": "Refund Of Id"
+          },
           "splits": {
             "anyOf": [
               {
@@ -3211,6 +3303,22 @@
             "title": "Planned",
             "type": "boolean"
           },
+          "refund_of": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RefundOfRef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Set on a refund: the purchase it gives money back for."
+          },
+          "refunded_amount": {
+            "description": "On a purchase: how much the refunds so far have given back, in its currency.",
+            "title": "Refunded Amount",
+            "type": "string"
+          },
           "splits": {
             "items": {
               "$ref": "#/components/schemas/SplitResponse"
@@ -3300,6 +3408,8 @@
           "transaction_time",
           "planned",
           "splits",
+          "refund_of",
+          "refunded_amount",
           "currency",
           "exchange_rate",
           "base_amount",
@@ -3315,18 +3425,26 @@
         "type": "object"
       },
       "TransactionTotals": {
-        "description": "Totals of the matching income and expense transactions, in your base currency. Transfers\nonly move money between your accounts, so they are not counted.",
+        "description": "Totals of the matching income and expense transactions, in your base currency. Transfers\nonly move money between your accounts, so they are not counted. A refund is money back for\nspending, so it lowers `expense` and is not part of `income`.",
         "properties": {
           "currency": {
             "title": "Currency",
             "type": "string"
           },
           "expense": {
+            "description": "Spending, less what refunds gave back.",
             "title": "Expense",
             "type": "string"
           },
           "income": {
+            "description": "Income, not counting refunds.",
             "title": "Income",
+            "type": "string"
+          },
+          "refunded": {
+            "default": "0",
+            "description": "What refunds gave back, already taken off `expense`.",
+            "title": "Refunded",
             "type": "string"
           }
         },
@@ -3448,6 +3566,19 @@
               }
             ],
             "title": "Planned"
+          },
+          "refund_of_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only null is accepted: it turns a refund into plain income.",
+            "title": "Refund Of Id"
           },
           "splits": {
             "anyOf": [

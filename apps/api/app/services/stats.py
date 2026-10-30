@@ -45,6 +45,7 @@ class StatsService:
             select(
                 Transaction.transaction_date,
                 Transaction.type,
+                Transaction.refund_of_id.is_not(None),
                 func.sum(Transaction.base_amount),
             )
             .where(
@@ -54,12 +55,20 @@ class StatsService:
                 Transaction.transaction_date >= first,
                 Transaction.transaction_date <= end,
             )
-            .group_by(Transaction.transaction_date, Transaction.type)
+            .group_by(
+                Transaction.transaction_date,
+                Transaction.type,
+                Transaction.refund_of_id.is_not(None),
+            )
         )
         sums: dict[str, dict[TransactionType, Decimal]] = {}
-        for day, kind, total in (await self.db.execute(stmt)).all():
+        for day, kind, is_refund, total in (await self.db.execute(stmt)).all():
             bucket = sums.setdefault(f"{day.year:04d}-{day.month:02d}", {})
-            bucket[kind] = bucket.get(kind, ZERO) + Decimal(str(total or 0))
+            amount = Decimal(str(total or 0))
+            # A refund is money back for spending, not income: it takes away from expense.
+            if is_refund:
+                kind, amount = TransactionType.EXPENSE, -amount
+            bucket[kind] = bucket.get(kind, ZERO) + amount
 
         points = []
         for back in range(months - 1, -1, -1):

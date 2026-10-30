@@ -91,6 +91,11 @@ def _num(value: Decimal | None) -> float | None:
     return float(value) if value is not None else None
 
 
+def _type_label(t: Transaction) -> str:
+    """ "Refund" for a refund (money back for spending), else the type."""
+    return "Refund" if t.refund_of_id else t.type.value.capitalize()
+
+
 def _signed_base(t: Transaction) -> Decimal | None:
     """Income positive, expense negative, transfers blank (they only move money around), so a
     plain SUM of the column is the net result."""
@@ -145,19 +150,22 @@ def build_workbook(
             for category, share in parts:
                 if category_id is not None and category.id != category_id:
                     continue
-                if t.type is TransactionType.INCOME:
+                # A refund is money back for spending: it lowers expense and is not income.
+                kind = "expense" if t.refund_of_id else t.type.value
+                signed = share * t.spending_sign
+                if kind == "income":
                     income += share
                 else:
-                    expense += share
-                entry = category_totals.setdefault((t.type.value, category.id), [category, 0, 0])
-                entry[1] += share
+                    expense += signed
+                entry = category_totals.setdefault((kind, category.id), [category, 0, 0])
+                entry[1] += signed
                 entry[2] += 0 if category.id in counted else 1
                 counted.add(category.id)
             for line, share in zip(lines, [p[1] for p in parts], strict=True) if lines else []:
                 item_rows.append(
                     [
                         (t.transaction_date, "yyyy-mm-dd"),
-                        (t.type.value.capitalize(), None),
+                        (_type_label(t), None),
                         (t.vendor.name if t.vendor else None, None),
                         (line.name, None),
                         (line.category, None),
@@ -171,7 +179,7 @@ def build_workbook(
         values = [
             (t.transaction_date, "yyyy-mm-dd"),
             (t.transaction_time, "hh:mm"),
-            (t.type.value.capitalize(), None),
+            (_type_label(t), None),
             (None if is_transfer else _categories(t), None),
             (t.vendor.name if t.vendor else None, None),
             (t.description, None),

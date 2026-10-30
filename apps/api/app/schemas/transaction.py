@@ -3,7 +3,7 @@ from datetime import date, datetime, time
 from decimal import Decimal
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.enums import PaymentMethod, TransactionType
 from app.schemas.account import AccountRef
@@ -32,6 +32,11 @@ class SplitInput(BaseModel):
         decimal_places=4,
         description="The part of `amount` that is tax (GST), when known.",
     )
+    refund_of_split_id: uuid.UUID | None = Field(
+        default=None,
+        description="On a refund: the item of the purchase this line gives back. Its name and "
+        "category are then taken from that item.",
+    )
 
     @model_validator(mode="after")
     def _tax_within_amount(self):
@@ -50,6 +55,28 @@ class SplitResponse(BaseModel):
     category_id: uuid.UUID
     amount: Decimal
     tax_amount: Decimal | None
+    refund_of_split_id: uuid.UUID | None
+    refunded_amount: Decimal = Field(
+        description="How much of this item the refunds so far have given back."
+    )
+
+    @field_validator("refunded_amount", mode="before")
+    @classmethod
+    def _exact(cls, v):
+        return Decimal(str(v or 0)).quantize(Decimal("0.0001"))
+
+
+class RefundOfRef(BaseModel):
+    """The purchase a refund gives money back for."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    amount: Decimal
+    currency: str
+    category: str
+    transaction_date: date
+    vendor_name: str | None = Field(default=None, validation_alias=AliasPath("vendor", "name"))
 
 
 class TransactionCreate(VendorRef):
@@ -78,6 +105,13 @@ class TransactionCreate(VendorRef):
         "`amount`; `category` is then taken from the biggest line, so it can be left out.",
     )
     subscription_id: uuid.UUID | None = None
+    refund_of_id: uuid.UUID | None = Field(
+        default=None,
+        description="Income only: makes this a refund of that expense. It gives back part of what "
+        "that purchase cost, in its currency and category, and counts as money back toward that "
+        "spending, not as income. A purchase with items needs `splits` that name the items being "
+        "refunded.",
+    )
     tags: TagNames | None = Field(
         default=None,
         description="Tags by name, found or created. They belong to the whole transaction.",
@@ -115,14 +149,18 @@ class TransactionCreate(VendorRef):
             if self.splits:
                 raise ValueError("Transfers can't be split")
             return self
-        if not self.category and not self.splits:
-            raise ValueError("category is required")
-        if self.payment_method is None:
-            raise ValueError("payment_method is required")
+        # A refund takes its category (and, by default, payment method) from the purchase.
+        if self.refund_of_id is None:
+            if not self.category and not self.splits:
+                raise ValueError("category is required")
+            if self.payment_method is None:
+                raise ValueError("payment_method is required")
         if self.to_account_id is not None or self.to_amount is not None:
             raise ValueError("Only transfers have to_account_id / to_amount")
         if self.subscription_id is not None and self.type is not TransactionType.EXPENSE:
             raise ValueError("Only expenses can belong to a subscription")
+        if self.refund_of_id is not None and self.type is not TransactionType.INCOME:
+            raise ValueError("A refund is income")
         return self
 
 
@@ -140,6 +178,9 @@ class TransactionUpdate(VendorRef):
     account_id: uuid.UUID | None = None  # explicit null unlinks
     to_account_id: uuid.UUID | None = None  # explicit null unlinks
     to_amount: Amount | None = None
+    refund_of_id: uuid.UUID | None = Field(
+        default=None, description="Only null is accepted: it turns a refund into plain income."
+    )
     currency: CurrencyCode | None = None
     exchange_rate: ExchangeRate | None = None
     payment_method: PaymentMethod | None = None
@@ -192,6 +233,12 @@ class TransactionResponse(BaseModel):
     transaction_time: time | None
     planned: bool
     splits: list[SplitResponse]
+    refund_of: RefundOfRef | None = Field(
+        description="Set on a refund: the purchase it gives money back for."
+    )
+    refunded_amount: Decimal = Field(
+        description="On a purchase: how much the refunds so far have given back, in its currency."
+    )
     currency: str
     exchange_rate: Decimal
     base_amount: Decimal
@@ -204,6 +251,11 @@ class TransactionResponse(BaseModel):
     deleted_at: datetime | None = Field(
         description="When it was moved to the trash; null for a live transaction"
     )
+
+    @field_validator("refunded_amount", mode="before")
+    @classmethod
+    def _exact(cls, v):
+        return Decimal(str(v or 0)).quantize(Decimal("0.0001"))
 
 
 # The most transactions one bulk request can touch.
@@ -281,8 +333,12 @@ class CategoryTotals(BaseModel):
 
 class TransactionTotals(BaseModel):
     """Totals of the matching income and expense transactions, in your base currency. Transfers
-    only move money between your accounts, so they are not counted."""
+    only move money between your accounts, so they are not counted. A refund is money back for
+    spending, so it lowers `expense` and is not part of `income`."""
 
-    income: Decimal
-    expense: Decimal
+    income: Decimal = Field(description="Income, not counting refunds.")
+    expense: Decimal = Field(description="Spending, less what refunds gave back.")
+    refunded: Decimal = Field(
+        default=Decimal(0), description="What refunds gave back, already taken off `expense`."
+    )
     currency: str

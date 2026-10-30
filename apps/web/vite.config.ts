@@ -46,6 +46,7 @@ export default defineConfig(({ mode }) => {
 					"Storefront",
 					"Tune",
 					"UnarchiveOutlined",
+					"Undo",
 				].map((icon) => `@mui/icons-material/${icon}`),
 			],
 		},

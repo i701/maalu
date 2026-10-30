@@ -499,7 +499,10 @@ async def delete_transaction(
     transaction = await service.get(user_id, transaction_id)
     if transaction is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Transaction not found")
-    await service.trash(transaction)
+    try:
+        await service.trash(transaction)
+    except TransactionRuleError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -530,7 +533,10 @@ async def restore_transaction(
     transaction = await service.get_trashed(user_id, transaction_id)
     if transaction is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Transaction not found in the trash")
-    return await service.restore(transaction)
+    try:
+        return await service.restore(transaction)
+    except TransactionRuleError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
 
 
 @router.delete("/{transaction_id}/permanent", status_code=status.HTTP_204_NO_CONTENT)

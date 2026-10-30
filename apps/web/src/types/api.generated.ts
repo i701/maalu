@@ -2013,6 +2013,30 @@ export interface components {
              */
             recovery_codes: string[];
         };
+        /**
+         * RefundOfRef
+         * @description The purchase a refund gives money back for.
+         */
+        RefundOfRef: {
+            /** Amount */
+            amount: string;
+            /** Category */
+            category: string;
+            /** Currency */
+            currency: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Transaction Date
+             * Format: date
+             */
+            transaction_date: string;
+            /** Vendor Name */
+            vendor_name?: string | null;
+        };
         /** RegistrationStatus */
         RegistrationStatus: {
             /**
@@ -2078,6 +2102,11 @@ export interface components {
              */
             quantity: number | string;
             /**
+             * Refund Of Split Id
+             * @description On a refund: the item of the purchase this line gives back. Its name and category are then taken from that item.
+             */
+            refund_of_split_id?: string | null;
+            /**
              * Tax Amount
              * @description The part of `amount` that is tax (GST), when known.
              */
@@ -2103,6 +2132,13 @@ export interface components {
             name: string;
             /** Quantity */
             quantity: string;
+            /** Refund Of Split Id */
+            refund_of_split_id: string | null;
+            /**
+             * Refunded Amount
+             * @description How much of this item the refunds so far have given back.
+             */
+            refunded_amount: string;
             /** Tax Amount */
             tax_amount: string | null;
         };
@@ -2486,6 +2522,11 @@ export interface components {
              */
             planned: boolean;
             /**
+             * Refund Of Id
+             * @description Income only: makes this a refund of that expense. It gives back part of what that purchase cost, in its currency and category, and counts as money back toward that spending, not as income. A purchase with items needs `splits` that name the items being refunded.
+             */
+            refund_of_id?: string | null;
+            /**
              * Splits
              * @description Optional breakdown by item and category. The line amounts must add up to `amount`; `category` is then taken from the biggest line, so it can be left out.
              */
@@ -2561,6 +2602,13 @@ export interface components {
             payment_method: components["schemas"]["PaymentMethod"];
             /** Planned */
             planned: boolean;
+            /** @description Set on a refund: the purchase it gives money back for. */
+            refund_of: components["schemas"]["RefundOfRef"] | null;
+            /**
+             * Refunded Amount
+             * @description On a purchase: how much the refunds so far have given back, in its currency.
+             */
+            refunded_amount: string;
             /** Splits */
             splits: components["schemas"]["SplitResponse"][];
             subscription: components["schemas"]["SubscriptionRef"] | null;
@@ -2582,15 +2630,28 @@ export interface components {
         /**
          * TransactionTotals
          * @description Totals of the matching income and expense transactions, in your base currency. Transfers
-         *     only move money between your accounts, so they are not counted.
+         *     only move money between your accounts, so they are not counted. A refund is money back for
+         *     spending, so it lowers `expense` and is not part of `income`.
          */
         TransactionTotals: {
             /** Currency */
             currency: string;
-            /** Expense */
+            /**
+             * Expense
+             * @description Spending, less what refunds gave back.
+             */
             expense: string;
-            /** Income */
+            /**
+             * Income
+             * @description Income, not counting refunds.
+             */
             income: string;
+            /**
+             * Refunded
+             * @description What refunds gave back, already taken off `expense`.
+             * @default 0
+             */
+            refunded: string;
         };
         /**
          * TransactionType
@@ -2621,6 +2682,11 @@ export interface components {
             payment_method?: components["schemas"]["PaymentMethod"] | null;
             /** Planned */
             planned?: boolean | null;
+            /**
+             * Refund Of Id
+             * @description Only null is accepted: it turns a refund into plain income.
+             */
+            refund_of_id?: string | null;
             /**
              * Splits
              * @description Replaces all the lines. Explicit null removes the split.

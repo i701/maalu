@@ -454,7 +454,7 @@ async def seed(
             category, vendor_choices, (low, high), _w = rng.choices(EVERYDAY, weights=weights)[0]
             account = rng.choices(mvr_spending, weights=spending_weights)[0]
             vendor = rng.choice(vendor_choices)
-            await add(
+            bought = await add(
                 type=TransactionType.EXPENSE,
                 amount=_money(rng.uniform(low, high)),
                 payment_method=_method_for(account.group),
@@ -464,6 +464,17 @@ async def seed(
                 account_id=account.id,
                 description=rng.choice([None, None, None, "Weekly shop", "With friends", "Urgent"]),
             )
+            # now and then part of it goes back a few days later
+            back = day + timedelta(days=rng.randint(1, 12))
+            if rng.random() < 0.06 and back <= today:
+                await add(
+                    type=TransactionType.INCOME,
+                    amount=(bought.amount / 2).quantize(Decimal("0.01")) or bought.amount,
+                    transaction_date=back,
+                    refund_of_id=bought.id,
+                    account_id=account.id,
+                    description="Returned",
+                )
 
     await db.flush()
     n_vendors = await db.scalar(select(func.count(Vendor.id)).where(Vendor.user_id == uid))

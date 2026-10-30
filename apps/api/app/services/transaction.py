@@ -61,6 +61,10 @@ def _not_applicable(t: Transaction, data: BulkUpdate) -> str:
         return "A transfer has no category, vendor or payment method"
     if data.category and t.splits and not (data.vendor_name or data.payment_method):
         return "A split transaction takes its category from its items"
+    if data.category and t.refund_of_id and not (data.vendor_name or data.payment_method):
+        return "A refund takes its category from the purchase"
+    if data.category and Decimal(str(getattr(t, "refunded_amount", 0) or 0)) > 0:
+        return "A purchase with refunds keeps its category"
     return "Nothing to change"
 
 
@@ -195,6 +199,124 @@ class TransactionService:
             )
         return lines
 
+    # --- Refunds ------------------------------------------------------------------------------
+
+    async def _refund_original(self, user_id: uuid.UUID, original_id: uuid.UUID) -> Transaction:
+        """The purchase a refund is for: one of your posted, live expenses."""
+        stmt = select(Transaction).where(
+            Transaction.id == original_id,
+            Transaction.user_id == user_id,
+            Transaction.live(),
+            Transaction.planned.is_(False),
+            Transaction.type == TransactionType.EXPENSE,
+        )
+        original = await self.db.scalar(stmt)
+        if original is None:
+            raise TransactionRuleError(
+                "That purchase can't be refunded: it is not one of your expenses"
+            )
+        return original
+
+    @staticmethod
+    def _refund_parts(
+        original: Transaction, inputs: list[SplitInput] | None
+    ) -> tuple[Category | None, list[TransactionSplit]]:
+        """A refund's category, or its item lines. A purchase without items is refunded in its own
+        category; one with items is refunded item by item, each line taking that item's name and
+        category, so the money is taken off the right categories."""
+        if not original.splits:
+            if inputs:
+                raise TransactionRuleError("This purchase has no items to refund one by one")
+            return original.category_ref, []
+        if not inputs:
+            raise TransactionRuleError("Choose which items are being refunded")
+        by_id = {s.id: s for s in original.splits}
+        lines = []
+        for position, s in enumerate(inputs):
+            item = by_id.get(s.refund_of_split_id) if s.refund_of_split_id else None
+            if item is None:
+                raise TransactionRuleError("Name the item of the purchase that each line refunds")
+            lines.append(
+                TransactionSplit(
+                    position=position,
+                    name=item.name,
+                    quantity=s.quantity,
+                    category_ref=item.category_ref,
+                    amount=s.amount,
+                    tax_amount=s.tax_amount,
+                    refund_of_split_id=item.id,
+                )
+            )
+        return None, lines
+
+    async def _refunded(self, original_id: uuid.UUID, exclude: uuid.UUID | None) -> Decimal:
+        """What the live refunds of a purchase gave back, leaving out the refund `exclude`."""
+        stmt = select(func.coalesce(func.sum(Transaction.amount), 0)).where(
+            Transaction.refund_of_id == original_id, Transaction.deleted_at.is_(None)
+        )
+        if exclude is not None:
+            stmt = stmt.where(Transaction.id != exclude)
+        return Decimal(str(await self.db.scalar(stmt) or 0))
+
+    async def _refunded_on_item(self, item_id: uuid.UUID, exclude: uuid.UUID | None) -> Decimal:
+        stmt = (
+            select(func.coalesce(func.sum(TransactionSplit.amount), 0))
+            .join(Transaction, Transaction.id == TransactionSplit.transaction_id)
+            .where(TransactionSplit.refund_of_split_id == item_id, Transaction.deleted_at.is_(None))
+        )
+        if exclude is not None:
+            stmt = stmt.where(Transaction.id != exclude)
+        return Decimal(str(await self.db.scalar(stmt) or 0))
+
+    async def _check_refund(
+        self,
+        original: Transaction,
+        *,
+        amount: Decimal,
+        currency: str,
+        lines: list[TransactionSplit],
+        exclude: uuid.UUID | None = None,
+    ) -> None:
+        """A refund can give back no more than is left of the purchase (or of each item), in the
+        purchase's currency. `exclude` is the refund being changed, so it does not count twice."""
+        if currency != original.currency:
+            raise TransactionRuleError(
+                f"A refund must be in the currency of the purchase ({original.currency})"
+            )
+        if original.splits:
+            seen: set[uuid.UUID] = set()
+            for line in lines:
+                item_id = line.refund_of_split_id
+                if item_id in seen:
+                    raise TransactionRuleError("An item can be refunded only once in one refund")
+                seen.add(item_id)
+                item = next(s for s in original.splits if s.id == item_id)
+                left = item.amount - await self._refunded_on_item(item_id, exclude)
+                if line.amount > left:
+                    raise TransactionRuleError(
+                        f'Only {left:,.2f} of "{item.name}" is left to refund'
+                    )
+            return
+        left = original.amount - await self._refunded(original.id, exclude)
+        if amount > left:
+            raise TransactionRuleError(f"Only {left:,.2f} of this purchase is left to refund")
+
+    @staticmethod
+    def _same_lines(existing: list[TransactionSplit], new: list[SplitInput] | None) -> bool:
+        """Whether a purchase's items are being sent back unchanged."""
+        if not new or len(new) != len(existing):
+            return False
+        return all(
+            (e.name, e.quantity, e.category, e.amount, e.tax_amount)
+            == (n.name, n.quantity, n.category, n.amount, n.tax_amount)
+            for e, n in zip(existing, new, strict=True)
+        )
+
+    @staticmethod
+    def _has_refunds(transaction: Transaction) -> bool:
+        """Whether live refunds give back part of this purchase (loaded with the row)."""
+        return Decimal(str(getattr(transaction, "refunded_amount", 0) or 0)) > 0
+
     @staticmethod
     def _check_splits(transaction: Transaction) -> None:
         """If the transaction is split, its lines must add up to the amount, and its own category
@@ -212,34 +334,61 @@ class TransactionService:
         base = await self._base_currency(user_id)
         account = await self._resolve_account(user_id, data.account_id)
         to_account = await self._resolve_account(user_id, data.to_account_id)
+        original = (
+            await self._refund_original(user_id, data.refund_of_id) if data.refund_of_id else None
+        )
+        currency, rate = data.currency, data.exchange_rate
+        if original is not None:  # a refund is in the purchase's currency, at its rate by default
+            currency = currency or original.currency
+            if rate is None and currency == original.currency:
+                rate = original.exchange_rate
         money = self._money_fields(
             transaction_type=data.type,
             amount=data.amount,
-            currency=data.currency,
-            exchange_rate=data.exchange_rate,
+            currency=currency,
+            exchange_rate=rate,
             account=account,
             to_account=to_account,
             to_amount=data.to_amount,
             base=base,
         )
         is_transfer = data.type is TransactionType.TRANSFER
+        if original is not None:
+            category_ref, refund_lines = self._refund_parts(original, data.splits)
+            await self._check_refund(
+                original, amount=data.amount, currency=money["currency"], lines=refund_lines
+            )
+        else:
+            category_ref = (
+                await self.categories.get_or_create(user_id, data.category)
+                if data.category and not is_transfer and not data.splits
+                else None
+            )
+            refund_lines = []
         transaction = Transaction(
             user_id=user_id,
             type=data.type,
             amount=data.amount,
             # a split transaction without its own category takes the biggest item's (_check_splits)
-            category_ref=await self.categories.get_or_create(user_id, data.category)
-            if data.category and not is_transfer and not data.splits
-            else None,
-            splits=await self._build_splits(user_id, data.splits) if data.splits else [],
-            payment_method=TRANSFER_PAYMENT_METHOD if is_transfer else data.payment_method,
+            category_ref=category_ref,
+            splits=refund_lines
+            or (await self._build_splits(user_id, data.splits) if data.splits else []),
+            refund_of=original,
+            payment_method=TRANSFER_PAYMENT_METHOD
+            if is_transfer
+            else (data.payment_method or (original.payment_method if original else None)),
             description=data.description,
             transaction_date=data.transaction_date,
             transaction_time=data.transaction_time,
             planned=data.planned,
             account=account,
             to_account=to_account,
-            vendor=await self._resolve_vendor(user_id, data.vendor_id, data.vendor_name),
+            vendor=await self._resolve_vendor(user_id, data.vendor_id, data.vendor_name)
+            or (
+                original.vendor
+                if original and not data.vendor_id and not data.vendor_name
+                else None
+            ),
             subscription=await self._resolve_subscription(user_id, data.subscription_id),
             tags=await self.tags.resolve_many(user_id, data.tags or []),
             **money,
@@ -498,29 +647,43 @@ class TransactionService:
         )
         money = Transaction.type.in_([TransactionType.INCOME, TransactionType.EXPENSE])
         stmt = (
-            select(Transaction.type, func.sum(Transaction.base_amount))
+            select(Transaction.type, Transaction.is_refund(), func.sum(Transaction.base_amount))
             .where(*conditions, money)
-            .group_by(Transaction.type)
+            .group_by(Transaction.type, Transaction.is_refund())
         )
         if category_id is not None:
             # Only the part of a split transaction that is in this category counts, not all of it.
             stmt = stmt.where(~Transaction.splits.any())
-        sums = {
-            kind: Decimal(str(total or 0)) for kind, total in (await self.db.execute(stmt)).all()
-        }
+        income = expense = refunded = Decimal(0)
+
+        def put(kind: TransactionType, is_refund: bool, amount: Decimal) -> None:
+            """A refund is money back for spending: it takes away from expense, not adds to
+            income."""
+            nonlocal income, expense, refunded
+            if is_refund:
+                refunded += amount
+                expense -= amount
+            elif kind is TransactionType.INCOME:
+                income += amount
+            else:
+                expense += amount
+
+        for kind, is_refund, total in (await self.db.execute(stmt)).all():
+            put(kind, bool(is_refund), Decimal(str(total or 0)))
         if category_id is not None:
-            for kind, _category, share in await self._split_shares(conditions, money, category_id):
-                sums[kind] = sums.get(kind, Decimal(0)) + share
+            for t, _category, share in await self._split_shares(conditions, money, category_id):
+                put(t.type, t.refund_of_id is not None, share)
         return TransactionTotals(
-            income=sums.get(TransactionType.INCOME, Decimal(0)),
-            expense=sums.get(TransactionType.EXPENSE, Decimal(0)),
+            income=income,
+            expense=expense,
+            refunded=refunded,
             currency=await self._base_currency(user_id),
         )
 
     async def _split_shares(
         self, conditions: list, money, category_id: uuid.UUID | None
-    ) -> list[tuple[TransactionType, Category, Decimal]]:
-        """(type, category, base-currency share) of every item of the matching split
+    ) -> list[tuple[Transaction, Category, Decimal]]:
+        """(transaction, category, base-currency share) of every item of the matching split
         transactions, or only of the items in `category_id` when given."""
         stmt = select(Transaction).where(*conditions, money, Transaction.splits.any())
         out = []
@@ -528,7 +691,7 @@ class TransactionService:
             shares = allocate_base(t.base_amount, t.amount, [s.amount for s in t.splits])
             for line, share in zip(t.splits, shares, strict=True):
                 if category_id is None or line.category_id == category_id:
-                    out.append((t.type, line.category_ref, share))
+                    out.append((t, line.category_ref, share))
         return out
 
     async def category_totals_for_user(
@@ -553,7 +716,9 @@ class TransactionService:
         """Income and expense per category (base currency) for the rows the same filters would list.
 
         Plain transactions count under their own category. A split transaction counts under each
-        of its lines' categories, with its base amount shared out in proportion to the lines.
+        of its lines' categories, with its base amount shared out in proportion to the lines. A
+        refund is money back for spending: it counts under the same categories as an expense, taking
+        away what it gives back, and is not income.
         """
         conditions = self._conditions(
             user_id,
@@ -583,28 +748,34 @@ class TransactionService:
         plain = (
             select(
                 Transaction.type,
+                Transaction.is_refund(),
                 Category,
                 func.sum(Transaction.base_amount),
                 func.count(Transaction.id),
             )
             .join(Category, Category.id == Transaction.category_id)
             .where(*conditions, money, ~Transaction.splits.any())
-            .group_by(Transaction.type, Category.id)
+            .group_by(Transaction.type, Transaction.is_refund(), Category.id)
         )
-        for kind, category, total, count in (await self.db.execute(plain)).all():
-            add(kind, category, Decimal(str(total or 0)), count)
+        for kind, is_refund, category, total, count in (await self.db.execute(plain)).all():
+            amount = Decimal(str(total or 0))
+            if is_refund:
+                add(TransactionType.EXPENSE, category, -amount, count)
+            else:
+                add(kind, category, amount, count)
 
         # A split transaction counts once toward each category its items are in.
         touched: dict[tuple[TransactionType, uuid.UUID, uuid.UUID], bool] = {}
         split_stmt = select(Transaction).where(*conditions, money, Transaction.splits.any())
         for t in (await self.db.scalars(split_stmt)).all():
             shares = allocate_base(t.base_amount, t.amount, [s.amount for s in t.splits])
+            kind = TransactionType.EXPENSE if t.refund_of_id else t.type
             for line, share in zip(t.splits, shares, strict=True):
                 if category_id is not None and line.category_id != category_id:
                     continue
-                first = (t.type, t.id, line.category_id) not in touched
-                touched[(t.type, t.id, line.category_id)] = True
-                add(t.type, line.category_ref, share, 1 if first else 0)
+                first = (kind, t.id, line.category_id) not in touched
+                touched[(kind, t.id, line.category_id)] = True
+                add(kind, line.category_ref, share * t.spending_sign, 1 if first else 0)
 
         rows = [
             CategoryTotal(
@@ -790,12 +961,71 @@ class TransactionService:
     def _trash_conditions(user_id: uuid.UUID) -> list:
         return [Transaction.user_id == user_id, Transaction.deleted_at.is_not(None)]
 
+    def _guard_refunded_purchase(
+        self, transaction: Transaction, changes: dict, data: TransactionUpdate
+    ) -> None:
+        """A purchase that has refunds keeps its amount, currency, category and items: the refunds
+        were measured against them. Everything else (date, vendor, account, tags, notes) can
+        change. Sending the same values back, as the edit form does, is not a change."""
+        current = transaction
+        new_category = changes.get("category")
+        changed = (
+            changes.get("type", current.type) is not current.type
+            or ("amount" in changes and changes["amount"] != current.amount)
+            or ("currency" in changes and changes["currency"].upper() != current.currency)
+            or changes.get("planned") is True
+            or (
+                new_category is not None
+                and not current.splits
+                and normalize_name(new_category) != normalize_name(current.category)
+            )
+        )
+        if "splits" in changes:
+            if current.splits and self._same_lines(current.splits, data.splits):
+                changes.pop("splits")  # unchanged: keep the rows the refunds point at
+            else:
+                changed = changed or bool(current.splits or data.splits)
+        if changed:
+            raise TransactionRuleError(
+                "This purchase has refunds. Move them to the trash first to change its amount, "
+                "category or items"
+            )
+
     async def update(self, transaction: Transaction, data: TransactionUpdate) -> Transaction:
         changes = data.model_dump(exclude_unset=True)
         user_id = transaction.user_id
         old_type = transaction.type
         new_type = changes.get("type", old_type)
         is_transfer = new_type is TransactionType.TRANSFER
+        if transaction.type is TransactionType.EXPENSE and self._has_refunds(transaction):
+            self._guard_refunded_purchase(transaction, changes, data)
+
+        original = transaction.refund_of  # set when this is a refund
+        if original is not None:
+            if new_type is not TransactionType.INCOME:
+                raise TransactionRuleError("A refund is income. Unlink it from the purchase first")
+            if "refund_of_id" in changes:
+                if changes.pop("refund_of_id") is not None:
+                    raise TransactionRuleError("A refund can't be moved to another purchase")
+                # unlink: it becomes plain income, keeping its category and lines as they are
+                transaction.refund_of = None
+                for line in transaction.splits:
+                    line.refund_of_split_id = None
+                original = None
+            else:
+                name = changes.pop("category", None)
+                if name is not None and normalize_name(name) != normalize_name(
+                    transaction.category
+                ):
+                    raise TransactionRuleError("A refund takes its category from the purchase")
+                if "splits" in changes:
+                    changes.pop("splits")
+                    category_ref, lines = self._refund_parts(original, data.splits)
+                    transaction.splits = lines
+                    if category_ref is not None:
+                        transaction.category_ref = category_ref
+        elif "refund_of_id" in changes:
+            changes.pop("refund_of_id")  # already plain income: nothing to unlink
 
         # Links. An explicit null unlinks.
         if "tags" in changes:
@@ -880,12 +1110,23 @@ class TransactionService:
         for field, value in changes.items():
             setattr(transaction, field, value)
         self._check_splits(transaction)
+        if original is not None:
+            await self._check_refund(
+                original,
+                amount=transaction.amount,
+                currency=transaction.currency,
+                lines=list(transaction.splits),
+                exclude=transaction.id,
+            )
         await self.db.flush()
         await self.db.refresh(transaction)
         return transaction
 
     async def trash(self, transaction: Transaction) -> None:
-        """Move to the trash: hidden and uncounted, but recoverable."""
+        """Move to the trash: hidden and uncounted, but recoverable. A purchase that has refunds
+        stays until its refunds are in the trash too."""
+        if transaction.type is TransactionType.EXPENSE and self._has_refunds(transaction):
+            raise TransactionRuleError("This purchase has refunds. Move them to the trash first")
         transaction.deleted_at = datetime.now(UTC)
         await self.db.flush()
 
@@ -904,8 +1145,20 @@ class TransactionService:
         return await self.update(transaction, TransactionUpdate(**changes))
 
     async def restore(self, transaction: Transaction) -> Transaction:
+        original = transaction.refund_of
+        if original is not None:  # a refund needs its purchase, and room left in it
+            if original.deleted_at is not None or original.planned:
+                raise TransactionRuleError("Restore the purchase this refund is for first")
+            await self._check_refund(
+                original,
+                amount=transaction.amount,
+                currency=transaction.currency,
+                lines=list(transaction.splits),
+                exclude=transaction.id,
+            )
         transaction.deleted_at = None
         await self.db.flush()
+        await self.db.refresh(transaction)  # reloads what the row's own values feed (refunded)
         return transaction
 
     async def _bulk_rows(
@@ -930,17 +1183,44 @@ class TransactionService:
     async def bulk_trash(self, user_id: uuid.UUID, ids: list[uuid.UUID]) -> BulkResult:
         rows, skipped = await self._bulk_rows(user_id, ids, trashed=False)
         now = datetime.now(UTC)
-        for t in rows:
+        # Refunds first, so a purchase can go in the same batch as its refunds.
+        refunds = [t for t in rows if t.refund_of_id is not None]
+        for t in refunds:
             t.deleted_at = now
         await self.db.flush()
-        return BulkResult(updated=len(rows), skipped=skipped)
+        moved = len(refunds)
+        for t in rows:
+            if t.refund_of_id is not None:
+                continue
+            still = await self.db.scalar(
+                select(func.count(Transaction.id)).where(
+                    Transaction.refund_of_id == t.id, Transaction.deleted_at.is_(None)
+                )
+            )
+            if t.type is TransactionType.EXPENSE and still:
+                skipped.append(
+                    BulkSkipped(
+                        id=t.id, reason="This purchase has refunds. Move them to the trash first"
+                    )
+                )
+                continue
+            t.deleted_at = now
+            moved += 1
+        await self.db.flush()
+        return BulkResult(updated=moved, skipped=skipped)
 
     async def bulk_restore(self, user_id: uuid.UUID, ids: list[uuid.UUID]) -> BulkResult:
         rows, skipped = await self._bulk_rows(user_id, ids, trashed=True)
-        for t in rows:
-            t.deleted_at = None
-        await self.db.flush()
-        return BulkResult(updated=len(rows), skipped=skipped)
+        restored = 0
+        # Purchases first, so a refund can come back in the same batch as its purchase.
+        for t in sorted(rows, key=lambda t: t.refund_of_id is not None):
+            try:
+                await self.restore(t)
+            except TransactionRuleError as exc:
+                skipped.append(BulkSkipped(id=t.id, reason=str(exc)))
+            else:
+                restored += 1
+        return BulkResult(updated=restored, skipped=skipped)
 
     async def bulk_purge(self, user_id: uuid.UUID, ids: list[uuid.UUID]) -> BulkResult:
         """Delete for good: only what is already in the trash."""
@@ -968,7 +1248,9 @@ class TransactionService:
             applied = False
             transfer = t.type is TransactionType.TRANSFER
             if not transfer:
-                if category is not None and not t.splits:
+                # a refund takes its category from the purchase; so does one with refunds
+                keeps_category = t.refund_of_id is not None or self._has_refunds(t)
+                if category is not None and not t.splits and not keeps_category:
                     t.category_ref = category
                     applied = True
                 if vendor is not None:

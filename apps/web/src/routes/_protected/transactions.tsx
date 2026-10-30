@@ -1,5 +1,6 @@
 import AddIcon from "@mui/icons-material/Add";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
+import UndoIcon from "@mui/icons-material/Undo";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
@@ -78,6 +79,9 @@ import {
 import { getBudgetFn } from "#/server/budget";
 import { getCategoryFn, listCategoriesFn } from "#/server/categories";
 import { getMeFn } from "#/server/auth";
+import RefundDialogHost from "#/components/RefundDialogHost";
+import { canRefund, isRefund, wasRefunded } from "#/lib/refund";
+import { useRefundDialog } from "#/lib/use-refund-dialog";
 import { listTagsFn } from "#/server/tags";
 import { getVendorFn, listVendorsFn } from "#/server/vendors";
 import {
@@ -230,9 +234,11 @@ const TYPE_TILE = {
 	transfer: { symbol: "payments", accent: ACCENT.blue, shape: 0 },
 } as const;
 
-/** The card's coloured, shaped icon: income green, expense pink, transfer blue. */
-function TxTile({ type }: { type: Transaction["type"] }) {
-	const k = TYPE_TILE[type];
+const REFUND_TILE = { symbol: "undo", accent: ACCENT.green, shape: 1 } as const;
+
+/** The card's coloured, shaped icon: income green, expense pink, transfer blue, refund green. */
+function TxTile({ t }: { t: Transaction }) {
+	const k = isRefund(t) ? REFUND_TILE : TYPE_TILE[t.type];
 	return (
 		<ShapeTile shape={k.shape} size={52} accent={k.accent}>
 			<Symbol name={k.symbol} size={24} filled />
@@ -247,6 +253,20 @@ function TxMethodChip({ t }: { t: Transaction }) {
 		<TonalChip
 			accent={PAYMENT_ACCENT[t.payment_method]}
 			label={PAYMENT_METHOD_LABELS[t.payment_method]}
+		/>
+	);
+}
+
+/** "Refund" on money given back, and how much of a purchase has been refunded. */
+function TxRefundChip({ t }: { t: Transaction }) {
+	if (isRefund(t)) return <TonalChip accent={ACCENT.green} label="Refund" />;
+	if (!wasRefunded(t)) return null;
+	return (
+		<TonalChip
+			accent={ACCENT.amber}
+			label={
+				canRefund(t) ? `Refunded ${formatMoney(t.refunded_amount, t.currency)}` : "Fully refunded"
+			}
 		/>
 	);
 }
@@ -289,18 +309,25 @@ function TxAmount({ t, baseCurrency }: { t: Transaction; baseCurrency: string })
 function TxActions({
 	t,
 	onConvert,
+	onRefund,
 	onDuplicate,
 	onEdit,
 	onDelete,
 }: {
 	t: Transaction;
 	onConvert: () => void;
+	onRefund: () => void;
 	onDuplicate: () => void;
 	onEdit: () => void;
 	onDelete: () => void;
 }) {
 	return (
 		<>
+			{canRefund(t) && (
+				<IconButton aria-label="Refund" title="Refund" size="small" onClick={onRefund}>
+					<UndoIcon fontSize="small" />
+				</IconButton>
+			)}
 			{t.type === "expense" && !t.subscription && (
 				<IconButton
 					aria-label="Make subscription"
@@ -311,9 +338,11 @@ function TxActions({
 					<AutorenewIcon fontSize="small" />
 				</IconButton>
 			)}
-			<IconButton aria-label="Duplicate" title="Duplicate" size="small" onClick={onDuplicate}>
-				<ContentCopyOutlinedIcon fontSize="small" />
-			</IconButton>
+			{!isRefund(t) && (
+				<IconButton aria-label="Duplicate" title="Duplicate" size="small" onClick={onDuplicate}>
+					<ContentCopyOutlinedIcon fontSize="small" />
+				</IconButton>
+			)}
 			<IconButton aria-label="Edit" title="Edit" size="small" onClick={onEdit}>
 				<EditOutlinedIcon fontSize="small" />
 			</IconButton>
@@ -334,6 +363,7 @@ const TransactionsTable = memo(function TransactionsTable({
 	onToggleAll,
 	baseCurrency,
 	onConvert,
+	onRefund,
 	onDuplicate,
 	onEdit,
 	onDelete,
@@ -345,6 +375,7 @@ const TransactionsTable = memo(function TransactionsTable({
 	onToggleAll: () => void;
 	baseCurrency: string;
 	onConvert: (t: Transaction) => void;
+	onRefund: (t: Transaction) => void;
 	onDuplicate: (t: Transaction) => void;
 	onEdit: (t: Transaction) => void;
 	onDelete: (t: Transaction) => void;
@@ -402,6 +433,11 @@ const TransactionsTable = memo(function TransactionsTable({
 								<TxSubscriptionChip t={t} />
 							</Box>
 						)}
+						{(isRefund(t) || wasRefunded(t)) && (
+							<Box sx={{ mt: 0.5 }}>
+								<TxRefundChip t={t} />
+							</Box>
+						)}
 						{t.tags.length > 0 && (
 							<Box sx={{ mt: 0.5, display: "flex", flexWrap: "wrap", gap: 0.5 }}>
 								<TagChips tags={t.tags} />
@@ -426,6 +462,7 @@ const TransactionsTable = memo(function TransactionsTable({
 						<TxActions
 							t={t}
 							onConvert={() => onConvert(t)}
+							onRefund={() => onRefund(t)}
 							onDuplicate={() => onDuplicate(t)}
 							onEdit={() => onEdit(t)}
 							onDelete={() => onDelete(t)}
@@ -444,7 +481,7 @@ const TransactionsTable = memo(function TransactionsTable({
 							sx={{ ml: -0.75, mt: 0.5, alignSelf: "flex-start" }}
 						/>
 					}
-					leading={<TxTile type={t.type} />}
+					leading={<TxTile t={t} />}
 					primary={
 						<Typography variant="body2" sx={{ fontWeight: 500 }}>
 							{txTitle(t)}
@@ -470,6 +507,7 @@ const TransactionsTable = memo(function TransactionsTable({
 								</Typography>
 							)}
 							<TxSubscriptionChip t={t} />
+							<TxRefundChip t={t} />
 							<TagChips tags={t.tags} />
 						</>
 					}
@@ -477,6 +515,7 @@ const TransactionsTable = memo(function TransactionsTable({
 						<TxActions
 							t={t}
 							onConvert={() => onConvert(t)}
+							onRefund={() => onRefund(t)}
 							onDuplicate={() => onDuplicate(t)}
 							onEdit={() => onEdit(t)}
 							onDelete={() => onDelete(t)}
@@ -496,6 +535,7 @@ function TransactionList({
 	vendors,
 	tags,
 	onConvert,
+	onRefund,
 	onDuplicate,
 	onEdit,
 	onDelete,
@@ -511,6 +551,7 @@ function TransactionList({
 	total: number;
 	search: TransactionSearch;
 	onConvert: (t: Transaction) => void;
+	onRefund: (t: Transaction) => void;
 	onDuplicate: (t: Transaction) => void;
 	onEdit: (t: Transaction) => void;
 	onDelete: (t: Transaction) => void;
@@ -561,6 +602,7 @@ function TransactionList({
 				onToggle={selection.toggle}
 				onToggleAll={selection.toggleAll}
 				onConvert={onConvert}
+				onRefund={onRefund}
 				onDuplicate={onDuplicate}
 				onEdit={onEdit}
 				onDelete={onDelete}
@@ -649,6 +691,7 @@ function TransactionsPage() {
 	}, []);
 	const [deleting, setDeleting] = useState<Transaction | null>(null);
 	const [converting, setConverting] = useState<Transaction | null>(null);
+	const { refunding, refundOf, edit, close: closeRefund } = useRefundDialog(setEditing);
 
 	const setPage = (page: number) => navigate({ search: (p) => ({ ...p, page }), replace: true });
 
@@ -797,8 +840,9 @@ function TransactionsPage() {
 										total={total}
 										search={search}
 										onConvert={setConverting}
+										onRefund={refundOf}
 										onDuplicate={duplicate}
-										onEdit={setEditing}
+										onEdit={edit}
 										onDelete={setDeleting}
 									/>
 								)}
@@ -838,6 +882,12 @@ function TransactionsPage() {
 					}}
 				/>
 			)}
+			<RefundDialogHost
+				state={refunding}
+				accounts={accounts}
+				baseCurrency={user.base_currency}
+				onClose={closeRefund}
+			/>
 			{converting && (
 				<MakeSubscriptionDialog transaction={converting} onClose={() => setConverting(null)} />
 			)}

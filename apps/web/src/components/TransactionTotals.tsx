@@ -25,7 +25,11 @@ export default function TransactionTotals({ totals }: { totals: Totals | null })
 					</Grid>
 					<Grid size={{ xs: 12, sm: 6 }}>
 						<StatCard
-							label="Expense in these results"
+							label={
+								Number(shown.refunded) > 0
+									? "Expense in these results, after refunds"
+									: "Expense in these results"
+							}
 							value={formatMoney(shown.expense, shown.currency)}
 							gradient="rose"
 							icon="arrow_upward"

@@ -18,7 +18,7 @@ const MonthlyCard = memo(function MonthlyCard({ stats }: { stats: MonthlyStats }
 				label: monthLabel(`${m.month}-01`, true),
 				title: monthLabel(`${m.month}-01`),
 				a: Number(m.income),
-				b: Number(m.expense),
+				b: Math.max(0, Number(m.expense)), // refunds can take a month below zero
 			})),
 		[months],
 	);

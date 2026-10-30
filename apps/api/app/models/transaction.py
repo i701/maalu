@@ -16,10 +16,13 @@ from sqlalchemy import (
     Time,
     Uuid,
     and_,
+    case,
     false,
     func,
+    or_,
+    select,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, aliased, column_property, mapped_column, relationship
 
 from app.enums import PaymentMethod, TransactionType
 from app.models.account import Account
@@ -113,6 +116,15 @@ class Transaction(Base):
     tags: Mapped[list[Tag]] = relationship(
         secondary=transaction_tags, lazy="selectin", order_by=Tag.normalized_name
     )
+    # A refund: an income transaction that gives back part of an earlier expense. It counts as
+    # money back toward that spending (the same category, in the month it arrives), not as income.
+    # Deleting the purchase for good only unlinks it.
+    refund_of_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("transactions.id", ondelete="SET NULL"), index=True, default=None
+    )
+    refund_of: Mapped["Transaction | None"] = relationship(
+        lazy="joined", join_depth=1, remote_side="Transaction.id", foreign_keys=[refund_of_id]
+    )
     # Something coming up that has not happened yet (rent due next month). It is listed under
     # "upcoming" but counts toward nothing (balances, budgets, totals, stats) until it is posted,
     # which just turns this off.
@@ -135,6 +147,28 @@ class Transaction(Base):
         """What counts toward money: not in the trash and not just planned. Use this for balances,
         budgets, goals, totals and stats; use `live()` for anything that only needs the row."""
         return and_(cls.deleted_at.is_(None), cls.planned.is_(False))
+
+    @classmethod
+    def is_refund(cls):
+        """A refund of an earlier purchase (see `refund_of_id`)."""
+        return cls.refund_of_id.is_not(None)
+
+    @classmethod
+    def spending(cls):
+        """What counts as spending: expenses, and refunds, which are money back for spending. Pair
+        it with `spending_base()` or `spending_sign` so refunds take away instead of adding."""
+        refund = and_(cls.type == TransactionType.INCOME, cls.refund_of_id.is_not(None))
+        return or_(cls.type == TransactionType.EXPENSE, refund)
+
+    @classmethod
+    def spending_base(cls):
+        """`base_amount` as spending: negative for a refund."""
+        return case((cls.refund_of_id.is_not(None), -cls.base_amount), else_=cls.base_amount)
+
+    @property
+    def spending_sign(self) -> int:
+        """-1 for a refund, +1 for an expense (what to multiply a share of its amount by)."""
+        return -1 if self.refund_of_id is not None else 1
 
     @property
     def category(self) -> str:
@@ -167,7 +201,37 @@ class TransactionSplit(Base):
     def category(self) -> str:
         return self.category_ref.name
 
+    # On a refund's line: the item of the purchase this line gives back. Deleting that item (it
+    # only goes with its purchase) just unlinks.
+    refund_of_split_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("transaction_splits.id", ondelete="SET NULL"), index=True, default=None
+    )
+
     # What this line cost in the transaction's currency, tax included, so the lines add up to the
     # transaction's amount. `tax_amount` is the part of it that is tax (GST), when known.
     amount: Mapped[Decimal] = mapped_column(Numeric(19, 4))
     tax_amount: Mapped[Decimal | None] = mapped_column(Numeric(19, 4), default=None)
+
+
+# How much of a purchase (and of each of its items) has been refunded so far: what the live refunds
+# give back, in the purchase's currency. A refund in the trash gives nothing back, a planned one is
+# counted so the total can't be promised twice. Loaded with every purchase, so the list can show it.
+_refund = aliased(Transaction)
+Transaction.refunded_amount = column_property(  # type: ignore[attr-defined]
+    select(func.coalesce(func.sum(_refund.amount), 0))
+    .where(_refund.refund_of_id == Transaction.id, _refund.deleted_at.is_(None))
+    .correlate_except(_refund)
+    .scalar_subquery()
+)
+_refund_line = aliased(TransactionSplit)
+_refund_owner = aliased(Transaction)
+TransactionSplit.refunded_amount = column_property(  # type: ignore[attr-defined]
+    select(func.coalesce(func.sum(_refund_line.amount), 0))
+    .join(_refund_owner, _refund_owner.id == _refund_line.transaction_id)
+    .where(
+        _refund_line.refund_of_split_id == TransactionSplit.id,
+        _refund_owner.deleted_at.is_(None),
+    )
+    .correlate_except(_refund_line, _refund_owner)
+    .scalar_subquery()
+)

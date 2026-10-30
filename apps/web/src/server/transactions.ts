@@ -42,6 +42,8 @@ const splitSchema = z.object({
 		.regex(/^\d+(\.\d{1,4})?$/)
 		.nullable()
 		.optional(),
+	// On a refund's line: the item of the purchase it gives back.
+	refund_of_split_id: z.uuid().optional(),
 });
 
 const createSchema = z.object({
@@ -58,6 +60,8 @@ const createSchema = z.object({
 	splits: z.array(splitSchema).min(1).optional(),
 	vendor_name: z.string().trim().min(1).max(200).optional(),
 	subscription_id: z.uuid().optional(),
+	// Income only: makes this a refund of that expense.
+	refund_of_id: z.uuid().optional(),
 	account_id: z.uuid().optional(),
 	to_account_id: z.uuid().optional(),
 	to_amount: amount.optional(),
@@ -68,7 +72,7 @@ const createSchema = z.object({
 const updateSchema = z.object({
 	id: z.uuid(),
 	changes: createSchema
-		.omit({ vendor_name: true })
+		.omit({ vendor_name: true, refund_of_id: true })
 		.partial()
 		.extend({
 			vendor_name: z.string().trim().min(1).max(200).optional(),
