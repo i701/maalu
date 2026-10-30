@@ -1726,6 +1726,20 @@
         "title": "PostPlanned",
         "type": "object"
       },
+      "RegistrationStatus": {
+        "properties": {
+          "open": {
+            "description": "Whether a new account can be created right now.",
+            "title": "Open",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "open"
+        ],
+        "title": "RegistrationStatus",
+        "type": "object"
+      },
       "SplitInput": {
         "description": "One line of a split transaction. `amount` is the line total paid, tax included.",
         "properties": {
@@ -4381,6 +4395,28 @@
           }
         },
         "summary": "Register",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/registration": {
+      "get": {
+        "description": "Whether sign-up is open, so the sign-in and register pages can say so. No login needed.",
+        "operationId": "registration_status_api_v1_auth_registration_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistrationStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Registration Status",
         "tags": [
           "auth"
         ]

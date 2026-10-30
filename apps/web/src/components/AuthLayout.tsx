@@ -13,7 +13,7 @@ export default function AuthLayout({
 	children,
 }: {
 	title: string;
-	subtitle: string;
+	subtitle?: string;
 	children: ReactNode;
 }) {
 	return (
@@ -37,9 +37,12 @@ export default function AuthLayout({
 						<Typography variant="h2" component="h1" gutterBottom>
 							{title}
 						</Typography>
-						<Typography variant="body2" sx={{ mb: 3, color: "text.secondary" }}>
-							{subtitle}
-						</Typography>
+						{subtitle && (
+							<Typography variant="body2" sx={{ color: "text.secondary" }}>
+								{subtitle}
+							</Typography>
+						)}
+						<Box sx={{ mb: 3 }} />
 						{children}
 					</CardContent>
 				</Card>

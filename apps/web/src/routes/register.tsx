@@ -7,20 +7,26 @@ import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import AuthLayout from "#/components/AuthLayout";
 import CurrencyField from "#/components/CurrencyField";
-import { RouterLink } from "#/components/RouterLinks";
-import { getSessionFn, registerFn } from "#/server/auth";
+import { RouterButton, RouterLink } from "#/components/RouterLinks";
+import { getRegistrationFn, getSessionFn, registerFn } from "#/server/auth";
 import { listCurrenciesFn } from "#/server/currencies";
 
 export const Route = createFileRoute("/register")({
 	beforeLoad: async () => {
 		if (await getSessionFn()) throw redirect({ to: "/dashboard" });
 	},
-	loader: async () => ({ currencies: await listCurrenciesFn() }),
+	loader: async () => {
+		const registration = await getRegistrationFn();
+		return {
+			open: registration.open,
+			currencies: registration.open ? await listCurrenciesFn() : [],
+		};
+	},
 	component: RegisterPage,
 });
 
 function RegisterPage() {
-	const { currencies } = Route.useLoaderData();
+	const { open, currencies } = Route.useLoaderData();
 	const router = useRouter();
 	const [error, setError] = useState<string | null>(null);
 	const [pending, setPending] = useState(false);
@@ -47,6 +53,18 @@ function RegisterPage() {
 			setPending(false);
 		}
 	}
+
+	if (!open)
+		return (
+			<AuthLayout title="Sign-up is closed">
+				<Stack spacing={2.5}>
+					<Alert severity="info">Ask the person who runs this Maalu to add you.</Alert>
+					<RouterButton to="/login" variant="contained" size="large">
+						Sign in
+					</RouterButton>
+				</Stack>
+			</AuthLayout>
+		);
 
 	return (
 		<AuthLayout title="Create account" subtitle="Track your money in one place.">

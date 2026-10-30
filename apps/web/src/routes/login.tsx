@@ -9,17 +9,19 @@ import { z } from "zod";
 import AuthLayout from "#/components/AuthLayout";
 import { RouterLink } from "#/components/RouterLinks";
 import { safeRedirect } from "#/lib/safe-redirect";
-import { getSessionFn, loginFn } from "#/server/auth";
+import { getRegistrationFn, getSessionFn, loginFn } from "#/server/auth";
 
 export const Route = createFileRoute("/login")({
 	validateSearch: z.object({ redirect: z.string().optional().catch(undefined) }),
 	beforeLoad: async () => {
 		if (await getSessionFn()) throw redirect({ to: "/dashboard" });
 	},
+	loader: () => getRegistrationFn(),
 	component: LoginPage,
 });
 
 function LoginPage() {
+	const registration = Route.useLoaderData();
 	const router = useRouter();
 	const search = Route.useSearch();
 	const [error, setError] = useState<string | null>(null);
@@ -66,9 +68,11 @@ function LoginPage() {
 				<Button type="submit" variant="contained" size="large" loading={pending}>
 					Sign in
 				</Button>
-				<Typography variant="body2" sx={{ textAlign: "center", color: "text.secondary" }}>
-					No account? <RouterLink to="/register">Create one</RouterLink>
-				</Typography>
+				{registration.open && (
+					<Typography variant="body2" sx={{ textAlign: "center", color: "text.secondary" }}>
+						No account? <RouterLink to="/register">Create one</RouterLink>
+					</Typography>
+				)}
 			</Stack>
 		</AuthLayout>
 	);

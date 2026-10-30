@@ -2,6 +2,8 @@ import os
 from collections.abc import AsyncIterator, Awaitable, Callable
 
 os.environ.setdefault("SECRET_KEY", "test-secret-key-not-for-production-use")
+# most tests register several users; test_registration.py covers the other modes
+os.environ.setdefault("REGISTRATION", "open")
 
 import pytest
 from app.database import get_db

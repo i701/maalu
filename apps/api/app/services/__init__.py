@@ -34,7 +34,7 @@ from app.services.template import (
     TemplateService,
 )
 from app.services.transaction import TransactionService
-from app.services.user import EmailAlreadyRegisteredError, UserService
+from app.services.user import EmailAlreadyRegisteredError, RegistrationClosedError, UserService
 from app.services.vendor import VendorNameTakenError, VendorNotFoundError, VendorService
 
 __all__ = [
@@ -56,6 +56,7 @@ __all__ = [
     "GoalNotFoundError",
     "GoalRuleError",
     "GoalService",
+    "RegistrationClosedError",
     "StatsRangeError",
     "StatsService",
     "SubscriptionNotFoundError",

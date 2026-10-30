@@ -55,7 +55,7 @@ from app.schemas.transaction import (
     TransactionTotals,
     TransactionUpdate,
 )
-from app.schemas.user import Token, UserCreate, UserResponse, UserUpdate
+from app.schemas.user import RegistrationStatus, Token, UserCreate, UserResponse, UserUpdate
 from app.schemas.vendor import VendorCreate, VendorMerge, VendorResponse, VendorUpdate
 
 __all__ = [
@@ -86,6 +86,7 @@ __all__ = [
     "GoalResponse",
     "GoalUpdate",
     "PostPlanned",
+    "RegistrationStatus",
     "SplitInput",
     "SplitResponse",
     "SubscriptionCreate",

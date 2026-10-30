@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import type { User } from "#/types/api";
+import type { RegistrationStatus, User } from "#/types/api";
 import { apiRequest } from "./api";
 import { jwtExpiry, getAppSession } from "#/utils/session";
 
@@ -60,6 +60,12 @@ export const logoutFn = createServerFn({ method: "POST" }).handler(async () => {
 	const session = await getAppSession();
 	await session.clear();
 	return { ok: true as const };
+});
+
+/** Whether sign-up is open (the API decides; see `REGISTRATION`). A failure counts as closed. */
+export const getRegistrationFn = createServerFn({ method: "GET" }).handler(async () => {
+	const res = await apiRequest<RegistrationStatus>("/auth/registration", { anonymous: true });
+	return { open: res.ok && res.data.open };
 });
 
 /** Cookie-only check (no API call). Returns the cached user, never the token. */

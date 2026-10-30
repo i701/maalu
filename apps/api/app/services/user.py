@@ -1,9 +1,10 @@
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.models import Account, User
 from app.schemas import UserCreate, UserUpdate
 from app.security import DUMMY_HASH, hash_password, verify_password
@@ -12,6 +13,10 @@ from app.services.errors import TransactionRuleError
 
 
 class EmailAlreadyRegisteredError(Exception):
+    pass
+
+
+class RegistrationClosedError(Exception):
     pass
 
 
@@ -25,7 +30,15 @@ class UserService:
     async def get_by_email(self, email: str) -> User | None:
         return await self.db.scalar(select(User).where(User.email == email.lower()))
 
+    async def registration_open(self) -> bool:
+        """Whether a new account may be created: see `Settings.registration`."""
+        if settings.registration != "auto":
+            return settings.registration == "open"
+        return await self.db.scalar(select(func.count()).select_from(User)) == 0
+
     async def register(self, data: UserCreate) -> User:
+        if not await self.registration_open():
+            raise RegistrationClosedError
         user = User(
             email=data.email.lower(),
             hashed_password=hash_password(data.password),

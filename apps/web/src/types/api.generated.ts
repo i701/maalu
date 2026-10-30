@@ -144,6 +144,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/registration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Registration Status
+         * @description Whether sign-up is open, so the sign-in and register pages can say so. No login needed.
+         */
+        get: operations["registration_status_api_v1_auth_registration_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/budget": {
         parameters: {
             query?: never;
@@ -1759,6 +1779,14 @@ export interface components {
              */
             transaction_time?: string | null;
         };
+        /** RegistrationStatus */
+        RegistrationStatus: {
+            /**
+             * Open
+             * @description Whether a new account can be created right now.
+             */
+            open: boolean;
+        };
         /**
          * SplitInput
          * @description One line of a split transaction. `amount` is the line total paid, tax included.
@@ -2806,6 +2834,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    registration_status_api_v1_auth_registration_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrationStatus"];
                 };
             };
         };

@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -10,6 +12,10 @@ class Settings(BaseSettings):
     # Required, no default: generate with `openssl rand -hex 32`.
     secret_key: str
     access_token_expire_minutes: int = 30
+    # Who may create an account. "auto" (default): only while no account exists, so the first person
+    # to open a new instance becomes its owner and sign-up then closes. "open": anyone. "closed": no
+    # one (accounts are created another way, for example `just seed`).
+    registration: Literal["auto", "open", "closed"] = "auto"
     # Source of the list of world currencies (only the codes are read from it) and of the market
     # exchange rates offered as a suggestion when entering a foreign-currency amount. The rate a
     # user saves is always the one they confirm, never one fetched on their behalf.

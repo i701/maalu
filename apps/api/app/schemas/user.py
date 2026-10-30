@@ -36,6 +36,10 @@ class UserResponse(BaseModel):
     created_at: datetime
 
 
+class RegistrationStatus(BaseModel):
+    open: bool = Field(description="Whether a new account can be created right now.")
+
+
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
