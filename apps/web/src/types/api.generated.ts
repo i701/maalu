@@ -4910,3 +4910,26 @@ export interface operations {
         };
     };
 }
+type FlattenedDeepRequired<T> = {
+    [K in keyof T]-?: FlattenedDeepRequired<T[K] extends unknown[] | undefined | null ? Extract<T[K], unknown[]>[number] : T[K]>;
+};
+type ReadonlyArray<T> = [
+    Exclude<T, undefined>
+] extends [
+    unknown[]
+] ? Readonly<Exclude<T, undefined>> : Readonly<Exclude<T, undefined>[]>;
+export const pathsApiV1TransactionsGetParametersQueryTag_matchValues: ReadonlyArray<FlattenedDeepRequired<paths>["/api/v1/transactions"]["get"]["parameters"]["query"]["tag_match"]> = ["any", "all"];
+export const pathsApiV1TransactionsCategoriesGetParametersQueryTag_matchValues: ReadonlyArray<FlattenedDeepRequired<paths>["/api/v1/transactions/categories"]["get"]["parameters"]["query"]["tag_match"]> = ["any", "all"];
+export const pathsApiV1TransactionsExportGetParametersQueryTag_matchValues: ReadonlyArray<FlattenedDeepRequired<paths>["/api/v1/transactions/export"]["get"]["parameters"]["query"]["tag_match"]> = ["any", "all"];
+export const pathsApiV1TransactionsSummaryGetParametersQueryTag_matchValues: ReadonlyArray<FlattenedDeepRequired<paths>["/api/v1/transactions/summary"]["get"]["parameters"]["query"]["tag_match"]> = ["any", "all"];
+export const accountGroupValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AccountGroup"]> = ["cash", "accounts", "card", "debit_card", "savings", "prepaid", "investments", "overdrafts", "loan", "insurance", "others"];
+export const budgetLineResponseStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BudgetLineResponse"]["status"]> = ["ok", "warning", "over"];
+export const budgetTotalsStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BudgetTotals"]["status"]> = ["ok", "warning", "over"];
+export const categoryTotalTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CategoryTotal"]["type"]> = ["income", "expense"];
+export const goalResponseModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GoalResponse"]["mode"]> = ["account", "manual"];
+export const goalResponsePeriod_statusAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GoalResponse"]["period_status"]> = ["funded", "pending"];
+export const intervalUnitValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["IntervalUnit"]> = ["week", "month", "year"];
+export const paymentMethodValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PaymentMethod"]> = ["cash", "bank_transfer", "debit_card", "credit_card", "other"];
+export const subscriptionStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SubscriptionStatus"]> = ["active", "paused", "cancelled"];
+export const transactionTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TransactionType"]> = ["income", "expense", "transfer"];
+export const vendorLocalityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["VendorLocality"]> = ["local", "foreign", "unknown"];

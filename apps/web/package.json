@@ -10,7 +10,7 @@
 		"typecheck": "tsc --noEmit",
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"gen:api": "pnpm dlx --package typescript@5.9.3 --package openapi-typescript@7.13.0 openapi-typescript openapi.json -o src/types/api.generated.ts",
+		"gen:api": "pnpm dlx --package typescript@5.9.3 --package openapi-typescript@7.13.0 openapi-typescript openapi.json --enum-values -o src/types/api.generated.ts",
 		"lint": "oxlint",
 		"lint:fix": "oxlint --fix",
 		"fmt": "oxfmt",

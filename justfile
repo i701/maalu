@@ -48,8 +48,9 @@ api-types:
     uv run --directory apps/api python -m app.openapi ../web/openapi.json
     pnpm --filter @maalu/web gen:api
 
-# CI-style checks for everything
-check: check-api check-web
+# CI-style checks for everything. Regenerates the API types first, so tsc checks the web against
+# the API as it is now; commit the regenerated files with the API change (CI fails if they are stale).
+check: api-types check-api check-web
 
 check-api:
     uv run ruff check .
