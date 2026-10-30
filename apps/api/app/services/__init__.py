@@ -22,6 +22,7 @@ from app.services.goal import (
 )
 from app.services.money import ExchangeRateRequiredError
 from app.services.session import SessionService
+from app.services.snapshot import SnapshotService
 from app.services.stats import StatsRangeError, StatsService
 from app.services.subscription import (
     SubscriptionNotFoundError,
@@ -74,6 +75,7 @@ __all__ = [
     "PasswordUnchangedError",
     "RegistrationClosedError",
     "SessionService",
+    "SnapshotService",
     "StatsRangeError",
     "StatsService",
     "SubscriptionNotFoundError",

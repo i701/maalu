@@ -354,7 +354,7 @@
         "type": "object"
       },
       "BalanceTrendResponse": {
-        "description": "What your accounts were worth at the end of each day, in your base currency. Each account\nis valued at its current manual rate, so the line moves with transactions, not with markets.",
+        "description": "What your accounts were worth at the end of each day, in your base currency. Completed days\ncome from daily snapshots, each account at the manual rate it had that day, so revaluing an\naccount never rewrites the past; today is worked out live at the current rate. The line moves\nwith transactions, not with markets.",
         "properties": {
           "currency": {
             "title": "Currency",

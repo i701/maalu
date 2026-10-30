@@ -26,8 +26,10 @@ class BalancePoint(BaseModel):
 
 
 class BalanceTrendResponse(BaseModel):
-    """What your accounts were worth at the end of each day, in your base currency. Each account
-    is valued at its current manual rate, so the line moves with transactions, not with markets."""
+    """What your accounts were worth at the end of each day, in your base currency. Completed days
+    come from daily snapshots, each account at the manual rate it had that day, so revaluing an
+    account never rewrites the past; today is worked out live at the current rate. The line moves
+    with transactions, not with markets."""
 
     currency: str
     points: list[BalancePoint]

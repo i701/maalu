@@ -14,7 +14,7 @@ import procrastinate
 
 from app.config import settings
 from app.database import SessionLocal
-from app.services import SessionService
+from app.services import SessionService, SnapshotService
 
 logger = logging.getLogger("maalu.jobs")
 
@@ -45,3 +45,20 @@ async def purge_expired_sessions_job(timestamp: int) -> None:
     own, so a device nobody signs in from again would otherwise stay in the table for good."""
     removed = await purge_expired_sessions()
     logger.info("purged %d expired sessions", removed)
+
+
+async def snapshot_balances(session_factory=SessionLocal) -> None:
+    """Rebuild stale snapshots and add the days since each account's last one, for every user."""
+    async with session_factory() as session:
+        await SnapshotService(session).repair()
+        await session.commit()
+
+
+@app.periodic(cron="10 0 * * *")
+@app.task(name="snapshot_balances", queueing_lock="snapshot_balances")
+async def snapshot_balances_job(timestamp: int) -> None:
+    """Daily, just after midnight UTC: snapshot yesterday for every account, at the exchange rate
+    the account has now. Reading the balance chart does the same for one user, so this keeps the
+    day's rate honest even if nobody opened the app."""
+    await snapshot_balances()
+    logger.info("balance snapshots are up to date")

@@ -1,4 +1,5 @@
 from app.models.account import Account
+from app.models.balance_snapshot import BalanceSnapshot, SnapshotDirty
 from app.models.base import Base
 from app.models.budget import Budget, BudgetLine, BudgetLineCategory
 from app.models.category import Category
@@ -15,6 +16,7 @@ from app.models.vendor import Vendor
 
 __all__ = [
     "Account",
+    "BalanceSnapshot",
     "Base",
     "Budget",
     "BudgetLine",
@@ -24,6 +26,7 @@ __all__ = [
     "Goal",
     "GoalEntry",
     "RecoveryCode",
+    "SnapshotDirty",
     "Subscription",
     "Tag",
     "Transaction",

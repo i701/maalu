@@ -1403,8 +1403,10 @@ export interface components {
         };
         /**
          * BalanceTrendResponse
-         * @description What your accounts were worth at the end of each day, in your base currency. Each account
-         *     is valued at its current manual rate, so the line moves with transactions, not with markets.
+         * @description What your accounts were worth at the end of each day, in your base currency. Completed days
+         *     come from daily snapshots, each account at the manual rate it had that day, so revaluing an
+         *     account never rewrites the past; today is worked out live at the current rate. The line moves
+         *     with transactions, not with markets.
          */
         BalanceTrendResponse: {
             /** Currency */

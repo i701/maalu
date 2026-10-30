@@ -6,17 +6,28 @@ from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.enums import LIABILITY_GROUPS, TransactionType
-from app.models import Account, Transaction, User
+from app.models import Account, BalanceSnapshot, Transaction, User
 from app.schemas.stats import (
     BalancePoint,
     BalanceTrendResponse,
     MonthlyPoint,
     MonthlyResponse,
 )
+from app.services import snapshot as snapshots
 from app.services.money import BASE_AMOUNT_QUANTUM
+from app.services.snapshot import SnapshotService, _as_date
 
 ZERO = Decimal(0)
 MAX_TREND_DAYS = 400
+
+
+def _point(day: date, assets: Decimal, liabilities: Decimal) -> BalancePoint:
+    return BalancePoint(
+        date=day,
+        assets=assets.quantize(BASE_AMOUNT_QUANTUM),
+        liabilities=liabilities.quantize(BASE_AMOUNT_QUANTUM),
+        total=(assets - liabilities).quantize(BASE_AMOUNT_QUANTUM),
+    )
 
 
 class StatsRangeError(Exception):
@@ -100,11 +111,57 @@ class StatsService:
             ).all()
         )
         ids = [a.id for a in accounts]
+        await SnapshotService(self.db).repair(user_id)
+        today = snapshots._today()
+        points: list[BalancePoint] = []
+        done = min(end, today - timedelta(days=1))
+        if start <= done:
+            points += await self._snapshot_points(accounts, start, done)
+        if end >= today:
+            points += await self._live_points(accounts, ids, max(start, today), end)
+        return BalanceTrendResponse(currency=await self._base_currency(user_id), points=points)
+
+    async def _snapshot_points(
+        self, accounts: list[Account], start: date, end: date
+    ) -> list[BalancePoint]:
+        """Completed days, from the stored snapshots (each at the rate it had that day). A day
+        before an account's first snapshot counts its opening amount at the current rate."""
+        values: dict[tuple[uuid.UUID, date], Decimal] = {}
+        if accounts:
+            rows = await self.db.execute(
+                select(
+                    BalanceSnapshot.account_id, BalanceSnapshot.day, BalanceSnapshot.base_value
+                ).where(
+                    BalanceSnapshot.account_id.in_([a.id for a in accounts]),
+                    BalanceSnapshot.day >= start,
+                    BalanceSnapshot.day <= end,
+                )
+            )
+            values = {(a, _as_date(d)): Decimal(str(v)) for a, d, v in rows.all()}
+        points: list[BalancePoint] = []
+        day = start
+        while day <= end:
+            assets = liabilities = ZERO
+            for a in accounts:
+                base = values.get((a.id, day))
+                if base is None:
+                    base = (a.opening_amount * a.exchange_rate).quantize(BASE_AMOUNT_QUANTUM)
+                if a.group in LIABILITY_GROUPS:
+                    liabilities -= base
+                else:
+                    assets += base
+            points.append(_point(day, assets, liabilities))
+            day += timedelta(days=1)
+        return points
+
+    async def _live_points(
+        self, accounts: list[Account], ids: list[uuid.UUID], start: date, end: date
+    ) -> list[BalancePoint]:
+        """Today and later, worked out from the transactions at each account's current rate."""
         signed = case(
             (Transaction.type == TransactionType.INCOME, Transaction.amount),
             else_=-Transaction.amount,
         )
-
         # Each account's balance on the day before `start`, then the change on each day after.
         balance: dict[uuid.UUID, Decimal] = {a.id: a.opening_amount for a in accounts}
         changes: dict[tuple[uuid.UUID, date], Decimal] = {}
@@ -167,13 +224,6 @@ class StatsService:
                     liabilities -= base
                 else:
                     assets += base
-            points.append(
-                BalancePoint(
-                    date=day,
-                    assets=assets.quantize(BASE_AMOUNT_QUANTUM),
-                    liabilities=liabilities.quantize(BASE_AMOUNT_QUANTUM),
-                    total=(assets - liabilities).quantize(BASE_AMOUNT_QUANTUM),
-                )
-            )
+            points.append(_point(day, assets, liabilities))
             day += timedelta(days=1)
-        return BalanceTrendResponse(currency=await self._base_currency(user_id), points=points)
+        return points
