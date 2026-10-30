@@ -48,6 +48,20 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  # Background jobs (daily clean-up and the like): the same image as the API, running the
+  # procrastinate worker instead of the web server. Run one; the queue lives in Postgres.
+  worker:
+    image: ghcr.io/i701/maalu-api:${MAALU_VERSION:-latest}
+    command: ["procrastinate", "--app=app.jobs.app", "worker"]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-maalu}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-maalu}
+      SECRET_KEY: ${SECRET_KEY}
+      PYTHONPATH: /app/apps/api
+    depends_on:
+      api:
+        condition: service_started
+    restart: unless-stopped
+
   web:
     image: ghcr.io/i701/maalu-web:${MAALU_VERSION:-latest}
     environment:

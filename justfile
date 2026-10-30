@@ -17,13 +17,17 @@ db-down:
 
 # ── Run ─────────────────────────────────────────────────
 
-# Run API and web together
+# Run API, background worker and web together
 [parallel]
-dev: dev-api dev-web
+dev: dev-api dev-worker dev-web
 
 # API with autoreload (http://localhost:8000/docs)
 dev-api:
     cd apps/api && uv run fastapi dev main.py
+
+# Background job worker (daily clean-up and the like); needs the database up and migrated
+dev-worker:
+    cd apps/api && PYTHONPATH=. uv run procrastinate --app=app.jobs.app worker
 
 # Web app (http://localhost:3000)
 dev-web:

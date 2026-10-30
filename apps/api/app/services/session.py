@@ -53,6 +53,11 @@ class SessionService:
         await self.db.flush()
         return token
 
+    async def purge_expired(self) -> int:
+        """Delete every user's expired sessions (what the daily job does); how many went."""
+        result = await self.db.execute(delete(UserSession).where(UserSession.expires_at < _now()))
+        return result.rowcount or 0
+
     async def authenticate(self, token: str) -> tuple[UserSession, User] | None:
         """The live session and its user for a bearer token, or None (unknown, expired, ended, or
         the user is switched off). A session in use is renewed."""
