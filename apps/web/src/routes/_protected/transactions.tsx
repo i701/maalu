@@ -36,6 +36,7 @@ import SearchField from "#/components/SearchField";
 import ShapeTile from "#/components/ShapeTile";
 import Symbol from "#/components/Symbol";
 import { TagChips } from "#/components/TagChip";
+import { excludedNote } from "#/lib/accounts";
 import { txSubtitle, txTitle } from "#/lib/tx-display";
 import CategoryDot from "#/components/CategoryDot";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
@@ -289,6 +290,29 @@ function TxMethodChip({ t }: { t: Transaction }) {
 	);
 }
 
+/** "Adjustment" on a balance correction, and a note when the account is left out of the totals:
+ * neither counts as income or spending. */
+function TxStatsChips({ t }: { t: Transaction }) {
+	return (
+		<>
+			{t.adjustment && (
+				<TonalChip
+					accent={ACCENT.slate}
+					label="Adjustment"
+					title="A correction that makes the account match its bank: not income or spending"
+				/>
+			)}
+			{t.account?.exclude_from_stats && (
+				<TonalChip
+					accent={ACCENT.slate}
+					label="Not in my totals"
+					title="This account is left out of your totals and reports"
+				/>
+			)}
+		</>
+	);
+}
+
 /** "Refund" on money given back, and how much of a purchase has been refunded. */
 function TxRefundChip({ t }: { t: Transaction }) {
 	if (isRefund(t)) return <TonalChip accent={ACCENT.green} label="Refund" />;
@@ -368,6 +392,12 @@ function TxActions({
 	onEdit: () => void;
 	onDelete: () => void;
 }) {
+	if (t.adjustment)
+		return (
+			<IconButton aria-label="Delete" title="Delete" size="small" onClick={onDelete}>
+				<DeleteOutlineIcon fontSize="small" />
+			</IconButton>
+		);
 	return (
 		<>
 			{canRefund(t) && (
@@ -488,6 +518,11 @@ const TransactionsTable = memo(function TransactionsTable({
 								<TxGroupChip t={t} />
 							</Box>
 						)}
+						{(t.adjustment || t.account?.exclude_from_stats) && (
+							<Box sx={{ mt: 0.5, display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+								<TxStatsChips t={t} />
+							</Box>
+						)}
 						{t.tags.length > 0 && (
 							<Box sx={{ mt: 0.5, display: "flex", flexWrap: "wrap", gap: 0.5 }}>
 								<TagChips tags={t.tags} />
@@ -555,6 +590,7 @@ const TransactionsTable = memo(function TransactionsTable({
 							<TxSubscriptionChip t={t} />
 							<TxRefundChip t={t} />
 							<TxGroupChip t={t} />
+							<TxStatsChips t={t} />
 							<TagChips tags={t.tags} />
 						</>
 					}
@@ -843,7 +879,10 @@ function TransactionsPage() {
 
 					<Box sx={{ minWidth: 0 }}>
 						<PendingOverlay>
-							<TransactionTotals totals={totals} />
+							<TransactionTotals
+								totals={totals}
+								note={excludedNote(accounts, Boolean(search.account_id))}
+							/>
 							<CategoryBreakdown categories={categories} />
 
 							<TableCard>

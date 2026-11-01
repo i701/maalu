@@ -198,6 +198,7 @@ describe("initialValues", () => {
 		currency: "USD",
 		bank: null,
 		account_number: null,
+		exclude_from_stats: false,
 	} as const;
 
 	it("starts a new transaction in the default account, with its currency and method", () => {

@@ -45,6 +45,10 @@ class AccountGroup(StrEnum):
 
 # Balances in these groups are money you owe; everything else is an asset.
 LIABILITY_GROUPS = frozenset({AccountGroup.CARD, AccountGroup.OVERDRAFTS, AccountGroup.LOAN})
+# Only these have a credit limit: the most you can owe on them.
+CREDIT_LIMIT_GROUPS = frozenset({AccountGroup.CARD, AccountGroup.OVERDRAFTS})
+# The category a balance adjustment is filed under (it is left out of every report anyway).
+ADJUSTMENT_CATEGORY = "Balance adjustment"
 
 
 class TransactionType(StrEnum):

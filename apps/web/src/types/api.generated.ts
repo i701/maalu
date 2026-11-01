@@ -69,6 +69,29 @@ export interface paths {
         patch: operations["update_account_api_v1_accounts__account_id__patch"];
         trace?: never;
     };
+    "/api/v1/accounts/{account_id}/adjust": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Adjust Account
+         * @description Make the account match its bank. Send `new_balance` (what the bank says it holds) or
+         *     `amount` (what to add, negative to take away). The difference is recorded as a dated income or
+         *     expense (a "Balance adjustment") that changes the balance and its history from that date, but
+         *     is **not** income or spending in any total, report or budget. Delete it to undo it.
+         */
+        post: operations["adjust_account_api_v1_accounts__account_id__adjust_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/accounts/{account_id}/archive": {
         parameters: {
             query?: never;
@@ -1490,6 +1513,24 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AccountAdjust
+         * @description Make an account match its bank. Send exactly one of `new_balance` (what the bank says it
+         *     holds) or `amount` (what to add, negative to take away).
+         */
+        AccountAdjust: {
+            /** Amount */
+            amount?: number | string | null;
+            /**
+             * Date
+             * @description When it takes effect; default today
+             */
+            date?: string | null;
+            /** New Balance */
+            new_balance?: number | string | null;
+            /** Note */
+            note?: string | null;
+        };
         /** AccountCreate */
         AccountCreate: {
             /**
@@ -1503,6 +1544,11 @@ export interface components {
              */
             bank?: string | null;
             /**
+             * Credit Limit
+             * @description Cards and overdrafts only: the most that can be owed, in the account's currency. It changes no balance.
+             */
+            credit_limit?: number | string | null;
+            /**
              * Currency
              * @description Defaults to your base currency
              */
@@ -1514,6 +1560,12 @@ export interface components {
              * @description Base-currency units per 1 unit of `currency`. Required when `currency` differs from your base currency.
              */
             exchange_rate?: number | string | null;
+            /**
+             * Exclude From Stats
+             * @description Leave the account out of totals, reports, budgets and net worth
+             * @default false
+             */
+            exclude_from_stats: boolean;
             group: components["schemas"]["AccountGroup"];
             /** Name */
             name: string;
@@ -1539,6 +1591,8 @@ export interface components {
             bank: string | null;
             /** Currency */
             currency: string;
+            /** Exclude From Stats */
+            exclude_from_stats: boolean;
             group: components["schemas"]["AccountGroup"];
             /**
              * Id
@@ -1571,12 +1625,19 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /**
+             * Credit Limit
+             * @description Cards and overdrafts: the most that can be owed, in the account's currency
+             */
+            credit_limit: string | null;
             /** Currency */
             currency: string;
             /** Description */
             description: string | null;
             /** Exchange Rate */
             exchange_rate: string;
+            /** Exclude From Stats */
+            exclude_from_stats: boolean;
             group: components["schemas"]["AccountGroup"];
             /**
              * Id
@@ -1615,12 +1676,16 @@ export interface components {
             account_number?: string | null;
             /** Bank */
             bank?: string | null;
+            /** Credit Limit */
+            credit_limit?: number | string | null;
             /** Currency */
             currency?: string | null;
             /** Description */
             description?: string | null;
             /** Exchange Rate */
             exchange_rate?: number | string | null;
+            /** Exclude From Stats */
+            exclude_from_stats?: boolean | null;
             group?: components["schemas"]["AccountGroup"] | null;
             /** Name */
             name?: string | null;
@@ -3098,6 +3163,12 @@ export interface components {
          */
         TransactionResponse: {
             account: components["schemas"]["AccountRef"] | null;
+            /**
+             * Adjustment
+             * @description A balance adjustment: it moves the account's balance but is not income or spending
+             * @default false
+             */
+            adjustment: boolean;
             /** Amount */
             amount: string;
             /**
@@ -3646,6 +3717,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AccountResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    adjust_account_api_v1_accounts__account_id__adjust_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccountAdjust"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransactionResponse"];
                 };
             };
             /** @description Validation Error */

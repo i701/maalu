@@ -7,6 +7,7 @@ import { z } from "zod";
 import BudgetAlert from "#/components/BudgetAlert";
 import BalanceTrendCard from "#/components/dashboard/BalanceTrendCard";
 import BudgetGoalsCard from "#/components/dashboard/BudgetGoalsCard";
+import CreditUsageCard from "#/components/dashboard/CreditUsageCard";
 import DeltaBadge from "#/components/dashboard/DeltaBadge";
 import LatestTransactionsCard from "#/components/dashboard/LatestTransactionsCard";
 import MetricCard from "#/components/dashboard/MetricCard";
@@ -18,6 +19,8 @@ import { monthBounds, monthLabel, percentChange, shiftMonth } from "#/lib/dashbo
 import { formatMoney, sumDecimals } from "#/lib/format";
 import { staggerChildren } from "#/lib/motion";
 import { unwrap } from "#/lib/unwrap";
+import { creditUsage } from "#/lib/accounts";
+import { listAccountsFn } from "#/server/accounts";
 import { getBudgetFn } from "#/server/budget";
 import { listGoalsFn } from "#/server/goals";
 import { getMonthlyStatsFn, getBalanceTrendFn } from "#/server/stats";
@@ -51,16 +54,18 @@ export const Route = createFileRoute("/_protected/dashboard")({
 		const trendEnd = current.end > now && current.start <= now ? now : current.end;
 		const range = { date_from: current.start, date_to: current.end };
 
-		const [totals, before, categories, monthly, trend, latest, budget, goals] = await Promise.all([
-			getTransactionTotalsFn({ data: range }),
-			getTransactionTotalsFn({ data: { date_from: previous.start, date_to: previous.end } }),
-			getCategoryTotalsFn({ data: range }),
-			getMonthlyStatsFn({ data: { months: 6, to: current.end } }),
-			getBalanceTrendFn({ data: { from: current.start, to: trendEnd } }),
-			listTransactionsFn({ data: { page: 1, pageSize: 10 } }),
-			getBudgetFn({ data: {} }),
-			listGoalsFn({ data: {} }),
-		]);
+		const [totals, before, categories, monthly, trend, latest, budget, goals, accounts] =
+			await Promise.all([
+				getTransactionTotalsFn({ data: range }),
+				getTransactionTotalsFn({ data: { date_from: previous.start, date_to: previous.end } }),
+				getCategoryTotalsFn({ data: range }),
+				getMonthlyStatsFn({ data: { months: 6, to: current.end } }),
+				getBalanceTrendFn({ data: { from: current.start, to: trendEnd } }),
+				listTransactionsFn({ data: { page: 1, pageSize: 10 } }),
+				getBudgetFn({ data: {} }),
+				listGoalsFn({ data: {} }),
+				listAccountsFn(),
+			]);
 		return {
 			month: current.start,
 			totals: unwrap(totals),
@@ -72,14 +77,28 @@ export const Route = createFileRoute("/_protected/dashboard")({
 			// the page works without these two
 			budget: budget.ok ? budget.data : null,
 			goals: goals.ok ? goals.data : [],
+			// cards and overdrafts with a credit limit (the page works without them)
+			creditAccounts: accounts.ok
+				? accounts.data.filter((a) => !a.exclude_from_stats && creditUsage(a))
+				: [],
 		};
 	},
 	component: DashboardPage,
 });
 
 function DashboardPage() {
-	const { month, totals, before, categories, monthly, trend, latest, budget, goals } =
-		Route.useLoaderData();
+	const {
+		month,
+		totals,
+		before,
+		categories,
+		monthly,
+		trend,
+		latest,
+		budget,
+		goals,
+		creditAccounts,
+	} = Route.useLoaderData();
 	const navigate = Route.useNavigate();
 	const goTo = (on: string | undefined) => navigate({ search: { on }, replace: true });
 	const label = monthLabel(month);
@@ -190,6 +209,12 @@ function DashboardPage() {
 					<Box sx={cell(2)}>
 						<BudgetGoalsCard budget={budget} goals={goals} />
 					</Box>
+
+					{creditAccounts.length > 0 && (
+						<Box sx={cell(6)}>
+							<CreditUsageCard accounts={creditAccounts} />
+						</Box>
+					)}
 
 					<Box sx={cell(6)}>
 						<LatestTransactionsCard transactions={latest} />

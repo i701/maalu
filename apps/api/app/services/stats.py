@@ -61,7 +61,7 @@ class StatsService:
             )
             .where(
                 Transaction.user_id == user_id,
-                Transaction.counted(),
+                Transaction.reported(),
                 Transaction.type.in_([TransactionType.INCOME, TransactionType.EXPENSE]),
                 Transaction.transaction_date >= first,
                 Transaction.transaction_date <= end,
@@ -106,7 +106,11 @@ class StatsService:
         accounts = list(
             (
                 await self.db.scalars(
-                    select(Account).where(Account.user_id == user_id, Account.archived_at.is_(None))
+                    select(Account).where(
+                        Account.user_id == user_id,
+                        Account.archived_at.is_(None),
+                        Account.exclude_from_stats.is_(False),
+                    )
                 )
             ).all()
         )

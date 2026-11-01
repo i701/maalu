@@ -6,7 +6,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.allocation import allocate_base
-from app.enums import PaymentMethod, TransactionType
+from app.enums import ADJUSTMENT_CATEGORY, PaymentMethod, TransactionType
 from app.export import EXPORT_LIMIT, build_workbook
 from app.models import (
     Account,
@@ -209,6 +209,7 @@ class TransactionService:
             Transaction.user_id == user_id,
             Transaction.live(),
             Transaction.planned.is_(False),
+            Transaction.adjustment.is_(False),
             Transaction.type == TransactionType.EXPENSE,
         )
         original = await self.db.scalar(stmt)
@@ -330,6 +331,61 @@ class TransactionService:
                 f"The items add up to {total:,} but the total is {transaction.amount:,}"
             )
         transaction.category_ref = max(transaction.splits, key=lambda s: s.amount).category_ref
+
+    async def create_adjustment(
+        self,
+        user_id: uuid.UUID,
+        account: Account,
+        *,
+        new_balance: Decimal | None,
+        amount: Decimal | None,
+        day: date,
+        note: str | None,
+    ) -> Transaction:
+        """Make `account` match its bank: record the difference as an income (the balance was too
+        low) or an expense (too high) that moves the balance but is not income or spending in any
+        report. With `new_balance` the difference is worked out from the balance now; with `amount`
+        it is the amount (negative takes money away)."""
+        if account.archived_at is not None:
+            raise TransactionRuleError(f'"{account.name}" is archived. Unarchive it to use it')
+        if new_balance is not None:
+            from app.services.account import AccountService
+
+            current = (await AccountService(self.db).present([account]))[0].balance
+            difference = new_balance - current
+        else:
+            assert amount is not None
+            difference = amount
+        if difference == 0:
+            raise TransactionRuleError("The balance already matches: there is nothing to adjust")
+        kind = TransactionType.INCOME if difference > 0 else TransactionType.EXPENSE
+        size = abs(difference)
+        money = self._money_fields(
+            transaction_type=kind,
+            amount=size,
+            currency=account.currency,
+            exchange_rate=account.exchange_rate,
+            account=account,
+            to_account=None,
+            to_amount=None,
+            base=await self._base_currency(user_id),
+        )
+        transaction = Transaction(
+            user_id=user_id,
+            type=kind,
+            amount=size,
+            category_ref=await self.categories.get_or_create(user_id, ADJUSTMENT_CATEGORY),
+            payment_method=PaymentMethod.OTHER,
+            description=note or "Balance adjustment",
+            transaction_date=day,
+            account=account,
+            adjustment=True,
+            **money,
+        )
+        self.db.add(transaction)
+        await self.db.flush()
+        await self.db.refresh(transaction)
+        return transaction
 
     async def create(self, user_id: uuid.UUID, data: TransactionCreate) -> Transaction:
         base = await self._base_currency(user_id)
@@ -659,6 +715,8 @@ class TransactionService:
             date_from=date_from,
             date_to=date_to,
         )
+        # reports leave out balance adjustments and excluded accounts (unless you filter to one)
+        conditions = [*conditions, Transaction.reported(include_excluded_accounts=bool(account_id))]
         ids = await self._family(user_id, category_id)
         money = Transaction.type.in_([TransactionType.INCOME, TransactionType.EXPENSE])
         stmt = (
@@ -752,6 +810,7 @@ class TransactionService:
             date_from=date_from,
             date_to=date_to,
         )
+        conditions = [*conditions, Transaction.reported(include_excluded_accounts=bool(account_id))]
         money = Transaction.type.in_([TransactionType.INCOME, TransactionType.EXPENSE])
         totals: dict[tuple[TransactionType, uuid.UUID], list] = {}
         ids = await self._family(user_id, category_id)
@@ -1024,6 +1083,10 @@ class TransactionService:
             )
 
     async def update(self, transaction: Transaction, data: TransactionUpdate) -> Transaction:
+        if transaction.adjustment:
+            raise TransactionRuleError(
+                "A balance adjustment can't be edited. Delete it and make a new one"
+            )
         changes = data.model_dump(exclude_unset=True)
         user_id = transaction.user_id
         old_type = transaction.type
@@ -1286,6 +1349,9 @@ class TransactionService:
 
         updated = 0
         for t in rows:
+            if t.adjustment:
+                skipped.append(BulkSkipped(id=t.id, reason="A balance adjustment can't be changed"))
+                continue
             applied = False
             transfer = t.type is TransactionType.TRANSFER
             if not transfer:

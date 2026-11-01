@@ -243,6 +243,11 @@ class TransactionResponse(BaseModel):
         description="On a purchase: how much the refunds so far have given back, in its currency."
     )
     group: GroupRef | None = Field(default=None, description="The group it belongs to, if any")
+    adjustment: bool = Field(
+        default=False,
+        description="A balance adjustment: it moves the account's balance but is not income or "
+        "spending",
+    )
     attachment_count: int = Field(default=0, description="How many files are attached")
     link_count: int = Field(default=0, description="How many web links are attached")
     currency: str

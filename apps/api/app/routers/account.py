@@ -1,15 +1,25 @@
 import uuid
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, Response, status
 
-from app.dependencies import AccountServiceDep, CurrentUserId
+from app.dependencies import AccountServiceDep, CurrentUserId, TransactionServiceDep
 from app.pagination import PageDep, set_total
-from app.schemas import AccountCreate, AccountResponse, AccountSummary, AccountUpdate
+from app.schemas import (
+    AccountAdjust,
+    AccountCreate,
+    AccountResponse,
+    AccountSummary,
+    AccountUpdate,
+    TransactionResponse,
+)
 from app.services import (
     AccountHasTransactionsError,
+    AccountLimitError,
     AccountNumberTakenError,
     ExchangeRateRequiredError,
+    TransactionRuleError,
 )
 
 router = APIRouter(prefix="/accounts", tags=["accounts"])
@@ -19,6 +29,9 @@ _RATE_REQUIRED = HTTPException(
     "exchange_rate is required when currency differs from your base currency",
 )
 _NOT_FOUND = HTTPException(status.HTTP_404_NOT_FOUND, "Account not found")
+_NO_LIMIT = HTTPException(
+    status.HTTP_422_UNPROCESSABLE_CONTENT, "Only cards and overdrafts have a credit limit"
+)
 
 
 def _number_taken(exc: AccountNumberTakenError) -> HTTPException:
@@ -39,6 +52,8 @@ async def create_account(data: AccountCreate, user_id: CurrentUserId, service: A
         raise _RATE_REQUIRED from None
     except AccountNumberTakenError as exc:
         raise _number_taken(exc) from None
+    except AccountLimitError:
+        raise _NO_LIMIT from None
     return await _present_one(service, account)
 
 
@@ -94,12 +109,46 @@ async def update_account(
         raise _RATE_REQUIRED from None
     except AccountNumberTakenError as exc:
         raise _number_taken(exc) from None
+    except AccountLimitError:
+        raise _NO_LIMIT from None
     except AccountHasTransactionsError:
         raise HTTPException(
             status.HTTP_409_CONFLICT,
             "Currency can't change while transactions are linked to this account",
         ) from None
     return await _present_one(service, account)
+
+
+@router.post(
+    "/{account_id}/adjust",
+    response_model=TransactionResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def adjust_account(
+    account_id: uuid.UUID,
+    data: AccountAdjust,
+    user_id: CurrentUserId,
+    service: AccountServiceDep,
+    transactions: TransactionServiceDep,
+):
+    """Make the account match its bank. Send `new_balance` (what the bank says it holds) or
+    `amount` (what to add, negative to take away). The difference is recorded as a dated income or
+    expense (a "Balance adjustment") that changes the balance and its history from that date, but
+    is **not** income or spending in any total, report or budget. Delete it to undo it."""
+    account = await service.get(user_id, account_id)
+    if account is None:
+        raise _NOT_FOUND
+    try:
+        return await transactions.create_adjustment(
+            user_id,
+            account,
+            new_balance=data.new_balance,
+            amount=data.amount,
+            day=data.date or datetime.now(UTC).date(),
+            note=data.note,
+        )
+    except TransactionRuleError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
 
 
 @router.post("/{account_id}/archive", response_model=AccountResponse)

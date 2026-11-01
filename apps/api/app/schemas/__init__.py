@@ -1,4 +1,5 @@
 from app.schemas.account import (
+    AccountAdjust,
     AccountCreate,
     AccountRef,
     AccountResponse,
@@ -88,6 +89,7 @@ from app.schemas.vendor import VendorCreate, VendorMerge, VendorResponse, Vendor
 __all__ = [
     "MAX_SELECT_ALL",
     "MAX_TAGS",
+    "AccountAdjust",
     "AccountCreate",
     "AccountRef",
     "AccountResponse",

@@ -139,6 +139,10 @@ class Transaction(Base):
     planned: Mapped[bool] = mapped_column(
         Boolean, default=False, server_default=false(), index=True
     )
+    # A balance adjustment: a correction that makes an account match its bank. It moves the
+    # account's balance (and its history) but is not income or spending, so every report leaves it
+    # out (`reported()`). Made only by `POST /accounts/{id}/adjust`, and never edited.
+    adjustment: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
     # Set when the transaction is moved to the trash. A trashed row is hidden everywhere and
     # counts toward nothing (balances, budgets, stats) until it is restored or deleted for good.
     deleted_at: Mapped[datetime | None] = mapped_column(
@@ -155,6 +159,18 @@ class Transaction(Base):
         """What counts toward money: not in the trash and not just planned. Use this for balances,
         budgets, goals, totals and stats; use `live()` for anything that only needs the row."""
         return and_(cls.deleted_at.is_(None), cls.planned.is_(False))
+
+    @classmethod
+    def reported(cls, *, include_excluded_accounts: bool = False):
+        """What counts as income and spending in the reports: `counted()` less balance adjustments
+        (a correction is not money earned or spent) and less transactions in an account that is
+        excluded from the stats. Use it wherever income or spending is summed across accounts
+        (totals, category totals, the budget, monthly stats); balances still use `counted()`.
+        `include_excluded_accounts` is for a view of one account the user asked for by name."""
+        conditions = [cls.counted(), cls.adjustment.is_(False)]
+        if not include_excluded_accounts:
+            conditions.append(~cls.account.has(Account.exclude_from_stats.is_(True)))
+        return and_(*conditions)
 
     @classmethod
     def is_refund(cls):

@@ -34,6 +34,7 @@ export default defineConfig(({ mode }) => {
 					"AttachFile",
 					"Download",
 					"PictureAsPdfOutlined",
+					"Tune",
 					"UploadFile",
 					"Inventory2Outlined",
 					"EditOutlined",

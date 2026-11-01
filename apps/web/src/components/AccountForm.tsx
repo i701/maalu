@@ -1,8 +1,11 @@
+import FormControlLabel from "@mui/material/FormControlLabel";
 import Grid from "@mui/material/Grid";
 import MenuItem from "@mui/material/MenuItem";
+import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import { useState } from "react";
-import { bankChoices } from "#/lib/accounts";
+import { bankChoices, hasCreditLimit } from "#/lib/accounts";
 import { todayIso } from "#/lib/format";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
@@ -33,6 +36,7 @@ export default function AccountForm({
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
 	const [currency, setCurrency] = useState(account?.currency ?? baseCurrency);
+	const [group, setGroup] = useState<AccountGroup>(account?.group ?? "cash");
 	const foreign = currency !== baseCurrency;
 	const locked = (account?.transaction_count ?? 0) > 0;
 	const quick = [...new Set([baseCurrency, ...accounts.map((a) => a.currency)])].slice(0, 5);
@@ -43,12 +47,15 @@ export default function AccountForm({
 		const text = (k: string) => String(f.get(k) ?? "").trim();
 
 		const fields = {
-			group: text("group") as AccountGroup,
+			group,
 			name: text("name"),
 			opening_amount: text("opening_amount") || "0",
 			currency,
 			exchange_rate: foreign ? text("exchange_rate") : undefined,
 			description: text("description") || null,
+			// only cards and overdrafts have one; empty means none
+			credit_limit: hasCreditLimit(group) ? text("credit_limit") || null : null,
+			exclude_from_stats: f.get("exclude_from_stats") === "on",
 			bank: text("bank") || null,
 			account_number: text("account_number") || null,
 		};
@@ -78,7 +85,8 @@ export default function AccountForm({
 						select
 						label="Group"
 						name="group"
-						defaultValue={account?.group ?? "cash"}
+						value={group}
+						onChange={(e) => setGroup(e.target.value as AccountGroup)}
 						required
 					>
 						{ACCOUNT_GROUPS.map((g) => (
@@ -161,6 +169,19 @@ export default function AccountForm({
 					</Grid>
 				)}
 
+				{hasCreditLimit(group) && (
+					<Grid size={12}>
+						<TextField
+							label="Credit limit"
+							name="credit_limit"
+							defaultValue={account?.credit_limit ?? ""}
+							placeholder="10000"
+							helperText={`The most you can owe on it, in ${currency}. It changes no balance: it only shows how much is used.`}
+							slotProps={{ htmlInput: { inputMode: "decimal" } }}
+						/>
+					</Grid>
+				)}
+
 				<Grid size={12}>
 					<TextField
 						label="Description"
@@ -170,6 +191,20 @@ export default function AccountForm({
 						minRows={2}
 						slotProps={{ htmlInput: { maxLength: 1000 } }}
 					/>
+				</Grid>
+
+				<Grid size={12}>
+					<FormControlLabel
+						control={
+							<Switch name="exclude_from_stats" defaultChecked={account?.exclude_from_stats} />
+						}
+						label="Leave out of my totals"
+					/>
+					<Typography variant="caption" component="p" sx={{ color: "text.secondary", mt: -0.5 }}>
+						For an account that is not really yours, like a card you manage for someone else. Its
+						balance and transactions stay, but it is not counted in totals, reports, budgets or net
+						worth.
+					</Typography>
 				</Grid>
 			</Grid>
 		</FormDialog>

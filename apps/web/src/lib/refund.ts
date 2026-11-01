@@ -15,7 +15,12 @@ export function isRefund(t: Transaction): boolean {
 
 /** Whether a purchase has anything left to refund. Planned ones have not happened yet. */
 export function canRefund(t: Transaction): boolean {
-	return t.type === "expense" && !t.planned && Number(amountLeft(t.amount, t.refunded_amount)) > 0;
+	return (
+		t.type === "expense" &&
+		!t.planned &&
+		!t.adjustment &&
+		Number(amountLeft(t.amount, t.refunded_amount)) > 0
+	);
 }
 
 /** Whether refunds have given part of this purchase back. */

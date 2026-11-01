@@ -1,6 +1,7 @@
 from app.services.account import (
     AccountCurrencyMismatchError,
     AccountHasTransactionsError,
+    AccountLimitError,
     AccountNotFoundError,
     AccountNumberTakenError,
     AccountService,
@@ -63,6 +64,7 @@ from app.services.vendor import VendorNameTakenError, VendorNotFoundError, Vendo
 __all__ = [
     "AccountCurrencyMismatchError",
     "AccountHasTransactionsError",
+    "AccountLimitError",
     "AccountNotFoundError",
     "AccountNumberTakenError",
     "AccountService",

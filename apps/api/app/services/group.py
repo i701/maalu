@@ -188,6 +188,8 @@ class GroupService:
             raise GroupRuleError("Some of those transactions were not found")
         if any(t.type is TransactionType.TRANSFER for t in rows):
             raise GroupRuleError("A transfer can't be put in a group")
+        if any(t.adjustment for t in rows):
+            raise GroupRuleError("A balance adjustment can't be put in a group")
         if any(t.group_id is not None and t.group_id != group_id for t in rows):
             raise GroupRuleError("Some of those transactions are already in a group")
         return rows

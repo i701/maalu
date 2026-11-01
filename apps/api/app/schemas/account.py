@@ -1,10 +1,17 @@
+import datetime as dt
 import re
 import uuid
-from datetime import datetime
 from decimal import Decimal
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    field_validator,
+    model_validator,
+)
 
 from app.enums import AccountGroup
 from app.schemas.types import CurrencyCode, ExchangeRate
@@ -15,6 +22,7 @@ Bank = Annotated[str, StringConstraints(strip_whitespace=True, max_length=100)]
 ACCOUNT_NUMBER_PATTERN = re.compile(r"^[0-9A-Za-z*-]{1,34}$")
 # Signed: negative = money owed.
 Balance = Annotated[Decimal, Field(max_digits=19, decimal_places=4)]
+CreditLimit = Annotated[Decimal, Field(max_digits=19, decimal_places=4, ge=0)]
 
 
 def normalize_account_number(value: str | None) -> str | None:
@@ -42,6 +50,7 @@ class AccountRef(BaseModel):
     currency: str
     bank: str | None
     account_number: str | None
+    exclude_from_stats: bool
 
 
 class AccountCreate(BaseModel):
@@ -57,6 +66,15 @@ class AccountCreate(BaseModel):
         "Required when `currency` differs from your base currency.",
     )
     description: Description | None = None
+    credit_limit: CreditLimit | None = Field(
+        default=None,
+        description="Cards and overdrafts only: the most that can be owed, in the account's "
+        "currency. It changes no balance.",
+    )
+    exclude_from_stats: bool = Field(
+        default=False,
+        description="Leave the account out of totals, reports, budgets and net worth",
+    )
     bank: Bank | None = Field(default=None, description="The bank that holds it, if any")
     account_number: str | None = Field(
         default=None,
@@ -86,8 +104,12 @@ class AccountUpdate(BaseModel):
     description: Description | None = None
     bank: Bank | None = None
     account_number: str | None = None
+    credit_limit: CreditLimit | None = None
+    exclude_from_stats: bool | None = None
 
-    @field_validator("group", "name", "opening_amount", "currency", "exchange_rate")
+    @field_validator(
+        "group", "name", "opening_amount", "currency", "exchange_rate", "exclude_from_stats"
+    )
     @classmethod
     def _required_fields_not_null(cls, v):
         if v is None:  # only runs when the field is sent
@@ -115,15 +137,19 @@ class AccountResponse(BaseModel):
     description: str | None
     bank: str | None
     account_number: str | None
+    credit_limit: Decimal | None = Field(
+        description="Cards and overdrafts: the most that can be owed, in the account's currency"
+    )
+    exclude_from_stats: bool
     is_liability: bool
     # Computed: opening amount + linked transactions.
     balance: Decimal
     base_balance: Decimal = Field(description="Balance valued in your base currency")
     transaction_count: int
-    archived_at: datetime | None = Field(
+    archived_at: dt.datetime | None = Field(
         description="When it was archived; null for an account in use"
     )
-    created_at: datetime
+    created_at: dt.datetime
 
 
 class AccountSummary(BaseModel):
@@ -133,3 +159,19 @@ class AccountSummary(BaseModel):
     liabilities: Decimal
     total: Decimal  # assets - liabilities
     currency: str
+
+
+class AccountAdjust(BaseModel):
+    """Make an account match its bank. Send exactly one of `new_balance` (what the bank says it
+    holds) or `amount` (what to add, negative to take away)."""
+
+    new_balance: Balance | None = None
+    amount: Balance | None = None
+    date: dt.date | None = Field(default=None, description="When it takes effect; default today")
+    note: Annotated[str, StringConstraints(strip_whitespace=True, max_length=1000)] | None = None
+
+    @model_validator(mode="after")
+    def _one_of(self):
+        if (self.new_balance is None) == (self.amount is None):
+            raise ValueError("Send either new_balance or amount")
+        return self

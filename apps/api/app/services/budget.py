@@ -100,7 +100,7 @@ class BudgetService:
         each of its items' categories, with its base amount shared out by `allocate_base`."""
         conditions = [
             Transaction.user_id == user_id,
-            Transaction.counted(),
+            Transaction.reported(),
             Transaction.spending(),  # refunds take away what they give back
             Transaction.transaction_date >= start,
             Transaction.transaction_date <= end,

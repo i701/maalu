@@ -1,6 +1,66 @@
 {
   "components": {
     "schemas": {
+      "AccountAdjust": {
+        "description": "Make an account match its bank. Send exactly one of `new_balance` (what the bank says it\nholds) or `amount` (what to add, negative to take away).",
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When it takes effect; default today",
+            "title": "Date"
+          },
+          "new_balance": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Balance"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "title": "AccountAdjust",
+        "type": "object"
+      },
       "AccountCreate": {
         "properties": {
           "account_number": {
@@ -27,6 +87,22 @@
             ],
             "description": "The bank that holds it, if any",
             "title": "Bank"
+          },
+          "credit_limit": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Cards and overdrafts only: the most that can be owed, in the account's currency. It changes no balance.",
+            "title": "Credit Limit"
           },
           "currency": {
             "anyOf": [
@@ -68,6 +144,12 @@
             ],
             "description": "Base-currency units per 1 unit of `currency`. Required when `currency` differs from your base currency.",
             "title": "Exchange Rate"
+          },
+          "exclude_from_stats": {
+            "default": false,
+            "description": "Leave the account out of totals, reports, budgets and net worth",
+            "title": "Exclude From Stats",
+            "type": "boolean"
           },
           "group": {
             "$ref": "#/components/schemas/AccountGroup"
@@ -144,6 +226,10 @@
             "title": "Currency",
             "type": "string"
           },
+          "exclude_from_stats": {
+            "title": "Exclude From Stats",
+            "type": "boolean"
+          },
           "group": {
             "$ref": "#/components/schemas/AccountGroup"
           },
@@ -163,7 +249,8 @@
           "group",
           "currency",
           "bank",
-          "account_number"
+          "account_number",
+          "exclude_from_stats"
         ],
         "title": "AccountRef",
         "type": "object"
@@ -219,6 +306,18 @@
             "title": "Created At",
             "type": "string"
           },
+          "credit_limit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Cards and overdrafts: the most that can be owed, in the account's currency",
+            "title": "Credit Limit"
+          },
           "currency": {
             "title": "Currency",
             "type": "string"
@@ -237,6 +336,10 @@
           "exchange_rate": {
             "title": "Exchange Rate",
             "type": "string"
+          },
+          "exclude_from_stats": {
+            "title": "Exclude From Stats",
+            "type": "boolean"
           },
           "group": {
             "$ref": "#/components/schemas/AccountGroup"
@@ -273,6 +376,8 @@
           "description",
           "bank",
           "account_number",
+          "credit_limit",
+          "exclude_from_stats",
           "is_liability",
           "balance",
           "base_balance",
@@ -338,6 +443,21 @@
             ],
             "title": "Bank"
           },
+          "credit_limit": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credit Limit"
+          },
           "currency": {
             "anyOf": [
               {
@@ -376,6 +496,17 @@
               }
             ],
             "title": "Exchange Rate"
+          },
+          "exclude_from_stats": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exclude From Stats"
           },
           "group": {
             "anyOf": [
@@ -3942,6 +4073,12 @@
               }
             ]
           },
+          "adjustment": {
+            "default": false,
+            "description": "A balance adjustment: it moves the account's balance but is not income or spending",
+            "title": "Adjustment",
+            "type": "boolean"
+          },
           "amount": {
             "title": "Amount",
             "type": "string"
@@ -5337,6 +5474,65 @@
           }
         ],
         "summary": "Update Account",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/api/v1/accounts/{account_id}/adjust": {
+      "post": {
+        "description": "Make the account match its bank. Send `new_balance` (what the bank says it holds) or\n`amount` (what to add, negative to take away). The difference is recorded as a dated income or\nexpense (a \"Balance adjustment\") that changes the balance and its history from that date, but\nis **not** income or spending in any total, report or budget. Delete it to undo it.",
+        "operationId": "adjust_account_api_v1_accounts__account_id__adjust_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "account_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Account Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountAdjust"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Adjust Account",
         "tags": [
           "accounts"
         ]

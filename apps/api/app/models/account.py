@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 from sqlalchemy import (
+    Boolean,
     DateTime,
     Enum,
     ForeignKey,
@@ -11,6 +12,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     Uuid,
+    false,
     func,
 )
 from sqlalchemy.orm import Mapped, mapped_column
@@ -57,6 +59,13 @@ class Account(Base):
     # Used to value the account in the overview; editable to revalue it.
     exchange_rate: Mapped[Decimal] = mapped_column(Numeric(19, 8))
     description: Mapped[str | None] = mapped_column(Text, default=None)
+    # Cards and overdrafts only: the most that can be owed, in the account's currency. It changes
+    # no balance; it only says how much of the limit is used.
+    credit_limit: Mapped[Decimal | None] = mapped_column(Numeric(19, 4), default=None)
+    # An account that is not really the user's (a card managed for someone else, an old account kept
+    # for reference): its own balance and transactions stay, but it is left out of the totals, the
+    # reports, the budget and net worth.
+    exclude_from_stats: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
     # Set when the account is archived: closed, hidden from pickers and the overview, and left out
     # of the totals, but its transactions stay in the history. Reversible.
     archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)

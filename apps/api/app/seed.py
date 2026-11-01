@@ -57,13 +57,16 @@ HISTORY_DAYS = 180
 LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1"}
 
 # (group, name, opening amount, currency)
+# credit limits for the cards in the demo data
+LIMITS = {"Visa Credit": Decimal("10000")}
+
 # group, name, opening amount, currency, bank, made-up account number
 ACCOUNTS = [
     (AccountGroup.CASH, "Wallet", "1500", BASE, None, None),
     (AccountGroup.ACCOUNTS, "BML Current", "18000", BASE, "BML", "7770000000001"),
     (AccountGroup.SAVINGS, "BML Savings", "60000", BASE, "BML", "7730000000002"),
     (AccountGroup.DEBIT_CARD, "MIB Debit", "5200", BASE, "MIB", "90501100000001001"),
-    (AccountGroup.CARD, "Visa Credit", "0", BASE, "BML", "411111XXXXXX0003"),
+    (AccountGroup.CARD, "Visa Credit", "-1800", BASE, "BML", "411111XXXXXX0003"),
     (AccountGroup.PREPAID, "Dhiraagu Top-up", "120", BASE, None, None),
     (AccountGroup.ACCOUNTS, "USD Account", "2500", "USD", "BML", "7730000000004"),
     (AccountGroup.LOAN, "Car Loan", "-45000", BASE, "BML", None),
@@ -299,6 +302,7 @@ async def seed(
                 description=rng.choice([None, None, "Seeded demo account"]),
                 bank=bank,
                 account_number=number,
+                credit_limit=LIMITS.get(name),
             ),
         )
 

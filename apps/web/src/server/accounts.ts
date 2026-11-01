@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { ACCOUNT_GROUPS, type Account, type AccountSummary } from "#/types/api";
+import { ACCOUNT_GROUPS, type Account, type AccountSummary, type Transaction } from "#/types/api";
 import { apiRequest } from "./api";
 
 // Signed decimal string (negative = money owed); forwarded untouched, no float round-trip.
@@ -18,6 +18,12 @@ const createSchema = z.object({
 	currency: currency.optional(),
 	exchange_rate: exchangeRate.optional(),
 	description: z.string().max(1000).nullable().optional(),
+	credit_limit: z
+		.string()
+		.regex(/^\d+(\.\d{1,4})?$/, "Enter a valid limit (max 4 decimals)")
+		.nullable()
+		.optional(),
+	exclude_from_stats: z.boolean().optional(),
 	bank: z.string().max(100).nullable().optional(),
 	account_number: z.string().max(80).nullable().optional(),
 });
@@ -80,3 +86,23 @@ export const unarchiveAccountFn = createServerFn({ method: "POST" })
 export const deleteAccountFn = createServerFn({ method: "POST" })
 	.validator(z.object({ id: z.uuid() }))
 	.handler(async ({ data }) => apiRequest<void>(`/accounts/${data.id}`, { method: "DELETE" }));
+
+/** Make an account match its bank: send the new balance, or an amount to add (negative takes
+ * away). The difference is recorded as an adjustment that is not income or spending. */
+export const adjustAccountFn = createServerFn({ method: "POST" })
+	.validator(
+		z
+			.object({
+				id: z.uuid(),
+				new_balance: balance.optional(),
+				amount: balance.optional(),
+				date: z.iso.date().optional(),
+				note: z.string().trim().max(1000).nullish(),
+			})
+			.refine((v) => (v.new_balance === undefined) !== (v.amount === undefined), {
+				message: "Send either the new balance or an amount",
+			}),
+	)
+	.handler(async ({ data: { id, ...body } }) =>
+		apiRequest<Transaction>(`/accounts/${id}/adjust`, { method: "POST", body }),
+	);

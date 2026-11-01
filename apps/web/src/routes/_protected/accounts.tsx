@@ -2,6 +2,7 @@ import { MORPH_TRANSITION, morph } from "#/lib/shape";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import TuneIcon from "@mui/icons-material/Tune";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -15,6 +16,8 @@ import { z } from "zod";
 import AccountForm from "#/components/AccountForm";
 import ArchivedAccounts from "#/components/ArchivedAccounts";
 import AccountIdentity from "#/components/AccountIdentity";
+import AdjustBalanceDialog from "#/components/AdjustBalanceDialog";
+import CreditUsage from "#/components/CreditUsage";
 import ConfirmDelete from "#/components/ConfirmDelete";
 import EmptyState from "#/components/EmptyState";
 import PageHeader from "#/components/PageHeader";
@@ -105,6 +108,24 @@ function ArchiveButton({ account }: { account: Account }) {
 		>
 			<Inventory2OutlinedIcon fontSize="small" />
 		</IconButton>
+	);
+}
+
+/** Opens the dialog that makes an account match its bank. */
+function AdjustButton({ account }: { account: Account }) {
+	const [open, setOpen] = useState(false);
+	return (
+		<>
+			<IconButton
+				aria-label="Adjust balance"
+				title="Adjust balance"
+				size="small"
+				onClick={() => setOpen(true)}
+			>
+				<TuneIcon fontSize="small" />
+			</IconButton>
+			{open && <AdjustBalanceDialog account={account} onClose={() => setOpen(false)} />}
+		</>
 	);
 }
 
@@ -210,7 +231,9 @@ function AccountsPage() {
 										<Typography variant="subtitle1">{ACCOUNT_GROUP_LABELS[group]}</Typography>
 										<Typography variant="body2" sx={{ color: "text.secondary" }}>
 											{formatMoney(
-												sumDecimals(items.map((a) => a.base_balance)),
+												sumDecimals(
+													items.filter((a) => !a.exclude_from_stats).map((a) => a.base_balance),
+												),
 												user.base_currency,
 											)}
 										</Typography>
@@ -251,6 +274,7 @@ function AccountsPage() {
 													secondary={
 														<>
 															<AccountIdentity account={a} />
+															<CreditUsage account={a} />
 															{a.description && (
 																<Typography variant="caption" sx={{ color: "text.secondary" }}>
 																	{a.description}
@@ -287,6 +311,7 @@ function AccountsPage() {
 															>
 																<EditOutlinedIcon fontSize="small" />
 															</IconButton>
+															<AdjustButton account={a} />
 															<ArchiveButton account={a} />
 															<IconButton
 																aria-label="Delete"

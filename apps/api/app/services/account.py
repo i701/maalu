@@ -5,7 +5,7 @@ from decimal import Decimal
 from sqlalchemy import case, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.enums import LIABILITY_GROUPS, TransactionType
+from app.enums import CREDIT_LIMIT_GROUPS, LIABILITY_GROUPS, AccountGroup, TransactionType
 from app.models import Account, Transaction, User
 from app.schemas import AccountCreate, AccountResponse, AccountSummary, AccountUpdate
 from app.services.money import BASE_AMOUNT_QUANTUM, price_in_base
@@ -27,6 +27,10 @@ class AccountNumberTakenError(Exception):
     def __init__(self, name: str) -> None:
         super().__init__(name)
         self.name = name
+
+
+class AccountLimitError(Exception):
+    """A credit limit on an account that cannot have one."""
 
 
 class AccountHasTransactionsError(Exception):
@@ -105,7 +109,13 @@ class AccountService:
         if taken is not None:
             raise AccountNumberTakenError(taken)
 
+    @staticmethod
+    def _check_limit(group: AccountGroup, limit: Decimal | None) -> None:
+        if limit is not None and group not in CREDIT_LIMIT_GROUPS:
+            raise AccountLimitError
+
     async def create(self, user_id: uuid.UUID, data: AccountCreate) -> Account:
+        self._check_limit(data.group, data.credit_limit)
         await self._check_number(user_id, data.account_number)
         base = await self._base_currency(user_id)
         currency = data.currency or base
@@ -120,6 +130,8 @@ class AccountService:
             description=data.description,
             bank=data.bank,
             account_number=data.account_number,
+            credit_limit=data.credit_limit,
+            exclude_from_stats=data.exclude_from_stats,
         )
         self.db.add(account)
         await self.db.flush()
@@ -153,6 +165,11 @@ class AccountService:
 
     async def update(self, account: Account, data: AccountUpdate) -> Account:
         changes = data.model_dump(exclude_unset=True)
+        group = changes.get("group", account.group)
+        if changes.get("credit_limit") is not None:
+            self._check_limit(group, changes["credit_limit"])
+        elif group not in CREDIT_LIMIT_GROUPS:
+            changes["credit_limit"] = None  # moved out of cards and overdrafts: no limit any more
         if "account_number" in changes:
             await self._check_number(account.user_id, changes["account_number"], exclude=account.id)
 
@@ -232,6 +249,8 @@ class AccountService:
                     description=a.description,
                     bank=a.bank,
                     account_number=a.account_number,
+                    credit_limit=a.credit_limit,
+                    exclude_from_stats=a.exclude_from_stats,
                     is_liability=a.group in LIABILITY_GROUPS,
                     balance=balance,
                     base_balance=(balance * a.exchange_rate).quantize(BASE_AMOUNT_QUANTUM),
@@ -243,7 +262,12 @@ class AccountService:
         return out
 
     async def summary(self, user_id: uuid.UUID) -> AccountSummary:
-        accounts = await self.present(await self.list_for_user(user_id))
+        # an account excluded from the stats is not part of what you are worth
+        accounts = [
+            a
+            for a in await self.present(await self.list_for_user(user_id))
+            if not a.exclude_from_stats
+        ]
         assets = sum((a.base_balance for a in accounts if not a.is_liability), Decimal(0))
         liabilities = sum((-a.base_balance for a in accounts if a.is_liability), Decimal(0))
         return AccountSummary(
