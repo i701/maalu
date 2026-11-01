@@ -7,6 +7,7 @@ from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator, m
 
 from app.enums import PaymentMethod, TransactionType
 from app.schemas.account import AccountRef
+from app.schemas.group import GroupRef
 from app.schemas.subscription import SubscriptionRef
 from app.schemas.tag import TagNames, TagRef
 from app.schemas.types import CurrencyCode, ExchangeRate
@@ -241,6 +242,7 @@ class TransactionResponse(BaseModel):
     refunded_amount: Decimal = Field(
         description="On a purchase: how much the refunds so far have given back, in its currency."
     )
+    group: GroupRef | None = Field(default=None, description="The group it belongs to, if any")
     attachment_count: int = Field(default=0, description="How many files are attached")
     link_count: int = Field(default=0, description="How many web links are attached")
     currency: str

@@ -29,6 +29,7 @@ from app.models.account import Account
 from app.models.attachment import TransactionAttachment
 from app.models.base import Base
 from app.models.category import Category
+from app.models.group import TransactionGroup
 from app.models.link import TransactionLink
 from app.models.subscription import Subscription
 from app.models.tag import Tag, transaction_tags
@@ -127,6 +128,11 @@ class Transaction(Base):
     refund_of: Mapped["Transaction | None"] = relationship(
         lazy="joined", join_depth=1, remote_side="Transaction.id", foreign_keys=[refund_of_id]
     )
+    # The group this belongs to, if any (see `TransactionGroup`). Deleting the group only unlinks.
+    group_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("transaction_groups.id", ondelete="SET NULL"), index=True, default=None
+    )
+    group: Mapped[TransactionGroup | None] = relationship(lazy="joined")
     # Something coming up that has not happened yet (rent due next month). It is listed under
     # "upcoming" but counts toward nothing (balances, budgets, totals, stats) until it is posted,
     # which just turns this off.

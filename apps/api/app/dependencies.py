@@ -14,6 +14,7 @@ from app.services import (
     BudgetService,
     CategoryService,
     GoalService,
+    GroupService,
     LinkService,
     SessionService,
     StatsService,
@@ -82,6 +83,10 @@ def get_attachment_service(db: DbSession) -> AttachmentService:
     return AttachmentService(db)
 
 
+def get_group_service(db: DbSession) -> GroupService:
+    return GroupService(db)
+
+
 def get_link_service(db: DbSession) -> LinkService:
     return LinkService(db)
 
@@ -107,6 +112,7 @@ SubscriptionServiceDep = Annotated[SubscriptionService, Depends(get_subscription
 TagServiceDep = Annotated[TagService, Depends(get_tag_service)]
 TemplateServiceDep = Annotated[TemplateService, Depends(get_template_service)]
 AttachmentServiceDep = Annotated[AttachmentService, Depends(get_attachment_service)]
+GroupServiceDep = Annotated[GroupService, Depends(get_group_service)]
 LinkServiceDep = Annotated[LinkService, Depends(get_link_service)]
 BackupServiceDep = Annotated[BackupService, Depends(get_backup_service)]
 

@@ -35,6 +35,7 @@ from app.schemas import (
 from app.services.account import AccountCurrencyMismatchError, AccountNotFoundError
 from app.services.category import CategoryService, normalize_name
 from app.services.errors import TransactionNotPlannedError, TransactionRuleError
+from app.services.group import GroupService
 from app.services.money import BASE_AMOUNT_QUANTUM, price_in_base
 from app.services.subscription import SubscriptionNotFoundError
 from app.services.tag import TagService
@@ -1028,6 +1029,7 @@ class TransactionService:
         old_type = transaction.type
         new_type = changes.get("type", old_type)
         is_transfer = new_type is TransactionType.TRANSFER
+        left_group: uuid.UUID | None = None
         if transaction.type is TransactionType.EXPENSE and self._has_refunds(transaction):
             self._guard_refunded_purchase(transaction, changes, data)
 
@@ -1120,6 +1122,10 @@ class TransactionService:
 
         # Type-specific housekeeping when the kind of transaction changes.
         if is_transfer:
+            # a transfer can't be in a group
+            left_group = transaction.group_id
+            transaction.group_id = None
+            transaction.group = None
             transaction.splits = []
             transaction.vendor = None
             transaction.subscription = None
@@ -1150,6 +1156,8 @@ class TransactionService:
                 exclude=transaction.id,
             )
         await self.db.flush()
+        if left_group is not None:  # it was turned into a transfer: the group may be too small now
+            await GroupService(self.db).dissolve_undersized(user_id, {left_group})
         await self.db.refresh(transaction)
         return transaction
 
@@ -1256,9 +1264,11 @@ class TransactionService:
     async def bulk_purge(self, user_id: uuid.UUID, ids: list[uuid.UUID]) -> BulkResult:
         """Delete for good: only what is already in the trash."""
         rows, skipped = await self._bulk_rows(user_id, ids, trashed=True)
+        groups = {t.group_id for t in rows}
         for t in rows:
             await self.db.delete(t)
         await self.db.flush()
+        await GroupService(self.db).dissolve_undersized(user_id, groups)
         return BulkResult(updated=len(rows), skipped=skipped)
 
     async def bulk_update(self, user_id: uuid.UUID, data: BulkUpdate) -> BulkResult:
@@ -1304,5 +1314,7 @@ class TransactionService:
 
     async def delete(self, transaction: Transaction) -> None:
         """Delete for good (used from the trash)."""
+        group_id = transaction.group_id
         await self.db.delete(transaction)
         await self.db.flush()
+        await GroupService(self.db).dissolve_undersized(transaction.user_id, {group_id})

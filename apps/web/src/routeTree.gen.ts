@@ -17,6 +17,7 @@ import { Route as ProtectedAccountsRouteImport } from './routes/_protected/accou
 import { Route as ProtectedBudgetRouteImport } from './routes/_protected/budget'
 import { Route as ProtectedCategoriesRouteImport } from './routes/_protected/categories'
 import { Route as ProtectedDashboardRouteImport } from './routes/_protected/dashboard'
+import { Route as ProtectedGroupsRouteImport } from './routes/_protected/groups'
 import { Route as ProtectedProfileRouteImport } from './routes/_protected/profile'
 import { Route as ProtectedSettingsRouteImport } from './routes/_protected/settings'
 import { Route as ProtectedSubscriptionsRouteImport } from './routes/_protected/subscriptions'
@@ -67,6 +68,11 @@ const ProtectedCategoriesRoute = ProtectedCategoriesRouteImport.update({
 const ProtectedDashboardRoute = ProtectedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => ProtectedRoute,
+} as any)
+const ProtectedGroupsRoute = ProtectedGroupsRouteImport.update({
+  id: '/groups',
+  path: '/groups',
   getParentRoute: () => ProtectedRoute,
 } as any)
 const ProtectedProfileRoute = ProtectedProfileRouteImport.update({
@@ -138,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/budget': typeof ProtectedBudgetRoute
   '/categories': typeof ProtectedCategoriesRoute
   '/dashboard': typeof ProtectedDashboardRoute
+  '/groups': typeof ProtectedGroupsRoute
   '/profile': typeof ProtectedProfileRoute
   '/settings': typeof ProtectedSettingsRoute
   '/subscriptions': typeof ProtectedSubscriptionsRoute
@@ -159,6 +166,7 @@ export interface FileRoutesByTo {
   '/budget': typeof ProtectedBudgetRoute
   '/categories': typeof ProtectedCategoriesRoute
   '/dashboard': typeof ProtectedDashboardRoute
+  '/groups': typeof ProtectedGroupsRoute
   '/profile': typeof ProtectedProfileRoute
   '/settings': typeof ProtectedSettingsRoute
   '/subscriptions': typeof ProtectedSubscriptionsRoute
@@ -182,6 +190,7 @@ export interface FileRoutesById {
   '/_protected/budget': typeof ProtectedBudgetRoute
   '/_protected/categories': typeof ProtectedCategoriesRoute
   '/_protected/dashboard': typeof ProtectedDashboardRoute
+  '/_protected/groups': typeof ProtectedGroupsRoute
   '/_protected/profile': typeof ProtectedProfileRoute
   '/_protected/settings': typeof ProtectedSettingsRoute
   '/_protected/subscriptions': typeof ProtectedSubscriptionsRoute
@@ -205,6 +214,7 @@ export interface FileRouteTypes {
     | '/budget'
     | '/categories'
     | '/dashboard'
+    | '/groups'
     | '/profile'
     | '/settings'
     | '/subscriptions'
@@ -226,6 +236,7 @@ export interface FileRouteTypes {
     | '/budget'
     | '/categories'
     | '/dashboard'
+    | '/groups'
     | '/profile'
     | '/settings'
     | '/subscriptions'
@@ -248,6 +259,7 @@ export interface FileRouteTypes {
     | '/_protected/budget'
     | '/_protected/categories'
     | '/_protected/dashboard'
+    | '/_protected/groups'
     | '/_protected/profile'
     | '/_protected/settings'
     | '/_protected/subscriptions'
@@ -328,6 +340,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof ProtectedDashboardRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
+    '/_protected/groups': {
+      id: '/_protected/groups'
+      path: '/groups'
+      fullPath: '/groups'
+      preLoaderRoute: typeof ProtectedGroupsRouteImport
       parentRoute: typeof ProtectedRoute
     }
     '/_protected/profile': {
@@ -422,6 +441,7 @@ interface ProtectedRouteChildren {
   ProtectedBudgetRoute: typeof ProtectedBudgetRoute
   ProtectedCategoriesRoute: typeof ProtectedCategoriesRoute
   ProtectedDashboardRoute: typeof ProtectedDashboardRoute
+  ProtectedGroupsRoute: typeof ProtectedGroupsRoute
   ProtectedProfileRoute: typeof ProtectedProfileRoute
   ProtectedSettingsRoute: typeof ProtectedSettingsRoute
   ProtectedSubscriptionsRoute: typeof ProtectedSubscriptionsRoute
@@ -437,6 +457,7 @@ const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedBudgetRoute: ProtectedBudgetRoute,
   ProtectedCategoriesRoute: ProtectedCategoriesRoute,
   ProtectedDashboardRoute: ProtectedDashboardRoute,
+  ProtectedGroupsRoute: ProtectedGroupsRoute,
   ProtectedProfileRoute: ProtectedProfileRoute,
   ProtectedSettingsRoute: ProtectedSettingsRoute,
   ProtectedSubscriptionsRoute: ProtectedSubscriptionsRoute,

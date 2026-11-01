@@ -41,6 +41,7 @@ OWNED = (
     "goals",
     "subscriptions",
     "tags",
+    "transaction_groups",
     "transaction_links",
     "transaction_templates",
     "transactions",

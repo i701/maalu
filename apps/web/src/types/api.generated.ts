@@ -681,6 +681,98 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Groups
+         * @description Your groups, the one with the most recent transaction first. The total number of matches,
+         *     ignoring paging, is in `X-Total-Count`.
+         */
+        get: operations["list_groups_api_v1_groups_get"];
+        put?: never;
+        /**
+         * Create Group
+         * @description Bundle two to fifty transactions under a name. Each must be yours, not in the trash, not a
+         *     transfer and not already in a group. Nothing about them changes: the group adds them up.
+         */
+        post: operations["create_group_api_v1_groups_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Group
+         * @description A group with its summary and its transactions (those not in the trash), newest first.
+         */
+        get: operations["get_group_api_v1_groups__group_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Group
+         * @description Delete the group. Its transactions are kept and just stop being grouped.
+         */
+        delete: operations["delete_group_api_v1_groups__group_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Group */
+        patch: operations["update_group_api_v1_groups__group_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/groups/{group_id}/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add To Group
+         * @description Add transactions to a group (at most fifty in all). Same rules as when creating one.
+         */
+        post: operations["add_to_group_api_v1_groups__group_id__transactions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/groups/{group_id}/transactions/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Remove From Group
+         * @description Take transactions out of a group (they are not deleted). A group left with fewer than two
+         *     transactions is deleted.
+         */
+        post: operations["remove_from_group_api_v1_groups__group_id__transactions_remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/links/{link_id}": {
         parameters: {
             query?: never;
@@ -2151,6 +2243,159 @@ export interface components {
             /** Target Date */
             target_date?: string | null;
         };
+        /** GroupCreate */
+        GroupCreate: {
+            /** Name */
+            name: string;
+            /** Note */
+            note?: string | null;
+            /** Transaction Ids */
+            transaction_ids: string[];
+        };
+        /** GroupDetail */
+        GroupDetail: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Currency
+             * @description Your base currency
+             */
+            currency: string;
+            /**
+             * Date From
+             * @description The earliest of those, if any
+             */
+            date_from: string | null;
+            /**
+             * Date To
+             * @description The latest of those, if any
+             */
+            date_to: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Money In
+             * @description Income in the group, in your base currency
+             */
+            money_in: string;
+            /**
+             * Money Out
+             * @description Expenses in the group, in your base currency
+             */
+            money_out: string;
+            /** Name */
+            name: string;
+            /**
+             * Net
+             * @description money_in - money_out, in your base currency
+             */
+            net: string;
+            /** Note */
+            note: string | null;
+            /**
+             * Transaction Count
+             * @description How many of its transactions are not in the trash
+             */
+            transaction_count: number;
+            /** Transactions */
+            transactions: components["schemas"]["TransactionResponse"][];
+        };
+        /** GroupMembers */
+        GroupMembers: {
+            /** Transaction Ids */
+            transaction_ids: string[];
+        };
+        /**
+         * GroupRef
+         * @description Compact form embedded in transaction responses.
+         */
+        GroupRef: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+        };
+        /** GroupRemoved */
+        GroupRemoved: {
+            /**
+             * Dissolved
+             * @description True when too few were left (a group needs two), so the group was deleted
+             */
+            dissolved: boolean;
+            /** Removed */
+            removed: number;
+        };
+        /** GroupResponse */
+        GroupResponse: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Currency
+             * @description Your base currency
+             */
+            currency: string;
+            /**
+             * Date From
+             * @description The earliest of those, if any
+             */
+            date_from: string | null;
+            /**
+             * Date To
+             * @description The latest of those, if any
+             */
+            date_to: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Money In
+             * @description Income in the group, in your base currency
+             */
+            money_in: string;
+            /**
+             * Money Out
+             * @description Expenses in the group, in your base currency
+             */
+            money_out: string;
+            /** Name */
+            name: string;
+            /**
+             * Net
+             * @description money_in - money_out, in your base currency
+             */
+            net: string;
+            /** Note */
+            note: string | null;
+            /**
+             * Transaction Count
+             * @description How many of its transactions are not in the trash
+             */
+            transaction_count: number;
+        };
+        /**
+         * GroupUpdate
+         * @description Partial update. `note: null` clears it.
+         */
+        GroupUpdate: {
+            /** Name */
+            name?: string | null;
+            /** Note */
+            note?: string | null;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -2888,6 +3133,8 @@ export interface components {
             description: string | null;
             /** Exchange Rate */
             exchange_rate: string;
+            /** @description The group it belongs to, if any */
+            group?: components["schemas"]["GroupRef"] | null;
             /**
              * Id
              * Format: uuid
@@ -4567,6 +4814,239 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GoalResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_groups_api_v1_groups_get: {
+        parameters: {
+            query?: {
+                /** @description Search name and note */
+                q?: string | null;
+                /** @description Omit for all rows */
+                limit?: number | null;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_group_api_v1_groups_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GroupCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_group_api_v1_groups__group_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_group_api_v1_groups__group_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_group_api_v1_groups__group_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GroupUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_to_group_api_v1_groups__group_id__transactions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GroupMembers"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_from_group_api_v1_groups__group_id__transactions_remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GroupMembers"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupRemoved"];
                 };
             };
             /** @description Validation Error */

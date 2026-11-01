@@ -28,6 +28,7 @@ from app.services.goal import (
     GoalRuleError,
     GoalService,
 )
+from app.services.group import GroupNotFoundError, GroupRuleError, GroupService
 from app.services.link import LinkService
 from app.services.money import ExchangeRateRequiredError
 from app.services.session import SessionService
@@ -87,6 +88,9 @@ __all__ = [
     "GoalNotFoundError",
     "GoalRuleError",
     "GoalService",
+    "GroupNotFoundError",
+    "GroupRuleError",
+    "GroupService",
     "InvalidPasswordError",
     "InvalidTwoFactorCodeError",
     "LinkService",

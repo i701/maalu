@@ -4,6 +4,7 @@ import UndoIcon from "@mui/icons-material/Undo";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
@@ -14,11 +15,12 @@ import IconButton from "@mui/material/IconButton";
 import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
-import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
 import { memo, useCallback, useState } from "react";
 import { z } from "zod";
 import ActiveFilters from "#/components/ActiveFilters";
 import BulkEditDialog from "#/components/BulkEditDialog";
+import GroupDialog from "#/components/GroupDialog";
 import ConfirmDelete from "#/components/ConfirmDelete";
 import EmptyState from "#/components/EmptyState";
 import ExportButton from "#/components/ExportButton";
@@ -80,6 +82,7 @@ import {
 } from "#/server/transactions";
 import { getBudgetFn } from "#/server/budget";
 import { getCategoryFn, listCategoriesFn } from "#/server/categories";
+import { listGroupsFn } from "#/server/groups";
 import { getMeFn } from "#/server/auth";
 import RefundDialogHost from "#/components/RefundDialogHost";
 import { canRefund, isRefund, wasRefunded } from "#/lib/refund";
@@ -93,6 +96,7 @@ import {
 	TRANSACTION_TYPES,
 	type Category,
 	type Tag,
+	type TransactionGroup,
 	type Transaction,
 	type Vendor,
 } from "#/types/api";
@@ -171,6 +175,7 @@ export const Route = createFileRoute("/_protected/transactions")({
 			category,
 			account,
 			budget,
+			groups,
 		] = await Promise.all([
 			listTransactionsFn({ data: deps }),
 			listVendorsFn(),
@@ -190,6 +195,8 @@ export const Route = createFileRoute("/_protected/transactions")({
 			deps.account_id ? getAccountFn({ data: { id: deps.account_id } }) : Promise.resolve(null),
 			// for the "limits needing attention" strip; the page works without it
 			getBudgetFn({ data: {} }),
+			// for the "Group" action's list of groups to add to
+			listGroupsFn(),
 		]);
 		const rows = unwrap(transactions);
 		const last = lastPageIfOutOfRange({
@@ -215,6 +222,7 @@ export const Route = createFileRoute("/_protected/transactions")({
 			currencies,
 			allCategories: unwrap(allCategories),
 			budget: budget.ok ? budget.data : null,
+			allGroups: groups.ok ? groups.data : [],
 			selectedVendor: vendor?.ok ? { id: vendor.data.id, label: vendor.data.name } : null,
 			selectedCategory: category?.ok ? { id: category.data.id, label: category.data.name } : null,
 			selectedAccount: account?.ok
@@ -292,6 +300,21 @@ function TxRefundChip({ t }: { t: Transaction }) {
 				canRefund(t) ? `Refunded ${formatMoney(t.refunded_amount, t.currency)}` : "Fully refunded"
 			}
 		/>
+	);
+}
+
+/** The group it belongs to, opening that group. */
+function TxGroupChip({ t }: { t: Transaction }) {
+	if (!t.group) return null;
+	return (
+		<Link
+			to="/groups"
+			search={{ group: t.group.id, page: 1, pageSize: 20 }}
+			style={{ textDecoration: "none" }}
+			title={`Open the group "${t.group.name}"`}
+		>
+			<TonalChip accent={ACCENT.blue} label={t.group.name} clickable />
+		</Link>
 	);
 }
 
@@ -460,6 +483,11 @@ const TransactionsTable = memo(function TransactionsTable({
 								<TxRefundChip t={t} />
 							</Box>
 						)}
+						{t.group && (
+							<Box sx={{ mt: 0.5 }}>
+								<TxGroupChip t={t} />
+							</Box>
+						)}
 						{t.tags.length > 0 && (
 							<Box sx={{ mt: 0.5, display: "flex", flexWrap: "wrap", gap: 0.5 }}>
 								<TagChips tags={t.tags} />
@@ -526,6 +554,7 @@ const TransactionsTable = memo(function TransactionsTable({
 							)}
 							<TxSubscriptionChip t={t} />
 							<TxRefundChip t={t} />
+							<TxGroupChip t={t} />
 							<TagChips tags={t.tags} />
 						</>
 					}
@@ -552,6 +581,7 @@ function TransactionList({
 	categories,
 	vendors,
 	tags,
+	groups,
 	onConvert,
 	onRefund,
 	onDuplicate,
@@ -565,6 +595,8 @@ function TransactionList({
 	categories: Category[];
 	vendors: Vendor[];
 	tags: Tag[];
+	/** Every group, for adding the selection to one. */
+	groups: TransactionGroup[];
 	/** How many transactions match the filters, over every page. */
 	total: number;
 	search: TransactionSearch;
@@ -578,6 +610,7 @@ function TransactionList({
 	// The ids the open dialog is about, fixed when it opened (the selection resets once rows move).
 	const [editing, setEditing] = useState<string[] | null>(null);
 	const [deleting, setDeleting] = useState<string[] | null>(null);
+	const [grouping, setGrouping] = useState<string[] | null>(null);
 
 	return (
 		<>
@@ -602,6 +635,14 @@ function TransactionList({
 					onClick={() => setEditing(selection.selectedIds)}
 				>
 					Edit
+				</Button>
+				<Button
+					size="small"
+					color="inherit"
+					startIcon={<Inventory2OutlinedIcon />}
+					onClick={() => setGrouping(selection.selectedIds)}
+				>
+					Group
 				</Button>
 				<Button
 					size="small"
@@ -632,6 +673,14 @@ function TransactionList({
 					vendors={vendors}
 					tags={tags}
 					onClose={() => setEditing(null)}
+					onDone={selection.clear}
+				/>
+			)}
+			{grouping && (
+				<GroupDialog
+					ids={grouping}
+					groups={groups}
+					onClose={() => setGrouping(null)}
 					onDone={selection.clear}
 				/>
 			)}
@@ -679,6 +728,7 @@ function TransactionsPage() {
 		accounts,
 		templates,
 		allTags,
+		allGroups,
 		defaultAccountId,
 		upcoming,
 		currencies,
@@ -855,6 +905,7 @@ function TransactionsPage() {
 										categories={allCategories}
 										vendors={vendors}
 										tags={allTags}
+										groups={allGroups}
 										total={total}
 										search={search}
 										onConvert={setConverting}

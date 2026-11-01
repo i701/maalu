@@ -21,6 +21,15 @@ from app.schemas.category import (
     CategoryUpdate,
 )
 from app.schemas.goal import GoalCreate, GoalEntryCreate, GoalResponse, GoalUpdate
+from app.schemas.group import (
+    GroupCreate,
+    GroupDetail,
+    GroupMembers,
+    GroupRef,
+    GroupRemoved,
+    GroupResponse,
+    GroupUpdate,
+)
 from app.schemas.link import LinkCreate, LinkResponse
 from app.schemas.subscription import (
     SubscriptionCreate,
@@ -106,6 +115,13 @@ __all__ = [
     "GoalEntryCreate",
     "GoalResponse",
     "GoalUpdate",
+    "GroupCreate",
+    "GroupDetail",
+    "GroupMembers",
+    "GroupRef",
+    "GroupRemoved",
+    "GroupResponse",
+    "GroupUpdate",
     "LinkCreate",
     "LinkResponse",
     "PasswordChange",
@@ -150,3 +166,6 @@ __all__ = [
     "VendorResponse",
     "VendorUpdate",
 ]
+
+# GroupDetail refers to TransactionResponse, which refers back to GroupRef, so it is finished here
+GroupDetail.model_rebuild(_types_namespace={"TransactionResponse": TransactionResponse})

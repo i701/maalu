@@ -41,6 +41,7 @@ from app.schemas import (
 from app.services import (
     AccountService,
     CategoryService,
+    GroupService,
     SubscriptionService,
     TransactionService,
     UserService,
@@ -311,6 +312,7 @@ async def seed(
         )
 
     counts = {"income": 0, "expense": 0, "transfer": 0}
+    everyday: list[Transaction] = []
 
     async def add(**fields) -> Transaction:
         tx = await tx_svc.create(uid, TransactionCreate(**fields))
@@ -492,6 +494,7 @@ async def seed(
                 account_id=account.id,
                 description=rng.choice([None, None, None, "Weekly shop", "With friends", "Urgent"]),
             )
+            everyday.append(bought)
             # now and then part of it goes back a few days later
             back = day + timedelta(days=rng.randint(1, 12))
             if rng.random() < 0.06 and back <= today:
@@ -505,6 +508,12 @@ async def seed(
                 )
 
     await db.flush()
+    # a group of three ordinary purchases, so the Groups page has something to show
+    if len(everyday) >= 3:
+        await GroupService(db).create(
+            uid, "Weekend out", "Seeded demo group", [t.id for t in everyday[:3]]
+        )
+
     await _group_categories(db, uid)
     n_vendors = await db.scalar(select(func.count(Vendor.id)).where(Vendor.user_id == uid))
     return SeedSummary(
