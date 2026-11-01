@@ -10,6 +10,7 @@ import { ACCENT } from "#/lib/m3";
 import { useAction } from "#/lib/use-action";
 import { unarchiveAccountFn } from "#/server/accounts";
 import type { Account } from "#/types/api";
+import AccountIdentity from "./AccountIdentity";
 import MobileCard from "./MobileCard";
 import { useNotify } from "./Notify";
 import Reveal from "./Reveal";
@@ -88,6 +89,7 @@ export default function ArchivedAccounts({
 										{a.name}
 									</Typography>
 								}
+								secondary={<AccountIdentity account={a} />}
 								end={
 									<Typography variant="body2" sx={{ color: "text.secondary" }}>
 										{formatMoney(a.balance, a.currency)}

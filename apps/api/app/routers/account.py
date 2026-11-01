@@ -8,6 +8,7 @@ from app.pagination import PageDep, set_total
 from app.schemas import AccountCreate, AccountResponse, AccountSummary, AccountUpdate
 from app.services import (
     AccountHasTransactionsError,
+    AccountNumberTakenError,
     ExchangeRateRequiredError,
 )
 
@@ -20,6 +21,12 @@ _RATE_REQUIRED = HTTPException(
 _NOT_FOUND = HTTPException(status.HTTP_404_NOT_FOUND, "Account not found")
 
 
+def _number_taken(exc: AccountNumberTakenError) -> HTTPException:
+    return HTTPException(
+        status.HTTP_409_CONFLICT, f'The account "{exc.name}" already has this account number'
+    )
+
+
 async def _present_one(service: AccountServiceDep, account) -> AccountResponse:
     return (await service.present([account]))[0]
 
@@ -30,6 +37,8 @@ async def create_account(data: AccountCreate, user_id: CurrentUserId, service: A
         account = await service.create(user_id, data)
     except ExchangeRateRequiredError:
         raise _RATE_REQUIRED from None
+    except AccountNumberTakenError as exc:
+        raise _number_taken(exc) from None
     return await _present_one(service, account)
 
 
@@ -39,7 +48,9 @@ async def list_accounts(
     service: AccountServiceDep,
     response: Response,
     page: PageDep,
-    q: Annotated[str | None, Query(max_length=100, description="Search name, description")] = None,
+    q: Annotated[
+        str | None, Query(max_length=100, description="Search name, bank, number, description")
+    ] = None,
     archived: Annotated[bool, Query(description="List the archived accounts instead")] = False,
 ):
     """All accounts in use, or one page with `limit`/`offset`, optionally searched by name. The
@@ -81,6 +92,8 @@ async def update_account(
         account = await service.update(account, data)
     except ExchangeRateRequiredError:
         raise _RATE_REQUIRED from None
+    except AccountNumberTakenError as exc:
+        raise _number_taken(exc) from None
     except AccountHasTransactionsError:
         raise HTTPException(
             status.HTTP_409_CONFLICT,

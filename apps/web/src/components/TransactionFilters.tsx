@@ -1,3 +1,4 @@
+import { accountIdentity } from "#/lib/accounts";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
@@ -68,7 +69,9 @@ async function searchAccountOptions(q: string): Promise<RemoteOption[]> {
 		? res.data.map((a) => ({
 				id: a.id,
 				label: a.name,
-				hint: `${ACCOUNT_GROUP_LABELS[a.group]} · ${a.currency}`,
+				hint: [ACCOUNT_GROUP_LABELS[a.group], a.currency, accountIdentity(a)]
+					.filter(Boolean)
+					.join(" · "),
 			}))
 		: [];
 }

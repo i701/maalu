@@ -21,6 +21,14 @@ class AccountCurrencyMismatchError(Exception):
         self.currency = currency
 
 
+class AccountNumberTakenError(Exception):
+    """Another of the user's accounts already has this account number."""
+
+    def __init__(self, name: str) -> None:
+        super().__init__(name)
+        self.name = name
+
+
 class AccountHasTransactionsError(Exception):
     """The account's currency can't change while transactions are linked to it."""
 
@@ -51,6 +59,9 @@ class AccountService:
                 or_(
                     Account.name.icontains(term, autoescape=True),
                     Account.description.icontains(term, autoescape=True),
+                    Account.bank.icontains(term, autoescape=True),
+                    # spaces never stay in a stored number, so ignore them in the search too
+                    Account.account_number.icontains(term.replace(" ", ""), autoescape=True),
                 )
             )
         return conditions
@@ -79,7 +90,23 @@ class AccountService:
         stmt = select(Account).where(Account.id == account_id, Account.user_id == user_id)
         return await self.db.scalar(stmt)
 
+    async def _check_number(
+        self, user_id: uuid.UUID, number: str | None, *, exclude: uuid.UUID | None = None
+    ) -> None:
+        """Refuse a number another account of the user already carries."""
+        if number is None:
+            return
+        stmt = select(Account.name).where(
+            Account.user_id == user_id, Account.account_number == number
+        )
+        if exclude is not None:
+            stmt = stmt.where(Account.id != exclude)
+        taken = await self.db.scalar(stmt)
+        if taken is not None:
+            raise AccountNumberTakenError(taken)
+
     async def create(self, user_id: uuid.UUID, data: AccountCreate) -> Account:
+        await self._check_number(user_id, data.account_number)
         base = await self._base_currency(user_id)
         currency = data.currency or base
         rate, _ = price_in_base(Decimal(1), currency, data.exchange_rate, base)
@@ -91,6 +118,8 @@ class AccountService:
             currency=currency,
             exchange_rate=rate,
             description=data.description,
+            bank=data.bank,
+            account_number=data.account_number,
         )
         self.db.add(account)
         await self.db.flush()
@@ -124,6 +153,8 @@ class AccountService:
 
     async def update(self, account: Account, data: AccountUpdate) -> Account:
         changes = data.model_dump(exclude_unset=True)
+        if "account_number" in changes:
+            await self._check_number(account.user_id, changes["account_number"], exclude=account.id)
 
         if changes.keys() & {"currency", "exchange_rate"}:
             base = await self._base_currency(account.user_id)
@@ -199,6 +230,8 @@ class AccountService:
                     currency=a.currency,
                     exchange_rate=a.exchange_rate,
                     description=a.description,
+                    bank=a.bank,
+                    account_number=a.account_number,
                     is_liability=a.group in LIABILITY_GROUPS,
                     balance=balance,
                     base_balance=(balance * a.exchange_rate).quantize(BASE_AMOUNT_QUANTUM),

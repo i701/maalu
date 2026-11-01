@@ -2,6 +2,7 @@ import Grid from "@mui/material/Grid";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import { useState } from "react";
+import { bankChoices } from "#/lib/accounts";
 import { todayIso } from "#/lib/format";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
@@ -9,6 +10,7 @@ import { createAccountFn, updateAccountFn } from "#/server/accounts";
 import { ACCOUNT_GROUPS, ACCOUNT_GROUP_LABELS, type Account, type AccountGroup } from "#/types/api";
 import CurrencyChips from "./CurrencyChips";
 import FormDialog from "./FormDialog";
+import NamePickerField from "./NamePickerField";
 import RateField from "./RateField";
 import { useNotify } from "./Notify";
 
@@ -47,6 +49,8 @@ export default function AccountForm({
 			currency,
 			exchange_rate: foreign ? text("exchange_rate") : undefined,
 			description: text("description") || null,
+			bank: text("bank") || null,
+			account_number: text("account_number") || null,
 		};
 
 		const ok = await run(() =>
@@ -93,6 +97,27 @@ export default function AccountForm({
 						required
 						autoFocus
 						slotProps={{ htmlInput: { maxLength: 200 } }}
+					/>
+				</Grid>
+
+				<Grid size={{ xs: 12, sm: 5 }}>
+					<NamePickerField
+						names={bankChoices(accounts)}
+						noun="bank"
+						label="Bank"
+						name="bank"
+						defaultValue={account?.bank ?? ""}
+						maxLength={100}
+						helper={false}
+					/>
+				</Grid>
+				<Grid size={{ xs: 12, sm: 7 }}>
+					<TextField
+						label="Account number"
+						name="account_number"
+						defaultValue={account?.account_number ?? ""}
+						helperText="Optional. Tells accounts with the same name apart."
+						slotProps={{ htmlInput: { maxLength: 80, inputMode: "text", autoComplete: "off" } }}
 					/>
 				</Grid>
 

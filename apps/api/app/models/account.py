@@ -2,7 +2,17 @@ import uuid
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Numeric, String, Text, Uuid, func
+from sqlalchemy import (
+    DateTime,
+    Enum,
+    ForeignKey,
+    Numeric,
+    String,
+    Text,
+    UniqueConstraint,
+    Uuid,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.enums import AccountGroup
@@ -14,6 +24,11 @@ class Account(Base):
     `opening_amount` plus the sum of the transactions linked to the account."""
 
     __tablename__ = "accounts"
+    # An account number identifies one account, so two of a user's accounts cannot share one. Many
+    # accounts can have none (NULLs never collide).
+    __table_args__ = (
+        UniqueConstraint("user_id", "account_number", name="uq_accounts_user_account_number"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
@@ -29,6 +44,11 @@ class Account(Base):
         )
     )
     name: Mapped[str] = mapped_column(String(200))
+    # Which bank holds it, as the user writes it ("BML", "MIB"), and the account's number there.
+    # Both optional: they tell apart accounts that share a name and let a statement be matched to
+    # its account. The number is kept without spaces, as typed otherwise.
+    bank: Mapped[str | None] = mapped_column(String(100), default=None)
+    account_number: Mapped[str | None] = mapped_column(String(34), default=None)
     # Signed, in the account's currency. Use a negative amount for money owed (cards, loans).
     opening_amount: Mapped[Decimal] = mapped_column(Numeric(19, 4), default=Decimal(0))
     # Transactions linked to the account must be in this currency.

@@ -56,15 +56,16 @@ HISTORY_DAYS = 180
 LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1"}
 
 # (group, name, opening amount, currency)
+# group, name, opening amount, currency, bank, made-up account number
 ACCOUNTS = [
-    (AccountGroup.CASH, "Wallet", "1500", BASE),
-    (AccountGroup.ACCOUNTS, "BML Current", "18000", BASE),
-    (AccountGroup.SAVINGS, "BML Savings", "60000", BASE),
-    (AccountGroup.DEBIT_CARD, "MIB Debit", "5200", BASE),
-    (AccountGroup.CARD, "Visa Credit", "0", BASE),
-    (AccountGroup.PREPAID, "Dhiraagu Top-up", "120", BASE),
-    (AccountGroup.ACCOUNTS, "USD Account", "2500", "USD"),
-    (AccountGroup.LOAN, "Car Loan", "-45000", BASE),
+    (AccountGroup.CASH, "Wallet", "1500", BASE, None, None),
+    (AccountGroup.ACCOUNTS, "BML Current", "18000", BASE, "BML", "7770000000001"),
+    (AccountGroup.SAVINGS, "BML Savings", "60000", BASE, "BML", "7730000000002"),
+    (AccountGroup.DEBIT_CARD, "MIB Debit", "5200", BASE, "MIB", "90501100000001001"),
+    (AccountGroup.CARD, "Visa Credit", "0", BASE, "BML", "411111XXXXXX0003"),
+    (AccountGroup.PREPAID, "Dhiraagu Top-up", "120", BASE, None, None),
+    (AccountGroup.ACCOUNTS, "USD Account", "2500", "USD", "BML", "7730000000004"),
+    (AccountGroup.LOAN, "Car Loan", "-45000", BASE, "BML", None),
 ]
 
 # name -> (is_local, usual currency, contact, address)
@@ -285,7 +286,7 @@ async def seed(
 
     # --- accounts
     accounts: dict[str, Account] = {}
-    for group, name, opening, currency in ACCOUNTS:
+    for group, name, opening, currency, bank, number in ACCOUNTS:
         accounts[name] = await accounts_svc.create(
             uid,
             AccountCreate(
@@ -295,6 +296,8 @@ async def seed(
                 currency=currency,
                 exchange_rate=None if currency == BASE else USD_RATE,
                 description=rng.choice([None, None, "Seeded demo account"]),
+                bank=bank,
+                account_number=number,
             ),
         )
 

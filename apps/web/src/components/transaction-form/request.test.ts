@@ -191,7 +191,14 @@ describe("tags", () => {
 });
 
 describe("initialValues", () => {
-	const card = { id: "acc-1", name: "Visa", group: "card", currency: "USD" } as const;
+	const card = {
+		id: "acc-1",
+		name: "Visa",
+		group: "card",
+		currency: "USD",
+		bank: null,
+		account_number: null,
+	} as const;
 
 	it("starts a new transaction in the default account, with its currency and method", () => {
 		expect(initialValues(undefined, "MVR", card)).toMatchObject({

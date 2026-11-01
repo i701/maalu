@@ -1401,6 +1401,16 @@ export interface components {
         /** AccountCreate */
         AccountCreate: {
             /**
+             * Account Number
+             * @description Its number at the bank, if any. Spaces are ignored; a user's accounts cannot share one.
+             */
+            account_number?: string | null;
+            /**
+             * Bank
+             * @description The bank that holds it, if any
+             */
+            bank?: string | null;
+            /**
              * Currency
              * @description Defaults to your base currency
              */
@@ -1431,6 +1441,10 @@ export interface components {
          * @description Compact form embedded in transaction responses.
          */
         AccountRef: {
+            /** Account Number */
+            account_number: string | null;
+            /** Bank */
+            bank: string | null;
             /** Currency */
             currency: string;
             group: components["schemas"]["AccountGroup"];
@@ -1444,6 +1458,8 @@ export interface components {
         };
         /** AccountResponse */
         AccountResponse: {
+            /** Account Number */
+            account_number: string | null;
             /**
              * Archived At
              * @description When it was archived; null for an account in use
@@ -1451,6 +1467,8 @@ export interface components {
             archived_at: string | null;
             /** Balance */
             balance: string;
+            /** Bank */
+            bank: string | null;
             /**
              * Base Balance
              * @description Balance valued in your base currency
@@ -1501,6 +1519,10 @@ export interface components {
          * @description Partial update. `description: null` clears it.
          */
         AccountUpdate: {
+            /** Account Number */
+            account_number?: string | null;
+            /** Bank */
+            bank?: string | null;
             /** Currency */
             currency?: string | null;
             /** Description */
@@ -3208,7 +3230,7 @@ export interface operations {
     list_accounts_api_v1_accounts_get: {
         parameters: {
             query?: {
-                /** @description Search name, description */
+                /** @description Search name, bank, number, description */
                 q?: string | null;
                 /** @description List the archived accounts instead */
                 archived?: boolean;

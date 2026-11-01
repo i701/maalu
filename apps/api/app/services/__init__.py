@@ -2,6 +2,7 @@ from app.services.account import (
     AccountCurrencyMismatchError,
     AccountHasTransactionsError,
     AccountNotFoundError,
+    AccountNumberTakenError,
     AccountService,
 )
 from app.services.attachment import (
@@ -62,6 +63,7 @@ __all__ = [
     "AccountCurrencyMismatchError",
     "AccountHasTransactionsError",
     "AccountNotFoundError",
+    "AccountNumberTakenError",
     "AccountService",
     "AttachmentNotFoundError",
     "AttachmentRuleError",

@@ -69,6 +69,8 @@ async def test_balance_follows_linked_transactions(client: AsyncClient, auth):
         "name": "Wallet",
         "group": "cash",
         "currency": "MVR",
+        "bank": None,
+        "account_number": None,
     }
 
 

@@ -3,6 +3,31 @@
     "schemas": {
       "AccountCreate": {
         "properties": {
+          "account_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Its number at the bank, if any. Spaces are ignored; a user's accounts cannot share one.",
+            "title": "Account Number"
+          },
+          "bank": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The bank that holds it, if any",
+            "title": "Bank"
+          },
           "currency": {
             "anyOf": [
               {
@@ -93,6 +118,28 @@
       "AccountRef": {
         "description": "Compact form embedded in transaction responses.",
         "properties": {
+          "account_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Number"
+          },
+          "bank": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bank"
+          },
           "currency": {
             "title": "Currency",
             "type": "string"
@@ -114,13 +161,26 @@
           "id",
           "name",
           "group",
-          "currency"
+          "currency",
+          "bank",
+          "account_number"
         ],
         "title": "AccountRef",
         "type": "object"
       },
       "AccountResponse": {
         "properties": {
+          "account_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Number"
+          },
           "archived_at": {
             "anyOf": [
               {
@@ -137,6 +197,17 @@
           "balance": {
             "title": "Balance",
             "type": "string"
+          },
+          "bank": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bank"
           },
           "base_balance": {
             "description": "Balance valued in your base currency",
@@ -200,6 +271,8 @@
           "currency",
           "exchange_rate",
           "description",
+          "bank",
+          "account_number",
           "is_liability",
           "balance",
           "base_balance",
@@ -242,6 +315,29 @@
       "AccountUpdate": {
         "description": "Partial update. `description: null` clears it.",
         "properties": {
+          "account_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Number"
+          },
+          "bank": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bank"
+          },
           "currency": {
             "anyOf": [
               {
@@ -4595,7 +4691,7 @@
         "operationId": "list_accounts_api_v1_accounts_get",
         "parameters": [
           {
-            "description": "Search name, description",
+            "description": "Search name, bank, number, description",
             "in": "query",
             "name": "q",
             "required": false,
@@ -4609,7 +4705,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Search name, description",
+              "description": "Search name, bank, number, description",
               "title": "Q"
             }
           },

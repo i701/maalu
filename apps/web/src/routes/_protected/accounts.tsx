@@ -14,6 +14,7 @@ import { useState } from "react";
 import { z } from "zod";
 import AccountForm from "#/components/AccountForm";
 import ArchivedAccounts from "#/components/ArchivedAccounts";
+import AccountIdentity from "#/components/AccountIdentity";
 import ConfirmDelete from "#/components/ConfirmDelete";
 import EmptyState from "#/components/EmptyState";
 import PageHeader from "#/components/PageHeader";
@@ -248,11 +249,14 @@ function AccountsPage() {
 														</Typography>
 													}
 													secondary={
-														a.description && (
-															<Typography variant="caption" sx={{ color: "text.secondary" }}>
-																{a.description}
-															</Typography>
-														)
+														<>
+															<AccountIdentity account={a} />
+															{a.description && (
+																<Typography variant="caption" sx={{ color: "text.secondary" }}>
+																	{a.description}
+																</Typography>
+															)}
+														</>
 													}
 													end={
 														<Typography

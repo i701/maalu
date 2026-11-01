@@ -18,6 +18,8 @@ const createSchema = z.object({
 	currency: currency.optional(),
 	exchange_rate: exchangeRate.optional(),
 	description: z.string().max(1000).nullable().optional(),
+	bank: z.string().max(100).nullable().optional(),
+	account_number: z.string().max(80).nullable().optional(),
 });
 
 const updateSchema = z.object({
