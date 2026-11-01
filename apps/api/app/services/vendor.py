@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.enums import VendorLocality
-from app.models import Subscription, Transaction, TransactionTemplate, Vendor
+from app.models import ImportAlias, Subscription, Transaction, TransactionTemplate, Vendor
 from app.schemas import VendorCreate, VendorUpdate
 from app.services.category import CategoryService
 from app.services.tag import TagService
@@ -150,13 +150,13 @@ class VendorService:
     async def merge(self, source: Vendor, target: Vendor) -> Vendor:
         """Move everything from `source` to `target`, then delete `source`.
 
-        Transactions (trashed ones too), subscriptions and templates follow. Details the target
-        lacks (address, contact, currency, local or foreign, usual category and tags) are taken
-        from the source; what the target already has is kept.
+        Transactions (trashed ones too), subscriptions, templates and remembered statement names
+        follow. Details the target lacks (address, contact, currency, local or foreign, usual
+        category and tags) are taken from the source; what the target already has is kept.
         """
         if source.id == target.id:
             raise VendorNameTakenError
-        for model in (Transaction, Subscription, TransactionTemplate):
+        for model in (Transaction, Subscription, TransactionTemplate, ImportAlias):
             await self.db.execute(
                 update(model).where(model.vendor_id == source.id).values(vendor_id=target.id)
             )

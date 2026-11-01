@@ -39,6 +39,8 @@ OWNED = (
     "budgets",
     "categories",
     "goals",
+    "import_aliases",
+    "import_batches",
     "subscriptions",
     "tags",
     "transaction_groups",
@@ -51,6 +53,7 @@ OWNED = (
 CHILDREN = {
     "budget_line_categories": ("line_id", "budget_lines"),
     "goal_entries": ("goal_id", "goals"),
+    "import_rows": ("batch_id", "import_batches"),
     "template_tags": ("template_id", "transaction_templates"),
     "transaction_splits": ("transaction_id", "transactions"),
     "transaction_tags": ("transaction_id", "transactions"),

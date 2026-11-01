@@ -7,6 +7,7 @@ from app.models.category import Category
 from app.models.exchange_rate import ExchangeRate
 from app.models.goal import Goal, GoalEntry
 from app.models.group import TransactionGroup
+from app.models.import_batch import ImportAlias, ImportBatch, ImportRow
 from app.models.link import TransactionLink
 from app.models.recovery_code import RecoveryCode
 from app.models.session import UserSession
@@ -28,6 +29,9 @@ __all__ = [
     "ExchangeRate",
     "Goal",
     "GoalEntry",
+    "ImportAlias",
+    "ImportBatch",
+    "ImportRow",
     "RecoveryCode",
     "SnapshotDirty",
     "Subscription",

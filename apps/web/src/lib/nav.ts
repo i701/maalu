@@ -56,6 +56,7 @@ export const NAV_ITEMS: readonly NavDestination[] = [
 		group: "money",
 		bottom: true,
 	},
+	{ to: "/import", label: "Import", symbol: "upload_file", accent: "orange", group: "money" },
 	{
 		to: "/budget",
 		label: "Budget",

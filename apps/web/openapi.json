@@ -2340,6 +2340,379 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "ImportBatchResponse": {
+        "properties": {
+          "account": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AccountRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "filename": {
+            "title": "Filename",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "imported_count": {
+            "title": "Imported Count",
+            "type": "integer"
+          },
+          "profile": {
+            "title": "Profile",
+            "type": "string"
+          },
+          "skipped_count": {
+            "title": "Skipped Count",
+            "type": "integer"
+          },
+          "transaction_count": {
+            "description": "How many of its transactions are still there",
+            "title": "Transaction Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "account",
+          "filename",
+          "profile",
+          "imported_count",
+          "skipped_count",
+          "transaction_count",
+          "created_at"
+        ],
+        "title": "ImportBatchResponse",
+        "type": "object"
+      },
+      "ImportCommit": {
+        "properties": {
+          "account_id": {
+            "format": "uuid",
+            "title": "Account Id",
+            "type": "string"
+          },
+          "filename": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Filename",
+            "type": "string"
+          },
+          "profile": {
+            "maxLength": 32,
+            "title": "Profile",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/ImportRowIn"
+            },
+            "maxItems": 2000,
+            "minItems": 1,
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "account_id",
+          "filename",
+          "profile",
+          "rows"
+        ],
+        "title": "ImportCommit",
+        "type": "object"
+      },
+      "ImportPreview": {
+        "properties": {
+          "account": {
+            "$ref": "#/components/schemas/AccountRef"
+          },
+          "balance_after": {
+            "description": "What it would hold after importing every new row",
+            "title": "Balance After",
+            "type": "string"
+          },
+          "balance_matches": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Whether that equals the statement's closing balance; null when the statement has none",
+            "title": "Balance Matches"
+          },
+          "balance_now": {
+            "description": "What the account holds now",
+            "title": "Balance Now",
+            "type": "string"
+          },
+          "closing_balance": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closing Balance"
+          },
+          "duplicate_count": {
+            "title": "Duplicate Count",
+            "type": "integer"
+          },
+          "new_count": {
+            "description": "Rows that would be imported (not already there)",
+            "title": "New Count",
+            "type": "integer"
+          },
+          "opening_balance": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opening Balance"
+          },
+          "profile": {
+            "title": "Profile",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/PreviewRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "profile",
+          "account",
+          "opening_balance",
+          "closing_balance",
+          "rows",
+          "new_count",
+          "duplicate_count",
+          "balance_now",
+          "balance_after",
+          "balance_matches"
+        ],
+        "title": "ImportPreview",
+        "type": "object"
+      },
+      "ImportResult": {
+        "properties": {
+          "batch": {
+            "$ref": "#/components/schemas/ImportBatchResponse"
+          },
+          "skipped": {
+            "items": {
+              "$ref": "#/components/schemas/ImportSkipped"
+            },
+            "title": "Skipped",
+            "type": "array"
+          }
+        },
+        "required": [
+          "batch",
+          "skipped"
+        ],
+        "title": "ImportResult",
+        "type": "object"
+      },
+      "ImportRowIn": {
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Amount"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Left out: the transaction goes in 'Uncategorized'",
+            "title": "Category"
+          },
+          "counterparty": {
+            "default": "",
+            "maxLength": 200,
+            "title": "Counterparty",
+            "type": "string"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "payment_method": {
+            "$ref": "#/components/schemas/PaymentMethod",
+            "default": "bank_transfer"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "skip": {
+            "default": false,
+            "description": "A row you chose not to import: it is not made, but is in the report",
+            "title": "Skip",
+            "type": "boolean"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "maxLength": 50,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "maxItems": 10,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tags"
+          },
+          "time": {
+            "anyOf": [
+              {
+                "format": "time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time"
+          },
+          "transfer_account_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Makes it a transfer between the statement's account and this one. Both must use the same currency.",
+            "title": "Transfer Account Id"
+          },
+          "type": {
+            "enum": [
+              "income",
+              "expense"
+            ],
+            "title": "Type",
+            "type": "string"
+          },
+          "vendor_name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vendor Name"
+          }
+        },
+        "required": [
+          "date",
+          "type",
+          "amount"
+        ],
+        "title": "ImportRowIn",
+        "type": "object"
+      },
+      "ImportSkipped": {
+        "properties": {
+          "index": {
+            "description": "Position in the rows that were sent, from 0",
+            "title": "Index",
+            "type": "integer"
+          },
+          "outcome": {
+            "description": "`skipped`: already there. `failed`: could not be made",
+            "enum": [
+              "skipped",
+              "failed"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "index",
+          "outcome",
+          "reason"
+        ],
+        "title": "ImportSkipped",
+        "type": "object"
+      },
       "IntervalUnit": {
         "enum": [
           "week",
@@ -2610,6 +2983,166 @@
           }
         },
         "title": "PostPlanned",
+        "type": "object"
+      },
+      "PreviewRow": {
+        "description": "One line of the statement, with what Maalu could already work out about it.",
+        "properties": {
+          "amount": {
+            "title": "Amount",
+            "type": "string"
+          },
+          "balance": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The statement's running balance after this row",
+            "title": "Balance"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "That vendor's usual category",
+            "title": "Category"
+          },
+          "counterparty": {
+            "title": "Counterparty",
+            "type": "string"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "duplicate": {
+            "anyOf": [
+              {
+                "enum": [
+                  "reference",
+                  "transfer",
+                  "possible"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "`reference`: already imported. `transfer`: already recorded as a transfer between your accounts (the other side of it). `possible`: a transaction by hand with the same day, amount and direction. Rows with `reference` or `transfer` are left out by default.",
+            "title": "Duplicate"
+          },
+          "index": {
+            "description": "Position in the statement, oldest first",
+            "title": "Index",
+            "type": "integer"
+          },
+          "kind": {
+            "description": "The bank's own transaction type",
+            "title": "Kind",
+            "type": "string"
+          },
+          "payment_method": {
+            "$ref": "#/components/schemas/PaymentMethod"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "tags": {
+            "description": "That vendor's usual tags",
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "time": {
+            "anyOf": [
+              {
+                "format": "time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time"
+          },
+          "transfer_account_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Your other account, when this name was earlier marked as a transfer to it",
+            "title": "Transfer Account Id"
+          },
+          "type": {
+            "enum": [
+              "income",
+              "expense"
+            ],
+            "title": "Type",
+            "type": "string"
+          },
+          "vendor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A vendor this name is known to be, if any",
+            "title": "Vendor"
+          }
+        },
+        "required": [
+          "index",
+          "date",
+          "time",
+          "type",
+          "amount",
+          "counterparty",
+          "description",
+          "reference",
+          "kind",
+          "payment_method",
+          "balance",
+          "vendor",
+          "category",
+          "tags",
+          "transfer_account_id",
+          "duplicate"
+        ],
+        "title": "PreviewRow",
         "type": "object"
       },
       "RecoveryCodes": {
@@ -7766,6 +8299,281 @@
         "summary": "Remove From Group",
         "tags": [
           "groups"
+        ]
+      }
+    },
+    "/api/v1/imports": {
+      "get": {
+        "description": "Earlier imports, newest first. The total is in `X-Total-Count`.",
+        "operationId": "list_imports_api_v1_imports_get",
+        "parameters": [
+          {
+            "description": "Omit for all rows",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 200,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Omit for all rows",
+              "title": "Limit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ImportBatchResponse"
+                  },
+                  "title": "Response List Imports Api V1 Imports Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List Imports",
+        "tags": [
+          "imports"
+        ]
+      },
+      "post": {
+        "description": "Create the transactions you confirmed, as one batch you can undo. Rows already imported\n(same bank reference) and rows that cannot be made are skipped and listed with the reason,\nnever failing the rest. The names you matched to a vendor or to one of your own accounts are\nremembered for the next statement.",
+        "operationId": "import_rows_api_v1_imports_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportCommit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Import Rows",
+        "tags": [
+          "imports"
+        ]
+      }
+    },
+    "/api/v1/imports/preview": {
+      "post": {
+        "description": "Read a CSV statement (BML or MIB; send the file as the request body) and say what is in it,\nwhat Maalu already knows about each row and which rows are already recorded. Nothing is\nsaved: send the rows you want to `POST /imports`.",
+        "operationId": "preview_import_api_v1_imports_preview_post",
+        "parameters": [
+          {
+            "description": "The account the statement belongs to",
+            "in": "query",
+            "name": "account_id",
+            "required": true,
+            "schema": {
+              "description": "The account the statement belongs to",
+              "format": "uuid",
+              "title": "Account Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportPreview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Preview Import",
+        "tags": [
+          "imports"
+        ]
+      }
+    },
+    "/api/v1/imports/{batch_id}": {
+      "delete": {
+        "description": "Undo an import: everything it made that is still there goes to the trash (so it can be\nrestored from there). Transactions you already deleted are left alone.",
+        "operationId": "undo_import_api_v1_imports__batch_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Batch Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Undo Import",
+        "tags": [
+          "imports"
+        ]
+      }
+    },
+    "/api/v1/imports/{batch_id}/report": {
+      "get": {
+        "description": "A CSV of every row of that import and what became of it: imported, skipped (already\nthere), left out by you, or failed with the reason.",
+        "operationId": "import_report_api_v1_imports__batch_id__report_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Batch Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/csv": {}
+            },
+            "description": "The report, as a CSV file"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Import Report",
+        "tags": [
+          "imports"
         ]
       }
     },

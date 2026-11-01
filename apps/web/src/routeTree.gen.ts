@@ -18,6 +18,7 @@ import { Route as ProtectedBudgetRouteImport } from './routes/_protected/budget'
 import { Route as ProtectedCategoriesRouteImport } from './routes/_protected/categories'
 import { Route as ProtectedDashboardRouteImport } from './routes/_protected/dashboard'
 import { Route as ProtectedGroupsRouteImport } from './routes/_protected/groups'
+import { Route as ProtectedImportRouteImport } from './routes/_protected/import'
 import { Route as ProtectedProfileRouteImport } from './routes/_protected/profile'
 import { Route as ProtectedSettingsRouteImport } from './routes/_protected/settings'
 import { Route as ProtectedSubscriptionsRouteImport } from './routes/_protected/subscriptions'
@@ -30,6 +31,8 @@ import { Route as ApiAttachmentsRouteImport } from './routes/api.attachments'
 import { Route as ApiBackupRouteImport } from './routes/api.backup'
 import { Route as ApiAttachmentsIdRouteImport } from './routes/api.attachments.$id'
 import { Route as ApiExportTransactionsRouteImport } from './routes/api.export.transactions'
+import { Route as ApiImportsPreviewRouteImport } from './routes/api.imports.preview'
+import { Route as ApiImportsIdReportRouteImport } from './routes/api.imports.$id.report'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -73,6 +76,11 @@ const ProtectedDashboardRoute = ProtectedDashboardRouteImport.update({
 const ProtectedGroupsRoute = ProtectedGroupsRouteImport.update({
   id: '/groups',
   path: '/groups',
+  getParentRoute: () => ProtectedRoute,
+} as any)
+const ProtectedImportRoute = ProtectedImportRouteImport.update({
+  id: '/import',
+  path: '/import',
   getParentRoute: () => ProtectedRoute,
 } as any)
 const ProtectedProfileRoute = ProtectedProfileRouteImport.update({
@@ -135,6 +143,16 @@ const ApiExportTransactionsRoute = ApiExportTransactionsRouteImport.update({
   path: '/api/export/transactions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiImportsPreviewRoute = ApiImportsPreviewRouteImport.update({
+  id: '/api/imports/preview',
+  path: '/api/imports/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiImportsIdReportRoute = ApiImportsIdReportRouteImport.update({
+  id: '/api/imports/$id/report',
+  path: '/api/imports/$id/report',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -145,6 +163,7 @@ export interface FileRoutesByFullPath {
   '/categories': typeof ProtectedCategoriesRoute
   '/dashboard': typeof ProtectedDashboardRoute
   '/groups': typeof ProtectedGroupsRoute
+  '/import': typeof ProtectedImportRoute
   '/profile': typeof ProtectedProfileRoute
   '/settings': typeof ProtectedSettingsRoute
   '/subscriptions': typeof ProtectedSubscriptionsRoute
@@ -157,6 +176,8 @@ export interface FileRoutesByFullPath {
   '/api/backup': typeof ApiBackupRoute
   '/api/attachments/$id': typeof ApiAttachmentsIdRoute
   '/api/export/transactions': typeof ApiExportTransactionsRoute
+  '/api/imports/preview': typeof ApiImportsPreviewRoute
+  '/api/imports/$id/report': typeof ApiImportsIdReportRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -167,6 +188,7 @@ export interface FileRoutesByTo {
   '/categories': typeof ProtectedCategoriesRoute
   '/dashboard': typeof ProtectedDashboardRoute
   '/groups': typeof ProtectedGroupsRoute
+  '/import': typeof ProtectedImportRoute
   '/profile': typeof ProtectedProfileRoute
   '/settings': typeof ProtectedSettingsRoute
   '/subscriptions': typeof ProtectedSubscriptionsRoute
@@ -179,6 +201,8 @@ export interface FileRoutesByTo {
   '/api/backup': typeof ApiBackupRoute
   '/api/attachments/$id': typeof ApiAttachmentsIdRoute
   '/api/export/transactions': typeof ApiExportTransactionsRoute
+  '/api/imports/preview': typeof ApiImportsPreviewRoute
+  '/api/imports/$id/report': typeof ApiImportsIdReportRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -191,6 +215,7 @@ export interface FileRoutesById {
   '/_protected/categories': typeof ProtectedCategoriesRoute
   '/_protected/dashboard': typeof ProtectedDashboardRoute
   '/_protected/groups': typeof ProtectedGroupsRoute
+  '/_protected/import': typeof ProtectedImportRoute
   '/_protected/profile': typeof ProtectedProfileRoute
   '/_protected/settings': typeof ProtectedSettingsRoute
   '/_protected/subscriptions': typeof ProtectedSubscriptionsRoute
@@ -203,6 +228,8 @@ export interface FileRoutesById {
   '/api/backup': typeof ApiBackupRoute
   '/api/attachments/$id': typeof ApiAttachmentsIdRoute
   '/api/export/transactions': typeof ApiExportTransactionsRoute
+  '/api/imports/preview': typeof ApiImportsPreviewRoute
+  '/api/imports/$id/report': typeof ApiImportsIdReportRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -215,6 +242,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/dashboard'
     | '/groups'
+    | '/import'
     | '/profile'
     | '/settings'
     | '/subscriptions'
@@ -227,6 +255,8 @@ export interface FileRouteTypes {
     | '/api/backup'
     | '/api/attachments/$id'
     | '/api/export/transactions'
+    | '/api/imports/preview'
+    | '/api/imports/$id/report'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -237,6 +267,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/dashboard'
     | '/groups'
+    | '/import'
     | '/profile'
     | '/settings'
     | '/subscriptions'
@@ -249,6 +280,8 @@ export interface FileRouteTypes {
     | '/api/backup'
     | '/api/attachments/$id'
     | '/api/export/transactions'
+    | '/api/imports/preview'
+    | '/api/imports/$id/report'
   id:
     | '__root__'
     | '/'
@@ -260,6 +293,7 @@ export interface FileRouteTypes {
     | '/_protected/categories'
     | '/_protected/dashboard'
     | '/_protected/groups'
+    | '/_protected/import'
     | '/_protected/profile'
     | '/_protected/settings'
     | '/_protected/subscriptions'
@@ -272,6 +306,8 @@ export interface FileRouteTypes {
     | '/api/backup'
     | '/api/attachments/$id'
     | '/api/export/transactions'
+    | '/api/imports/preview'
+    | '/api/imports/$id/report'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -282,6 +318,8 @@ export interface RootRouteChildren {
   ApiAttachmentsRoute: typeof ApiAttachmentsRouteWithChildren
   ApiBackupRoute: typeof ApiBackupRoute
   ApiExportTransactionsRoute: typeof ApiExportTransactionsRoute
+  ApiImportsPreviewRoute: typeof ApiImportsPreviewRoute
+  ApiImportsIdReportRoute: typeof ApiImportsIdReportRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -347,6 +385,13 @@ declare module '@tanstack/react-router' {
       path: '/groups'
       fullPath: '/groups'
       preLoaderRoute: typeof ProtectedGroupsRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
+    '/_protected/import': {
+      id: '/_protected/import'
+      path: '/import'
+      fullPath: '/import'
+      preLoaderRoute: typeof ProtectedImportRouteImport
       parentRoute: typeof ProtectedRoute
     }
     '/_protected/profile': {
@@ -433,6 +478,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiExportTransactionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/imports/preview': {
+      id: '/api/imports/preview'
+      path: '/api/imports/preview'
+      fullPath: '/api/imports/preview'
+      preLoaderRoute: typeof ApiImportsPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/imports/$id/report': {
+      id: '/api/imports/$id/report'
+      path: '/api/imports/$id/report'
+      fullPath: '/api/imports/$id/report'
+      preLoaderRoute: typeof ApiImportsIdReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -442,6 +501,7 @@ interface ProtectedRouteChildren {
   ProtectedCategoriesRoute: typeof ProtectedCategoriesRoute
   ProtectedDashboardRoute: typeof ProtectedDashboardRoute
   ProtectedGroupsRoute: typeof ProtectedGroupsRoute
+  ProtectedImportRoute: typeof ProtectedImportRoute
   ProtectedProfileRoute: typeof ProtectedProfileRoute
   ProtectedSettingsRoute: typeof ProtectedSettingsRoute
   ProtectedSubscriptionsRoute: typeof ProtectedSubscriptionsRoute
@@ -458,6 +518,7 @@ const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedCategoriesRoute: ProtectedCategoriesRoute,
   ProtectedDashboardRoute: ProtectedDashboardRoute,
   ProtectedGroupsRoute: ProtectedGroupsRoute,
+  ProtectedImportRoute: ProtectedImportRoute,
   ProtectedProfileRoute: ProtectedProfileRoute,
   ProtectedSettingsRoute: ProtectedSettingsRoute,
   ProtectedSubscriptionsRoute: ProtectedSubscriptionsRoute,
@@ -492,6 +553,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAttachmentsRoute: ApiAttachmentsRouteWithChildren,
   ApiBackupRoute: ApiBackupRoute,
   ApiExportTransactionsRoute: ApiExportTransactionsRoute,
+  ApiImportsPreviewRoute: ApiImportsPreviewRoute,
+  ApiImportsIdReportRoute: ApiImportsIdReportRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

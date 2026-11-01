@@ -13,6 +13,7 @@ from app.routers import (
     currency,
     goal,
     group,
+    imports,
     stats,
     subscription,
     tag,
@@ -52,4 +53,5 @@ def create_app() -> FastAPI:
     app.include_router(backup.router, prefix="/api/v1")
     app.include_router(attachment.router, prefix="/api/v1")
     app.include_router(group.router, prefix="/api/v1")
+    app.include_router(imports.router, prefix="/api/v1")
     return app

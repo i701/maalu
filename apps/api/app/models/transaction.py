@@ -143,6 +143,13 @@ class Transaction(Base):
     # account's balance (and its history) but is not income or spending, so every report leaves it
     # out (`reported()`). Made only by `POST /accounts/{id}/adjust`, and never edited.
     adjustment: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+    # Made by importing a statement: the batch it came in with (undoing the import trashes the whole
+    # batch; deleting the batch row only unlinks) and the bank's own id for the row, which is what
+    # keeps a second import of the same statement from making it twice.
+    import_batch_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("import_batches.id", ondelete="SET NULL"), index=True, default=None
+    )
+    import_ref: Mapped[str | None] = mapped_column(String(100), index=True, default=None)
     # Set when the transaction is moved to the trash. A trashed row is hidden everywhere and
     # counts toward nothing (balances, budgets, stats) until it is restored or deleted for good.
     deleted_at: Mapped[datetime | None] = mapped_column(

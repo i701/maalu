@@ -796,6 +796,97 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Imports
+         * @description Earlier imports, newest first. The total is in `X-Total-Count`.
+         */
+        get: operations["list_imports_api_v1_imports_get"];
+        put?: never;
+        /**
+         * Import Rows
+         * @description Create the transactions you confirmed, as one batch you can undo. Rows already imported
+         *     (same bank reference) and rows that cannot be made are skipped and listed with the reason,
+         *     never failing the rest. The names you matched to a vendor or to one of your own accounts are
+         *     remembered for the next statement.
+         */
+        post: operations["import_rows_api_v1_imports_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/imports/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview Import
+         * @description Read a CSV statement (BML or MIB; send the file as the request body) and say what is in it,
+         *     what Maalu already knows about each row and which rows are already recorded. Nothing is
+         *     saved: send the rows you want to `POST /imports`.
+         */
+        post: operations["preview_import_api_v1_imports_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/imports/{batch_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Undo Import
+         * @description Undo an import: everything it made that is still there goes to the trash (so it can be
+         *     restored from there). Transactions you already deleted are left alone.
+         */
+        delete: operations["undo_import_api_v1_imports__batch_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/imports/{batch_id}/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Import Report
+         * @description A CSV of every row of that import and what became of it: imported, skipped (already
+         *     there), left out by you, or failed with the reason.
+         */
+        get: operations["import_report_api_v1_imports__batch_id__report_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/links/{link_id}": {
         parameters: {
             query?: never;
@@ -2466,6 +2557,151 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** ImportBatchResponse */
+        ImportBatchResponse: {
+            account: components["schemas"]["AccountRef"] | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Filename */
+            filename: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Imported Count */
+            imported_count: number;
+            /** Profile */
+            profile: string;
+            /** Skipped Count */
+            skipped_count: number;
+            /**
+             * Transaction Count
+             * @description How many of its transactions are still there
+             */
+            transaction_count: number;
+        };
+        /** ImportCommit */
+        ImportCommit: {
+            /**
+             * Account Id
+             * Format: uuid
+             */
+            account_id: string;
+            /** Filename */
+            filename: string;
+            /** Profile */
+            profile: string;
+            /** Rows */
+            rows: components["schemas"]["ImportRowIn"][];
+        };
+        /** ImportPreview */
+        ImportPreview: {
+            account: components["schemas"]["AccountRef"];
+            /**
+             * Balance After
+             * @description What it would hold after importing every new row
+             */
+            balance_after: string;
+            /**
+             * Balance Matches
+             * @description Whether that equals the statement's closing balance; null when the statement has none
+             */
+            balance_matches: boolean | null;
+            /**
+             * Balance Now
+             * @description What the account holds now
+             */
+            balance_now: string;
+            /** Closing Balance */
+            closing_balance: string | null;
+            /** Duplicate Count */
+            duplicate_count: number;
+            /**
+             * New Count
+             * @description Rows that would be imported (not already there)
+             */
+            new_count: number;
+            /** Opening Balance */
+            opening_balance: string | null;
+            /** Profile */
+            profile: string;
+            /** Rows */
+            rows: components["schemas"]["PreviewRow"][];
+        };
+        /** ImportResult */
+        ImportResult: {
+            batch: components["schemas"]["ImportBatchResponse"];
+            /** Skipped */
+            skipped: components["schemas"]["ImportSkipped"][];
+        };
+        /** ImportRowIn */
+        ImportRowIn: {
+            /** Amount */
+            amount: number | string;
+            /**
+             * Category
+             * @description Left out: the transaction goes in 'Uncategorized'
+             */
+            category?: string | null;
+            /**
+             * Counterparty
+             * @default
+             */
+            counterparty: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Description */
+            description?: string | null;
+            /** @default bank_transfer */
+            payment_method: components["schemas"]["PaymentMethod"];
+            /** Reference */
+            reference?: string | null;
+            /**
+             * Skip
+             * @description A row you chose not to import: it is not made, but is in the report
+             * @default false
+             */
+            skip: boolean;
+            /** Tags */
+            tags?: string[] | null;
+            /** Time */
+            time?: string | null;
+            /**
+             * Transfer Account Id
+             * @description Makes it a transfer between the statement's account and this one. Both must use the same currency.
+             */
+            transfer_account_id?: string | null;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "income" | "expense";
+            /** Vendor Name */
+            vendor_name?: string | null;
+        };
+        /** ImportSkipped */
+        ImportSkipped: {
+            /**
+             * Index
+             * @description Position in the rows that were sent, from 0
+             */
+            index: number;
+            /**
+             * Outcome
+             * @description `skipped`: already there. `failed`: could not be made
+             * @enum {string}
+             */
+            outcome: "skipped" | "failed";
+            /** Reason */
+            reason: string;
+        };
         /**
          * IntervalUnit
          * @enum {string}
@@ -2595,6 +2831,73 @@ export interface components {
              * @description The time it happened
              */
             transaction_time?: string | null;
+        };
+        /**
+         * PreviewRow
+         * @description One line of the statement, with what Maalu could already work out about it.
+         */
+        PreviewRow: {
+            /** Amount */
+            amount: string;
+            /**
+             * Balance
+             * @description The statement's running balance after this row
+             */
+            balance: string | null;
+            /**
+             * Category
+             * @description That vendor's usual category
+             */
+            category: string | null;
+            /** Counterparty */
+            counterparty: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Description */
+            description: string;
+            /**
+             * Duplicate
+             * @description `reference`: already imported. `transfer`: already recorded as a transfer between your accounts (the other side of it). `possible`: a transaction by hand with the same day, amount and direction. Rows with `reference` or `transfer` are left out by default.
+             */
+            duplicate: ("reference" | "transfer" | "possible") | null;
+            /**
+             * Index
+             * @description Position in the statement, oldest first
+             */
+            index: number;
+            /**
+             * Kind
+             * @description The bank's own transaction type
+             */
+            kind: string;
+            payment_method: components["schemas"]["PaymentMethod"];
+            /** Reference */
+            reference: string | null;
+            /**
+             * Tags
+             * @description That vendor's usual tags
+             */
+            tags: string[];
+            /** Time */
+            time: string | null;
+            /**
+             * Transfer Account Id
+             * @description Your other account, when this name was earlier marked as a transfer to it
+             */
+            transfer_account_id: string | null;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "income" | "expense";
+            /**
+             * Vendor
+             * @description A vendor this name is known to be, if any
+             */
+            vendor: string | null;
         };
         /** RecoveryCodes */
         RecoveryCodes: {
@@ -5177,6 +5480,170 @@ export interface operations {
             };
         };
     };
+    list_imports_api_v1_imports_get: {
+        parameters: {
+            query?: {
+                /** @description Omit for all rows */
+                limit?: number | null;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportBatchResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_rows_api_v1_imports_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportCommit"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_import_api_v1_imports_preview_post: {
+        parameters: {
+            query: {
+                /** @description The account the statement belongs to */
+                account_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/octet-stream": string;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportPreview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    undo_import_api_v1_imports__batch_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_report_api_v1_imports__batch_id__report_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The report, as a CSV file */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     delete_link_api_v1_links__link_id__delete: {
         parameters: {
             query?: never;
@@ -6952,8 +7419,12 @@ export const categoryTotalTypeValues: ReadonlyArray<FlattenedDeepRequired<compon
 export const categoryUpdateColorAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CategoryUpdate"]["color"]> = ["blue", "green", "orange", "violet", "pink", "amber", "lime", "slate"];
 export const goalResponseModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GoalResponse"]["mode"]> = ["account", "manual"];
 export const goalResponsePeriod_statusAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GoalResponse"]["period_status"]> = ["funded", "pending"];
+export const importRowInTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImportRowIn"]["type"]> = ["income", "expense"];
+export const importSkippedOutcomeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImportSkipped"]["outcome"]> = ["skipped", "failed"];
 export const intervalUnitValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["IntervalUnit"]> = ["week", "month", "year"];
 export const paymentMethodValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PaymentMethod"]> = ["cash", "bank_transfer", "debit_card", "credit_card", "other"];
+export const previewRowDuplicateAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PreviewRow"]["duplicate"]> = ["reference", "transfer", "possible"];
+export const previewRowTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PreviewRow"]["type"]> = ["income", "expense"];
 export const subscriptionStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SubscriptionStatus"]> = ["active", "paused", "cancelled"];
 export const transactionTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TransactionType"]> = ["income", "expense", "transfer"];
 export const vendorLocalityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["VendorLocality"]> = ["local", "foreign", "unknown"];
