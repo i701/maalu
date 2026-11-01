@@ -6,6 +6,7 @@ from typing import Annotated
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
 
 from app.enums import IntervalUnit, PaymentMethod, SubscriptionStatus
+from app.schemas.account import AccountRef
 from app.schemas.types import CurrencyCode, ExchangeRate
 from app.schemas.vendor import VendorRef, VendorResponse
 
@@ -36,6 +37,11 @@ class SubscriptionCreate(VendorRef):
         description="Base-currency units per 1 unit of `currency`. "
         "Required when `currency` differs from your base currency.",
     )
+    account_id: uuid.UUID | None = Field(
+        default=None,
+        description="Where it is paid from. Its planned payments go in this account, which must "
+        "be in the same currency",
+    )
     payment_method: PaymentMethod
     category: Category
     interval_unit: IntervalUnit
@@ -51,6 +57,7 @@ class SubscriptionUpdate(VendorRef):
     amount: Cost | None = None
     currency: CurrencyCode | None = None
     exchange_rate: ExchangeRate | None = None
+    account_id: uuid.UUID | None = Field(default=None, description="`null` unlinks the account")
     payment_method: PaymentMethod | None = None
     category: Category | None = None
     interval_unit: IntervalUnit | None = None
@@ -93,6 +100,7 @@ class SubscriptionResponse(BaseModel):
     currency: str
     exchange_rate: Decimal
     base_amount: Decimal
+    account: AccountRef | None
     payment_method: PaymentMethod
     category: str
     category_id: uuid.UUID

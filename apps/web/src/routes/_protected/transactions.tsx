@@ -249,6 +249,25 @@ const REFUND_TILE = { symbol: "undo", accent: ACCENT.green, shape: 1 } as const;
 
 /** The card's coloured, shaped icon: income green, expense pink, transfer blue, refund green. */
 /** The line under a transaction's title, led by a dot in its category's colour when it has just one. */
+/** What the delete dialog says: skipping a subscription's planned payment, or moving to the trash. */
+function deleteCopy(t: Transaction) {
+	const amount = formatMoney(t.amount, t.currency);
+	if (t.planned && t.subscription) {
+		return {
+			title: "Skip this payment",
+			message: `Skip this ${amount} payment for ${t.subscription.name}? It moves to the trash and the subscription plans its next payment instead.`,
+			confirmLabel: "Skip",
+			doneMessage: "Skipped",
+		};
+	}
+	return {
+		title: "Move to trash",
+		message: `Move this ${amount} transaction to the trash? It stops counting toward your totals, and you can restore it from the Trash page.`,
+		confirmLabel: "Move to trash",
+		doneMessage: "Moved to trash",
+	};
+}
+
 function TxSubtitle({ t }: { t: Transaction }) {
 	const dot = t.type !== "transfer" && t.splits.length <= 1 && t.category_color;
 	return (
@@ -1001,10 +1020,7 @@ function TransactionsPage() {
 			)}
 			{deleting && (
 				<ConfirmDelete
-					title="Move to trash"
-					message={`Move this ${formatMoney(deleting.amount, deleting.currency)} transaction to the trash? It stops counting toward your totals, and you can restore it from the Trash page.`}
-					confirmLabel="Move to trash"
-					doneMessage="Moved to trash"
+					{...deleteCopy(deleting)}
 					onConfirm={() => deleteTransactionFn({ data: { id: deleting.id } })}
 					onClose={() => setDeleting(null)}
 				/>

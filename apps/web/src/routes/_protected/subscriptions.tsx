@@ -34,6 +34,7 @@ import { useLiveSearch } from "#/lib/live-search";
 import { staggerChildren } from "#/lib/motion";
 import { lastPageIfOutOfRange, pageSearch } from "#/lib/pagination";
 import { unwrap } from "#/lib/unwrap";
+import { listAccountsFn } from "#/server/accounts";
 import { listCurrenciesFn } from "#/server/currencies";
 import {
 	deleteSubscriptionFn,
@@ -62,12 +63,13 @@ export const Route = createFileRoute("/_protected/subscriptions")({
 	validateSearch: searchSchema,
 	loaderDeps: ({ search }) => search,
 	loader: async ({ deps }) => {
-		const [subscriptions, summary, vendors, categories, currencies] = await Promise.all([
+		const [subscriptions, summary, vendors, categories, currencies, accounts] = await Promise.all([
 			listSubscriptionsPageFn({ data: deps }),
 			getSubscriptionSummaryFn(),
 			listVendorsFn(), // every vendor, for the form's picker
 			listCategoriesFn(),
 			listCurrenciesFn(),
+			listAccountsFn(), // the accounts it can be paid from
 		]);
 		const rows = unwrap(subscriptions);
 		const last = lastPageIfOutOfRange({
@@ -84,6 +86,7 @@ export const Route = createFileRoute("/_protected/subscriptions")({
 			vendors: unwrap(vendors),
 			categories: unwrap(categories),
 			currencies,
+			accounts: unwrap(accounts),
 		};
 	},
 	component: SubscriptionsPage,
@@ -251,7 +254,8 @@ const SubscriptionsTable = memo(function SubscriptionsTable({
 });
 
 function SubscriptionsPage() {
-	const { items, total, summary, vendors, categories, currencies } = Route.useLoaderData();
+	const { items, total, summary, vendors, categories, currencies, accounts } =
+		Route.useLoaderData();
 	const { user } = Route.useRouteContext();
 	const [editing, setEditing] = useState<Subscription | "new" | null>(null);
 	const [deleting, setDeleting] = useState<Subscription | null>(null);
@@ -406,6 +410,7 @@ function SubscriptionsPage() {
 			{editing && (
 				<SubscriptionForm
 					subscription={editing === "new" ? undefined : editing}
+					accounts={accounts}
 					vendors={vendors}
 					categories={categories}
 					currencies={currencies}

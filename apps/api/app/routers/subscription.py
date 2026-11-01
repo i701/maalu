@@ -14,6 +14,7 @@ from app.schemas import (
     SubscriptionUpdate,
 )
 from app.services import (
+    AccountNotFoundError,
     ExchangeRateRequiredError,
     TransactionAlreadyLinkedError,
     TransactionNotFoundError,
@@ -28,10 +29,12 @@ _RATE_REQUIRED = HTTPException(
     "exchange_rate is required when currency differs from your base currency",
 )
 _VENDOR_NOT_FOUND = HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Vendor not found")
+_ACCOUNT_NOT_FOUND = HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Account not found")
 _NOT_FOUND = HTTPException(status.HTTP_404_NOT_FOUND, "Subscription not found")
 
 
 async def _present_one(service: SubscriptionServiceDep, subscription) -> SubscriptionResponse:
+    await service.sync(subscription.user_id, subscription)  # its next payment is planned
     return (await service.present([subscription]))[0]
 
 
@@ -45,6 +48,10 @@ async def create_subscription(
         raise _VENDOR_NOT_FOUND from None
     except ExchangeRateRequiredError:
         raise _RATE_REQUIRED from None
+    except AccountNotFoundError:
+        raise _ACCOUNT_NOT_FOUND from None
+    except TransactionRuleError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
     return await _present_one(service, subscription)
 
 
@@ -62,6 +69,7 @@ async def list_subscriptions(
 ):
     """All subscriptions, or one page with `limit`/`offset`, optionally filtered. The total
     number of matches, ignoring paging, is in `X-Total-Count`."""
+    await service.sync(user_id)  # so every active subscription has its next payment planned
     filters = {"q": q, "interval_unit": interval_unit}
     set_total(response, await service.count_for_user(user_id, status_filter, **filters))
     subscriptions = await service.list_for_user(
@@ -128,6 +136,10 @@ async def update_subscription(
         raise _VENDOR_NOT_FOUND from None
     except ExchangeRateRequiredError:
         raise _RATE_REQUIRED from None
+    except AccountNotFoundError:
+        raise _ACCOUNT_NOT_FOUND from None
+    except TransactionRuleError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
     return await _present_one(service, subscription)
 
 

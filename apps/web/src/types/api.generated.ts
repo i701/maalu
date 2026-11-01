@@ -2737,6 +2737,11 @@ export interface components {
         };
         /** SubscriptionCreate */
         SubscriptionCreate: {
+            /**
+             * Account Id
+             * @description Where it is paid from. Its planned payments go in this account, which must be in the same currency
+             */
+            account_id?: string | null;
             /** Amount */
             amount: number | string;
             /** Category */
@@ -2805,6 +2810,7 @@ export interface components {
         };
         /** SubscriptionResponse */
         SubscriptionResponse: {
+            account: components["schemas"]["AccountRef"] | null;
             /** Amount */
             amount: string;
             /** Base Amount */
@@ -2874,6 +2880,11 @@ export interface components {
          * @description Partial update. `vendor_id: null` / `vendor_name: null` unlinks the vendor.
          */
         SubscriptionUpdate: {
+            /**
+             * Account Id
+             * @description `null` unlinks the account
+             */
+            account_id?: string | null;
             /** Amount */
             amount?: number | string | null;
             /** Category */

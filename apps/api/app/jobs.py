@@ -14,7 +14,7 @@ import procrastinate
 
 from app.config import settings
 from app.database import SessionLocal
-from app.services import AttachmentService, SessionService, SnapshotService
+from app.services import AttachmentService, SessionService, SnapshotService, SubscriptionService
 
 logger = logging.getLogger("maalu.jobs")
 
@@ -78,3 +78,21 @@ async def purge_orphan_attachments_job(timestamp: int) -> None:
     all of them, so none of those paths has to touch storage."""
     removed = await purge_orphan_attachments()
     logger.info("removed %d orphan attachment files", removed)
+
+
+async def plan_subscriptions(session_factory=SessionLocal) -> int:
+    """Plan the next payment of every active subscription that has none; returns how many."""
+    async with session_factory() as session:
+        made = await SubscriptionService(session).sync(None)
+        await session.commit()
+    return made
+
+
+@app.periodic(cron="20 0 * * *")
+@app.task(name="plan_subscriptions", queueing_lock="plan_subscriptions")
+async def plan_subscriptions_job(timestamp: int) -> None:
+    """Daily, at 00:20: plan the next payment of each subscription whose date has come within
+    reach (a yearly one appears a month ahead). Opening the Upcoming list or the Subscriptions
+    page does the same for one user, so this mostly covers the days nobody opened the app."""
+    made = await plan_subscriptions()
+    logger.info("planned %d subscription payments", made)

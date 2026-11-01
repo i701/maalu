@@ -2911,6 +2911,19 @@
       },
       "SubscriptionCreate": {
         "properties": {
+          "account_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Where it is paid from. Its planned payments go in this account, which must be in the same currency",
+            "title": "Account Id"
+          },
           "amount": {
             "anyOf": [
               {
@@ -3080,6 +3093,16 @@
       },
       "SubscriptionResponse": {
         "properties": {
+          "account": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AccountRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "amount": {
             "title": "Amount",
             "type": "string"
@@ -3189,6 +3212,7 @@
           "currency",
           "exchange_rate",
           "base_amount",
+          "account",
           "payment_method",
           "category",
           "category_id",
@@ -3240,6 +3264,19 @@
       "SubscriptionUpdate": {
         "description": "Partial update. `vendor_id: null` / `vendor_name: null` unlinks the vendor.",
         "properties": {
+          "account_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "`null` unlinks the account",
+            "title": "Account Id"
+          },
           "amount": {
             "anyOf": [
               {

@@ -5,7 +5,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, Response, status
 
-from app.dependencies import CurrentUserId, TransactionServiceDep
+from app.dependencies import CurrentUserId, SubscriptionServiceDep, TransactionServiceDep
 from app.enums import PaymentMethod, TransactionType
 from app.export import XLSX_MEDIA_TYPE
 from app.pagination import MAX_LIMIT, PageDep, set_total
@@ -87,6 +87,7 @@ async def create_transaction(
 async def list_transactions(
     user_id: CurrentUserId,
     service: TransactionServiceDep,
+    subscriptions: SubscriptionServiceDep,
     response: Response,
     vendor_id: uuid.UUID | None = None,
     subscription_id: uuid.UUID | None = None,
@@ -127,6 +128,8 @@ async def list_transactions(
 ):
     """One page (default 50) of matching transactions. The total number of matches, ignoring
     `limit`/`offset`, is in the `X-Total-Count` header."""
+    if planned:  # the upcoming list includes each subscription's next payment
+        await subscriptions.sync(user_id)
     filters = {
         "transaction_type": transaction_type,
         "vendor_id": vendor_id,
@@ -343,6 +346,7 @@ async def category_totals(
 async def matching_transaction_ids(
     user_id: CurrentUserId,
     service: TransactionServiceDep,
+    subscriptions: SubscriptionServiceDep,
     vendor_id: uuid.UUID | None = None,
     subscription_id: uuid.UUID | None = None,
     account_id: uuid.UUID | None = None,
@@ -373,6 +377,8 @@ async def matching_transaction_ids(
     """The ids of every transaction matching the same filters as the list, across all pages, for
     "select everything that matches" before a bulk action. At most 5,000: past that you get a 422
     asking to narrow the filters."""
+    if planned:
+        await subscriptions.sync(user_id)
     _check_range(min_amount, max_amount)
     _check_dates(date_from, date_to)
     try:

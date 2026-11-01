@@ -1,6 +1,10 @@
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CheckIcon from "@mui/icons-material/Check";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import Accordion from "@mui/material/Accordion";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import AccordionSummary from "@mui/material/AccordionSummary";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
@@ -32,83 +36,110 @@ export default function UpcomingCard({
 	const [paying, setPaying] = useState<Transaction | null>(null);
 	const today = localToday();
 	if (items.length === 0) return null;
+	const overdueCount = items.filter((t) => isOverdue(t, today)).length;
 
 	return (
 		<>
-			<Box
-				component="section"
+			<Accordion
+				disableGutters
+				elevation={0}
+				square
 				aria-label="Upcoming transactions"
 				sx={{
 					mb: 2,
-					p: 2,
-					borderRadius: "var(--shape-xl)",
+					borderRadius: "var(--shape-xl) !important",
 					bgcolor: "var(--md-sys-color-surface-container-low)",
+					backgroundImage: "none",
+					"&::before": { display: "none" },
 				}}
 			>
-				<Stack direction="row" sx={{ alignItems: "baseline", gap: 1, mb: 1 }}>
-					<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-						Upcoming
-					</Typography>
-					<Typography variant="body2" sx={{ color: "text.secondary" }}>
+				<AccordionSummary
+					expandIcon={<ExpandMoreIcon />}
+					sx={{ px: 2, borderRadius: "var(--shape-xl)" }}
+				>
+					<Stack direction="row" sx={{ alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+						<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+							Upcoming
+						</Typography>
+						<TonalChip accent={ACCENT.blue} label={String(items.length)} />
+						{overdueCount > 0 && (
+							<TonalChip accent="var(--md-sys-color-error)" label={`${overdueCount} overdue`} />
+						)}
+						<Typography variant="body2" sx={{ color: "text.secondary" }}>
+							Next: {txTitle(items[0])}, {dueLabel(items[0].transaction_date, today).toLowerCase()}
+						</Typography>
+					</Stack>
+				</AccordionSummary>
+				<AccordionDetails sx={{ px: 2, pt: 0, pb: 2 }}>
+					<Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
 						Planned, not counted until you mark them paid
 					</Typography>
-				</Stack>
-				<Stack sx={{ gap: 0.5 }}>
-					{items.map((t) => {
-						const overdue = isOverdue(t, today);
-						return (
-							<Stack
-								key={t.id}
-								direction="row"
-								sx={{ alignItems: "center", gap: 1.5, flexWrap: "wrap", py: 0.75 }}
-							>
-								<TonalChip
-									accent={overdue ? "var(--md-sys-color-error)" : ACCENT.blue}
-									label={dueLabel(t.transaction_date, today)}
-									sx={{ minWidth: 104 }}
-								/>
-								<Box sx={{ flex: 1, minWidth: 160 }}>
-									<Typography variant="body2" sx={{ fontWeight: 500 }}>
-										{txTitle(t)}
-									</Typography>
-									<Stack direction="row" sx={{ alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
-										<Typography variant="caption" sx={{ color: "text.secondary" }}>
-											{formatWhen(t.transaction_date, t.transaction_time)}
+					<Stack sx={{ gap: 0.5 }}>
+						{items.map((t) => {
+							const overdue = isOverdue(t, today);
+							return (
+								<Stack
+									key={t.id}
+									direction="row"
+									sx={{ alignItems: "center", gap: 1.5, flexWrap: "wrap", py: 0.75 }}
+								>
+									<TonalChip
+										accent={overdue ? "var(--md-sys-color-error)" : ACCENT.blue}
+										label={dueLabel(t.transaction_date, today)}
+										sx={{ minWidth: 104 }}
+									/>
+									<Box sx={{ flex: 1, minWidth: 160 }}>
+										<Typography variant="body2" sx={{ fontWeight: 500 }}>
+											{txTitle(t)}
 										</Typography>
-										<TagChips tags={t.tags} />
+										<Stack
+											direction="row"
+											sx={{ alignItems: "center", gap: 0.5, flexWrap: "wrap" }}
+										>
+											<Typography variant="caption" sx={{ color: "text.secondary" }}>
+												{formatWhen(t.transaction_date, t.transaction_time)}
+												{t.subscription ? " · Subscription" : ""}
+											</Typography>
+											<TagChips tags={t.tags} />
+										</Stack>
+									</Box>
+									<Typography variant="body2" sx={{ fontWeight: 600 }}>
+										{SIGN[t.type]}
+										{formatMoney(t.amount, t.currency)}
+									</Typography>
+									<Stack direction="row" sx={{ alignItems: "center" }}>
+										<Button
+											size="small"
+											variant="outlined"
+											color="inherit"
+											startIcon={<CheckIcon fontSize="small" />}
+											onClick={() => setPaying(t)}
+										>
+											Mark as paid
+										</Button>
+										<IconButton
+											aria-label="Edit"
+											title="Edit"
+											size="small"
+											onClick={() => onEdit(t)}
+										>
+											<EditOutlinedIcon fontSize="small" />
+										</IconButton>
+										<IconButton
+											aria-label={t.subscription ? "Skip" : "Delete"}
+											title={t.subscription ? "Skip this payment" : "Delete"}
+											size="small"
+											onClick={() => onDelete(t)}
+										>
+											<DeleteOutlineIcon fontSize="small" />
+										</IconButton>
 									</Stack>
-								</Box>
-								<Typography variant="body2" sx={{ fontWeight: 600 }}>
-									{SIGN[t.type]}
-									{formatMoney(t.amount, t.currency)}
-								</Typography>
-								<Stack direction="row" sx={{ alignItems: "center" }}>
-									<Button
-										size="small"
-										variant="outlined"
-										color="inherit"
-										startIcon={<CheckIcon fontSize="small" />}
-										onClick={() => setPaying(t)}
-									>
-										Mark as paid
-									</Button>
-									<IconButton aria-label="Edit" title="Edit" size="small" onClick={() => onEdit(t)}>
-										<EditOutlinedIcon fontSize="small" />
-									</IconButton>
-									<IconButton
-										aria-label="Delete"
-										title="Delete"
-										size="small"
-										onClick={() => onDelete(t)}
-									>
-										<DeleteOutlineIcon fontSize="small" />
-									</IconButton>
 								</Stack>
-							</Stack>
-						);
-					})}
-				</Stack>
-			</Box>
+							);
+						})}
+					</Stack>
+				</AccordionDetails>
+			</Accordion>
 			{paying && <MarkPaidDialog transaction={paying} onClose={() => setPaying(null)} />}
 		</>
 	);

@@ -35,6 +35,7 @@ const createSchema = z.object({
 	start_date: z.iso.date(),
 	status: z.enum(SUBSCRIPTION_STATUSES).optional(),
 	vendor_name: name.optional(),
+	account_id: z.uuid().nullable().optional(), // null unlinks the account
 });
 
 const updateSchema = z.object({

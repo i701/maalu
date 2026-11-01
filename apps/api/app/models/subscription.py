@@ -6,6 +6,7 @@ from sqlalchemy import Date, DateTime, Enum, ForeignKey, Integer, Numeric, Strin
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.enums import IntervalUnit, PaymentMethod, SubscriptionStatus
+from app.models.account import Account
 from app.models.base import Base
 from app.models.category import Category
 from app.models.vendor import Vendor
@@ -49,9 +50,19 @@ class Subscription(Base):
     category_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("categories.id"), index=True)
     category_ref: Mapped[Category] = relationship(lazy="joined")
 
+    # Where it is paid from, if known. The planned payments made for it go in this account, whose
+    # currency the subscription then shares. Deleting the account only unlinks it.
+    account_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("accounts.id", ondelete="SET NULL"), index=True, default=None
+    )
+    account: Mapped[Account | None] = relationship(lazy="joined")
+
     interval_unit: Mapped[IntervalUnit] = mapped_column(_str_enum(IntervalUnit))
     interval_count: Mapped[int] = mapped_column(Integer, default=1)
     start_date: Mapped[date] = mapped_column(Date)  # first billing date; anchors the schedule
+    # The last billing date a planned payment was made for. The next one is made for the cycle after
+    # it, so deleting a planned payment (skipping that cycle) does not bring it back.
+    planned_through: Mapped[date | None] = mapped_column(Date, default=None)
     status: Mapped[SubscriptionStatus] = mapped_column(
         _str_enum(SubscriptionStatus), default=SubscriptionStatus.ACTIVE
     )

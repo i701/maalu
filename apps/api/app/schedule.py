@@ -7,6 +7,8 @@ from decimal import Decimal
 from app.enums import IntervalUnit
 
 MONTHLY_QUANTUM = Decimal("0.0001")
+# How far ahead of its date the next payment of a subscription is planned.
+PLAN_AHEAD_DAYS = 35
 
 
 def occurrence(start: date, unit: IntervalUnit, count: int, k: int) -> date:
