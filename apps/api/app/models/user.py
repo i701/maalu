@@ -23,6 +23,11 @@ class User(Base):
     )
     # Whether the transaction form offers "start from a template". Templates stay either way.
     start_from_template: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    # Which kinds of notification are made for this user. Turning one off stops new ones; the ones
+    # already there stay.
+    notify_payments: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    notify_budget: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    notify_goals: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     # Two-factor (an authenticator app). The secret is kept encrypted (`app/two_factor.py`); it is
     # set during setup but only counts once `two_factor_enabled` is true.
     two_factor_secret: Mapped[str | None] = mapped_column(String(255), default=None)

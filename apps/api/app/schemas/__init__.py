@@ -41,6 +41,7 @@ from app.schemas.imports import (
     PreviewRow,
 )
 from app.schemas.link import LinkCreate, LinkResponse
+from app.schemas.notification import NotificationResponse, UnreadCount
 from app.schemas.subscription import (
     SubscriptionCreate,
     SubscriptionFromTransaction,
@@ -141,6 +142,7 @@ __all__ = [
     "ImportSkipped",
     "LinkCreate",
     "LinkResponse",
+    "NotificationResponse",
     "PasswordChange",
     "PostPlanned",
     "PreviewRow",
@@ -176,6 +178,7 @@ __all__ = [
     "TwoFactorCode",
     "TwoFactorConfirm",
     "TwoFactorSetup",
+    "UnreadCount",
     "UserCreate",
     "UserResponse",
     "UserUpdate",

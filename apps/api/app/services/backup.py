@@ -68,6 +68,8 @@ EXCLUDED = (
     "exchange_rates",
     "balance_snapshots",
     "balance_snapshot_dirty",
+    # worked out again from the data, so there is nothing to restore
+    "notifications",
     # the files live in storage, not in the database, so they are not in the backup file
     "transaction_attachments",
 )
@@ -159,6 +161,9 @@ class BackupService:
             "settings": {
                 "base_currency": user.base_currency,
                 "start_from_template": user.start_from_template,
+                "notify_payments": user.notify_payments,
+                "notify_budget": user.notify_budget,
+                "notify_goals": user.notify_goals,
                 "default_account_id": _encode(user.default_account_id),
             },
             "counts": {name: len(rows) for name, rows in tables.items()},
@@ -227,6 +232,9 @@ class BackupService:
         if isinstance(currency, str) and len(currency) == 3:
             user.base_currency = currency.upper()
         user.start_from_template = bool(settings.get("start_from_template", True))
+        user.notify_payments = bool(settings.get("notify_payments", True))
+        user.notify_budget = bool(settings.get("notify_budget", True))
+        user.notify_goals = bool(settings.get("notify_goals", True))
         default = settings.get("default_account_id")
         user.default_account_id = new_ids["accounts"].get(default) if default else None
 

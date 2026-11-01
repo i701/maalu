@@ -14,7 +14,13 @@ import procrastinate
 
 from app.config import settings
 from app.database import SessionLocal
-from app.services import AttachmentService, SessionService, SnapshotService, SubscriptionService
+from app.services import (
+    AttachmentService,
+    NotificationService,
+    SessionService,
+    SnapshotService,
+    SubscriptionService,
+)
 
 logger = logging.getLogger("maalu.jobs")
 
@@ -96,3 +102,23 @@ async def plan_subscriptions_job(timestamp: int) -> None:
     page does the same for one user, so this mostly covers the days nobody opened the app."""
     made = await plan_subscriptions()
     logger.info("planned %d subscription payments", made)
+
+
+async def generate_notifications(session_factory=SessionLocal) -> tuple[int, int]:
+    """Look for new notifications for every user, and sweep old ones; returns (made, swept)."""
+    async with session_factory() as session:
+        service = NotificationService(session)
+        made = await service.sync(None)
+        swept = await service.purge_old()
+        await session.commit()
+    return made, swept
+
+
+@app.periodic(cron="0 4 * * *")
+@app.task(name="generate_notifications", queueing_lock="generate_notifications")
+async def generate_notifications_job(timestamp: int) -> None:
+    """Daily, at 04:00 UTC (09:00 in the Maldives): find payments coming due, budget limits reached
+    and goals met, so they wait in the bell when you open the app. Opening the app looks too (for
+    you, every few minutes), so this mostly covers the days nobody opened it."""
+    made, swept = await generate_notifications()
+    logger.info("made %d notifications, swept %d old ones", made, swept)

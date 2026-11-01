@@ -8,6 +8,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useNotify } from "#/components/Notify";
 import PageHeader from "#/components/PageHeader";
 import BackupCard from "#/components/BackupCard";
+import NotificationSettings from "#/components/NotificationSettings";
 import PasswordCard from "#/components/PasswordCard";
 import SessionsCard from "#/components/SessionsCard";
 import TwoFactorSettings from "#/components/TwoFactorSettings";
@@ -60,6 +61,7 @@ function SettingsPage() {
 						</Typography>
 					</CardContent>
 				</Card>
+				<NotificationSettings me={me} />
 				<PasswordCard twoFactor={me.two_factor_enabled} />
 				<TwoFactorSettings enabled={me.two_factor_enabled} />
 				<SessionsCard sessions={sessions} />

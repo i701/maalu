@@ -33,6 +33,8 @@ export default defineConfig(({ mode }) => {
 					"DeleteOutlined",
 					"AttachFile",
 					"Download",
+					"DoneAll",
+					"NotificationsNoneOutlined",
 					"PictureAsPdfOutlined",
 					"Tune",
 					"UploadFile",

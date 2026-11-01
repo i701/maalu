@@ -33,6 +33,7 @@ from app.services.group import GroupNotFoundError, GroupRuleError, GroupService
 from app.services.imports import ImportNotFoundError, ImportService
 from app.services.link import LinkService
 from app.services.money import ExchangeRateRequiredError
+from app.services.notification import NotificationNotFoundError, NotificationService
 from app.services.session import SessionService
 from app.services.snapshot import SnapshotService
 from app.services.stats import StatsRangeError, StatsService
@@ -99,6 +100,8 @@ __all__ = [
     "InvalidPasswordError",
     "InvalidTwoFactorCodeError",
     "LinkService",
+    "NotificationNotFoundError",
+    "NotificationService",
     "PasswordUnchangedError",
     "RegistrationClosedError",
     "SessionService",

@@ -4,11 +4,12 @@ import { SIDEBAR_WIDTH, TOP_BAR_HEIGHT } from "#/lib/nav";
 import type { SessionUser } from "#/utils/session";
 import Brand from "./Brand";
 import ColorModeToggle from "./ColorModeToggle";
+import NotificationBell from "./NotificationBell";
 import UserMenu from "./UserMenu";
 
 /** The top bar: the app name on the left (narrow screens; the sidebar has it otherwise), colour
  * mode and account on the right. Tonal, with no border. */
-export default function TopBar({ user }: { user: SessionUser }) {
+export default function TopBar({ user, unread }: { user: SessionUser; unread: number }) {
 	return (
 		<Box
 			component="header"
@@ -36,6 +37,7 @@ export default function TopBar({ user }: { user: SessionUser }) {
 					<Brand />
 				</Box>
 				<Box sx={{ display: "flex", alignItems: "center", gap: 0.5, ml: "auto" }}>
+					<NotificationBell unread={unread} />
 					<ColorModeToggle />
 					<UserMenu user={user} />
 				</Box>

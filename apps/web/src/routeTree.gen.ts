@@ -19,6 +19,7 @@ import { Route as ProtectedCategoriesRouteImport } from './routes/_protected/cat
 import { Route as ProtectedDashboardRouteImport } from './routes/_protected/dashboard'
 import { Route as ProtectedGroupsRouteImport } from './routes/_protected/groups'
 import { Route as ProtectedImportRouteImport } from './routes/_protected/import'
+import { Route as ProtectedNotificationsRouteImport } from './routes/_protected/notifications'
 import { Route as ProtectedProfileRouteImport } from './routes/_protected/profile'
 import { Route as ProtectedSettingsRouteImport } from './routes/_protected/settings'
 import { Route as ProtectedSubscriptionsRouteImport } from './routes/_protected/subscriptions'
@@ -81,6 +82,11 @@ const ProtectedGroupsRoute = ProtectedGroupsRouteImport.update({
 const ProtectedImportRoute = ProtectedImportRouteImport.update({
   id: '/import',
   path: '/import',
+  getParentRoute: () => ProtectedRoute,
+} as any)
+const ProtectedNotificationsRoute = ProtectedNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => ProtectedRoute,
 } as any)
 const ProtectedProfileRoute = ProtectedProfileRouteImport.update({
@@ -164,6 +170,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof ProtectedDashboardRoute
   '/groups': typeof ProtectedGroupsRoute
   '/import': typeof ProtectedImportRoute
+  '/notifications': typeof ProtectedNotificationsRoute
   '/profile': typeof ProtectedProfileRoute
   '/settings': typeof ProtectedSettingsRoute
   '/subscriptions': typeof ProtectedSubscriptionsRoute
@@ -189,6 +196,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof ProtectedDashboardRoute
   '/groups': typeof ProtectedGroupsRoute
   '/import': typeof ProtectedImportRoute
+  '/notifications': typeof ProtectedNotificationsRoute
   '/profile': typeof ProtectedProfileRoute
   '/settings': typeof ProtectedSettingsRoute
   '/subscriptions': typeof ProtectedSubscriptionsRoute
@@ -216,6 +224,7 @@ export interface FileRoutesById {
   '/_protected/dashboard': typeof ProtectedDashboardRoute
   '/_protected/groups': typeof ProtectedGroupsRoute
   '/_protected/import': typeof ProtectedImportRoute
+  '/_protected/notifications': typeof ProtectedNotificationsRoute
   '/_protected/profile': typeof ProtectedProfileRoute
   '/_protected/settings': typeof ProtectedSettingsRoute
   '/_protected/subscriptions': typeof ProtectedSubscriptionsRoute
@@ -243,6 +252,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/groups'
     | '/import'
+    | '/notifications'
     | '/profile'
     | '/settings'
     | '/subscriptions'
@@ -268,6 +278,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/groups'
     | '/import'
+    | '/notifications'
     | '/profile'
     | '/settings'
     | '/subscriptions'
@@ -294,6 +305,7 @@ export interface FileRouteTypes {
     | '/_protected/dashboard'
     | '/_protected/groups'
     | '/_protected/import'
+    | '/_protected/notifications'
     | '/_protected/profile'
     | '/_protected/settings'
     | '/_protected/subscriptions'
@@ -392,6 +404,13 @@ declare module '@tanstack/react-router' {
       path: '/import'
       fullPath: '/import'
       preLoaderRoute: typeof ProtectedImportRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
+    '/_protected/notifications': {
+      id: '/_protected/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof ProtectedNotificationsRouteImport
       parentRoute: typeof ProtectedRoute
     }
     '/_protected/profile': {
@@ -502,6 +521,7 @@ interface ProtectedRouteChildren {
   ProtectedDashboardRoute: typeof ProtectedDashboardRoute
   ProtectedGroupsRoute: typeof ProtectedGroupsRoute
   ProtectedImportRoute: typeof ProtectedImportRoute
+  ProtectedNotificationsRoute: typeof ProtectedNotificationsRoute
   ProtectedProfileRoute: typeof ProtectedProfileRoute
   ProtectedSettingsRoute: typeof ProtectedSettingsRoute
   ProtectedSubscriptionsRoute: typeof ProtectedSubscriptionsRoute
@@ -519,6 +539,7 @@ const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedDashboardRoute: ProtectedDashboardRoute,
   ProtectedGroupsRoute: ProtectedGroupsRoute,
   ProtectedImportRoute: ProtectedImportRoute,
+  ProtectedNotificationsRoute: ProtectedNotificationsRoute,
   ProtectedProfileRoute: ProtectedProfileRoute,
   ProtectedSettingsRoute: ProtectedSettingsRoute,
   ProtectedSubscriptionsRoute: ProtectedSubscriptionsRoute,

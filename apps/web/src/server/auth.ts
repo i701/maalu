@@ -122,6 +122,9 @@ export const updateMeFn = createServerFn({ method: "POST" })
 		z.object({
 			default_account_id: z.uuid().nullable().optional(),
 			start_from_template: z.boolean().optional(),
+			notify_payments: z.boolean().optional(),
+			notify_budget: z.boolean().optional(),
+			notify_goals: z.boolean().optional(),
 		}),
 	)
 	.handler(async ({ data }) => apiRequest<User>("/users/me", { method: "PATCH", body: data }));

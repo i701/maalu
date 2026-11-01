@@ -103,6 +103,9 @@ export type Vendor = Schemas["VendorResponse"];
 export type Subscription = Schemas["SubscriptionResponse"];
 export type SubscriptionSummary = Schemas["SubscriptionSummary"];
 export type Account = Schemas["AccountResponse"];
+/** Not `Notification`: that is the browser's own type. */
+export type AppNotification = Schemas["NotificationResponse"];
+export type NotificationKind = AppNotification["kind"];
 export type ImportPreview = Schemas["ImportPreview"];
 export type PreviewRow = Schemas["PreviewRow"];
 export type ImportBatch = Schemas["ImportBatchResponse"];

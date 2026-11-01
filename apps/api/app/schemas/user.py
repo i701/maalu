@@ -23,6 +23,13 @@ class UserUpdate(BaseModel):
         default=True,
         description="Whether the transaction form offers to start from a template.",
     )
+    notify_payments: bool = Field(
+        default=True, description="Notify when a planned payment is due soon or overdue."
+    )
+    notify_budget: bool = Field(
+        default=True, description="Notify when a budget limit is close or over."
+    )
+    notify_goals: bool = Field(default=True, description="Notify when a savings goal is reached.")
 
 
 class UserResponse(BaseModel):
@@ -33,6 +40,9 @@ class UserResponse(BaseModel):
     base_currency: str
     default_account_id: uuid.UUID | None
     start_from_template: bool
+    notify_payments: bool
+    notify_budget: bool
+    notify_goals: bool
     two_factor_enabled: bool = Field(
         description="Whether signing in also needs a code from an authenticator app."
     )

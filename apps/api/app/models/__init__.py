@@ -9,6 +9,7 @@ from app.models.goal import Goal, GoalEntry
 from app.models.group import TransactionGroup
 from app.models.import_batch import ImportAlias, ImportBatch, ImportRow
 from app.models.link import TransactionLink
+from app.models.notification import Notification
 from app.models.recovery_code import RecoveryCode
 from app.models.session import UserSession
 from app.models.subscription import Subscription
@@ -32,6 +33,7 @@ __all__ = [
     "ImportAlias",
     "ImportBatch",
     "ImportRow",
+    "Notification",
     "RecoveryCode",
     "SnapshotDirty",
     "Subscription",

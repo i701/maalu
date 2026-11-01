@@ -12,12 +12,20 @@ import TopBar from "./TopBar";
  * The app frame: a slim top bar, plus a sidebar on wide screens and a bottom navigation bar on
  * narrow ones. Chrome is separated from the page by tone, never by borders.
  */
-export default function AppShell({ user, children }: { user: SessionUser; children: ReactNode }) {
+export default function AppShell({
+	user,
+	unread,
+	children,
+}: {
+	user: SessionUser;
+	unread: number;
+	children: ReactNode;
+}) {
 	return (
 		<Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
 			<NavigationProgress />
 			<SideNav />
-			<TopBar user={user} />
+			<TopBar user={user} unread={unread} />
 			<BottomNav />
 
 			<Box
