@@ -9,11 +9,21 @@ back in without email.
 import asyncio
 import getpass
 import sys
+from urllib.parse import urlparse
 
+from sqlalchemy import delete, update
+from sqlalchemy.sql.ddl import sort_tables
+
+from app.config import settings
 from app.database import SessionLocal
+from app.models import User
+from app.models.base import Base
 from app.services import SessionService, UserService
 
-USAGE = "usage: python -m app.admin disable-2fa EMAIL | reset-password EMAIL | create-bucket"
+USAGE = (
+    "usage: python -m app.admin disable-2fa EMAIL | reset-password EMAIL | create-bucket "
+    "| reset-data"
+)
 MIN_PASSWORD = 8
 MAX_PASSWORD = 128
 
@@ -64,6 +74,33 @@ def ask_for_password() -> str | None:
     return first
 
 
+# What reset-data leaves alone: who can sign in (accounts, their sessions, two-factor and recovery
+# codes) and the exchange-rate cache. Every other table is data and goes, including later ones.
+KEEP_ON_RESET = frozenset({"users", "sessions", "recovery_codes", "exchange_rates"})
+LOCAL_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
+
+
+def is_local_database(url: str) -> bool:
+    """Whether the database URL points at this machine: reset-data is for development only."""
+    return urlparse(url.replace("+asyncpg", "", 1)).hostname in LOCAL_HOSTS
+
+
+async def reset_data(session_factory=SessionLocal) -> list[str]:
+    """Delete everything users have entered (accounts, transactions, categories, budgets, imports,
+    and the rest) but keep the users, their sessions and two-factor, so you stay signed in and
+    start from an empty account. Returns the tables cleared. The background job queue is not part
+    of the app's tables and is untouched."""
+    data = [t for t in Base.metadata.tables.values() if t.name not in KEEP_ON_RESET]
+    tables = list(reversed(sort_tables(data)))  # sorted among themselves: users is not in the way
+    async with session_factory() as session:
+        # a user's default account is a link into the data being deleted
+        await session.execute(update(User).values(default_account_id=None))
+        for table in tables:  # children first, so no foreign key is ever in the way
+            await session.execute(delete(table))
+        await session.commit()
+    return [t.name for t in tables]
+
+
 def create_bucket() -> int:
     """Create the attachments bucket if it is missing (development, or a first setup)."""
     from app.storage import S3Storage, get_storage
@@ -82,6 +119,13 @@ def create_bucket() -> int:
 def main(argv: list[str]) -> int:
     if argv == ["create-bucket"]:
         return create_bucket()
+    if argv == ["reset-data"]:
+        if not is_local_database(settings.database_url):
+            print("reset-data only runs against a database on this machine.", file=sys.stderr)
+            return 1
+        cleared = asyncio.run(reset_data())
+        print(f"Cleared {len(cleared)} tables. Users, sessions and two-factor were kept.")
+        return 0
     if len(argv) != 2 or argv[0] not in ("disable-2fa", "reset-password"):
         print(USAGE, file=sys.stderr)
         return 2

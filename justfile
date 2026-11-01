@@ -138,6 +138,16 @@ migration message:
 migrate:
     cd apps/api && uv run alembic upgrade head
 
+# Accounts, transactions, categories, budgets, imports and the rest go; you stay signed in and start
+# from empty. It migrates first, asks before deleting, and refuses a database that is not on this
+# machine. Attachment files in storage are not touched (the daily sweep removes the orphans).
+# `just seed` fills the demo user afterwards if you want sample data.
+# Development only: delete all data (not users, sessions or two-factor) from the local database
+[confirm("This deletes ALL data in the local Maalu database (users and sessions are kept). Continue?")]
+reset-db:
+    cd apps/api && uv run alembic upgrade head
+    cd apps/api && uv run python -m app.admin reset-data
+
 # Roll back one migration
 rollback:
     cd apps/api && uv run alembic downgrade -1

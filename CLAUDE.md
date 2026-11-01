@@ -19,6 +19,7 @@ just storage-up       # optional: floci (local S3) on :4566 plus the attachments
 just migrate          # alembic upgrade head
 just dev              # API :8000 (/docs) + background worker + web :3000 in parallel; or dev-api / dev-worker / dev-web
 just seed [N]         # random demo data for the demo user (local DB only); prints the login
+just reset-db         # dev only: delete ALL data but keep users, sessions and two-factor (asks first; local DB only)
 
 just check            # just api-types, then what CI runs: ruff check + format --check; oxfmt --check, oxlint, tsc --noEmit
 just fmt              # ruff format/fix + oxfmt + oxlint --fix
