@@ -125,3 +125,34 @@ async def test_refuses_to_run_against_a_remote_database(monkeypatch):
         seed_module.settings, "database_url", "postgresql+asyncpg://u:p@localhost:5432/maalu"
     )
     seed_module._assert_local_database()  # local is fine
+
+
+async def test_seeding_another_email_leaves_the_demo_user_alone(db: AsyncSession):
+    demo = await run(db, n=40)
+    other = await seed_module.seed(
+        db, transactions=30, rng=random.Random(2), today=TODAY, email="sample@maalu.dev"
+    )
+    await db.commit()
+    assert demo.user == seed_module.DEMO_EMAIL
+    assert other.user == "sample@maalu.dev"
+    assert await count(db, User) == 2
+
+    async def rows_of(email: str) -> int:
+        stmt = (
+            select(func.count())
+            .select_from(Transaction)
+            .join(User, User.id == Transaction.user_id)
+            .where(User.email == email)
+        )
+        return (await db.scalar(stmt)) or 0
+
+    demo_rows = await rows_of(seed_module.DEMO_EMAIL)
+    assert demo_rows > 0
+
+    # seeding the other user again replaces only theirs
+    await seed_module.seed(
+        db, transactions=30, rng=random.Random(3), today=TODAY, email="sample@maalu.dev"
+    )
+    await db.commit()
+    assert await count(db, User) == 2
+    assert await rows_of(seed_module.DEMO_EMAIL) == demo_rows

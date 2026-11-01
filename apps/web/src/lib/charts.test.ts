@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compact, niceTicks } from "./charts";
+import { compact, niceTicks, spreadLabels } from "./charts";
 
 describe("niceTicks", () => {
 	it("returns round values that cover the range", () => {
@@ -61,5 +61,32 @@ describe("compact", () => {
 	it("keeps the sign", () => {
 		expect(compact(-1500)).toBe("-1.5K");
 		expect(compact(-42)).toBe("-42");
+	});
+});
+
+describe("spreadLabels", () => {
+	it("leaves labels that already have room where they are", () => {
+		expect(spreadLabels([10, 50, 90], 20, 0, 100)).toEqual([10, 50, 90]);
+	});
+
+	it("pushes crowded labels apart, in the order of the nodes", () => {
+		const out = spreadLabels([50, 52, 54], 20, 0, 200);
+		expect(out).toEqual([50, 70, 90]);
+	});
+
+	it("keeps the order of the input whatever the order of the centres", () => {
+		const out = spreadLabels([90, 10, 50], 20, 0, 100);
+		expect(out).toEqual([90, 10, 50]);
+	});
+
+	it("slides the pile up when it would run off the bottom", () => {
+		const out = spreadLabels([95, 96, 97], 20, 0, 100);
+		expect(out[2]).toBe(100);
+		expect(out[1]).toBe(80);
+		expect(out[0]).toBe(60);
+	});
+
+	it("stays inside the box", () => {
+		expect(spreadLabels([-5, 500], 20, 0, 100)).toEqual([0, 100]);
 	});
 });

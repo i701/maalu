@@ -276,13 +276,19 @@ def _method_for(group: AccountGroup) -> PaymentMethod:
 
 
 async def seed(
-    db: AsyncSession, *, transactions: int, rng: random.Random, today: date
+    db: AsyncSession,
+    *,
+    transactions: int,
+    rng: random.Random,
+    today: date,
+    email: str = DEMO_EMAIL,
 ) -> SeedSummary:
-    """Replace the demo user's data with fresh random data. The caller commits."""
-    await db.execute(delete(User).where(User.email == DEMO_EMAIL))  # children cascade
+    """Replace the data of the user with this email (the demo user by default; made if missing)
+    with fresh random data. Only that user is touched. The caller commits."""
+    await db.execute(delete(User).where(User.email == email))  # children cascade
     await db.flush()
     user = await UserService(db).register(
-        UserCreate(email=DEMO_EMAIL, password=DEMO_PASSWORD, base_currency=BASE)
+        UserCreate(email=email, password=DEMO_PASSWORD, base_currency=BASE)
     )
     uid = user.id
     vendors_svc, accounts_svc = VendorService(db), AccountService(db)
@@ -521,7 +527,7 @@ async def seed(
     await _group_categories(db, uid)
     n_vendors = await db.scalar(select(func.count(Vendor.id)).where(Vendor.user_id == uid))
     return SeedSummary(
-        user=DEMO_EMAIL,
+        user=email,
         accounts=len(accounts),
         vendors=n_vendors or 0,
         subscriptions=len(subscriptions),
@@ -544,12 +550,19 @@ async def main() -> None:
         "transactions", nargs="?", type=int, default=250, help="random rows (default 250)"
     )
     parser.add_argument("--seed", type=int, default=None, help="random seed, for reproducible data")
+    parser.add_argument(
+        "--email",
+        default=DEMO_EMAIL,
+        help="seed this user instead of the demo user (its data is replaced; yours is untouched)",
+    )
     args = parser.parse_args()
     _assert_local_database()
 
     rng = random.Random(args.seed)
     async with SessionLocal() as db:
-        summary = await seed(db, transactions=args.transactions, rng=rng, today=date.today())
+        summary = await seed(
+            db, transactions=args.transactions, rng=rng, today=date.today(), email=args.email
+        )
         await db.commit()
 
     t = summary.transactions
@@ -558,7 +571,7 @@ async def main() -> None:
         f"{summary.subscriptions} subscriptions and {sum(t.values())} transactions "
         f"({t['income']} income, {t['expense']} expense, {t['transfer']} transfer)."
     )
-    print(f"Sign in as {DEMO_EMAIL} / {DEMO_PASSWORD}")
+    print(f"Sign in as {summary.user} / {DEMO_PASSWORD}")
 
 
 if __name__ == "__main__":

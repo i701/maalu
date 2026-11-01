@@ -27,3 +27,23 @@ export function compact(value: number): string {
 	const [n, unit] = abs < 1_000_000 ? [abs / 1000, "K"] : [abs / 1_000_000, "M"];
 	return `${sign}${n >= 100 ? Math.round(n) : Number(n.toFixed(1))}${unit}`;
 }
+
+/**
+ * Label positions (vertical centres) that keep at least `gap` px apart, as close as they can be to
+ * where their nodes are, inside [min, max]. Takes and returns the centres in the same order.
+ */
+export function spreadLabels(centers: number[], gap: number, min: number, max: number): number[] {
+	const order = centers.map((c, i) => ({ c, i })).toSorted((a, b) => a.c - b.c);
+	const placed = order.map(({ c }) => Math.min(Math.max(c, min), max));
+	for (let k = 1; k < placed.length; k++) placed[k] = Math.max(placed[k], placed[k - 1] + gap);
+	// pushed past the bottom? slide the pile back up
+	const over = (placed.at(-1) ?? 0) - max;
+	if (over > 0) {
+		placed[placed.length - 1] -= over;
+		for (let k = placed.length - 2; k >= 0; k--)
+			placed[k] = Math.min(placed[k], placed[k + 1] - gap);
+	}
+	const out = Array.from({ length: centers.length }, () => 0);
+	order.forEach(({ i }, k) => (out[i] = placed[k]));
+	return out;
+}

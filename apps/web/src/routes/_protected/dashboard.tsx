@@ -11,6 +11,7 @@ import CreditUsageCard from "#/components/dashboard/CreditUsageCard";
 import DeltaBadge from "#/components/dashboard/DeltaBadge";
 import LatestTransactionsCard from "#/components/dashboard/LatestTransactionsCard";
 import MetricCard from "#/components/dashboard/MetricCard";
+import MoneyFlowCard from "#/components/dashboard/MoneyFlowCard";
 import MonthlyCard from "#/components/dashboard/MonthlyCard";
 import SpendingCard from "#/components/dashboard/SpendingCard";
 import PendingOverlay from "#/components/PendingOverlay";
@@ -59,7 +60,7 @@ export const Route = createFileRoute("/_protected/dashboard")({
 				getTransactionTotalsFn({ data: range }),
 				getTransactionTotalsFn({ data: { date_from: previous.start, date_to: previous.end } }),
 				getCategoryTotalsFn({ data: range }),
-				getMonthlyStatsFn({ data: { months: 6, to: current.end } }),
+				getMonthlyStatsFn({ data: { months: 12, to: current.end } }),
 				getBalanceTrendFn({ data: { from: current.start, to: trendEnd } }),
 				listTransactionsFn({ data: { page: 1, pageSize: 10 } }),
 				getBudgetFn({ data: {} }),
@@ -208,6 +209,10 @@ function DashboardPage() {
 					</Box>
 					<Box sx={cell(2)}>
 						<BudgetGoalsCard budget={budget} goals={goals} />
+					</Box>
+
+					<Box sx={cell(6)}>
+						<MoneyFlowCard categories={categories} period={label} />
 					</Box>
 
 					{creditAccounts.length > 0 && (
