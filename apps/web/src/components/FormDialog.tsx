@@ -20,6 +20,7 @@ export default function FormDialog({
 	children,
 	maxWidth = "sm",
 	submitLabel = "Save",
+	submitDisabled = false,
 }: {
 	title: string;
 	error: string | null;
@@ -31,6 +32,8 @@ export default function FormDialog({
 	maxWidth?: "xs" | "sm" | "md";
 	/** The text of the submit button. */
 	submitLabel?: string;
+	/** Keeps the submit button off until the form can be sent. */
+	submitDisabled?: boolean;
 }) {
 	const shownError = useLastDefined(error); // keeps the text while the alert closes
 
@@ -62,7 +65,7 @@ export default function FormDialog({
 				<Button onClick={sheet.close} color="inherit">
 					Cancel
 				</Button>
-				<Button type="submit" variant="contained" loading={pending}>
+				<Button type="submit" variant="contained" loading={pending} disabled={submitDisabled}>
 					{submitLabel}
 				</Button>
 			</DialogActions>

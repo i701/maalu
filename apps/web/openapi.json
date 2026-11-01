@@ -5101,7 +5101,7 @@
                 "type": "null"
               }
             ],
-            "description": "Only null is accepted: it turns a refund into plain income.",
+            "description": "A purchase's id turns this income into a refund of it (same currency, at most what is left of the purchase; it takes the purchase's category, and a purchase with items needs `splits` naming the items, adding up to the amount). Null turns a refund back into plain income.",
             "title": "Refund Of Id"
           },
           "splits": {
@@ -12438,6 +12438,90 @@
           }
         ],
         "summary": "Post Planned Transaction",
+        "tags": [
+          "transactions"
+        ]
+      }
+    },
+    "/api/v1/transactions/{transaction_id}/refund-candidates": {
+      "get": {
+        "description": "Purchases this income could be linked to as a refund: posted expenses in its currency, on or\nbefore its date, with at least that much left to refund. Most likely first (same amount, then\nsame vendor, then most recent). Link one with `PATCH` and `refund_of_id`.",
+        "operationId": "refund_candidates_api_v1_transactions__transaction_id__refund_candidates_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "transaction_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Transaction Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Search description, vendor, category",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Search description, vendor, category",
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TransactionResponse"
+                  },
+                  "title": "Response Refund Candidates Api V1 Transactions  Transaction Id  Refund Candidates Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Refund Candidates",
         "tags": [
           "transactions"
         ]

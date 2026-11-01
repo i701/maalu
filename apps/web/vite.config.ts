@@ -34,6 +34,7 @@ export default defineConfig(({ mode }) => {
 					"AttachFile",
 					"Download",
 					"DoneAll",
+					"InsertLinkOutlined",
 					"NotificationsNoneOutlined",
 					"PictureAsPdfOutlined",
 					"Tune",

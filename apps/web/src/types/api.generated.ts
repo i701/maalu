@@ -1578,6 +1578,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/transactions/{transaction_id}/refund-candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Refund Candidates
+         * @description Purchases this income could be linked to as a refund: posted expenses in its currency, on or
+         *     before its date, with at least that much left to refund. Most likely first (same amount, then
+         *     same vendor, then most recent). Link one with `PATCH` and `refund_of_id`.
+         */
+        get: operations["refund_candidates_api_v1_transactions__transaction_id__refund_candidates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/transactions/{transaction_id}/restore": {
         parameters: {
             query?: never;
@@ -3746,7 +3768,7 @@ export interface components {
             planned?: boolean | null;
             /**
              * Refund Of Id
-             * @description Only null is accepted: it turns a refund into plain income.
+             * @description A purchase's id turns this income into a refund of it (same currency, at most what is left of the purchase; it takes the purchase's category, and a purchase with items needs `splits` naming the items, adding up to the amount). Null turns a refund back into plain income.
              */
             refund_of_id?: string | null;
             /**
@@ -7373,6 +7395,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TransactionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    refund_candidates_api_v1_transactions__transaction_id__refund_candidates_get: {
+        parameters: {
+            query?: {
+                /** @description Search description, vendor, category */
+                q?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                transaction_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransactionResponse"][];
                 };
             };
             /** @description Validation Error */

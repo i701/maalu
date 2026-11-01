@@ -2,8 +2,9 @@ import { useCallback, useState } from "react";
 import type { Transaction } from "#/types/api";
 import { isRefund } from "./refund";
 
-/** A refund being made (`purchase`) or changed (`refund`). */
-export type Refunding = { purchase?: Transaction; refund?: Transaction };
+/** A refund being made (`purchase`), changed (`refund`), or made out of existing income (`income`,
+ * to be linked to the purchase it gave money back for). */
+export type Refunding = { purchase?: Transaction; refund?: Transaction; income?: Transaction };
 
 /**
  * What the Transactions page needs to open the refund dialog. A refund has its own, smaller form (it
@@ -12,7 +13,11 @@ export type Refunding = { purchase?: Transaction; refund?: Transaction };
  */
 export function useRefundDialog(onEdit: (t: Transaction) => void) {
 	const [refunding, setRefunding] = useState<Refunding | null>(null);
-	const refundOf = useCallback((purchase: Transaction) => setRefunding({ purchase }), []);
+	// "Refund" on an expense, "Link to a purchase" on income: the same button position and callback.
+	const refundOf = useCallback(
+		(t: Transaction) => setRefunding(t.type === "income" ? { income: t } : { purchase: t }),
+		[],
+	);
 	const edit = useCallback(
 		(t: Transaction) => (isRefund(t) ? setRefunding({ refund: t }) : onEdit(t)),
 		[onEdit],

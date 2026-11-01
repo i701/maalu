@@ -2,7 +2,7 @@ import uuid
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import case, func, literal, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.allocation import allocate_base
@@ -302,6 +302,91 @@ class TransactionService:
         left = original.amount - await self._refunded(original.id, exclude)
         if amount > left:
             raise TransactionRuleError(f"Only {left:,.2f} of this purchase is left to refund")
+
+    async def _link_refund(
+        self,
+        transaction: Transaction,
+        original_id: uuid.UUID,
+        new_type: TransactionType,
+        changes: dict,
+        data: TransactionUpdate,
+    ) -> Transaction:
+        """Turn existing income into a refund of a purchase. It keeps its own date, amount, account,
+        rate and notes; it takes the purchase's category (a purchase with items is refunded item
+        by item, so `splits` must name the items and add up to the amount). The money then counts
+        as spending taken back, not as income. The room left in the purchase and the currency are
+        checked with the other refund rules at the end of `update`."""
+        if transaction.type is not TransactionType.INCOME or new_type is not TransactionType.INCOME:
+            raise TransactionRuleError("Only income can be a refund")
+        if transaction.adjustment:
+            raise TransactionRuleError("A balance adjustment can't be a refund")
+        if original_id == transaction.id:
+            raise TransactionRuleError("A transaction can't be a refund of itself")
+        original = await self._refund_original(transaction.user_id, original_id)
+        name = changes.pop("category", None)
+        if (
+            name is not None
+            and not original.splits
+            and normalize_name(name) != normalize_name(original.category)
+        ):
+            raise TransactionRuleError("A refund takes its category from the purchase")
+        changes.pop("splits", None)  # replaced below by the purchase's items, or by none
+        category_ref, lines = self._refund_parts(original, data.splits)
+        transaction.splits = lines
+        if category_ref is not None:
+            transaction.category_ref = category_ref
+        transaction.refund_of = original
+        return original
+
+    async def refund_candidates(
+        self,
+        user_id: uuid.UUID,
+        income: Transaction,
+        *,
+        q: str | None = None,
+        limit: int = 20,
+    ) -> list[Transaction]:
+        """Purchases this income could be a refund of: your posted expenses in the income's
+        currency, on or before its date, with at least that much left to refund. The most likely
+        first: the same amount, then the same vendor, then the most recent."""
+        left = Transaction.amount - Transaction.refunded_amount
+        conditions = [
+            Transaction.user_id == user_id,
+            Transaction.live(),
+            Transaction.planned.is_(False),
+            Transaction.adjustment.is_(False),
+            Transaction.type == TransactionType.EXPENSE,
+            Transaction.currency == income.currency,
+            Transaction.transaction_date <= income.transaction_date,
+            Transaction.id != income.id,
+            left >= income.amount,
+        ]
+        if q and q.strip():
+            term = q.strip()
+            conditions.append(
+                or_(
+                    Transaction.description.icontains(term, autoescape=True),
+                    Transaction.vendor.has(Vendor.name.icontains(term, autoescape=True)),
+                    Transaction.category_ref.has(Category.name.icontains(term, autoescape=True)),
+                )
+            )
+        same_vendor = (
+            case((Transaction.vendor_id == income.vendor_id, 0), else_=1)
+            if income.vendor_id
+            else literal(1)
+        )
+        stmt = (
+            select(Transaction)
+            .where(*conditions)
+            .order_by(
+                case((Transaction.amount == income.amount, 0), else_=1),
+                same_vendor,
+                Transaction.transaction_date.desc(),
+                Transaction.created_at.desc(),
+            )
+            .limit(limit)
+        )
+        return list((await self.db.scalars(stmt)).all())
 
     @staticmethod
     def _same_lines(existing: list[TransactionSplit], new: list[SplitInput] | None) -> bool:
@@ -1121,7 +1206,9 @@ class TransactionService:
                     if category_ref is not None:
                         transaction.category_ref = category_ref
         elif "refund_of_id" in changes:
-            changes.pop("refund_of_id")  # already plain income: nothing to unlink
+            target = changes.pop("refund_of_id")
+            if target is not None:  # link this income to a purchase, making it a refund of it
+                original = await self._link_refund(transaction, target, new_type, changes, data)
 
         # Links. An explicit null unlinks.
         if "tags" in changes:

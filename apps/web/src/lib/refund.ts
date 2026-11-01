@@ -23,6 +23,11 @@ export function canRefund(t: Transaction): boolean {
 	);
 }
 
+/** Whether this is plain income that could be linked to the purchase it gave money back for. */
+export function canLinkRefund(t: Transaction): boolean {
+	return t.type === "income" && !t.adjustment && t.refund_of === null;
+}
+
 /** Whether refunds have given part of this purchase back. */
 export function wasRefunded(t: Transaction): boolean {
 	return Number(t.refunded_amount) > 0;

@@ -1,5 +1,6 @@
 import AddIcon from "@mui/icons-material/Add";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
+import InsertLinkOutlinedIcon from "@mui/icons-material/InsertLinkOutlined";
 import UndoIcon from "@mui/icons-material/Undo";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
@@ -86,7 +87,7 @@ import { getCategoryFn, listCategoriesFn } from "#/server/categories";
 import { listGroupsFn } from "#/server/groups";
 import { getMeFn } from "#/server/auth";
 import RefundDialogHost from "#/components/RefundDialogHost";
-import { canRefund, isRefund, wasRefunded } from "#/lib/refund";
+import { canLinkRefund, canRefund, isRefund, wasRefunded } from "#/lib/refund";
 import { useRefundDialog } from "#/lib/use-refund-dialog";
 import { listTagsFn } from "#/server/tags";
 import { getVendorFn, listVendorsFn } from "#/server/vendors";
@@ -422,6 +423,16 @@ function TxActions({
 			{canRefund(t) && (
 				<IconButton aria-label="Refund" title="Refund" size="small" onClick={onRefund}>
 					<UndoIcon fontSize="small" />
+				</IconButton>
+			)}
+			{canLinkRefund(t) && (
+				<IconButton
+					aria-label="Link to a purchase"
+					title="This is a refund: link it to the purchase"
+					size="small"
+					onClick={onRefund}
+				>
+					<InsertLinkOutlinedIcon fontSize="small" />
 				</IconButton>
 			)}
 			{t.type === "expense" && !t.subscription && (

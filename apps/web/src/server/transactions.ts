@@ -77,6 +77,8 @@ const updateSchema = z.object({
 		.extend({
 			vendor_name: z.string().trim().min(1).max(200).optional(),
 			vendor_id: z.null().optional(), // explicit null unlinks the vendor
+			// A purchase's id makes this income a refund of it; null makes a refund plain income
+			refund_of_id: z.uuid().nullable().optional(),
 			subscription_id: z.uuid().nullable().optional(), // explicit null unlinks the subscription
 			account_id: z.uuid().nullable().optional(), // explicit null unlinks the account
 			to_account_id: z.uuid().nullable().optional(),
@@ -311,4 +313,13 @@ export const deleteTransactionPermanentlyFn = createServerFn({ method: "POST" })
 	.validator(z.object({ id: z.uuid() }))
 	.handler(async ({ data }) =>
 		apiRequest<void>(`/transactions/${data.id}/permanent`, { method: "DELETE" }),
+	);
+
+/** Purchases an income could be linked to as a refund, most likely first. */
+export const listRefundCandidatesFn = createServerFn({ method: "GET" })
+	.validator(z.object({ id: z.uuid(), q: z.string().max(100).optional() }))
+	.handler(async ({ data }) =>
+		apiRequest<Transaction[]>(`/transactions/${data.id}/refund-candidates`, {
+			query: { q: data.q || undefined, limit: 20 },
+		}),
 	);

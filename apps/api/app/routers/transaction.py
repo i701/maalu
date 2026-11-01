@@ -512,6 +512,33 @@ async def delete_transaction(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
+@router.get("/{transaction_id}/refund-candidates", response_model=list[TransactionResponse])
+async def refund_candidates(
+    transaction_id: uuid.UUID,
+    user_id: CurrentUserId,
+    service: TransactionServiceDep,
+    q: Annotated[
+        str | None, Query(max_length=100, description="Search description, vendor, category")
+    ] = None,
+    limit: Annotated[int, Query(ge=1, le=50)] = 20,
+):
+    """Purchases this income could be linked to as a refund: posted expenses in its currency, on or
+    before its date, with at least that much left to refund. Most likely first (same amount, then
+    same vendor, then most recent). Link one with `PATCH` and `refund_of_id`."""
+    income = await service.get(user_id, transaction_id)
+    if income is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Transaction not found")
+    if (
+        income.type is not TransactionType.INCOME
+        or income.refund_of_id is not None
+        or income.adjustment
+    ):
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT, "Only plain income can be linked to a purchase"
+        )
+    return await service.refund_candidates(user_id, income, q=q, limit=limit)
+
+
 @router.post("/{transaction_id}/post", response_model=TransactionResponse)
 async def post_planned_transaction(
     transaction_id: uuid.UUID,

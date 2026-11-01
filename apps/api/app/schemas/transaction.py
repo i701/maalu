@@ -181,7 +181,11 @@ class TransactionUpdate(VendorRef):
     to_account_id: uuid.UUID | None = None  # explicit null unlinks
     to_amount: Amount | None = None
     refund_of_id: uuid.UUID | None = Field(
-        default=None, description="Only null is accepted: it turns a refund into plain income."
+        default=None,
+        description="A purchase's id turns this income into a refund of it (same currency, at "
+        "most what is left of the purchase; it takes the purchase's category, and a purchase "
+        "with items needs `splits` naming the items, adding up to the amount). Null turns a "
+        "refund back into plain income.",
     )
     currency: CurrencyCode | None = None
     exchange_rate: ExchangeRate | None = None

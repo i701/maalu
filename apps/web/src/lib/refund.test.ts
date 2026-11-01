@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Transaction } from "#/types/api";
-import { amountLeft, canRefund, isRefund, wasRefunded } from "./refund";
+import { amountLeft, canLinkRefund, canRefund, isRefund, wasRefunded } from "./refund";
 
 const purchase = (over: Partial<Transaction> = {}) =>
 	({
@@ -50,5 +50,23 @@ describe("isRefund / wasRefunded", () => {
 	it("says whether any refunds were made", () => {
 		expect(wasRefunded(purchase())).toBe(false);
 		expect(wasRefunded(purchase({ refunded_amount: "0.0100" }))).toBe(true);
+	});
+});
+
+const income = (over: Partial<Transaction> = {}) =>
+	purchase({ type: "income", adjustment: false, ...over });
+
+describe("canLinkRefund", () => {
+	it("is plain income only", () => {
+		expect(canLinkRefund(income())).toBe(true);
+		expect(canLinkRefund(purchase())).toBe(false); // an expense
+		expect(canLinkRefund(income({ type: "transfer" }))).toBe(false);
+	});
+
+	it("is not for a refund already, or a balance adjustment", () => {
+		expect(canLinkRefund(income({ refund_of: { id: "x" } as Transaction["refund_of"] }))).toBe(
+			false,
+		);
+		expect(canLinkRefund(income({ adjustment: true }))).toBe(false);
 	});
 });
