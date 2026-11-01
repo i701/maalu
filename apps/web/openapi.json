@@ -322,6 +322,47 @@
         "title": "AccountUpdate",
         "type": "object"
       },
+      "AttachmentResponse": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "filename": {
+            "title": "Filename",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "mime_type": {
+            "title": "Mime Type",
+            "type": "string"
+          },
+          "size": {
+            "title": "Size",
+            "type": "integer"
+          },
+          "transaction_id": {
+            "format": "uuid",
+            "title": "Transaction Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "transaction_id",
+          "filename",
+          "mime_type",
+          "size",
+          "created_at"
+        ],
+        "title": "AttachmentResponse",
+        "type": "object"
+      },
       "BackupRestored": {
         "properties": {
           "restored": {
@@ -1754,6 +1795,77 @@
         ],
         "title": "IntervalUnit",
         "type": "string"
+      },
+      "LinkCreate": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "url": {
+            "description": "A web address. http or https only; https:// is added when no scheme is typed.",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "LinkCreate",
+        "type": "object"
+      },
+      "LinkResponse": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "transaction_id": {
+            "format": "uuid",
+            "title": "Transaction Id",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "transaction_id",
+          "url",
+          "title",
+          "created_at"
+        ],
+        "title": "LinkResponse",
+        "type": "object"
       },
       "MarketRateResponse": {
         "properties": {
@@ -3412,6 +3524,12 @@
             "title": "Amount",
             "type": "string"
           },
+          "attachment_count": {
+            "default": 0,
+            "description": "How many files are attached",
+            "title": "Attachment Count",
+            "type": "integer"
+          },
           "base_amount": {
             "title": "Base Amount",
             "type": "string"
@@ -3485,6 +3603,12 @@
             "format": "uuid",
             "title": "Id",
             "type": "string"
+          },
+          "link_count": {
+            "default": 0,
+            "description": "How many web links are attached",
+            "title": "Link Count",
+            "type": "integer"
           },
           "payment_method": {
             "$ref": "#/components/schemas/PaymentMethod"
@@ -4879,6 +5003,100 @@
         "summary": "Unarchive Account",
         "tags": [
           "accounts"
+        ]
+      }
+    },
+    "/api/v1/attachments/{attachment_id}": {
+      "delete": {
+        "operationId": "delete_attachment_api_v1_attachments__attachment_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "attachment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Attachment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Delete Attachment",
+        "tags": [
+          "attachments"
+        ]
+      },
+      "get": {
+        "description": "The file itself, shown in the browser unless `download` is true.",
+        "operationId": "download_attachment_api_v1_attachments__attachment_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "attachment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Attachment Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "download",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Download",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/octet-stream": {}
+            },
+            "description": "The file"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Download Attachment",
+        "tags": [
+          "attachments"
         ]
       }
     },
@@ -6481,6 +6699,47 @@
         "summary": "Delete Entry",
         "tags": [
           "goals"
+        ]
+      }
+    },
+    "/api/v1/links/{link_id}": {
+      "delete": {
+        "operationId": "delete_link_api_v1_links__link_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "link_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Link Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Delete Link",
+        "tags": [
+          "attachments"
         ]
       }
     },
@@ -9620,6 +9879,239 @@
         "summary": "Update Transaction",
         "tags": [
           "transactions"
+        ]
+      }
+    },
+    "/api/v1/transactions/{transaction_id}/attachments": {
+      "get": {
+        "description": "The files attached to a transaction, oldest first.",
+        "operationId": "list_attachments_api_v1_transactions__transaction_id__attachments_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "transaction_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Transaction Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AttachmentResponse"
+                  },
+                  "title": "Response List Attachments Api V1 Transactions  Transaction Id  Attachments Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List Attachments",
+        "tags": [
+          "attachments"
+        ]
+      },
+      "post": {
+        "description": "Attach a file (the request body is the file itself): a JPEG, PNG, WebP or PDF, up to the size\nlimit, at most ten per transaction. The type is read from the bytes, not from any header.",
+        "operationId": "upload_attachment_api_v1_transactions__transaction_id__attachments_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "transaction_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Transaction Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The file's name, for display",
+            "in": "query",
+            "name": "filename",
+            "required": true,
+            "schema": {
+              "description": "The file's name, for display",
+              "maxLength": 1000,
+              "title": "Filename",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttachmentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Upload Attachment",
+        "tags": [
+          "attachments"
+        ]
+      }
+    },
+    "/api/v1/transactions/{transaction_id}/links": {
+      "get": {
+        "description": "The web links attached to a transaction, oldest first.",
+        "operationId": "list_links_api_v1_transactions__transaction_id__links_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "transaction_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Transaction Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LinkResponse"
+                  },
+                  "title": "Response List Links Api V1 Transactions  Transaction Id  Links Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List Links",
+        "tags": [
+          "attachments"
+        ]
+      },
+      "post": {
+        "description": "Attach a web link (an online receipt or order page). http and https only; the address is\nstored as given and never fetched. At most ten per transaction.",
+        "operationId": "add_link_api_v1_transactions__transaction_id__links_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "transaction_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Transaction Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Add Link",
+        "tags": [
+          "attachments"
         ]
       }
     },

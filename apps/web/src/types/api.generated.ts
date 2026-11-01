@@ -107,6 +107,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/attachments/{attachment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download Attachment
+         * @description The file itself, shown in the browser unless `download` is true.
+         */
+        get: operations["download_attachment_api_v1_attachments__attachment_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Attachment */
+        delete: operations["delete_attachment_api_v1_attachments__attachment_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/2fa/disable": {
         parameters: {
             query?: never;
@@ -660,6 +681,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/links/{link_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Link */
+        delete: operations["delete_link_api_v1_links__link_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/stats/balance-trend": {
         parameters: {
             query?: never;
@@ -1145,6 +1183,56 @@ export interface paths {
         patch: operations["update_transaction_api_v1_transactions__transaction_id__patch"];
         trace?: never;
     };
+    "/api/v1/transactions/{transaction_id}/attachments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Attachments
+         * @description The files attached to a transaction, oldest first.
+         */
+        get: operations["list_attachments_api_v1_transactions__transaction_id__attachments_get"];
+        put?: never;
+        /**
+         * Upload Attachment
+         * @description Attach a file (the request body is the file itself): a JPEG, PNG, WebP or PDF, up to the size
+         *     limit, at most ten per transaction. The type is read from the bytes, not from any header.
+         */
+        post: operations["upload_attachment_api_v1_transactions__transaction_id__attachments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/transactions/{transaction_id}/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Links
+         * @description The web links attached to a transaction, oldest first.
+         */
+        get: operations["list_links_api_v1_transactions__transaction_id__links_get"];
+        put?: never;
+        /**
+         * Add Link
+         * @description Attach a web link (an online receipt or order page). http and https only; the address is
+         *     stored as given and never fetched. At most ten per transaction.
+         */
+        post: operations["add_link_api_v1_transactions__transaction_id__links_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/transactions/{transaction_id}/permanent": {
         parameters: {
             query?: never;
@@ -1424,6 +1512,30 @@ export interface components {
             name?: string | null;
             /** Opening Amount */
             opening_amount?: number | string | null;
+        };
+        /** AttachmentResponse */
+        AttachmentResponse: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Filename */
+            filename: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Mime Type */
+            mime_type: string;
+            /** Size */
+            size: number;
+            /**
+             * Transaction Id
+             * Format: uuid
+             */
+            transaction_id: string;
         };
         /** BackupRestored */
         BackupRestored: {
@@ -2027,6 +2139,38 @@ export interface components {
          * @enum {string}
          */
         IntervalUnit: "week" | "month" | "year";
+        /** LinkCreate */
+        LinkCreate: {
+            /** Title */
+            title?: string | null;
+            /**
+             * Url
+             * @description A web address. http or https only; https:// is added when no scheme is typed.
+             */
+            url: string;
+        };
+        /** LinkResponse */
+        LinkResponse: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string | null;
+            /**
+             * Transaction Id
+             * Format: uuid
+             */
+            transaction_id: string;
+            /** Url */
+            url: string;
+        };
         /** MarketRateResponse */
         MarketRateResponse: {
             /** Base */
@@ -2689,6 +2833,12 @@ export interface components {
             account: components["schemas"]["AccountRef"] | null;
             /** Amount */
             amount: string;
+            /**
+             * Attachment Count
+             * @description How many files are attached
+             * @default 0
+             */
+            attachment_count: number;
             /** Base Amount */
             base_amount: string;
             /** Category */
@@ -2721,6 +2871,12 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /**
+             * Link Count
+             * @description How many web links are attached
+             * @default 0
+             */
+            link_count: number;
             payment_method: components["schemas"]["PaymentMethod"];
             /** Planned */
             planned: boolean;
@@ -3284,6 +3440,68 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["AccountResponse"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_attachment_api_v1_attachments__attachment_id__get: {
+        parameters: {
+            query?: {
+                download?: boolean;
+            };
+            header?: never;
+            path: {
+                attachment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The file */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_attachment_api_v1_attachments__attachment_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                attachment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -4328,6 +4546,35 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["GoalResponse"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_link_api_v1_links__link_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                link_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -5547,6 +5794,141 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TransactionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_attachments_api_v1_transactions__transaction_id__attachments_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transaction_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttachmentResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_attachment_api_v1_transactions__transaction_id__attachments_post: {
+        parameters: {
+            query: {
+                /** @description The file's name, for display */
+                filename: string;
+            };
+            header?: never;
+            path: {
+                transaction_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/octet-stream": string;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttachmentResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_links_api_v1_transactions__transaction_id__links_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transaction_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LinkResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_link_api_v1_transactions__transaction_id__links_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transaction_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LinkResponse"];
                 };
             };
             /** @description Validation Error */

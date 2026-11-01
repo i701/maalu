@@ -25,7 +25,9 @@ import { Route as ProtectedTemplatesRouteImport } from './routes/_protected/temp
 import { Route as ProtectedTransactionsRouteImport } from './routes/_protected/transactions'
 import { Route as ProtectedTrashRouteImport } from './routes/_protected/trash'
 import { Route as ProtectedVendorsRouteImport } from './routes/_protected/vendors'
+import { Route as ApiAttachmentsRouteImport } from './routes/api.attachments'
 import { Route as ApiBackupRouteImport } from './routes/api.backup'
+import { Route as ApiAttachmentsIdRouteImport } from './routes/api.attachments.$id'
 import { Route as ApiExportTransactionsRouteImport } from './routes/api.export.transactions'
 
 const IndexRoute = IndexRouteImport.update({
@@ -107,10 +109,20 @@ const ProtectedVendorsRoute = ProtectedVendorsRouteImport.update({
   path: '/vendors',
   getParentRoute: () => ProtectedRoute,
 } as any)
+const ApiAttachmentsRoute = ApiAttachmentsRouteImport.update({
+  id: '/api/attachments',
+  path: '/api/attachments',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiBackupRoute = ApiBackupRouteImport.update({
   id: '/api/backup',
   path: '/api/backup',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAttachmentsIdRoute = ApiAttachmentsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiAttachmentsRoute,
 } as any)
 const ApiExportTransactionsRoute = ApiExportTransactionsRouteImport.update({
   id: '/api/export/transactions',
@@ -134,7 +146,9 @@ export interface FileRoutesByFullPath {
   '/transactions': typeof ProtectedTransactionsRoute
   '/trash': typeof ProtectedTrashRoute
   '/vendors': typeof ProtectedVendorsRoute
+  '/api/attachments': typeof ApiAttachmentsRouteWithChildren
   '/api/backup': typeof ApiBackupRoute
+  '/api/attachments/$id': typeof ApiAttachmentsIdRoute
   '/api/export/transactions': typeof ApiExportTransactionsRoute
 }
 export interface FileRoutesByTo {
@@ -153,7 +167,9 @@ export interface FileRoutesByTo {
   '/transactions': typeof ProtectedTransactionsRoute
   '/trash': typeof ProtectedTrashRoute
   '/vendors': typeof ProtectedVendorsRoute
+  '/api/attachments': typeof ApiAttachmentsRouteWithChildren
   '/api/backup': typeof ApiBackupRoute
+  '/api/attachments/$id': typeof ApiAttachmentsIdRoute
   '/api/export/transactions': typeof ApiExportTransactionsRoute
 }
 export interface FileRoutesById {
@@ -174,7 +190,9 @@ export interface FileRoutesById {
   '/_protected/transactions': typeof ProtectedTransactionsRoute
   '/_protected/trash': typeof ProtectedTrashRoute
   '/_protected/vendors': typeof ProtectedVendorsRoute
+  '/api/attachments': typeof ApiAttachmentsRouteWithChildren
   '/api/backup': typeof ApiBackupRoute
+  '/api/attachments/$id': typeof ApiAttachmentsIdRoute
   '/api/export/transactions': typeof ApiExportTransactionsRoute
 }
 export interface FileRouteTypes {
@@ -195,7 +213,9 @@ export interface FileRouteTypes {
     | '/transactions'
     | '/trash'
     | '/vendors'
+    | '/api/attachments'
     | '/api/backup'
+    | '/api/attachments/$id'
     | '/api/export/transactions'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -214,7 +234,9 @@ export interface FileRouteTypes {
     | '/transactions'
     | '/trash'
     | '/vendors'
+    | '/api/attachments'
     | '/api/backup'
+    | '/api/attachments/$id'
     | '/api/export/transactions'
   id:
     | '__root__'
@@ -234,7 +256,9 @@ export interface FileRouteTypes {
     | '/_protected/transactions'
     | '/_protected/trash'
     | '/_protected/vendors'
+    | '/api/attachments'
     | '/api/backup'
+    | '/api/attachments/$id'
     | '/api/export/transactions'
   fileRoutesById: FileRoutesById
 }
@@ -243,6 +267,7 @@ export interface RootRouteChildren {
   ProtectedRoute: typeof ProtectedRouteWithChildren
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
+  ApiAttachmentsRoute: typeof ApiAttachmentsRouteWithChildren
   ApiBackupRoute: typeof ApiBackupRoute
   ApiExportTransactionsRoute: typeof ApiExportTransactionsRoute
 }
@@ -361,12 +386,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedVendorsRouteImport
       parentRoute: typeof ProtectedRoute
     }
+    '/api/attachments': {
+      id: '/api/attachments'
+      path: '/api/attachments'
+      fullPath: '/api/attachments'
+      preLoaderRoute: typeof ApiAttachmentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/backup': {
       id: '/api/backup'
       path: '/api/backup'
       fullPath: '/api/backup'
       preLoaderRoute: typeof ApiBackupRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/attachments/$id': {
+      id: '/api/attachments/$id'
+      path: '/$id'
+      fullPath: '/api/attachments/$id'
+      preLoaderRoute: typeof ApiAttachmentsIdRouteImport
+      parentRoute: typeof ApiAttachmentsRoute
     }
     '/api/export/transactions': {
       id: '/api/export/transactions'
@@ -412,11 +451,24 @@ const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(
   ProtectedRouteChildren,
 )
 
+interface ApiAttachmentsRouteChildren {
+  ApiAttachmentsIdRoute: typeof ApiAttachmentsIdRoute
+}
+
+const ApiAttachmentsRouteChildren: ApiAttachmentsRouteChildren = {
+  ApiAttachmentsIdRoute: ApiAttachmentsIdRoute,
+}
+
+const ApiAttachmentsRouteWithChildren = ApiAttachmentsRoute._addFileChildren(
+  ApiAttachmentsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ProtectedRoute: ProtectedRouteWithChildren,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
+  ApiAttachmentsRoute: ApiAttachmentsRouteWithChildren,
   ApiBackupRoute: ApiBackupRoute,
   ApiExportTransactionsRoute: ApiExportTransactionsRoute,
 }

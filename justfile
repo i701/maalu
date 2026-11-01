@@ -15,6 +15,13 @@ db-up:
 db-down:
     docker compose down
 
+# Start the local S3-compatible store (floci) and create the attachments bucket in it. Needs
+# ATTACHMENTS_S3_* set in apps/api/.env (see .env.example); without them attachments use a folder.
+storage-up:
+    docker compose up -d storage
+    sleep 3
+    cd apps/api && uv run python -m app.admin create-bucket
+
 # ── Run ─────────────────────────────────────────────────
 
 # Run API, background worker and web together

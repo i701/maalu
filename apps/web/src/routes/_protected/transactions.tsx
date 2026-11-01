@@ -36,6 +36,7 @@ import Symbol from "#/components/Symbol";
 import { TagChips } from "#/components/TagChip";
 import { txSubtitle, txTitle } from "#/lib/tx-display";
 import CategoryDot from "#/components/CategoryDot";
+import AttachFileIcon from "@mui/icons-material/AttachFile";
 import TonalChip from "#/components/TonalChip";
 import TableCard from "#/components/TableCard";
 import TablePager from "#/components/TablePager";
@@ -247,6 +248,15 @@ function TxSubtitle({ t }: { t: Transaction }) {
 			<Typography variant="caption" sx={{ color: "text.secondary" }}>
 				{txSubtitle(t)}
 			</Typography>
+			{t.attachment_count + t.link_count > 0 && (
+				<Box
+					component="span"
+					title={`${t.attachment_count + t.link_count} attached`}
+					sx={{ display: "inline-flex", alignItems: "center", color: "text.secondary" }}
+				>
+					<AttachFileIcon sx={{ fontSize: 14 }} />
+				</Box>
+			)}
 		</Box>
 	);
 }
@@ -499,7 +509,9 @@ const TransactionsTable = memo(function TransactionsTable({
 							{txTitle(t)}
 						</Typography>
 					}
-					secondary={txSubtitle(t) && <TxSubtitle t={t} />}
+					secondary={
+						(txSubtitle(t) || t.attachment_count + t.link_count > 0) && <TxSubtitle t={t} />
+					}
 					end={<TxAmount t={t} baseCurrency={baseCurrency} />}
 					meta={
 						<>

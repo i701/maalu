@@ -41,6 +41,7 @@ OWNED = (
     "goals",
     "subscriptions",
     "tags",
+    "transaction_links",
     "transaction_templates",
     "transactions",
     "vendors",
@@ -63,6 +64,8 @@ EXCLUDED = (
     "exchange_rates",
     "balance_snapshots",
     "balance_snapshot_dirty",
+    # the files live in storage, not in the database, so they are not in the backup file
+    "transaction_attachments",
 )
 INCLUDED: list[Table] = sort_tables([Base.metadata.tables[n] for n in (*OWNED, *CHILDREN)])
 

@@ -9,10 +9,12 @@ from app.database import get_db
 from app.models import User, UserSession
 from app.services import (
     AccountService,
+    AttachmentService,
     BackupService,
     BudgetService,
     CategoryService,
     GoalService,
+    LinkService,
     SessionService,
     StatsService,
     SubscriptionService,
@@ -76,6 +78,14 @@ def get_tag_service(db: DbSession) -> TagService:
     return TagService(db)
 
 
+def get_attachment_service(db: DbSession) -> AttachmentService:
+    return AttachmentService(db)
+
+
+def get_link_service(db: DbSession) -> LinkService:
+    return LinkService(db)
+
+
 def get_backup_service(db: DbSession) -> BackupService:
     return BackupService(db)
 
@@ -96,6 +106,8 @@ AccountServiceDep = Annotated[AccountService, Depends(get_account_service)]
 SubscriptionServiceDep = Annotated[SubscriptionService, Depends(get_subscription_service)]
 TagServiceDep = Annotated[TagService, Depends(get_tag_service)]
 TemplateServiceDep = Annotated[TemplateService, Depends(get_template_service)]
+AttachmentServiceDep = Annotated[AttachmentService, Depends(get_attachment_service)]
+LinkServiceDep = Annotated[LinkService, Depends(get_link_service)]
 BackupServiceDep = Annotated[BackupService, Depends(get_backup_service)]
 
 

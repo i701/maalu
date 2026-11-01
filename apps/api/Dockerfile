@@ -16,7 +16,10 @@ ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1
 WORKDIR /app/apps/api
 COPY --from=build /app/.venv /app/.venv
 COPY apps/api/ ./
-RUN useradd --system --uid 10001 maalu
+RUN useradd --system --uid 10001 maalu \
+    && mkdir -p /data/attachments && chown -R maalu /data
+# Attachments go here unless a bucket is set (ATTACHMENTS_S3_BUCKET); mount a volume on it.
+ENV ATTACHMENTS_DIR=/data/attachments
 USER maalu
 EXPOSE 8000
 # Needs SECRET_KEY and DATABASE_URL (postgresql+asyncpg://...).

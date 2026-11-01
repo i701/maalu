@@ -4,6 +4,12 @@ from app.services.account import (
     AccountNotFoundError,
     AccountService,
 )
+from app.services.attachment import (
+    AttachmentNotFoundError,
+    AttachmentRuleError,
+    AttachmentService,
+    AttachmentTooLargeError,
+)
 from app.services.backup import BackupFormatError, BackupNotEmptyError, BackupService
 from app.services.budget import BudgetCategoryTakenError, BudgetLineNotFoundError, BudgetService
 from app.services.category import (
@@ -21,6 +27,7 @@ from app.services.goal import (
     GoalRuleError,
     GoalService,
 )
+from app.services.link import LinkService
 from app.services.money import ExchangeRateRequiredError
 from app.services.session import SessionService
 from app.services.snapshot import SnapshotService
@@ -56,6 +63,10 @@ __all__ = [
     "AccountHasTransactionsError",
     "AccountNotFoundError",
     "AccountService",
+    "AttachmentNotFoundError",
+    "AttachmentRuleError",
+    "AttachmentService",
+    "AttachmentTooLargeError",
     "BackupFormatError",
     "BackupNotEmptyError",
     "BackupService",
@@ -76,6 +87,7 @@ __all__ = [
     "GoalService",
     "InvalidPasswordError",
     "InvalidTwoFactorCodeError",
+    "LinkService",
     "PasswordUnchangedError",
     "RegistrationClosedError",
     "SessionService",

@@ -14,7 +14,7 @@ import procrastinate
 
 from app.config import settings
 from app.database import SessionLocal
-from app.services import SessionService, SnapshotService
+from app.services import AttachmentService, SessionService, SnapshotService
 
 logger = logging.getLogger("maalu.jobs")
 
@@ -62,3 +62,19 @@ async def snapshot_balances_job(timestamp: int) -> None:
     day's rate honest even if nobody opened the app."""
     await snapshot_balances()
     logger.info("balance snapshots are up to date")
+
+
+async def purge_orphan_attachments(session_factory=SessionLocal) -> int:
+    """Delete stored attachment files with no row (over a day old); returns how many went."""
+    async with session_factory() as session:
+        return await AttachmentService(session).purge_orphans()
+
+
+@app.periodic(cron="30 4 * * *")
+@app.task(name="purge_orphan_attachments", queueing_lock="purge_orphan_attachments")
+async def purge_orphan_attachments_job(timestamp: int) -> None:
+    """Daily, at 04:30: remove attachment files nothing points at any more. Deleting a transaction
+    for good, an account, or a failed upload leaves the file behind; this is what cleans up after
+    all of them, so none of those paths has to touch storage."""
+    removed = await purge_orphan_attachments()
+    logger.info("removed %d orphan attachment files", removed)

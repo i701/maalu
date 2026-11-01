@@ -5,6 +5,7 @@ from app.schemas.account import (
     AccountSummary,
     AccountUpdate,
 )
+from app.schemas.attachment import AttachmentResponse
 from app.schemas.backup import BackupRestored
 from app.schemas.budget import (
     BudgetLineCreate,
@@ -20,6 +21,7 @@ from app.schemas.category import (
     CategoryUpdate,
 )
 from app.schemas.goal import GoalCreate, GoalEntryCreate, GoalResponse, GoalUpdate
+from app.schemas.link import LinkCreate, LinkResponse
 from app.schemas.subscription import (
     SubscriptionCreate,
     SubscriptionFromTransaction,
@@ -82,6 +84,7 @@ __all__ = [
     "AccountResponse",
     "AccountSummary",
     "AccountUpdate",
+    "AttachmentResponse",
     "BackupRestored",
     "BudgetLineCreate",
     "BudgetLineResponse",
@@ -103,6 +106,8 @@ __all__ = [
     "GoalEntryCreate",
     "GoalResponse",
     "GoalUpdate",
+    "LinkCreate",
+    "LinkResponse",
     "PasswordChange",
     "PostPlanned",
     "RecoveryCodes",

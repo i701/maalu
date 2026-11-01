@@ -13,7 +13,7 @@ import sys
 from app.database import SessionLocal
 from app.services import SessionService, UserService
 
-USAGE = "usage: python -m app.admin disable-2fa EMAIL | reset-password EMAIL"
+USAGE = "usage: python -m app.admin disable-2fa EMAIL | reset-password EMAIL | create-bucket"
 MIN_PASSWORD = 8
 MAX_PASSWORD = 128
 
@@ -64,7 +64,24 @@ def ask_for_password() -> str | None:
     return first
 
 
+def create_bucket() -> int:
+    """Create the attachments bucket if it is missing (development, or a first setup)."""
+    from app.storage import S3Storage, get_storage
+
+    storage = get_storage()
+    if not isinstance(storage, S3Storage):
+        print(
+            "No bucket is set (ATTACHMENTS_S3_BUCKET): attachments go to a folder.", file=sys.stderr
+        )
+        return 1
+    created = storage.ensure_bucket()
+    print(f"Bucket {storage.bucket} {'created' if created else 'already exists'}.")
+    return 0
+
+
 def main(argv: list[str]) -> int:
+    if argv == ["create-bucket"]:
+        return create_bucket()
     if len(argv) != 2 or argv[0] not in ("disable-2fa", "reset-password"):
         print(USAGE, file=sys.stderr)
         return 2

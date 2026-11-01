@@ -20,6 +20,7 @@ dependencies = [
     "segno>=1.6.6",
     "procrastinate>=3",
     "psycopg[binary,pool]>=3.2",
+    "boto3>=1.35",
 ]
 
 [dependency-groups]
@@ -28,6 +29,7 @@ dev = [
     "pytest-asyncio>=0.25",
     "aiosqlite>=0.20",
     "httpx>=0.28.1",
+    "moto[s3]>=5",
 ]
 
 [tool.pytest.ini_options]

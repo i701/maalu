@@ -5,6 +5,7 @@ from app.config import settings
 from app.rate_limit import RateLimitedError
 from app.routers import (
     account,
+    attachment,
     auth,
     backup,
     budget,
@@ -48,4 +49,5 @@ def create_app() -> FastAPI:
     app.include_router(subscription.router, prefix="/api/v1")
     app.include_router(currency.router, prefix="/api/v1")
     app.include_router(backup.router, prefix="/api/v1")
+    app.include_router(attachment.router, prefix="/api/v1")
     return app

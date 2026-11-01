@@ -15,5 +15,17 @@ services:
       timeout: 3s
       retries: 10
 
+  # An S3-compatible store for attachments in development (floci, a local AWS emulator). Optional:
+  # without ATTACHMENTS_S3_BUCKET the API keeps attachments in a folder. `just storage-up`.
+  storage:
+    image: floci/floci:latest
+    ports:
+      - "4566:4566"
+    environment:
+      FLOCI_STORAGE_MODE: hybrid
+    volumes:
+      - maalu-storage:/app/data
+
 volumes:
   maalu-pgdata:
+  maalu-storage:

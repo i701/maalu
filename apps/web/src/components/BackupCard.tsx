@@ -76,8 +76,9 @@ export default function BackupCard() {
 				<Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
 					One file with everything you own: accounts, transactions, categories, tags, budgets, goals
 					and templates. It has no password or sign-in details, but it is your financial data in
-					plain text, so keep it somewhere safe. To restore it, sign in to a new, empty account and
-					choose the file here.
+					plain text, so keep it somewhere safe. Attached links are included, but attached files
+					(receipts) are not: they stay in your storage. To restore it, sign in to a new, empty
+					account and choose the file here.
 				</Typography>
 				{error && (
 					<Alert severity="error" sx={{ mb: 2 }}>

@@ -26,8 +26,10 @@ from sqlalchemy.orm import Mapped, aliased, column_property, mapped_column, rela
 
 from app.enums import PaymentMethod, TransactionType
 from app.models.account import Account
+from app.models.attachment import TransactionAttachment
 from app.models.base import Base
 from app.models.category import Category
+from app.models.link import TransactionLink
 from app.models.subscription import Subscription
 from app.models.tag import Tag, transaction_tags
 from app.models.vendor import Vendor
@@ -241,5 +243,21 @@ TransactionSplit.refunded_amount = column_property(  # type: ignore[attr-defined
         _refund_owner.deleted_at.is_(None),
     )
     .correlate_except(_refund_line, _refund_owner)
+    .scalar_subquery()
+)
+
+# How many files are attached, loaded with every transaction so the list can show a paperclip.
+Transaction.attachment_count = column_property(  # type: ignore[attr-defined]
+    select(func.count(TransactionAttachment.id))
+    .where(TransactionAttachment.transaction_id == Transaction.id)
+    .correlate_except(TransactionAttachment)
+    .scalar_subquery()
+)
+
+# How many web links are attached, loaded with every transaction like `attachment_count`.
+Transaction.link_count = column_property(  # type: ignore[attr-defined]
+    select(func.count(TransactionLink.id))
+    .where(TransactionLink.transaction_id == Transaction.id)
+    .correlate_except(TransactionLink)
     .scalar_subquery()
 )

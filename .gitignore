@@ -12,3 +12,6 @@ __pycache__/
 .DS_Store
 node_modules/
 *.egg-info/
+
+# attachments kept on disk in development (see ATTACHMENTS_DIR)
+apps/api/data/

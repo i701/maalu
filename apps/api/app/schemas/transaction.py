@@ -241,6 +241,8 @@ class TransactionResponse(BaseModel):
     refunded_amount: Decimal = Field(
         description="On a purchase: how much the refunds so far have given back, in its currency."
     )
+    attachment_count: int = Field(default=0, description="How many files are attached")
+    link_count: int = Field(default=0, description="How many web links are attached")
     currency: str
     exchange_rate: Decimal
     base_amount: Decimal

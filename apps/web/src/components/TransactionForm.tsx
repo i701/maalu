@@ -1,11 +1,7 @@
-import Autocomplete from "@mui/material/Autocomplete";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import Grid from "@mui/material/Grid";
-import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
-import Typography from "@mui/material/Typography";
 import { type FormEvent, useState } from "react";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
@@ -21,6 +17,7 @@ import {
 	type TransactionType,
 	type Vendor,
 } from "#/types/api";
+import AttachmentsField from "./AttachmentsField";
 import FormDialog from "./FormDialog";
 import { useNotify } from "./Notify";
 import SaveTemplateDialog from "./SaveTemplateDialog";
@@ -33,6 +30,9 @@ import OrdinaryFields from "./transaction-form/OrdinaryFields";
 import TemplatePicker from "./transaction-form/TemplatePicker";
 import TransferFields from "./transaction-form/TransferFields";
 import { messageAfterSave } from "./transaction-form/budget-warning";
+import PlannedAndSubscription from "./transaction-form/PlannedAndSubscription";
+import { useAttachments } from "./transaction-form/useAttachments";
+import { useLinks } from "./transaction-form/useLinks";
 import { useFormFields } from "./transaction-form/useFormFields";
 import { useSplits } from "./transaction-form/useSplits";
 import { useVendorDefaults } from "./transaction-form/useVendorDefaults";
@@ -112,6 +112,8 @@ export default function TransactionForm({
 		planned,
 		switched,
 	} = fields;
+	const attachments = useAttachments(transaction?.id);
+	const links = useLinks(transaction?.id);
 	const splits = useSplits(seed);
 	const vendorDefaults = useVendorDefaults(vendors, seed, !splits.enabled);
 	const subscriptionOptions = subscriptionChoices(subscriptions, transaction);
@@ -148,7 +150,13 @@ export default function TransactionForm({
 		const request = buildTransactionRequest(form, formState());
 		if ("error" in request) return setLocalError(request.error);
 		setLocalError(null);
-		if (await run(request.send)) {
+		let createdId: string | undefined;
+		const send = async () => {
+			const res = await request.send();
+			if (res.ok && !transaction) createdId = res.data.id;
+			return res;
+		};
+		if (await run(send)) {
 			const message = await messageAfterSave({
 				success: request.success,
 				type,
@@ -157,6 +165,11 @@ export default function TransactionForm({
 				planned,
 			});
 			notify(message.text, message.severity);
+			// files picked on a new transaction go up now that it has an id
+			const skipped = createdId
+				? [await attachments.uploadPending(createdId), await links.savePending(createdId)]
+				: [];
+			for (const text of skipped) if (text) notify(text, "warning");
 			if (another && !transaction) {
 				fillFrom(seedAfterSave(form, formState()));
 				// the form was cleared: put the cursor back on the amount, ready for the next one
@@ -269,37 +282,14 @@ export default function TransactionForm({
 						/>
 					</RevealCell>
 
-					<Cell size={12}>
-						<FormControlLabel
-							control={<Switch checked={planned} onChange={(_, on) => fields.setPlanned(on)} />}
-							label="Planned"
-						/>
-						<Typography
-							variant="caption"
-							component="p"
-							sx={{ color: "text.secondary", mt: -0.5, mb: 1 }}
-						>
-							Coming up, not happened yet. It counts toward nothing until you mark it as paid.
-						</Typography>
-					</Cell>
-
-					<RevealCell size={12} show={type === "expense"}>
-						<Autocomplete
-							options={subscriptionOptions}
-							value={subscription}
-							onChange={(_, v) => fields.setSubscription(v)}
-							getOptionLabel={(o) => o.name}
-							isOptionEqualToValue={(a, b) => a.id === b.id}
-							noOptionsText="No subscriptions yet"
-							renderInput={(params) => (
-								<TextField
-									{...params}
-									label="Subscription"
-									helperText="Optional. Marks this as a payment for a recurring charge"
-								/>
-							)}
-						/>
-					</RevealCell>
+					<PlannedAndSubscription
+						planned={planned}
+						onPlannedChange={fields.setPlanned}
+						isExpense={type === "expense"}
+						options={subscriptionOptions}
+						subscription={subscription}
+						onSubscriptionChange={fields.setSubscription}
+					/>
 
 					<Cell size={12}>
 						<TagsField
@@ -318,6 +308,10 @@ export default function TransactionForm({
 							multiline
 							minRows={2}
 						/>
+					</Cell>
+
+					<Cell size={12}>
+						<AttachmentsField state={attachments} links={links} />
 					</Cell>
 
 					<Cell size={12}>

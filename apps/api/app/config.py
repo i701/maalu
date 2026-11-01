@@ -27,6 +27,19 @@ class Settings(BaseSettings):
     currency_source_url: str = "https://api.frankfurter.dev/v2/rates"
     exchange_rate_timeout_seconds: float = 5.0
     currency_cache_ttl_seconds: int = 24 * 60 * 60
+    # Where transaction attachments (receipts) are kept. With a bucket set they go to any
+    # S3-compatible store (AWS S3, Cloudflare R2, MinIO, floci in development); without one they go
+    # to a folder on disk, which is the default and needs nothing set up (mount a volume on it).
+    attachments_s3_bucket: str | None = None
+    # Leave out for AWS S3; set for R2 (https://<account>.r2.cloudflarestorage.com), MinIO, floci...
+    attachments_s3_endpoint: str | None = None
+    attachments_s3_region: str = "auto"
+    attachments_s3_access_key_id: str | None = None
+    attachments_s3_secret_access_key: str | None = None
+    attachments_dir: str = "data/attachments"
+    attachment_max_bytes: int = 10 * 1024 * 1024
+    attachments_per_transaction: int = 10
+    links_per_transaction: int = 10
 
 
 settings = Settings()  # type: ignore[call-arg]  # secret_key comes from env
