@@ -1,3 +1,4 @@
+import { createHmac } from "node:crypto";
 import { expect, type APIRequestContext, type Page } from "@playwright/test";
 
 const API = "http://localhost:8101/api/v1";
@@ -73,4 +74,45 @@ export async function apiAs(request: APIRequestContext, email: string) {
 				...data,
 			}),
 	};
+}
+
+const BASE32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+
+/** The 6-digit code an authenticator app shows for `secret` (RFC 6238: SHA-1, 30-second steps).
+ * `steps` moves it that many steps on from now: the API accepts a step either side of its own and
+ * each step only once, so a second code in a test has to come from the next step. */
+export function totp(secret: string, steps = 0): string {
+	let bits = "";
+	for (const ch of secret.replace(/[=\s]/g, "").toUpperCase())
+		bits += BASE32.indexOf(ch).toString(2).padStart(5, "0");
+	const key = Buffer.from(
+		Array.from({ length: Math.floor(bits.length / 8) }, (_, i) =>
+			Number.parseInt(bits.slice(i * 8, i * 8 + 8), 2),
+		),
+	);
+	const step = Buffer.alloc(8);
+	step.writeBigUInt64BE(BigInt(Math.floor(Date.now() / 30_000) + steps));
+	const hmac = createHmac("sha1", key).update(step).digest();
+	const offset = hmac[hmac.length - 1] & 0xf;
+	const binary = hmac.readUInt32BE(offset) & 0x7fffffff;
+	return String(binary % 1_000_000).padStart(6, "0");
+}
+
+/** Sign in on the sign-in page with a password (no second step yet). */
+export async function signIn(page: Page, email: string) {
+	await open(page, "/login");
+	await page.getByLabel("Email").fill(email);
+	await page.getByLabel("Password").fill(PASSWORD);
+	await page.getByRole("button", { name: "Sign in" }).click();
+}
+
+/** Sign out from the account menu. */
+export async function signOut(page: Page) {
+	await page
+		.getByRole("button", { name: /account|profile|menu/i })
+		.first()
+		.click();
+	await page.getByRole("menuitem", { name: /sign out|log out/i }).click();
+	await expect(page).toHaveURL(/\/login/);
+	await page.waitForLoadState("networkidle");
 }
