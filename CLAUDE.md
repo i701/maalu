@@ -24,7 +24,7 @@ just reset-db         # dev only: delete ALL data but keep users, sessions and t
 just check            # just api-types, then what CI runs: ruff check + format --check; oxfmt --check, oxlint, tsc --noEmit
 just fmt              # ruff format/fix + oxfmt + oxlint --fix
 just doctor-web       # react-doctor (CI runs it on PRs; advisory only)
-just test             # API pytest, then the web unit tests (just test-api / just test-web)
+just test             # API pytest (in parallel), then the web unit tests (just test-api / just test-web)
 just api-types        # after ANY API schema change: rewrite apps/web/openapi.json and src/types/api.generated.ts, commit both
 
 just disable-2fa EMAIL  # turn two-factor off for someone who lost their app and recovery codes
@@ -33,7 +33,7 @@ just migration "msg"  # alembic autogenerate; review the generated file
 just rollback         # downgrade -1
 ```
 
-To run one test: `cd apps/api && uv run pytest tests/test_transfers.py::test_name -q`. Tests use in-memory SQLite (aiosqlite with foreign keys turned on) through `dependency_overrides[get_db]`, so they don't need Postgres. Fixtures in `tests/conftest.py`: `client`, `signup(email)` returns bearer headers, and `auth` is a ready-made user. CI does not run pytest, so run it yourself.
+To run one test: `cd apps/api && uv run pytest tests/test_transfers.py::test_name -q`. Tests use in-memory SQLite (aiosqlite with foreign keys turned on) through `dependency_overrides[get_db]`, so they don't need Postgres. Fixtures in `tests/conftest.py`: `client`, `signup(email)` returns bearer headers, and `auth` is a ready-made user. CI runs them too (the `api-tests` job in `.github/workflows/ci.yml` runs `just test-api`, which is `pytest -n auto`, one worker per core; they need no Postgres and no network, and no `.env` since the job sets `SECRET_KEY`). Run them yourself before pushing all the same.
 
 Env files: `apps/api/.env` (`SECRET_KEY` is required; `DATABASE_URL`) and `apps/web/.env` (`API_URL`, `SESSION_SECRET` of at least 32 chars). Copy them from the `.env.example` files.
 

@@ -97,8 +97,10 @@ lint-web:
 
 test: test-api test-web
 
+# The API tests, in parallel (one worker per core; each test has its own in-memory database).
+# For one test run pytest directly: cd apps/api && uv run pytest tests/test_x.py::test_name -q
 test-api:
-    cd apps/api && uv run pytest
+    cd apps/api && uv run pytest -n auto
 
 # Unit tests for the web app's pure helpers (money maths, charts, budget); no browser, no API
 test-web:

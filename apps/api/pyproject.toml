@@ -30,6 +30,7 @@ dev = [
     "aiosqlite>=0.20",
     "httpx>=0.28.1",
     "moto[s3]>=5",
+    "pytest-xdist>=3.6",
 ]
 
 [tool.pytest.ini_options]

@@ -29,6 +29,23 @@ jobs:
       - run: just check-api # ruff check + ruff format --check
       - run: just check-openapi # the committed OpenAPI schema (apps/web/openapi.json) is current
 
+  api-tests:
+    name: API tests (pytest)
+    runs-on: ubuntu-latest
+    env:
+      UV_FROZEN: "1"
+      # The app needs one to start; the tests make their own users. Long enough not to trip the
+      # JWT library's short-key warning.
+      SECRET_KEY: ci-not-a-secret-ci-not-a-secret-ci-not-a-secret
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - uses: extractions/setup-just@v4
+      # Needs no Postgres: the tests run against in-memory SQLite and never reach the network.
+      - run: just test-api
+
   web:
     name: Web (oxfmt, oxlint, tsc, unit tests)
     runs-on: ubuntu-latest
