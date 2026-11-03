@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException, Query, status
 
 from app.dependencies import CurrentUserId, StatsServiceDep
-from app.schemas.stats import BalanceTrendResponse, MonthlyResponse
+from app.schemas.stats import BalanceTrendResponse, MonthlyResponse, NetWorthDrivers
 from app.services import StatsRangeError
 
 router = APIRouter(prefix="/stats", tags=["stats"])
@@ -31,5 +31,21 @@ async def balance_trend(
     """What your accounts were worth at the end of each day, in your base currency."""
     try:
         return await service.balance_trend(user_id, start, to)
+    except StatsRangeError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
+
+
+@router.get("/net-worth-drivers", response_model=NetWorthDrivers)
+async def net_worth_drivers(
+    user_id: CurrentUserId,
+    service: StatsServiceDep,
+    start: Annotated[date, Query(alias="from", description="First day, YYYY-MM-DD")],
+    to: Annotated[date, Query(description="Last day, inclusive")],
+):
+    """How net worth moved from the end of the day before `from` to the end of `to`, and what moved
+    it: income, spending, balance adjustments, transfers across the edge of net worth, and exchange
+    rates, plus each account's own change."""
+    try:
+        return await service.net_worth_drivers(user_id, start, to)
     except StatsRangeError as exc:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None

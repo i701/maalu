@@ -3032,6 +3032,139 @@
         "title": "MonthlyResponse",
         "type": "object"
       },
+      "NetWorthAccountChange": {
+        "properties": {
+          "account_id": {
+            "format": "uuid",
+            "title": "Account Id",
+            "type": "string"
+          },
+          "change": {
+            "description": "end - start",
+            "title": "Change",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "end": {
+            "description": "Worth at the end of the last day, in base",
+            "title": "End",
+            "type": "string"
+          },
+          "group": {
+            "title": "Group",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "start": {
+            "description": "Worth at the end of the day before the period, in base",
+            "title": "Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "account_id",
+          "name",
+          "group",
+          "currency",
+          "start",
+          "end",
+          "change"
+        ],
+        "title": "NetWorthAccountChange",
+        "type": "object"
+      },
+      "NetWorthDriver": {
+        "properties": {
+          "amount": {
+            "description": "What it added to your net worth; negative takes away",
+            "title": "Amount",
+            "type": "string"
+          },
+          "key": {
+            "enum": [
+              "income",
+              "spending",
+              "adjustments",
+              "transfers",
+              "exchange_rates"
+            ],
+            "title": "Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "amount"
+        ],
+        "title": "NetWorthDriver",
+        "type": "object"
+      },
+      "NetWorthDrivers": {
+        "description": "How your net worth moved between two days and what moved it, in your base currency. Net worth\nis what the active accounts that count toward stats are worth (what you owe counts below zero),\nthe same line as the balance trend. The change is split into `income`, `spending` (after\nrefunds), `adjustments` (balance corrections), `transfers` (money moved to or from an account\nthat is not part of net worth: archived or left out of stats) and `exchange_rates`, which is\nwhat is left: accounts in another currency are worth a different amount in your base currency\nwhen their rate changes. The drivers always add up to `change` exactly, and `exchange_rates` is\nzero when everything is in your base currency.",
+        "properties": {
+          "accounts": {
+            "description": "Each account's own change, biggest first; accounts with nothing in them and no change are left out",
+            "items": {
+              "$ref": "#/components/schemas/NetWorthAccountChange"
+            },
+            "title": "Accounts",
+            "type": "array"
+          },
+          "change": {
+            "title": "Change",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "drivers": {
+            "items": {
+              "$ref": "#/components/schemas/NetWorthDriver"
+            },
+            "title": "Drivers",
+            "type": "array"
+          },
+          "end": {
+            "description": "Net worth at the end of `end_date`",
+            "title": "End",
+            "type": "string"
+          },
+          "end_date": {
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          },
+          "start": {
+            "description": "Net worth at the end of the day before `start_date`",
+            "title": "Start",
+            "type": "string"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "currency",
+          "start_date",
+          "end_date",
+          "start",
+          "end",
+          "change",
+          "drivers",
+          "accounts"
+        ],
+        "title": "NetWorthDrivers",
+        "type": "object"
+      },
       "NotificationResponse": {
         "properties": {
           "body": {
@@ -9999,6 +10132,69 @@
           }
         ],
         "summary": "Monthly",
+        "tags": [
+          "stats"
+        ]
+      }
+    },
+    "/api/v1/stats/net-worth-drivers": {
+      "get": {
+        "description": "How net worth moved from the end of the day before `from` to the end of `to`, and what moved\nit: income, spending, balance adjustments, transfers across the edge of net worth, and exchange\nrates, plus each account's own change.",
+        "operationId": "net_worth_drivers_api_v1_stats_net_worth_drivers_get",
+        "parameters": [
+          {
+            "description": "First day, YYYY-MM-DD",
+            "in": "query",
+            "name": "from",
+            "required": true,
+            "schema": {
+              "description": "First day, YYYY-MM-DD",
+              "format": "date",
+              "title": "From",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Last day, inclusive",
+            "in": "query",
+            "name": "to",
+            "required": true,
+            "schema": {
+              "description": "Last day, inclusive",
+              "format": "date",
+              "title": "To",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetWorthDrivers"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Net Worth Drivers",
         "tags": [
           "stats"
         ]

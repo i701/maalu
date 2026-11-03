@@ -1085,6 +1085,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/stats/net-worth-drivers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Net Worth Drivers
+         * @description How net worth moved from the end of the day before `from` to the end of `to`, and what moved
+         *     it: income, spending, balance adjustments, transfers across the edge of net worth, and exchange
+         *     rates, plus each account's own change.
+         */
+        get: operations["net_worth_drivers_api_v1_stats_net_worth_drivers_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/subscriptions": {
         parameters: {
             query?: never;
@@ -3138,6 +3160,92 @@ export interface components {
             currency: string;
             /** Months */
             months: components["schemas"]["MonthlyPoint"][];
+        };
+        /** NetWorthAccountChange */
+        NetWorthAccountChange: {
+            /**
+             * Account Id
+             * Format: uuid
+             */
+            account_id: string;
+            /**
+             * Change
+             * @description end - start
+             */
+            change: string;
+            /** Currency */
+            currency: string;
+            /**
+             * End
+             * @description Worth at the end of the last day, in base
+             */
+            end: string;
+            /** Group */
+            group: string;
+            /** Name */
+            name: string;
+            /**
+             * Start
+             * @description Worth at the end of the day before the period, in base
+             */
+            start: string;
+        };
+        /** NetWorthDriver */
+        NetWorthDriver: {
+            /**
+             * Amount
+             * @description What it added to your net worth; negative takes away
+             */
+            amount: string;
+            /**
+             * Key
+             * @enum {string}
+             */
+            key: "income" | "spending" | "adjustments" | "transfers" | "exchange_rates";
+        };
+        /**
+         * NetWorthDrivers
+         * @description How your net worth moved between two days and what moved it, in your base currency. Net worth
+         *     is what the active accounts that count toward stats are worth (what you owe counts below zero),
+         *     the same line as the balance trend. The change is split into `income`, `spending` (after
+         *     refunds), `adjustments` (balance corrections), `transfers` (money moved to or from an account
+         *     that is not part of net worth: archived or left out of stats) and `exchange_rates`, which is
+         *     what is left: accounts in another currency are worth a different amount in your base currency
+         *     when their rate changes. The drivers always add up to `change` exactly, and `exchange_rates` is
+         *     zero when everything is in your base currency.
+         */
+        NetWorthDrivers: {
+            /**
+             * Accounts
+             * @description Each account's own change, biggest first; accounts with nothing in them and no change are left out
+             */
+            accounts: components["schemas"]["NetWorthAccountChange"][];
+            /** Change */
+            change: string;
+            /** Currency */
+            currency: string;
+            /** Drivers */
+            drivers: components["schemas"]["NetWorthDriver"][];
+            /**
+             * End
+             * @description Net worth at the end of `end_date`
+             */
+            end: string;
+            /**
+             * End Date
+             * Format: date
+             */
+            end_date: string;
+            /**
+             * Start
+             * @description Net worth at the end of the day before `start_date`
+             */
+            start: string;
+            /**
+             * Start Date
+             * Format: date
+             */
+            start_date: string;
         };
         /** NotificationResponse */
         NotificationResponse: {
@@ -6577,6 +6685,40 @@ export interface operations {
             };
         };
     };
+    net_worth_drivers_api_v1_stats_net_worth_drivers_get: {
+        parameters: {
+            query: {
+                /** @description First day, YYYY-MM-DD */
+                from: string;
+                /** @description Last day, inclusive */
+                to: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NetWorthDrivers"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_subscriptions_api_v1_subscriptions_get: {
         parameters: {
             query?: {
@@ -8458,6 +8600,7 @@ export const goalResponsePeriod_statusAnyOf0Values: ReadonlyArray<FlattenedDeepR
 export const importRowInTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImportRowIn"]["type"]> = ["income", "expense"];
 export const importSkippedOutcomeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImportSkipped"]["outcome"]> = ["skipped", "failed"];
 export const intervalUnitValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["IntervalUnit"]> = ["week", "month", "year"];
+export const netWorthDriverKeyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NetWorthDriver"]["key"]> = ["income", "spending", "adjustments", "transfers", "exchange_rates"];
 export const notificationResponseKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NotificationResponse"]["kind"]> = ["payment_due", "payment_overdue", "installments_done", "budget_warning", "budget_over", "goal_reached"];
 export const paymentMethodValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PaymentMethod"]> = ["cash", "bank_transfer", "debit_card", "credit_card", "other"];
 export const previewRowDuplicateAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PreviewRow"]["duplicate"]> = ["reference", "transfer", "possible"];
