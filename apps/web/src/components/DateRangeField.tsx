@@ -80,11 +80,12 @@ export default function DateRangeField({
 					);
 				})}
 			</Stack>
-			<Stack direction="row" spacing={1.5} sx={{ alignItems: "flex-start" }}>
+			<Stack spacing={1.5}>
 				<TextField
 					size="small"
 					type="date"
 					label="From"
+					fullWidth
 					value={from}
 					onChange={(e) => edit(e.target.value, to)}
 					error={backwards}
@@ -94,6 +95,7 @@ export default function DateRangeField({
 					size="small"
 					type="date"
 					label="To"
+					fullWidth
 					value={to}
 					onChange={(e) => edit(from, e.target.value)}
 					error={backwards}
