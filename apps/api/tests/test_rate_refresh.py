@@ -312,3 +312,20 @@ async def test_the_jobs_daily_rate_shows_in_the_history(client: AsyncClient, aut
     # one kept point is too few for 30 days, so the stretch is fetched and the kept one joins it
     points = (await history(client, auth)).json()["points"]
     assert len(points) >= 20
+
+
+async def test_two_requests_keeping_the_same_day_at_once_do_not_fail(client: AsyncClient, source):
+    day = TODAY - timedelta(days=3)
+    async with client.session_factory() as winner, client.session_factory() as loser:
+        # The loser looked, found nothing, and then the winner kept the day first.
+        async def nothing_kept(*args, **kwargs):
+            return None
+
+        loser.scalar = nothing_kept
+        await exchange_rate._keep(winner, "USD", "MVR", day, day, Decimal("15.5"))
+        await winner.commit()
+        await exchange_rate._keep(loser, "USD", "MVR", day, day, Decimal("15.6"))
+        await loser.commit()
+    async with client.session_factory() as db:
+        rows = (await db.scalars(select(ExchangeRate))).all()
+    assert [(r.requested_on, r.rate) for r in rows] == [(day, Decimal("15.5"))]

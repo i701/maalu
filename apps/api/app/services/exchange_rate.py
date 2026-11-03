@@ -12,6 +12,7 @@ from decimal import Decimal
 
 import httpx
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -117,12 +118,7 @@ async def market_rate(
         return None
 
     if past:
-        db.add(
-            ExchangeRate(
-                base=base, quote=quote, requested_on=on, rate_date=found.rate_date, rate=found.rate
-            )
-        )
-        await db.flush()
+        await _keep(db, base, quote, on, found.rate_date, found.rate)
     return found
 
 
@@ -138,17 +134,41 @@ class RatePoint:
     rate: Decimal
 
 
-async def _remember(db: AsyncSession, base: str, quote: str, day: date, rate: Decimal) -> None:
-    """Keep a rate under the day the source says it is for (a day's rate never changes after)."""
+async def _keep(
+    db: AsyncSession, base: str, quote: str, requested_on: date, rate_date: date, rate: Decimal
+) -> None:
+    """Keep a rate for a day, unless it is already kept (a day's rate never changes after).
+
+    Rates are shared by every user and looked up on read, so two requests can try to keep the same
+    day at once. The check below misses that, so the unique key refuses the second; it is refused
+    inside a savepoint and ignored, since the row it wanted is there."""
     exists = await db.scalar(
         select(ExchangeRate.id).where(
             ExchangeRate.base == base,
             ExchangeRate.quote == quote,
-            ExchangeRate.requested_on == day,
+            ExchangeRate.requested_on == requested_on,
         )
     )
-    if exists is None:
-        db.add(ExchangeRate(base=base, quote=quote, requested_on=day, rate_date=day, rate=rate))
+    if exists is not None:
+        return
+    try:
+        async with db.begin_nested():
+            db.add(
+                ExchangeRate(
+                    base=base,
+                    quote=quote,
+                    requested_on=requested_on,
+                    rate_date=rate_date,
+                    rate=rate,
+                )
+            )
+    except IntegrityError:
+        pass
+
+
+async def _remember(db: AsyncSession, base: str, quote: str, day: date, rate: Decimal) -> None:
+    """Keep a rate under the day the source says it is for."""
+    await _keep(db, base, quote, day, day, rate)
 
 
 async def cache_latest(db: AsyncSession, base: str, quote: str) -> MarketRate | None:
