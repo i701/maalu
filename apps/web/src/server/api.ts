@@ -74,9 +74,15 @@ export async function apiRequest<T>(
 		body = JSON.stringify(opts.body);
 	}
 
+	const method = opts.method ?? "GET";
 	let res: Response;
 	try {
-		res = await fetch(url, { method: opts.method ?? "GET", headers, body });
+		res = await fetch(url, { method, headers, body }).catch((err) => {
+			// A kept-alive connection the API has just closed fails with a reset the first time it is
+			// reused. Reading is harmless to repeat; a write is not, so it is reported instead.
+			if (method !== "GET") throw err;
+			return fetch(url, { method, headers, body });
+		});
 	} catch {
 		return { ok: false, status: 503, error: "Cannot reach the Maalu API" };
 	}

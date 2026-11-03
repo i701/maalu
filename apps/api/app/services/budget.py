@@ -3,6 +3,7 @@ from datetime import date
 from decimal import ROUND_FLOOR, Decimal
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.allocation import allocate_base
@@ -69,8 +70,13 @@ class BudgetService:
         budget = await self.db.scalar(select(Budget).where(Budget.user_id == user_id))
         if budget is None:
             budget = Budget(user_id=user_id, period_start_day=1, warn_percent=80)
-            self.db.add(budget)
-            await self.db.flush()
+            try:
+                async with self.db.begin_nested():  # a lost race must not poison the request
+                    self.db.add(budget)
+            except IntegrityError:
+                # a parallel request (the page asks for the budget twice) made it first: use theirs
+                budget = await self.db.scalar(select(Budget).where(Budget.user_id == user_id))
+                assert budget is not None
         return budget
 
     async def update_settings(self, user_id: uuid.UUID, data: BudgetSettingsUpdate) -> Budget:
