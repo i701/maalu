@@ -1,4 +1,5 @@
 from app.services.account import (
+    AccountAutoRateError,
     AccountCurrencyMismatchError,
     AccountHasTransactionsError,
     AccountLimitError,
@@ -64,6 +65,7 @@ from app.services.user import (
 from app.services.vendor import VendorNameTakenError, VendorNotFoundError, VendorService
 
 __all__ = [
+    "AccountAutoRateError",
     "AccountCurrencyMismatchError",
     "AccountHasTransactionsError",
     "AccountLimitError",

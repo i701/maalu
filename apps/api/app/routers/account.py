@@ -15,6 +15,7 @@ from app.schemas import (
     TransactionResponse,
 )
 from app.services import (
+    AccountAutoRateError,
     AccountHasTransactionsError,
     AccountLimitError,
     AccountNumberTakenError,
@@ -27,6 +28,10 @@ router = APIRouter(prefix="/accounts", tags=["accounts"])
 _RATE_REQUIRED = HTTPException(
     status.HTTP_422_UNPROCESSABLE_CONTENT,
     "exchange_rate is required when currency differs from your base currency",
+)
+_NO_AUTO_RATE = HTTPException(
+    status.HTTP_422_UNPROCESSABLE_CONTENT,
+    "An account in your base currency has no exchange rate to keep up to date",
 )
 _NOT_FOUND = HTTPException(status.HTTP_404_NOT_FOUND, "Account not found")
 _NO_LIMIT = HTTPException(
@@ -54,6 +59,8 @@ async def create_account(data: AccountCreate, user_id: CurrentUserId, service: A
         raise _number_taken(exc) from None
     except AccountLimitError:
         raise _NO_LIMIT from None
+    except AccountAutoRateError:
+        raise _NO_AUTO_RATE from None
     return await _present_one(service, account)
 
 
@@ -111,6 +118,8 @@ async def update_account(
         raise _number_taken(exc) from None
     except AccountLimitError:
         raise _NO_LIMIT from None
+    except AccountAutoRateError:
+        raise _NO_AUTO_RATE from None
     except AccountHasTransactionsError:
         raise HTTPException(
             status.HTTP_409_CONFLICT,

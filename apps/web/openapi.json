@@ -75,6 +75,12 @@
             "description": "Its number at the bank, if any. Spaces are ignored; a user's accounts cannot share one.",
             "title": "Account Number"
           },
+          "auto_rate": {
+            "default": false,
+            "description": "Foreign-currency accounts: keep `exchange_rate` at the market rate, updated daily. Your own typed rate is then replaced each day.",
+            "title": "Auto Rate",
+            "type": "boolean"
+          },
           "bank": {
             "anyOf": [
               {
@@ -281,6 +287,11 @@
             "description": "When it was archived; null for an account in use",
             "title": "Archived At"
           },
+          "auto_rate": {
+            "description": "Whether the rate is kept at the market rate daily",
+            "title": "Auto Rate",
+            "type": "boolean"
+          },
           "balance": {
             "title": "Balance",
             "type": "string"
@@ -378,6 +389,7 @@
           "account_number",
           "credit_limit",
           "exclude_from_stats",
+          "auto_rate",
           "is_liability",
           "balance",
           "base_balance",
@@ -430,6 +442,17 @@
               }
             ],
             "title": "Account Number"
+          },
+          "auto_rate": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auto Rate"
           },
           "bank": {
             "anyOf": [
@@ -3213,6 +3236,59 @@
           "duplicate"
         ],
         "title": "PreviewRow",
+        "type": "object"
+      },
+      "RateHistoryResponse": {
+        "properties": {
+          "base": {
+            "pattern": "^[A-Za-z]{3}$",
+            "title": "Base",
+            "type": "string"
+          },
+          "points": {
+            "description": "The rate of 1 `base` in `quote` on the days the source had one, oldest first",
+            "items": {
+              "$ref": "#/components/schemas/RatePointResponse"
+            },
+            "title": "Points",
+            "type": "array"
+          },
+          "quote": {
+            "pattern": "^[A-Za-z]{3}$",
+            "title": "Quote",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "base",
+          "quote",
+          "points",
+          "source"
+        ],
+        "title": "RateHistoryResponse",
+        "type": "object"
+      },
+      "RatePointResponse": {
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "rate": {
+            "title": "Rate",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "rate"
+        ],
+        "title": "RatePointResponse",
         "type": "object"
       },
       "RecoveryCodes": {
@@ -7728,6 +7804,83 @@
           }
         ],
         "summary": "Get Market Rate",
+        "tags": [
+          "currencies"
+        ]
+      }
+    },
+    "/api/v1/currencies/rate-history": {
+      "get": {
+        "description": "How the market rate of 1 `base` in `quote` moved over the last `days` days, oldest first.\nRates Maalu has kept are used; otherwise the source is asked once and its answer kept.",
+        "operationId": "get_rate_history_api_v1_currencies_rate_history_get",
+        "parameters": [
+          {
+            "description": "The currency you are converting from",
+            "in": "query",
+            "name": "base",
+            "required": true,
+            "schema": {
+              "description": "The currency you are converting from",
+              "pattern": "^[A-Za-z]{3}$",
+              "title": "Base",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The currency you are converting to",
+            "in": "query",
+            "name": "quote",
+            "required": true,
+            "schema": {
+              "description": "The currency you are converting to",
+              "pattern": "^[A-Za-z]{3}$",
+              "title": "Quote",
+              "type": "string"
+            }
+          },
+          {
+            "description": "How far back",
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "default": 90,
+              "description": "How far back",
+              "maximum": 365,
+              "minimum": 7,
+              "title": "Days",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RateHistoryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Get Rate History",
         "tags": [
           "currencies"
         ]

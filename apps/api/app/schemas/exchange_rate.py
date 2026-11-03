@@ -14,3 +14,17 @@ class MarketRateResponse(BaseModel):
     requested_date: date
     exact: bool = Field(description="False when `rate_date` is earlier than the day asked about")
     source: str
+
+
+class RatePointResponse(BaseModel):
+    date: date
+    rate: Decimal
+
+
+class RateHistoryResponse(BaseModel):
+    base: CurrencyCode
+    quote: CurrencyCode
+    points: list[RatePointResponse] = Field(
+        description="The rate of 1 `base` in `quote` on the days the source had one, oldest first"
+    )
+    source: str

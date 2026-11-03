@@ -104,6 +104,7 @@ export type Vendor = Schemas["VendorResponse"];
 export type Subscription = Schemas["SubscriptionResponse"];
 export type SubscriptionSummary = Schemas["SubscriptionSummary"];
 export type Account = Schemas["AccountResponse"];
+export type RateHistory = Schemas["RateHistoryResponse"];
 /** Not `Notification`: that is the browser's own type. */
 export type AppNotification = Schemas["NotificationResponse"];
 export type NotificationKind = AppNotification["kind"];

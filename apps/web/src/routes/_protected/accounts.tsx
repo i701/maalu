@@ -2,6 +2,7 @@ import { MORPH_TRANSITION, morph } from "#/lib/shape";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import ShowChartIcon from "@mui/icons-material/ShowChart";
 import TuneIcon from "@mui/icons-material/Tune";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import Box from "@mui/material/Box";
@@ -18,6 +19,7 @@ import ArchivedAccounts from "#/components/ArchivedAccounts";
 import AccountIdentity from "#/components/AccountIdentity";
 import AdjustBalanceDialog from "#/components/AdjustBalanceDialog";
 import CreditUsage from "#/components/CreditUsage";
+import RateHistoryDialog from "#/components/RateHistoryDialog";
 import ConfirmDelete from "#/components/ConfirmDelete";
 import EmptyState from "#/components/EmptyState";
 import PageHeader from "#/components/PageHeader";
@@ -125,6 +127,30 @@ function AdjustButton({ account }: { account: Account }) {
 				<TuneIcon fontSize="small" />
 			</IconButton>
 			{open && <AdjustBalanceDialog account={account} onClose={() => setOpen(false)} />}
+		</>
+	);
+}
+
+/** Opens the history of the market rate for a foreign-currency account. */
+function RateHistoryButton({ account, baseCurrency }: { account: Account; baseCurrency: string }) {
+	const [open, setOpen] = useState(false);
+	return (
+		<>
+			<IconButton
+				aria-label="Rate history"
+				title="Rate history"
+				size="small"
+				onClick={() => setOpen(true)}
+			>
+				<ShowChartIcon fontSize="small" />
+			</IconButton>
+			{open && (
+				<RateHistoryDialog
+					account={account}
+					baseCurrency={baseCurrency}
+					onClose={() => setOpen(false)}
+				/>
+			)}
 		</>
 	);
 }
@@ -298,6 +324,7 @@ function AccountsPage() {
 															<Typography variant="caption" sx={{ color: "text.secondary" }}>
 																≈ {formatMoney(a.base_balance, user.base_currency)} @{" "}
 																{Number(a.exchange_rate)}
+																{a.auto_rate ? " · auto" : ""}
 															</Typography>
 														)
 													}
@@ -311,6 +338,9 @@ function AccountsPage() {
 															>
 																<EditOutlinedIcon fontSize="small" />
 															</IconButton>
+															{a.currency !== user.base_currency && (
+																<RateHistoryButton account={a} baseCurrency={user.base_currency} />
+															)}
 															<AdjustButton account={a} />
 															<ArchiveButton account={a} />
 															<IconButton

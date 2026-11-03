@@ -625,6 +625,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/currencies/rate-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Rate History
+         * @description How the market rate of 1 `base` in `quote` moved over the last `days` days, oldest first.
+         *     Rates Maalu has kept are used; otherwise the source is asked once and its answer kept.
+         */
+        get: operations["get_rate_history_api_v1_currencies_rate_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/goals": {
         parameters: {
             query?: never;
@@ -1750,6 +1771,12 @@ export interface components {
              */
             account_number?: string | null;
             /**
+             * Auto Rate
+             * @description Foreign-currency accounts: keep `exchange_rate` at the market rate, updated daily. Your own typed rate is then replaced each day.
+             * @default false
+             */
+            auto_rate: boolean;
+            /**
              * Bank
              * @description The bank that holds it, if any
              */
@@ -1822,6 +1849,11 @@ export interface components {
              * @description When it was archived; null for an account in use
              */
             archived_at: string | null;
+            /**
+             * Auto Rate
+             * @description Whether the rate is kept at the market rate daily
+             */
+            auto_rate: boolean;
             /** Balance */
             balance: string;
             /** Bank */
@@ -1885,6 +1917,8 @@ export interface components {
         AccountUpdate: {
             /** Account Number */
             account_number?: string | null;
+            /** Auto Rate */
+            auto_rate?: boolean | null;
             /** Bank */
             bank?: string | null;
             /** Credit Limit */
@@ -3050,6 +3084,30 @@ export interface components {
              * @description A vendor this name is known to be, if any
              */
             vendor: string | null;
+        };
+        /** RateHistoryResponse */
+        RateHistoryResponse: {
+            /** Base */
+            base: string;
+            /**
+             * Points
+             * @description The rate of 1 `base` in `quote` on the days the source had one, oldest first
+             */
+            points: components["schemas"]["RatePointResponse"][];
+            /** Quote */
+            quote: string;
+            /** Source */
+            source: string;
+        };
+        /** RatePointResponse */
+        RatePointResponse: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Rate */
+            rate: string;
         };
         /** RecoveryCodes */
         RecoveryCodes: {
@@ -5220,6 +5278,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MarketRateResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_rate_history_api_v1_currencies_rate_history_get: {
+        parameters: {
+            query: {
+                /** @description The currency you are converting from */
+                base: string;
+                /** @description The currency you are converting to */
+                quote: string;
+                /** @description How far back */
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RateHistoryResponse"];
                 };
             };
             /** @description Validation Error */

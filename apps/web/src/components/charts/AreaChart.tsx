@@ -18,6 +18,7 @@ export default function AreaChart({
 	ariaLabel,
 	color = "var(--chart-line)",
 	height = 200,
+	formatTick = compact,
 }: {
 	points: AreaPoint[];
 	formatValue: (value: number) => string;
@@ -26,6 +27,8 @@ export default function AreaChart({
 	ariaLabel: string;
 	color?: string;
 	height?: number;
+	/** How the y axis labels read (default: short numbers like 1.2K) */
+	formatTick?: (value: number) => string;
 }) {
 	const plot = useRef<HTMLDivElement>(null);
 	const [active, setActive] = useState<number | null>(null);
@@ -123,7 +126,7 @@ export default function AreaChart({
 							whiteSpace: "nowrap",
 						}}
 					>
-						{compact(t)}
+						{formatTick(t)}
 					</Box>
 				))}
 

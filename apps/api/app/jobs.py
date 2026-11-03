@@ -21,6 +21,7 @@ from app.services import (
     SnapshotService,
     SubscriptionService,
 )
+from app.services.exchange_rate import refresh_rates
 
 logger = logging.getLogger("maalu.jobs")
 
@@ -122,3 +123,22 @@ async def generate_notifications_job(timestamp: int) -> None:
     you, every few minutes), so this mostly covers the days nobody opened it."""
     made, swept = await generate_notifications()
     logger.info("made %d notifications, swept %d old ones", made, swept)
+
+
+async def refresh_exchange_rates(session_factory=SessionLocal) -> tuple[int, int]:
+    """Look up the latest rate of every foreign currency in use, keep it for the history, and update
+    the accounts that follow the market; returns (pairs looked up, accounts updated)."""
+    async with session_factory() as session:
+        result = await refresh_rates(session)
+        await session.commit()
+    return result
+
+
+@app.periodic(cron="30 16 * * *")
+@app.task(name="refresh_exchange_rates", queueing_lock="refresh_exchange_rates")
+async def refresh_exchange_rates_job(timestamp: int) -> None:
+    """Daily, at 16:30 UTC (after the day's rates are published): keep each foreign currency's
+    latest rate, and set the rate of accounts that follow the market. The balance snapshots of
+    the next midnight then pick the new rate up."""
+    pairs, updated = await refresh_exchange_rates()
+    logger.info("looked up %d rates, updated %d accounts", pairs, updated)

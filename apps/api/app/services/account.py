@@ -1,5 +1,5 @@
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 from sqlalchemy import case, func, or_, select, update
@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.enums import CREDIT_LIMIT_GROUPS, LIABILITY_GROUPS, AccountGroup, TransactionType
 from app.models import Account, Transaction, User
 from app.schemas import AccountCreate, AccountResponse, AccountSummary, AccountUpdate
+from app.services.exchange_rate import MarketRateUnavailableError, market_rate
 from app.services.money import BASE_AMOUNT_QUANTUM, price_in_base
 
 
@@ -27,6 +28,10 @@ class AccountNumberTakenError(Exception):
     def __init__(self, name: str) -> None:
         super().__init__(name)
         self.name = name
+
+
+class AccountAutoRateError(Exception):
+    """An account in the base currency has no rate to keep up to date."""
 
 
 class AccountLimitError(Exception):
@@ -114,11 +119,23 @@ class AccountService:
         if limit is not None and group not in CREDIT_LIMIT_GROUPS:
             raise AccountLimitError
 
+    async def _follow_market(self, account: Account, base: str) -> None:
+        """Set the account's rate from the latest market rate, now. If the source cannot be
+        reached the rate stays as it is: the daily job will do it later."""
+        try:
+            found = await market_rate(self.db, account.currency, base, date.today())
+        except MarketRateUnavailableError:
+            return
+        if found is not None:
+            account.exchange_rate = found.rate
+
     async def create(self, user_id: uuid.UUID, data: AccountCreate) -> Account:
         self._check_limit(data.group, data.credit_limit)
         await self._check_number(user_id, data.account_number)
         base = await self._base_currency(user_id)
         currency = data.currency or base
+        if data.auto_rate and currency == base:
+            raise AccountAutoRateError
         rate, _ = price_in_base(Decimal(1), currency, data.exchange_rate, base)
         account = Account(
             user_id=user_id,
@@ -132,7 +149,10 @@ class AccountService:
             account_number=data.account_number,
             credit_limit=data.credit_limit,
             exclude_from_stats=data.exclude_from_stats,
+            auto_rate=data.auto_rate,
         )
+        if data.auto_rate:
+            await self._follow_market(account, base)
         self.db.add(account)
         await self.db.flush()
         await self.db.refresh(account)
@@ -173,8 +193,14 @@ class AccountService:
         if "account_number" in changes:
             await self._check_number(account.user_id, changes["account_number"], exclude=account.id)
 
+        base = await self._base_currency(account.user_id)
+        new_currency = changes.get("currency", account.currency)
+        if new_currency == base:
+            if changes.get("auto_rate"):
+                raise AccountAutoRateError
+            changes["auto_rate"] = False  # nothing to follow in the base currency
+        turned_on = bool(changes.get("auto_rate")) and not account.auto_rate
         if changes.keys() & {"currency", "exchange_rate"}:
-            base = await self._base_currency(account.user_id)
             currency = changes.get("currency", account.currency)
             if currency != account.currency and await self._transaction_count(account.id):
                 raise AccountHasTransactionsError
@@ -186,6 +212,8 @@ class AccountService:
 
         for field, value in changes.items():
             setattr(account, field, value)
+        if turned_on:
+            await self._follow_market(account, base)
         await self.db.flush()
         await self.db.refresh(account)
         return account
@@ -251,6 +279,7 @@ class AccountService:
                     account_number=a.account_number,
                     credit_limit=a.credit_limit,
                     exclude_from_stats=a.exclude_from_stats,
+                    auto_rate=a.auto_rate,
                     is_liability=a.group in LIABILITY_GROUPS,
                     balance=balance,
                     base_balance=(balance * a.exchange_rate).quantize(BASE_AMOUNT_QUANTUM),

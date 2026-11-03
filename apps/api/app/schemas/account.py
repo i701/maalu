@@ -75,6 +75,11 @@ class AccountCreate(BaseModel):
         default=False,
         description="Leave the account out of totals, reports, budgets and net worth",
     )
+    auto_rate: bool = Field(
+        default=False,
+        description="Foreign-currency accounts: keep `exchange_rate` at the market rate, updated "
+        "daily. Your own typed rate is then replaced each day.",
+    )
     bank: Bank | None = Field(default=None, description="The bank that holds it, if any")
     account_number: str | None = Field(
         default=None,
@@ -106,9 +111,16 @@ class AccountUpdate(BaseModel):
     account_number: str | None = None
     credit_limit: CreditLimit | None = None
     exclude_from_stats: bool | None = None
+    auto_rate: bool | None = None
 
     @field_validator(
-        "group", "name", "opening_amount", "currency", "exchange_rate", "exclude_from_stats"
+        "group",
+        "name",
+        "opening_amount",
+        "currency",
+        "exchange_rate",
+        "exclude_from_stats",
+        "auto_rate",
     )
     @classmethod
     def _required_fields_not_null(cls, v):
@@ -141,6 +153,7 @@ class AccountResponse(BaseModel):
         description="Cards and overdrafts: the most that can be owed, in the account's currency"
     )
     exclude_from_stats: bool
+    auto_rate: bool = Field(description="Whether the rate is kept at the market rate daily")
     is_liability: bool
     # Computed: opening amount + linked transactions.
     balance: Decimal

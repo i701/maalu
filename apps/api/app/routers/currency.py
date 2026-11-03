@@ -5,10 +5,17 @@ from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel
 
 from app.dependencies import CurrentUserId, DbSession
-from app.schemas.exchange_rate import MarketRateResponse
+from app.schemas.exchange_rate import MarketRateResponse, RateHistoryResponse, RatePointResponse
 from app.schemas.types import CurrencyCode
 from app.services.currency import list_currencies
-from app.services.exchange_rate import SOURCE_NAME, MarketRateUnavailableError, market_rate
+from app.services.exchange_rate import (
+    HISTORY_MAX_DAYS,
+    HISTORY_MIN_DAYS,
+    SOURCE_NAME,
+    MarketRateUnavailableError,
+    market_rate,
+    rate_history,
+)
 
 router = APIRouter(prefix="/currencies", tags=["currencies"])
 
@@ -50,5 +57,33 @@ async def get_market_rate(
         rate_date=found.rate_date,
         requested_date=found.requested_date,
         exact=found.exact,
+        source=SOURCE_NAME,
+    )
+
+
+@router.get("/rate-history", response_model=RateHistoryResponse)
+async def get_rate_history(
+    _user_id: CurrentUserId,
+    db: DbSession,
+    base: Annotated[CurrencyCode, Query(description="The currency you are converting from")],
+    quote: Annotated[CurrencyCode, Query(description="The currency you are converting to")],
+    days: Annotated[
+        int, Query(ge=HISTORY_MIN_DAYS, le=HISTORY_MAX_DAYS, description="How far back")
+    ] = 90,
+):
+    """How the market rate of 1 `base` in `quote` moved over the last `days` days, oldest first.
+    Rates Maalu has kept are used; otherwise the source is asked once and its answer kept."""
+    try:
+        points = await rate_history(db, base, quote, days)
+    except MarketRateUnavailableError:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE, "The exchange rate source is not reachable"
+        ) from None
+    if not points:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"No market rate for {base} to {quote}")
+    return RateHistoryResponse(
+        base=base,
+        quote=quote,
+        points=[RatePointResponse(date=p.day, rate=p.rate) for p in points],
         source=SOURCE_NAME,
     )

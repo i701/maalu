@@ -46,6 +46,9 @@ class Account(Base):
         )
     )
     name: Mapped[str] = mapped_column(String(200))
+    # Keep `exchange_rate` at the market rate: a daily job (and turning this on) sets it from the
+    # latest rate. Off by default, because a rate you typed is a rate you chose.
+    auto_rate: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
     # Which bank holds it, as the user writes it ("BML", "MIB"), and the account's number there.
     # Both optional: they tell apart accounts that share a name and let a statement be matched to
     # its account. The number is kept without spaces, as typed otherwise.

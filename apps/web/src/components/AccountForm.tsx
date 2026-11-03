@@ -56,6 +56,8 @@ export default function AccountForm({
 			// only cards and overdrafts have one; empty means none
 			credit_limit: hasCreditLimit(group) ? text("credit_limit") || null : null,
 			exclude_from_stats: f.get("exclude_from_stats") === "on",
+			// only a foreign-currency account has a rate to keep up to date
+			auto_rate: foreign && f.get("auto_rate") === "on",
 			bank: text("bank") || null,
 			account_number: text("account_number") || null,
 		};
@@ -166,6 +168,15 @@ export default function AccountForm({
 							initial={account?.currency === currency ? account.exchange_rate : ""}
 							hint="Used to value this account in your base currency."
 						/>
+						<FormControlLabel
+							control={<Switch name="auto_rate" defaultChecked={account?.auto_rate} />}
+							label="Keep this rate up to date"
+							sx={{ mt: 0.5 }}
+						/>
+						<Typography variant="caption" component="p" sx={{ color: "text.secondary", mt: -0.5 }}>
+							Maalu sets the rate from the market now and again every day, so a rate you type is
+							replaced. Leave it off to keep your own, such as your bank's.
+						</Typography>
 					</Grid>
 				)}
 
