@@ -9,6 +9,7 @@ const PAGES = [
 	"/transactions",
 	"/accounts",
 	"/subscriptions",
+	"/compare",
 	"/import",
 	"/places",
 	"/budget",

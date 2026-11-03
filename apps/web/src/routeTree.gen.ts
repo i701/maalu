@@ -16,6 +16,7 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProtectedAccountsRouteImport } from './routes/_protected/accounts'
 import { Route as ProtectedBudgetRouteImport } from './routes/_protected/budget'
 import { Route as ProtectedCategoriesRouteImport } from './routes/_protected/categories'
+import { Route as ProtectedCompareRouteImport } from './routes/_protected/compare'
 import { Route as ProtectedDashboardRouteImport } from './routes/_protected/dashboard'
 import { Route as ProtectedGroupsRouteImport } from './routes/_protected/groups'
 import { Route as ProtectedImportRouteImport } from './routes/_protected/import'
@@ -68,6 +69,11 @@ const ProtectedBudgetRoute = ProtectedBudgetRouteImport.update({
 const ProtectedCategoriesRoute = ProtectedCategoriesRouteImport.update({
   id: '/categories',
   path: '/categories',
+  getParentRoute: () => ProtectedRoute,
+} as any)
+const ProtectedCompareRoute = ProtectedCompareRouteImport.update({
+  id: '/compare',
+  path: '/compare',
   getParentRoute: () => ProtectedRoute,
 } as any)
 const ProtectedDashboardRoute = ProtectedDashboardRouteImport.update({
@@ -173,6 +179,7 @@ export interface FileRoutesByFullPath {
   '/accounts': typeof ProtectedAccountsRoute
   '/budget': typeof ProtectedBudgetRoute
   '/categories': typeof ProtectedCategoriesRoute
+  '/compare': typeof ProtectedCompareRoute
   '/dashboard': typeof ProtectedDashboardRoute
   '/groups': typeof ProtectedGroupsRoute
   '/import': typeof ProtectedImportRoute
@@ -200,6 +207,7 @@ export interface FileRoutesByTo {
   '/accounts': typeof ProtectedAccountsRoute
   '/budget': typeof ProtectedBudgetRoute
   '/categories': typeof ProtectedCategoriesRoute
+  '/compare': typeof ProtectedCompareRoute
   '/dashboard': typeof ProtectedDashboardRoute
   '/groups': typeof ProtectedGroupsRoute
   '/import': typeof ProtectedImportRoute
@@ -229,6 +237,7 @@ export interface FileRoutesById {
   '/_protected/accounts': typeof ProtectedAccountsRoute
   '/_protected/budget': typeof ProtectedBudgetRoute
   '/_protected/categories': typeof ProtectedCategoriesRoute
+  '/_protected/compare': typeof ProtectedCompareRoute
   '/_protected/dashboard': typeof ProtectedDashboardRoute
   '/_protected/groups': typeof ProtectedGroupsRoute
   '/_protected/import': typeof ProtectedImportRoute
@@ -258,6 +267,7 @@ export interface FileRouteTypes {
     | '/accounts'
     | '/budget'
     | '/categories'
+    | '/compare'
     | '/dashboard'
     | '/groups'
     | '/import'
@@ -285,6 +295,7 @@ export interface FileRouteTypes {
     | '/accounts'
     | '/budget'
     | '/categories'
+    | '/compare'
     | '/dashboard'
     | '/groups'
     | '/import'
@@ -313,6 +324,7 @@ export interface FileRouteTypes {
     | '/_protected/accounts'
     | '/_protected/budget'
     | '/_protected/categories'
+    | '/_protected/compare'
     | '/_protected/dashboard'
     | '/_protected/groups'
     | '/_protected/import'
@@ -395,6 +407,13 @@ declare module '@tanstack/react-router' {
       path: '/categories'
       fullPath: '/categories'
       preLoaderRoute: typeof ProtectedCategoriesRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
+    '/_protected/compare': {
+      id: '/_protected/compare'
+      path: '/compare'
+      fullPath: '/compare'
+      preLoaderRoute: typeof ProtectedCompareRouteImport
       parentRoute: typeof ProtectedRoute
     }
     '/_protected/dashboard': {
@@ -537,6 +556,7 @@ interface ProtectedRouteChildren {
   ProtectedAccountsRoute: typeof ProtectedAccountsRoute
   ProtectedBudgetRoute: typeof ProtectedBudgetRoute
   ProtectedCategoriesRoute: typeof ProtectedCategoriesRoute
+  ProtectedCompareRoute: typeof ProtectedCompareRoute
   ProtectedDashboardRoute: typeof ProtectedDashboardRoute
   ProtectedGroupsRoute: typeof ProtectedGroupsRoute
   ProtectedImportRoute: typeof ProtectedImportRoute
@@ -556,6 +576,7 @@ const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedAccountsRoute: ProtectedAccountsRoute,
   ProtectedBudgetRoute: ProtectedBudgetRoute,
   ProtectedCategoriesRoute: ProtectedCategoriesRoute,
+  ProtectedCompareRoute: ProtectedCompareRoute,
   ProtectedDashboardRoute: ProtectedDashboardRoute,
   ProtectedGroupsRoute: ProtectedGroupsRoute,
   ProtectedImportRoute: ProtectedImportRoute,

@@ -56,6 +56,7 @@ export const NAV_ITEMS: readonly NavDestination[] = [
 		group: "money",
 		bottom: true,
 	},
+	{ to: "/compare", label: "Compare", symbol: "insights", accent: "violet", group: "money" },
 	{ to: "/import", label: "Import", symbol: "upload_file", accent: "orange", group: "money" },
 	{ to: "/places", label: "Places", symbol: "location_on", accent: "pink", group: "money" },
 	{
