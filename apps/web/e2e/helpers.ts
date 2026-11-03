@@ -43,7 +43,15 @@ export async function apiAs(request: APIRequestContext, email: string) {
 		return res.json() as Promise<T>;
 	}
 
+	async function get<T>(path: string): Promise<T> {
+		const res = await request.get(`${API}${path}`, { headers });
+		expect(res.ok(), `${path}: ${await res.text()}`).toBeTruthy();
+		return res.json() as Promise<T>;
+	}
+
 	return {
+		get,
+		post,
 		account: (name: string, opening_amount = "0", group = "accounts") =>
 			post<{ id: string }>("/accounts", { name, group, currency: "MVR", opening_amount }),
 		subscription: (data: object) =>
