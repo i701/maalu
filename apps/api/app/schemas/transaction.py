@@ -369,6 +369,32 @@ class CategoryTotals(BaseModel):
     categories: list[CategoryTotal]
 
 
+class CategoryMonthRow(BaseModel):
+    type: Literal["income", "expense"]
+    category_id: uuid.UUID
+    category: str
+    color: str = Field(description="The category's accent colour")
+    parent_id: uuid.UUID | None = Field(description="Set on a sub-category")
+    parent: str | None = Field(description="The parent's name")
+    parent_color: str | None = Field(description="The parent's accent colour")
+    amounts: list[Decimal] = Field(
+        description="In your base currency, one for each entry of `months` (zero where nothing "
+        "happened)"
+    )
+    total: Decimal = Field(description="All of `amounts` added up")
+
+
+class CategoryMonths(BaseModel):
+    """Income and expense per category for each calendar month, in your base currency: the same
+    numbers as the category totals, split by month. Transfers and balance adjustments are not
+    counted, a split transaction counts under its items' categories, and a refund takes away from
+    spending."""
+
+    currency: str
+    months: list[str] = Field(description="Every month in the range, oldest first, as YYYY-MM")
+    categories: list[CategoryMonthRow]
+
+
 class TransactionTotals(BaseModel):
     """Totals of the matching income and expense transactions, in your base currency. Transfers
     only move money between your accounts, so they are not counted. A refund is money back for

@@ -1404,6 +1404,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/transactions/categories/monthly": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Category Months
+         * @description Income and expense per category for each calendar month in a range (at most 36 months), in
+         *     your base currency: the category totals split by month, for a category-by-month table.
+         */
+        get: operations["category_months_api_v1_transactions_categories_monthly_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/transactions/export": {
         parameters: {
             query?: never;
@@ -2375,6 +2396,69 @@ export interface components {
              * @description The category that takes over everything in this one
              */
             into_id: string;
+        };
+        /** CategoryMonthRow */
+        CategoryMonthRow: {
+            /**
+             * Amounts
+             * @description In your base currency, one for each entry of `months` (zero where nothing happened)
+             */
+            amounts: string[];
+            /** Category */
+            category: string;
+            /**
+             * Category Id
+             * Format: uuid
+             */
+            category_id: string;
+            /**
+             * Color
+             * @description The category's accent colour
+             */
+            color: string;
+            /**
+             * Parent
+             * @description The parent's name
+             */
+            parent: string | null;
+            /**
+             * Parent Color
+             * @description The parent's accent colour
+             */
+            parent_color: string | null;
+            /**
+             * Parent Id
+             * @description Set on a sub-category
+             */
+            parent_id: string | null;
+            /**
+             * Total
+             * @description All of `amounts` added up
+             */
+            total: string;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "income" | "expense";
+        };
+        /**
+         * CategoryMonths
+         * @description Income and expense per category for each calendar month, in your base currency: the same
+         *     numbers as the category totals, split by month. Transfers and balance adjustments are not
+         *     counted, a split transaction counts under its items' categories, and a refund takes away from
+         *     spending.
+         */
+        CategoryMonths: {
+            /** Categories */
+            categories: components["schemas"]["CategoryMonthRow"][];
+            /** Currency */
+            currency: string;
+            /**
+             * Months
+             * @description Every month in the range, oldest first, as YYYY-MM
+             */
+            months: string[];
         };
         /** CategoryResponse */
         CategoryResponse: {
@@ -7343,6 +7427,41 @@ export interface operations {
             };
         };
     };
+    category_months_api_v1_transactions_categories_monthly_get: {
+        parameters: {
+            query?: {
+                account_id?: string | null;
+                /** @description Inclusive, YYYY-MM-DD. Default: 11 months before the end of the range */
+                date_from?: string | null;
+                /** @description Inclusive, YYYY-MM-DD. Default: the end of this month */
+                date_to?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategoryMonths"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     export_transactions_api_v1_transactions_export_get: {
         parameters: {
             query?: {
@@ -8331,6 +8450,7 @@ export const accountGroupValues: ReadonlyArray<FlattenedDeepRequired<components>
 export const budgetLineResponseStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BudgetLineResponse"]["status"]> = ["ok", "warning", "over"];
 export const budgetTotalsStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BudgetTotals"]["status"]> = ["ok", "warning", "over"];
 export const categoryCreateColorAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CategoryCreate"]["color"]> = ["blue", "green", "orange", "violet", "pink", "amber", "lime", "slate"];
+export const categoryMonthRowTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CategoryMonthRow"]["type"]> = ["income", "expense"];
 export const categoryTotalTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CategoryTotal"]["type"]> = ["income", "expense"];
 export const categoryUpdateColorAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CategoryUpdate"]["color"]> = ["blue", "green", "orange", "violet", "pink", "amber", "lime", "slate"];
 export const goalResponseModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["GoalResponse"]["mode"]> = ["account", "manual"];

@@ -1326,6 +1326,126 @@
         "title": "CategoryMerge",
         "type": "object"
       },
+      "CategoryMonthRow": {
+        "properties": {
+          "amounts": {
+            "description": "In your base currency, one for each entry of `months` (zero where nothing happened)",
+            "items": {
+              "type": "string"
+            },
+            "title": "Amounts",
+            "type": "array"
+          },
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "category_id": {
+            "format": "uuid",
+            "title": "Category Id",
+            "type": "string"
+          },
+          "color": {
+            "description": "The category's accent colour",
+            "title": "Color",
+            "type": "string"
+          },
+          "parent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The parent's name",
+            "title": "Parent"
+          },
+          "parent_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The parent's accent colour",
+            "title": "Parent Color"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Set on a sub-category",
+            "title": "Parent Id"
+          },
+          "total": {
+            "description": "All of `amounts` added up",
+            "title": "Total",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "income",
+              "expense"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "category_id",
+          "category",
+          "color",
+          "parent_id",
+          "parent",
+          "parent_color",
+          "amounts",
+          "total"
+        ],
+        "title": "CategoryMonthRow",
+        "type": "object"
+      },
+      "CategoryMonths": {
+        "description": "Income and expense per category for each calendar month, in your base currency: the same\nnumbers as the category totals, split by month. Transfers and balance adjustments are not\ncounted, a split transaction counts under its items' categories, and a refund takes away from\nspending.",
+        "properties": {
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryMonthRow"
+            },
+            "title": "Categories",
+            "type": "array"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "months": {
+            "description": "Every month in the range, oldest first, as YYYY-MM",
+            "items": {
+              "type": "string"
+            },
+            "title": "Months",
+            "type": "array"
+          }
+        },
+        "required": [
+          "currency",
+          "months",
+          "categories"
+        ],
+        "title": "CategoryMonths",
+        "type": "object"
+      },
       "CategoryResponse": {
         "properties": {
           "budget_line_count": {
@@ -11740,6 +11860,100 @@
           }
         ],
         "summary": "Category Totals",
+        "tags": [
+          "transactions"
+        ]
+      }
+    },
+    "/api/v1/transactions/categories/monthly": {
+      "get": {
+        "description": "Income and expense per category for each calendar month in a range (at most 36 months), in\nyour base currency: the category totals split by month, for a category-by-month table.",
+        "operationId": "category_months_api_v1_transactions_categories_monthly_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "account_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Account Id"
+            }
+          },
+          {
+            "description": "Inclusive, YYYY-MM-DD. Default: 11 months before the end of the range",
+            "in": "query",
+            "name": "date_from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inclusive, YYYY-MM-DD. Default: 11 months before the end of the range",
+              "title": "Date From"
+            }
+          },
+          {
+            "description": "Inclusive, YYYY-MM-DD. Default: the end of this month",
+            "in": "query",
+            "name": "date_to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inclusive, YYYY-MM-DD. Default: the end of this month",
+              "title": "Date To"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryMonths"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Category Months",
         "tags": [
           "transactions"
         ]

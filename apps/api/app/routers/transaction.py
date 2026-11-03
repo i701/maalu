@@ -13,6 +13,7 @@ from app.schemas import (
     BulkIds,
     BulkResult,
     BulkUpdate,
+    CategoryMonths,
     CategoryTotals,
     PlaceTotals,
     PostPlanned,
@@ -340,6 +341,30 @@ async def category_totals(
         date_from=date_from,
         date_to=date_to,
     )
+
+
+@router.get("/categories/monthly", response_model=CategoryMonths)
+async def category_months(
+    user_id: CurrentUserId,
+    service: TransactionServiceDep,
+    account_id: uuid.UUID | None = None,
+    date_from: Annotated[
+        date | None,
+        Query(description="Inclusive, YYYY-MM-DD. Default: 11 months before the end of the range"),
+    ] = None,
+    date_to: Annotated[
+        date | None, Query(description="Inclusive, YYYY-MM-DD. Default: the end of this month")
+    ] = None,
+):
+    """Income and expense per category for each calendar month in a range (at most 36 months), in
+    your base currency: the category totals split by month, for a category-by-month table."""
+    _check_dates(date_from, date_to)
+    try:
+        return await service.category_months_for_user(
+            user_id, account_id=account_id, date_from=date_from, date_to=date_to
+        )
+    except TransactionRuleError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from exc
 
 
 # Declared before "/{transaction_id}" so "ids" isn't parsed as an id.

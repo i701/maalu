@@ -1,3 +1,4 @@
+import calendar
 import math
 import uuid
 from collections import Counter
@@ -25,6 +26,8 @@ from app.schemas import (
     BulkResult,
     BulkSkipped,
     BulkUpdate,
+    CategoryMonthRow,
+    CategoryMonths,
     CategoryTotal,
     CategoryTotals,
     PlaceTotal,
@@ -73,6 +76,28 @@ def _not_applicable(t: Transaction, data: BulkUpdate) -> str:
     if data.category and Decimal(str(getattr(t, "refunded_amount", 0) or 0)) > 0:
         return "A purchase with refunds keeps its category"
     return "Nothing to change"
+
+
+DEFAULT_MONTHS = 12
+MAX_MONTHS = 36
+
+
+def _month_end(on: date) -> date:
+    return date(on.year, on.month, calendar.monthrange(on.year, on.month)[1])
+
+
+def _shift_months(on: date, months: int) -> date:
+    index = on.year * 12 + (on.month - 1) + months
+    return date(index // 12, index % 12 + 1, 1)
+
+
+def _months_between(first: date, last: date) -> list[str]:
+    """Every calendar month from the one `first` is in to the one `last` is in, as "YYYY-MM"."""
+    months, current = [], first.replace(day=1)
+    while current <= last:
+        months.append(f"{current.year:04d}-{current.month:02d}")
+        current = _shift_months(current, 1)
+    return months
 
 
 class TransactionService:
@@ -982,58 +1007,10 @@ class TransactionService:
             date_to=date_to,
         )
         conditions = [*conditions, Transaction.reported(include_excluded_accounts=bool(account_id))]
-        money = Transaction.type.in_([TransactionType.INCOME, TransactionType.EXPENSE])
-        totals: dict[tuple[TransactionType, uuid.UUID], list] = {}
-        ids = await self._family(user_id, category_id)
-
-        def add(kind: TransactionType, category: Category, amount: Decimal, count: int) -> None:
-            entry = totals.setdefault((kind, category.id), [category, Decimal(0), 0])
-            entry[1] += amount
-            entry[2] += count
-
-        plain = (
-            select(
-                Transaction.type,
-                Transaction.is_refund(),
-                Category,
-                func.sum(Transaction.base_amount),
-                func.count(Transaction.id),
-            )
-            .join(Category, Category.id == Transaction.category_id)
-            .where(*conditions, money, ~Transaction.splits.any())
-            .group_by(Transaction.type, Transaction.is_refund(), Category.id)
+        buckets = await self._category_buckets(
+            conditions, await self._family(user_id, category_id), monthly=False
         )
-        for kind, is_refund, category, total, count in (await self.db.execute(plain)).all():
-            amount = Decimal(str(total or 0))
-            if is_refund:
-                add(TransactionType.EXPENSE, category, -amount, count)
-            else:
-                add(kind, category, amount, count)
-
-        # A split transaction counts once toward each category its items are in.
-        touched: dict[tuple[TransactionType, uuid.UUID, uuid.UUID], bool] = {}
-        split_stmt = select(Transaction).where(*conditions, money, Transaction.splits.any())
-        for t in (await self.db.scalars(split_stmt)).all():
-            shares = allocate_base(t.base_amount, t.amount, [s.amount for s in t.splits])
-            kind = TransactionType.EXPENSE if t.refund_of_id else t.type
-            for line, share in zip(t.splits, shares, strict=True):
-                if ids is not None and line.category_id not in ids:
-                    continue
-                first = (kind, t.id, line.category_id) not in touched
-                touched[(kind, t.id, line.category_id)] = True
-                add(kind, line.category_ref, share * t.spending_sign, 1 if first else 0)
-
-        parent_ids = {c.parent_id for c, _total, _count in totals.values() if c.parent_id}
-        parents = {
-            pid: (name, color)
-            for pid, name, color in (
-                await self.db.execute(
-                    select(Category.id, Category.name, Category.color).where(
-                        Category.id.in_(parent_ids)
-                    )
-                )
-            ).all()
-        }
+        parents = await self._parent_names([c for c, _total, _count in buckets.values()])
         rows = [
             CategoryTotal(
                 type=kind.value,
@@ -1046,10 +1023,150 @@ class TransactionService:
                 total=total,
                 count=count,
             )
-            for (kind, _), (category, total, count) in totals.items()
+            for (kind, _, _), (category, total, count) in buckets.items()
         ]
         rows.sort(key=lambda r: (r.type, -r.total, r.category))
         return CategoryTotals(currency=await self._base_currency(user_id), categories=rows)
+
+    async def _parent_names(
+        self, categories: list[Category]
+    ) -> dict[uuid.UUID | None, tuple[str | None, str | None]]:
+        """Name and colour of the parents of some categories, by the parent's id."""
+        parent_ids = {c.parent_id for c in categories if c.parent_id}
+        if not parent_ids:
+            return {}
+        found = await self.db.execute(
+            select(Category.id, Category.name, Category.color).where(Category.id.in_(parent_ids))
+        )
+        return {pid: (name, color) for pid, name, color in found.all()}
+
+    async def _category_buckets(
+        self, conditions: list, ids: set[uuid.UUID] | None, *, monthly: bool
+    ) -> dict[tuple[TransactionType, uuid.UUID, str | None], list]:
+        """What each category came to, per kind, as `[category, total, count]`. Plain transactions
+        count under their own category; a split transaction counts under each of its items'
+        categories with its base amount shared out in proportion to the items; a refund takes away
+        from spending instead of adding income. With `monthly` the key also carries the month
+        ("2026-11") the money fell in, otherwise `None`."""
+        money = Transaction.type.in_([TransactionType.INCOME, TransactionType.EXPENSE])
+        totals: dict[tuple[TransactionType, uuid.UUID, str | None], list] = {}
+
+        def add(
+            kind: TransactionType, category: Category, amount: Decimal, count: int, on: date
+        ) -> None:
+            bucket = f"{on.year:04d}-{on.month:02d}" if monthly else None
+            entry = totals.setdefault((kind, category.id, bucket), [category, Decimal(0), 0])
+            entry[1] += amount
+            entry[2] += count
+
+        year = func.extract("year", Transaction.transaction_date)
+        month = func.extract("month", Transaction.transaction_date)
+        columns = [
+            Transaction.type,
+            Transaction.is_refund(),
+            Category,
+            func.sum(Transaction.base_amount),
+            func.count(Transaction.id),
+        ]
+        grouping = [Transaction.type, Transaction.is_refund(), Category.id]
+        if monthly:
+            columns += [year, month]
+            grouping += [year, month]
+        plain = (
+            select(*columns)
+            .join(Category, Category.id == Transaction.category_id)
+            .where(*conditions, money, ~Transaction.splits.any())
+            .group_by(*grouping)
+        )
+        for kind, is_refund, category, total, count, *when in (await self.db.execute(plain)).all():
+            on = date(int(when[0]), int(when[1]), 1) if when else date.min
+            amount = Decimal(str(total or 0))
+            if is_refund:
+                add(TransactionType.EXPENSE, category, -amount, count, on)
+            else:
+                add(kind, category, amount, count, on)
+
+        # A split transaction counts once toward each category its items are in.
+        touched: dict[tuple[TransactionType, uuid.UUID, uuid.UUID], bool] = {}
+        split_stmt = select(Transaction).where(*conditions, money, Transaction.splits.any())
+        for t in (await self.db.scalars(split_stmt)).all():
+            shares = allocate_base(t.base_amount, t.amount, [s.amount for s in t.splits])
+            kind = TransactionType.EXPENSE if t.refund_of_id else t.type
+            for line, share in zip(t.splits, shares, strict=True):
+                if ids is not None and line.category_id not in ids:
+                    continue
+                first = (kind, t.id, line.category_id) not in touched
+                touched[(kind, t.id, line.category_id)] = True
+                add(
+                    kind,
+                    line.category_ref,
+                    share * t.spending_sign,
+                    1 if first else 0,
+                    t.transaction_date,
+                )
+        return totals
+
+    async def category_months_for_user(
+        self,
+        user_id: uuid.UUID,
+        *,
+        account_id: uuid.UUID | None = None,
+        date_from: date | None = None,
+        date_to: date | None = None,
+    ) -> CategoryMonths:
+        """Income and expense per category for each calendar month (base currency), the same
+        numbers as `category_totals_for_user` split by month: transfers and balance adjustments are
+        left out, a split transaction counts under its items' categories, a refund takes away from
+        spending. With no dates it is the last 12 months, this one included. Every month in the
+        range is listed even when nothing happened in it, so each category's `amounts` lines up
+        with `months`."""
+        today = date.today()
+        date_to = date_to or _month_end(today)
+        date_from = date_from or _shift_months(date_to.replace(day=1), -(DEFAULT_MONTHS - 1))
+        months = _months_between(date_from, date_to)
+        if len(months) > MAX_MONTHS:
+            raise TransactionRuleError(f"Choose at most {MAX_MONTHS} months")
+        conditions = await self._build_conditions(
+            user_id,
+            transaction_type=None,
+            vendor_id=None,
+            subscription_id=None,
+            payment_method=None,
+            currency=None,
+            account_id=account_id,
+            date_from=date_from,
+            date_to=date_to,
+        )
+        conditions = [*conditions, Transaction.reported(include_excluded_accounts=bool(account_id))]
+        buckets = await self._category_buckets(conditions, None, monthly=True)
+
+        position = {m: i for i, m in enumerate(months)}
+        grid: dict[tuple[TransactionType, uuid.UUID], tuple[Category, list[Decimal]]] = {}
+        for (kind, category_id, month), (category, amount, _count) in buckets.items():
+            _, amounts = grid.setdefault(
+                (kind, category_id), (category, [Decimal(0)] * len(months))
+            )
+            if month in position:
+                amounts[position[month]] += amount
+        parents = await self._parent_names([c for c, _ in grid.values()])
+        rows = [
+            CategoryMonthRow(
+                type=kind.value,
+                category_id=category.id,
+                category=category.name,
+                color=category.color,
+                parent_id=category.parent_id,
+                parent=parents.get(category.parent_id, (None, None))[0],
+                parent_color=parents.get(category.parent_id, (None, None))[1],
+                amounts=[a.quantize(BASE_AMOUNT_QUANTUM) for a in amounts],
+                total=sum(amounts, Decimal(0)).quantize(BASE_AMOUNT_QUANTUM),
+            )
+            for (kind, _), (category, amounts) in grid.items()
+        ]
+        rows.sort(key=lambda r: (r.type, -r.total, r.category))
+        return CategoryMonths(
+            currency=await self._base_currency(user_id), months=months, categories=rows
+        )
 
     async def export_xlsx(
         self,
