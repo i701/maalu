@@ -62,3 +62,44 @@ jobs:
       - run: just check-web # oxfmt --check, oxlint, tsc --noEmit
       - run: just test-web # vitest: the pure helpers in src/lib
       - run: just check-generated-types # src/types/api.generated.ts matches the committed schema
+
+  e2e:
+    name: End-to-end tests (Playwright)
+    runs-on: ubuntu-latest
+    env:
+      UV_FROZEN: "1"
+      E2E_DATABASE_URL: postgresql+asyncpg://maalu:maalu@localhost:5432/maalu_e2e
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: maalu
+          POSTGRES_PASSWORD: maalu
+          POSTGRES_DB: maalu_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U maalu" --health-interval 5s --health-timeout 3s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - uses: pnpm/action-setup@v6
+        with:
+          cache: true
+      - run: pnpm --filter @maalu/web exec playwright install --with-deps chromium
+      # Playwright starts the API (migrating the database first) and the built web app itself.
+      - run: pnpm --filter @maalu/web e2e
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            apps/web/playwright-report
+            apps/web/test-results
+          retention-days: 7
