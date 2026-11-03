@@ -55,6 +55,7 @@ export default defineConfig(({ mode }) => {
 					"RestoreFromTrashOutlined",
 					"Search",
 					"Storefront",
+					"SwapHoriz",
 					"Tune",
 					"UnarchiveOutlined",
 					"Undo",

@@ -1447,6 +1447,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/transactions/link-transfer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Link Transfer
+         * @description Make an expense and an income that are the two sides of one transfer into that transfer.
+         *     The expense becomes the transfer (from its account to the income's account, for the amount the
+         *     income received) and the income goes to the trash. They need different accounts; a purchase
+         *     with items or refunds, a refund, a planned or adjustment row can't be linked.
+         */
+        post: operations["link_transfer_api_v1_transactions_link_transfer_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/transactions/places": {
         parameters: {
             query?: never;
@@ -1483,6 +1506,49 @@ export interface paths {
         get: operations["transaction_totals_api_v1_transactions_summary_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/transactions/transfer-suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Transfer Suggestions
+         * @description Pairs that look like one move of your own money entered twice: an expense and an income in
+         *     different accounts, the same amount in the same currency, within two days. The closest first
+         *     pairing wins, so a transaction is in at most one pair. Nothing is merged: that is `POST
+         *     /transactions/link-transfer`, once you confirm.
+         */
+        get: operations["transfer_suggestions_api_v1_transactions_transfer_suggestions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/transactions/transfer-suggestions/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Dismiss Suggestion
+         * @description Say that this pair is not a transfer, so it is not suggested again.
+         */
+        post: operations["dismiss_suggestion_api_v1_transactions_transfer_suggestions_dismiss_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4030,6 +4096,34 @@ export interface components {
             vendor_id?: string | null;
             /** Vendor Name */
             vendor_name?: string | null;
+        };
+        /**
+         * TransferPair
+         * @description An expense and an income that are the two sides of one move of your own money.
+         */
+        TransferPair: {
+            /**
+             * Expense Id
+             * Format: uuid
+             * @description The money leaving one account
+             */
+            expense_id: string;
+            /**
+             * Income Id
+             * Format: uuid
+             * @description The same money arriving in another
+             */
+            income_id: string;
+        };
+        /** TransferSuggestion */
+        TransferSuggestion: {
+            /**
+             * Days Apart
+             * @description How many days between the two, 0 for the same day
+             */
+            days_apart: number;
+            expense: components["schemas"]["TransactionResponse"];
+            income: components["schemas"]["TransactionResponse"];
         };
         /** TwoFactorChallenge */
         TwoFactorChallenge: {
@@ -7352,6 +7446,39 @@ export interface operations {
             };
         };
     };
+    link_transfer_api_v1_transactions_link_transfer_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransferPair"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransactionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     spending_places_api_v1_transactions_places_get: {
         parameters: {
             query?: {
@@ -7425,6 +7552,68 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["TransactionTotals"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    transfer_suggestions_api_v1_transactions_transfer_suggestions_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransferSuggestion"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dismiss_suggestion_api_v1_transactions_transfer_suggestions_dismiss_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransferPair"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

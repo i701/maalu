@@ -21,6 +21,7 @@ from app.routers import (
     tag,
     template,
     transaction,
+    transfer_link,
     vendor,
 )
 
@@ -41,6 +42,8 @@ def create_app() -> FastAPI:
         return {"status": "ok"}
 
     app.include_router(auth.router, prefix="/api/v1")
+    # before the transactions router: its fixed paths must not be read as a transaction id
+    app.include_router(transfer_link.router, prefix="/api/v1")
     app.include_router(transaction.router, prefix="/api/v1")
     app.include_router(account.router, prefix="/api/v1")
     app.include_router(stats.router, prefix="/api/v1")

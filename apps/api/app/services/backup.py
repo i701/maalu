@@ -47,6 +47,7 @@ OWNED = (
     "transaction_links",
     "transaction_templates",
     "transactions",
+    "transfer_dismissals",
     "vendors",
 )
 # Tables without one, and the column that ties each to a row of an owned table.

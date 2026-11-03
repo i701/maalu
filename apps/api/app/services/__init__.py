@@ -51,6 +51,7 @@ from app.services.template import (
     TemplateService,
 )
 from app.services.transaction import TransactionService
+from app.services.transfer_link import TransferLinkNotFoundError, TransferLinkService
 from app.services.user import (
     EmailAlreadyRegisteredError,
     InvalidPasswordError,
@@ -123,6 +124,8 @@ __all__ = [
     "TransactionNotPlannedError",
     "TransactionRuleError",
     "TransactionService",
+    "TransferLinkNotFoundError",
+    "TransferLinkService",
     "TwoFactorCodeRequiredError",
     "TwoFactorLockedError",
     "TwoFactorStateError",

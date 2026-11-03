@@ -16,6 +16,7 @@ from app.models.subscription import Subscription
 from app.models.tag import Tag, template_tags, transaction_tags, vendor_tags
 from app.models.template import TransactionTemplate
 from app.models.transaction import Transaction, TransactionSplit
+from app.models.transfer_dismissal import TransferDismissal
 from app.models.user import User
 from app.models.vendor import Vendor
 
@@ -44,6 +45,7 @@ __all__ = [
     "TransactionLink",
     "TransactionSplit",
     "TransactionTemplate",
+    "TransferDismissal",
     "User",
     "UserSession",
     "Vendor",

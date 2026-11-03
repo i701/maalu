@@ -81,6 +81,7 @@ from app.schemas.transaction import (
     TransactionTotals,
     TransactionUpdate,
 )
+from app.schemas.transfer_link import TransferPair, TransferSuggestion
 from app.schemas.user import (
     EndedSessions,
     PasswordChange,
@@ -178,6 +179,8 @@ __all__ = [
     "TransactionResponse",
     "TransactionTotals",
     "TransactionUpdate",
+    "TransferPair",
+    "TransferSuggestion",
     "TwoFactorChallenge",
     "TwoFactorCode",
     "TwoFactorConfirm",

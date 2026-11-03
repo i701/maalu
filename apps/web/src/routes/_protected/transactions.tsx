@@ -1,5 +1,6 @@
 import AddIcon from "@mui/icons-material/Add";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import InsertLinkOutlinedIcon from "@mui/icons-material/InsertLinkOutlined";
 import UndoIcon from "@mui/icons-material/Undo";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
@@ -17,12 +18,13 @@ import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { z } from "zod";
 import ActiveFilters from "#/components/ActiveFilters";
 import BulkEditDialog from "#/components/BulkEditDialog";
 import GroupDialog from "#/components/GroupDialog";
 import ConfirmDelete from "#/components/ConfirmDelete";
+import MakeTransferDialog from "#/components/MakeTransferDialog";
 import EmptyState from "#/components/EmptyState";
 import ExportButton from "#/components/ExportButton";
 import FiltersDrawer from "#/components/FiltersDrawer";
@@ -50,6 +52,7 @@ import TransactionForm from "#/components/TransactionForm";
 import { seedFromTransaction } from "#/components/transaction-form/request";
 import TransactionTotals from "#/components/TransactionTotals";
 import BudgetAlert from "#/components/BudgetAlert";
+import TransferSuggestionsCard from "#/components/TransferSuggestionsCard";
 import UpcomingCard from "#/components/UpcomingCard";
 import CategoryBreakdown from "#/components/CategoryBreakdown";
 import { formatDate, formatMoney, formatTime, formatWhen } from "#/lib/format";
@@ -75,6 +78,7 @@ import { listSubscriptionsFn } from "#/server/subscriptions";
 import { listTemplatesFn } from "#/server/templates";
 import {
 	listUpcomingFn,
+	listTransferSuggestionsFn,
 	bulkTrashFn,
 	deleteTransactionFn,
 	getCategoryTotalsFn,
@@ -88,6 +92,7 @@ import { listGroupsFn } from "#/server/groups";
 import { getMeFn } from "#/server/auth";
 import RefundDialogHost from "#/components/RefundDialogHost";
 import { placeLabel } from "#/lib/places";
+import { linkablePair } from "#/lib/transfer-link";
 import { canLinkRefund, canRefund, isRefund, wasRefunded } from "#/lib/refund";
 import { useRefundDialog } from "#/lib/use-refund-dialog";
 import { listTagsFn } from "#/server/tags";
@@ -178,6 +183,7 @@ export const Route = createFileRoute("/_protected/transactions")({
 			category,
 			account,
 			budget,
+			suggestions,
 			groups,
 		] = await Promise.all([
 			listTransactionsFn({ data: deps }),
@@ -198,6 +204,8 @@ export const Route = createFileRoute("/_protected/transactions")({
 			deps.account_id ? getAccountFn({ data: { id: deps.account_id } }) : Promise.resolve(null),
 			// for the "limits needing attention" strip; the page works without it
 			getBudgetFn({ data: {} }),
+			// pairs that look like one transfer entered twice; the page works without them
+			listTransferSuggestionsFn(),
 			// for the "Group" action's list of groups to add to
 			listGroupsFn(),
 		]);
@@ -226,6 +234,7 @@ export const Route = createFileRoute("/_protected/transactions")({
 			allCategories: unwrap(allCategories),
 			budget: budget.ok ? budget.data : null,
 			allGroups: groups.ok ? groups.data : [],
+			transferSuggestions: suggestions.ok ? suggestions.data : [],
 			selectedVendor: vendor?.ok ? { id: vendor.data.id, label: vendor.data.name } : null,
 			selectedCategory: category?.ok ? { id: category.data.id, label: category.data.name } : null,
 			selectedAccount: account?.ok
@@ -681,6 +690,12 @@ function TransactionList({
 	const [editing, setEditing] = useState<string[] | null>(null);
 	const [deleting, setDeleting] = useState<string[] | null>(null);
 	const [grouping, setGrouping] = useState<string[] | null>(null);
+	// two selected transactions that are the two sides of one transfer can be made one
+	const pair = useMemo(
+		() => (selection.wide ? null : linkablePair(items.filter((t) => selection.selected.has(t.id)))),
+		[items, selection.selected, selection.wide],
+	);
+	const [linking, setLinking] = useState(false);
 
 	return (
 		<>
@@ -714,6 +729,16 @@ function TransactionList({
 				>
 					Group
 				</Button>
+				{pair && (
+					<Button
+						size="small"
+						color="inherit"
+						startIcon={<SwapHorizIcon />}
+						onClick={() => setLinking(true)}
+					>
+						Make a transfer
+					</Button>
+				)}
 				<Button
 					size="small"
 					color="inherit"
@@ -743,6 +768,14 @@ function TransactionList({
 					vendors={vendors}
 					tags={tags}
 					onClose={() => setEditing(null)}
+					onDone={selection.clear}
+				/>
+			)}
+			{linking && pair && (
+				<MakeTransferDialog
+					expense={pair.expense}
+					income={pair.income}
+					onClose={() => setLinking(false)}
 					onDone={selection.clear}
 				/>
 			)}
@@ -799,6 +832,7 @@ function TransactionsPage() {
 		templates,
 		allTags,
 		allGroups,
+		transferSuggestions,
 		defaultAccountId,
 		upcoming,
 		currencies,
@@ -884,6 +918,7 @@ function TransactionsPage() {
 			<BudgetAlert budget={budget} />
 
 			<UpcomingCard items={upcoming} onEdit={setEditing} onDelete={setDeleting} />
+			<TransferSuggestionsCard suggestions={transferSuggestions} />
 
 			<Box sx={{ containerType: "inline-size" }}>
 				<Box

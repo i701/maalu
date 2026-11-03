@@ -5671,6 +5671,51 @@
         "title": "TransactionUpdate",
         "type": "object"
       },
+      "TransferPair": {
+        "description": "An expense and an income that are the two sides of one move of your own money.",
+        "properties": {
+          "expense_id": {
+            "description": "The money leaving one account",
+            "format": "uuid",
+            "title": "Expense Id",
+            "type": "string"
+          },
+          "income_id": {
+            "description": "The same money arriving in another",
+            "format": "uuid",
+            "title": "Income Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "expense_id",
+          "income_id"
+        ],
+        "title": "TransferPair",
+        "type": "object"
+      },
+      "TransferSuggestion": {
+        "properties": {
+          "days_apart": {
+            "description": "How many days between the two, 0 for the same day",
+            "title": "Days Apart",
+            "type": "integer"
+          },
+          "expense": {
+            "$ref": "#/components/schemas/TransactionResponse"
+          },
+          "income": {
+            "$ref": "#/components/schemas/TransactionResponse"
+          }
+        },
+        "required": [
+          "expense",
+          "income",
+          "days_apart"
+        ],
+        "title": "TransferSuggestion",
+        "type": "object"
+      },
       "TwoFactorChallenge": {
         "properties": {
           "challenge_token": {
@@ -12299,6 +12344,53 @@
         ]
       }
     },
+    "/api/v1/transactions/link-transfer": {
+      "post": {
+        "description": "Make an expense and an income that are the two sides of one transfer into that transfer.\nThe expense becomes the transfer (from its account to the income's account, for the amount the\nincome received) and the income goes to the trash. They need different accounts; a purchase\nwith items or refunds, a refund, a planned or adjustment row can't be linked.",
+        "operationId": "link_transfer_api_v1_transactions_link_transfer_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferPair"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Link Transfer",
+        "tags": [
+          "transfers"
+        ]
+      }
+    },
     "/api/v1/transactions/places": {
       "get": {
         "description": "Where your spending went, for the map: expenses you marked with a location, grouped by spot\n(about 100 m), biggest first, in your base currency with refunds taken off.",
@@ -12667,6 +12759,101 @@
         "summary": "Transaction Totals",
         "tags": [
           "transactions"
+        ]
+      }
+    },
+    "/api/v1/transactions/transfer-suggestions": {
+      "get": {
+        "description": "Pairs that look like one move of your own money entered twice: an expense and an income in\ndifferent accounts, the same amount in the same currency, within two days. The closest first\npairing wins, so a transaction is in at most one pair. Nothing is merged: that is `POST\n/transactions/link-transfer`, once you confirm.",
+        "operationId": "transfer_suggestions_api_v1_transactions_transfer_suggestions_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TransferSuggestion"
+                  },
+                  "title": "Response Transfer Suggestions Api V1 Transactions Transfer Suggestions Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Transfer Suggestions",
+        "tags": [
+          "transfers"
+        ]
+      }
+    },
+    "/api/v1/transactions/transfer-suggestions/dismiss": {
+      "post": {
+        "description": "Say that this pair is not a transfer, so it is not suggested again.",
+        "operationId": "dismiss_suggestion_api_v1_transactions_transfer_suggestions_dismiss_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferPair"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Dismiss Suggestion",
+        "tags": [
+          "transfers"
         ]
       }
     },

@@ -104,6 +104,7 @@ export type Vendor = Schemas["VendorResponse"];
 export type Subscription = Schemas["SubscriptionResponse"];
 export type SubscriptionSummary = Schemas["SubscriptionSummary"];
 export type Account = Schemas["AccountResponse"];
+export type TransferSuggestion = Schemas["TransferSuggestion"];
 export type PlaceTotal = Schemas["PlaceTotal"];
 export type PlaceSearchHit = Schemas["PlaceSearchHit"];
 export type PlaceSearchResponse = Schemas["PlaceSearchResponse"];

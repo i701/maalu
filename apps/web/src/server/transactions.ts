@@ -9,6 +9,7 @@ import {
 	type PlaceTotals,
 	type Transaction,
 	type TransactionTotals,
+	type TransferSuggestion,
 } from "#/types/api";
 import type { PageResult } from "#/lib/pagination";
 import { apiRequest } from "./api";
@@ -334,6 +335,27 @@ export const listRefundCandidatesFn = createServerFn({ method: "GET" })
 		apiRequest<Transaction[]>(`/transactions/${data.id}/refund-candidates`, {
 			query: { q: data.q || undefined, limit: 20 },
 		}),
+	);
+
+/** Pairs that look like one move of your own money entered twice (an expense and an income). */
+export const listTransferSuggestionsFn = createServerFn({ method: "GET" }).handler(async () =>
+	apiRequest<TransferSuggestion[]>("/transactions/transfer-suggestions"),
+);
+
+const pairSchema = z.object({ expense_id: z.uuid(), income_id: z.uuid() });
+
+/** Say a suggested pair is not a transfer, so it is not suggested again. */
+export const dismissTransferSuggestionFn = createServerFn({ method: "POST" })
+	.validator(pairSchema)
+	.handler(async ({ data }) =>
+		apiRequest<void>("/transactions/transfer-suggestions/dismiss", { method: "POST", body: data }),
+	);
+
+/** Make an expense and an income, the two sides of one transfer, into that transfer. */
+export const linkTransferFn = createServerFn({ method: "POST" })
+	.validator(pairSchema)
+	.handler(async ({ data }) =>
+		apiRequest<Transaction>("/transactions/link-transfer", { method: "POST", body: data }),
 	);
 
 /** Where the spending went, for the map: marked expenses grouped by spot. */
