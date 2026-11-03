@@ -1,6 +1,8 @@
 import Grid from "@mui/material/Grid";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
+import { useState } from "react";
+import { placeOf, placePayload, type PlaceValue } from "#/lib/places";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
 import { createVendorFn, updateVendorFn } from "#/server/vendors";
@@ -8,6 +10,7 @@ import type { Category, Tag, Vendor } from "#/types/api";
 import CategoryField from "./CategoryField";
 import CurrencyField from "./CurrencyField";
 import FormDialog from "./FormDialog";
+import LocationField from "./LocationField";
 import { useNotify } from "./Notify";
 import TagsField from "./TagsField";
 
@@ -29,6 +32,7 @@ export default function VendorForm({
 	const { run, pending, error } = useAction();
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
+	const [location, setLocation] = useState<PlaceValue | null>(vendor ? placeOf(vendor) : null);
 
 	async function submit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault();
@@ -44,6 +48,7 @@ export default function VendorForm({
 			contact: text("contact") || null,
 			default_category: text("default_category") || null,
 			default_tags: f.getAll("default_tags").map(String),
+			...placePayload(location),
 		};
 
 		const ok = await run(() =>
@@ -122,6 +127,9 @@ export default function VendorForm({
 						placeholder="Phone, email, contact person…"
 						slotProps={{ htmlInput: { maxLength: 255 } }}
 					/>
+				</Grid>
+				<Grid size={12}>
+					<LocationField value={location} onChange={setLocation} title="Where it usually is" />
 				</Grid>
 				<Grid size={12}>
 					<TextField

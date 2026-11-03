@@ -1,0 +1,61 @@
+/* Maps (Leaflet). Leaflet writes colours as SVG attributes, which cannot hold var(), so the marks
+   take their colours from these classes and follow light and dark mode. */
+
+.maalu-map.leaflet-container {
+	background: var(--md-sys-color-surface-container-high);
+	border-radius: var(--shape-lg);
+	font: inherit;
+}
+
+/* The tiles are light: in dark mode flip them so the map does not glare. */
+[data-mui-color-scheme="dark"] .maalu-map .leaflet-tile-pane {
+	filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9);
+}
+@media (prefers-color-scheme: dark) {
+	:root:not([data-mui-color-scheme="light"]):not([data-mui-color-scheme="dark"])
+		.maalu-map
+		.leaflet-tile-pane {
+		filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9);
+	}
+}
+
+.maalu-map .leaflet-control-attribution {
+	background: color-mix(in srgb, var(--md-sys-color-surface) 80%, transparent);
+	color: var(--md-sys-color-on-surface-variant);
+	font-size: 10px;
+}
+.maalu-map .leaflet-control-attribution a {
+	color: var(--md-sys-color-primary);
+}
+
+/* a spot with spending */
+.maalu-place {
+	fill: var(--chart-expense);
+	fill-opacity: 0.45;
+	stroke: var(--chart-expense);
+	stroke-width: 2px;
+	cursor: pointer;
+}
+.maalu-place.is-focused {
+	fill-opacity: 0.8;
+	stroke: var(--md-sys-color-on-surface);
+}
+
+/* the pin you drop */
+.maalu-pin {
+	width: 28px;
+	height: 28px;
+	margin: -28px 0 0 -14px;
+	border-radius: 50% 50% 50% 0;
+	transform: rotate(-45deg);
+	background: var(--md-sys-color-primary);
+	border: 2px solid var(--md-sys-color-on-primary);
+	box-shadow: var(--elev-2);
+}
+.maalu-pin::after {
+	content: "";
+	position: absolute;
+	inset: 7px;
+	border-radius: 50%;
+	background: var(--md-sys-color-on-primary);
+}

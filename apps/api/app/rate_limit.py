@@ -26,6 +26,8 @@ LOGIN_IP_FAILURES = 30
 TWO_FACTOR_IP_FAILURES = 20
 REGISTER_WINDOW = 60 * 60
 REGISTER_IP_ATTEMPTS = 10
+PLACE_SEARCH_WINDOW = 60
+PLACE_SEARCH_PER_USER = 20  # a search a few seconds apart is a person; more is a script
 
 # Memory bound: when this many keys are held, the ones not seen for the longest window are dropped.
 MAX_KEYS = 10_000
@@ -131,3 +133,11 @@ def check_register(ip: str) -> None:
         return
     limiter.check(f"register:ip:{ip}", REGISTER_IP_ATTEMPTS, REGISTER_WINDOW)
     limiter.record(f"register:ip:{ip}", REGISTER_WINDOW)
+
+
+def check_place_search(user_id: object) -> None:
+    """Every search counts: each one goes to a service that is not ours."""
+    if not _on():
+        return
+    limiter.check(f"places:user:{user_id}", PLACE_SEARCH_PER_USER, PLACE_SEARCH_WINDOW)
+    limiter.record(f"places:user:{user_id}", PLACE_SEARCH_WINDOW)

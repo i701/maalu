@@ -1,7 +1,18 @@
 import uuid
 from datetime import UTC, datetime
+from decimal import Decimal
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text, UniqueConstraint, Uuid, func
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Numeric,
+    String,
+    Text,
+    UniqueConstraint,
+    Uuid,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
@@ -40,6 +51,11 @@ class Vendor(Base):
     default_tags: Mapped[list[Tag]] = relationship(
         secondary=vendor_tags, lazy="selectin", order_by=Tag.normalized_name
     )
+    # Where this vendor usually is (a shop's spot on the map), pre-filled on a transaction when the
+    # vendor is picked. Both coordinates or neither; a convenience, never applied by the API.
+    latitude: Mapped[Decimal | None] = mapped_column(Numeric(9, 6), default=None)
+    longitude: Mapped[Decimal | None] = mapped_column(Numeric(9, 6), default=None)
+    place: Mapped[str | None] = mapped_column(String(200), default=None)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

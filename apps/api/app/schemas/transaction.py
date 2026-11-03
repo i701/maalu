@@ -10,7 +10,7 @@ from app.schemas.account import AccountRef
 from app.schemas.group import GroupRef
 from app.schemas.subscription import SubscriptionRef
 from app.schemas.tag import TagNames, TagRef
-from app.schemas.types import CurrencyCode, ExchangeRate
+from app.schemas.types import CurrencyCode, ExchangeRate, Latitude, Longitude, PlaceName
 from app.schemas.vendor import VendorName, VendorRef, VendorResponse
 
 # Decimal in, Decimal out: JSON serialises as a string, so no float rounding on the wire.
@@ -118,6 +118,13 @@ class TransactionCreate(VendorRef):
         default=None,
         description="Tags by name, found or created. They belong to the whole transaction.",
     )
+    latitude: Latitude | None = Field(
+        default=None, description="Where it happened. Send both coordinates or neither."
+    )
+    longitude: Longitude | None = None
+    place: PlaceName | None = Field(
+        default=None, description="A name for that spot, such as a shop. Needs the coordinates."
+    )
     account_id: uuid.UUID | None = Field(
         default=None,
         description="Income/expense: optional, and the transaction uses its currency. "
@@ -141,6 +148,10 @@ class TransactionCreate(VendorRef):
 
     @model_validator(mode="after")
     def _check_shape(self):
+        if (self.latitude is None) != (self.longitude is None):
+            raise ValueError("Send both a latitude and a longitude, or neither")
+        if self.place and self.latitude is None:
+            raise ValueError("A place needs its coordinates")
         if self.type is TransactionType.TRANSFER:
             if self.account_id is None or self.to_account_id is None:
                 raise ValueError("A transfer needs account_id (from) and to_account_id (to)")
@@ -194,6 +205,11 @@ class TransactionUpdate(VendorRef):
     description: str | None = None
     transaction_date: date | None = None
     transaction_time: time | None = None  # explicit null clears
+    latitude: Latitude | None = Field(
+        default=None, description="Explicit null removes the location (send all three as null)."
+    )
+    longitude: Longitude | None = None
+    place: PlaceName | None = None
     planned: bool | None = None
     splits: list[SplitInput] | None = Field(
         default=None,
@@ -238,6 +254,9 @@ class TransactionResponse(BaseModel):
     description: str | None
     transaction_date: date
     transaction_time: time | None
+    latitude: Decimal | None = Field(description="Where it happened, if you marked it")
+    longitude: Decimal | None
+    place: str | None = Field(description="A name for that spot, if you gave one")
     planned: bool
     splits: list[SplitResponse]
     refund_of: RefundOfRef | None = Field(
@@ -361,3 +380,19 @@ class TransactionTotals(BaseModel):
         default=Decimal(0), description="What refunds gave back, already taken off `expense`."
     )
     currency: str
+
+
+class PlaceTotal(BaseModel):
+    """Spending at one spot: transactions marked within about 100 m of each other."""
+
+    latitude: Decimal = Field(description="The middle of the transactions at this spot")
+    longitude: Decimal
+    place: str | None = Field(description="The name most of them gave it, if any")
+    count: int
+    spent: Decimal = Field(description="In your base currency, with refunds taken off")
+    last_date: date = Field(description="The most recent of them")
+
+
+class PlaceTotals(BaseModel):
+    currency: str
+    places: list[PlaceTotal]

@@ -87,6 +87,7 @@ import { getCategoryFn, listCategoriesFn } from "#/server/categories";
 import { listGroupsFn } from "#/server/groups";
 import { getMeFn } from "#/server/auth";
 import RefundDialogHost from "#/components/RefundDialogHost";
+import { placeLabel } from "#/lib/places";
 import { canLinkRefund, canRefund, isRefund, wasRefunded } from "#/lib/refund";
 import { useRefundDialog } from "#/lib/use-refund-dialog";
 import { listTagsFn } from "#/server/tags";
@@ -321,6 +322,9 @@ function TxStatsChips({ t }: { t: Transaction }) {
 					label="Adjustment"
 					title="A correction that makes the account match its bank: not income or spending"
 				/>
+			)}
+			{t.latitude != null && (
+				<TonalChip accent={ACCENT.pink} label={placeLabel(t)} title="Marked on the map" />
 			)}
 			{t.account?.exclude_from_stats && (
 				<TonalChip

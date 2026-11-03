@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { SUGGESTED_PAYMENT_METHOD } from "#/lib/accounts";
 import { isFuture, localToday } from "#/lib/planned";
+import type { PlaceValue } from "#/lib/places";
 import type { AccountRef, PaymentMethod, Transaction, TransactionType } from "#/types/api";
 import { initialValues, seedFromTransaction, type SubRef, type TransactionSeed } from "./request";
 
@@ -38,6 +39,8 @@ export function useFormFields({
 	// The day the form is for: the exchange-rate suggestion follows it.
 	const [date, setDate] = useState(transaction?.transaction_date ?? localToday());
 	const [switched, setSwitched] = useState(false); // true once the user has changed the type
+	// Where it happened, if marked on the map.
+	const [location, setLocation] = useState<PlaceValue | null>(filled.seed?.location ?? null);
 	// Planned: coming up, not happened yet. It turns on by itself when the date is in the future,
 	// until you set it yourself (an existing transaction keeps what it has).
 	const [planned, setPlannedState] = useState(transaction?.planned ?? false);
@@ -85,6 +88,7 @@ export function useFormFields({
 		setCurrency(v.currency);
 		setPaymentMethod(v.paymentMethod);
 		setSubscription(v.subscription);
+		setLocation(next.location);
 		setSwitched(false);
 	}
 
@@ -112,6 +116,8 @@ export function useFormFields({
 		planned,
 		setPlanned,
 		switched,
+		location,
+		setLocation,
 		pickAccount,
 		changeType,
 		fillFrom,

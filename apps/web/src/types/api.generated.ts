@@ -1023,6 +1023,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/places/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search For Places
+         * @description Find places by name, to put a pin on the map. Only the text you typed (and roughly where the
+         *     map is) is sent to the geocoder, only when you search, and never to anyone else. 404 when the
+         *     server has place search turned off; 429 past 20 searches a minute.
+         */
+        get: operations["search_for_places_api_v1_places_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/stats/balance-trend": {
         parameters: {
             query?: never;
@@ -1417,6 +1439,27 @@ export interface paths {
          *     asking to narrow the filters.
          */
         get: operations["matching_transaction_ids_api_v1_transactions_ids_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/transactions/places": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Spending Places
+         * @description Where your spending went, for the map: expenses you marked with a location, grouped by spot
+         *     (about 100 m), biggest first, in your base currency with refunds taken off.
+         */
+        get: operations["spending_places_api_v1_transactions_places_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2996,6 +3039,71 @@ export interface components {
          * @enum {string}
          */
         PaymentMethod: "cash" | "bank_transfer" | "debit_card" | "credit_card" | "other";
+        /** PlaceSearchHit */
+        PlaceSearchHit: {
+            /**
+             * Address
+             * @description The full address as the geocoder gives it
+             */
+            address: string;
+            /** Latitude */
+            latitude: string;
+            /** Longitude */
+            longitude: string;
+            /**
+             * Name
+             * @description What the place is called (a shop's name, a street, a town)
+             */
+            name: string;
+        };
+        /** PlaceSearchResponse */
+        PlaceSearchResponse: {
+            /** Results */
+            results: components["schemas"]["PlaceSearchHit"][];
+            /**
+             * Source
+             * @description The service that answered
+             */
+            source: string;
+        };
+        /**
+         * PlaceTotal
+         * @description Spending at one spot: transactions marked within about 100 m of each other.
+         */
+        PlaceTotal: {
+            /** Count */
+            count: number;
+            /**
+             * Last Date
+             * Format: date
+             * @description The most recent of them
+             */
+            last_date: string;
+            /**
+             * Latitude
+             * @description The middle of the transactions at this spot
+             */
+            latitude: string;
+            /** Longitude */
+            longitude: string;
+            /**
+             * Place
+             * @description The name most of them gave it, if any
+             */
+            place: string | null;
+            /**
+             * Spent
+             * @description In your base currency, with refunds taken off
+             */
+            spent: string;
+        };
+        /** PlaceTotals */
+        PlaceTotals: {
+            /** Currency */
+            currency: string;
+            /** Places */
+            places: components["schemas"]["PlaceTotal"][];
+        };
         /**
          * PostPlanned
          * @description Turn a planned transaction into a real one. Every field is optional: leave one out to keep
@@ -3666,7 +3774,19 @@ export interface components {
              * @description Base-currency units per 1 unit of `currency`. Required when `currency` differs from your base currency.
              */
             exchange_rate?: number | string | null;
+            /**
+             * Latitude
+             * @description Where it happened. Send both coordinates or neither.
+             */
+            latitude?: number | string | null;
+            /** Longitude */
+            longitude?: number | string | null;
             payment_method?: components["schemas"]["PaymentMethod"] | null;
+            /**
+             * Place
+             * @description A name for that spot, such as a shop. Needs the coordinates.
+             */
+            place?: string | null;
             /**
              * Planned
              * @description Something coming up that has not happened yet. It counts toward nothing until it is posted.
@@ -3771,12 +3891,24 @@ export interface components {
              */
             id: string;
             /**
+             * Latitude
+             * @description Where it happened, if you marked it
+             */
+            latitude: string | null;
+            /**
              * Link Count
              * @description How many web links are attached
              * @default 0
              */
             link_count: number;
+            /** Longitude */
+            longitude: string | null;
             payment_method: components["schemas"]["PaymentMethod"];
+            /**
+             * Place
+             * @description A name for that spot, if you gave one
+             */
+            place: string | null;
             /** Planned */
             planned: boolean;
             /** @description Set on a refund: the purchase it gives money back for. */
@@ -3856,7 +3988,16 @@ export interface components {
             description?: string | null;
             /** Exchange Rate */
             exchange_rate?: number | string | null;
+            /**
+             * Latitude
+             * @description Explicit null removes the location (send all three as null).
+             */
+            latitude?: number | string | null;
+            /** Longitude */
+            longitude?: number | string | null;
             payment_method?: components["schemas"]["PaymentMethod"] | null;
+            /** Place */
+            place?: string | null;
             /** Planned */
             planned?: boolean | null;
             /**
@@ -4053,8 +4194,20 @@ export interface components {
             default_tags?: string[];
             /** Is Local */
             is_local?: boolean | null;
+            /**
+             * Latitude
+             * @description Where it usually is. Send both coordinates or neither.
+             */
+            latitude?: number | string | null;
+            /** Longitude */
+            longitude?: number | string | null;
             /** Name */
             name: string;
+            /**
+             * Place
+             * @description A name for that spot
+             */
+            place?: string | null;
         };
         /**
          * VendorLocality
@@ -4095,8 +4248,20 @@ export interface components {
             id: string;
             /** Is Local */
             is_local: boolean | null;
+            /**
+             * Latitude
+             * @description Where it usually is. Send both coordinates or neither.
+             */
+            latitude: string | null;
+            /** Longitude */
+            longitude: string | null;
             /** Name */
             name: string;
+            /**
+             * Place
+             * @description A name for that spot
+             */
+            place: string | null;
         };
         /**
          * VendorUpdate
@@ -4121,8 +4286,20 @@ export interface components {
             default_tags?: string[] | null;
             /** Is Local */
             is_local?: boolean | null;
+            /**
+             * Latitude
+             * @description Where it usually is. Send both coordinates or neither.
+             */
+            latitude?: number | string | null;
+            /** Longitude */
+            longitude?: number | string | null;
             /** Name */
             name?: string | null;
+            /**
+             * Place
+             * @description A name for that spot
+             */
+            place?: string | null;
         };
     };
     responses: never;
@@ -6118,6 +6295,42 @@ export interface operations {
             };
         };
     };
+    search_for_places_api_v1_places_search_get: {
+        parameters: {
+            query: {
+                /** @description What to look for */
+                q: string;
+                /** @description Where the map is: prefers nearby places */
+                near_lat?: number | null;
+                near_lng?: number | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlaceSearchResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     balance_trend_api_v1_stats_balance_trend_get: {
         parameters: {
             query: {
@@ -7126,6 +7339,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": string[];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    spending_places_api_v1_transactions_places_get: {
+        parameters: {
+            query?: {
+                /** @description Inclusive, YYYY-MM-DD */
+                date_from?: string | null;
+                /** @description Inclusive, YYYY-MM-DD */
+                date_to?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlaceTotals"];
                 };
             };
             /** @description Validation Error */

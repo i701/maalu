@@ -98,6 +98,35 @@ VENDORS = {
     "Namecheap": (False, "USD", None, None),
 }
 
+# Where the local vendors are (latitude, longitude), so the demo data has a map to look at. Every
+# purchase from one is marked there, with a little scatter so a spot is a handful of nearby points.
+PLACES = {
+    "Ensis Mart": (4.1752, 73.5100),
+    "Hulhumale Fresh": (4.2147, 73.5400),
+    "Male Fish Market": (4.1766, 73.5163),
+    "Island Cafe": (4.1740, 73.5085),
+    "Sea House Restaurant": (4.1782, 73.5127),
+    "Fuel Station Male": (4.1720, 73.5200),
+    "Hiya Pharmacy": (4.1768, 73.5106),
+    "Thilafushi Hardware": (4.1890, 73.4350),
+    "Bookshop Male": (4.1757, 73.5090),
+    "Cinema Male": (4.1765, 73.5115),
+    "Tropic Gym": (4.2120, 73.5380),
+}
+
+
+def _spot(vendor: str | None, rng: random.Random) -> dict:
+    """The location fields for a purchase from a vendor with a known place, else none."""
+    if vendor not in PLACES:
+        return {}
+    lat, lng = PLACES[vendor]
+    return {
+        "latitude": Decimal(str(lat + rng.uniform(-0.0003, 0.0003))).quantize(Decimal("0.000001")),
+        "longitude": Decimal(str(lng + rng.uniform(-0.0003, 0.0003))).quantize(Decimal("0.000001")),
+        "place": vendor,
+    }
+
+
 # (category, vendors (None = no vendor), amount range in MVR)
 EVERYDAY = [
     ("Groceries", ["Ensis Mart", "Hulhumale Fresh", "Male Fish Market"], (80, 600), 28),
@@ -317,7 +346,20 @@ async def seed(
         await vendors_svc.create(
             uid,
             VendorCreate(
-                name=name, is_local=is_local, currency=currency, contact=contact, address=address
+                name=name,
+                is_local=is_local,
+                currency=currency,
+                contact=contact,
+                address=address,
+                **(
+                    {
+                        "latitude": Decimal(str(PLACES[name][0])),
+                        "longitude": Decimal(str(PLACES[name][1])),
+                        "place": name,
+                    }
+                    if name in PLACES
+                    else {}
+                ),
             ),
         )
 
@@ -503,6 +545,7 @@ async def seed(
                 vendor_name=vendor,
                 account_id=account.id,
                 description=rng.choice([None, None, None, "Weekly shop", "With friends", "Urgent"]),
+                **_spot(vendor, rng),
             )
             everyday.append(bought)
             # now and then part of it goes back a few days later

@@ -20,6 +20,7 @@ import { Route as ProtectedDashboardRouteImport } from './routes/_protected/dash
 import { Route as ProtectedGroupsRouteImport } from './routes/_protected/groups'
 import { Route as ProtectedImportRouteImport } from './routes/_protected/import'
 import { Route as ProtectedNotificationsRouteImport } from './routes/_protected/notifications'
+import { Route as ProtectedPlacesRouteImport } from './routes/_protected/places'
 import { Route as ProtectedProfileRouteImport } from './routes/_protected/profile'
 import { Route as ProtectedSettingsRouteImport } from './routes/_protected/settings'
 import { Route as ProtectedSubscriptionsRouteImport } from './routes/_protected/subscriptions'
@@ -87,6 +88,11 @@ const ProtectedImportRoute = ProtectedImportRouteImport.update({
 const ProtectedNotificationsRoute = ProtectedNotificationsRouteImport.update({
   id: '/notifications',
   path: '/notifications',
+  getParentRoute: () => ProtectedRoute,
+} as any)
+const ProtectedPlacesRoute = ProtectedPlacesRouteImport.update({
+  id: '/places',
+  path: '/places',
   getParentRoute: () => ProtectedRoute,
 } as any)
 const ProtectedProfileRoute = ProtectedProfileRouteImport.update({
@@ -171,6 +177,7 @@ export interface FileRoutesByFullPath {
   '/groups': typeof ProtectedGroupsRoute
   '/import': typeof ProtectedImportRoute
   '/notifications': typeof ProtectedNotificationsRoute
+  '/places': typeof ProtectedPlacesRoute
   '/profile': typeof ProtectedProfileRoute
   '/settings': typeof ProtectedSettingsRoute
   '/subscriptions': typeof ProtectedSubscriptionsRoute
@@ -197,6 +204,7 @@ export interface FileRoutesByTo {
   '/groups': typeof ProtectedGroupsRoute
   '/import': typeof ProtectedImportRoute
   '/notifications': typeof ProtectedNotificationsRoute
+  '/places': typeof ProtectedPlacesRoute
   '/profile': typeof ProtectedProfileRoute
   '/settings': typeof ProtectedSettingsRoute
   '/subscriptions': typeof ProtectedSubscriptionsRoute
@@ -225,6 +233,7 @@ export interface FileRoutesById {
   '/_protected/groups': typeof ProtectedGroupsRoute
   '/_protected/import': typeof ProtectedImportRoute
   '/_protected/notifications': typeof ProtectedNotificationsRoute
+  '/_protected/places': typeof ProtectedPlacesRoute
   '/_protected/profile': typeof ProtectedProfileRoute
   '/_protected/settings': typeof ProtectedSettingsRoute
   '/_protected/subscriptions': typeof ProtectedSubscriptionsRoute
@@ -253,6 +262,7 @@ export interface FileRouteTypes {
     | '/groups'
     | '/import'
     | '/notifications'
+    | '/places'
     | '/profile'
     | '/settings'
     | '/subscriptions'
@@ -279,6 +289,7 @@ export interface FileRouteTypes {
     | '/groups'
     | '/import'
     | '/notifications'
+    | '/places'
     | '/profile'
     | '/settings'
     | '/subscriptions'
@@ -306,6 +317,7 @@ export interface FileRouteTypes {
     | '/_protected/groups'
     | '/_protected/import'
     | '/_protected/notifications'
+    | '/_protected/places'
     | '/_protected/profile'
     | '/_protected/settings'
     | '/_protected/subscriptions'
@@ -411,6 +423,13 @@ declare module '@tanstack/react-router' {
       path: '/notifications'
       fullPath: '/notifications'
       preLoaderRoute: typeof ProtectedNotificationsRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
+    '/_protected/places': {
+      id: '/_protected/places'
+      path: '/places'
+      fullPath: '/places'
+      preLoaderRoute: typeof ProtectedPlacesRouteImport
       parentRoute: typeof ProtectedRoute
     }
     '/_protected/profile': {
@@ -522,6 +541,7 @@ interface ProtectedRouteChildren {
   ProtectedGroupsRoute: typeof ProtectedGroupsRoute
   ProtectedImportRoute: typeof ProtectedImportRoute
   ProtectedNotificationsRoute: typeof ProtectedNotificationsRoute
+  ProtectedPlacesRoute: typeof ProtectedPlacesRoute
   ProtectedProfileRoute: typeof ProtectedProfileRoute
   ProtectedSettingsRoute: typeof ProtectedSettingsRoute
   ProtectedSubscriptionsRoute: typeof ProtectedSubscriptionsRoute
@@ -540,6 +560,7 @@ const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedGroupsRoute: ProtectedGroupsRoute,
   ProtectedImportRoute: ProtectedImportRoute,
   ProtectedNotificationsRoute: ProtectedNotificationsRoute,
+  ProtectedPlacesRoute: ProtectedPlacesRoute,
   ProtectedProfileRoute: ProtectedProfileRoute,
   ProtectedSettingsRoute: ProtectedSettingsRoute,
   ProtectedSubscriptionsRoute: ProtectedSubscriptionsRoute,

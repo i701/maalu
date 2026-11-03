@@ -137,6 +137,11 @@ class VendorService:
         if "default_tags" in changes:
             tags = changes.pop("default_tags") or []
             vendor.default_tags = await self.tags.resolve_many(vendor.user_id, tags)
+        if changes.keys() & {"latitude", "longitude"}:
+            lat = changes.get("latitude", vendor.latitude)
+            lng = changes.get("longitude", vendor.longitude)
+            if lat is None or lng is None:  # one of them cleared: the spot is gone, name and all
+                changes.update(latitude=None, longitude=None, place=None)
         for field, value in changes.items():
             setattr(vendor, field, value)
         try:
@@ -151,8 +156,8 @@ class VendorService:
         """Move everything from `source` to `target`, then delete `source`.
 
         Transactions (trashed ones too), subscriptions, templates and remembered statement names
-        follow. Details the target lacks (address, contact, currency, local or foreign, usual
-        category and tags) are taken from the source; what the target already has is kept.
+        follow. Details the target lacks (address, contact, currency, local or foreign, location,
+        usual category and tags) are taken from the source; what the target already has is kept.
         """
         if source.id == target.id:
             raise VendorNameTakenError
@@ -163,6 +168,12 @@ class VendorService:
         for field in ("address", "contact", "currency", "is_local"):
             if getattr(target, field) is None and getattr(source, field) is not None:
                 setattr(target, field, getattr(source, field))
+        if target.latitude is None and source.latitude is not None:
+            target.latitude, target.longitude, target.place = (
+                source.latitude,
+                source.longitude,
+                source.place,
+            )
         if target.default_category_ref is None:
             target.default_category_ref = source.default_category_ref
         if not target.default_tags:

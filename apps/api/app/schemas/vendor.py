@@ -13,7 +13,7 @@ from pydantic import (
 
 from app.schemas.category import CategoryName
 from app.schemas.tag import TagNames, TagRef
-from app.schemas.types import CurrencyCode
+from app.schemas.types import CurrencyCode, Latitude, Longitude, PlaceName
 
 VendorName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 
@@ -23,11 +23,27 @@ class _VendorDetails(BaseModel):
     is_local: bool | None = None
     currency: CurrencyCode | None = None
     contact: Annotated[str, StringConstraints(strip_whitespace=True, max_length=255)] | None = None
+    latitude: Latitude | None = Field(
+        default=None, description="Where it usually is. Send both coordinates or neither."
+    )
+    longitude: Longitude | None = None
+    place: PlaceName | None = Field(default=None, description="A name for that spot")
 
-    @field_validator("address", "contact")
+    @field_validator("address", "contact", "place")
     @classmethod
     def _blank_to_none(cls, v: str | None) -> str | None:
         return v or None
+
+    @model_validator(mode="after")
+    def _location_goes_together(self):
+        sent = self.model_fields_set
+        if ("latitude" in sent or "longitude" in sent) and (
+            (self.latitude is None) != (self.longitude is None)
+        ):
+            raise ValueError("Send both a latitude and a longitude, or neither")
+        if self.place and self.latitude is None:
+            raise ValueError("A place needs its coordinates")
+        return self
 
 
 class VendorCreate(_VendorDetails):

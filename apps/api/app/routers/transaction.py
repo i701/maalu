@@ -14,6 +14,7 @@ from app.schemas import (
     BulkResult,
     BulkUpdate,
     CategoryTotals,
+    PlaceTotals,
     PostPlanned,
     TagMatch,
     TransactionCreate,
@@ -456,6 +457,22 @@ async def list_trash(
     """Deleted transactions, most recently deleted first. They count toward nothing."""
     set_total(response, await service.count_trashed(user_id))
     return await service.list_trashed(user_id, limit=page.limit, offset=page.offset)
+
+
+@router.get("/places", response_model=PlaceTotals)
+async def spending_places(
+    user_id: CurrentUserId,
+    service: TransactionServiceDep,
+    date_from: Annotated[date | None, Query(description="Inclusive, YYYY-MM-DD")] = None,
+    date_to: Annotated[date | None, Query(description="Inclusive, YYYY-MM-DD")] = None,
+):
+    """Where your spending went, for the map: expenses you marked with a location, grouped by spot
+    (about 100 m), biggest first, in your base currency with refunds taken off."""
+    _check_dates(date_from, date_to)
+    return PlaceTotals(
+        currency=await service.base_currency(user_id),
+        places=await service.places(user_id, date_from=date_from, date_to=date_to),
+    )
 
 
 @router.get("/{transaction_id}", response_model=TransactionResponse)

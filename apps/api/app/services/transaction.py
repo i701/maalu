@@ -1,4 +1,6 @@
+import math
 import uuid
+from collections import Counter
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -25,6 +27,7 @@ from app.schemas import (
     BulkUpdate,
     CategoryTotal,
     CategoryTotals,
+    PlaceTotal,
     PostPlanned,
     SplitInput,
     TagMatch,
@@ -45,6 +48,9 @@ from app.services.vendor import VendorNotFoundError, VendorService
 TRANSFER_PAYMENT_METHOD = PaymentMethod.OTHER
 
 # Changing any of these means the money fields have to be recomputed.
+SPOT_DEGREES = 0.0009  # places closer than this to a spot's middle (about 100 m) are the same spot
+COORDINATE = Decimal("0.000001")
+
 MONEY_KEYS = {
     "type",
     "amount",
@@ -120,6 +126,9 @@ class TransactionService:
         if account.archived_at is not None and not keep_archived:
             raise TransactionRuleError(f'"{account.name}" is archived. Unarchive it to use it')
         return account
+
+    async def base_currency(self, user_id: uuid.UUID) -> str:
+        return await self._base_currency(user_id)
 
     async def _base_currency(self, user_id: uuid.UUID) -> str:
         user = await self.db.get(User, user_id)
@@ -405,6 +414,16 @@ class TransactionService:
         return Decimal(str(getattr(transaction, "refunded_amount", 0) or 0)) > 0
 
     @staticmethod
+    def _check_location(transaction: Transaction) -> None:
+        """Both coordinates or neither, and a name only with them. A blank name is no name."""
+        if (transaction.latitude is None) != (transaction.longitude is None):
+            raise TransactionRuleError("Give both a latitude and a longitude, or neither")
+        if transaction.place is not None and not transaction.place.strip():
+            transaction.place = None
+        if transaction.place and transaction.latitude is None:
+            raise TransactionRuleError("A place needs its coordinates")
+
+    @staticmethod
     def _check_splits(transaction: Transaction) -> None:
         """If the transaction is split, its lines must add up to the amount, and its own category
         follows the biggest line so category filters and the list keep working."""
@@ -522,6 +541,9 @@ class TransactionService:
             description=data.description,
             transaction_date=data.transaction_date,
             transaction_time=data.transaction_time,
+            latitude=data.latitude,
+            longitude=data.longitude,
+            place=data.place or None,
             planned=data.planned,
             account=account,
             to_account=to_account,
@@ -540,6 +562,70 @@ class TransactionService:
         await self.db.flush()
         await self.db.refresh(transaction)
         return transaction
+
+    async def places(
+        self,
+        user_id: uuid.UUID,
+        *,
+        date_from: date | None = None,
+        date_to: date | None = None,
+    ) -> list[PlaceTotal]:
+        """Where the spending went: expenses (with refunds taken off) that were marked on the map,
+        grouped by spot (points within about 100 m of each other), biggest first."""
+        stmt = select(
+            Transaction.latitude,
+            Transaction.longitude,
+            Transaction.place,
+            Transaction.transaction_date,
+            Transaction.spending_base(),
+        ).where(
+            Transaction.user_id == user_id,
+            Transaction.reported(),
+            Transaction.spending(),
+            Transaction.latitude.is_not(None),
+            Transaction.longitude.is_not(None),
+        )
+        if date_from is not None:
+            stmt = stmt.where(Transaction.transaction_date >= date_from)
+        if date_to is not None:
+            stmt = stmt.where(Transaction.transaction_date <= date_to)
+        points = sorted((await self.db.execute(stmt)).all(), key=lambda r: (r[0], r[1], r[3]))
+        # Group points that are within about 100 m of a spot's middle (not a fixed grid, which would
+        # split a spot that straddles a cell edge). The middle is the running average.
+        spots: list[dict] = []
+        for lat, lng, place, day, spent in points:
+            for spot in spots:
+                dy = float(lat) - spot["lat"]
+                dx = (float(lng) - spot["lng"]) * math.cos(math.radians(spot["lat"]))
+                if math.hypot(dx, dy) <= SPOT_DEGREES:
+                    spot["rows"].append((lat, lng, place, day, spent))
+                    n = len(spot["rows"])
+                    spot["lat"] += (float(lat) - spot["lat"]) / n
+                    spot["lng"] += (float(lng) - spot["lng"]) / n
+                    break
+            else:
+                spots.append(
+                    {"lat": float(lat), "lng": float(lng), "rows": [(lat, lng, place, day, spent)]}
+                )
+        out = []
+        for spot in spots:
+            rows = spot["rows"]
+            names = Counter(r[2] for r in rows if r[2])
+            out.append(
+                PlaceTotal(
+                    latitude=(sum((r[0] for r in rows), Decimal(0)) / len(rows)).quantize(
+                        COORDINATE
+                    ),
+                    longitude=(sum((r[1] for r in rows), Decimal(0)) / len(rows)).quantize(
+                        COORDINATE
+                    ),
+                    place=names.most_common(1)[0][0] if names else None,
+                    count=len(rows),
+                    spent=sum((r[4] for r in rows), Decimal(0)),
+                    last_date=max(r[3] for r in rows),
+                )
+            )
+        return sorted(out, key=lambda p: (-p.spent, -p.count))
 
     async def _family(
         self, user_id: uuid.UUID, category_id: uuid.UUID | None
@@ -1297,6 +1383,7 @@ class TransactionService:
         for field, value in changes.items():
             setattr(transaction, field, value)
         self._check_splits(transaction)
+        self._check_location(transaction)
         if original is not None:
             await self._check_refund(
                 original,

@@ -6,6 +6,7 @@ import {
 	type ApiResult,
 	type BulkResult,
 	type CategoryTotals,
+	type PlaceTotals,
 	type Transaction,
 	type TransactionTotals,
 } from "#/types/api";
@@ -46,6 +47,13 @@ const splitSchema = z.object({
 	refund_of_split_id: z.uuid().optional(),
 });
 
+/** A coordinate as a decimal string with up to six decimals, within +-`limit` degrees. */
+const coordinate = (limit: number) =>
+	z
+		.string()
+		.regex(/^-?\d{1,3}(\.\d{1,6})?$/, "Enter a valid coordinate")
+		.refine((v) => Math.abs(Number(v)) <= limit, `Must be within ${limit} degrees`);
+
 const createSchema = z.object({
 	type: z.enum(TRANSACTION_TYPES),
 	amount,
@@ -67,6 +75,10 @@ const createSchema = z.object({
 	to_amount: amount.optional(),
 	tags: z.array(z.string().trim().min(1).max(50)).max(10).optional(),
 	planned: z.boolean().optional(),
+	// where it happened: both coordinates or neither (null removes them when updating)
+	latitude: coordinate(90).nullable().optional(),
+	longitude: coordinate(180).nullable().optional(),
+	place: z.string().trim().max(200).nullable().optional(),
 });
 
 const updateSchema = z.object({
@@ -321,5 +333,19 @@ export const listRefundCandidatesFn = createServerFn({ method: "GET" })
 	.handler(async ({ data }) =>
 		apiRequest<Transaction[]>(`/transactions/${data.id}/refund-candidates`, {
 			query: { q: data.q || undefined, limit: 20 },
+		}),
+	);
+
+/** Where the spending went, for the map: marked expenses grouped by spot. */
+export const getPlacesFn = createServerFn({ method: "GET" })
+	.validator(
+		z.object({
+			date_from: z.iso.date().optional(),
+			date_to: z.iso.date().optional(),
+		}),
+	)
+	.handler(async ({ data }) =>
+		apiRequest<PlaceTotals>("/transactions/places", {
+			query: { date_from: data.date_from, date_to: data.date_to },
 		}),
 	);

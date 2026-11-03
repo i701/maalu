@@ -115,6 +115,11 @@ class Transaction(Base):
     # Optional time of day on that date, as the clock on the wall read (no time zone). It only
     # orders the transactions of one day; the ones without a time come after the ones with one.
     transaction_time: Mapped[time | None] = mapped_column(Time, default=None)
+    # Where it happened, as a point on the map (degrees, six decimals) with an optional name. Both
+    # coordinates or neither; a name needs them. Nothing here is looked up: you drop the pin.
+    latitude: Mapped[Decimal | None] = mapped_column(Numeric(9, 6), default=None)
+    longitude: Mapped[Decimal | None] = mapped_column(Numeric(9, 6), default=None)
+    place: Mapped[str | None] = mapped_column(String(200), default=None)
     # Labels that cut across categories. Belong to the whole transaction, not to its items.
     tags: Mapped[list[Tag]] = relationship(
         secondary=transaction_tags, lazy="selectin", order_by=Tag.normalized_name

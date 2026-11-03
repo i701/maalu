@@ -1,5 +1,6 @@
 import { SUGGESTED_PAYMENT_METHOD } from "#/lib/accounts";
 import { toScaled } from "#/lib/decimal";
+import { newPlacePayload, placeOf, placePayload, type PlaceValue } from "#/lib/places";
 import type { TemplateDraft } from "#/server/templates";
 import { createTransactionFn, updateTransactionFn } from "#/server/transactions";
 import type { SplitsState } from "./useSplits";
@@ -29,7 +30,7 @@ export type TransactionSeed = Pick<
 	| "subscription"
 	| "account"
 	| "to_account"
-> & { vendorName: string; tags: string[] };
+> & { vendorName: string; tags: string[]; location: PlaceValue | null };
 
 /** "45.0000" as "45", "12.5000" as "12.5": the API sends four decimals, a person types fewer. */
 const trimZeros = (amount: string) =>
@@ -53,6 +54,7 @@ export function seedFromTransaction(t: Transaction): TransactionSeed {
 		to_account: t.to_account,
 		vendorName: t.vendor?.name ?? "",
 		tags: t.tags.map((x) => x.name),
+		location: placeOf(t),
 	};
 }
 
@@ -72,6 +74,7 @@ export function seedFromTemplate(t: TransactionTemplate): TransactionSeed {
 		to_account: t.to_account,
 		vendorName: t.vendor ?? "",
 		tags: t.tags.map((x) => x.name),
+		location: null,
 	};
 }
 
@@ -94,6 +97,7 @@ export function seedAfterSave(f: FormData, s: State): TransactionSeed {
 		to_account: s.type === "transfer" ? s.toAccount : null,
 		vendorName: s.type === "transfer" ? "" : text(f, "vendor"),
 		tags: tagNames(f),
+		location: s.type === "transfer" ? null : s.location,
 	};
 }
 
@@ -148,6 +152,8 @@ type State = {
 	planned: boolean;
 	/** The item table, when it is switched on (not for transfers). */
 	splits: SplitsState | null;
+	/** Where it happened, if marked on the map (not for transfers). */
+	location: PlaceValue | null;
 };
 
 const text = (f: FormData, k: string) => String(f.get(k) ?? "").trim();
@@ -243,6 +249,7 @@ function ordinaryRequest(f: FormData, s: State): TransactionRequest {
 						subscription_id: subscription?.id,
 						account_id: accountId || undefined,
 						tags: tagNames(f),
+						...newPlacePayload(s.location),
 					},
 				}),
 		};
@@ -260,6 +267,7 @@ function ordinaryRequest(f: FormData, s: State): TransactionRequest {
 						...(!split && transaction.splits.length > 0 ? { splits: null } : {}),
 						description: description || null,
 						tags: tagNames(f), // replaces the tags: an empty list removes them
+						...placePayload(s.location), // all three null removes the location
 						// changed -> link / unlink; unchanged -> omit
 						...(accountId === (transaction.account?.id ?? "")
 							? {}

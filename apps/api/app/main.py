@@ -15,6 +15,7 @@ from app.routers import (
     group,
     imports,
     notification,
+    place,
     stats,
     subscription,
     tag,
@@ -56,4 +57,5 @@ def create_app() -> FastAPI:
     app.include_router(group.router, prefix="/api/v1")
     app.include_router(imports.router, prefix="/api/v1")
     app.include_router(notification.router, prefix="/api/v1")
+    app.include_router(place.router, prefix="/api/v1")
     return app

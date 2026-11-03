@@ -27,6 +27,14 @@ class Settings(BaseSettings):
     currency_source_url: str = "https://api.frankfurter.dev/v2/rates"
     exchange_rate_timeout_seconds: float = 5.0
     currency_cache_ttl_seconds: int = 24 * 60 * 60
+    # Searching for a place by name when marking a location on the map. It asks a geocoder
+    # (Nominatim by default: its public server wants light personal use, an identifying
+    # User-Agent and at most one request a second, all of which `services/geocode.py` keeps to).
+    # What a user types into that search box is sent to it; nothing else is. Set it empty to turn
+    # place search off (the map still works by clicking), or point it at your own Nominatim.
+    geocoder_url: str = "https://nominatim.openstreetmap.org/search"
+    geocoder_user_agent: str = "Maalu (self-hosted personal finance; https://github.com/i701/maalu)"
+    geocoder_timeout_seconds: float = 8.0
     # Where transaction attachments (receipts) are kept. With a bucket set they go to any
     # S3-compatible store (AWS S3, Cloudflare R2, MinIO, floci in development); without one they go
     # to a folder on disk, which is the default and needs nothing set up (mount a volume on it).

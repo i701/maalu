@@ -14,6 +14,16 @@ const vendorFields = {
 	is_local: z.boolean().nullable(),
 	currency,
 	contact: z.string().max(255).nullable(),
+	// where it usually is: both coordinates or neither
+	latitude: z
+		.string()
+		.regex(/^-?\d{1,3}(\.\d{1,6})?$/)
+		.nullable(),
+	longitude: z
+		.string()
+		.regex(/^-?\d{1,3}(\.\d{1,6})?$/)
+		.nullable(),
+	place: z.string().trim().max(200).nullable(),
 };
 
 const defaults = {

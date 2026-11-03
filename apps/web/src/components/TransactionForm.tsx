@@ -17,11 +17,13 @@ import {
 	type TransactionType,
 	type Vendor,
 } from "#/types/api";
+import { placeOf } from "#/lib/places";
 import AttachmentsField from "./AttachmentsField";
 import FormDialog from "./FormDialog";
 import { useNotify } from "./Notify";
 import SaveTemplateDialog from "./SaveTemplateDialog";
 import TagsField from "./TagsField";
+import LocationField from "./LocationField";
 import VendorField from "./VendorField";
 import { formatTime } from "#/lib/format";
 import { Cell, RevealCell } from "./transaction-form/Cells";
@@ -111,12 +113,22 @@ export default function TransactionForm({
 		date,
 		planned,
 		switched,
+		location,
 	} = fields;
 	const attachments = useAttachments(transaction?.id);
 	const links = useLinks(transaction?.id);
 	const splits = useSplits(seed);
 	const vendorDefaults = useVendorDefaults(vendors, seed, !splits.enabled);
 	const subscriptionOptions = subscriptionChoices(subscriptions, transaction);
+
+	/** Picking a known vendor also marks its usual place, unless a place is already marked. */
+	function onVendorChange(value: string, fromUser: boolean) {
+		vendorDefaults.onVendorChange(value, fromUser);
+		if (!fromUser || location) return;
+		const typed = value.trim().toLowerCase();
+		const spot = placeOf(vendors.find((v) => v.name.toLowerCase() === typed) ?? {});
+		if (spot) fields.setLocation(spot);
+	}
 
 	function changeType(next: TransactionType) {
 		fields.changeType(next);
@@ -142,6 +154,7 @@ export default function TransactionForm({
 		subscription,
 		planned,
 		splits: type !== "transfer" && splits.enabled ? splits : null,
+		location: type === "transfer" ? null : location,
 	});
 
 	async function submit(e: FormEvent<HTMLFormElement>) {
@@ -278,8 +291,12 @@ export default function TransactionForm({
 						<VendorField
 							vendors={vendors}
 							defaultValue={seed?.vendorName ?? ""}
-							onValueChange={vendorDefaults.onVendorChange}
+							onValueChange={onVendorChange}
 						/>
+					</RevealCell>
+
+					<RevealCell size={12} show={!isTransfer}>
+						<LocationField value={location} onChange={fields.setLocation} />
 					</RevealCell>
 
 					<PlannedAndSubscription

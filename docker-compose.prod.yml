@@ -10,6 +10,11 @@
 #   MAALU_VERSION=latest   (a release: 1.2.0, 1.2, sha-abc1234)
 #   REGISTRATION=auto      (auto: only the first account can sign up; open: anyone; closed: no one)
 #   RATE_LIMIT=true        (slows down password and code guessing; leave it on)
+#   MAP_TILE_URL=          (map tiles for the location picker and Places page; default OpenStreetMap,
+#                           or your own tile server: https://tiles.example.com/{z}/{x}/{y}.png)
+#   MAP_ATTRIBUTION=       (credit for those tiles; a short HTML string)
+#   GEOCODER_URL=          (place search in the map picker; default Nominatim's public server, set it
+#                           empty to turn the search off)
 #   Attachments (receipts) are kept in a volume by default. To use an S3-compatible bucket instead
 #   (AWS S3, Cloudflare R2, MinIO...), set the bucket and, for anything but AWS, the endpoint:
 #   ATTACHMENTS_S3_BUCKET=  ATTACHMENTS_S3_ENDPOINT=  ATTACHMENTS_S3_REGION=auto
@@ -42,6 +47,9 @@ services:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-maalu}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-maalu}
       SECRET_KEY: ${SECRET_KEY}
       REGISTRATION: ${REGISTRATION:-auto}
+      # Place search in the map picker (a geocoder; what is typed there is sent to it). Empty turns it
+      # off. Only the default is used when this is not set at all.
+      GEOCODER_URL: ${GEOCODER_URL-https://nominatim.openstreetmap.org/search}
       RATE_LIMIT: ${RATE_LIMIT:-true}
       # Only the web container can reach this service (no published port), so trust the visitor's
       # address it passes on in X-Forwarded-For. Without this every visitor would look like the
@@ -85,6 +93,9 @@ services:
     environment:
       API_URL: http://api:8000
       SESSION_SECRET: ${SESSION_SECRET}
+      # Where the map's tiles come from; empty means OpenStreetMap's public server.
+      MAP_TILE_URL: ${MAP_TILE_URL:-}
+      MAP_ATTRIBUTION: ${MAP_ATTRIBUTION:-}
     ports:
       - "${PORT:-3000}:3000"
     depends_on:

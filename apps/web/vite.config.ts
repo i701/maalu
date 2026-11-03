@@ -34,6 +34,8 @@ export default defineConfig(({ mode }) => {
 					"AttachFile",
 					"Download",
 					"DoneAll",
+					"MyLocation",
+					"PlaceOutlined",
 					"ShowChart",
 					"InsertLinkOutlined",
 					"NotificationsNoneOutlined",

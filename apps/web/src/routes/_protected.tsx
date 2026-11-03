@@ -3,6 +3,8 @@ import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import AppShell from "#/components/AppShell";
 import RevalidateOnFocus from "#/components/RevalidateOnFocus";
 import { getSessionFn } from "#/server/auth";
+import { MapConfigProvider } from "#/lib/map-config";
+import { getMapConfigFn } from "#/server/map";
 import { unreadCountFn } from "#/server/notifications";
 
 export const Route = createFileRoute("/_protected")({
@@ -13,19 +15,21 @@ export const Route = createFileRoute("/_protected")({
 		return { user: session.user };
 	},
 	// The bell's badge. Refetched with everything else after a change and when the tab regains focus.
-	loader: async () => ({ unread: await unreadCountFn() }),
+	loader: async () => ({ unread: await unreadCountFn(), map: await getMapConfigFn() }),
 	component: ProtectedLayout,
 });
 
 function ProtectedLayout() {
 	const { user } = Route.useRouteContext();
-	const { unread } = Route.useLoaderData();
+	const { unread, map } = Route.useLoaderData();
 	return (
 		<AppShell user={user} unread={unread}>
 			<RevalidateOnFocus />
-			<Box sx={{ position: "relative" }}>
-				<Outlet />
-			</Box>
+			<MapConfigProvider value={map}>
+				<Box sx={{ position: "relative" }}>
+					<Outlet />
+				</Box>
+			</MapConfigProvider>
 		</AppShell>
 	);
 }

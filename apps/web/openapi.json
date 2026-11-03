@@ -3029,6 +3029,130 @@
         "title": "PaymentMethod",
         "type": "string"
       },
+      "PlaceSearchHit": {
+        "properties": {
+          "address": {
+            "description": "The full address as the geocoder gives it",
+            "title": "Address",
+            "type": "string"
+          },
+          "latitude": {
+            "title": "Latitude",
+            "type": "string"
+          },
+          "longitude": {
+            "title": "Longitude",
+            "type": "string"
+          },
+          "name": {
+            "description": "What the place is called (a shop's name, a street, a town)",
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "address",
+          "latitude",
+          "longitude"
+        ],
+        "title": "PlaceSearchHit",
+        "type": "object"
+      },
+      "PlaceSearchResponse": {
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/PlaceSearchHit"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "source": {
+            "description": "The service that answered",
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "results",
+          "source"
+        ],
+        "title": "PlaceSearchResponse",
+        "type": "object"
+      },
+      "PlaceTotal": {
+        "description": "Spending at one spot: transactions marked within about 100 m of each other.",
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "last_date": {
+            "description": "The most recent of them",
+            "format": "date",
+            "title": "Last Date",
+            "type": "string"
+          },
+          "latitude": {
+            "description": "The middle of the transactions at this spot",
+            "title": "Latitude",
+            "type": "string"
+          },
+          "longitude": {
+            "title": "Longitude",
+            "type": "string"
+          },
+          "place": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The name most of them gave it, if any",
+            "title": "Place"
+          },
+          "spent": {
+            "description": "In your base currency, with refunds taken off",
+            "title": "Spent",
+            "type": "string"
+          }
+        },
+        "required": [
+          "latitude",
+          "longitude",
+          "place",
+          "count",
+          "spent",
+          "last_date"
+        ],
+        "title": "PlaceTotal",
+        "type": "object"
+      },
+      "PlaceTotals": {
+        "properties": {
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "places": {
+            "items": {
+              "$ref": "#/components/schemas/PlaceTotal"
+            },
+            "title": "Places",
+            "type": "array"
+          }
+        },
+        "required": [
+          "currency",
+          "places"
+        ],
+        "title": "PlaceTotals",
+        "type": "object"
+      },
       "PostPlanned": {
         "description": "Turn a planned transaction into a real one. Every field is optional: leave one out to keep\nit as planned (an explicit `null` time clears the planned one).",
         "properties": {
@@ -4718,6 +4842,39 @@
             "description": "Base-currency units per 1 unit of `currency`. Required when `currency` differs from your base currency.",
             "title": "Exchange Rate"
           },
+          "latitude": {
+            "anyOf": [
+              {
+                "maximum": 90.0,
+                "minimum": -90.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Where it happened. Send both coordinates or neither.",
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "maximum": 180.0,
+                "minimum": -180.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
           "payment_method": {
             "anyOf": [
               {
@@ -4727,6 +4884,19 @@
                 "type": "null"
               }
             ]
+          },
+          "place": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A name for that spot, such as a shop. Needs the coordinates.",
+            "title": "Place"
           },
           "planned": {
             "default": false,
@@ -4991,14 +5161,49 @@
             "title": "Id",
             "type": "string"
           },
+          "latitude": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Where it happened, if you marked it",
+            "title": "Latitude"
+          },
           "link_count": {
             "default": 0,
             "description": "How many web links are attached",
             "title": "Link Count",
             "type": "integer"
           },
+          "longitude": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
           "payment_method": {
             "$ref": "#/components/schemas/PaymentMethod"
+          },
+          "place": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A name for that spot, if you gave one",
+            "title": "Place"
           },
           "planned": {
             "title": "Planned",
@@ -5108,6 +5313,9 @@
           "description",
           "transaction_date",
           "transaction_time",
+          "latitude",
+          "longitude",
+          "place",
           "planned",
           "splits",
           "refund_of",
@@ -5248,6 +5456,39 @@
             ],
             "title": "Exchange Rate"
           },
+          "latitude": {
+            "anyOf": [
+              {
+                "maximum": 90.0,
+                "minimum": -90.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Explicit null removes the location (send all three as null).",
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "maximum": 180.0,
+                "minimum": -180.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
           "payment_method": {
             "anyOf": [
               {
@@ -5257,6 +5498,18 @@
                 "type": "null"
               }
             ]
+          },
+          "place": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place"
           },
           "planned": {
             "anyOf": [
@@ -5770,11 +6023,57 @@
             ],
             "title": "Is Local"
           },
+          "latitude": {
+            "anyOf": [
+              {
+                "maximum": 90.0,
+                "minimum": -90.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Where it usually is. Send both coordinates or neither.",
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "maximum": 180.0,
+                "minimum": -180.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
           "name": {
             "maxLength": 200,
             "minLength": 1,
             "title": "Name",
             "type": "string"
+          },
+          "place": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A name for that spot",
+            "title": "Place"
           }
         },
         "required": [
@@ -5885,9 +6184,45 @@
             ],
             "title": "Is Local"
           },
+          "latitude": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Where it usually is. Send both coordinates or neither.",
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
           "name": {
             "title": "Name",
             "type": "string"
+          },
+          "place": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A name for that spot",
+            "title": "Place"
           }
         },
         "required": [
@@ -5895,6 +6230,9 @@
           "is_local",
           "currency",
           "contact",
+          "latitude",
+          "longitude",
+          "place",
           "id",
           "name",
           "default_category",
@@ -5986,6 +6324,39 @@
             ],
             "title": "Is Local"
           },
+          "latitude": {
+            "anyOf": [
+              {
+                "maximum": 90.0,
+                "minimum": -90.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Where it usually is. Send both coordinates or neither.",
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "maximum": 180.0,
+                "minimum": -180.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
           "name": {
             "anyOf": [
               {
@@ -5998,6 +6369,19 @@
               }
             ],
             "title": "Name"
+          },
+          "place": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A name for that spot",
+            "title": "Place"
           }
         },
         "title": "VendorUpdate",
@@ -9218,6 +9602,108 @@
         ]
       }
     },
+    "/api/v1/places/search": {
+      "get": {
+        "description": "Find places by name, to put a pin on the map. Only the text you typed (and roughly where the\nmap is) is sent to the geocoder, only when you search, and never to anyone else. 404 when the\nserver has place search turned off; 429 past 20 searches a minute.",
+        "operationId": "search_for_places_api_v1_places_search_get",
+        "parameters": [
+          {
+            "description": "What to look for",
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "description": "What to look for",
+              "maxLength": 200,
+              "minLength": 2,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Where the map is: prefers nearby places",
+            "in": "query",
+            "name": "near_lat",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 90,
+                  "minimum": -90,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Where the map is: prefers nearby places",
+              "title": "Near Lat"
+            }
+          },
+          {
+            "in": "query",
+            "name": "near_lng",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 180,
+                  "minimum": -180,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Near Lng"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 5,
+              "maximum": 8,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaceSearchResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Search For Places",
+        "tags": [
+          "places"
+        ]
+      }
+    },
     "/api/v1/stats/balance-trend": {
       "get": {
         "description": "What your accounts were worth at the end of each day, in your base currency.",
@@ -11808,6 +12294,83 @@
           }
         ],
         "summary": "Matching Transaction Ids",
+        "tags": [
+          "transactions"
+        ]
+      }
+    },
+    "/api/v1/transactions/places": {
+      "get": {
+        "description": "Where your spending went, for the map: expenses you marked with a location, grouped by spot\n(about 100 m), biggest first, in your base currency with refunds taken off.",
+        "operationId": "spending_places_api_v1_transactions_places_get",
+        "parameters": [
+          {
+            "description": "Inclusive, YYYY-MM-DD",
+            "in": "query",
+            "name": "date_from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inclusive, YYYY-MM-DD",
+              "title": "Date From"
+            }
+          },
+          {
+            "description": "Inclusive, YYYY-MM-DD",
+            "in": "query",
+            "name": "date_to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inclusive, YYYY-MM-DD",
+              "title": "Date To"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaceTotals"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Spending Places",
         "tags": [
           "transactions"
         ]
