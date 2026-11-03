@@ -209,3 +209,52 @@ async def test_a_restored_account_gets_its_balance_history_rebuilt(client, signu
     )
     assert resp.status_code == 200
     assert await stale() == 0
+
+
+async def test_an_account_that_only_opened_the_budget_page_is_still_new(client, signup):
+    """Looking at the budget page makes the account's budget row (settings, no limits), which must
+    not make a new account refuse its first restore: this is what opening the dashboard does. The
+    backup's own budget settings win over the default one."""
+    source = await signup("source@example.com")
+    assert (
+        await client.patch(
+            "/api/v1/budget", json={"period_start_day": 5, "warn_percent": 70}, headers=source
+        )
+    ).status_code == 200
+    raw = (await client.get(BACKUP, headers=source)).content
+    assert json.loads(raw)["counts"]["budgets"] == 1
+
+    fresh = await signup("fresh@example.com")
+    assert (await client.get("/api/v1/budget", headers=fresh)).status_code == 200  # the default
+    resp = await restore(client, fresh, raw)
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["restored"]["budgets"] == 1
+    budget = (await client.get("/api/v1/budget", headers=fresh)).json()
+    assert (budget["period_start_day"], budget["warn_percent"]) == (5, 70)
+
+
+async def test_a_restore_without_a_budget_leaves_the_new_account_able_to_make_one(client, signup):
+    headers = await signup("fresh@example.com")
+    assert (await client.get("/api/v1/budget", headers=headers)).status_code == 200
+    empty = (await client.get(BACKUP, headers=headers)).json()
+    empty["tables"]["budgets"] = []
+    empty["counts"]["budgets"] = 0
+    raw = with_tables(json.dumps(empty).encode(), lambda tables: None)
+    other = await signup("other@example.com")
+    assert (await restore(client, other, raw)).status_code == 200
+    assert (await client.get("/api/v1/budget", headers=other)).status_code == 200
+
+
+async def test_an_account_with_a_budget_limit_is_not_empty(client, signup):
+    raw = await seeded_backup(client)
+    headers = await signup("fresh@example.com")
+    category = (
+        await client.post("/api/v1/categories", json={"name": "Food"}, headers=headers)
+    ).json()
+    line = await client.post(
+        "/api/v1/budget/lines",
+        json={"name": "Food", "category_ids": [category["id"]], "amount": "100"},
+        headers=headers,
+    )
+    assert line.status_code == 201, line.text
+    assert (await restore(client, headers, raw)).status_code == 409

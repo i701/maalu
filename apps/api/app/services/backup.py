@@ -19,13 +19,13 @@ from decimal import Decimal
 from typing import Any
 
 from sqlalchemy import Date as SADate
-from sqlalchemy import DateTime, Enum, Table, Uuid, func, insert, select, update
+from sqlalchemy import DateTime, Enum, Table, Uuid, delete, func, insert, select, update
 from sqlalchemy import Time as SATime
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.ddl import sort_tables
 
-from app.models import Base, SnapshotDirty, User
+from app.models import Base, Budget, SnapshotDirty, User
 from app.services.snapshot import EPOCH
 
 FORMAT = "maalu-backup"
@@ -176,7 +176,12 @@ class BackupService:
     # ── Restore ─────────────────────────────────────────────────────────────────────────────
 
     async def _is_empty(self, user_id: uuid.UUID) -> bool:
+        """No data in any backed-up table. The budget row itself is not data: it is made by looking
+        at the budget page (settings only), so a new account that has had a look is still new; its
+        limits are, and are counted as their own table."""
         for table in INCLUDED:
+            if table.name == "budgets":
+                continue
             found = await self.db.scalar(
                 select(func.count()).select_from(table).where(self._mine(table, user_id))
             )
@@ -209,6 +214,8 @@ class BackupService:
         payload = self._read(raw)
         if not await self._is_empty(user.id):
             raise BackupNotEmptyError
+        # the empty default budget made by looking at the page gives way to the backup's own
+        await self.db.execute(delete(Budget).where(Budget.user_id == user.id))
         tables: dict[str, list[dict]] = payload["tables"]
 
         # every row gets a new id; foreign keys are rewritten through these maps
