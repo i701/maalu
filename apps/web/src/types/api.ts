@@ -67,6 +67,7 @@ export const SUBSCRIPTION_STATUS_LABELS: Record<SubscriptionStatus, string> = {
 	active: "Active",
 	paused: "Paused",
 	cancelled: "Cancelled",
+	completed: "Completed",
 };
 
 export type AccountGroup = Schemas["AccountGroup"];

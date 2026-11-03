@@ -2930,7 +2930,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "payment_due" | "payment_overdue" | "budget_warning" | "budget_over" | "goal_reached";
+            kind: "payment_due" | "payment_overdue" | "installments_done" | "budget_warning" | "budget_over" | "goal_reached";
             /**
              * Link
              * @description A page of the app to open for it
@@ -3212,6 +3212,11 @@ export interface components {
              */
             exchange_rate?: number | string | null;
             /**
+             * Installments Total
+             * @description A plan with this many payments, then it is completed. Null: no end.
+             */
+            installments_total?: number | null;
+            /**
              * Interval Count
              * @default 1
              */
@@ -3220,6 +3225,12 @@ export interface components {
             /** Name */
             name: string;
             payment_method: components["schemas"]["PaymentMethod"];
+            /**
+             * Remind Days Before
+             * @description Days before a payment to be reminded; null for no reminder.
+             * @default 3
+             */
+            remind_days_before: number | null;
             /**
              * Start Date
              * Format: date
@@ -3291,6 +3302,13 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /**
+             * Installments Left
+             * @description Payments still to make; null when it has no fixed number
+             */
+            installments_left: number | null;
+            /** Installments Total */
+            installments_total: number | null;
             /** Interval Count */
             interval_count: number;
             interval_unit: components["schemas"]["IntervalUnit"];
@@ -3309,6 +3327,13 @@ export interface components {
             next_due_date: string | null;
             payment_method: components["schemas"]["PaymentMethod"];
             /**
+             * Payments Made
+             * @description Payments made so far (posted ones linked to it)
+             */
+            payments_made: number;
+            /** Remind Days Before */
+            remind_days_before: number | null;
+            /**
              * Start Date
              * Format: date
              */
@@ -3320,7 +3345,7 @@ export interface components {
          * SubscriptionStatus
          * @enum {string}
          */
-        SubscriptionStatus: "active" | "paused" | "cancelled";
+        SubscriptionStatus: "active" | "paused" | "cancelled" | "completed";
         /** SubscriptionSummary */
         SubscriptionSummary: {
             /** Active Count */
@@ -3348,12 +3373,22 @@ export interface components {
             currency?: string | null;
             /** Exchange Rate */
             exchange_rate?: number | string | null;
+            /**
+             * Installments Total
+             * @description Explicit null makes it an ongoing subscription again.
+             */
+            installments_total?: number | null;
             /** Interval Count */
             interval_count?: number | null;
             interval_unit?: components["schemas"]["IntervalUnit"] | null;
             /** Name */
             name?: string | null;
             payment_method?: components["schemas"]["PaymentMethod"] | null;
+            /**
+             * Remind Days Before
+             * @description Explicit null turns the reminder off.
+             */
+            remind_days_before?: number | null;
             /** Start Date */
             start_date?: string | null;
             status?: components["schemas"]["SubscriptionStatus"] | null;
@@ -7773,10 +7808,10 @@ export const goalResponsePeriod_statusAnyOf0Values: ReadonlyArray<FlattenedDeepR
 export const importRowInTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImportRowIn"]["type"]> = ["income", "expense"];
 export const importSkippedOutcomeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImportSkipped"]["outcome"]> = ["skipped", "failed"];
 export const intervalUnitValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["IntervalUnit"]> = ["week", "month", "year"];
-export const notificationResponseKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NotificationResponse"]["kind"]> = ["payment_due", "payment_overdue", "budget_warning", "budget_over", "goal_reached"];
+export const notificationResponseKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NotificationResponse"]["kind"]> = ["payment_due", "payment_overdue", "installments_done", "budget_warning", "budget_over", "goal_reached"];
 export const paymentMethodValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PaymentMethod"]> = ["cash", "bank_transfer", "debit_card", "credit_card", "other"];
 export const previewRowDuplicateAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PreviewRow"]["duplicate"]> = ["reference", "transfer", "possible"];
 export const previewRowTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PreviewRow"]["type"]> = ["income", "expense"];
-export const subscriptionStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SubscriptionStatus"]> = ["active", "paused", "cancelled"];
+export const subscriptionStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SubscriptionStatus"]> = ["active", "paused", "cancelled", "completed"];
 export const transactionTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TransactionType"]> = ["income", "expense", "transfer"];
 export const vendorLocalityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["VendorLocality"]> = ["local", "foreign", "unknown"];

@@ -30,6 +30,7 @@ import TablePager from "#/components/TablePager";
 import TableToolbar from "#/components/TableToolbar";
 import { daysUntil, formatDate, formatInterval, formatMoney } from "#/lib/format";
 import { STATUS_ACCENT } from "#/lib/accents";
+import { installmentsText } from "#/lib/subscription";
 import { useLiveSearch } from "#/lib/live-search";
 import { staggerChildren } from "#/lib/motion";
 import { lastPageIfOutOfRange, pageSearch } from "#/lib/pagination";
@@ -119,6 +120,11 @@ function SubCost({ s, baseCurrency }: { s: Subscription; baseCurrency: string })
 					{formatInterval(s.interval_unit, s.interval_count)}
 				</Typography>
 			</Typography>
+			{installmentsText(s.installments_total, s.payments_made) && (
+				<Typography variant="caption" sx={{ color: "text.secondary", display: "block" }}>
+					{installmentsText(s.installments_total, s.payments_made)}
+				</Typography>
+			)}
 			{s.currency !== baseCurrency && (
 				<Typography variant="caption" sx={{ color: "text.secondary", display: "block" }}>
 					≈ {formatMoney(s.base_amount, baseCurrency)} @ {Number(s.exchange_rate)}

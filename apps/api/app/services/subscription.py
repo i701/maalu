@@ -183,6 +183,10 @@ class SubscriptionService:
         )
         self.db.add(subscription)
         await self.db.flush()
+        if data.remind_days_before is None:
+            # the column's default would fill an empty value in: "no reminder" must stay empty
+            subscription.remind_days_before = None
+            await self.db.flush()
         await self.db.refresh(subscription)
         return subscription
 
@@ -229,6 +233,16 @@ class SubscriptionService:
             )
         for field, value in changes.items():
             setattr(subscription, field, value)
+        if (
+            subscription.status is SubscriptionStatus.COMPLETED
+            and "status" not in changes
+            and "installments_total" in changes
+        ):
+            # more payments were added (or the end was removed): it carries on
+            payments = (await self._payments_made([subscription.id])).get(subscription.id, 0)
+            total = subscription.installments_total
+            if total is None or payments < total:
+                subscription.status = SubscriptionStatus.ACTIVE
         await self.db.flush()
         await self._refresh_planned(subscription, changed=set(data.model_fields_set))
         await self.db.refresh(subscription)
@@ -294,9 +308,21 @@ class SubscriptionService:
         )
         return dict((await self.db.execute(stmt)).all())
 
+    async def _payments_made(self, ids: list[uuid.UUID]) -> dict[uuid.UUID, int]:
+        """How many posted payments are linked to each subscription."""
+        if not ids:
+            return {}
+        stmt = (
+            select(Transaction.subscription_id, func.count(Transaction.id))
+            .where(Transaction.subscription_id.in_(ids), Transaction.counted())
+            .group_by(Transaction.subscription_id)
+        )
+        return dict((await self.db.execute(stmt)).all())
+
     async def present(self, subscriptions: list[Subscription]) -> list[SubscriptionResponse]:
         """Attach the computed schedule fields (last paid, next due, overdue, monthly cost)."""
         last_paid = await self._last_paid_dates([s.id for s in subscriptions])
+        payments = await self._payments_made([s.id for s in subscriptions])
         today = date.today()
         out = []
         for s in subscriptions:
@@ -326,6 +352,12 @@ class SubscriptionService:
                     monthly_base_cost=monthly_cost(
                         s.base_amount, s.interval_unit, s.interval_count
                     ),
+                    installments_total=s.installments_total,
+                    payments_made=payments.get(s.id, 0),
+                    installments_left=None
+                    if s.installments_total is None
+                    else max(0, s.installments_total - payments.get(s.id, 0)),
+                    remind_days_before=s.remind_days_before,
                     created_at=s.created_at,
                 )
             )
@@ -397,9 +429,16 @@ class SubscriptionService:
                 stmt = stmt.where(Subscription.user_id == user_id)
             subscriptions = list((await self.db.scalars(stmt)).all())
         last_paid = await self._last_paid_dates([s.id for s in subscriptions])
+        payments = await self._payments_made([s.id for s in subscriptions])
         horizon = date.today() + timedelta(days=PLAN_AHEAD_DAYS)
         made = 0
         for s in subscriptions:
+            if s.installments_total is not None and payments.get(s.id, 0) >= s.installments_total:
+                # the last instalment has been paid: the plan is done and plans nothing more
+                s.status = SubscriptionStatus.COMPLETED
+                for leftover in await self._live_planned(s.id):
+                    leftover.deleted_at = datetime.now(UTC)
+                continue
             unit, count, start = s.interval_unit, s.interval_count, s.start_date
             paid = last_paid.get(s.id)
             paid_k = nearest_occurrence_index(start, unit, count, paid) if paid else -1

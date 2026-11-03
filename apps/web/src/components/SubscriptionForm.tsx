@@ -19,6 +19,12 @@ import {
 	type SubscriptionStatus,
 	type Vendor,
 } from "#/types/api";
+import {
+	installmentsFromField,
+	remindFromField,
+	remindToField,
+	REMIND_OPTIONS,
+} from "#/lib/subscription";
 import CategoryField from "./CategoryField";
 import CurrencyField from "./CurrencyField";
 import FormDialog from "./FormDialog";
@@ -56,6 +62,8 @@ function readFields(f: FormData, account: Account | null, foreign: boolean) {
 		interval_count: Number(text("interval_count")),
 		start_date: text("start_date"),
 		status: text("status") as SubscriptionStatus,
+		installments_total: installmentsFromField(text("installments_total")),
+		remind_days_before: remindFromField(text("remind_days_before")),
 	};
 }
 
@@ -175,6 +183,59 @@ function MoneyFields({
 	);
 }
 
+/** Status, the number of payments (for instalments) and the reminder. */
+function PlanFields({ subscription }: { subscription?: Subscription }) {
+	return (
+		<>
+			<Grid size={{ xs: 12, sm: 6 }}>
+				<TextField
+					select
+					label="Status"
+					name="status"
+					defaultValue={subscription?.status ?? "active"}
+					required
+				>
+					{SUBSCRIPTION_STATUSES.filter(
+						// "Completed" happens by itself, when the last payment is made
+						(s) => s !== "completed" || subscription?.status === "completed",
+					).map((s) => (
+						<MenuItem key={s} value={s}>
+							{SUBSCRIPTION_STATUS_LABELS[s]}
+						</MenuItem>
+					))}
+				</TextField>
+			</Grid>
+
+			<Grid size={{ xs: 12, sm: 6 }}>
+				<TextField
+					label="Number of payments"
+					name="installments_total"
+					type="number"
+					defaultValue={subscription?.installments_total ?? ""}
+					placeholder="Goes on until you stop it"
+					helperText="For instalments: it completes after this many payments"
+					slotProps={{ htmlInput: { min: 1, max: 600 }, inputLabel: { shrink: true } }}
+				/>
+			</Grid>
+			<Grid size={{ xs: 12, sm: 6 }}>
+				<TextField
+					select
+					label="Remind me"
+					name="remind_days_before"
+					defaultValue={remindToField(subscription ? subscription.remind_days_before : 3)}
+					helperText="Overdue payments are always told"
+				>
+					{REMIND_OPTIONS.map((o) => (
+						<MenuItem key={o.value} value={o.value}>
+							{o.label}
+						</MenuItem>
+					))}
+				</TextField>
+			</Grid>
+		</>
+	);
+}
+
 export default function SubscriptionForm({
 	subscription,
 	accounts,
@@ -288,21 +349,7 @@ export default function SubscriptionForm({
 					/>
 				</Grid>
 
-				<Grid size={{ xs: 12, sm: 6 }}>
-					<TextField
-						select
-						label="Status"
-						name="status"
-						defaultValue={subscription?.status ?? "active"}
-						required
-					>
-						{SUBSCRIPTION_STATUSES.map((s) => (
-							<MenuItem key={s} value={s}>
-								{SUBSCRIPTION_STATUS_LABELS[s]}
-							</MenuItem>
-						))}
-					</TextField>
-				</Grid>
+				<PlanFields subscription={subscription} />
 
 				<Grid size={{ xs: 12, sm: 6 }}>
 					<TextField

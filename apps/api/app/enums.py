@@ -27,6 +27,7 @@ class SubscriptionStatus(StrEnum):
     ACTIVE = "active"
     PAUSED = "paused"
     CANCELLED = "cancelled"
+    COMPLETED = "completed"  # an installment plan whose last payment was made
 
 
 class AccountGroup(StrEnum):

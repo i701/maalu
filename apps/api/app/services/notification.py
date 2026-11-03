@@ -6,11 +6,13 @@ from sqlalchemy import delete, func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Notification, Transaction, User
+from app.enums import SubscriptionStatus
+from app.models import Notification, Subscription, Transaction, User
 from app.services.budget import BudgetService
 from app.services.goal import GoalService
 
 DUE_SOON_DAYS = 3  # a planned payment is "due soon" this many days ahead, and on the day
+MAX_REMIND_DAYS = 60  # the longest lead a subscription can ask for (see RemindDays)
 KEEP_DAYS = 90  # notifications older than this are swept
 # Looking for new notifications costs a few queries, and every page asks for the unread count, so
 # a user's data is looked at once in a while, not on every request. The daily job ignores this.
@@ -67,12 +69,17 @@ class NotificationService:
             Transaction.user_id == user.id,
             Transaction.live(),
             Transaction.planned.is_(True),
-            Transaction.transaction_date <= today + timedelta(days=DUE_SOON_DAYS),
+            Transaction.transaction_date <= today + timedelta(days=MAX_REMIND_DAYS),
         )
         made = 0
         for t in (await self.db.scalars(stmt)).all():
             days = (t.transaction_date - today).days
             overdue = days < 0
+            # a subscription says how far ahead it wants to hear (or not at all); anything else
+            # planned is "due soon" a few days before. Being overdue is always told.
+            lead = t.subscription.remind_days_before if t.subscription else DUE_SOON_DAYS
+            if not overdue and (lead is None or days > lead):
+                continue
             name = (
                 (t.subscription.name if t.subscription else None)
                 or (t.vendor.name if t.vendor else None)
@@ -127,6 +134,26 @@ class NotificationService:
                 )
         return made
 
+    async def _installments(self, user: User, known: set[str]) -> int:
+        """An installment plan whose last payment has been made."""
+        stmt = select(Subscription).where(
+            Subscription.user_id == user.id,
+            Subscription.status == SubscriptionStatus.COMPLETED,
+            Subscription.installments_total.is_not(None),
+        )
+        made = 0
+        for sub in (await self.db.scalars(stmt)).all():
+            made += await self._add(
+                user.id,
+                known,
+                kind="installments_done",
+                title=f"{sub.name}: last payment made",
+                body=f"All {sub.installments_total} payments are done",
+                link="/subscriptions",
+                dedupe_key=f"installments-done:{sub.id}",
+            )
+        return made
+
     async def _sync_user(self, user: User) -> int:
         known = set(
             (
@@ -139,6 +166,7 @@ class NotificationService:
         made = 0
         if user.notify_payments:
             made += await self._payments(user, known, today)
+            made += await self._installments(user, known)
         if user.notify_budget:
             made += await self._budget(user, known)
         if user.notify_goals:

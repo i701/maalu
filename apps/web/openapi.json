@@ -2909,6 +2909,7 @@
             "enum": [
               "payment_due",
               "payment_overdue",
+              "installments_done",
               "budget_warning",
               "budget_over",
               "goal_reached"
@@ -3573,6 +3574,20 @@
             "description": "Base-currency units per 1 unit of `currency`. Required when `currency` differs from your base currency.",
             "title": "Exchange Rate"
           },
+          "installments_total": {
+            "anyOf": [
+              {
+                "maximum": 600.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A plan with this many payments, then it is completed. Null: no end.",
+            "title": "Installments Total"
+          },
           "interval_count": {
             "default": 1,
             "maximum": 120.0,
@@ -3591,6 +3606,21 @@
           },
           "payment_method": {
             "$ref": "#/components/schemas/PaymentMethod"
+          },
+          "remind_days_before": {
+            "anyOf": [
+              {
+                "maximum": 60.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": 3,
+            "description": "Days before a payment to be reminded; null for no reminder.",
+            "title": "Remind Days Before"
           },
           "start_date": {
             "description": "First billing date; anchors the schedule",
@@ -3740,6 +3770,29 @@
             "title": "Id",
             "type": "string"
           },
+          "installments_left": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Payments still to make; null when it has no fixed number",
+            "title": "Installments Left"
+          },
+          "installments_total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Installments Total"
+          },
           "interval_count": {
             "title": "Interval Count",
             "type": "integer"
@@ -3787,6 +3840,22 @@
           "payment_method": {
             "$ref": "#/components/schemas/PaymentMethod"
           },
+          "payments_made": {
+            "description": "Payments made so far (posted ones linked to it)",
+            "title": "Payments Made",
+            "type": "integer"
+          },
+          "remind_days_before": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remind Days Before"
+          },
           "start_date": {
             "format": "date",
             "title": "Start Date",
@@ -3826,6 +3895,10 @@
           "next_due_date",
           "is_overdue",
           "monthly_base_cost",
+          "installments_total",
+          "payments_made",
+          "installments_left",
+          "remind_days_before",
           "created_at"
         ],
         "title": "SubscriptionResponse",
@@ -3835,7 +3908,8 @@
         "enum": [
           "active",
           "paused",
-          "cancelled"
+          "cancelled",
+          "completed"
         ],
         "title": "SubscriptionStatus",
         "type": "string"
@@ -3934,6 +4008,20 @@
             ],
             "title": "Exchange Rate"
           },
+          "installments_total": {
+            "anyOf": [
+              {
+                "maximum": 600.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Explicit null makes it an ongoing subscription again.",
+            "title": "Installments Total"
+          },
           "interval_count": {
             "anyOf": [
               {
@@ -3979,6 +4067,20 @@
                 "type": "null"
               }
             ]
+          },
+          "remind_days_before": {
+            "anyOf": [
+              {
+                "maximum": 60.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Explicit null turns the reminder off.",
+            "title": "Remind Days Before"
           },
           "start_date": {
             "anyOf": [

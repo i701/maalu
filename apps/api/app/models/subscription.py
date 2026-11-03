@@ -63,6 +63,12 @@ class Subscription(Base):
     # The last billing date a planned payment was made for. The next one is made for the cycle after
     # it, so deleting a planned payment (skipping that cycle) does not bring it back.
     planned_through: Mapped[date | None] = mapped_column(Date, default=None)
+    # A plan with a fixed number of payments (a phone on instalments): once that many have been
+    # made it is `completed` and plans nothing more. Null means it goes on until you stop it.
+    installments_total: Mapped[int | None] = mapped_column(Integer, default=None)
+    # How many days before a payment's date to tell you it is coming (0 = on the day). Null means
+    # no reminder; being overdue is always told.
+    remind_days_before: Mapped[int | None] = mapped_column(Integer, default=3, server_default="3")
     status: Mapped[SubscriptionStatus] = mapped_column(
         _str_enum(SubscriptionStatus), default=SubscriptionStatus.ACTIVE
     )

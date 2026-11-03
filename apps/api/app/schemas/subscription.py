@@ -15,6 +15,8 @@ Category = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1,
 # Cost per cycle: always positive (transactions are signed, subscriptions are not).
 Cost = Annotated[Decimal, Field(gt=0, max_digits=19, decimal_places=4)]
 IntervalCount = Annotated[int, Field(ge=1, le=120)]
+Installments = Annotated[int, Field(ge=1, le=600)]
+RemindDays = Annotated[int, Field(ge=0, le=60)]
 
 
 class SubscriptionRef(BaseModel):
@@ -48,6 +50,13 @@ class SubscriptionCreate(VendorRef):
     interval_count: IntervalCount = 1
     start_date: date = Field(description="First billing date; anchors the schedule")
     status: SubscriptionStatus = SubscriptionStatus.ACTIVE
+    installments_total: Installments | None = Field(
+        default=None,
+        description="A plan with this many payments, then it is completed. Null: no end.",
+    )
+    remind_days_before: RemindDays | None = Field(
+        default=3, description="Days before a payment to be reminded; null for no reminder."
+    )
 
 
 class SubscriptionUpdate(VendorRef):
@@ -64,6 +73,12 @@ class SubscriptionUpdate(VendorRef):
     interval_count: IntervalCount | None = None
     start_date: date | None = None
     status: SubscriptionStatus | None = None
+    installments_total: Installments | None = Field(
+        default=None, description="Explicit null makes it an ongoing subscription again."
+    )
+    remind_days_before: RemindDays | None = Field(
+        default=None, description="Explicit null turns the reminder off."
+    )
 
     @field_validator(
         "name",
@@ -113,6 +128,12 @@ class SubscriptionResponse(BaseModel):
     next_due_date: date | None
     is_overdue: bool
     monthly_base_cost: Decimal = Field(description="Cost per month in your base currency")
+    installments_total: int | None
+    payments_made: int = Field(description="Payments made so far (posted ones linked to it)")
+    installments_left: int | None = Field(
+        description="Payments still to make; null when it has no fixed number"
+    )
+    remind_days_before: int | None
     created_at: datetime
 
 

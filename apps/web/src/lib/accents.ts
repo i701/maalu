@@ -14,6 +14,7 @@ export const STATUS_ACCENT: Record<SubscriptionStatus, string> = {
 	active: ACCENT.green,
 	paused: ACCENT.amber,
 	cancelled: ACCENT.slate,
+	completed: ACCENT.blue,
 };
 
 export const LOCALITY_ACCENT = { local: ACCENT.green, foreign: ACCENT.orange } as const;

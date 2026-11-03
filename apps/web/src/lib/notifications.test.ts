@@ -16,6 +16,7 @@ describe("KIND_META", () => {
 			"budget_over",
 			"budget_warning",
 			"goal_reached",
+			"installments_done",
 			"payment_due",
 			"payment_overdue",
 		]);

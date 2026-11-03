@@ -5,7 +5,12 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 NotificationKind = Literal[
-    "payment_due", "payment_overdue", "budget_warning", "budget_over", "goal_reached"
+    "payment_due",
+    "payment_overdue",
+    "installments_done",
+    "budget_warning",
+    "budget_over",
+    "goal_reached",
 ]
 
 
