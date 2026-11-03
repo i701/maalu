@@ -56,6 +56,7 @@ export const NAV_ITEMS: readonly NavDestination[] = [
 		group: "money",
 		bottom: true,
 	},
+	{ to: "/net-worth", label: "Net worth", symbol: "finance", accent: "green", group: "money" },
 	{ to: "/compare", label: "Compare", symbol: "insights", accent: "violet", group: "money" },
 	{ to: "/trends", label: "Trends", symbol: "calendar_month", accent: "lime", group: "money" },
 	{ to: "/import", label: "Import", symbol: "upload_file", accent: "orange", group: "money" },

@@ -140,4 +140,7 @@ export type MonthlyPoint = Schemas["MonthlyPoint"];
 export type MonthlyStats = Schemas["MonthlyResponse"];
 export type BalancePoint = Schemas["BalancePoint"];
 export type BalanceTrend = Schemas["BalanceTrendResponse"];
+export type NetWorthDrivers = Schemas["NetWorthDrivers"];
+export type NetWorthDriver = Schemas["NetWorthDriver"];
+export type NetWorthAccountChange = Schemas["NetWorthAccountChange"];
 export type MarketRate = Schemas["MarketRateResponse"];

@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import type { BalanceTrend, MonthlyStats } from "#/types/api";
+import type { BalanceTrend, MonthlyStats, NetWorthDrivers } from "#/types/api";
 import { apiRequest } from "./api";
 
 /** Income and expense per calendar month, ending with the month containing `to`. */
@@ -15,4 +15,13 @@ export const getBalanceTrendFn = createServerFn({ method: "GET" })
 	.validator(z.object({ from: z.iso.date(), to: z.iso.date() }))
 	.handler(async ({ data }) =>
 		apiRequest<BalanceTrend>("/stats/balance-trend", { query: { from: data.from, to: data.to } }),
+	);
+
+/** How net worth moved between two days and what moved it. */
+export const getNetWorthDriversFn = createServerFn({ method: "GET" })
+	.validator(z.object({ from: z.iso.date(), to: z.iso.date() }))
+	.handler(async ({ data }) =>
+		apiRequest<NetWorthDrivers>("/stats/net-worth-drivers", {
+			query: { from: data.from, to: data.to },
+		}),
 	);

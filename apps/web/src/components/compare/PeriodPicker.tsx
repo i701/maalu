@@ -18,7 +18,10 @@ const PeriodPicker = memo(function PeriodPicker({
 	custom,
 	onPreset,
 	onCustom,
+	single = false,
 }: {
+	/** one range (From and To) instead of two, for a page that looks at a single period */
+	single?: boolean;
 	preset: Preset;
 	custom: Partial<CustomRanges>;
 	onPreset: (preset: Preset) => void;
@@ -42,12 +45,14 @@ const PeriodPicker = memo(function PeriodPicker({
 			</ToggleButtonGroup>
 			{preset === "custom" && (
 				<Stack direction="row" useFlexGap spacing={1.5} sx={{ flexWrap: "wrap" }}>
-					{FIELDS.map(({ key, label }) => (
+					{(single ? FIELDS.slice(0, 2) : FIELDS).map(({ key, label }) => (
 						<TextField
 							key={key}
 							size="small"
 							type="date"
-							label={label}
+							label={
+								single ? label.replace("Now: ", "").replace(/^./, (c) => c.toUpperCase()) : label
+							}
 							value={custom[key] ?? ""}
 							onChange={(e) => onCustom(key, e.target.value)}
 							slotProps={{ inputLabel: { shrink: true } }}

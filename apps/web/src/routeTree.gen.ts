@@ -20,6 +20,7 @@ import { Route as ProtectedCompareRouteImport } from './routes/_protected/compar
 import { Route as ProtectedDashboardRouteImport } from './routes/_protected/dashboard'
 import { Route as ProtectedGroupsRouteImport } from './routes/_protected/groups'
 import { Route as ProtectedImportRouteImport } from './routes/_protected/import'
+import { Route as ProtectedNetWorthRouteImport } from './routes/_protected/net-worth'
 import { Route as ProtectedNotificationsRouteImport } from './routes/_protected/notifications'
 import { Route as ProtectedPlacesRouteImport } from './routes/_protected/places'
 import { Route as ProtectedProfileRouteImport } from './routes/_protected/profile'
@@ -90,6 +91,11 @@ const ProtectedGroupsRoute = ProtectedGroupsRouteImport.update({
 const ProtectedImportRoute = ProtectedImportRouteImport.update({
   id: '/import',
   path: '/import',
+  getParentRoute: () => ProtectedRoute,
+} as any)
+const ProtectedNetWorthRoute = ProtectedNetWorthRouteImport.update({
+  id: '/net-worth',
+  path: '/net-worth',
   getParentRoute: () => ProtectedRoute,
 } as any)
 const ProtectedNotificationsRoute = ProtectedNotificationsRouteImport.update({
@@ -189,6 +195,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof ProtectedDashboardRoute
   '/groups': typeof ProtectedGroupsRoute
   '/import': typeof ProtectedImportRoute
+  '/net-worth': typeof ProtectedNetWorthRoute
   '/notifications': typeof ProtectedNotificationsRoute
   '/places': typeof ProtectedPlacesRoute
   '/profile': typeof ProtectedProfileRoute
@@ -218,6 +225,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof ProtectedDashboardRoute
   '/groups': typeof ProtectedGroupsRoute
   '/import': typeof ProtectedImportRoute
+  '/net-worth': typeof ProtectedNetWorthRoute
   '/notifications': typeof ProtectedNotificationsRoute
   '/places': typeof ProtectedPlacesRoute
   '/profile': typeof ProtectedProfileRoute
@@ -249,6 +257,7 @@ export interface FileRoutesById {
   '/_protected/dashboard': typeof ProtectedDashboardRoute
   '/_protected/groups': typeof ProtectedGroupsRoute
   '/_protected/import': typeof ProtectedImportRoute
+  '/_protected/net-worth': typeof ProtectedNetWorthRoute
   '/_protected/notifications': typeof ProtectedNotificationsRoute
   '/_protected/places': typeof ProtectedPlacesRoute
   '/_protected/profile': typeof ProtectedProfileRoute
@@ -280,6 +289,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/groups'
     | '/import'
+    | '/net-worth'
     | '/notifications'
     | '/places'
     | '/profile'
@@ -309,6 +319,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/groups'
     | '/import'
+    | '/net-worth'
     | '/notifications'
     | '/places'
     | '/profile'
@@ -339,6 +350,7 @@ export interface FileRouteTypes {
     | '/_protected/dashboard'
     | '/_protected/groups'
     | '/_protected/import'
+    | '/_protected/net-worth'
     | '/_protected/notifications'
     | '/_protected/places'
     | '/_protected/profile'
@@ -447,6 +459,13 @@ declare module '@tanstack/react-router' {
       path: '/import'
       fullPath: '/import'
       preLoaderRoute: typeof ProtectedImportRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
+    '/_protected/net-worth': {
+      id: '/_protected/net-worth'
+      path: '/net-worth'
+      fullPath: '/net-worth'
+      preLoaderRoute: typeof ProtectedNetWorthRouteImport
       parentRoute: typeof ProtectedRoute
     }
     '/_protected/notifications': {
@@ -579,6 +598,7 @@ interface ProtectedRouteChildren {
   ProtectedDashboardRoute: typeof ProtectedDashboardRoute
   ProtectedGroupsRoute: typeof ProtectedGroupsRoute
   ProtectedImportRoute: typeof ProtectedImportRoute
+  ProtectedNetWorthRoute: typeof ProtectedNetWorthRoute
   ProtectedNotificationsRoute: typeof ProtectedNotificationsRoute
   ProtectedPlacesRoute: typeof ProtectedPlacesRoute
   ProtectedProfileRoute: typeof ProtectedProfileRoute
@@ -600,6 +620,7 @@ const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedDashboardRoute: ProtectedDashboardRoute,
   ProtectedGroupsRoute: ProtectedGroupsRoute,
   ProtectedImportRoute: ProtectedImportRoute,
+  ProtectedNetWorthRoute: ProtectedNetWorthRoute,
   ProtectedNotificationsRoute: ProtectedNotificationsRoute,
   ProtectedPlacesRoute: ProtectedPlacesRoute,
   ProtectedProfileRoute: ProtectedProfileRoute,
