@@ -10,6 +10,7 @@ const PAGES = [
 	"/accounts",
 	"/subscriptions",
 	"/compare",
+	"/trends",
 	"/import",
 	"/places",
 	"/budget",

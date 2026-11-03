@@ -29,6 +29,7 @@ import { Route as ProtectedTagsRouteImport } from './routes/_protected/tags'
 import { Route as ProtectedTemplatesRouteImport } from './routes/_protected/templates'
 import { Route as ProtectedTransactionsRouteImport } from './routes/_protected/transactions'
 import { Route as ProtectedTrashRouteImport } from './routes/_protected/trash'
+import { Route as ProtectedTrendsRouteImport } from './routes/_protected/trends'
 import { Route as ProtectedVendorsRouteImport } from './routes/_protected/vendors'
 import { Route as ApiAttachmentsRouteImport } from './routes/api.attachments'
 import { Route as ApiBackupRouteImport } from './routes/api.backup'
@@ -136,6 +137,11 @@ const ProtectedTrashRoute = ProtectedTrashRouteImport.update({
   path: '/trash',
   getParentRoute: () => ProtectedRoute,
 } as any)
+const ProtectedTrendsRoute = ProtectedTrendsRouteImport.update({
+  id: '/trends',
+  path: '/trends',
+  getParentRoute: () => ProtectedRoute,
+} as any)
 const ProtectedVendorsRoute = ProtectedVendorsRouteImport.update({
   id: '/vendors',
   path: '/vendors',
@@ -192,6 +198,7 @@ export interface FileRoutesByFullPath {
   '/templates': typeof ProtectedTemplatesRoute
   '/transactions': typeof ProtectedTransactionsRoute
   '/trash': typeof ProtectedTrashRoute
+  '/trends': typeof ProtectedTrendsRoute
   '/vendors': typeof ProtectedVendorsRoute
   '/api/attachments': typeof ApiAttachmentsRouteWithChildren
   '/api/backup': typeof ApiBackupRoute
@@ -220,6 +227,7 @@ export interface FileRoutesByTo {
   '/templates': typeof ProtectedTemplatesRoute
   '/transactions': typeof ProtectedTransactionsRoute
   '/trash': typeof ProtectedTrashRoute
+  '/trends': typeof ProtectedTrendsRoute
   '/vendors': typeof ProtectedVendorsRoute
   '/api/attachments': typeof ApiAttachmentsRouteWithChildren
   '/api/backup': typeof ApiBackupRoute
@@ -250,6 +258,7 @@ export interface FileRoutesById {
   '/_protected/templates': typeof ProtectedTemplatesRoute
   '/_protected/transactions': typeof ProtectedTransactionsRoute
   '/_protected/trash': typeof ProtectedTrashRoute
+  '/_protected/trends': typeof ProtectedTrendsRoute
   '/_protected/vendors': typeof ProtectedVendorsRoute
   '/api/attachments': typeof ApiAttachmentsRouteWithChildren
   '/api/backup': typeof ApiBackupRoute
@@ -280,6 +289,7 @@ export interface FileRouteTypes {
     | '/templates'
     | '/transactions'
     | '/trash'
+    | '/trends'
     | '/vendors'
     | '/api/attachments'
     | '/api/backup'
@@ -308,6 +318,7 @@ export interface FileRouteTypes {
     | '/templates'
     | '/transactions'
     | '/trash'
+    | '/trends'
     | '/vendors'
     | '/api/attachments'
     | '/api/backup'
@@ -337,6 +348,7 @@ export interface FileRouteTypes {
     | '/_protected/templates'
     | '/_protected/transactions'
     | '/_protected/trash'
+    | '/_protected/trends'
     | '/_protected/vendors'
     | '/api/attachments'
     | '/api/backup'
@@ -500,6 +512,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedTrashRouteImport
       parentRoute: typeof ProtectedRoute
     }
+    '/_protected/trends': {
+      id: '/_protected/trends'
+      path: '/trends'
+      fullPath: '/trends'
+      preLoaderRoute: typeof ProtectedTrendsRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
     '/_protected/vendors': {
       id: '/_protected/vendors'
       path: '/vendors'
@@ -569,6 +588,7 @@ interface ProtectedRouteChildren {
   ProtectedTemplatesRoute: typeof ProtectedTemplatesRoute
   ProtectedTransactionsRoute: typeof ProtectedTransactionsRoute
   ProtectedTrashRoute: typeof ProtectedTrashRoute
+  ProtectedTrendsRoute: typeof ProtectedTrendsRoute
   ProtectedVendorsRoute: typeof ProtectedVendorsRoute
 }
 
@@ -589,6 +609,7 @@ const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedTemplatesRoute: ProtectedTemplatesRoute,
   ProtectedTransactionsRoute: ProtectedTransactionsRoute,
   ProtectedTrashRoute: ProtectedTrashRoute,
+  ProtectedTrendsRoute: ProtectedTrendsRoute,
   ProtectedVendorsRoute: ProtectedVendorsRoute,
 }
 

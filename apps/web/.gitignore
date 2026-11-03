@@ -6,3 +6,4 @@ dist
 .nitro
 test-results
 playwright-report
+.vitest

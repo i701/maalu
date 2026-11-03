@@ -5,6 +5,7 @@ import {
 	TRANSACTION_TYPES,
 	type ApiResult,
 	type BulkResult,
+	type CategoryMonths,
 	type CategoryTotals,
 	type PlaceTotals,
 	type Transaction,
@@ -183,6 +184,19 @@ export const getCategoryTotalsFn = createServerFn({ method: "GET" })
 		apiRequest<CategoryTotals>("/transactions/categories", {
 			query: filterQuery(data),
 		}),
+	);
+
+/** Income and expense per category for each month in a range (the category-by-month table). */
+export const getCategoryMonthsFn = createServerFn({ method: "GET" })
+	.validator(
+		z.object({
+			date_from: z.iso.date().optional(),
+			date_to: z.iso.date().optional(),
+			account_id: z.uuid().optional(),
+		}),
+	)
+	.handler(async ({ data }) =>
+		apiRequest<CategoryMonths>("/transactions/categories/monthly", { query: data }),
 	);
 
 export const createTransactionFn = createServerFn({ method: "POST" })
