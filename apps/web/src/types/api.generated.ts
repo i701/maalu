@@ -1067,6 +1067,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/salary-rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Rules
+         * @description What each account or goal gets when a salary is split, oldest first.
+         */
+        get: operations["list_rules_api_v1_salary_rules_get"];
+        put?: never;
+        /** Create Rule */
+        post: operations["create_rule_api_v1_salary_rules_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/salary-rules/{rule_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Rule */
+        delete: operations["delete_rule_api_v1_salary_rules__rule_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Rule */
+        patch: operations["update_rule_api_v1_salary_rules__rule_id__patch"];
+        trace?: never;
+    };
     "/api/v1/stats/balance-trend": {
         parameters: {
             query?: never;
@@ -1807,6 +1846,37 @@ export interface paths {
         /** Restore Transaction */
         post: operations["restore_transaction_api_v1_transactions__transaction_id__restore_post"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/transactions/{transaction_id}/salary-split": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Salary Split Plan
+         * @description What the salary rules would send on from this salary (nothing is made), or, after a split,
+         *     what it made. Only a posted income in the Salary category can be split.
+         */
+        get: operations["salary_split_plan_api_v1_transactions__transaction_id__salary_split_get"];
+        put?: never;
+        /**
+         * Apply Salary Split
+         * @description Make the split: a transfer from the salary's account into each account, an amount set aside
+         *     for each goal tracked by hand. The lines are the ones you confirmed (amounts may differ from the
+         *     plan) and can't add up to more than the salary. 409 when it was already split.
+         */
+        post: operations["apply_salary_split_api_v1_transactions__transaction_id__salary_split_post"];
+        /**
+         * Undo Salary Split
+         * @description Take a split back: its transfers go to the trash and its set-asides are removed.
+         */
+        delete: operations["undo_salary_split_api_v1_transactions__transaction_id__salary_split_delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3575,6 +3645,204 @@ export interface components {
              * @description Whether a new account can be created right now.
              */
             open: boolean;
+        };
+        /** SalaryRuleCreate */
+        SalaryRuleCreate: {
+            /**
+             * Account Id
+             * @description Send money to this account (a transfer from the salary's)
+             */
+            account_id?: string | null;
+            /**
+             * Goal Id
+             * @description Set money aside for this goal (or move it to its account)
+             */
+            goal_id?: string | null;
+            mode: components["schemas"]["SalaryRuleMode"];
+            /**
+             * Value
+             * @description A percentage of the salary (up to 100), or an amount in its currency
+             */
+            value: number | string;
+        };
+        /**
+         * SalaryRuleMode
+         * @description How much of a salary a rule sends on: a share of it, or a fixed amount.
+         * @enum {string}
+         */
+        SalaryRuleMode: "percent" | "fixed";
+        /** SalaryRuleResponse */
+        SalaryRuleResponse: {
+            /** Account Id */
+            account_id: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Goal Id */
+            goal_id: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            mode: components["schemas"]["SalaryRuleMode"];
+            /** Target Name */
+            target_name: string;
+            /**
+             * Target Type
+             * @enum {string}
+             */
+            target_type: "account" | "goal";
+            /** Value */
+            value: string;
+        };
+        /**
+         * SalaryRuleUpdate
+         * @description Partial update: how much a rule sends. The target can't change; delete the rule instead.
+         */
+        SalaryRuleUpdate: {
+            mode?: components["schemas"]["SalaryRuleMode"] | null;
+            /** Value */
+            value?: number | string | null;
+        };
+        /** SalarySplitApply */
+        SalarySplitApply: {
+            /** Items */
+            items: components["schemas"]["SalarySplitLine"][];
+        };
+        /**
+         * SalarySplitItem
+         * @description One line of the proposed split.
+         */
+        SalarySplitItem: {
+            /**
+             * Amount
+             * @description What this rule works out to, in the salary's currency
+             */
+            amount: string;
+            mode: components["schemas"]["SalaryRuleMode"];
+            /**
+             * Ok
+             * @description False when it can't be made (see `reason`)
+             */
+            ok: boolean;
+            /** Reason */
+            reason?: string | null;
+            /**
+             * Rule Id
+             * Format: uuid
+             */
+            rule_id: string;
+            /**
+             * Target Id
+             * Format: uuid
+             */
+            target_id: string;
+            /** Target Name */
+            target_name: string;
+            /**
+             * Target Type
+             * @enum {string}
+             */
+            target_type: "account" | "goal";
+            /** Value */
+            value: string;
+        };
+        /** SalarySplitLine */
+        SalarySplitLine: {
+            /** Amount */
+            amount: number | string;
+            /**
+             * Target Id
+             * Format: uuid
+             */
+            target_id: string;
+            /**
+             * Target Type
+             * @enum {string}
+             */
+            target_type: "account" | "goal";
+        };
+        /** SalarySplitMade */
+        SalarySplitMade: {
+            /** Amount */
+            amount: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "transfer" | "entry";
+            /** Target Name */
+            target_name: string;
+        };
+        /**
+         * SalarySplitPlan
+         * @description What a salary's rules would send on, or, once it has been split, what was made.
+         */
+        SalarySplitPlan: {
+            /**
+             * Account Id
+             * Format: uuid
+             */
+            account_id: string;
+            /** Account Name */
+            account_name: string;
+            /** Amount */
+            amount: string;
+            /**
+             * Applied
+             * @description True once the split has been made (undo it to redo it)
+             */
+            applied: boolean;
+            /** Currency */
+            currency: string;
+            /** Items */
+            items: components["schemas"]["SalarySplitItem"][];
+            /**
+             * Left
+             * @description What stays in the account (salary less total)
+             */
+            left: string;
+            /**
+             * Made
+             * @description What a split made
+             */
+            made?: components["schemas"]["SalarySplitMade"][];
+            /**
+             * Over
+             * @description True when the lines add up to more than the salary
+             */
+            over: boolean;
+            /**
+             * Salary Id
+             * Format: uuid
+             */
+            salary_id: string;
+            /**
+             * Total
+             * @description The lines that can be made, added up
+             */
+            total: string;
+        };
+        /** SalarySplitResult */
+        SalarySplitResult: {
+            /**
+             * Entries
+             * @description Amounts set aside for goals tracked by hand
+             */
+            entries: number;
+            /**
+             * Transfers
+             * @description Transfers made between accounts
+             */
+            transfers: number;
         };
         /**
          * SessionResponse
@@ -6716,6 +6984,123 @@ export interface operations {
             };
         };
     };
+    list_rules_api_v1_salary_rules_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalaryRuleResponse"][];
+                };
+            };
+        };
+    };
+    create_rule_api_v1_salary_rules_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SalaryRuleCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalaryRuleResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_rule_api_v1_salary_rules__rule_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_rule_api_v1_salary_rules__rule_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SalaryRuleUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalaryRuleResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     balance_trend_api_v1_stats_balance_trend_get: {
         parameters: {
             query: {
@@ -8399,6 +8784,101 @@ export interface operations {
             };
         };
     };
+    salary_split_plan_api_v1_transactions__transaction_id__salary_split_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transaction_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalarySplitPlan"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    apply_salary_split_api_v1_transactions__transaction_id__salary_split_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transaction_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SalarySplitApply"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalarySplitResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    undo_salary_split_api_v1_transactions__transaction_id__salary_split_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transaction_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     read_me_api_v1_users_me_get: {
         parameters: {
             query?: never;
@@ -8705,6 +9185,11 @@ export const notificationResponseKindValues: ReadonlyArray<FlattenedDeepRequired
 export const paymentMethodValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PaymentMethod"]> = ["cash", "bank_transfer", "debit_card", "credit_card", "other"];
 export const previewRowDuplicateAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PreviewRow"]["duplicate"]> = ["reference", "transfer", "possible"];
 export const previewRowTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PreviewRow"]["type"]> = ["income", "expense"];
+export const salaryRuleModeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SalaryRuleMode"]> = ["percent", "fixed"];
+export const salaryRuleResponseTarget_typeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SalaryRuleResponse"]["target_type"]> = ["account", "goal"];
+export const salarySplitItemTarget_typeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SalarySplitItem"]["target_type"]> = ["account", "goal"];
+export const salarySplitLineTarget_typeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SalarySplitLine"]["target_type"]> = ["account", "goal"];
+export const salarySplitMadeKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SalarySplitMade"]["kind"]> = ["transfer", "entry"];
 export const subscriptionStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SubscriptionStatus"]> = ["active", "paused", "cancelled", "completed"];
 export const transactionTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TransactionType"]> = ["income", "expense", "transfer"];
 export const vendorLocalityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["VendorLocality"]> = ["local", "foreign", "unknown"];

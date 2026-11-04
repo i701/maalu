@@ -133,6 +133,11 @@ class Transaction(Base):
     refund_of: Mapped["Transaction | None"] = relationship(
         lazy="joined", join_depth=1, remote_side="Transaction.id", foreign_keys=[refund_of_id]
     )
+    # The salary this transfer was made from, by a salary split (see `SalarySplitService`). Deleting
+    # the salary for good only unlinks it.
+    split_from_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("transactions.id", ondelete="SET NULL"), index=True, default=None
+    )
     # The group this belongs to, if any (see `TransactionGroup`). Deleting the group only unlinks.
     group_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid, ForeignKey("transaction_groups.id", ondelete="SET NULL"), index=True, default=None

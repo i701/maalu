@@ -18,6 +18,7 @@ from app.services import (
     ImportService,
     LinkService,
     NotificationService,
+    SalarySplitService,
     SessionService,
     StatsService,
     SubscriptionService,
@@ -48,6 +49,10 @@ def get_session_service(db: DbSession) -> SessionService:
 
 def get_transaction_service(db: DbSession) -> TransactionService:
     return TransactionService(db)
+
+
+def get_salary_split_service(db: DbSession) -> SalarySplitService:
+    return SalarySplitService(db)
 
 
 def get_vendor_service(db: DbSession) -> VendorService:
@@ -121,6 +126,7 @@ VendorServiceDep = Annotated[VendorService, Depends(get_vendor_service)]
 BudgetServiceDep = Annotated[BudgetService, Depends(get_budget_service)]
 StatsServiceDep = Annotated[StatsService, Depends(get_stats_service)]
 GoalServiceDep = Annotated[GoalService, Depends(get_goal_service)]
+SalarySplitServiceDep = Annotated[SalarySplitService, Depends(get_salary_split_service)]
 CategoryServiceDep = Annotated[CategoryService, Depends(get_category_service)]
 AccountServiceDep = Annotated[AccountService, Depends(get_account_service)]
 SubscriptionServiceDep = Annotated[SubscriptionService, Depends(get_subscription_service)]

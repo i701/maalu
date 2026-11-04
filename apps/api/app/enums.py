@@ -7,6 +7,13 @@ ACCENT_COLORS = ("blue", "green", "orange", "violet", "pink", "amber", "lime", "
 AccentColor = Literal["blue", "green", "orange", "violet", "pink", "amber", "lime", "slate"]
 
 
+class SalaryRuleMode(StrEnum):
+    """How much of a salary a rule sends on: a share of it, or a fixed amount."""
+
+    PERCENT = "percent"
+    FIXED = "fixed"
+
+
 class CategoryKind(StrEnum):
     """How necessary spending in a category is. A category with no kind is "unsorted"."""
 

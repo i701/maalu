@@ -47,6 +47,7 @@ export default defineConfig(({ mode }) => {
 					"ExpandLess",
 					"LightMode",
 					"Link",
+					"CallSplit",
 					"Logout",
 					"Menu",
 					"Person",

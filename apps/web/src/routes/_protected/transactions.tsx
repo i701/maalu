@@ -3,6 +3,7 @@ import AutorenewIcon from "@mui/icons-material/Autorenew";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import InsertLinkOutlinedIcon from "@mui/icons-material/InsertLinkOutlined";
 import UndoIcon from "@mui/icons-material/Undo";
+import CallSplitIcon from "@mui/icons-material/CallSplit";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
@@ -75,7 +76,10 @@ import { unwrap } from "#/lib/unwrap";
 import { getAccountFn, listAccountsFn } from "#/server/accounts";
 import { listCurrenciesFn } from "#/server/currencies";
 import { listSubscriptionsFn } from "#/server/subscriptions";
+import { listSalaryRulesFn } from "#/server/salary";
 import { listTemplatesFn } from "#/server/templates";
+import { canSplitSalary, useSalarySplit } from "#/lib/use-salary-split";
+import SalarySplitHost from "#/components/SalarySplitHost";
 import {
 	listUpcomingFn,
 	listTransferSuggestionsFn,
@@ -185,6 +189,7 @@ export const Route = createFileRoute("/_protected/transactions")({
 			budget,
 			suggestions,
 			groups,
+			salaryRules,
 		] = await Promise.all([
 			listTransactionsFn({ data: deps }),
 			listVendorsFn(),
@@ -208,6 +213,8 @@ export const Route = createFileRoute("/_protected/transactions")({
 			listTransferSuggestionsFn(),
 			// for the "Group" action's list of groups to add to
 			listGroupsFn(),
+			// whether adding a salary should offer to split it
+			listSalaryRulesFn(),
 		]);
 		const rows = unwrap(transactions);
 		const last = lastPageIfOutOfRange({
@@ -235,6 +242,7 @@ export const Route = createFileRoute("/_protected/transactions")({
 			budget: budget.ok ? budget.data : null,
 			allGroups: groups.ok ? groups.data : [],
 			transferSuggestions: suggestions.ok ? suggestions.data : [],
+			hasSalaryRules: salaryRules.ok && salaryRules.data.length > 0,
 			selectedVendor: vendor?.ok ? { id: vendor.data.id, label: vendor.data.name } : null,
 			selectedCategory: category?.ok ? { id: category.data.id, label: category.data.name } : null,
 			selectedAccount: account?.ok
@@ -413,6 +421,7 @@ function TxAmount({ t, baseCurrency }: { t: Transaction; baseCurrency: string })
 function TxActions({
 	t,
 	onConvert,
+	onSplit,
 	onRefund,
 	onDuplicate,
 	onEdit,
@@ -420,6 +429,7 @@ function TxActions({
 }: {
 	t: Transaction;
 	onConvert: () => void;
+	onSplit: () => void;
 	onRefund: () => void;
 	onDuplicate: () => void;
 	onEdit: () => void;
@@ -446,6 +456,16 @@ function TxActions({
 					onClick={onRefund}
 				>
 					<InsertLinkOutlinedIcon fontSize="small" />
+				</IconButton>
+			)}
+			{canSplitSalary(t) && (
+				<IconButton
+					aria-label="Split salary"
+					title="Split this salary between accounts and goals"
+					size="small"
+					onClick={onSplit}
+				>
+					<CallSplitIcon fontSize="small" />
 				</IconButton>
 			)}
 			{t.type === "expense" && !t.subscription && (
@@ -483,6 +503,7 @@ const TransactionsTable = memo(function TransactionsTable({
 	onToggleAll,
 	baseCurrency,
 	onConvert,
+	onSplit,
 	onRefund,
 	onDuplicate,
 	onEdit,
@@ -495,6 +516,7 @@ const TransactionsTable = memo(function TransactionsTable({
 	onToggleAll: () => void;
 	baseCurrency: string;
 	onConvert: (t: Transaction) => void;
+	onSplit: (t: Transaction) => void;
 	onRefund: (t: Transaction) => void;
 	onDuplicate: (t: Transaction) => void;
 	onEdit: (t: Transaction) => void;
@@ -590,6 +612,7 @@ const TransactionsTable = memo(function TransactionsTable({
 						<TxActions
 							t={t}
 							onConvert={() => onConvert(t)}
+							onSplit={() => onSplit(t)}
 							onRefund={() => onRefund(t)}
 							onDuplicate={() => onDuplicate(t)}
 							onEdit={() => onEdit(t)}
@@ -641,6 +664,7 @@ const TransactionsTable = memo(function TransactionsTable({
 						<TxActions
 							t={t}
 							onConvert={() => onConvert(t)}
+							onSplit={() => onSplit(t)}
 							onRefund={() => onRefund(t)}
 							onDuplicate={() => onDuplicate(t)}
 							onEdit={() => onEdit(t)}
@@ -662,6 +686,7 @@ function TransactionList({
 	tags,
 	groups,
 	onConvert,
+	onSplit,
 	onRefund,
 	onDuplicate,
 	onEdit,
@@ -680,6 +705,7 @@ function TransactionList({
 	total: number;
 	search: TransactionSearch;
 	onConvert: (t: Transaction) => void;
+	onSplit: (t: Transaction) => void;
 	onRefund: (t: Transaction) => void;
 	onDuplicate: (t: Transaction) => void;
 	onEdit: (t: Transaction) => void;
@@ -756,6 +782,7 @@ function TransactionList({
 				onToggle={selection.toggle}
 				onToggleAll={selection.toggleAll}
 				onConvert={onConvert}
+				onSplit={onSplit}
 				onRefund={onRefund}
 				onDuplicate={onDuplicate}
 				onEdit={onEdit}
@@ -841,6 +868,7 @@ function TransactionsPage() {
 		allCategories,
 		budget,
 		selectedAccount,
+		hasSalaryRules,
 	} = Route.useLoaderData();
 	const { user } = Route.useRouteContext();
 	// The URL as soon as it changes (the loader data lags behind it), so controls feel instant.
@@ -864,6 +892,7 @@ function TransactionsPage() {
 	const [deleting, setDeleting] = useState<Transaction | null>(null);
 	const [converting, setConverting] = useState<Transaction | null>(null);
 	const { refunding, refundOf, edit, close: closeRefund } = useRefundDialog(setEditing);
+	const salary = useSalarySplit(hasSalaryRules);
 
 	const setPage = (page: number) => navigate({ search: (p) => ({ ...p, page }), replace: true });
 
@@ -1017,6 +1046,7 @@ function TransactionsPage() {
 										total={total}
 										search={search}
 										onConvert={setConverting}
+										onSplit={salary.open}
 										onRefund={refundOf}
 										onDuplicate={duplicate}
 										onEdit={edit}
@@ -1053,12 +1083,14 @@ function TransactionsPage() {
 					accounts={accounts}
 					currencies={currencies}
 					baseCurrency={user.base_currency}
+					onCreated={salary.afterCreate}
 					onClose={() => {
 						setEditing(null);
 						setCopyOf(null);
 					}}
 				/>
 			)}
+			<SalarySplitHost id={salary.id} onClose={salary.close} />
 			<RefundDialogHost
 				state={refunding}
 				accounts={accounts}

@@ -57,6 +57,10 @@ class GoalEntry(Base):
         Uuid, ForeignKey("goals.id", ondelete="CASCADE"), index=True
     )
     goal: Mapped[Goal] = relationship(back_populates="entries")
+    # The salary this was set aside from, by a salary split. Deleting the salary only unlinks it.
+    split_from_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("transactions.id", ondelete="SET NULL"), index=True, default=None
+    )
     entry_date: Mapped[date] = mapped_column(Date)
     amount: Mapped[Decimal] = mapped_column(Numeric(19, 4))
     note: Mapped[str | None] = mapped_column(String(200), default=None)

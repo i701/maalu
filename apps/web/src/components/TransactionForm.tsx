@@ -63,6 +63,7 @@ export default function TransactionForm({
 	currencies,
 	baseCurrency,
 	onClose,
+	onCreated,
 }: {
 	/** undefined = create a new transaction */
 	transaction?: Transaction;
@@ -81,6 +82,8 @@ export default function TransactionForm({
 	currencies: string[];
 	baseCurrency: string;
 	onClose: () => void;
+	/** Called with a transaction that was just created (not edited). */
+	onCreated?: (created: Transaction) => void;
 }) {
 	const { run, pending, error } = useAction();
 	const sheet = useSheet(onClose);
@@ -163,10 +166,10 @@ export default function TransactionForm({
 		const request = buildTransactionRequest(form, formState());
 		if ("error" in request) return setLocalError(request.error);
 		setLocalError(null);
-		let createdId: string | undefined;
+		let created: Transaction | undefined;
 		const send = async () => {
 			const res = await request.send();
-			if (res.ok && !transaction) createdId = res.data.id;
+			if (res.ok && !transaction) created = res.data;
 			return res;
 		};
 		if (await run(send)) {
@@ -179,17 +182,13 @@ export default function TransactionForm({
 			});
 			notify(message.text, message.severity);
 			// files picked on a new transaction go up now that it has an id
-			const skipped = createdId
-				? [await attachments.uploadPending(createdId), await links.savePending(createdId)]
-				: [];
-			for (const text of skipped) if (text) notify(text, "warning");
+			for (const text of created ? await uploadPending(created.id, attachments, links) : [])
+				if (text) notify(text, "warning");
 			if (another && !transaction) {
 				fillFrom(seedAfterSave(form, formState()));
-				// the form was cleared: put the cursor back on the amount, ready for the next one
-				requestAnimationFrame(() =>
-					document.querySelector<HTMLInputElement>('input[name="amount"]')?.focus(),
-				);
+				focusAmount(); // the form was cleared: ready for the next one
 			} else sheet.close();
+			if (created) onCreated?.(created);
 		}
 	}
 
@@ -348,4 +347,15 @@ export default function TransactionForm({
 			)}
 		</>
 	);
-}
+} /** Put the cursor back on the amount. */
+const focusAmount = () =>
+	requestAnimationFrame(() =>
+		document.querySelector<HTMLInputElement>('input[name="amount"]')?.focus(),
+	);
+
+/** Files and links picked on a new transaction go up now that it has an id: any that were skipped. */
+const uploadPending = (
+	id: string,
+	attachments: ReturnType<typeof useAttachments>,
+	links: ReturnType<typeof useLinks>,
+) => Promise.all([attachments.uploadPending(id), links.savePending(id)]);

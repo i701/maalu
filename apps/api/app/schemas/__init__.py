@@ -44,6 +44,17 @@ from app.schemas.imports import (
 )
 from app.schemas.link import LinkCreate, LinkResponse
 from app.schemas.notification import NotificationResponse, UnreadCount
+from app.schemas.salary import (
+    SalaryRuleCreate,
+    SalaryRuleResponse,
+    SalaryRuleUpdate,
+    SalarySplitApply,
+    SalarySplitItem,
+    SalarySplitLine,
+    SalarySplitMade,
+    SalarySplitPlan,
+    SalarySplitResult,
+)
 from app.schemas.subscription import (
     SubscriptionCreate,
     SubscriptionFromTransaction,
@@ -162,6 +173,15 @@ __all__ = [
     "RecoveryCodes",
     "RefundOfRef",
     "RegistrationStatus",
+    "SalaryRuleCreate",
+    "SalaryRuleResponse",
+    "SalaryRuleUpdate",
+    "SalarySplitApply",
+    "SalarySplitItem",
+    "SalarySplitLine",
+    "SalarySplitMade",
+    "SalarySplitPlan",
+    "SalarySplitResult",
     "SessionResponse",
     "SplitInput",
     "SplitResponse",

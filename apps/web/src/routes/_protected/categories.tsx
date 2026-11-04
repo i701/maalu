@@ -277,7 +277,7 @@ function CategoriesPage() {
 				action={
 					<HeaderActions
 						unsorted={unsorted}
-						canSort={all.length > 0}
+						canSort={all.some((c) => !c.is_salary)}
 						onSort={() => setSorting(true)}
 						onAdd={() => setEditing("new")}
 					/>

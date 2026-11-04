@@ -41,6 +41,7 @@ OWNED = (
     "goals",
     "import_aliases",
     "import_batches",
+    "salary_rules",
     "subscriptions",
     "tags",
     "transaction_groups",

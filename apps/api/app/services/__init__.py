@@ -36,6 +36,14 @@ from app.services.imports import ImportNotFoundError, ImportService
 from app.services.link import LinkService
 from app.services.money import ExchangeRateRequiredError
 from app.services.notification import NotificationNotFoundError, NotificationService
+from app.services.salary_split import (
+    SalaryRuleNotFoundError,
+    SalaryRuleTakenError,
+    SalarySplitAppliedError,
+    SalarySplitError,
+    SalarySplitNotAppliedError,
+    SalarySplitService,
+)
 from app.services.session import SessionService
 from app.services.snapshot import SnapshotService
 from app.services.stats import StatsRangeError, StatsService
@@ -109,6 +117,12 @@ __all__ = [
     "NotificationService",
     "PasswordUnchangedError",
     "RegistrationClosedError",
+    "SalaryRuleNotFoundError",
+    "SalaryRuleTakenError",
+    "SalarySplitAppliedError",
+    "SalarySplitError",
+    "SalarySplitNotAppliedError",
+    "SalarySplitService",
     "SessionService",
     "SnapshotService",
     "StatsRangeError",

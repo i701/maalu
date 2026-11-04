@@ -15,18 +15,34 @@ import TwoFactorSettings from "#/components/TwoFactorSettings";
 import { unwrap } from "#/lib/unwrap";
 import { useAction } from "#/lib/use-action";
 import { getMeFn, updateMeFn } from "#/server/auth";
+import { listAccountsFn } from "#/server/accounts";
+import { listGoalsFn } from "#/server/goals";
+import { listSalaryRulesFn } from "#/server/salary";
 import { listSessionsFn } from "#/server/sessions";
+import SalaryRulesCard from "#/components/SalaryRulesCard";
 
 export const Route = createFileRoute("/_protected/settings")({
 	loader: async () => {
-		const [me, sessions] = await Promise.all([getMeFn(), listSessionsFn()]);
-		return { me: unwrap(me), sessions: unwrap(sessions) };
+		const [me, sessions, rules, accounts, goals] = await Promise.all([
+			getMeFn(),
+			listSessionsFn(),
+			listSalaryRulesFn(),
+			listAccountsFn(),
+			listGoalsFn({ data: {} }),
+		]);
+		return {
+			me: unwrap(me),
+			sessions: unwrap(sessions),
+			rules: unwrap(rules),
+			accounts: unwrap(accounts),
+			goals: unwrap(goals),
+		};
 	},
 	component: SettingsPage,
 });
 
 function SettingsPage() {
-	const { me, sessions } = Route.useLoaderData();
+	const { me, sessions, rules, accounts, goals } = Route.useLoaderData();
 	const { run, pending, error } = useAction();
 	const notify = useNotify();
 
@@ -61,6 +77,12 @@ function SettingsPage() {
 						</Typography>
 					</CardContent>
 				</Card>
+				<SalaryRulesCard
+					rules={rules}
+					accounts={accounts}
+					goals={goals}
+					currency={me.base_currency}
+				/>
 				<NotificationSettings me={me} />
 				<PasswordCard twoFactor={me.two_factor_enabled} />
 				<TwoFactorSettings enabled={me.two_factor_enabled} />

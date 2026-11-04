@@ -3873,6 +3873,418 @@
         "title": "RegistrationStatus",
         "type": "object"
       },
+      "SalaryRuleCreate": {
+        "properties": {
+          "account_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Send money to this account (a transfer from the salary's)",
+            "title": "Account Id"
+          },
+          "goal_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Set money aside for this goal (or move it to its account)",
+            "title": "Goal Id"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/SalaryRuleMode"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "description": "A percentage of the salary (up to 100), or an amount in its currency",
+            "title": "Value"
+          }
+        },
+        "required": [
+          "mode",
+          "value"
+        ],
+        "title": "SalaryRuleCreate",
+        "type": "object"
+      },
+      "SalaryRuleMode": {
+        "description": "How much of a salary a rule sends on: a share of it, or a fixed amount.",
+        "enum": [
+          "percent",
+          "fixed"
+        ],
+        "title": "SalaryRuleMode",
+        "type": "string"
+      },
+      "SalaryRuleResponse": {
+        "properties": {
+          "account_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "goal_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Goal Id"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/SalaryRuleMode"
+          },
+          "target_name": {
+            "title": "Target Name",
+            "type": "string"
+          },
+          "target_type": {
+            "enum": [
+              "account",
+              "goal"
+            ],
+            "title": "Target Type",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "target_type",
+          "account_id",
+          "goal_id",
+          "target_name",
+          "mode",
+          "value",
+          "created_at"
+        ],
+        "title": "SalaryRuleResponse",
+        "type": "object"
+      },
+      "SalaryRuleUpdate": {
+        "description": "Partial update: how much a rule sends. The target can't change; delete the rule instead.",
+        "properties": {
+          "mode": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SalaryRuleMode"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "value": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "title": "SalaryRuleUpdate",
+        "type": "object"
+      },
+      "SalarySplitApply": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SalarySplitLine"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "SalarySplitApply",
+        "type": "object"
+      },
+      "SalarySplitItem": {
+        "description": "One line of the proposed split.",
+        "properties": {
+          "amount": {
+            "description": "What this rule works out to, in the salary's currency",
+            "title": "Amount",
+            "type": "string"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/SalaryRuleMode"
+          },
+          "ok": {
+            "description": "False when it can't be made (see `reason`)",
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "rule_id": {
+            "format": "uuid",
+            "title": "Rule Id",
+            "type": "string"
+          },
+          "target_id": {
+            "format": "uuid",
+            "title": "Target Id",
+            "type": "string"
+          },
+          "target_name": {
+            "title": "Target Name",
+            "type": "string"
+          },
+          "target_type": {
+            "enum": [
+              "account",
+              "goal"
+            ],
+            "title": "Target Type",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rule_id",
+          "target_type",
+          "target_id",
+          "target_name",
+          "amount",
+          "mode",
+          "value",
+          "ok"
+        ],
+        "title": "SalarySplitItem",
+        "type": "object"
+      },
+      "SalarySplitLine": {
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Amount"
+          },
+          "target_id": {
+            "format": "uuid",
+            "title": "Target Id",
+            "type": "string"
+          },
+          "target_type": {
+            "enum": [
+              "account",
+              "goal"
+            ],
+            "title": "Target Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "target_type",
+          "target_id",
+          "amount"
+        ],
+        "title": "SalarySplitLine",
+        "type": "object"
+      },
+      "SalarySplitMade": {
+        "properties": {
+          "amount": {
+            "title": "Amount",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "transfer",
+              "entry"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "target_name": {
+            "title": "Target Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "target_name",
+          "amount"
+        ],
+        "title": "SalarySplitMade",
+        "type": "object"
+      },
+      "SalarySplitPlan": {
+        "description": "What a salary's rules would send on, or, once it has been split, what was made.",
+        "properties": {
+          "account_id": {
+            "format": "uuid",
+            "title": "Account Id",
+            "type": "string"
+          },
+          "account_name": {
+            "title": "Account Name",
+            "type": "string"
+          },
+          "amount": {
+            "title": "Amount",
+            "type": "string"
+          },
+          "applied": {
+            "description": "True once the split has been made (undo it to redo it)",
+            "title": "Applied",
+            "type": "boolean"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SalarySplitItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "left": {
+            "description": "What stays in the account (salary less total)",
+            "title": "Left",
+            "type": "string"
+          },
+          "made": {
+            "description": "What a split made",
+            "items": {
+              "$ref": "#/components/schemas/SalarySplitMade"
+            },
+            "title": "Made",
+            "type": "array"
+          },
+          "over": {
+            "description": "True when the lines add up to more than the salary",
+            "title": "Over",
+            "type": "boolean"
+          },
+          "salary_id": {
+            "format": "uuid",
+            "title": "Salary Id",
+            "type": "string"
+          },
+          "total": {
+            "description": "The lines that can be made, added up",
+            "title": "Total",
+            "type": "string"
+          }
+        },
+        "required": [
+          "salary_id",
+          "amount",
+          "currency",
+          "account_id",
+          "account_name",
+          "applied",
+          "items",
+          "total",
+          "left",
+          "over"
+        ],
+        "title": "SalarySplitPlan",
+        "type": "object"
+      },
+      "SalarySplitResult": {
+        "properties": {
+          "entries": {
+            "description": "Amounts set aside for goals tracked by hand",
+            "title": "Entries",
+            "type": "integer"
+          },
+          "transfers": {
+            "description": "Transfers made between accounts",
+            "title": "Transfers",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "transfers",
+          "entries"
+        ],
+        "title": "SalarySplitResult",
+        "type": "object"
+      },
       "SessionResponse": {
         "description": "One sign-in of yours, for the list of where you are signed in.",
         "properties": {
@@ -10182,6 +10594,178 @@
         ]
       }
     },
+    "/api/v1/salary-rules": {
+      "get": {
+        "description": "What each account or goal gets when a salary is split, oldest first.",
+        "operationId": "list_rules_api_v1_salary_rules_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SalaryRuleResponse"
+                  },
+                  "title": "Response List Rules Api V1 Salary Rules Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List Rules",
+        "tags": [
+          "salary"
+        ]
+      },
+      "post": {
+        "operationId": "create_rule_api_v1_salary_rules_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SalaryRuleCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalaryRuleResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Create Rule",
+        "tags": [
+          "salary"
+        ]
+      }
+    },
+    "/api/v1/salary-rules/{rule_id}": {
+      "delete": {
+        "operationId": "delete_rule_api_v1_salary_rules__rule_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "rule_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Rule Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Delete Rule",
+        "tags": [
+          "salary"
+        ]
+      },
+      "patch": {
+        "operationId": "update_rule_api_v1_salary_rules__rule_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "rule_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Rule Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SalaryRuleUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalaryRuleResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Update Rule",
+        "tags": [
+          "salary"
+        ]
+      }
+    },
     "/api/v1/stats/balance-trend": {
       "get": {
         "description": "What your accounts were worth at the end of each day, in your base currency.",
@@ -14167,6 +14751,152 @@
         "summary": "Restore Transaction",
         "tags": [
           "transactions"
+        ]
+      }
+    },
+    "/api/v1/transactions/{transaction_id}/salary-split": {
+      "delete": {
+        "description": "Take a split back: its transfers go to the trash and its set-asides are removed.",
+        "operationId": "undo_salary_split_api_v1_transactions__transaction_id__salary_split_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "transaction_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Transaction Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Undo Salary Split",
+        "tags": [
+          "salary"
+        ]
+      },
+      "get": {
+        "description": "What the salary rules would send on from this salary (nothing is made), or, after a split,\nwhat it made. Only a posted income in the Salary category can be split.",
+        "operationId": "salary_split_plan_api_v1_transactions__transaction_id__salary_split_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "transaction_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Transaction Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalarySplitPlan"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Salary Split Plan",
+        "tags": [
+          "salary"
+        ]
+      },
+      "post": {
+        "description": "Make the split: a transfer from the salary's account into each account, an amount set aside\nfor each goal tracked by hand. The lines are the ones you confirmed (amounts may differ from the\nplan) and can't add up to more than the salary. 409 when it was already split.",
+        "operationId": "apply_salary_split_api_v1_transactions__transaction_id__salary_split_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "transaction_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Transaction Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SalarySplitApply"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalarySplitResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Apply Salary Split",
+        "tags": [
+          "salary"
         ]
       }
     },
