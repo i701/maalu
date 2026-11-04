@@ -528,7 +528,8 @@ export interface paths {
         /**
          * List Categories
          * @description All categories, or one page with `limit`/`offset`, optionally searched. The total number of
-         *     matches, ignoring paging, is in `X-Total-Count`.
+         *     matches, ignoring paging, is in `X-Total-Count`. The default Salary category is made first
+         *     when it is missing.
          */
         get: operations["list_categories_api_v1_categories_get"];
         put?: never;
@@ -2558,6 +2559,12 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /**
+             * Is Salary
+             * @description The default Salary category: income only, never a refund, can't be renamed, deleted, merged away or nested
+             * @default false
+             */
+            is_salary: boolean;
             /** @description Its own need or want; null when not sorted */
             kind?: components["schemas"]["CategoryKind"] | null;
             /** Name */
@@ -4179,6 +4186,11 @@ export interface components {
             category_color: string | null;
             /** Category Id */
             category_id: string | null;
+            /**
+             * Category Is Salary
+             * @description In the default Salary category: pay, which can't be linked to a purchase
+             */
+            category_is_salary: boolean;
             /**
              * Created At
              * Format: date-time

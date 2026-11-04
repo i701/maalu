@@ -53,14 +53,17 @@ async def test_create_returns_what_the_form_needs(client: AsyncClient, auth):
 
 async def test_category_and_vendor_are_found_or_created(client: AsyncClient, auth):
     await make(client, auth)
-    cats = [c["name"] for c in (await client.get(CAT, headers=auth)).json()]
+    cats = [
+        c["name"]
+        for c in [c for c in (await client.get(CAT, headers=auth)).json() if not c["is_salary"]]
+    ]
     vendors = [v["name"] for v in (await client.get(VEND, headers=auth)).json()]
     assert "Groceries" in cats
     assert "Male Fish Market" in vendors
     # A second template reuses them rather than duplicating.
     await make(client, auth, name="Other", vendor_name="male fish market", category="groceries")
     assert len((await client.get(VEND, headers=auth)).json()) == 1
-    assert len((await client.get(CAT, headers=auth)).json()) == 1
+    assert len([c for c in (await client.get(CAT, headers=auth)).json() if not c["is_salary"]]) == 1
 
 
 async def test_amount_and_most_fields_are_optional(client: AsyncClient, auth):
@@ -167,7 +170,10 @@ async def test_delete(client: AsyncClient, auth):
 async def test_templates_never_block_deleting_what_they_point_at(client: AsyncClient, auth):
     a = await account(client, auth, "Gone")
     t = await make(client, auth, account_id=a["id"])
-    cat = next(c["id"] for c in (await client.get(CAT, headers=auth)).json())
+    cat = next(
+        c["id"]
+        for c in [c for c in (await client.get(CAT, headers=auth)).json() if not c["is_salary"]]
+    )
     assert (await client.delete(f"{ACC}/{a['id']}", headers=auth)).status_code == 204
     assert (await client.delete(f"{CAT}/{cat}", headers=auth)).status_code == 204
     left = (await client.get(f"{URL}/{t['id']}", headers=auth)).json()

@@ -24,7 +24,10 @@ async def make(client: AsyncClient, auth, name: str, **extra) -> dict:
 
 
 async def kinds(client: AsyncClient, auth) -> dict[str, str | None]:
-    return {c["name"]: c["kind"] for c in (await client.get(CAT, headers=auth)).json()}
+    return {
+        c["name"]: c["kind"]
+        for c in [c for c in (await client.get(CAT, headers=auth)).json() if not c["is_salary"]]
+    }
 
 
 async def test_a_category_starts_unsorted_and_can_be_set_and_cleared(
@@ -61,7 +64,10 @@ async def test_a_sub_category_takes_its_parents_kind_unless_it_has_its_own(
     plain = await make(client, auth, "Groceries", parent_id=food["id"])
     treats = await make(client, auth, "Dining", parent_id=food["id"], kind="want")
 
-    by_name = {c["name"]: c for c in (await client.get(CAT, headers=auth)).json()}
+    by_name = {
+        c["name"]: c
+        for c in [c for c in (await client.get(CAT, headers=auth)).json() if not c["is_salary"]]
+    }
     assert by_name["Groceries"]["kind"] is None
     assert by_name["Groceries"]["effective_kind"] == "need"
     assert by_name["Dining"]["effective_kind"] == "want"

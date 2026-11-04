@@ -77,6 +77,11 @@ class CategoryResponse(BaseModel):
     effective_kind: CategoryKind | None = Field(
         default=None, description="Its kind, or its parent's when it has none of its own"
     )
+    is_salary: bool = Field(
+        default=False,
+        description="The default Salary category: income only, never a refund, can't be renamed, "
+        "deleted, merged away or nested",
+    )
     parent_id: uuid.UUID | None = Field(default=None, description="Set on a sub-category")
     parent: str | None = Field(default=None, description="The parent's name")
     child_count: int = Field(default=0, description="Its sub-categories")

@@ -41,6 +41,6 @@ export function kindShares(categories: CategoryTotal[]): KindShare[] | null {
 }
 
 /** The categories (parents first, as the API lists them) that still have no kind of their own and
- * take none from a parent. */
+ * take none from a parent. The default Salary category is pay, not spending, so it is left out. */
 export const unsortedCategories = (categories: Category[]): Category[] =>
-	categories.filter((c) => c.effective_kind == null);
+	categories.filter((c) => c.effective_kind == null && !c.is_salary);

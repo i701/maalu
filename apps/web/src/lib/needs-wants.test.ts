@@ -43,12 +43,15 @@ describe("kindShares", () => {
 	});
 });
 
-const named = (name: string, effective_kind: Category["effective_kind"]) =>
-	({ name, effective_kind }) as Category;
+const named = (name: string, effective_kind: Category["effective_kind"], is_salary = false) =>
+	({ name, effective_kind, is_salary }) as Category;
 
 describe("unsortedCategories", () => {
 	it("keeps the ones with no kind of their own or a parent's", () => {
 		const c = named;
+		expect(unsortedCategories([c("Salary", null, true), c("B", null)]).map((x) => x.name)).toEqual([
+			"B",
+		]);
 		expect(
 			unsortedCategories([c("A", "need"), c("B", null), c("C", "want"), c("D", undefined)]).map(
 				(x) => x.name,

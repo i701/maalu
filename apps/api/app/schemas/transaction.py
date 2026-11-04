@@ -251,6 +251,9 @@ class TransactionResponse(BaseModel):
     category: str
     category_id: uuid.UUID | None
     category_color: str | None = Field(description="The category's accent colour")
+    category_is_salary: bool = Field(
+        description="In the default Salary category: pay, which can't be linked to a purchase"
+    )
     description: str | None
     transaction_date: date
     transaction_time: time | None

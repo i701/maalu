@@ -1,7 +1,7 @@
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, Enum, ForeignKey, String, UniqueConstraint, Uuid, func
+from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, String, UniqueConstraint, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.enums import CategoryKind
@@ -39,6 +39,9 @@ class Category(Base):
         ),
         default=None,
     )
+    # The one default category for pay (every user has it). Only income goes in it, it can never be
+    # linked to a purchase as a refund, and it can't be renamed, deleted, merged away or nested.
+    is_salary: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     # One level only: a top-level category can have sub-categories, a sub-category cannot. The
     # parent still works as a category of its own. Deleting a parent leaves its children top-level.
     parent_id: Mapped[uuid.UUID | None] = mapped_column(

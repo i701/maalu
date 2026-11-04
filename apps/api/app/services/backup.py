@@ -25,7 +25,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.ddl import sort_tables
 
-from app.models import Base, Budget, SnapshotDirty, User
+from app.models import Base, Budget, Category, SnapshotDirty, User
 from app.services.snapshot import EPOCH
 
 FORMAT = "maalu-backup"
@@ -178,13 +178,15 @@ class BackupService:
     async def _is_empty(self, user_id: uuid.UUID) -> bool:
         """No data in any backed-up table. The budget row itself is not data: it is made by looking
         at the budget page (settings only), so a new account that has had a look is still new; its
-        limits are, and are counted as their own table."""
+        limits are, and are counted as their own table. The default Salary category is not data
+        either: every account has one from the start."""
         for table in INCLUDED:
             if table.name == "budgets":
                 continue
-            found = await self.db.scalar(
-                select(func.count()).select_from(table).where(self._mine(table, user_id))
-            )
+            condition = self._mine(table, user_id)
+            if table.name == "categories":
+                condition = condition & table.c.is_salary.is_(False)
+            found = await self.db.scalar(select(func.count()).select_from(table).where(condition))
             if found:
                 return False
         return True
@@ -216,6 +218,10 @@ class BackupService:
             raise BackupNotEmptyError
         # the empty default budget made by looking at the page gives way to the backup's own
         await self.db.execute(delete(Budget).where(Budget.user_id == user.id))
+        # and so does the default Salary category, which the backup brings its own copy of
+        await self.db.execute(
+            delete(Category).where(Category.user_id == user.id, Category.is_salary.is_(True))
+        )
         tables: dict[str, list[dict]] = payload["tables"]
 
         # every row gets a new id; foreign keys are rewritten through these maps

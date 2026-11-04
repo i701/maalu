@@ -70,6 +70,7 @@ function Usage({ category }: { category: Category }) {
 	const kind = category.effective_kind;
 	return (
 		<>
+			{category.is_salary && <TonalChip accent={ACCENT.green} label="Default · pay" />}
 			{kind && (
 				<TonalChip
 					accent={kind === "need" ? ACCENT.blue : ACCENT.orange}
@@ -117,10 +118,13 @@ function CategoryName({ category }: { category: Category }) {
 }
 
 function Actions({
+	locked,
 	onRename,
 	onMerge,
 	onDelete,
 }: {
+	/** The default Salary category: it can be edited, but not merged away or deleted */
+	locked: boolean;
 	onRename: () => void;
 	onMerge: () => void;
 	onDelete: () => void;
@@ -132,13 +136,20 @@ function Actions({
 			</IconButton>
 			<IconButton
 				aria-label="Merge into another category"
-				title="Merge"
+				title={locked ? "The default Salary category can't be merged away" : "Merge"}
 				size="small"
+				disabled={locked}
 				onClick={onMerge}
 			>
 				<Symbol name="sort" size={20} />
 			</IconButton>
-			<IconButton aria-label="Delete" title="Delete" size="small" onClick={onDelete}>
+			<IconButton
+				aria-label="Delete"
+				title={locked ? "The default Salary category can't be deleted" : "Delete"}
+				size="small"
+				disabled={locked}
+				onClick={onDelete}
+			>
 				<DeleteOutlineIcon fontSize="small" />
 			</IconButton>
 		</>
@@ -180,6 +191,7 @@ const CategoriesTable = memo(function CategoriesTable({
 					</TableCell>
 					<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
 						<Actions
+							locked={c.is_salary}
 							onRename={() => onRename(c)}
 							onMerge={() => onMerge(c)}
 							onDelete={() => onDelete(c)}
@@ -198,6 +210,7 @@ const CategoriesTable = memo(function CategoriesTable({
 					meta={<Usage category={c} />}
 					actions={
 						<Actions
+							locked={c.is_salary}
 							onRename={() => onRename(c)}
 							onMerge={() => onMerge(c)}
 							onDelete={() => onDelete(c)}

@@ -34,17 +34,19 @@ export default function SortKindsDialog({
 	const { run, pending, error } = useAction();
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
+	// The default Salary category is pay, not spending, so it has no need or want to choose.
+	const spending = useMemo(() => categories.filter((c) => !c.is_salary), [categories]);
 	const [choices, setChoices] = useState<Record<string, Choice>>(() =>
-		Object.fromEntries(categories.map((c) => [c.id, choiceOf(c)])),
+		Object.fromEntries(spending.map((c) => [c.id, choiceOf(c)])),
 	);
 	const [onlyUnsorted, setOnlyUnsorted] = useState(false);
 
 	const changed = useMemo(
-		() => categories.filter((c) => choices[c.id] !== choiceOf(c)),
-		[categories, choices],
+		() => spending.filter((c) => choices[c.id] !== choiceOf(c)),
+		[spending, choices],
 	);
 	// "Unsorted" is judged on what was opened, so a row doesn't vanish the moment it is set.
-	const shown = onlyUnsorted ? categories.filter((c) => c.effective_kind == null) : categories;
+	const shown = onlyUnsorted ? spending.filter((c) => c.effective_kind == null) : spending;
 
 	async function submit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault();

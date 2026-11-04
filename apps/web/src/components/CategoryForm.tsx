@@ -43,7 +43,7 @@ export default function CategoryForm({
 		e.preventDefault();
 		const name = String(new FormData(e.currentTarget).get("name") ?? "").trim();
 		const fields = {
-			name,
+			name: category?.is_salary ? category.name : name,
 			...(color ? { color: color as Accent } : {}),
 			parent_id: parentId || null,
 			kind: kind || null,
@@ -76,7 +76,14 @@ export default function CategoryForm({
 					defaultValue={category?.name}
 					required
 					autoFocus
-					helperText={category ? "Everything in this category is renamed with it" : undefined}
+					disabled={category?.is_salary}
+					helperText={
+						category?.is_salary
+							? "The default category for pay: it keeps its name"
+							: category
+								? "Everything in this category is renamed with it"
+								: undefined
+					}
 					slotProps={{ htmlInput: { maxLength: 100 } }}
 				/>
 				<ColorSwatches value={color} onChange={setColor} />
@@ -86,7 +93,7 @@ export default function CategoryForm({
 					label="Parent category"
 					value={parentId}
 					onChange={(e) => setParentId(e.target.value)}
-					disabled={parents.length === 0}
+					disabled={parents.length === 0 || category?.is_salary}
 					helperText={
 						category && category.child_count > 0
 							? "Has sub-categories, so it stays at the top"

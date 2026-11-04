@@ -150,6 +150,11 @@ class SubscriptionService:
         )
         return await self.db.scalar(stmt)
 
+    @staticmethod
+    def _check_not_salary(category: Category) -> None:
+        if category.is_salary:  # a subscription is spending, and Salary is for income only
+            raise TransactionRuleError("The Salary category is only for income")
+
     async def create(self, user_id: uuid.UUID, data: SubscriptionCreate) -> Subscription:
         fields = data.model_dump(
             exclude={
@@ -171,11 +176,13 @@ class SubscriptionService:
             base,
         )
         vendor = await self._resolve_vendor(user_id, data.vendor_id, data.vendor_name)
+        category = await self.categories.get_or_create(user_id, data.category)
+        self._check_not_salary(category)
         subscription = Subscription(
             user_id=user_id,
             vendor=vendor,
             account=account,
-            category_ref=await self.categories.get_or_create(user_id, data.category),
+            category_ref=category,
             currency=currency,
             exchange_rate=rate,
             base_amount=base_amount,
@@ -228,9 +235,9 @@ class SubscriptionService:
             )
 
         if (name := changes.pop("category", None)) is not None:
-            subscription.category_ref = await self.categories.get_or_create(
-                subscription.user_id, name
-            )
+            category = await self.categories.get_or_create(subscription.user_id, name)
+            self._check_not_salary(category)
+            subscription.category_ref = category
         for field, value in changes.items():
             setattr(subscription, field, value)
         if (

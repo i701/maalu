@@ -19,7 +19,10 @@ def expense(category: str = "Groceries", amount: str = "10", **extra) -> dict:
 
 
 async def names(client: AsyncClient, auth) -> list[str]:
-    return [c["name"] for c in (await client.get(CAT, headers=auth)).json()]
+    return [
+        c["name"]
+        for c in [c for c in (await client.get(CAT, headers=auth)).json() if not c["is_salary"]]
+    ]
 
 
 async def test_requires_auth(client: AsyncClient):
@@ -66,7 +69,10 @@ async def test_usage_counts_and_search(client: AsyncClient, auth: dict[str, str]
     ]
     await client.post(TX, json=expense("x", "10", splits=lines), headers=auth)
     await client.post(TX, json=expense("Groceries", "5"), headers=auth)
-    got = {c["name"]: c for c in (await client.get(CAT, headers=auth)).json()}
+    got = {
+        c["name"]: c
+        for c in [c for c in (await client.get(CAT, headers=auth)).json() if not c["is_salary"]]
+    }
     assert got["Groceries"]["transaction_count"] == 2
     assert got["Junk food"]["transaction_count"] == 1
     found = await client.get(CAT, params={"q": "junk"}, headers=auth)
@@ -79,7 +85,10 @@ async def test_rename_updates_everything_and_rejects_a_taken_name(
 ):
     await client.post(TX, json=expense("Grocries"), headers=auth)
     await client.post(TX, json=expense("Fuel"), headers=auth)
-    cats = {c["name"]: c["id"] for c in (await client.get(CAT, headers=auth)).json()}
+    cats = {
+        c["name"]: c["id"]
+        for c in [c for c in (await client.get(CAT, headers=auth)).json() if not c["is_salary"]]
+    }
     ok = await client.patch(f"{CAT}/{cats['Grocries']}", json={"name": "Groceries"}, headers=auth)
     assert ok.status_code == 200
     assert {r["category"] for r in (await client.get(TX, headers=auth)).json()} == {
@@ -94,7 +103,9 @@ async def test_delete_only_when_unused(client: AsyncClient, auth: dict[str, str]
     tid = (await client.post(TX, json=expense("Fuel"), headers=auth)).json()["id"]
     unused = (await client.post(CAT, json={"name": "Spare"}, headers=auth)).json()["id"]
     fuel = next(
-        c["id"] for c in (await client.get(CAT, headers=auth)).json() if c["name"] == "Fuel"
+        c["id"]
+        for c in [c for c in (await client.get(CAT, headers=auth)).json() if not c["is_salary"]]
+        if c["name"] == "Fuel"
     )
     assert (await client.delete(f"{CAT}/{fuel}", headers=auth)).status_code == 409
     assert (await client.delete(f"{CAT}/{unused}", headers=auth)).status_code == 204
@@ -114,7 +125,10 @@ async def test_merge_moves_everything_then_removes_the_source(
     ]
     await client.post(TX, json=expense("x", "10", splits=lines), headers=auth)
     await client.post(TX, json=expense("Junk", "3"), headers=auth)
-    cats = {c["name"]: c["id"] for c in (await client.get(CAT, headers=auth)).json()}
+    cats = {
+        c["name"]: c["id"]
+        for c in [c for c in (await client.get(CAT, headers=auth)).json() if not c["is_salary"]]
+    }
     merged = await client.post(
         f"{CAT}/{cats['Junk']}/merge", json={"into_id": cats["Groceries"]}, headers=auth
     )
@@ -130,7 +144,7 @@ async def test_merge_moves_everything_then_removes_the_source(
 async def test_categories_are_per_user(client: AsyncClient, auth: dict[str, str], signup: Signup):
     mine = (await client.post(CAT, json={"name": "Fuel"}, headers=auth)).json()["id"]
     bob = await signup("bob@example.com")
-    assert (await client.get(CAT, headers=bob)).json() == []
+    assert [c for c in (await client.get(CAT, headers=bob)).json() if not c["is_salary"]] == []
     assert (await client.get(f"{CAT}/{mine}", headers=bob)).status_code == 404
     assert (await client.post(CAT, json={"name": "Fuel"}, headers=bob)).status_code == 201
 
@@ -144,7 +158,10 @@ async def test_filter_transactions_by_category_including_split_items(
     ]
     await client.post(TX, json=expense("x", "10", splits=lines), headers=auth)
     await client.post(TX, json=expense("Fuel", "20"), headers=auth)
-    cats = {c["name"]: c["id"] for c in (await client.get(CAT, headers=auth)).json()}
+    cats = {
+        c["name"]: c["id"]
+        for c in [c for c in (await client.get(CAT, headers=auth)).json() if not c["is_salary"]]
+    }
 
     junk = await client.get(TX, params={"category_id": cats["Junk food"]}, headers=auth)
     assert len(junk.json()) == 1  # the split purchase, via its item
@@ -162,7 +179,10 @@ async def test_category_filter_counts_only_the_matching_part_of_a_split(
     ]
     await client.post(TX, json=expense("x", "10", splits=lines), headers=auth)
     await client.post(TX, json=expense("Groceries", "20"), headers=auth)
-    cats = {c["name"]: c["id"] for c in (await client.get(CAT, headers=auth)).json()}
+    cats = {
+        c["name"]: c["id"]
+        for c in [c for c in (await client.get(CAT, headers=auth)).json() if not c["is_salary"]]
+    }
     params = {"category_id": cats["Groceries"]}
 
     summary = (await client.get(f"{TX}/summary", params=params, headers=auth)).json()

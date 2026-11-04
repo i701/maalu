@@ -30,11 +30,14 @@ async def test_defaults_are_found_or_created_by_name(client: AsyncClient, auth):
     v = await make(client, auth, default_category="Groceries", default_tags=["Weekly", "need"])
     assert v["default_category"] == "Groceries"
     assert tag_names(v) == ["need", "Weekly"]
-    assert [c["name"] for c in (await client.get(CAT, headers=auth)).json()] == ["Groceries"]
+    assert [
+        c["name"]
+        for c in [c for c in (await client.get(CAT, headers=auth)).json() if not c["is_salary"]]
+    ] == ["Groceries"]
     assert len((await client.get(TAGS, headers=auth)).json()) == 2
     # Reused, not duplicated, whatever the case.
     await make(client, auth, "Other", default_category="groceries", default_tags=["WEEKLY"])
-    assert len((await client.get(CAT, headers=auth)).json()) == 1
+    assert len([c for c in (await client.get(CAT, headers=auth)).json() if not c["is_salary"]]) == 1
     assert len((await client.get(TAGS, headers=auth)).json()) == 2
 
 
@@ -98,7 +101,7 @@ async def test_defaults_show_wherever_the_vendor_is_embedded(client: AsyncClient
 
 async def test_deleting_the_category_just_clears_the_default(client: AsyncClient, auth):
     v = await make(client, auth, default_category="Spare")
-    cat = (await client.get(CAT, headers=auth)).json()[0]["id"]
+    cat = next(c["id"] for c in (await client.get(CAT, headers=auth)).json() if not c["is_salary"])
     assert (await client.delete(f"{CAT}/{cat}", headers=auth)).status_code == 204
     assert (await client.get(f"{VEND}/{v['id']}", headers=auth)).json()["default_category"] is None
 
@@ -109,7 +112,10 @@ async def test_merging_a_category_moves_vendor_and_template_defaults(client: Asy
         TPL, json={"name": "T", "type": "expense", "category": "Grocery"}, headers=auth
     )
     await client.post(CAT, json={"name": "Groceries"}, headers=auth)
-    cats = {c["name"]: c["id"] for c in (await client.get(CAT, headers=auth)).json()}
+    cats = {
+        c["name"]: c["id"]
+        for c in [c for c in (await client.get(CAT, headers=auth)).json() if not c["is_salary"]]
+    }
     merged = await client.post(
         f"{CAT}/{cats['Grocery']}/merge", json={"into_id": cats["Groceries"]}, headers=auth
     )
@@ -146,8 +152,10 @@ async def test_vendor_defaults_are_private(client: AsyncClient, auth, signup: Si
     # The same names are free for another user and do not leak between accounts.
     mine = await make(client, other, default_category="Groceries", default_tags=["Weekly"])
     assert mine["default_category"] == "Groceries"
-    assert len((await client.get(CAT, headers=auth)).json()) == 1
-    assert len((await client.get(CAT, headers=other)).json()) == 1
+    assert len([c for c in (await client.get(CAT, headers=auth)).json() if not c["is_salary"]]) == 1
+    assert (
+        len([c for c in (await client.get(CAT, headers=other)).json() if not c["is_salary"]]) == 1
+    )
     assert len((await client.get(TAGS, headers=other)).json()) == 1
 
 

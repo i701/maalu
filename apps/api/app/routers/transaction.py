@@ -578,6 +578,11 @@ async def refund_candidates(
         raise HTTPException(
             status.HTTP_422_UNPROCESSABLE_CONTENT, "Only plain income can be linked to a purchase"
         )
+    if income.category_is_salary:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            "Salary can't be linked to a purchase: it is not a refund",
+        )
     return await service.refund_candidates(user_id, income, q=q, limit=limit)
 
 

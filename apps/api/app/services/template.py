@@ -90,6 +90,8 @@ class TemplateService:
         category = (
             await self.categories.get_or_create(user_id, data.category) if data.category else None
         )
+        if category is not None and category.is_salary and data.type is not TransactionType.INCOME:
+            raise TransactionRuleError("The Salary category is only for income")
 
         template = TransactionTemplate(
             user_id=user_id,

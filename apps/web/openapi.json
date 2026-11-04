@@ -1561,6 +1561,12 @@
             "title": "Id",
             "type": "string"
           },
+          "is_salary": {
+            "default": false,
+            "description": "The default Salary category: income only, never a refund, can't be renamed, deleted, merged away or nested",
+            "title": "Is Salary",
+            "type": "boolean"
+          },
           "kind": {
             "anyOf": [
               {
@@ -5482,6 +5488,11 @@
             ],
             "title": "Category Id"
           },
+          "category_is_salary": {
+            "description": "In the default Salary category: pay, which can't be linked to a purchase",
+            "title": "Category Is Salary",
+            "type": "boolean"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -5684,6 +5695,7 @@
           "category",
           "category_id",
           "category_color",
+          "category_is_salary",
           "description",
           "transaction_date",
           "transaction_time",
@@ -8170,7 +8182,7 @@
     },
     "/api/v1/categories": {
       "get": {
-        "description": "All categories, or one page with `limit`/`offset`, optionally searched. The total number of\nmatches, ignoring paging, is in `X-Total-Count`.",
+        "description": "All categories, or one page with `limit`/`offset`, optionally searched. The total number of\nmatches, ignoring paging, is in `X-Total-Count`. The default Salary category is made first\nwhen it is missing.",
         "operationId": "list_categories_api_v1_categories_get",
         "parameters": [
           {

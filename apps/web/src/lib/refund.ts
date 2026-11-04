@@ -23,9 +23,10 @@ export function canRefund(t: Transaction): boolean {
 	);
 }
 
-/** Whether this is plain income that could be linked to the purchase it gave money back for. */
+/** Whether this is plain income that could be linked to the purchase it gave money back for. Pay
+ * (the Salary category) never is. */
 export function canLinkRefund(t: Transaction): boolean {
-	return t.type === "income" && !t.adjustment && t.refund_of === null;
+	return t.type === "income" && !t.adjustment && t.refund_of === null && !t.category_is_salary;
 }
 
 /** Whether refunds have given part of this purchase back. */

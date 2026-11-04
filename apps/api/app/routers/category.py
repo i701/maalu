@@ -14,7 +14,12 @@ from app.schemas import (
     CategoryResponse,
     CategoryUpdate,
 )
-from app.services import CategoryInUseError, CategoryNameTakenError, CategoryParentError
+from app.services import (
+    CategoryInUseError,
+    CategoryNameTakenError,
+    CategoryParentError,
+    CategoryProtectedError,
+)
 
 router = APIRouter(prefix="/categories", tags=["categories"])
 
@@ -54,7 +59,9 @@ async def list_categories(
     q: Annotated[str | None, Query(max_length=100, description="Search the name")] = None,
 ):
     """All categories, or one page with `limit`/`offset`, optionally searched. The total number of
-    matches, ignoring paging, is in `X-Total-Count`."""
+    matches, ignoring paging, is in `X-Total-Count`. The default Salary category is made first
+    when it is missing."""
+    await service.ensure_salary(user_id)
     set_total(response, await service.count_for_user(user_id, q=q))
     categories = await service.list_for_user(user_id, q=q, limit=page.limit, offset=page.offset)
     return await service.present(user_id, categories)
@@ -87,7 +94,7 @@ async def update_category(
         await service.update(category, data.model_dump(exclude_unset=True))
     except CategoryNameTakenError:
         raise _NAME_TAKEN from None
-    except CategoryParentError as exc:
+    except (CategoryParentError, CategoryProtectedError) as exc:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
     return (await service.present(user_id, [category]))[0]
 
@@ -107,7 +114,7 @@ async def merge_category(
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Choose a different category")
     try:
         await service.merge(source, target)
-    except CategoryParentError as exc:
+    except (CategoryParentError, CategoryProtectedError) as exc:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
     return (await service.present(user_id, [target]))[0]
 
@@ -125,4 +132,6 @@ async def delete_category(
             status.HTTP_409_CONFLICT,
             "This category is still used. Merge it into another one instead.",
         ) from None
+    except CategoryProtectedError as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from None
     return Response(status_code=status.HTTP_204_NO_CONTENT)

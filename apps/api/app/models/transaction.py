@@ -214,6 +214,11 @@ class Transaction(Base):
     def category_color(self) -> str | None:
         return self.category_ref.color if self.category_ref else None
 
+    @property
+    def category_is_salary(self) -> bool:
+        """In the default Salary category: pay, which is never a refund."""
+        return bool(self.category_ref and self.category_ref.is_salary)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

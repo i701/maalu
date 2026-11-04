@@ -33,7 +33,7 @@ async def spend(client, auth, category, amount, **extra) -> dict:
 
 
 async def all_categories(client, auth) -> list[dict]:
-    return (await client.get(CAT, headers=auth)).json()
+    return [c for c in (await client.get(CAT, headers=auth)).json() if not c["is_salary"]]
 
 
 # --- colours ------------------------------------------------

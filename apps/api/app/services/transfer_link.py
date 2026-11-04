@@ -17,7 +17,7 @@ from sqlalchemy import delete, exists, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.enums import TransactionType
-from app.models import Transaction, TransactionSplit, TransferDismissal
+from app.models import Category, Transaction, TransactionSplit, TransferDismissal
 from app.schemas import TransactionUpdate
 from app.services.errors import TransactionRuleError
 from app.services.transaction import TransactionService
@@ -87,6 +87,8 @@ class TransferLinkService:
             raise TransactionRuleError("Link one expense and one income")
         if income.refund_of_id is not None:
             raise TransactionRuleError("A refund is money back for a purchase, not a transfer")
+        if income.category_is_salary:
+            raise TransactionRuleError("Salary is pay, not money moved between your accounts")
         if expense.account_id == income.account_id:
             raise TransactionRuleError("Money moving within one account is not a transfer")
         if expense.splits:
@@ -126,6 +128,7 @@ class TransferLinkService:
                     Transaction.user_id == user_id,
                     Transaction.type == TransactionType.INCOME,
                     Transaction.refund_of_id.is_(None),
+                    ~Transaction.category_ref.has(Category.is_salary.is_(True)),
                     *self._eligible(),
                 )
                 .order_by(Transaction.transaction_date.desc())

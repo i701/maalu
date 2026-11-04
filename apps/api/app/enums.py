@@ -57,6 +57,8 @@ LIABILITY_GROUPS = frozenset({AccountGroup.CARD, AccountGroup.OVERDRAFTS, Accoun
 CREDIT_LIMIT_GROUPS = frozenset({AccountGroup.CARD, AccountGroup.OVERDRAFTS})
 # The category a balance adjustment is filed under (it is left out of every report anyway).
 ADJUSTMENT_CATEGORY = "Balance adjustment"
+# The default category for pay. Income in it is never a refund, and nothing but income goes in it.
+SALARY_CATEGORY = "Salary"
 
 
 class TransactionType(StrEnum):

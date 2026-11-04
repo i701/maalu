@@ -81,7 +81,8 @@ test("a category can be marked a want from its own form", async ({ page, request
 	});
 
 	await open(page, "/categories");
-	await page.getByRole("button", { name: "Edit" }).click();
+	// the first card: Cinema comes before the default Salary category
+	await page.getByRole("button", { name: "Edit" }).first().click();
 	await page.getByLabel("Need or want").click();
 	await page.getByRole("option", { name: "Want" }).click();
 	await page.getByRole("button", { name: "Save", exact: true }).click();

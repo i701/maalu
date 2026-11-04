@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
-from app.enums import ACCENT_COLORS, CategoryKind
+from app.enums import ACCENT_COLORS, SALARY_CATEGORY, CategoryKind
 from app.models import (
     BudgetLine,
     BudgetLineCategory,
@@ -30,6 +30,10 @@ class CategoryNameTakenError(Exception):
 class CategoryParentError(Exception):
     """A parent that can't be used (not yours, itself, not top-level) or a category that can't have
     one. The message is safe to show."""
+
+
+class CategoryProtectedError(Exception):
+    """Something the Salary category can't have done to it. The message is safe to show."""
 
 
 class CategoryInUseError(Exception):
@@ -94,7 +98,7 @@ class CategoryService:
         """The palette colour the user's categories use least, so neighbours rarely look alike."""
         rows = await self.db.execute(
             select(Category.color, func.count())
-            .where(Category.user_id == user_id)
+            .where(Category.user_id == user_id, Category.is_salary.is_(False))
             .group_by(Category.color)
         )
         used = dict(rows.all())
@@ -107,6 +111,8 @@ class CategoryService:
         parent = await self.get(user_id, parent_id)
         if parent is None:
             raise CategoryParentError("That parent category was not found")
+        if parent.is_salary or (category is not None and category.is_salary):
+            raise CategoryParentError("The Salary category can't have a parent or sub-categories")
         if category is not None and parent.id == category.id:
             raise CategoryParentError("A category can't be its own parent")
         if parent.parent_id is not None:
@@ -134,13 +140,15 @@ class CategoryService:
     ) -> Category:
         if parent_id is not None:
             await self._check_parent(user_id, None, parent_id)
+        is_salary = normalize_name(name) == normalize_name(SALARY_CATEGORY)
         category = Category(
             user_id=user_id,
             name=" ".join(name.split()),
             normalized_name=normalize_name(name),
-            color=color or await self._next_color(user_id),
+            color=color or ("green" if is_salary else await self._next_color(user_id)),
             parent_id=parent_id,
             kind=kind,
+            is_salary=is_salary,
         )
         try:
             async with self.db.begin_nested():  # a name clash doesn't poison the outer transaction
@@ -153,6 +161,10 @@ class CategoryService:
     async def get_or_create(self, user_id: uuid.UUID, name: str) -> Category:
         existing = await self.get_by_name(user_id, name)
         if existing:
+            if not existing.is_salary and existing.normalized_name == normalize_name(
+                SALARY_CATEGORY
+            ):
+                existing.is_salary = True  # e.g. restored from a backup made before it was flagged
             return existing
         try:
             return await self.create(user_id, name)
@@ -161,9 +173,23 @@ class CategoryService:
             assert category is not None
             return category
 
+    async def ensure_salary(self, user_id: uuid.UUID) -> Category:
+        """The user's Salary category, made when it is missing (a new account, or data cleared)."""
+        found = await self.db.scalar(
+            select(Category).where(Category.user_id == user_id, Category.is_salary.is_(True))
+        )
+        return found or await self.get_or_create(user_id, SALARY_CATEGORY)
+
     async def update(self, category: Category, changes: dict) -> Category:
         """Apply the fields sent: a new name, colour, kind and/or parent (null removes the parent or
         the kind)."""
+        if category.is_salary and (
+            changes.get("parent_id") is not None
+            or ("name" in changes and normalize_name(changes["name"]) != category.normalized_name)
+        ):
+            raise CategoryProtectedError(
+                "The Salary category can't be renamed or put under another category"
+            )
         if "parent_id" in changes:
             parent_id = changes["parent_id"]
             if parent_id is not None:
@@ -281,6 +307,7 @@ class CategoryService:
                     name=c.name,
                     color=c.color,
                     kind=c.kind,
+                    is_salary=c.is_salary,
                     effective_kind=c.kind or parent_rows.get(c.parent_id, (None, None))[1],
                     parent_id=c.parent_id,
                     parent=parent_rows.get(c.parent_id, (None, None))[0],
@@ -297,6 +324,11 @@ class CategoryService:
         """Move everything from `source` to `target`, then delete `source`."""
         if source.id == target.id:
             raise CategoryNameTakenError
+        if source.is_salary:
+            raise CategoryProtectedError(
+                "The Salary category can't be merged into another one. Merge other categories "
+                "into it instead"
+            )
         # One level: the source's sub-categories move under the target, which therefore has to be a
         # top-level category.
         has_children = await self.db.scalar(
@@ -346,6 +378,10 @@ class CategoryService:
         return target
 
     async def delete(self, user_id: uuid.UUID, category: Category) -> None:
+        if category.is_salary:
+            raise CategoryProtectedError(
+                "The Salary category is a default one and can't be deleted"
+            )
         used = (await self.usage(user_id)).get(category.id, (0, 0, 0))
         if any(used):
             raise CategoryInUseError

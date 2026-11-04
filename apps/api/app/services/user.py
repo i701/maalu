@@ -11,6 +11,7 @@ from app.models import Account, RecoveryCode, User
 from app.schemas import UserCreate, UserUpdate
 from app.security import DUMMY_HASH, hash_password, verify_password
 from app.services.account import AccountNotFoundError
+from app.services.category import CategoryService
 from app.services.errors import TransactionRuleError
 
 
@@ -86,6 +87,7 @@ class UserService:
         except IntegrityError as exc:  # unique(email): also covers concurrent registrations
             await self.db.rollback()
             raise EmailAlreadyRegisteredError from exc
+        await CategoryService(self.db).ensure_salary(user.id)  # the default category for pay
         return user
 
     async def authenticate(self, email: str, password: str) -> User | None:

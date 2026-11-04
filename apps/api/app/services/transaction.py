@@ -354,6 +354,8 @@ class TransactionService:
             raise TransactionRuleError("Only income can be a refund")
         if transaction.adjustment:
             raise TransactionRuleError("A balance adjustment can't be a refund")
+        if transaction.category_is_salary:
+            raise TransactionRuleError("Salary can't be linked to a purchase: it is not a refund")
         if original_id == transaction.id:
             raise TransactionRuleError("A transaction can't be a refund of itself")
         original = await self._refund_original(transaction.user_id, original_id)
@@ -447,6 +449,15 @@ class TransactionService:
             transaction.place = None
         if transaction.place and transaction.latitude is None:
             raise TransactionRuleError("A place needs its coordinates")
+
+    @staticmethod
+    def _check_salary(transaction: Transaction) -> None:
+        """The default Salary category is for income only: pay is never spending or a transfer."""
+        if transaction.type is TransactionType.INCOME:
+            return
+        categories = [transaction.category_ref, *(s.category_ref for s in transaction.splits)]
+        if any(c is not None and c.is_salary for c in categories):
+            raise TransactionRuleError("The Salary category is only for income")
 
     @staticmethod
     def _check_splits(transaction: Transaction) -> None:
@@ -583,6 +594,7 @@ class TransactionService:
             **money,
         )
         self._check_splits(transaction)
+        self._check_salary(transaction)
         self.db.add(transaction)
         await self.db.flush()
         await self.db.refresh(transaction)
@@ -1504,6 +1516,7 @@ class TransactionService:
         for field, value in changes.items():
             setattr(transaction, field, value)
         self._check_splits(transaction)
+        self._check_salary(transaction)
         self._check_location(transaction)
         if original is not None:
             await self._check_refund(
@@ -1652,6 +1665,13 @@ class TransactionService:
             if not transfer:
                 # a refund takes its category from the purchase; so does one with refunds
                 keeps_category = t.refund_of_id is not None or self._has_refunds(t)
+                if (
+                    category is not None
+                    and category.is_salary
+                    and t.type is not TransactionType.INCOME
+                ):
+                    skipped.append(BulkSkipped(id=t.id, reason="Salary is only for income"))
+                    continue
                 if category is not None and not t.splits and not keeps_category:
                     t.category_ref = category
                     applied = True

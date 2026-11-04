@@ -69,4 +69,8 @@ describe("canLinkRefund", () => {
 		);
 		expect(canLinkRefund(income({ adjustment: true }))).toBe(false);
 	});
+
+	it("is not for pay, which is not money given back", () => {
+		expect(canLinkRefund(income({ category_is_salary: true }))).toBe(false);
+	});
 });
