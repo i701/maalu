@@ -13,14 +13,24 @@ RESTORE = f"{BACKUP}/restore"
 ACCOUNTS = "/api/v1/accounts"
 
 
-async def seeded_backup(client) -> bytes:
-    """A backup of the seeded demo user's data."""
+_seeded: bytes | None = None
+
+
+async def seeded_backup(client, *, keep_demo: bool = False) -> bytes:
+    """A backup of the seeded demo user's data. Seeding costs seconds and the file is the same every
+    time (restoring gives every row new ids, so one file can go into any database), so it is made
+    once per test process. A test that also needs the demo user in this database passes
+    `keep_demo`."""
+    global _seeded
+    if _seeded is not None and not keep_demo:
+        return _seeded
     async with client.session_factory() as db:
         await seed(db, transactions=80, rng=random.Random(7), today=date.today())
         await db.commit()
     async with client.session_factory() as db:
         demo = await db.scalar(select(User).where(User.email == DEMO_EMAIL))
-        return await BackupService(db).export(demo)
+        _seeded = await BackupService(db).export(demo)
+    return _seeded
 
 
 def with_tables(raw: bytes, change) -> bytes:
@@ -57,7 +67,7 @@ async def test_download_needs_a_login_and_holds_no_credentials(client, auth):
 
 
 async def test_a_restore_brings_back_everything(client, signup):
-    raw = await seeded_backup(client)
+    raw = await seeded_backup(client, keep_demo=True)
     original = json.loads(raw)
     assert original["counts"]["transactions"] > 50
 

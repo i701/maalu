@@ -8,13 +8,24 @@ os.environ.setdefault("REGISTRATION", "open")
 os.environ.setdefault("RATE_LIMIT", "false")
 
 import pytest
+from app import security
 from app.database import get_db
 from app.main import create_app
 from app.models import Base
+from app.services import user as user_service
 from httpx import ASGITransport, AsyncClient
+from pwdlib import PasswordHash
+from pwdlib.hashers.argon2 import Argon2Hasher
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
+
+# Nearly every test registers and signs in a user, and the real argon2id settings cost about 50 ms
+# for each hash and each check. The minimum settings are the same algorithm, so the code paths and
+# the stored format are the same, and the suite is much faster. The real cost is in app/security.py.
+security._password_hash = PasswordHash((Argon2Hasher(time_cost=1, memory_cost=8, parallelism=1),))
+# the hash checked when a sign-in email is unknown was made with the real settings at import
+security.DUMMY_HASH = user_service.DUMMY_HASH = security._password_hash.hash("dummy-for-tests")
 
 
 @pytest.fixture
