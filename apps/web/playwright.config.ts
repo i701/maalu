@@ -12,7 +12,10 @@ const DATABASE_URL =
 export default defineConfig({
 	testDir: "e2e",
 	fullyParallel: true,
-	workers: process.env.CI ? 2 : 4, // one API and one web server serve every worker
+	// Each worker is a whole Chromium, and one API and one web server serve them all, so a few is
+	// plenty: more only makes the machine (and the tests, which hash passwords) slower.
+	// `E2E_WORKERS=4 just e2e` for more.
+	workers: Number(process.env.E2E_WORKERS) || 2,
 	expect: { timeout: 15_000 }, // sign-up and sign-in hash a password, which is slow when tests run side by side
 	forbidOnly: !!process.env.CI,
 	retries: process.env.CI ? 1 : 0,
@@ -44,6 +47,11 @@ export default defineConfig({
 			url: `http://localhost:${WEB_PORT}/login`,
 			timeout: 240_000,
 			reuseExistingServer: !process.env.CI,
+			// A test that ends or navigates while a request is in flight makes the browser drop the
+			// connection, and the server logs a stack trace for each ("Error: aborted", ECONNRESET).
+			// That is the tests closing pages, not a failure, so it is hidden unless asked for
+			// (`E2E_VERBOSE=1 just e2e`); the API's output is always shown.
+			stderr: process.env.E2E_VERBOSE ? "pipe" : "ignore",
 			env: {
 				API_URL: `http://127.0.0.1:${API_PORT}`,
 				SESSION_SECRET: "e2e-session-secret-e2e-session-secret-0123456789",

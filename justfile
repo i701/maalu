@@ -109,10 +109,11 @@ test-web:
 # End-to-end tests: a real browser (Playwright) against a real API and a production build of the
 # web app, on their own ports (8101, 3101) and their own database (maalu_e2e), so `just dev` and its
 # data are untouched. Needs `just db-up` and, once, `just e2e-install`. Pass Playwright options after
-# the recipe, for example `just e2e --headed` or `just e2e e2e/auth.spec.ts`.
+# the recipe, for example `just e2e --headed` or `just e2e e2e/auth.spec.ts`. It runs at the lowest
+# CPU priority with 2 workers (`E2E_WORKERS=4 just e2e` for more) so the machine stays usable.
 e2e *args:
     docker compose exec -T db sh -c "psql -U maalu -d postgres -tc \"SELECT 1 FROM pg_database WHERE datname='maalu_e2e'\" | grep -q 1 || createdb -U maalu maalu_e2e"
-    pnpm --filter @maalu/web e2e {{args}}
+    nice -n 19 pnpm --filter @maalu/web e2e {{args}}
 
 # Download the browser the end-to-end tests drive (once, about 150 MB)
 e2e-install:
