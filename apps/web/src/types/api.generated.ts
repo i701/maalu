@@ -1106,6 +1106,28 @@ export interface paths {
         patch: operations["update_rule_api_v1_salary_rules__rule_id__patch"];
         trace?: never;
     };
+    "/api/v1/stats/available-to-spend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Available To Spend
+         * @description What you can spend until the end of the budget period: what your everyday accounts hold,
+         *     less the bills still to pay (planned expenses, overdue ones included) and less what is set aside
+         *     for goals you track by hand.
+         */
+        get: operations["available_to_spend_api_v1_stats_available_to_spend_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/stats/balance-trend": {
         parameters: {
             query?: never;
@@ -2204,6 +2226,135 @@ export interface components {
              * Format: uuid
              */
             transaction_id: string;
+        };
+        /** AvailableAccount */
+        AvailableAccount: {
+            /**
+             * Balance
+             * @description What it holds now, in your base currency
+             */
+            balance: string;
+            /** Group */
+            group: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+        };
+        /** AvailableBill */
+        AvailableBill: {
+            /**
+             * Amount
+             * @description In your base currency
+             */
+            amount: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Overdue
+             * @description Its date has passed and it is still planned
+             */
+            overdue: boolean;
+            /**
+             * Subscription
+             * @description The subscription it belongs to, if any
+             */
+            subscription: string | null;
+            /**
+             * Title
+             * @description Its description, else its category
+             */
+            title: string;
+        };
+        /** AvailableReserve */
+        AvailableReserve: {
+            /**
+             * Amount
+             * @description Set aside by hand, kept inside your accounts
+             */
+            amount: string;
+            /**
+             * Goal Id
+             * Format: uuid
+             */
+            goal_id: string;
+            /** Name */
+            name: string;
+        };
+        /**
+         * AvailableToSpend
+         * @description What you can spend until the end of the budget period without touching a bill that is still
+         *     to pay or money set aside for a goal. Everything is in your base currency.
+         */
+        AvailableToSpend: {
+            /**
+             * Accounts
+             * @description What it starts from: cash, current, debit and prepaid accounts that count toward your stats, leaving out any account a goal follows
+             */
+            accounts: components["schemas"]["AvailableAccount"][];
+            /**
+             * Available
+             * @description balance - bills_total - reserved_total. Below zero means you are short.
+             */
+            available: string;
+            /**
+             * Balance
+             * @description Those accounts added up
+             */
+            balance: string;
+            /**
+             * Bills
+             * @description Planned expenses (a subscription's next payment, rent due) not yet paid, overdue ones first, then by date
+             */
+            bills: components["schemas"]["AvailableBill"][];
+            /** Bills Total */
+            bills_total: string;
+            /** Currency */
+            currency: string;
+            /**
+             * Expected Income
+             * @description Planned income up to the end of the period (a salary not yet received). It is not counted in `available`, so the figure never relies on money that hasn't arrived.
+             */
+            expected_income: string;
+            /**
+             * Kept Apart
+             * @description Accounts that count toward net worth but not toward spending: savings, investments and accounts a goal follows
+             */
+            kept_apart: components["schemas"]["AvailableAccount"][];
+            /**
+             * Period End
+             * Format: date
+             * @description Bills dated up to here (and any overdue) are counted
+             */
+            period_end: string;
+            /**
+             * Period Start
+             * Format: date
+             */
+            period_start: string;
+            /**
+             * Reserved
+             * @description Goals tracked by hand: what you set aside is not yours to spend
+             */
+            reserved: components["schemas"]["AvailableReserve"][];
+            /** Reserved Total */
+            reserved_total: string;
+            /**
+             * Today
+             * Format: date
+             */
+            today: string;
         };
         /** BackupRestored */
         BackupRestored: {
@@ -7097,6 +7248,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    available_to_spend_api_v1_stats_available_to_spend_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AvailableToSpend"];
                 };
             };
         };

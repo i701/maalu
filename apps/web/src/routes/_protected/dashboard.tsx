@@ -5,6 +5,7 @@ import Button from "@mui/material/Button";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import BudgetAlert from "#/components/BudgetAlert";
+import AvailableCard from "#/components/dashboard/AvailableCard";
 import BalanceTrendCard from "#/components/dashboard/BalanceTrendCard";
 import BudgetGoalsCard from "#/components/dashboard/BudgetGoalsCard";
 import CreditUsageCard from "#/components/dashboard/CreditUsageCard";
@@ -25,7 +26,7 @@ import { creditUsage } from "#/lib/accounts";
 import { listAccountsFn } from "#/server/accounts";
 import { getBudgetFn } from "#/server/budget";
 import { listGoalsFn } from "#/server/goals";
-import { getMonthlyStatsFn, getBalanceTrendFn } from "#/server/stats";
+import { getAvailableToSpendFn, getBalanceTrendFn, getMonthlyStatsFn } from "#/server/stats";
 import {
 	getCategoryTotalsFn,
 	getTransactionTotalsFn,
@@ -56,7 +57,7 @@ export const Route = createFileRoute("/_protected/dashboard")({
 		const trendEnd = current.end > now && current.start <= now ? now : current.end;
 		const range = { date_from: current.start, date_to: current.end };
 
-		const [totals, before, categories, monthly, trend, latest, budget, goals, accounts] =
+		const [totals, before, categories, monthly, trend, latest, budget, goals, accounts, available] =
 			await Promise.all([
 				getTransactionTotalsFn({ data: range }),
 				getTransactionTotalsFn({ data: { date_from: previous.start, date_to: previous.end } }),
@@ -67,6 +68,7 @@ export const Route = createFileRoute("/_protected/dashboard")({
 				getBudgetFn({ data: {} }),
 				listGoalsFn({ data: {} }),
 				listAccountsFn(),
+				getAvailableToSpendFn(),
 			]);
 		return {
 			month: current.start,
@@ -77,6 +79,7 @@ export const Route = createFileRoute("/_protected/dashboard")({
 			trend: unwrap(trend),
 			latest: unwrap(latest).items.slice(0, 5),
 			// the page works without these two
+			available: available.ok ? available.data : null,
 			budget: budget.ok ? budget.data : null,
 			goals: goals.ok ? goals.data : [],
 			// cards and overdrafts with a credit limit (the page works without them)
@@ -100,6 +103,7 @@ function DashboardPage() {
 		budget,
 		goals,
 		creditAccounts,
+		available,
 	} = Route.useLoaderData();
 	const navigate = Route.useNavigate();
 	const goTo = (on: string | undefined) => navigate({ search: { on }, replace: true });
@@ -158,6 +162,11 @@ function DashboardPage() {
 						...staggerChildren(),
 					}}
 				>
+					{available && (
+						<Box sx={cell(6)}>
+							<AvailableCard data={available} />
+						</Box>
+					)}
 					<Box sx={cell(2)}>
 						<MetricCard
 							label={`Income in ${label}`}

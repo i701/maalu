@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import type { BalanceTrend, MonthlyStats, NetWorthDrivers } from "#/types/api";
+import type { AvailableToSpend, BalanceTrend, MonthlyStats, NetWorthDrivers } from "#/types/api";
 import { apiRequest } from "./api";
 
 /** Income and expense per calendar month, ending with the month containing `to`. */
@@ -25,3 +25,8 @@ export const getNetWorthDriversFn = createServerFn({ method: "GET" })
 			query: { from: data.from, to: data.to },
 		}),
 	);
+
+/** What can be spent until the end of the budget period, with the working behind it. */
+export const getAvailableToSpendFn = createServerFn({ method: "GET" }).handler(async () =>
+	apiRequest<AvailableToSpend>("/stats/available-to-spend"),
+);

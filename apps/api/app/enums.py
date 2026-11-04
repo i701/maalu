@@ -60,6 +60,10 @@ class AccountGroup(StrEnum):
 
 # Balances in these groups are money you owe; everything else is an asset.
 LIABILITY_GROUPS = frozenset({AccountGroup.CARD, AccountGroup.OVERDRAFTS, AccountGroup.LOAN})
+# Accounts that hold money you spend from day to day: what "available to spend" starts from.
+SPENDABLE_GROUPS = frozenset(
+    {AccountGroup.CASH, AccountGroup.ACCOUNTS, AccountGroup.DEBIT_CARD, AccountGroup.PREPAID}
+)
 # Only these have a credit limit: the most you can owe on them.
 CREDIT_LIMIT_GROUPS = frozenset({AccountGroup.CARD, AccountGroup.OVERDRAFTS})
 # The category a balance adjustment is filed under (it is left out of every report anyway).

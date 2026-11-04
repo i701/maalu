@@ -13,6 +13,7 @@ from app.services.attachment import (
     AttachmentService,
     AttachmentTooLargeError,
 )
+from app.services.available import AvailableService
 from app.services.backup import BackupFormatError, BackupNotEmptyError, BackupService
 from app.services.budget import BudgetCategoryTakenError, BudgetLineNotFoundError, BudgetService
 from app.services.category import (
@@ -86,6 +87,7 @@ __all__ = [
     "AttachmentRuleError",
     "AttachmentService",
     "AttachmentTooLargeError",
+    "AvailableService",
     "BackupFormatError",
     "BackupNotEmptyError",
     "BackupService",

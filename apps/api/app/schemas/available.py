@@ -1,0 +1,62 @@
+import uuid
+from datetime import date
+from decimal import Decimal
+
+from pydantic import BaseModel, Field
+
+
+class AvailableAccount(BaseModel):
+    id: uuid.UUID
+    name: str
+    group: str
+    balance: Decimal = Field(description="What it holds now, in your base currency")
+
+
+class AvailableBill(BaseModel):
+    id: uuid.UUID
+    title: str = Field(description="Its description, else its category")
+    date: date
+    amount: Decimal = Field(description="In your base currency")
+    overdue: bool = Field(description="Its date has passed and it is still planned")
+    subscription: str | None = Field(description="The subscription it belongs to, if any")
+
+
+class AvailableReserve(BaseModel):
+    goal_id: uuid.UUID
+    name: str
+    amount: Decimal = Field(description="Set aside by hand, kept inside your accounts")
+
+
+class AvailableToSpend(BaseModel):
+    """What you can spend until the end of the budget period without touching a bill that is still
+    to pay or money set aside for a goal. Everything is in your base currency."""
+
+    currency: str
+    today: date
+    period_start: date
+    period_end: date = Field(description="Bills dated up to here (and any overdue) are counted")
+    accounts: list[AvailableAccount] = Field(
+        description="What it starts from: cash, current, debit and prepaid accounts that count "
+        "toward your stats, leaving out any account a goal follows"
+    )
+    balance: Decimal = Field(description="Those accounts added up")
+    bills: list[AvailableBill] = Field(
+        description="Planned expenses (a subscription's next payment, rent due) not yet paid, "
+        "overdue ones first, then by date"
+    )
+    bills_total: Decimal
+    reserved: list[AvailableReserve] = Field(
+        description="Goals tracked by hand: what you set aside is not yours to spend"
+    )
+    reserved_total: Decimal
+    available: Decimal = Field(
+        description="balance - bills_total - reserved_total. Below zero means you are short."
+    )
+    expected_income: Decimal = Field(
+        description="Planned income up to the end of the period (a salary not yet received). It "
+        "is not counted in `available`, so the figure never relies on money that hasn't arrived."
+    )
+    kept_apart: list[AvailableAccount] = Field(
+        description="Accounts that count toward net worth but not toward spending: savings, "
+        "investments and accounts a goal follows"
+    )

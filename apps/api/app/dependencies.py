@@ -10,6 +10,7 @@ from app.models import User, UserSession
 from app.services import (
     AccountService,
     AttachmentService,
+    AvailableService,
     BackupService,
     BudgetService,
     CategoryService,
@@ -53,6 +54,10 @@ def get_transaction_service(db: DbSession) -> TransactionService:
 
 def get_salary_split_service(db: DbSession) -> SalarySplitService:
     return SalarySplitService(db)
+
+
+def get_available_service(db: DbSession) -> AvailableService:
+    return AvailableService(db)
 
 
 def get_vendor_service(db: DbSession) -> VendorService:
@@ -125,6 +130,7 @@ TransactionServiceDep = Annotated[TransactionService, Depends(get_transaction_se
 VendorServiceDep = Annotated[VendorService, Depends(get_vendor_service)]
 BudgetServiceDep = Annotated[BudgetService, Depends(get_budget_service)]
 StatsServiceDep = Annotated[StatsService, Depends(get_stats_service)]
+AvailableServiceDep = Annotated[AvailableService, Depends(get_available_service)]
 GoalServiceDep = Annotated[GoalService, Depends(get_goal_service)]
 SalarySplitServiceDep = Annotated[SalarySplitService, Depends(get_salary_split_service)]
 CategoryServiceDep = Annotated[CategoryService, Depends(get_category_service)]

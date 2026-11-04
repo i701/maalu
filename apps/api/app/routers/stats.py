@@ -3,7 +3,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, status
 
-from app.dependencies import CurrentUserId, StatsServiceDep
+from app.dependencies import AvailableServiceDep, CurrentUserId, StatsServiceDep
+from app.schemas.available import AvailableToSpend
 from app.schemas.stats import BalanceTrendResponse, MonthlyResponse, NetWorthDrivers
 from app.services import StatsRangeError
 
@@ -49,3 +50,11 @@ async def net_worth_drivers(
         return await service.net_worth_drivers(user_id, start, to)
     except StatsRangeError as exc:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
+
+
+@router.get("/available-to-spend", response_model=AvailableToSpend)
+async def available_to_spend(user_id: CurrentUserId, service: AvailableServiceDep):
+    """What you can spend until the end of the budget period: what your everyday accounts hold,
+    less the bills still to pay (planned expenses, overdue ones included) and less what is set aside
+    for goals you track by hand."""
+    return await service.available_to_spend(user_id)

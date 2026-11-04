@@ -613,6 +613,209 @@
         "title": "AttachmentResponse",
         "type": "object"
       },
+      "AvailableAccount": {
+        "properties": {
+          "balance": {
+            "description": "What it holds now, in your base currency",
+            "title": "Balance",
+            "type": "string"
+          },
+          "group": {
+            "title": "Group",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "group",
+          "balance"
+        ],
+        "title": "AvailableAccount",
+        "type": "object"
+      },
+      "AvailableBill": {
+        "properties": {
+          "amount": {
+            "description": "In your base currency",
+            "title": "Amount",
+            "type": "string"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "overdue": {
+            "description": "Its date has passed and it is still planned",
+            "title": "Overdue",
+            "type": "boolean"
+          },
+          "subscription": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The subscription it belongs to, if any",
+            "title": "Subscription"
+          },
+          "title": {
+            "description": "Its description, else its category",
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "date",
+          "amount",
+          "overdue",
+          "subscription"
+        ],
+        "title": "AvailableBill",
+        "type": "object"
+      },
+      "AvailableReserve": {
+        "properties": {
+          "amount": {
+            "description": "Set aside by hand, kept inside your accounts",
+            "title": "Amount",
+            "type": "string"
+          },
+          "goal_id": {
+            "format": "uuid",
+            "title": "Goal Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "goal_id",
+          "name",
+          "amount"
+        ],
+        "title": "AvailableReserve",
+        "type": "object"
+      },
+      "AvailableToSpend": {
+        "description": "What you can spend until the end of the budget period without touching a bill that is still\nto pay or money set aside for a goal. Everything is in your base currency.",
+        "properties": {
+          "accounts": {
+            "description": "What it starts from: cash, current, debit and prepaid accounts that count toward your stats, leaving out any account a goal follows",
+            "items": {
+              "$ref": "#/components/schemas/AvailableAccount"
+            },
+            "title": "Accounts",
+            "type": "array"
+          },
+          "available": {
+            "description": "balance - bills_total - reserved_total. Below zero means you are short.",
+            "title": "Available",
+            "type": "string"
+          },
+          "balance": {
+            "description": "Those accounts added up",
+            "title": "Balance",
+            "type": "string"
+          },
+          "bills": {
+            "description": "Planned expenses (a subscription's next payment, rent due) not yet paid, overdue ones first, then by date",
+            "items": {
+              "$ref": "#/components/schemas/AvailableBill"
+            },
+            "title": "Bills",
+            "type": "array"
+          },
+          "bills_total": {
+            "title": "Bills Total",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "expected_income": {
+            "description": "Planned income up to the end of the period (a salary not yet received). It is not counted in `available`, so the figure never relies on money that hasn't arrived.",
+            "title": "Expected Income",
+            "type": "string"
+          },
+          "kept_apart": {
+            "description": "Accounts that count toward net worth but not toward spending: savings, investments and accounts a goal follows",
+            "items": {
+              "$ref": "#/components/schemas/AvailableAccount"
+            },
+            "title": "Kept Apart",
+            "type": "array"
+          },
+          "period_end": {
+            "description": "Bills dated up to here (and any overdue) are counted",
+            "format": "date",
+            "title": "Period End",
+            "type": "string"
+          },
+          "period_start": {
+            "format": "date",
+            "title": "Period Start",
+            "type": "string"
+          },
+          "reserved": {
+            "description": "Goals tracked by hand: what you set aside is not yours to spend",
+            "items": {
+              "$ref": "#/components/schemas/AvailableReserve"
+            },
+            "title": "Reserved",
+            "type": "array"
+          },
+          "reserved_total": {
+            "title": "Reserved Total",
+            "type": "string"
+          },
+          "today": {
+            "format": "date",
+            "title": "Today",
+            "type": "string"
+          }
+        },
+        "required": [
+          "currency",
+          "today",
+          "period_start",
+          "period_end",
+          "accounts",
+          "balance",
+          "bills",
+          "bills_total",
+          "reserved",
+          "reserved_total",
+          "available",
+          "expected_income",
+          "kept_apart"
+        ],
+        "title": "AvailableToSpend",
+        "type": "object"
+      },
       "BackupRestored": {
         "properties": {
           "restored": {
@@ -10763,6 +10966,33 @@
         "summary": "Update Rule",
         "tags": [
           "salary"
+        ]
+      }
+    },
+    "/api/v1/stats/available-to-spend": {
+      "get": {
+        "description": "What you can spend until the end of the budget period: what your everyday accounts hold,\nless the bills still to pay (planned expenses, overdue ones included) and less what is set aside\nfor goals you track by hand.",
+        "operationId": "available_to_spend_api_v1_stats_available_to_spend_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvailableToSpend"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Available To Spend",
+        "tags": [
+          "stats"
         ]
       }
     },
