@@ -20,6 +20,7 @@ const cat = (
 	category_id: id,
 	category: id.toUpperCase(),
 	color: "blue",
+	kind: null,
 	parent_id: null,
 	parent: null,
 	parent_color: null,

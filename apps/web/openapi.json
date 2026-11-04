@@ -1285,6 +1285,17 @@
             "description": "One of the accent colours. Left out, the one you use least.",
             "title": "Color"
           },
+          "kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoryKind"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Whether spending here is a need or a want. Left out: not sorted."
+          },
           "name": {
             "maxLength": 100,
             "minLength": 1,
@@ -1309,6 +1320,59 @@
           "name"
         ],
         "title": "CategoryCreate",
+        "type": "object"
+      },
+      "CategoryKind": {
+        "description": "How necessary spending in a category is. A category with no kind is \"unsorted\".",
+        "enum": [
+          "need",
+          "want"
+        ],
+        "title": "CategoryKind",
+        "type": "string"
+      },
+      "CategoryKindBulk": {
+        "properties": {
+          "ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Ids",
+            "type": "array"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoryKind"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Need or want for all of them. Null clears it."
+          }
+        },
+        "required": [
+          "ids"
+        ],
+        "title": "CategoryKindBulk",
+        "type": "object"
+      },
+      "CategoryKindResult": {
+        "properties": {
+          "updated": {
+            "description": "Categories that were set (yours, found)",
+            "title": "Updated",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "updated"
+        ],
+        "title": "CategoryKindResult",
         "type": "object"
       },
       "CategoryMerge": {
@@ -1349,6 +1413,17 @@
             "description": "The category's accent colour",
             "title": "Color",
             "type": "string"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoryKind"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Need or want: the category's own, or its parent's; null when not sorted"
           },
           "parent": {
             "anyOf": [
@@ -1406,6 +1481,7 @@
           "category_id",
           "category",
           "color",
+          "kind",
           "parent_id",
           "parent",
           "parent_color",
@@ -1469,10 +1545,32 @@
             "title": "Created At",
             "type": "string"
           },
+          "effective_kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoryKind"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Its kind, or its parent's when it has none of its own"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
             "type": "string"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoryKind"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Its own need or want; null when not sorted"
           },
           "name": {
             "title": "Name",
@@ -1545,6 +1643,17 @@
             "title": "Count",
             "type": "integer"
           },
+          "kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoryKind"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Need or want: the category's own, or its parent's; null when not sorted"
+          },
           "parent": {
             "anyOf": [
               {
@@ -1601,6 +1710,7 @@
           "category_id",
           "category",
           "color",
+          "kind",
           "parent_id",
           "parent",
           "parent_color",
@@ -1655,6 +1765,17 @@
               }
             ],
             "title": "Color"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoryKind"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Need or want. Explicit null clears it (not sorted)."
           },
           "name": {
             "anyOf": [
@@ -8179,6 +8300,53 @@
           }
         ],
         "summary": "Create Category",
+        "tags": [
+          "categories"
+        ]
+      }
+    },
+    "/api/v1/categories/kind": {
+      "patch": {
+        "description": "Mark several categories as a need or a want at once (null clears it). Declared before the\n`{category_id}` routes so \"kind\" isn't read as an id.",
+        "operationId": "set_category_kinds_api_v1_categories_kind_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryKindBulk"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryKindResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Set Category Kinds",
         "tags": [
           "categories"
         ]

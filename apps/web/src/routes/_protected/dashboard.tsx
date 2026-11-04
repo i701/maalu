@@ -13,6 +13,7 @@ import LatestTransactionsCard from "#/components/dashboard/LatestTransactionsCar
 import MetricCard from "#/components/dashboard/MetricCard";
 import MoneyFlowCard from "#/components/dashboard/MoneyFlowCard";
 import MonthlyCard from "#/components/dashboard/MonthlyCard";
+import NeedsWantsCard from "#/components/dashboard/NeedsWantsCard";
 import SpendingCard from "#/components/dashboard/SpendingCard";
 import PendingOverlay from "#/components/PendingOverlay";
 import Symbol from "#/components/Symbol";
@@ -209,6 +210,10 @@ function DashboardPage() {
 					</Box>
 					<Box sx={cell(2)}>
 						<BudgetGoalsCard budget={budget} goals={goals} />
+					</Box>
+
+					<Box sx={cell(6)}>
+						<NeedsWantsCard categories={categories} period={label} />
 					</Box>
 
 					<Box sx={cell(6)}>

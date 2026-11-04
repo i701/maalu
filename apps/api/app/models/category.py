@@ -1,9 +1,10 @@
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, ForeignKey, String, UniqueConstraint, Uuid, func
+from sqlalchemy import DateTime, Enum, ForeignKey, String, UniqueConstraint, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.enums import CategoryKind
 from app.models.base import Base
 
 
@@ -27,6 +28,17 @@ class Category(Base):
     normalized_name: Mapped[str] = mapped_column(String(100))
     # One of ACCENT_COLORS: picked automatically (the one used least), changeable.
     color: Mapped[str] = mapped_column(String(16))
+    # Need or want (null = not sorted yet). A sub-category with none takes its parent's.
+    kind: Mapped[CategoryKind | None] = mapped_column(
+        Enum(
+            CategoryKind,
+            native_enum=False,
+            length=32,
+            create_constraint=False,
+            values_callable=lambda e: [m.value for m in e],
+        ),
+        default=None,
+    )
     # One level only: a top-level category can have sub-categories, a sub-category cannot. The
     # parent still works as a category of its own. Deleting a parent leaves its children top-level.
     parent_id: Mapped[uuid.UUID | None] = mapped_column(

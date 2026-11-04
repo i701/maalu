@@ -540,6 +540,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/categories/kind": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Set Category Kinds
+         * @description Mark several categories as a need or a want at once (null clears it). Declared before the
+         *     `{category_id}` routes so "kind" isn't read as an id.
+         */
+        patch: operations["set_category_kinds_api_v1_categories_kind_patch"];
+        trace?: never;
+    };
     "/api/v1/categories/{category_id}": {
         parameters: {
             query?: never;
@@ -2402,6 +2423,8 @@ export interface components {
              * @description One of the accent colours. Left out, the one you use least.
              */
             color?: ("blue" | "green" | "orange" | "violet" | "pink" | "amber" | "lime" | "slate") | null;
+            /** @description Whether spending here is a need or a want. Left out: not sorted. */
+            kind?: components["schemas"]["CategoryKind"] | null;
             /** Name */
             name: string;
             /**
@@ -2409,6 +2432,27 @@ export interface components {
              * @description Makes this a sub-category of that top-level category. One level only.
              */
             parent_id?: string | null;
+        };
+        /**
+         * CategoryKind
+         * @description How necessary spending in a category is. A category with no kind is "unsorted".
+         * @enum {string}
+         */
+        CategoryKind: "need" | "want";
+        /** CategoryKindBulk */
+        CategoryKindBulk: {
+            /** Ids */
+            ids: string[];
+            /** @description Need or want for all of them. Null clears it. */
+            kind?: components["schemas"]["CategoryKind"] | null;
+        };
+        /** CategoryKindResult */
+        CategoryKindResult: {
+            /**
+             * Updated
+             * @description Categories that were set (yours, found)
+             */
+            updated: number;
         };
         /** CategoryMerge */
         CategoryMerge: {
@@ -2438,6 +2482,8 @@ export interface components {
              * @description The category's accent colour
              */
             color: string;
+            /** @description Need or want: the category's own, or its parent's; null when not sorted */
+            kind: components["schemas"]["CategoryKind"] | null;
             /**
              * Parent
              * @description The parent's name
@@ -2505,11 +2551,15 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** @description Its kind, or its parent's when it has none of its own */
+            effective_kind?: components["schemas"]["CategoryKind"] | null;
             /**
              * Id
              * Format: uuid
              */
             id: string;
+            /** @description Its own need or want; null when not sorted */
+            kind?: components["schemas"]["CategoryKind"] | null;
             /** Name */
             name: string;
             /**
@@ -2553,6 +2603,8 @@ export interface components {
              * @description Transactions with money in this category
              */
             count: number;
+            /** @description Need or want: the category's own, or its parent's; null when not sorted */
+            kind: components["schemas"]["CategoryKind"] | null;
             /**
              * Parent
              * @description The parent's name
@@ -2599,6 +2651,8 @@ export interface components {
         CategoryUpdate: {
             /** Color */
             color?: ("blue" | "green" | "orange" | "violet" | "pink" | "amber" | "lime" | "slate") | null;
+            /** @description Need or want. Explicit null clears it (not sorted). */
+            kind?: components["schemas"]["CategoryKind"] | null;
             /** Name */
             name?: string | null;
             /**
@@ -5555,6 +5609,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CategoryResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_category_kinds_api_v1_categories_kind_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CategoryKindBulk"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategoryKindResult"];
                 };
             };
             /** @description Validation Error */
@@ -8592,6 +8679,7 @@ export const accountGroupValues: ReadonlyArray<FlattenedDeepRequired<components>
 export const budgetLineResponseStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BudgetLineResponse"]["status"]> = ["ok", "warning", "over"];
 export const budgetTotalsStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BudgetTotals"]["status"]> = ["ok", "warning", "over"];
 export const categoryCreateColorAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CategoryCreate"]["color"]> = ["blue", "green", "orange", "violet", "pink", "amber", "lime", "slate"];
+export const categoryKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CategoryKind"]> = ["need", "want"];
 export const categoryMonthRowTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CategoryMonthRow"]["type"]> = ["income", "expense"];
 export const categoryTotalTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CategoryTotal"]["type"]> = ["income", "expense"];
 export const categoryUpdateColorAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CategoryUpdate"]["color"]> = ["blue", "green", "orange", "violet", "pink", "amber", "lime", "slate"];

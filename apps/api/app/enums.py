@@ -7,6 +7,13 @@ ACCENT_COLORS = ("blue", "green", "orange", "violet", "pink", "amber", "lime", "
 AccentColor = Literal["blue", "green", "orange", "violet", "pink", "amber", "lime", "slate"]
 
 
+class CategoryKind(StrEnum):
+    """How necessary spending in a category is. A category with no kind is "unsorted"."""
+
+    NEED = "need"
+    WANT = "want"
+
+
 class PaymentMethod(StrEnum):
     """Stored as VARCHAR (not a native DB enum), so adding a member needs no migration."""
 

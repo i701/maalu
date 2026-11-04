@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
-from app.enums import ACCENT_COLORS
+from app.enums import ACCENT_COLORS, CategoryKind
 from app.models import (
     BudgetLine,
     BudgetLineCategory,
@@ -130,6 +130,7 @@ class CategoryService:
         *,
         color: str | None = None,
         parent_id: uuid.UUID | None = None,
+        kind: CategoryKind | None = None,
     ) -> Category:
         if parent_id is not None:
             await self._check_parent(user_id, None, parent_id)
@@ -139,6 +140,7 @@ class CategoryService:
             normalized_name=normalize_name(name),
             color=color or await self._next_color(user_id),
             parent_id=parent_id,
+            kind=kind,
         )
         try:
             async with self.db.begin_nested():  # a name clash doesn't poison the outer transaction
@@ -160,7 +162,8 @@ class CategoryService:
             return category
 
     async def update(self, category: Category, changes: dict) -> Category:
-        """Apply the fields sent: a new name, colour and/or parent (null removes the parent)."""
+        """Apply the fields sent: a new name, colour, kind and/or parent (null removes the parent or
+        the kind)."""
         if "parent_id" in changes:
             parent_id = changes["parent_id"]
             if parent_id is not None:
@@ -168,6 +171,8 @@ class CategoryService:
             category.parent_id = parent_id
         if "color" in changes:
             category.color = changes["color"]
+        if "kind" in changes:
+            category.kind = changes["kind"]
         if "name" in changes:
             category.name = " ".join(changes["name"].split())
             category.normalized_name = normalize_name(changes["name"])
@@ -177,6 +182,21 @@ class CategoryService:
         except IntegrityError as exc:
             raise CategoryNameTakenError from exc
         return category
+
+    async def set_kind(
+        self, user_id: uuid.UUID, ids: list[uuid.UUID], kind: CategoryKind | None
+    ) -> int:
+        """Set (or clear) the kind of several categories at once. Ids that aren't yours or don't
+        exist are left out, and the number set is returned."""
+        found = (
+            await self.db.scalars(
+                select(Category.id).where(Category.user_id == user_id, Category.id.in_(set(ids)))
+            )
+        ).all()
+        if found:
+            await self.db.execute(update(Category).where(Category.id.in_(found)).values(kind=kind))
+            await self.db.flush()
+        return len(found)
 
     async def family(self, user_id: uuid.UUID, category_id: uuid.UUID) -> list[uuid.UUID]:
         """A category and its sub-categories: what a filter, a budget line or a total on a parent
@@ -242,15 +262,16 @@ class CategoryService:
                 )
             ).all()
         )
-        parents = dict(
-            (
+        parent_rows = {
+            pid: (name, kind)
+            for pid, name, kind in (
                 await self.db.execute(
-                    select(Category.id, Category.name).where(
+                    select(Category.id, Category.name, Category.kind).where(
                         Category.id.in_({c.parent_id for c in categories if c.parent_id})
                     )
                 )
             ).all()
-        )
+        }
         out = []
         for c in categories:
             tx, subs, budget_lines = usage.get(c.id, (0, 0, 0))
@@ -259,8 +280,10 @@ class CategoryService:
                     id=c.id,
                     name=c.name,
                     color=c.color,
+                    kind=c.kind,
+                    effective_kind=c.kind or parent_rows.get(c.parent_id, (None, None))[1],
                     parent_id=c.parent_id,
-                    parent=parents.get(c.parent_id),
+                    parent=parent_rows.get(c.parent_id, (None, None))[0],
                     child_count=children.get(c.id, 0),
                     created_at=c.created_at,
                     transaction_count=tx,
@@ -284,6 +307,8 @@ class CategoryService:
                 f'"{target.name}" is a sub-category, so "{source.name}"\'s sub-categories can\'t '
                 "move under it. Merge into a top-level category, or move them first"
             )
+        if target.kind is None:  # like a vendor merge: take what the target lacks
+            target.kind = source.kind
         if target.parent_id == source.id:  # merging a parent into its own child: it takes its place
             target.parent_id = source.parent_id
         await self.db.execute(

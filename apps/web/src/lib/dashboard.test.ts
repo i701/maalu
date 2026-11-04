@@ -70,6 +70,7 @@ const total = (
 	category_id: category,
 	category,
 	color: "blue",
+	kind: null,
 	parent: null,
 	parent_color: null,
 	parent_id: null,

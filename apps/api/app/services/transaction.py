@@ -9,7 +9,7 @@ from sqlalchemy import case, func, literal, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.allocation import allocate_base
-from app.enums import ADJUSTMENT_CATEGORY, PaymentMethod, TransactionType
+from app.enums import ADJUSTMENT_CATEGORY, CategoryKind, PaymentMethod, TransactionType
 from app.export import EXPORT_LIMIT, build_workbook
 from app.models import (
     Account,
@@ -1017,9 +1017,10 @@ class TransactionService:
                 category_id=category.id,
                 category=category.name,
                 color=category.color,
+                kind=category.kind or parents.get(category.parent_id, (None, None, None))[2],
                 parent_id=category.parent_id,
-                parent=parents.get(category.parent_id, (None, None))[0],
-                parent_color=parents.get(category.parent_id, (None, None))[1],
+                parent=parents.get(category.parent_id, (None, None, None))[0],
+                parent_color=parents.get(category.parent_id, (None, None, None))[1],
                 total=total,
                 count=count,
             )
@@ -1030,15 +1031,17 @@ class TransactionService:
 
     async def _parent_names(
         self, categories: list[Category]
-    ) -> dict[uuid.UUID | None, tuple[str | None, str | None]]:
-        """Name and colour of the parents of some categories, by the parent's id."""
+    ) -> dict[uuid.UUID | None, tuple[str | None, str | None, CategoryKind | None]]:
+        """Name, colour and kind of the parents of some categories, by the parent's id."""
         parent_ids = {c.parent_id for c in categories if c.parent_id}
         if not parent_ids:
             return {}
         found = await self.db.execute(
-            select(Category.id, Category.name, Category.color).where(Category.id.in_(parent_ids))
+            select(Category.id, Category.name, Category.color, Category.kind).where(
+                Category.id.in_(parent_ids)
+            )
         )
-        return {pid: (name, color) for pid, name, color in found.all()}
+        return {pid: (name, color, kind) for pid, name, color, kind in found.all()}
 
     async def _category_buckets(
         self, conditions: list, ids: set[uuid.UUID] | None, *, monthly: bool
@@ -1155,9 +1158,10 @@ class TransactionService:
                 category_id=category.id,
                 category=category.name,
                 color=category.color,
+                kind=category.kind or parents.get(category.parent_id, (None, None, None))[2],
                 parent_id=category.parent_id,
-                parent=parents.get(category.parent_id, (None, None))[0],
-                parent_color=parents.get(category.parent_id, (None, None))[1],
+                parent=parents.get(category.parent_id, (None, None, None))[0],
+                parent_color=parents.get(category.parent_id, (None, None, None))[1],
                 amounts=[a.quantize(BASE_AMOUNT_QUANTUM) for a in amounts],
                 total=sum(amounts, Decimal(0)).quantize(BASE_AMOUNT_QUANTUM),
             )

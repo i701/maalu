@@ -24,6 +24,7 @@ from app.config import settings
 from app.database import SessionLocal
 from app.enums import (
     AccountGroup,
+    CategoryKind,
     IntervalUnit,
     PaymentMethod,
     SubscriptionStatus,
@@ -275,6 +276,22 @@ CATEGORY_GROUPS = {
 }
 
 
+# Need or want, for most of the demo's categories (Travel and the rest stay unsorted, so the demo
+# shows that bucket too). Dining is a want under Food & drink, a need.
+CATEGORY_KINDS = {
+    "Food & drink": CategoryKind.NEED,
+    "Groceries": CategoryKind.NEED,
+    "Dining": CategoryKind.WANT,
+    "Transport": CategoryKind.NEED,
+    "Fuel": CategoryKind.NEED,
+    "Utilities": CategoryKind.NEED,
+    "Health": CategoryKind.NEED,
+    "Lifestyle": CategoryKind.WANT,
+    "Shopping": CategoryKind.WANT,
+    "Entertainment": CategoryKind.WANT,
+}
+
+
 async def _group_categories(db: AsyncSession, uid) -> None:
     categories = CategoryService(db)
     for parent_name, children in CATEGORY_GROUPS.items():
@@ -283,6 +300,10 @@ async def _group_categories(db: AsyncSession, uid) -> None:
             child = await categories.get_by_name(uid, name)
             if child is not None:
                 child.parent_id = parent.id
+    for name, kind in CATEGORY_KINDS.items():
+        category = await categories.get_by_name(uid, name)
+        if category is not None:
+            category.kind = kind
     await db.flush()
 
 

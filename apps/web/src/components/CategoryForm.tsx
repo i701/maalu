@@ -7,7 +7,12 @@ import type { Accent } from "#/lib/m3";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
 import { createCategoryFn, updateCategoryFn } from "#/server/categories";
-import type { Category } from "#/types/api";
+import {
+	CATEGORY_KIND_LABELS,
+	CATEGORY_KINDS,
+	type Category,
+	type CategoryKind,
+} from "#/types/api";
 import ColorSwatches from "./ColorSwatches";
 import FormDialog from "./FormDialog";
 import { useNotify } from "./Notify";
@@ -30,6 +35,8 @@ export default function CategoryForm({
 	// Empty = let the API pick the least used colour (new categories only)
 	const [color, setColor] = useState(category?.color ?? "");
 	const [parentId, setParentId] = useState(category?.parent_id ?? "");
+	// Empty = not sorted
+	const [kind, setKind] = useState<CategoryKind | "">(category?.kind ?? "");
 	const parents = parentChoices(categories, category);
 
 	async function submit(e: React.FormEvent<HTMLFormElement>) {
@@ -39,6 +46,7 @@ export default function CategoryForm({
 			name,
 			...(color ? { color: color as Accent } : {}),
 			parent_id: parentId || null,
+			kind: kind || null,
 		};
 		const ok = await run(() =>
 			category
@@ -89,6 +97,21 @@ export default function CategoryForm({
 					{parents.map((p) => (
 						<MenuItem key={p.id} value={p.id}>
 							{p.name}
+						</MenuItem>
+					))}
+				</TextField>
+				<TextField
+					select
+					fullWidth
+					label="Need or want"
+					value={kind}
+					onChange={(e) => setKind(e.target.value as CategoryKind | "")}
+					helperText="Spending here counts as a need or a want in your reports. A sub-category with none takes its parent's"
+				>
+					<MenuItem value="">Not sorted</MenuItem>
+					{CATEGORY_KINDS.map((k) => (
+						<MenuItem key={k} value={k}>
+							{CATEGORY_KIND_LABELS[k]}
 						</MenuItem>
 					))}
 				</TextField>

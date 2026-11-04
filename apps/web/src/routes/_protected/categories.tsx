@@ -15,6 +15,7 @@ import CategoryForm from "#/components/CategoryForm";
 import ConfirmDelete from "#/components/ConfirmDelete";
 import EmptyState from "#/components/EmptyState";
 import MergeCategoryDialog from "#/components/MergeCategoryDialog";
+import SortKindsDialog from "#/components/SortKindsDialog";
 import MobileCard from "#/components/MobileCard";
 import PageHeader from "#/components/PageHeader";
 import PendingOverlay from "#/components/PendingOverlay";
@@ -32,7 +33,8 @@ import { ACCENT } from "#/lib/m3";
 import { lastPageIfOutOfRange, pageSearch } from "#/lib/pagination";
 import { unwrap } from "#/lib/unwrap";
 import { deleteCategoryFn, listCategoriesFn, listCategoriesPageFn } from "#/server/categories";
-import type { Category } from "#/types/api";
+import { unsortedCategories } from "#/lib/needs-wants";
+import { CATEGORY_KIND_LABELS, type Category } from "#/types/api";
 
 const searchSchema = z.object({
 	...pageSearch,
@@ -65,8 +67,17 @@ export const Route = createFileRoute("/_protected/categories")({
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 function Usage({ category }: { category: Category }) {
+	const kind = category.effective_kind;
 	return (
 		<>
+			{kind && (
+				<TonalChip
+					accent={kind === "need" ? ACCENT.blue : ACCENT.orange}
+					label={CATEGORY_KIND_LABELS[kind]}
+					title={category.kind ? undefined : `From ${category.parent}`}
+					sx={category.kind ? undefined : { opacity: 0.75 }}
+				/>
+			)}
 			<TonalChip
 				accent={ACCENT.blue}
 				label={plural(category.transaction_count, "transaction", "transactions")}
@@ -198,6 +209,31 @@ const CategoriesTable = memo(function CategoriesTable({
 	);
 });
 
+function HeaderActions({
+	unsorted,
+	canSort,
+	onSort,
+	onAdd,
+}: {
+	unsorted: number;
+	canSort: boolean;
+	onSort: () => void;
+	onAdd: () => void;
+}) {
+	return (
+		<Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+			{canSort && (
+				<Button variant="contained" onClick={onSort}>
+					{unsorted > 0 ? `Needs and wants (${unsorted} not sorted)` : "Needs and wants"}
+				</Button>
+			)}
+			<Button variant="contained" startIcon={<AddIcon />} onClick={onAdd}>
+				Add category
+			</Button>
+		</Box>
+	);
+}
+
 function CategoriesPage() {
 	const { items, total, all } = Route.useLoaderData();
 	const search = useLiveSearch(searchSchema);
@@ -210,6 +246,8 @@ function CategoriesPage() {
 	const [editing, setEditing] = useState<Category | "new" | null>(null);
 	const [merging, setMerging] = useState<Category | null>(null);
 	const [deleting, setDeleting] = useState<Category | null>(null);
+	const [sorting, setSorting] = useState(false);
+	const unsorted = unsortedCategories(all).length;
 
 	const filtered = Boolean(search.q);
 	const setPage = (page: number) => navigate({ search: (p) => ({ ...p, page }), replace: true });
@@ -224,9 +262,12 @@ function CategoriesPage() {
 				stats={[{ symbol: "category", label: plural(total, "category", "categories") }]}
 				description="What your money is for. Rename or merge them to keep things tidy."
 				action={
-					<Button variant="contained" startIcon={<AddIcon />} onClick={() => setEditing("new")}>
-						Add category
-					</Button>
+					<HeaderActions
+						unsorted={unsorted}
+						canSort={all.length > 0}
+						onSort={() => setSorting(true)}
+						onAdd={() => setEditing("new")}
+					/>
 				}
 			/>
 
@@ -295,6 +336,7 @@ function CategoriesPage() {
 					onClose={() => setEditing(null)}
 				/>
 			)}
+			{sorting && <SortKindsDialog categories={all} onClose={() => setSorting(false)} />}
 			{merging && (
 				<MergeCategoryDialog category={merging} categories={all} onClose={() => setMerging(null)} />
 			)}

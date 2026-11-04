@@ -5,7 +5,7 @@ from typing import Annotated, Literal
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from app.enums import PaymentMethod, TransactionType
+from app.enums import CategoryKind, PaymentMethod, TransactionType
 from app.schemas.account import AccountRef
 from app.schemas.group import GroupRef
 from app.schemas.subscription import SubscriptionRef
@@ -353,6 +353,9 @@ class CategoryTotal(BaseModel):
     category_id: uuid.UUID
     category: str
     color: str = Field(description="The category's accent colour")
+    kind: CategoryKind | None = Field(
+        description="Need or want: the category's own, or its parent's; null when not sorted"
+    )
     parent_id: uuid.UUID | None = Field(description="Set on a sub-category")
     parent: str | None = Field(description="The parent's name")
     parent_color: str | None = Field(description="The parent's accent colour")
@@ -374,6 +377,9 @@ class CategoryMonthRow(BaseModel):
     category_id: uuid.UUID
     category: str
     color: str = Field(description="The category's accent colour")
+    kind: CategoryKind | None = Field(
+        description="Need or want: the category's own, or its parent's; null when not sorted"
+    )
     parent_id: uuid.UUID | None = Field(description="Set on a sub-category")
     parent: str | None = Field(description="The parent's name")
     parent_color: str | None = Field(description="The parent's accent colour")

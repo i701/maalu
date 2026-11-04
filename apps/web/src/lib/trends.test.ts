@@ -20,6 +20,7 @@ const row = (amounts: string[], over: Partial<CategoryMonthRow> = {}): CategoryM
 	category_id: "c",
 	category: "Food",
 	color: "blue",
+	kind: null,
 	parent_id: null,
 	parent: null,
 	parent_color: null,

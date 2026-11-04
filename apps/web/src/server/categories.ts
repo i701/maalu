@@ -49,9 +49,17 @@ export const getCategoryFn = createServerFn({ method: "GET" })
 	.handler(async ({ data }) => apiRequest<Category>(`/categories/${data.id}`));
 
 const color = z.enum(ACCENT_NAMES);
+const kind = z.enum(["need", "want"]);
 
 export const createCategoryFn = createServerFn({ method: "POST" })
-	.validator(z.object({ name, color: color.optional(), parent_id: z.uuid().nullish() }))
+	.validator(
+		z.object({
+			name,
+			color: color.optional(),
+			parent_id: z.uuid().nullish(),
+			kind: kind.nullish(),
+		}),
+	)
 	.handler(async ({ data }) => apiRequest<Category>("/categories", { method: "POST", body: data }));
 
 /** Change a category: only the fields sent change, and `parent_id: null` makes it a top-level one. */
@@ -62,10 +70,18 @@ export const updateCategoryFn = createServerFn({ method: "POST" })
 			name: name.optional(),
 			color: color.optional(),
 			parent_id: z.uuid().nullish(),
+			kind: kind.nullish(),
 		}),
 	)
 	.handler(async ({ data: { id, ...body } }) =>
 		apiRequest<Category>(`/categories/${id}`, { method: "PATCH", body }),
+	);
+
+/** Mark several categories as a need or a want at once (`kind: null` clears it). */
+export const setCategoryKindsFn = createServerFn({ method: "POST" })
+	.validator(z.object({ ids: z.array(z.uuid()).min(1).max(500), kind: kind.nullable() }))
+	.handler(async ({ data }) =>
+		apiRequest<{ updated: number }>("/categories/kind", { method: "PATCH", body: data }),
 	);
 
 export const mergeCategoryFn = createServerFn({ method: "POST" })

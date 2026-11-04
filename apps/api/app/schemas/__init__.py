@@ -17,6 +17,8 @@ from app.schemas.budget import (
 )
 from app.schemas.category import (
     CategoryCreate,
+    CategoryKindBulk,
+    CategoryKindResult,
     CategoryMerge,
     CategoryResponse,
     CategoryUpdate,
@@ -122,6 +124,8 @@ __all__ = [
     "BulkSkipped",
     "BulkUpdate",
     "CategoryCreate",
+    "CategoryKindBulk",
+    "CategoryKindResult",
     "CategoryMerge",
     "CategoryMonthRow",
     "CategoryMonths",

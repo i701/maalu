@@ -6,6 +6,7 @@
  */
 import {
 	accountGroupValues,
+	categoryKindValues,
 	intervalUnitValues,
 	paymentMethodValues,
 	subscriptionStatusValues,
@@ -51,6 +52,13 @@ export const VENDOR_LOCALITY_LABELS: Record<VendorLocality, string> = {
 	local: "Local",
 	foreign: "Foreign",
 	unknown: "Not set",
+};
+
+export type CategoryKind = Schemas["CategoryKind"];
+export const CATEGORY_KINDS = categoryKindValues;
+export const CATEGORY_KIND_LABELS: Record<CategoryKind, string> = {
+	need: "Need",
+	want: "Want",
 };
 
 export type IntervalUnit = Schemas["IntervalUnit"];

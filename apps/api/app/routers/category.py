@@ -8,6 +8,8 @@ from app.models import Category
 from app.pagination import PageDep, set_total
 from app.schemas import (
     CategoryCreate,
+    CategoryKindBulk,
+    CategoryKindResult,
     CategoryMerge,
     CategoryResponse,
     CategoryUpdate,
@@ -34,7 +36,7 @@ async def create_category(
 ):
     try:
         category = await service.create(
-            user_id, data.name, color=data.color, parent_id=data.parent_id
+            user_id, data.name, color=data.color, parent_id=data.parent_id, kind=data.kind
         )
     except CategoryNameTakenError:
         raise _NAME_TAKEN from None
@@ -56,6 +58,15 @@ async def list_categories(
     set_total(response, await service.count_for_user(user_id, q=q))
     categories = await service.list_for_user(user_id, q=q, limit=page.limit, offset=page.offset)
     return await service.present(user_id, categories)
+
+
+@router.patch("/kind", response_model=CategoryKindResult)
+async def set_category_kinds(
+    data: CategoryKindBulk, user_id: CurrentUserId, service: CategoryServiceDep
+):
+    """Mark several categories as a need or a want at once (null clears it). Declared before the
+    `{category_id}` routes so "kind" isn't read as an id."""
+    return CategoryKindResult(updated=await service.set_kind(user_id, data.ids, data.kind))
 
 
 @router.get("/{category_id}", response_model=CategoryResponse)
