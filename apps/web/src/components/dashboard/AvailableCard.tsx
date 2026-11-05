@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import { Link } from "@tanstack/react-router";
+import { RouterButton } from "../RouterLinks";
 import { memo, useState } from "react";
 import { hasAccounts, isShort, workingLine } from "#/lib/available";
 import { formatDate, formatMoney } from "#/lib/format";
@@ -156,6 +157,9 @@ const AvailableCard = memo(function AvailableCard({ data }: { data: AvailableToS
 					>
 						{open ? "Hide the working" : "Show the working"}
 					</Button>
+					<RouterButton to="/plan" size="small" color="inherit" sx={{ mt: 1 }}>
+						Open the month plan
+					</RouterButton>
 					{open && <Working data={data} />}
 				</>
 			) : (

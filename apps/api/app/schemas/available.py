@@ -19,6 +19,7 @@ class AvailableBill(BaseModel):
     amount: Decimal = Field(description="In your base currency")
     overdue: bool = Field(description="Its date has passed and it is still planned")
     subscription: str | None = Field(description="The subscription it belongs to, if any")
+    account: str | None = Field(description="The account it will be paid from, if one is set")
 
 
 class AvailableReserve(BaseModel):
@@ -55,6 +56,9 @@ class AvailableToSpend(BaseModel):
     expected_income: Decimal = Field(
         description="Planned income up to the end of the period (a salary not yet received). It "
         "is not counted in `available`, so the figure never relies on money that hasn't arrived."
+    )
+    expected: list[AvailableBill] = Field(
+        description="The planned income behind `expected_income`, by date (same shape as bills)"
     )
     kept_apart: list[AvailableAccount] = Field(
         description="Accounts that count toward net worth but not toward spending: savings, "

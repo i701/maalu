@@ -23,6 +23,7 @@ import { Route as ProtectedImportRouteImport } from './routes/_protected/import'
 import { Route as ProtectedNetWorthRouteImport } from './routes/_protected/net-worth'
 import { Route as ProtectedNotificationsRouteImport } from './routes/_protected/notifications'
 import { Route as ProtectedPlacesRouteImport } from './routes/_protected/places'
+import { Route as ProtectedPlanRouteImport } from './routes/_protected/plan'
 import { Route as ProtectedProfileRouteImport } from './routes/_protected/profile'
 import { Route as ProtectedSettingsRouteImport } from './routes/_protected/settings'
 import { Route as ProtectedSubscriptionsRouteImport } from './routes/_protected/subscriptions'
@@ -106,6 +107,11 @@ const ProtectedNotificationsRoute = ProtectedNotificationsRouteImport.update({
 const ProtectedPlacesRoute = ProtectedPlacesRouteImport.update({
   id: '/places',
   path: '/places',
+  getParentRoute: () => ProtectedRoute,
+} as any)
+const ProtectedPlanRoute = ProtectedPlanRouteImport.update({
+  id: '/plan',
+  path: '/plan',
   getParentRoute: () => ProtectedRoute,
 } as any)
 const ProtectedProfileRoute = ProtectedProfileRouteImport.update({
@@ -198,6 +204,7 @@ export interface FileRoutesByFullPath {
   '/net-worth': typeof ProtectedNetWorthRoute
   '/notifications': typeof ProtectedNotificationsRoute
   '/places': typeof ProtectedPlacesRoute
+  '/plan': typeof ProtectedPlanRoute
   '/profile': typeof ProtectedProfileRoute
   '/settings': typeof ProtectedSettingsRoute
   '/subscriptions': typeof ProtectedSubscriptionsRoute
@@ -228,6 +235,7 @@ export interface FileRoutesByTo {
   '/net-worth': typeof ProtectedNetWorthRoute
   '/notifications': typeof ProtectedNotificationsRoute
   '/places': typeof ProtectedPlacesRoute
+  '/plan': typeof ProtectedPlanRoute
   '/profile': typeof ProtectedProfileRoute
   '/settings': typeof ProtectedSettingsRoute
   '/subscriptions': typeof ProtectedSubscriptionsRoute
@@ -260,6 +268,7 @@ export interface FileRoutesById {
   '/_protected/net-worth': typeof ProtectedNetWorthRoute
   '/_protected/notifications': typeof ProtectedNotificationsRoute
   '/_protected/places': typeof ProtectedPlacesRoute
+  '/_protected/plan': typeof ProtectedPlanRoute
   '/_protected/profile': typeof ProtectedProfileRoute
   '/_protected/settings': typeof ProtectedSettingsRoute
   '/_protected/subscriptions': typeof ProtectedSubscriptionsRoute
@@ -292,6 +301,7 @@ export interface FileRouteTypes {
     | '/net-worth'
     | '/notifications'
     | '/places'
+    | '/plan'
     | '/profile'
     | '/settings'
     | '/subscriptions'
@@ -322,6 +332,7 @@ export interface FileRouteTypes {
     | '/net-worth'
     | '/notifications'
     | '/places'
+    | '/plan'
     | '/profile'
     | '/settings'
     | '/subscriptions'
@@ -353,6 +364,7 @@ export interface FileRouteTypes {
     | '/_protected/net-worth'
     | '/_protected/notifications'
     | '/_protected/places'
+    | '/_protected/plan'
     | '/_protected/profile'
     | '/_protected/settings'
     | '/_protected/subscriptions'
@@ -482,6 +494,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedPlacesRouteImport
       parentRoute: typeof ProtectedRoute
     }
+    '/_protected/plan': {
+      id: '/_protected/plan'
+      path: '/plan'
+      fullPath: '/plan'
+      preLoaderRoute: typeof ProtectedPlanRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
     '/_protected/profile': {
       id: '/_protected/profile'
       path: '/profile'
@@ -601,6 +620,7 @@ interface ProtectedRouteChildren {
   ProtectedNetWorthRoute: typeof ProtectedNetWorthRoute
   ProtectedNotificationsRoute: typeof ProtectedNotificationsRoute
   ProtectedPlacesRoute: typeof ProtectedPlacesRoute
+  ProtectedPlanRoute: typeof ProtectedPlanRoute
   ProtectedProfileRoute: typeof ProtectedProfileRoute
   ProtectedSettingsRoute: typeof ProtectedSettingsRoute
   ProtectedSubscriptionsRoute: typeof ProtectedSubscriptionsRoute
@@ -623,6 +643,7 @@ const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedNetWorthRoute: ProtectedNetWorthRoute,
   ProtectedNotificationsRoute: ProtectedNotificationsRoute,
   ProtectedPlacesRoute: ProtectedPlacesRoute,
+  ProtectedPlanRoute: ProtectedPlanRoute,
   ProtectedProfileRoute: ProtectedProfileRoute,
   ProtectedSettingsRoute: ProtectedSettingsRoute,
   ProtectedSubscriptionsRoute: ProtectedSubscriptionsRoute,

@@ -88,6 +88,7 @@ async def test_available_is_what_everyday_accounts_hold_less_bills_and_set_aside
         ("120.0000", True),
         ("300.0000", False),
     ]
+    assert {b["account"] for b in body["bills"]} == {"Main"}
     assert dec(body["bills_total"]) == 420
     assert [(r["name"], dec(r["amount"])) for r in body["reserved"]] == [("Trip", 1000)]
     assert dec(body["available"]) == 5200 - 420 - 1000
@@ -139,6 +140,10 @@ async def test_planned_income_is_shown_but_never_counted(client: AsyncClient, au
     await planned(client, auth, main["id"], "8000", date.today(), kind="income")
     body = await get(client, auth)
     assert dec(body["expected_income"]) == 8000
+    assert [(e["title"], dec(e["amount"]), e["account"]) for e in body["expected"]] == [
+        ("Salary", 8000, "Main")
+    ]
+    assert body["bills"] == []
     assert dec(body["available"]) == 100
 
 

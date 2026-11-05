@@ -2247,6 +2247,11 @@ export interface components {
         /** AvailableBill */
         AvailableBill: {
             /**
+             * Account
+             * @description The account it will be paid from, if one is set
+             */
+            account: string | null;
+            /**
              * Amount
              * @description In your base currency
              */
@@ -2322,6 +2327,11 @@ export interface components {
             bills_total: string;
             /** Currency */
             currency: string;
+            /**
+             * Expected
+             * @description The planned income behind `expected_income`, by date (same shape as bills)
+             */
+            expected: components["schemas"]["AvailableBill"][];
             /**
              * Expected Income
              * @description Planned income up to the end of the period (a salary not yet received). It is not counted in `available`, so the figure never relies on money that hasn't arrived.

@@ -70,23 +70,21 @@ class AvailableService:
             )
         ).all()
         bills: list[AvailableBill] = []
-        expected = ZERO
+        coming: list[AvailableBill] = []
         for t in planned:
             if t.account_id is not None and t.account_id not in spendable_ids:
                 continue
-            if t.type is TransactionType.INCOME:
-                expected += t.base_amount
-                continue
-            bills.append(
-                AvailableBill(
-                    id=t.id,
-                    title=t.description or t.category,
-                    date=t.transaction_date,
-                    amount=t.base_amount,
-                    overdue=t.transaction_date < today,
-                    subscription=t.subscription.name if t.subscription else None,
-                )
+            row = AvailableBill(
+                id=t.id,
+                title=t.description or t.category,
+                date=t.transaction_date,
+                amount=t.base_amount,
+                overdue=t.transaction_date < today,
+                subscription=t.subscription.name if t.subscription else None,
+                account=t.account.name if t.account else None,
             )
+            (coming if t.type is TransactionType.INCOME else bills).append(row)
+        expected = sum((c.amount for c in coming), ZERO)
         bills.sort(key=lambda b: (not b.overdue, b.date, b.title))
 
         reserved = [
@@ -110,5 +108,6 @@ class AvailableService:
             reserved_total=reserved_total,
             available=balance - bills_total - reserved_total,
             expected_income=expected,
+            expected=coming,
             kept_apart=apart,
         )

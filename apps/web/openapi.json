@@ -645,6 +645,18 @@
       },
       "AvailableBill": {
         "properties": {
+          "account": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The account it will be paid from, if one is set",
+            "title": "Account"
+          },
           "amount": {
             "description": "In your base currency",
             "title": "Amount",
@@ -689,7 +701,8 @@
           "date",
           "amount",
           "overdue",
-          "subscription"
+          "subscription",
+          "account"
         ],
         "title": "AvailableBill",
         "type": "object"
@@ -756,6 +769,14 @@
             "title": "Currency",
             "type": "string"
           },
+          "expected": {
+            "description": "The planned income behind `expected_income`, by date (same shape as bills)",
+            "items": {
+              "$ref": "#/components/schemas/AvailableBill"
+            },
+            "title": "Expected",
+            "type": "array"
+          },
           "expected_income": {
             "description": "Planned income up to the end of the period (a salary not yet received). It is not counted in `available`, so the figure never relies on money that hasn't arrived.",
             "title": "Expected Income",
@@ -811,6 +832,7 @@
           "reserved_total",
           "available",
           "expected_income",
+          "expected",
           "kept_apart"
         ],
         "title": "AvailableToSpend",

@@ -14,8 +14,8 @@ import { useNotify } from "./Notify";
 /** "45.0000" as "45": the API sends four decimals, a person types fewer. */
 const tidy = (amount: string) => (amount.includes(".") ? amount.replace(/\.?0+$/, "") : amount);
 
-/** Turns a planned transaction into a real one. The bill is rarely exactly what was planned, so
- * the date (today) and the amount can be corrected on the way. */
+/** Turns a planned transaction into a real one. The bill is rarely exactly what was planned (and a
+ * salary never is), so the date (today) and the amount can be corrected on the way. */
 export default function MarkPaidDialog({
 	transaction,
 	onClose,
@@ -26,6 +26,7 @@ export default function MarkPaidDialog({
 	const { run, pending, error } = useAction();
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
+	const income = transaction.type === "income";
 
 	async function submit(e: FormEvent<HTMLFormElement>) {
 		e.preventDefault();
@@ -42,14 +43,14 @@ export default function MarkPaidDialog({
 			}),
 		);
 		if (ok) {
-			notify(`"${txTitle(transaction)}" marked as paid`);
+			notify(`"${txTitle(transaction)}" marked as ${income ? "received" : "paid"}`);
 			sheet.close();
 		}
 	}
 
 	return (
 		<FormDialog
-			title="Mark as paid"
+			title={income ? "Mark as received" : "Mark as paid"}
 			error={error}
 			pending={pending}
 			onSubmit={submit}
@@ -59,18 +60,23 @@ export default function MarkPaidDialog({
 			<Grid container spacing={2}>
 				<Grid size={12}>
 					<TextField
-						label="Amount"
+						label={income ? "Amount received" : "Amount"}
 						name="amount"
 						defaultValue={tidy(transaction.amount)}
 						required
 						autoFocus
-						helperText={`Planned: ${formatMoney(transaction.amount, transaction.currency)}. Change it if the real amount differs`}
+						onFocus={(e) => e.target.select()}
+						helperText={
+							income
+								? `Expected: ${formatMoney(transaction.amount, transaction.currency)}. Type what actually arrived`
+								: `Planned: ${formatMoney(transaction.amount, transaction.currency)}. Change it if the real amount differs`
+						}
 						slotProps={{ htmlInput: { inputMode: "decimal" } }}
 					/>
 				</Grid>
 				<Grid size={6}>
 					<TextField
-						label="Paid on"
+						label={income ? "Received on" : "Paid on"}
 						name="date"
 						type="date"
 						defaultValue={localToday()}
