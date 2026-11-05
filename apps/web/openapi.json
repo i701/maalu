@@ -667,6 +667,12 @@
             "title": "Date",
             "type": "string"
           },
+          "estimate": {
+            "default": false,
+            "description": "Only a guess: its subscription's amount varies from month to month",
+            "title": "Estimate",
+            "type": "boolean"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -3960,6 +3966,38 @@
             "description": "What it actually came to",
             "title": "Amount"
           },
+          "base_amount": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "For a bill in another currency: what it really cost in your base currency (the amount charged to your account). The rate is worked out from it.",
+            "title": "Base Amount"
+          },
+          "exchange_rate": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "For a bill in another currency: the rate it was really paid at (base-currency units per 1 unit of its currency)",
+            "title": "Exchange Rate"
+          },
           "transaction_date": {
             "anyOf": [
               {
@@ -5036,6 +5074,12 @@
             ],
             "title": "Amount"
           },
+          "amount_varies": {
+            "default": false,
+            "description": "The amount is only the usual one (a server bill, a utility). Its planned payments are estimates, and the real amount is entered when it is paid.",
+            "title": "Amount Varies",
+            "type": "boolean"
+          },
           "category": {
             "maxLength": 100,
             "minLength": 1,
@@ -5236,6 +5280,10 @@
             "title": "Amount",
             "type": "string"
           },
+          "amount_varies": {
+            "title": "Amount Varies",
+            "type": "boolean"
+          },
           "base_amount": {
             "title": "Base Amount",
             "type": "string"
@@ -5396,6 +5444,7 @@
           "payments_made",
           "installments_left",
           "remind_days_before",
+          "amount_varies",
           "created_at"
         ],
         "title": "SubscriptionResponse",
@@ -5464,6 +5513,17 @@
               }
             ],
             "title": "Amount"
+          },
+          "amount_varies": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Varies"
           },
           "category": {
             "anyOf": [

@@ -82,6 +82,7 @@ class AvailableService:
                 overdue=t.transaction_date < today,
                 subscription=t.subscription.name if t.subscription else None,
                 account=t.account.name if t.account else None,
+                estimate=bool(t.subscription and t.subscription.amount_varies),
             )
             (coming if t.type is TransactionType.INCOME else bills).append(row)
         expected = sum((c.amount for c in coming), ZERO)

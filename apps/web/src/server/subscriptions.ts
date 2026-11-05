@@ -36,6 +36,7 @@ const createSchema = z.object({
 	status: z.enum(SUBSCRIPTION_STATUSES).optional(),
 	installments_total: z.number().int().min(1).max(600).nullable().optional(),
 	remind_days_before: z.number().int().min(0).max(60).nullable().optional(),
+	amount_varies: z.boolean().optional(),
 	vendor_name: name.optional(),
 	account_id: z.uuid().nullable().optional(), // null unlinks the account
 });

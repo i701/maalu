@@ -339,6 +339,24 @@ class PostPlanned(BaseModel):
     transaction_date: date | None = Field(default=None, description="The day it actually happened")
     transaction_time: time | None = Field(default=None, description="The time it happened")
     amount: Amount | None = Field(default=None, description="What it actually came to")
+    exchange_rate: ExchangeRate | None = Field(
+        default=None,
+        description="For a bill in another currency: the rate it was really paid at (base-currency "
+        "units per 1 unit of its currency)",
+    )
+    base_amount: Amount | None = Field(
+        default=None,
+        description="For a bill in another currency: what it really cost in your base currency "
+        "(the amount charged to your account). The rate is worked out from it.",
+    )
+
+    @model_validator(mode="after")
+    def _one_way_to_price_it(self):
+        if self.exchange_rate is not None and self.base_amount is not None:
+            raise ValueError(
+                "Give the exchange rate or what it cost in your base currency, not both"
+            )
+        return self
 
 
 class BulkSkipped(BaseModel):

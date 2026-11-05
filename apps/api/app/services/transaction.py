@@ -3,7 +3,7 @@ import math
 import uuid
 from collections import Counter
 from datetime import UTC, date, datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_EVEN, Decimal
 
 from sqlalchemy import case, func, literal, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -1552,6 +1552,19 @@ class TransactionService:
             changes["transaction_time"] = data.transaction_time
         if data.amount is not None:
             changes["amount"] = data.amount
+        if data.exchange_rate is not None or data.base_amount is not None:
+            # a bill in another currency: the real rate, or what it really cost in the base currency
+            if transaction.currency == await self._base_currency(transaction.user_id):
+                raise TransactionRuleError(
+                    "This is in your base currency, so there is no exchange rate to set"
+                )
+            if data.base_amount is not None:
+                paid = changes.get("amount", transaction.amount)
+                changes["exchange_rate"] = (data.base_amount / paid).quantize(
+                    Decimal("0.00000001"), ROUND_HALF_EVEN
+                )
+            else:
+                changes["exchange_rate"] = data.exchange_rate
         return await self.update(transaction, TransactionUpdate(**changes))
 
     async def restore(self, transaction: Transaction) -> Transaction:

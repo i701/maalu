@@ -83,7 +83,7 @@ function Working({ data }: { data: AvailableToSpend }) {
 					<Row
 						key={b.id}
 						name={b.title}
-						note={b.overdue ? "overdue" : formatDate(b.date)}
+						note={`${b.overdue ? "overdue" : formatDate(b.date)}${b.estimate ? " · estimate" : ""}`}
 						amount={b.amount}
 						currency={c}
 					/>

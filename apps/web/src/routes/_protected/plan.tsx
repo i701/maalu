@@ -180,7 +180,13 @@ function PlanPage() {
 				)}
 			</PendingOverlay>
 
-			{paying && <MarkPaidDialog transaction={paying} onClose={() => setPayingId(null)} />}
+			{paying && (
+				<MarkPaidDialog
+					transaction={paying}
+					baseCurrency={available.currency}
+					onClose={() => setPayingId(null)}
+				/>
+			)}
 		</>
 	);
 }

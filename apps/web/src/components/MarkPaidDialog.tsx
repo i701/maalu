@@ -1,7 +1,8 @@
 import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
-import type { FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { formatMoney, formatTime } from "#/lib/format";
+import { baseOf, payBody } from "#/lib/mark-paid";
 import { localToday } from "#/lib/planned";
 import { useSheet } from "#/lib/sheet";
 import { txTitle } from "#/lib/tx-display";
@@ -14,19 +15,77 @@ import { useNotify } from "./Notify";
 /** "45.0000" as "45": the API sends four decimals, a person types fewer. */
 const tidy = (amount: string) => (amount.includes(".") ? amount.replace(/\.?0+$/, "") : amount);
 
+/** For a bill in another currency: the rate it was paid at, or what it really cost. */
+function RateFields({
+	rate,
+	charged,
+	preview,
+	planned,
+	baseCurrency,
+	onRate,
+	onCharged,
+}: {
+	rate: string;
+	charged: string;
+	/** What the amount comes to in the base currency at this rate, if it can be worked out */
+	preview: string | null;
+	planned: string;
+	baseCurrency: string;
+	onRate: (v: string) => void;
+	onCharged: (v: string) => void;
+}) {
+	return (
+		<>
+			<Grid size={6}>
+				<TextField
+					label="Exchange rate"
+					value={rate}
+					onChange={(e) => onRate(e.target.value)}
+					disabled={charged.trim() !== ""}
+					helperText={
+						preview && charged.trim() === ""
+							? `Planned at ${planned}. Comes to ${formatMoney(preview, baseCurrency)}`
+							: `Planned at ${planned}`
+					}
+					slotProps={{ htmlInput: { inputMode: "decimal" } }}
+				/>
+			</Grid>
+			<Grid size={6}>
+				<TextField
+					label={`Charged in ${baseCurrency}`}
+					value={charged}
+					onChange={(e) => onCharged(e.target.value)}
+					helperText="Optional: the exact amount taken. The rate is worked out from it"
+					slotProps={{ htmlInput: { inputMode: "decimal" } }}
+				/>
+			</Grid>
+		</>
+	);
+}
+
 /** Turns a planned transaction into a real one. The bill is rarely exactly what was planned (and a
- * salary never is), so the date (today) and the amount can be corrected on the way. */
+ * salary never is), so the date (today) and the amount can be corrected on the way. A bill in
+ * another currency can also take the rate it was really paid at, or what it really cost, since a
+ * server bill in dollars changes both. */
 export default function MarkPaidDialog({
 	transaction,
+	baseCurrency,
 	onClose,
 }: {
 	transaction: Transaction;
+	/** Your base currency: a bill in any other currency shows the rate fields */
+	baseCurrency?: string;
 	onClose: () => void;
 }) {
 	const { run, pending, error } = useAction();
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
 	const income = transaction.type === "income";
+	const foreign = Boolean(baseCurrency && transaction.currency !== baseCurrency);
+	const plannedRate = tidy(transaction.exchange_rate);
+	const [amount, setAmount] = useState(() => tidy(transaction.amount));
+	const [rate, setRate] = useState(plannedRate);
+	const [charged, setCharged] = useState("");
 
 	async function submit(e: FormEvent<HTMLFormElement>) {
 		e.preventDefault();
@@ -38,7 +97,7 @@ export default function MarkPaidDialog({
 					id: transaction.id,
 					transaction_date: text("date"),
 					transaction_time: text("time") || null,
-					amount: text("amount"),
+					...payBody({ amount: amount.trim(), foreign, rate, plannedRate, charged }),
 				},
 			}),
 		);
@@ -61,8 +120,8 @@ export default function MarkPaidDialog({
 				<Grid size={12}>
 					<TextField
 						label={income ? "Amount received" : "Amount"}
-						name="amount"
-						defaultValue={tidy(transaction.amount)}
+						value={amount}
+						onChange={(e) => setAmount(e.target.value)}
 						required
 						autoFocus
 						onFocus={(e) => e.target.select()}
@@ -74,6 +133,17 @@ export default function MarkPaidDialog({
 						slotProps={{ htmlInput: { inputMode: "decimal" } }}
 					/>
 				</Grid>
+				{foreign && baseCurrency && (
+					<RateFields
+						rate={rate}
+						charged={charged}
+						preview={baseOf(amount, rate)}
+						planned={plannedRate}
+						baseCurrency={baseCurrency}
+						onRate={setRate}
+						onCharged={setCharged}
+					/>
+				)}
 				<Grid size={6}>
 					<TextField
 						label={income ? "Received on" : "Paid on"}

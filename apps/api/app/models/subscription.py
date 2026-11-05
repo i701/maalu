@@ -2,7 +2,18 @@ import uuid
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
-from sqlalchemy import Date, DateTime, Enum, ForeignKey, Integer, Numeric, String, Uuid, func
+from sqlalchemy import (
+    Boolean,
+    Date,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    Uuid,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.enums import IntervalUnit, PaymentMethod, SubscriptionStatus
@@ -69,6 +80,10 @@ class Subscription(Base):
     # How many days before a payment's date to tell you it is coming (0 = on the day). Null means
     # no reminder; being overdue is always told.
     remind_days_before: Mapped[int | None] = mapped_column(Integer, default=3, server_default="3")
+    # The amount is only the usual one: each payment comes to something a little different (a
+    # server bill, a utility). Its planned payments are shown as estimates, and the real amount (and
+    # rate) is entered when it is marked as paid.
+    amount_varies: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     status: Mapped[SubscriptionStatus] = mapped_column(
         _str_enum(SubscriptionStatus), default=SubscriptionStatus.ACTIVE
     )

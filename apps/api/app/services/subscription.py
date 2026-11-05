@@ -365,6 +365,7 @@ class SubscriptionService:
                     if s.installments_total is None
                     else max(0, s.installments_total - payments.get(s.id, 0)),
                     remind_days_before=s.remind_days_before,
+                    amount_varies=s.amount_varies,
                     created_at=s.created_at,
                 )
             )

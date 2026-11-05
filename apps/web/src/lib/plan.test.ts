@@ -15,6 +15,7 @@ const bill = (
 	overdue: false,
 	subscription: null,
 	account: "Main",
+	estimate: false,
 	...over,
 });
 
@@ -96,6 +97,18 @@ describe("planDays", () => {
 		expect(rows.map((r) => r.short)).toEqual([false, true, true]);
 		expect(rows.map((r) => r.firstShort)).toEqual([false, true, false]);
 		expect(firstShortRow(days)?.id).toBe("b");
+	});
+
+	it("carries the estimate flag, so a varying bill can be shown as a guess", () => {
+		const days = planDays(
+			plan({
+				bills: [
+					bill("vps", "2026-11-06", "100", { estimate: true }),
+					bill("rent", "2026-11-07", "10"),
+				],
+			}),
+		);
+		expect(days.flatMap((d) => d.rows.map((r) => r.estimate))).toEqual([true, false]);
 	});
 
 	it("is empty when nothing is planned", () => {

@@ -300,6 +300,9 @@ export const postTransactionFn = createServerFn({ method: "POST" })
 			// null clears the planned time; leaving it out keeps it
 			transaction_time: timeOfDay.nullable().optional(),
 			amount: amount.optional(),
+			// a bill in another currency: the real rate, or what it really cost in the base currency
+			exchange_rate: exchangeRate.optional(),
+			base_amount: amount.optional(),
 		}),
 	)
 	.handler(async ({ data }) =>
@@ -309,6 +312,8 @@ export const postTransactionFn = createServerFn({ method: "POST" })
 				transaction_date: data.transaction_date,
 				transaction_time: data.transaction_time,
 				amount: data.amount,
+				exchange_rate: data.exchange_rate,
+				base_amount: data.base_amount,
 			},
 		}),
 	);

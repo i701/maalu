@@ -26,10 +26,13 @@ const SIGN = { income: "+", expense: "−", transfer: "" } as const;
  * nothing until then; ones whose day has passed say how late they are. */
 export default function UpcomingCard({
 	items,
+	baseCurrency,
 	onEdit,
 	onDelete,
 }: {
 	items: Transaction[];
+	/** Your base currency, so a bill in another one can be paid at its real rate */
+	baseCurrency?: string;
 	onEdit: (t: Transaction) => void;
 	onDelete: (t: Transaction) => void;
 }) {
@@ -140,7 +143,13 @@ export default function UpcomingCard({
 					</Stack>
 				</AccordionDetails>
 			</Accordion>
-			{paying && <MarkPaidDialog transaction={paying} onClose={() => setPaying(null)} />}
+			{paying && (
+				<MarkPaidDialog
+					transaction={paying}
+					baseCurrency={baseCurrency}
+					onClose={() => setPaying(null)}
+				/>
+			)}
 		</>
 	);
 }

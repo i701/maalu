@@ -1,6 +1,9 @@
 import Grid from "@mui/material/Grid";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import MenuItem from "@mui/material/MenuItem";
+import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
@@ -64,6 +67,7 @@ function readFields(f: FormData, account: Account | null, foreign: boolean) {
 		status: text("status") as SubscriptionStatus,
 		installments_total: installmentsFromField(text("installments_total")),
 		remind_days_before: remindFromField(text("remind_days_before")),
+		amount_varies: f.get("amount_varies") === "on",
 	};
 }
 
@@ -206,6 +210,18 @@ function PlanFields({ subscription }: { subscription?: Subscription }) {
 				</TextField>
 			</Grid>
 
+			<Grid size={12}>
+				<FormControlLabel
+					control={
+						<Switch name="amount_varies" defaultChecked={subscription?.amount_varies ?? false} />
+					}
+					label="The amount changes from month to month"
+				/>
+				<Typography variant="caption" component="p" sx={{ color: "text.secondary" }}>
+					The amount above is the usual one. Payments are shown as estimates, and you enter the real
+					amount (and exchange rate) when you pay.
+				</Typography>
+			</Grid>
 			<Grid size={{ xs: 12, sm: 6 }}>
 				<TextField
 					label="Number of payments"

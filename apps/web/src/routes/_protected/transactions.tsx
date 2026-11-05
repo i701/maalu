@@ -946,7 +946,12 @@ function TransactionsPage() {
 
 			<BudgetAlert budget={budget} />
 
-			<UpcomingCard items={upcoming} onEdit={setEditing} onDelete={setDeleting} />
+			<UpcomingCard
+				items={upcoming}
+				baseCurrency={user.base_currency}
+				onEdit={setEditing}
+				onDelete={setDeleting}
+			/>
 			<TransferSuggestionsCard suggestions={transferSuggestions} />
 
 			<Box sx={{ containerType: "inline-size" }}>

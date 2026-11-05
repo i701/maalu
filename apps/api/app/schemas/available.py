@@ -20,6 +20,10 @@ class AvailableBill(BaseModel):
     overdue: bool = Field(description="Its date has passed and it is still planned")
     subscription: str | None = Field(description="The subscription it belongs to, if any")
     account: str | None = Field(description="The account it will be paid from, if one is set")
+    estimate: bool = Field(
+        default=False,
+        description="Only a guess: its subscription's amount varies from month to month",
+    )
 
 
 class AvailableReserve(BaseModel):

@@ -12,6 +12,8 @@ export type PlanRow = {
 	amount: string;
 	account: string | null;
 	subscription: string | null;
+	/** Only a guess: its subscription's amount varies, so the real one is entered when it is paid */
+	estimate: boolean;
 	/** What is available once this bill is paid; null for income, which is not counted */
 	left: string | null;
 	/** Paying this bill leaves less than nothing */
@@ -65,6 +67,7 @@ export function planDays(data: AvailableToSpend): PlanDay[] {
 			amount: r.amount,
 			account: r.account ?? null,
 			subscription: r.subscription ?? null,
+			estimate: Boolean(r.estimate),
 			left,
 			short,
 			firstShort,

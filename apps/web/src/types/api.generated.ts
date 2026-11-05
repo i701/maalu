@@ -2323,6 +2323,12 @@ export interface components {
              */
             date: string;
             /**
+             * Estimate
+             * @description Only a guess: its subscription's amount varies from month to month
+             * @default false
+             */
+            estimate: boolean;
+            /**
              * Id
              * Format: uuid
              */
@@ -3827,6 +3833,16 @@ export interface components {
              */
             amount?: number | string | null;
             /**
+             * Base Amount
+             * @description For a bill in another currency: what it really cost in your base currency (the amount charged to your account). The rate is worked out from it.
+             */
+            base_amount?: number | string | null;
+            /**
+             * Exchange Rate
+             * @description For a bill in another currency: the rate it was really paid at (base-currency units per 1 unit of its currency)
+             */
+            exchange_rate?: number | string | null;
+            /**
              * Transaction Date
              * @description The day it actually happened
              */
@@ -4335,6 +4351,12 @@ export interface components {
             account_id?: string | null;
             /** Amount */
             amount: number | string;
+            /**
+             * Amount Varies
+             * @description The amount is only the usual one (a server bill, a utility). Its planned payments are estimates, and the real amount is entered when it is paid.
+             * @default false
+             */
+            amount_varies: boolean;
             /** Category */
             category: string;
             /**
@@ -4415,6 +4437,8 @@ export interface components {
             account: components["schemas"]["AccountRef"] | null;
             /** Amount */
             amount: string;
+            /** Amount Varies */
+            amount_varies: boolean;
             /** Base Amount */
             base_amount: string;
             /** Category */
@@ -4503,6 +4527,8 @@ export interface components {
             account_id?: string | null;
             /** Amount */
             amount?: number | string | null;
+            /** Amount Varies */
+            amount_varies?: boolean | null;
             /** Category */
             category?: string | null;
             /** Currency */

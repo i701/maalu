@@ -115,6 +115,7 @@ function SubCost({ s, baseCurrency }: { s: Subscription; baseCurrency: string })
 	return (
 		<>
 			<Typography variant="body2">
+				{s.amount_varies && "about "}
 				{formatMoney(s.amount, s.currency)}{" "}
 				<Typography component="span" variant="caption" sx={{ color: "text.secondary" }}>
 					{formatInterval(s.interval_unit, s.interval_count)}

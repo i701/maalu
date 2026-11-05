@@ -57,6 +57,11 @@ class SubscriptionCreate(VendorRef):
     remind_days_before: RemindDays | None = Field(
         default=3, description="Days before a payment to be reminded; null for no reminder."
     )
+    amount_varies: bool = Field(
+        default=False,
+        description="The amount is only the usual one (a server bill, a utility). Its planned "
+        "payments are estimates, and the real amount is entered when it is paid.",
+    )
 
 
 class SubscriptionUpdate(VendorRef):
@@ -79,6 +84,7 @@ class SubscriptionUpdate(VendorRef):
     remind_days_before: RemindDays | None = Field(
         default=None, description="Explicit null turns the reminder off."
     )
+    amount_varies: bool | None = None
 
     @field_validator(
         "name",
@@ -91,6 +97,7 @@ class SubscriptionUpdate(VendorRef):
         "interval_count",
         "start_date",
         "status",
+        "amount_varies",
     )
     @classmethod
     def _required_fields_not_null(cls, v):
@@ -134,6 +141,7 @@ class SubscriptionResponse(BaseModel):
         description="Payments still to make; null when it has no fixed number"
     )
     remind_days_before: int | None
+    amount_varies: bool
     created_at: datetime
 
 
