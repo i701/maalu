@@ -30,6 +30,7 @@ from app.schemas import (
     SalarySplitTaskResponse,
     TransactionCreate,
 )
+from app.services import notification
 from app.services.errors import TransactionRuleError
 from app.services.goal import GoalService
 from app.services.transaction import TransactionService
@@ -468,6 +469,8 @@ class SalarySplitService:
         if not rules or await self._task(user_id, salary.id) is not None:
             return
         self.db.add(SalarySplitTask(user_id=user_id, transaction_id=salary.id))
+        # the next look for notifications should not wait out its throttle: this is news
+        notification._last_sync.pop(user_id, None)
         await self.db.flush()
         if not any(r.auto for r in rules):
             return

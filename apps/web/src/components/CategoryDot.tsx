@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
 import { categoryAccent } from "#/lib/categories";
 
-/** A small round swatch in a category's colour, next to its name. Decorative: the name is the label. */
+/** A small round swatch in a category's colour (or a CSS colour variable, for needs and wants), next to its name. Decorative: the name is the label. */
 export default function CategoryDot({ color, size = 10 }: { color: string; size?: number }) {
 	return (
 		<Box
@@ -13,7 +13,7 @@ export default function CategoryDot({ color, size = 10 }: { color: string; size?
 				width: size,
 				height: size,
 				borderRadius: "50%",
-				bgcolor: categoryAccent(color),
+				bgcolor: color.startsWith("var(") ? color : categoryAccent(color),
 			}}
 		/>
 	);
