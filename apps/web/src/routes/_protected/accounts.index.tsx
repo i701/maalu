@@ -23,6 +23,7 @@ import RateHistoryDialog from "#/components/RateHistoryDialog";
 import ConfirmDelete from "#/components/ConfirmDelete";
 import EmptyState from "#/components/EmptyState";
 import PageHeader from "#/components/PageHeader";
+import { RouterLink } from "#/components/RouterLinks";
 import MobileCard from "#/components/MobileCard";
 import { useNotify } from "#/components/Notify";
 import PendingOverlay from "#/components/PendingOverlay";
@@ -52,7 +53,7 @@ const searchSchema = z.object({
 	q: z.coerce.string().max(100).optional().catch(undefined),
 });
 
-export const Route = createFileRoute("/_protected/accounts")({
+export const Route = createFileRoute("/_protected/accounts/")({
 	validateSearch: searchSchema,
 	loaderDeps: ({ search }) => search,
 	loader: async ({ deps }) => {
@@ -293,9 +294,15 @@ function AccountsPage() {
 														</ShapeTile>
 													}
 													primary={
-														<Typography variant="body2" sx={{ fontWeight: 500 }}>
+														<RouterLink
+															to="/accounts/$id"
+															params={{ id: a.id }}
+															underline="hover"
+															color="inherit"
+															sx={{ fontWeight: 500, fontSize: 14 }}
+														>
 															{a.name}
-														</Typography>
+														</RouterLink>
 													}
 													secondary={
 														<>

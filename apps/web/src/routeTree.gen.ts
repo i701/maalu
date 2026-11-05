@@ -13,7 +13,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as RegisterRouteImport } from './routes/register'
-import { Route as ProtectedAccountsRouteImport } from './routes/_protected/accounts'
 import { Route as ProtectedBudgetRouteImport } from './routes/_protected/budget'
 import { Route as ProtectedCategoriesRouteImport } from './routes/_protected/categories'
 import { Route as ProtectedCompareRouteImport } from './routes/_protected/compare'
@@ -36,6 +35,8 @@ import { Route as ProtectedTrendsRouteImport } from './routes/_protected/trends'
 import { Route as ProtectedVendorsRouteImport } from './routes/_protected/vendors'
 import { Route as ApiAttachmentsRouteImport } from './routes/api.attachments'
 import { Route as ApiBackupRouteImport } from './routes/api.backup'
+import { Route as ProtectedAccountsIndexRouteImport } from './routes/_protected/accounts.index'
+import { Route as ProtectedAccountsIdRouteImport } from './routes/_protected/accounts.$id'
 import { Route as ProtectedDocsIndexRouteImport } from './routes/_protected/docs.index'
 import { Route as ProtectedDocsSlugRouteImport } from './routes/_protected/docs.$slug'
 import { Route as ApiAttachmentsIdRouteImport } from './routes/api.attachments.$id'
@@ -61,11 +62,6 @@ const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
   getParentRoute: () => rootRouteImport,
-} as any)
-const ProtectedAccountsRoute = ProtectedAccountsRouteImport.update({
-  id: '/accounts',
-  path: '/accounts',
-  getParentRoute: () => ProtectedRoute,
 } as any)
 const ProtectedBudgetRoute = ProtectedBudgetRouteImport.update({
   id: '/budget',
@@ -177,6 +173,16 @@ const ApiBackupRoute = ApiBackupRouteImport.update({
   path: '/api/backup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProtectedAccountsIndexRoute = ProtectedAccountsIndexRouteImport.update({
+  id: '/accounts/',
+  path: '/accounts/',
+  getParentRoute: () => ProtectedRoute,
+} as any)
+const ProtectedAccountsIdRoute = ProtectedAccountsIdRouteImport.update({
+  id: '/accounts/$id',
+  path: '/accounts/$id',
+  getParentRoute: () => ProtectedRoute,
+} as any)
 const ProtectedDocsIndexRoute = ProtectedDocsIndexRouteImport.update({
   id: '/docs/',
   path: '/docs/',
@@ -212,7 +218,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/accounts': typeof ProtectedAccountsRoute
   '/budget': typeof ProtectedBudgetRoute
   '/categories': typeof ProtectedCategoriesRoute
   '/compare': typeof ProtectedCompareRoute
@@ -235,10 +240,12 @@ export interface FileRoutesByFullPath {
   '/vendors': typeof ProtectedVendorsRoute
   '/api/attachments': typeof ApiAttachmentsRouteWithChildren
   '/api/backup': typeof ApiBackupRoute
+  '/accounts/$id': typeof ProtectedAccountsIdRoute
   '/docs/$slug': typeof ProtectedDocsSlugRoute
   '/api/attachments/$id': typeof ApiAttachmentsIdRoute
   '/api/export/transactions': typeof ApiExportTransactionsRoute
   '/api/imports/preview': typeof ApiImportsPreviewRoute
+  '/accounts/': typeof ProtectedAccountsIndexRoute
   '/docs/': typeof ProtectedDocsIndexRoute
   '/api/imports/$id/report': typeof ApiImportsIdReportRoute
 }
@@ -246,7 +253,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/accounts': typeof ProtectedAccountsRoute
   '/budget': typeof ProtectedBudgetRoute
   '/categories': typeof ProtectedCategoriesRoute
   '/compare': typeof ProtectedCompareRoute
@@ -269,10 +275,12 @@ export interface FileRoutesByTo {
   '/vendors': typeof ProtectedVendorsRoute
   '/api/attachments': typeof ApiAttachmentsRouteWithChildren
   '/api/backup': typeof ApiBackupRoute
+  '/accounts/$id': typeof ProtectedAccountsIdRoute
   '/docs/$slug': typeof ProtectedDocsSlugRoute
   '/api/attachments/$id': typeof ApiAttachmentsIdRoute
   '/api/export/transactions': typeof ApiExportTransactionsRoute
   '/api/imports/preview': typeof ApiImportsPreviewRoute
+  '/accounts': typeof ProtectedAccountsIndexRoute
   '/docs': typeof ProtectedDocsIndexRoute
   '/api/imports/$id/report': typeof ApiImportsIdReportRoute
 }
@@ -282,7 +290,6 @@ export interface FileRoutesById {
   '/_protected': typeof ProtectedRouteWithChildren
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/_protected/accounts': typeof ProtectedAccountsRoute
   '/_protected/budget': typeof ProtectedBudgetRoute
   '/_protected/categories': typeof ProtectedCategoriesRoute
   '/_protected/compare': typeof ProtectedCompareRoute
@@ -305,10 +312,12 @@ export interface FileRoutesById {
   '/_protected/vendors': typeof ProtectedVendorsRoute
   '/api/attachments': typeof ApiAttachmentsRouteWithChildren
   '/api/backup': typeof ApiBackupRoute
+  '/_protected/accounts/$id': typeof ProtectedAccountsIdRoute
   '/_protected/docs/$slug': typeof ProtectedDocsSlugRoute
   '/api/attachments/$id': typeof ApiAttachmentsIdRoute
   '/api/export/transactions': typeof ApiExportTransactionsRoute
   '/api/imports/preview': typeof ApiImportsPreviewRoute
+  '/_protected/accounts/': typeof ProtectedAccountsIndexRoute
   '/_protected/docs/': typeof ProtectedDocsIndexRoute
   '/api/imports/$id/report': typeof ApiImportsIdReportRoute
 }
@@ -318,7 +327,6 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/register'
-    | '/accounts'
     | '/budget'
     | '/categories'
     | '/compare'
@@ -341,10 +349,12 @@ export interface FileRouteTypes {
     | '/vendors'
     | '/api/attachments'
     | '/api/backup'
+    | '/accounts/$id'
     | '/docs/$slug'
     | '/api/attachments/$id'
     | '/api/export/transactions'
     | '/api/imports/preview'
+    | '/accounts/'
     | '/docs/'
     | '/api/imports/$id/report'
   fileRoutesByTo: FileRoutesByTo
@@ -352,7 +362,6 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/register'
-    | '/accounts'
     | '/budget'
     | '/categories'
     | '/compare'
@@ -375,10 +384,12 @@ export interface FileRouteTypes {
     | '/vendors'
     | '/api/attachments'
     | '/api/backup'
+    | '/accounts/$id'
     | '/docs/$slug'
     | '/api/attachments/$id'
     | '/api/export/transactions'
     | '/api/imports/preview'
+    | '/accounts'
     | '/docs'
     | '/api/imports/$id/report'
   id:
@@ -387,7 +398,6 @@ export interface FileRouteTypes {
     | '/_protected'
     | '/login'
     | '/register'
-    | '/_protected/accounts'
     | '/_protected/budget'
     | '/_protected/categories'
     | '/_protected/compare'
@@ -410,10 +420,12 @@ export interface FileRouteTypes {
     | '/_protected/vendors'
     | '/api/attachments'
     | '/api/backup'
+    | '/_protected/accounts/$id'
     | '/_protected/docs/$slug'
     | '/api/attachments/$id'
     | '/api/export/transactions'
     | '/api/imports/preview'
+    | '/_protected/accounts/'
     | '/_protected/docs/'
     | '/api/imports/$id/report'
   fileRoutesById: FileRoutesById
@@ -459,13 +471,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/_protected/accounts': {
-      id: '/_protected/accounts'
-      path: '/accounts'
-      fullPath: '/accounts'
-      preLoaderRoute: typeof ProtectedAccountsRouteImport
-      parentRoute: typeof ProtectedRoute
     }
     '/_protected/budget': {
       id: '/_protected/budget'
@@ -621,6 +626,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiBackupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_protected/accounts/': {
+      id: '/_protected/accounts/'
+      path: '/accounts'
+      fullPath: '/accounts/'
+      preLoaderRoute: typeof ProtectedAccountsIndexRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
+    '/_protected/accounts/$id': {
+      id: '/_protected/accounts/$id'
+      path: '/accounts/$id'
+      fullPath: '/accounts/$id'
+      preLoaderRoute: typeof ProtectedAccountsIdRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
     '/_protected/docs/': {
       id: '/_protected/docs/'
       path: '/docs'
@@ -667,7 +686,6 @@ declare module '@tanstack/react-router' {
 }
 
 interface ProtectedRouteChildren {
-  ProtectedAccountsRoute: typeof ProtectedAccountsRoute
   ProtectedBudgetRoute: typeof ProtectedBudgetRoute
   ProtectedCategoriesRoute: typeof ProtectedCategoriesRoute
   ProtectedCompareRoute: typeof ProtectedCompareRoute
@@ -688,12 +706,13 @@ interface ProtectedRouteChildren {
   ProtectedTrashRoute: typeof ProtectedTrashRoute
   ProtectedTrendsRoute: typeof ProtectedTrendsRoute
   ProtectedVendorsRoute: typeof ProtectedVendorsRoute
+  ProtectedAccountsIdRoute: typeof ProtectedAccountsIdRoute
   ProtectedDocsSlugRoute: typeof ProtectedDocsSlugRoute
+  ProtectedAccountsIndexRoute: typeof ProtectedAccountsIndexRoute
   ProtectedDocsIndexRoute: typeof ProtectedDocsIndexRoute
 }
 
 const ProtectedRouteChildren: ProtectedRouteChildren = {
-  ProtectedAccountsRoute: ProtectedAccountsRoute,
   ProtectedBudgetRoute: ProtectedBudgetRoute,
   ProtectedCategoriesRoute: ProtectedCategoriesRoute,
   ProtectedCompareRoute: ProtectedCompareRoute,
@@ -714,7 +733,9 @@ const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedTrashRoute: ProtectedTrashRoute,
   ProtectedTrendsRoute: ProtectedTrendsRoute,
   ProtectedVendorsRoute: ProtectedVendorsRoute,
+  ProtectedAccountsIdRoute: ProtectedAccountsIdRoute,
   ProtectedDocsSlugRoute: ProtectedDocsSlugRoute,
+  ProtectedAccountsIndexRoute: ProtectedAccountsIndexRoute,
   ProtectedDocsIndexRoute: ProtectedDocsIndexRoute,
 }
 
