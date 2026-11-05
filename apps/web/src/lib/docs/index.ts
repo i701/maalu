@@ -1,11 +1,12 @@
 import { NAV_ITEMS } from "#/lib/nav";
 import { salarySplit } from "./salary-split";
+import { subscriptions } from "./subscriptions";
 import { varyingBills } from "./varying-bills";
 import type { Doc } from "./types";
 
 /** Every guide, in the order the index shows them. To add one: write it in its own file here, import
  * it below, and it appears on the Docs page. */
-export const DOCS: readonly Doc[] = [salarySplit, varyingBills];
+export const DOCS: readonly Doc[] = [subscriptions, varyingBills, salarySplit];
 
 export const findDoc = (slug: string): Doc | undefined => DOCS.find((d) => d.slug === slug);
 

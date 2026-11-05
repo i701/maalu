@@ -13,6 +13,7 @@ export const varyingBills: Doc = {
 		{ to: "/subscriptions", label: "Subscriptions: mark a bill as varying" },
 		{ to: "/plan", label: "Month plan: see your bills as estimates" },
 		{ to: "/transactions", label: "Transactions: the upcoming list" },
+		{ to: "/docs/subscriptions", label: "Guide: subscriptions and recurring bills" },
 	],
 	blocks: [
 		{
@@ -24,7 +25,7 @@ export const varyingBills: Doc = {
 		{
 			type: "steps",
 			items: [
-				"Open [Subscriptions](/subscriptions) and add the bill, or edit the one you have.",
+				"Open [Subscriptions](/subscriptions) and add the bill (see [Subscriptions and recurring bills](/docs/subscriptions)), or edit the one you have.",
 				"Enter the **usual** amount. For a bill in dollars, choose the currency and the exchange rate you normally see.",
 				"Switch on **The amount changes from month to month** and press **Save**.",
 			],
