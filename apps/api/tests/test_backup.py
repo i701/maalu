@@ -25,7 +25,7 @@ async def seeded_backup(client, *, keep_demo: bool = False) -> bytes:
     if _seeded is not None and not keep_demo:
         return _seeded
     async with client.session_factory() as db:
-        await seed(db, transactions=80, rng=random.Random(7), today=date.today())
+        await seed(db, rng=random.Random(7), today=date.today())
         await db.commit()
     async with client.session_factory() as db:
         demo = await db.scalar(select(User).where(User.email == DEMO_EMAIL))

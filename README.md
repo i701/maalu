@@ -24,7 +24,7 @@ cp apps/web/.env.example apps/web/.env   # set SESSION_SECRET (openssl rand -hex
 just dev       # API :8000 (/docs) + web :3000
 ```
 
-Want something to look at? `just seed` fills the database with realistic random data (accounts of every kind, vendors, subscriptions with payment history, income, expenses and transfers) for a demo user and prints the login. Run it again for fresh data (`just seed 600` for more rows). It only replaces the demo user's data and refuses to run against a non-local database.
+Want something to look at? `just seed` fills the database with a realistic first month for a demo user and prints the login: a 10,000 MVR salary, accounts at BML and MIB (current, savings, an emergency fund), a USD account and cash, the monthly bills (rent, internet, electricity, water, insurance, phone, Netflix, iCloud, a VPS), the salary split, a month of groceries, taxis and meals, a budget, savings goals and what is still to come. Run it again for a fresh start. It only replaces the demo user's data and refuses to run against a non-local database.
 
 Other recipes: `just fmt`, `just check`, `just test`, `just dev-api`, `just dev-web`, `just migration "message"`, `just rollback`.
 

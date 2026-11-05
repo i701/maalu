@@ -126,11 +126,11 @@ build-web:
 
 # ── Seed data ───────────────────────────────────────────
 
-# Fill the DB with realistic random data for the demo user (replaces only that user's data).
-# Usage: just seed        just seed 600        just seed 400 --email sample@maalu.dev
+# Fill the DB with a realistic first month for the demo user (replaces only that user's data).
+# Usage: just seed        just seed --seed 7        just seed --email sample@maalu.dev
 # (the last one seeds a separate user and leaves the demo user's data alone)
-seed transactions="250" *args:
-    cd apps/api && uv run python -m app.seed {{transactions}} {{args}}
+seed *args:
+    cd apps/api && uv run python -m app.seed {{args}}
 
 # ── Accounts ────────────────────────────────────────────
 

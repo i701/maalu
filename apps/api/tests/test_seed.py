@@ -1,18 +1,18 @@
 import random
 from collections.abc import AsyncIterator
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
 from app import seed as seed_module
-from app.enums import SubscriptionStatus, TransactionType
+from app.enums import TransactionType
 from app.models import Account, Base, Subscription, Transaction, User, Vendor
-from app.services import AccountService, SubscriptionService
+from app.services import AccountService, BudgetService, GoalService, SubscriptionService
 from sqlalchemy import event, func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
-TODAY = date(2026, 10, 10)
+TODAY = date.today()  # subscriptions plan their next payment against the real date
 
 
 @pytest.fixture
@@ -32,8 +32,8 @@ async def db() -> AsyncIterator[AsyncSession]:
     await engine.dispose()
 
 
-async def run(db: AsyncSession, n: int = 60, seed: int = 1):
-    summary = await seed_module.seed(db, transactions=n, rng=random.Random(seed), today=TODAY)
+async def run(db: AsyncSession, seed: int = 1, email: str = seed_module.DEMO_EMAIL):
+    summary = await seed_module.seed(db, rng=random.Random(seed), today=TODAY, email=email)
     await db.commit()
     return summary
 
@@ -42,61 +42,98 @@ async def count(db: AsyncSession, model) -> int:
     return (await db.scalar(select(func.count()).select_from(model))) or 0
 
 
-async def test_seeds_every_table_with_valid_data(db: AsyncSession):
+async def user_id(db: AsyncSession):
+    return await db.scalar(select(User.id))
+
+
+async def test_seeds_a_realistic_first_month(db: AsyncSession):
     summary = await run(db)
 
     assert await count(db, User) == 1
-    assert summary.accounts == await count(db, Account) == 8
+    assert summary.accounts == await count(db, Account) == 7
     assert summary.vendors == await count(db, Vendor) > 15
     assert summary.subscriptions == await count(db, Subscription) == 9
-    transactions = await count(db, Transaction)
-    assert sum(summary.transactions.values()) == transactions > 60
-    # all three kinds exist
+    assert sum(summary.transactions.values()) < 200  # a month or so, not a firehose
     for kind in ("income", "expense", "transfer"):
         assert summary.transactions[kind] > 0, kind
 
-    amounts = (await db.scalars(select(Transaction.amount))).all()
-    assert all(a > 0 for a in amounts)  # always positive; the type carries the direction
-    transfers = (
-        await db.scalars(select(Transaction).where(Transaction.type == TransactionType.TRANSFER))
+    dates = (
+        await db.scalars(select(Transaction.transaction_date).where(Transaction.planned.is_(False)))
     ).all()
-    assert all(t.account_id and t.to_account_id and t.to_amount for t in transfers)
-    # at least one cross-currency transfer (MVR -> USD): what arrived differs from what left
-    assert any(t.to_amount != t.amount for t in transfers)
+    assert min(dates) >= (TODAY.replace(day=1) - timedelta(days=1)).replace(day=1)
+    assert max(dates) <= TODAY
+    amounts = (await db.scalars(select(Transaction.amount))).all()
+    assert all(a > 0 for a in amounts)
 
 
-async def test_subscriptions_have_realistic_payment_history(db: AsyncSession):
+async def test_salaries_of_ten_thousand_are_split_and_the_next_is_expected(db: AsyncSession):
     await run(db)
-    user_id = await db.scalar(select(User.id))
+    posted = (
+        await db.scalars(
+            select(Transaction).where(
+                Transaction.type == TransactionType.INCOME,
+                Transaction.planned.is_(False),
+                Transaction.refund_of_id.is_(None),
+            )
+        )
+    ).all()
+    assert [t.amount for t in posted] == [Decimal("10000.0000")] * 2  # last month and this
+    planned = (await db.scalars(select(Transaction).where(Transaction.planned.is_(True)))).all()
+    salaries = [t for t in planned if t.type == TransactionType.INCOME]
+    assert len(salaries) == 1
+    assert salaries[0].transaction_date > TODAY
+    # each month the two rules moved 1,000 to the emergency fund and 500 to the savings
+    transfers = (
+        await db.scalars(
+            select(Transaction).where(
+                Transaction.type == TransactionType.TRANSFER,
+                Transaction.description.like("From salary%"),
+            )
+        )
+    ).all()
+    assert (
+        sorted(t.amount for t in transfers)
+        == [Decimal("500.0000")] * 2 + [Decimal("1000.0000")] * 2
+    )
+
+
+async def test_every_bill_was_paid_once_and_the_next_is_planned(db: AsyncSession):
+    await run(db)
+    uid = await user_id(db)
     service = SubscriptionService(db)
-    shown = await service.present(await service.list_for_user(user_id))
-    by_status = {s: [x for x in shown if x.status is s] for s in SubscriptionStatus}
+    shown = await service.present(await service.list_for_user(uid))
+    assert all(s.last_paid_date for s in shown)
+    assert not any(s.is_overdue for s in shown)
+    planned = (
+        await db.scalars(
+            select(Transaction).where(
+                Transaction.planned.is_(True), Transaction.subscription_id.is_not(None)
+            )
+        )
+    ).all()
+    assert len(planned) == 9  # one upcoming payment per bill
+    assert any(s.amount_varies for s in shown)
 
-    assert by_status[SubscriptionStatus.ACTIVE]
-    assert by_status[SubscriptionStatus.PAUSED]
-    assert by_status[SubscriptionStatus.CANCELLED]
-    assert all(s.last_paid_date for s in shown)  # every one has paid at least once
-    # paused / cancelled subscriptions never show as overdue
-    assert not any(s.is_overdue for s in by_status[SubscriptionStatus.PAUSED])
-    assert not any(s.is_overdue for s in by_status[SubscriptionStatus.CANCELLED])
 
-
-async def test_accounts_have_computed_balances_and_liabilities(db: AsyncSession):
+async def test_accounts_goals_and_budget_are_in_place(db: AsyncSession):
     await run(db)
-    user_id = await db.scalar(select(User.id))
+    uid = await user_id(db)
     service = AccountService(db)
-    accounts = await service.present(await service.list_for_user(user_id))
+    accounts = await service.present(await service.list_for_user(uid))
     by_name = {a.name: a for a in accounts}
-
-    assert by_name["Visa Credit"].is_liability
-    assert by_name["Car Loan"].is_liability
-    assert by_name["Car Loan"].balance < 0  # still owed
-    assert by_name["USD Account"].currency == "USD"
-    assert Decimal(by_name["USD Account"].exchange_rate) > 1
-    assert all(a.transaction_count > 0 for a in accounts if a.name != "Dhiraagu Top-up")
-    summary = await service.summary(user_id)
-    assert summary.assets > 0
-    assert summary.liabilities > 0
+    assert {
+        "BML Current",
+        "BML Savings",
+        "MIB Current",
+        "MIB Savings",
+        "MIB Emergency Fund",
+    } <= set(by_name)
+    assert by_name["BML USD"].currency == "USD"
+    assert all(a.balance >= 0 for a in accounts)  # nothing overdrawn during the month
+    goals = await GoalService(db).list_for_user(uid)
+    assert {g.name for g in goals} == {"Emergency fund", "Holiday", "New laptop"}
+    budget = await BudgetService(db).view(uid, TODAY)
+    assert len(budget.lines) == 4
 
 
 async def test_rerunning_replaces_the_demo_user_instead_of_piling_up(db: AsyncSession):
@@ -105,7 +142,7 @@ async def test_rerunning_replaces_the_demo_user_instead_of_piling_up(db: AsyncSe
     await run(db, seed=2)
     assert await count(db, User) == 1
     assert await db.scalar(select(User.id)) != first_user  # a fresh user
-    assert await count(db, Account) == 8  # not 16
+    assert await count(db, Account) == 7  # not 14
     assert await count(db, Subscription) == 9
 
 
@@ -128,11 +165,8 @@ async def test_refuses_to_run_against_a_remote_database(monkeypatch):
 
 
 async def test_seeding_another_email_leaves_the_demo_user_alone(db: AsyncSession):
-    demo = await run(db, n=40)
-    other = await seed_module.seed(
-        db, transactions=30, rng=random.Random(2), today=TODAY, email="sample@maalu.dev"
-    )
-    await db.commit()
+    demo = await run(db)
+    other = await run(db, seed=2, email="sample@maalu.dev")
     assert demo.user == seed_module.DEMO_EMAIL
     assert other.user == "sample@maalu.dev"
     assert await count(db, User) == 2
@@ -148,11 +182,6 @@ async def test_seeding_another_email_leaves_the_demo_user_alone(db: AsyncSession
 
     demo_rows = await rows_of(seed_module.DEMO_EMAIL)
     assert demo_rows > 0
-
-    # seeding the other user again replaces only theirs
-    await seed_module.seed(
-        db, transactions=30, rng=random.Random(3), today=TODAY, email="sample@maalu.dev"
-    )
-    await db.commit()
+    await run(db, seed=3, email="sample@maalu.dev")  # replaces only theirs
     assert await count(db, User) == 2
     assert await rows_of(seed_module.DEMO_EMAIL) == demo_rows
