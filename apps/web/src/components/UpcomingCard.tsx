@@ -17,6 +17,8 @@ import { dueLabel, isOverdue, localToday } from "#/lib/planned";
 import { txTitle } from "#/lib/tx-display";
 import type { Transaction } from "#/types/api";
 import MarkPaidDialog from "./MarkPaidDialog";
+import SalarySplitHost from "./SalarySplitHost";
+import { useSalaryOffer } from "#/lib/use-salary-offer";
 import { TagChips } from "./TagChip";
 import TonalChip from "./TonalChip";
 
@@ -37,6 +39,7 @@ export default function UpcomingCard({
 	onDelete: (t: Transaction) => void;
 }) {
 	const [paying, setPaying] = useState<Transaction | null>(null);
+	const salary = useSalaryOffer();
 	const today = localToday();
 	if (items.length === 0) return null;
 	const overdueCount = items.filter((t) => isOverdue(t, today)).length;
@@ -147,9 +150,11 @@ export default function UpcomingCard({
 				<MarkPaidDialog
 					transaction={paying}
 					baseCurrency={baseCurrency}
+					onPaid={salary.offer}
 					onClose={() => setPaying(null)}
 				/>
 			)}
+			<SalarySplitHost id={salary.id} onClose={salary.close} />
 		</>
 	);
 }

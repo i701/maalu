@@ -3729,7 +3729,8 @@
               "installments_done",
               "budget_warning",
               "budget_over",
-              "goal_reached"
+              "goal_reached",
+              "split_waiting"
             ],
             "title": "Kind",
             "type": "string"

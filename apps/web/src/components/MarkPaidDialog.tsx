@@ -70,11 +70,14 @@ function RateFields({
 export default function MarkPaidDialog({
 	transaction,
 	baseCurrency,
+	onPaid,
 	onClose,
 }: {
 	transaction: Transaction;
 	/** Your base currency: a bill in any other currency shows the rate fields */
 	baseCurrency?: string;
+	/** Called once it has been marked, with the planned transaction as it was */
+	onPaid?: (transaction: Transaction) => void;
 	onClose: () => void;
 }) {
 	const { run, pending, error } = useAction();
@@ -103,6 +106,7 @@ export default function MarkPaidDialog({
 		);
 		if (ok) {
 			notify(`"${txTitle(transaction)}" marked as ${income ? "received" : "paid"}`);
+			onPaid?.(transaction);
 			sheet.close();
 		}
 	}

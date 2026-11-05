@@ -239,3 +239,46 @@ async def test_the_switches_are_in_a_backup(client: AsyncClient, auth, signup: S
     assert resp.status_code == 200, resp.text
     me = (await client.get("/api/v1/users/me", headers=fresh)).json()
     assert (me["notify_payments"], me["notify_budget"], me["notify_goals"]) == (True, False, False)
+
+
+async def test_a_salary_split_waiting_is_a_notification(client: AsyncClient, auth):
+    acc = (
+        await client.post(
+            "/api/v1/accounts",
+            json={"name": "Main", "group": "accounts", "currency": "MVR", "opening_amount": "0"},
+            headers=auth,
+        )
+    ).json()
+    other = (
+        await client.post(
+            "/api/v1/accounts",
+            json={"name": "Save", "group": "savings", "currency": "MVR", "opening_amount": "0"},
+            headers=auth,
+        )
+    ).json()
+    rule = await client.post(
+        "/api/v1/salary-rules",
+        json={"mode": "percent", "value": "20", "account_id": other["id"]},
+        headers=auth,
+    )
+    assert rule.status_code == 201, rule.text
+    pay = await client.post(
+        TX,
+        json={
+            "type": "income",
+            "amount": "10000",
+            "payment_method": "bank_transfer",
+            "category": "Salary",
+            "account_id": acc["id"],
+            "transaction_date": TODAY.isoformat(),
+        },
+        headers=auth,
+    )
+    assert pay.status_code == 201, pay.text
+    found = [n for n in await listed(client, auth) if n["kind"] == "split_waiting"]
+    assert len(found) == 1
+    assert found[0]["link"] == "/pending"
+    assert found[0]["body"] == "Your salary of MVR 10,000.00 is ready to be split"
+    # once it is split, the notification stays (it was news) and is not made again
+    await listed(client, auth)
+    assert len([n for n in await listed(client, auth) if n["kind"] == "split_waiting"]) == 1

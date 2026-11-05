@@ -5,6 +5,8 @@ import { useMemo, useState } from "react";
 import MetricCard from "#/components/dashboard/MetricCard";
 import EmptyState from "#/components/EmptyState";
 import MarkPaidDialog from "#/components/MarkPaidDialog";
+import SalarySplitHost from "#/components/SalarySplitHost";
+import { useSalaryOffer } from "#/lib/use-salary-offer";
 import PageHeader from "#/components/PageHeader";
 import PendingOverlay from "#/components/PendingOverlay";
 import PlanAgenda from "#/components/plan/PlanAgenda";
@@ -60,6 +62,7 @@ function Verdict({
 function PlanPage() {
 	const { available, upcoming } = Route.useLoaderData();
 	const [payingId, setPayingId] = useState<string | null>(null);
+	const salary = useSalaryOffer();
 	const days = useMemo(() => planDays(available), [available]);
 	const paying: Transaction | undefined = upcoming.find((t) => t.id === payingId);
 	const short = isShort(available);
@@ -184,9 +187,11 @@ function PlanPage() {
 				<MarkPaidDialog
 					transaction={paying}
 					baseCurrency={available.currency}
+					onPaid={salary.offer}
 					onClose={() => setPayingId(null)}
 				/>
 			)}
+			<SalarySplitHost id={salary.id} onClose={salary.close} />
 		</>
 	);
 }

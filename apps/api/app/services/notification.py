@@ -6,8 +6,8 @@ from sqlalchemy import delete, func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.enums import SubscriptionStatus
-from app.models import Notification, Subscription, Transaction, User
+from app.enums import SplitTaskStatus, SubscriptionStatus
+from app.models import Notification, SalarySplitTask, Subscription, Transaction, User
 from app.services.budget import BudgetService
 from app.services.goal import GoalService
 
@@ -157,6 +157,31 @@ class NotificationService:
             )
         return made
 
+    async def _split_waiting(self, user: User, known: set[str]) -> int:
+        """A posted salary whose split is waiting for approval on the Pending screen."""
+        stmt = (
+            select(SalarySplitTask.id, Transaction.amount, Transaction.currency)
+            .join(Transaction, Transaction.id == SalarySplitTask.transaction_id)
+            .where(
+                SalarySplitTask.user_id == user.id,
+                SalarySplitTask.status == SplitTaskStatus.PENDING,
+                Transaction.deleted_at.is_(None),
+                Transaction.planned.is_(False),
+            )
+        )
+        made = 0
+        for task_id, amount, currency in (await self.db.execute(stmt)).all():
+            made += await self._add(
+                user.id,
+                known,
+                kind="split_waiting",
+                title="A salary split is waiting",
+                body=f"Your salary of {_money(amount, currency)} is ready to be split",
+                link="/pending",
+                dedupe_key=f"split-waiting:{task_id}",
+            )
+        return made
+
     async def _sync_user(self, user: User) -> int:
         known = set(
             (
@@ -170,6 +195,7 @@ class NotificationService:
         if user.notify_payments:
             made += await self._payments(user, known, today)
             made += await self._installments(user, known)
+            made += await self._split_waiting(user, known)
         if user.notify_budget:
             made += await self._budget(user, known)
         if user.notify_goals:

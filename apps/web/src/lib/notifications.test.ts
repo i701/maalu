@@ -19,6 +19,7 @@ describe("KIND_META", () => {
 			"installments_done",
 			"payment_due",
 			"payment_overdue",
+			"split_waiting",
 		]);
 	});
 });

@@ -3724,7 +3724,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "payment_due" | "payment_overdue" | "installments_done" | "budget_warning" | "budget_over" | "goal_reached";
+            kind: "payment_due" | "payment_overdue" | "installments_done" | "budget_warning" | "budget_over" | "goal_reached" | "split_waiting";
             /**
              * Link
              * @description A page of the app to open for it
@@ -9681,7 +9681,7 @@ export const importRowInTypeValues: ReadonlyArray<FlattenedDeepRequired<componen
 export const importSkippedOutcomeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImportSkipped"]["outcome"]> = ["skipped", "failed"];
 export const intervalUnitValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["IntervalUnit"]> = ["week", "month", "year"];
 export const netWorthDriverKeyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NetWorthDriver"]["key"]> = ["income", "spending", "adjustments", "transfers", "exchange_rates"];
-export const notificationResponseKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NotificationResponse"]["kind"]> = ["payment_due", "payment_overdue", "installments_done", "budget_warning", "budget_over", "goal_reached"];
+export const notificationResponseKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NotificationResponse"]["kind"]> = ["payment_due", "payment_overdue", "installments_done", "budget_warning", "budget_over", "goal_reached", "split_waiting"];
 export const paymentMethodValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PaymentMethod"]> = ["cash", "bank_transfer", "debit_card", "credit_card", "other"];
 export const previewRowDuplicateAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PreviewRow"]["duplicate"]> = ["reference", "transfer", "possible"];
 export const previewRowTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PreviewRow"]["type"]> = ["income", "expense"];
