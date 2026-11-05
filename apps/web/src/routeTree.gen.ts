@@ -35,6 +35,8 @@ import { Route as ProtectedTrendsRouteImport } from './routes/_protected/trends'
 import { Route as ProtectedVendorsRouteImport } from './routes/_protected/vendors'
 import { Route as ApiAttachmentsRouteImport } from './routes/api.attachments'
 import { Route as ApiBackupRouteImport } from './routes/api.backup'
+import { Route as ProtectedDocsIndexRouteImport } from './routes/_protected/docs.index'
+import { Route as ProtectedDocsSlugRouteImport } from './routes/_protected/docs.$slug'
 import { Route as ApiAttachmentsIdRouteImport } from './routes/api.attachments.$id'
 import { Route as ApiExportTransactionsRouteImport } from './routes/api.export.transactions'
 import { Route as ApiImportsPreviewRouteImport } from './routes/api.imports.preview'
@@ -169,6 +171,16 @@ const ApiBackupRoute = ApiBackupRouteImport.update({
   path: '/api/backup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProtectedDocsIndexRoute = ProtectedDocsIndexRouteImport.update({
+  id: '/docs/',
+  path: '/docs/',
+  getParentRoute: () => ProtectedRoute,
+} as any)
+const ProtectedDocsSlugRoute = ProtectedDocsSlugRouteImport.update({
+  id: '/docs/$slug',
+  path: '/docs/$slug',
+  getParentRoute: () => ProtectedRoute,
+} as any)
 const ApiAttachmentsIdRoute = ApiAttachmentsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -216,9 +228,11 @@ export interface FileRoutesByFullPath {
   '/vendors': typeof ProtectedVendorsRoute
   '/api/attachments': typeof ApiAttachmentsRouteWithChildren
   '/api/backup': typeof ApiBackupRoute
+  '/docs/$slug': typeof ProtectedDocsSlugRoute
   '/api/attachments/$id': typeof ApiAttachmentsIdRoute
   '/api/export/transactions': typeof ApiExportTransactionsRoute
   '/api/imports/preview': typeof ApiImportsPreviewRoute
+  '/docs/': typeof ProtectedDocsIndexRoute
   '/api/imports/$id/report': typeof ApiImportsIdReportRoute
 }
 export interface FileRoutesByTo {
@@ -247,9 +261,11 @@ export interface FileRoutesByTo {
   '/vendors': typeof ProtectedVendorsRoute
   '/api/attachments': typeof ApiAttachmentsRouteWithChildren
   '/api/backup': typeof ApiBackupRoute
+  '/docs/$slug': typeof ProtectedDocsSlugRoute
   '/api/attachments/$id': typeof ApiAttachmentsIdRoute
   '/api/export/transactions': typeof ApiExportTransactionsRoute
   '/api/imports/preview': typeof ApiImportsPreviewRoute
+  '/docs': typeof ProtectedDocsIndexRoute
   '/api/imports/$id/report': typeof ApiImportsIdReportRoute
 }
 export interface FileRoutesById {
@@ -280,9 +296,11 @@ export interface FileRoutesById {
   '/_protected/vendors': typeof ProtectedVendorsRoute
   '/api/attachments': typeof ApiAttachmentsRouteWithChildren
   '/api/backup': typeof ApiBackupRoute
+  '/_protected/docs/$slug': typeof ProtectedDocsSlugRoute
   '/api/attachments/$id': typeof ApiAttachmentsIdRoute
   '/api/export/transactions': typeof ApiExportTransactionsRoute
   '/api/imports/preview': typeof ApiImportsPreviewRoute
+  '/_protected/docs/': typeof ProtectedDocsIndexRoute
   '/api/imports/$id/report': typeof ApiImportsIdReportRoute
 }
 export interface FileRouteTypes {
@@ -313,9 +331,11 @@ export interface FileRouteTypes {
     | '/vendors'
     | '/api/attachments'
     | '/api/backup'
+    | '/docs/$slug'
     | '/api/attachments/$id'
     | '/api/export/transactions'
     | '/api/imports/preview'
+    | '/docs/'
     | '/api/imports/$id/report'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -344,9 +364,11 @@ export interface FileRouteTypes {
     | '/vendors'
     | '/api/attachments'
     | '/api/backup'
+    | '/docs/$slug'
     | '/api/attachments/$id'
     | '/api/export/transactions'
     | '/api/imports/preview'
+    | '/docs'
     | '/api/imports/$id/report'
   id:
     | '__root__'
@@ -376,9 +398,11 @@ export interface FileRouteTypes {
     | '/_protected/vendors'
     | '/api/attachments'
     | '/api/backup'
+    | '/_protected/docs/$slug'
     | '/api/attachments/$id'
     | '/api/export/transactions'
     | '/api/imports/preview'
+    | '/_protected/docs/'
     | '/api/imports/$id/report'
   fileRoutesById: FileRoutesById
 }
@@ -578,6 +602,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiBackupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_protected/docs/': {
+      id: '/_protected/docs/'
+      path: '/docs'
+      fullPath: '/docs/'
+      preLoaderRoute: typeof ProtectedDocsIndexRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
+    '/_protected/docs/$slug': {
+      id: '/_protected/docs/$slug'
+      path: '/docs/$slug'
+      fullPath: '/docs/$slug'
+      preLoaderRoute: typeof ProtectedDocsSlugRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
     '/api/attachments/$id': {
       id: '/api/attachments/$id'
       path: '/$id'
@@ -630,6 +668,8 @@ interface ProtectedRouteChildren {
   ProtectedTrashRoute: typeof ProtectedTrashRoute
   ProtectedTrendsRoute: typeof ProtectedTrendsRoute
   ProtectedVendorsRoute: typeof ProtectedVendorsRoute
+  ProtectedDocsSlugRoute: typeof ProtectedDocsSlugRoute
+  ProtectedDocsIndexRoute: typeof ProtectedDocsIndexRoute
 }
 
 const ProtectedRouteChildren: ProtectedRouteChildren = {
@@ -653,6 +693,8 @@ const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedTrashRoute: ProtectedTrashRoute,
   ProtectedTrendsRoute: ProtectedTrendsRoute,
   ProtectedVendorsRoute: ProtectedVendorsRoute,
+  ProtectedDocsSlugRoute: ProtectedDocsSlugRoute,
+  ProtectedDocsIndexRoute: ProtectedDocsIndexRoute,
 }
 
 const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(

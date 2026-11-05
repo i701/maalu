@@ -5,6 +5,7 @@ export const NAV_GROUPS = [
 	{ key: "money", label: "Money" },
 	{ key: "plan", label: "Planning" },
 	{ key: "organise", label: "Organise" },
+	{ key: "help", label: "Help" },
 ] as const;
 
 export type NavGroupKey = (typeof NAV_GROUPS)[number]["key"];
@@ -76,6 +77,7 @@ export const NAV_ITEMS: readonly NavDestination[] = [
 	{ to: "/groups", label: "Groups", symbol: "inventory_2", accent: "blue", group: "organise" },
 	{ to: "/templates", label: "Templates", symbol: "bookmark", accent: "lime", group: "organise" },
 	{ to: "/trash", label: "Trash", symbol: "delete", accent: "slate", group: "organise" },
+	{ to: "/docs", label: "Docs", symbol: "article", accent: "blue", group: "help" },
 ];
 
 export const BOTTOM_NAV_ITEMS = NAV_ITEMS.filter((item) => item.bottom);
