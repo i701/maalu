@@ -5,9 +5,9 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { memo } from "react";
-import { STATUS_COLOR, STATUS_LABEL, unsigned } from "#/lib/budget";
+import { fixedWindow, STATUS_COLOR, STATUS_LABEL, unsigned } from "#/lib/budget";
 import { formatMoney, sumDecimals } from "#/lib/format";
-import type { BudgetLine } from "#/types/api";
+import type { BudgetFixedLine, BudgetLine } from "#/types/api";
 import TonalChip from "./TonalChip";
 
 /** The progress track: fills to the share spent (capped at the full width) in the status colour. */
@@ -48,7 +48,7 @@ const BudgetLineCard = memo(function BudgetLineCard({
 	onEdit,
 	onDelete,
 }: {
-	line: BudgetLine;
+	line: BudgetLine | BudgetFixedLine;
 	currency: string;
 	onEdit: (line: BudgetLine) => void;
 	onDelete: (line: BudgetLine) => void;
@@ -56,6 +56,7 @@ const BudgetLineCard = memo(function BudgetLineCard({
 	const color = STATUS_COLOR[line.status];
 	const limit = sumDecimals([line.amount, line.carried]);
 	const over = line.status === "over";
+	const dated = "end_date" in line ? line : null;
 
 	return (
 		<Box
@@ -72,6 +73,11 @@ const BudgetLineCard = memo(function BudgetLineCard({
 					<Typography variant="subtitle1" sx={{ fontWeight: 600 }} noWrap>
 						{line.name}
 					</Typography>
+					{dated && (
+						<Typography variant="caption" sx={{ display: "block", color: "text.secondary" }}>
+							{fixedWindow(dated)}
+						</Typography>
+					)}
 					<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 0.5 }}>
 						{line.categories.map((c) => (
 							<TonalChip key={c.id} accent="var(--md-sys-color-outline)" label={c.name} />

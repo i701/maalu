@@ -11,7 +11,7 @@ from app.schemas import (
     BudgetResponse,
     BudgetSettingsUpdate,
 )
-from app.services import BudgetCategoryTakenError, CategoryNotFoundError
+from app.services import BudgetCategoryTakenError, BudgetLineRuleError, CategoryNotFoundError
 
 router = APIRouter(prefix="/budget", tags=["budget"])
 
@@ -47,6 +47,8 @@ async def create_line(data: BudgetLineCreate, user_id: CurrentUserId, service: B
         raise _CATEGORY_NOT_FOUND from None
     except BudgetCategoryTakenError as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from None
+    except BudgetLineRuleError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
     return await service.view(user_id)
 
 
@@ -66,6 +68,8 @@ async def update_line(
         raise _CATEGORY_NOT_FOUND from None
     except BudgetCategoryTakenError as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from None
+    except BudgetLineRuleError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
     return await service.view(user_id)
 
 

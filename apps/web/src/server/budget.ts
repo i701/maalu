@@ -9,6 +9,8 @@ const limit = z
 	.refine((v) => Number(v) > 0, "The limit must be greater than 0");
 const warnPercent = z.number().int().min(1).max(100);
 
+const day = z.iso.date();
+
 const lineFields = {
 	name: z.string().trim().min(1).max(200),
 	category_ids: z.array(z.uuid()).min(1, "Choose at least one category"),
@@ -31,7 +33,15 @@ export const updateBudgetFn = createServerFn({ method: "POST" })
 	.handler(async ({ data }) => apiRequest<Budget>("/budget", { method: "PATCH", body: data }));
 
 export const createBudgetLineFn = createServerFn({ method: "POST" })
-	.validator(z.object({ ...lineFields, warn_percent: warnPercent.optional() }))
+	.validator(
+		z.object({
+			...lineFields,
+			warn_percent: warnPercent.optional(),
+			// both, to make it a limit for just those dates
+			start_date: day.optional(),
+			end_date: day.optional(),
+		}),
+	)
 	.handler(async ({ data }) => apiRequest<Budget>("/budget/lines", { method: "POST", body: data }));
 
 export const updateBudgetLineFn = createServerFn({ method: "POST" })
@@ -41,6 +51,8 @@ export const updateBudgetLineFn = createServerFn({ method: "POST" })
 			changes: z.object({
 				...lineFields,
 				warn_percent: warnPercent.nullable(), // null goes back to the budget's level
+				start_date: day.optional(),
+				end_date: day.nullable().optional(), // null makes it a limit for every period again
 			}),
 		}),
 	)

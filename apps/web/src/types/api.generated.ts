@@ -2433,6 +2433,81 @@ export interface components {
             /** Name */
             name: string;
         };
+        /**
+         * BudgetFixedLine
+         * @description A limit for set dates: `amount` is the most to spend in its categories between the two
+         *     dates, counted once over the whole range (not per period).
+         */
+        BudgetFixedLine: {
+            /**
+             * Activity
+             * @description Expenses in the line's categories this period
+             */
+            activity: string;
+            /**
+             * Amount
+             * @description The limit for each period
+             */
+            amount: string;
+            /**
+             * Available
+             * @description amount + carried - activity (negative when over)
+             */
+            available: string;
+            /**
+             * Carried
+             * @description Unspent money carried in from earlier periods
+             */
+            carried: string;
+            /** Categories */
+            categories: components["schemas"]["BudgetCategoryRef"][];
+            /**
+             * Days Left
+             * @description Days until it ends, today included; null once over
+             */
+            days_left: number | null;
+            /**
+             * End Date
+             * Format: date
+             * @description Inclusive
+             */
+            end_date: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /**
+             * Percent
+             * @description Share of (amount + carried) already spent, rounded
+             */
+            percent: number;
+            /** Rollover */
+            rollover: boolean;
+            /**
+             * Start Date
+             * Format: date
+             */
+            start_date: string;
+            /**
+             * State
+             * @description Relative to today: not started yet, running, or over
+             * @enum {string}
+             */
+            state: "upcoming" | "active" | "ended";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ok" | "warning" | "over";
+            /**
+             * Warn Percent
+             * @description This line's own level, if it has one
+             */
+            warn_percent: number | null;
+        };
         /** BudgetLineCreate */
         BudgetLineCreate: {
             /**
@@ -2442,6 +2517,11 @@ export interface components {
             amount: number | string;
             /** Category Ids */
             category_ids: string[];
+            /**
+             * End Date
+             * @description Inclusive; needs `start_date`
+             */
+            end_date?: string | null;
             /** Name */
             name: string;
             /**
@@ -2449,6 +2529,11 @@ export interface components {
              * @default false
              */
             rollover: boolean;
+            /**
+             * Start Date
+             * @description With `end_date`: a limit for just those dates instead of every period. `amount` is then the most to spend between them, counted once.
+             */
+            start_date?: string | null;
             /**
              * Warn Percent
              * @description Overrides the budget's warning level for this line
@@ -2513,10 +2598,20 @@ export interface components {
             amount?: number | string | null;
             /** Category Ids */
             category_ids?: string[] | null;
+            /**
+             * End Date
+             * @description Makes this a limit for set dates when sent with `start_date`; an explicit null makes it a limit for every period again
+             */
+            end_date?: string | null;
             /** Name */
             name?: string | null;
             /** Rollover */
             rollover?: boolean | null;
+            /**
+             * Start Date
+             * @description Only for a limit with set dates (see `end_date`)
+             */
+            start_date?: string | null;
             /** Warn Percent */
             warn_percent?: number | null;
         };
@@ -2540,11 +2635,16 @@ export interface components {
         BudgetResponse: {
             /**
              * Attention
-             * @description Lines that are close to their limit or over it
+             * @description Per-period lines, and limits for set dates that are running, that are close to their limit or over it
              */
             attention: number;
             /** Currency */
             currency: string;
+            /**
+             * Fixed Lines
+             * @description Limits for set dates, every one whatever period is shown. They are not in `totals`, which add up the per-period lines.
+             */
+            fixed_lines?: components["schemas"]["BudgetFixedLine"][];
             /** Lines */
             lines: components["schemas"]["BudgetLineResponse"][];
             period: components["schemas"]["BudgetPeriod"];
@@ -9339,6 +9439,8 @@ export const pathsApiV1TransactionsExportGetParametersQueryTag_matchValues: Read
 export const pathsApiV1TransactionsIdsGetParametersQueryTag_matchValues: ReadonlyArray<FlattenedDeepRequired<paths>["/api/v1/transactions/ids"]["get"]["parameters"]["query"]["tag_match"]> = ["any", "all"];
 export const pathsApiV1TransactionsSummaryGetParametersQueryTag_matchValues: ReadonlyArray<FlattenedDeepRequired<paths>["/api/v1/transactions/summary"]["get"]["parameters"]["query"]["tag_match"]> = ["any", "all"];
 export const accountGroupValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AccountGroup"]> = ["cash", "accounts", "card", "debit_card", "savings", "prepaid", "investments", "overdrafts", "loan", "insurance", "others"];
+export const budgetFixedLineStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BudgetFixedLine"]["state"]> = ["upcoming", "active", "ended"];
+export const budgetFixedLineStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BudgetFixedLine"]["status"]> = ["ok", "warning", "over"];
 export const budgetLineResponseStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BudgetLineResponse"]["status"]> = ["ok", "warning", "over"];
 export const budgetTotalsStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BudgetTotals"]["status"]> = ["ok", "warning", "over"];
 export const categoryCreateColorAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CategoryCreate"]["color"]> = ["blue", "green", "orange", "violet", "pink", "amber", "lime", "slate"];

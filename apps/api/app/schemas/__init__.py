@@ -9,6 +9,7 @@ from app.schemas.account import (
 from app.schemas.attachment import AttachmentResponse
 from app.schemas.backup import BackupRestored
 from app.schemas.budget import (
+    BudgetFixedLine,
     BudgetLineCreate,
     BudgetLineResponse,
     BudgetLineUpdate,
@@ -125,6 +126,7 @@ __all__ = [
     "AccountUpdate",
     "AttachmentResponse",
     "BackupRestored",
+    "BudgetFixedLine",
     "BudgetLineCreate",
     "BudgetLineResponse",
     "BudgetLineUpdate",

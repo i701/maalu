@@ -13,7 +13,7 @@ export async function warningAfterExpense({
 }): Promise<string | null> {
 	try {
 		const res = await getBudgetFn({ data: { on: date } });
-		return res.ok ? budgetWarning(res.data, categories) : null;
+		return res.ok ? budgetWarning(res.data, categories, date) : null;
 	} catch {
 		return null;
 	}

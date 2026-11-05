@@ -3,7 +3,14 @@ from datetime import date
 from decimal import Decimal
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    field_validator,
+    model_validator,
+)
 
 from app.budget_period import MAX_START_DAY
 
@@ -12,6 +19,8 @@ Limit = Annotated[Decimal, Field(gt=0, max_digits=19, decimal_places=4)]
 WarnPercent = Annotated[int, Field(ge=1, le=100)]
 
 BudgetStatus = Literal["ok", "warning", "over"]
+# The longest a limit with set dates can run.
+MAX_RANGE_DAYS = 3660
 
 
 class BudgetSettingsUpdate(BaseModel):
@@ -34,6 +43,25 @@ class BudgetLineCreate(BaseModel):
         default=None, description="Overrides the budget's warning level for this line"
     )
     rollover: bool = False
+    start_date: date | None = Field(
+        default=None,
+        description="With `end_date`: a limit for just those dates instead of every period. "
+        "`amount` is then the most to spend between them, counted once.",
+    )
+    end_date: date | None = Field(default=None, description="Inclusive; needs `start_date`")
+
+    @model_validator(mode="after")
+    def _dates(self):
+        if (self.start_date is None) != (self.end_date is None):
+            raise ValueError("Give both a start date and an end date, or neither")
+        if self.start_date is not None and self.end_date is not None:
+            if self.end_date < self.start_date:
+                raise ValueError("The end date can't be before the start date")
+            if (self.end_date - self.start_date).days >= MAX_RANGE_DAYS:
+                raise ValueError("A limit can run for at most ten years")
+            if self.rollover:
+                raise ValueError("A limit for set dates has nothing to carry over")
+        return self
 
 
 class BudgetLineUpdate(BaseModel):
@@ -44,6 +72,14 @@ class BudgetLineUpdate(BaseModel):
     amount: Limit | None = None
     warn_percent: WarnPercent | None = None
     rollover: bool | None = None
+    start_date: date | None = Field(
+        default=None, description="Only for a limit with set dates (see `end_date`)"
+    )
+    end_date: date | None = Field(
+        default=None,
+        description="Makes this a limit for set dates when sent with `start_date`; an explicit "
+        "null makes it a limit for every period again",
+    )
 
     @field_validator("name", "category_ids", "amount", "rollover")
     @classmethod
@@ -75,6 +111,18 @@ class BudgetLineResponse(BaseModel):
     status: BudgetStatus
 
 
+class BudgetFixedLine(BudgetLineResponse):
+    """A limit for set dates: `amount` is the most to spend in its categories between the two
+    dates, counted once over the whole range (not per period)."""
+
+    start_date: date
+    end_date: date = Field(description="Inclusive")
+    state: Literal["upcoming", "active", "ended"] = Field(
+        description="Relative to today: not started yet, running, or over"
+    )
+    days_left: int | None = Field(description="Days until it ends, today included; null once over")
+
+
 class BudgetTotals(BaseModel):
     amount: Decimal
     activity: Decimal
@@ -95,5 +143,13 @@ class BudgetResponse(BaseModel):
     warn_percent: int
     period: BudgetPeriod
     lines: list[BudgetLineResponse]
+    fixed_lines: list[BudgetFixedLine] = Field(
+        default_factory=list,
+        description="Limits for set dates, every one whatever period is shown. They are not in "
+        "`totals`, which add up the per-period lines.",
+    )
     totals: BudgetTotals
-    attention: int = Field(description="Lines that are close to their limit or over it")
+    attention: int = Field(
+        description="Per-period lines, and limits for set dates that are running, that are close "
+        "to their limit or over it"
+    )

@@ -964,6 +964,129 @@
         "title": "BudgetCategoryRef",
         "type": "object"
       },
+      "BudgetFixedLine": {
+        "description": "A limit for set dates: `amount` is the most to spend in its categories between the two\ndates, counted once over the whole range (not per period).",
+        "properties": {
+          "activity": {
+            "description": "Expenses in the line's categories this period",
+            "title": "Activity",
+            "type": "string"
+          },
+          "amount": {
+            "description": "The limit for each period",
+            "title": "Amount",
+            "type": "string"
+          },
+          "available": {
+            "description": "amount + carried - activity (negative when over)",
+            "title": "Available",
+            "type": "string"
+          },
+          "carried": {
+            "description": "Unspent money carried in from earlier periods",
+            "title": "Carried",
+            "type": "string"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/BudgetCategoryRef"
+            },
+            "title": "Categories",
+            "type": "array"
+          },
+          "days_left": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Days until it ends, today included; null once over",
+            "title": "Days Left"
+          },
+          "end_date": {
+            "description": "Inclusive",
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "percent": {
+            "description": "Share of (amount + carried) already spent, rounded",
+            "title": "Percent",
+            "type": "integer"
+          },
+          "rollover": {
+            "title": "Rollover",
+            "type": "boolean"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "state": {
+            "description": "Relative to today: not started yet, running, or over",
+            "enum": [
+              "upcoming",
+              "active",
+              "ended"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "warning",
+              "over"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "warn_percent": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "This line's own level, if it has one",
+            "title": "Warn Percent"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "categories",
+          "amount",
+          "rollover",
+          "warn_percent",
+          "carried",
+          "activity",
+          "available",
+          "percent",
+          "status",
+          "start_date",
+          "end_date",
+          "state",
+          "days_left"
+        ],
+        "title": "BudgetFixedLine",
+        "type": "object"
+      },
       "BudgetLineCreate": {
         "properties": {
           "amount": {
@@ -988,6 +1111,19 @@
             "title": "Category Ids",
             "type": "array"
           },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Inclusive; needs `start_date`",
+            "title": "End Date"
+          },
           "name": {
             "maxLength": 200,
             "minLength": 1,
@@ -998,6 +1134,19 @@
             "default": false,
             "title": "Rollover",
             "type": "boolean"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "With `end_date`: a limit for just those dates instead of every period. `amount` is then the most to spend between them, counted once.",
+            "title": "Start Date"
           },
           "warn_percent": {
             "anyOf": [
@@ -1141,6 +1290,19 @@
             ],
             "title": "Category Ids"
           },
+          "end_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Makes this a limit for set dates when sent with `start_date`; an explicit null makes it a limit for every period again",
+            "title": "End Date"
+          },
           "name": {
             "anyOf": [
               {
@@ -1164,6 +1326,19 @@
               }
             ],
             "title": "Rollover"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only for a limit with set dates (see `end_date`)",
+            "title": "Start Date"
           },
           "warn_percent": {
             "anyOf": [
@@ -1211,13 +1386,21 @@
       "BudgetResponse": {
         "properties": {
           "attention": {
-            "description": "Lines that are close to their limit or over it",
+            "description": "Per-period lines, and limits for set dates that are running, that are close to their limit or over it",
             "title": "Attention",
             "type": "integer"
           },
           "currency": {
             "title": "Currency",
             "type": "string"
+          },
+          "fixed_lines": {
+            "description": "Limits for set dates, every one whatever period is shown. They are not in `totals`, which add up the per-period lines.",
+            "items": {
+              "$ref": "#/components/schemas/BudgetFixedLine"
+            },
+            "title": "Fixed Lines",
+            "type": "array"
           },
           "lines": {
             "items": {

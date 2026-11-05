@@ -15,7 +15,12 @@ from app.services.attachment import (
 )
 from app.services.available import AvailableService
 from app.services.backup import BackupFormatError, BackupNotEmptyError, BackupService
-from app.services.budget import BudgetCategoryTakenError, BudgetLineNotFoundError, BudgetService
+from app.services.budget import (
+    BudgetCategoryTakenError,
+    BudgetLineNotFoundError,
+    BudgetLineRuleError,
+    BudgetService,
+)
 from app.services.category import (
     CategoryInUseError,
     CategoryNameTakenError,
@@ -93,6 +98,7 @@ __all__ = [
     "BackupService",
     "BudgetCategoryTakenError",
     "BudgetLineNotFoundError",
+    "BudgetLineRuleError",
     "BudgetService",
     "CategoryInUseError",
     "CategoryNameTakenError",

@@ -51,8 +51,12 @@ class BudgetLine(Base):
     warn_percent: Mapped[int | None] = mapped_column(Integer, default=None)
     # Unspent money carries into the next period when on.
     rollover: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
-    # The first period this line counts from; rollover never reaches back before it.
+    # The first period this line counts from; rollover never reaches back before it. For a limit
+    # with set dates (`ends_on` given) it is the first day of those dates.
     start_date: Mapped[date] = mapped_column(Date)
+    # Set for a limit that is not per period: `amount` is then the most to spend in the categories
+    # between `start_date` and this day (inclusive), counted once over the whole range.
+    ends_on: Mapped[date | None] = mapped_column(Date, default=None)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

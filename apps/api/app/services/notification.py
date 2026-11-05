@@ -100,9 +100,12 @@ class NotificationService:
     async def _budget(self, user: User, known: set[str]) -> int:
         view = await BudgetService(self.db).view(user.id)
         made = 0
-        for line in view.lines:
+        # the per-period lines of the current period, and the limits for set dates that are running
+        running = [*view.lines, *(f for f in view.fixed_lines if f.state == "active")]
+        for line in running:
             if line.status == "ok":
                 continue
+            since = getattr(line, "start_date", view.period.start)
             over = line.status == "over"
             made += await self._add(
                 user.id,
@@ -114,7 +117,7 @@ class NotificationService:
                 body=f"{_money(line.activity, view.currency)} spent of "
                 f"{_money(line.amount + line.carried, view.currency)}",
                 link="/budget",
-                dedupe_key=f"budget:{line.id}:{view.period.start}:{line.status}",
+                dedupe_key=f"budget:{line.id}:{since}:{line.status}",
             )
         return made
 

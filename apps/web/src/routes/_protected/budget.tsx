@@ -59,6 +59,7 @@ function BudgetPage() {
 	const [settings, setSettings] = useState(false);
 
 	const { period } = budget;
+	const fixedLines = budget.fixed_lines ?? [];
 	const goTo = (on: string | undefined) => navigate({ search: { on }, replace: true });
 	const periodLabel = `${formatDate(period.start)} – ${formatDate(period.end)}`;
 
@@ -127,14 +128,14 @@ function BudgetPage() {
 			</Box>
 
 			<PendingOverlay>
-				{budget.lines.length === 0 ? (
+				{budget.lines.length === 0 && fixedLines.length === 0 ? (
 					<EmptyState firstRun symbol="savings" accent="amber" shape={2}>
 						No limits yet. Add one for a category, such as Groceries, and you'll see how much of it
 						you've spent and get a warning when you're close.
 					</EmptyState>
 				) : (
 					<>
-						<BudgetSummary budget={budget} />
+						{budget.lines.length > 0 && <BudgetSummary budget={budget} />}
 						<Box
 							sx={{
 								display: "grid",
@@ -153,6 +154,33 @@ function BudgetPage() {
 								/>
 							))}
 						</Box>
+						{fixedLines.length > 0 && (
+							<>
+								<Typography variant="h2" sx={{ fontSize: 18, fontWeight: 600, mt: 4, mb: 0.5 }}>
+									For set dates
+								</Typography>
+								<Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
+									One total for the whole stretch, not per period. They are not in the totals above.
+								</Typography>
+								<Box
+									sx={{
+										display: "grid",
+										gap: 2,
+										gridTemplateColumns: { xs: "1fr", md: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" },
+									}}
+								>
+									{fixedLines.map((line) => (
+										<BudgetLineCard
+											key={line.id}
+											line={line}
+											currency={budget.currency}
+											onEdit={setEditing}
+											onDelete={setDeleting}
+										/>
+									))}
+								</Box>
+							</>
+						)}
 					</>
 				)}
 			</PendingOverlay>

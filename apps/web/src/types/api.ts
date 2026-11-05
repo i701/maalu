@@ -147,6 +147,8 @@ export type CategoryMonthRow = Schemas["CategoryMonthRow"];
 export type TransactionTotals = Schemas["TransactionTotals"];
 export type BudgetStatus = Schemas["BudgetLineResponse"]["status"];
 export type BudgetLine = Schemas["BudgetLineResponse"];
+/** A limit for set dates: its amount is one total between two dates, not per period. */
+export type BudgetFixedLine = Schemas["BudgetFixedLine"];
 export type Budget = Schemas["BudgetResponse"];
 export type GoalEntry = Schemas["GoalEntryResponse"];
 export type Goal = Schemas["GoalResponse"];

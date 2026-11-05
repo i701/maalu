@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
-import type { Budget, BudgetLine, BudgetStatus } from "#/types/api";
-import { addDays, budgetWarning, describeLine, linesNeedingAttention, unsigned } from "./budget";
+import type { Budget, BudgetFixedLine, BudgetLine, BudgetStatus } from "#/types/api";
+import {
+	addDays,
+	budgetWarning,
+	datesOverlap,
+	describeLine,
+	fixedWindow,
+	linesNeedingAttention,
+	unsigned,
+} from "./budget";
 
 describe("addDays", () => {
 	it("moves by days without time-zone drift", () => {
@@ -128,5 +136,76 @@ describe("budgetWarning", () => {
 
 	it("says nothing about a past period", () => {
 		expect(budgetWarning(budget(lines, false), ["Groceries"])).toBeNull();
+	});
+});
+
+const fixed = (
+	name: string,
+	status: BudgetStatus,
+	categories: string[],
+	over: Partial<BudgetFixedLine> = {},
+): BudgetFixedLine => ({
+	...line(name, status, status === "over" ? 120 : 85, categories),
+	start_date: "2026-10-10",
+	end_date: "2026-10-20",
+	state: "active",
+	days_left: 6,
+	...over,
+});
+
+const withFixed = (lines: BudgetFixedLine[], isCurrent = true): Budget => ({
+	...budget([], isCurrent),
+	fixed_lines: lines,
+});
+
+describe("limits for set dates", () => {
+	it("count as needing attention only while they run", () => {
+		const b = withFixed([
+			fixed("Running", "warning", ["Trip"]),
+			fixed("Finished", "over", ["Trip"], { state: "ended", days_left: null }),
+			fixed("Soon", "over", ["Trip"], { state: "upcoming" }),
+		]);
+		expect(linesNeedingAttention(b).map((l) => l.name)).toEqual(["Running"]);
+	});
+
+	it("rank with the per-period lines, the worst first", () => {
+		const b: Budget = {
+			...withFixed([fixed("Trip", "over", ["Trip"])]),
+			lines: [line("Food", "warning", 90, ["Food"])],
+		};
+		expect(linesNeedingAttention(b).map((l) => l.name)).toEqual(["Trip", "Food"]);
+	});
+
+	it("warn after an expense inside their dates, even when another period is shown", () => {
+		const b = withFixed([fixed("Trip", "warning", ["Trip"])], false);
+		expect(budgetWarning(b, ["trip"], "2026-10-15")).toBe("Trip is at 85% of its limit");
+	});
+
+	it("do not warn for a day outside their dates", () => {
+		const b = withFixed([fixed("Trip", "warning", ["Trip"])]);
+		expect(budgetWarning(b, ["Trip"], "2026-10-25")).toBeNull();
+		expect(budgetWarning(b, ["Trip"], "2026-10-09")).toBeNull();
+		expect(budgetWarning(b, ["Other"], "2026-10-15")).toBeNull();
+	});
+});
+
+describe("fixedWindow", () => {
+	it("says how long is left, or that it has not started or has ended", () => {
+		expect(fixedWindow(fixed("A", "ok", []))).toMatch(/10 Oct 2026 – 20 Oct 2026 · 6 days left$/);
+		expect(fixedWindow(fixed("A", "ok", [], { days_left: 1 }))).toMatch(/1 day left$/);
+		expect(fixedWindow(fixed("A", "ok", [], { state: "upcoming", days_left: 12 }))).toMatch(
+			/12 days to its end$/,
+		);
+		expect(fixedWindow(fixed("A", "ok", [], { state: "ended", days_left: null }))).toMatch(
+			/ended$/,
+		);
+	});
+});
+
+describe("datesOverlap", () => {
+	it("is true when two stretches share a day, ends included", () => {
+		expect(datesOverlap(["2026-10-01", "2026-10-10"], ["2026-10-10", "2026-10-20"])).toBe(true);
+		expect(datesOverlap(["2026-10-01", "2026-10-10"], ["2026-10-11", "2026-10-20"])).toBe(false);
+		expect(datesOverlap(["2026-10-05", "2026-10-06"], ["2026-10-01", "2026-10-31"])).toBe(true);
 	});
 });
