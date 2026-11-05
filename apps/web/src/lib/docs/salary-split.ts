@@ -12,6 +12,7 @@ export const salarySplit: Doc = {
 	where: [
 		{ to: "/settings", label: "Settings: set up your rules" },
 		{ to: "/transactions", label: "Transactions: add or split a salary" },
+		{ to: "/pending", label: "Pending: approve waiting splits" },
 		{ to: "/plan", label: "Month plan: see what is left to spend" },
 	],
 	blocks: [
@@ -22,8 +23,8 @@ export const salarySplit: Doc = {
 		{
 			type: "callout",
 			tone: "note",
-			title: "Nothing moves by itself",
-			text: "Maalu only proposes the split. Money is moved and amounts are set aside only after you press **Make the split**.",
+			title: "Nothing moves by itself, unless you say so",
+			text: 'By default Maalu only proposes the split, and money is moved only after you approve it. You can switch individual rules to move automatically (see "Moving automatically" below).',
 		},
 
 		{ type: "h2", id: "what-you-need", text: "What you need" },
@@ -81,7 +82,7 @@ export const salarySplit: Doc = {
 			type: "callout",
 			tone: "tip",
 			title: "Missed it, or want to do it later?",
-			text: "Every salary in your [transaction list](/transactions) has a **Split salary** button (a small fork icon). It opens the same window whenever you like.",
+			text: "Closed the window? The split is waiting on the [Pending](/pending) screen. Every salary in your [transaction list](/transactions) also has a **Split salary** button (a small fork icon) that opens the same window whenever you like.",
 		},
 
 		{
@@ -95,6 +96,35 @@ export const salarySplit: Doc = {
 				["Stays in Main", "MVR 6,500.00"],
 			],
 			note: "Your real salary will differ from this, and that is fine: percentages are worked out from the amount you enter. You can also change any line before you confirm, for example to put 2,500 into savings this month.",
+		},
+
+		{ type: "h2", id: "pending", text: "Approving later: the Pending screen" },
+		{
+			type: "p",
+			text: "You don't have to deal with the split the moment you save the salary. Every salary that arrives while you have rules is added to the [Pending](/pending) screen, and a number beside **Pending** in the sidebar tells you how many are waiting.",
+		},
+		{
+			type: "steps",
+			items: [
+				"Open [Pending](/pending). Each waiting salary shows what arrived, what is proposed, and what stays in the account.",
+				"Press **Approve** to make the split exactly as proposed, or **Review and edit** to change amounts or untick lines first.",
+				"Press **Dismiss** if you don't want to split that salary. It leaves the list, and you can still split it later from the [Transactions](/transactions) page.",
+			],
+		},
+
+		{ type: "h2", id: "automatic", text: "Moving automatically" },
+		{
+			type: "p",
+			text: "If you always want a line to happen, such as 20% to savings, switch that rule to **Move it automatically when a salary arrives** (in [Settings](/settings), when you add or change the rule). Rules left off keep waiting for your approval.",
+		},
+		{
+			type: "list",
+			items: [
+				"An automatic line is made the moment a salary is posted. The rest of that salary's split waits on the Pending screen, with the automatic lines shown as **Already moved**.",
+				"If every rule is automatic, nothing waits: the whole split is made when the salary arrives.",
+				"If an automatic line can't be made (for example the account is in another currency), or the automatic lines would add up to more than the salary, none of them is made by itself. They wait on the Pending screen with the reason.",
+				"Undoing a split puts the salary back on the Pending screen, and it will not be made automatically a second time.",
+			],
 		},
 
 		{ type: "h2", id: "what-it-does", text: "What the split actually does" },
@@ -129,7 +159,7 @@ export const salarySplit: Doc = {
 		{
 			type: "list",
 			items: [
-				"A salary can be split **once**. To change a split, undo it and make it again.",
+				"Each line is made **once**. To change a line that was already made, undo the split and make it again.",
 				"The lines can't add up to more than the salary. Maalu stops you and says so.",
 				"Only a salary that has **arrived** (not planned) and is **in an account** can be split.",
 				"Both sides must be in the same currency. A line for an account in another currency is greyed out with the reason, and a goal can only be set aside from a salary in your base currency.",
@@ -145,7 +175,7 @@ export const salarySplit: Doc = {
 			items: [
 				{
 					q: "The split window didn't open when I saved my salary.",
-					a: "It opens by itself only when you have at least one rule, and the salary is in the **Salary** category and not marked **Planned**. Set up a rule in [Settings](/settings), then use the **Split salary** button on the salary.",
+					a: "It opens by itself only when you have at least one rule, and the salary is in the **Salary** category and not marked **Planned**. Set up a rule in [Settings](/settings), then use the **Split salary** button on the salary. A salary you saved with rules in place is also waiting on the [Pending](/pending) screen.",
 				},
 				{
 					q: "A line is greyed out and I can't tick it.",
@@ -161,7 +191,7 @@ export const salarySplit: Doc = {
 				},
 				{
 					q: "Will my salary be split automatically each month?",
-					a: "No. Maalu proposes the split and waits for you to confirm it, so you stay in control of where your money goes.",
+					a: "Only the lines whose rule you switched to move automatically. Everything else is proposed and waits on the [Pending](/pending) screen for your approval, so you stay in control of where your money goes.",
 				},
 			],
 		},

@@ -10,6 +10,8 @@ from app.schemas import (
     SalarySplitApply,
     SalarySplitPlan,
     SalarySplitResult,
+    SalarySplitTaskCount,
+    SalarySplitTaskResponse,
 )
 from app.services import (
     SalaryRuleNotFoundError,
@@ -127,4 +129,29 @@ async def undo_salary_split(
         raise HTTPException(status.HTTP_409_CONFLICT, "This salary has not been split") from None
     except SalarySplitError as exc:
         raise _unprocessable(exc) from None
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/salary-split-tasks", response_model=list[SalarySplitTaskResponse])
+async def list_salary_split_tasks(user_id: CurrentUserId, service: SalarySplitServiceDep):
+    """The salaries waiting for their split to be approved, newest first, each with its proposal.
+    Approve one with `POST /transactions/{id}/salary-split`; or dismiss it."""
+    return await service.list_tasks(user_id)
+
+
+@router.get("/salary-split-tasks/count", response_model=SalarySplitTaskCount)
+async def count_salary_split_tasks(user_id: CurrentUserId, service: SalarySplitServiceDep):
+    """How many are waiting (for the badge in the sidebar)."""
+    return SalarySplitTaskCount(count=await service.count_pending(user_id))
+
+
+@router.post("/salary-split-tasks/{task_id}/dismiss", status_code=status.HTTP_204_NO_CONTENT)
+async def dismiss_salary_split_task(
+    task_id: uuid.UUID, user_id: CurrentUserId, service: SalarySplitServiceDep
+):
+    """Don't split this salary. It leaves the Pending screen, and can still be split by hand."""
+    try:
+        await service.dismiss_task(user_id, task_id)
+    except SalaryRuleNotFoundError:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Task not found") from None
     return Response(status_code=status.HTTP_204_NO_CONTENT)

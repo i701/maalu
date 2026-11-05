@@ -4296,6 +4296,12 @@
             "description": "Send money to this account (a transfer from the salary's)",
             "title": "Account Id"
           },
+          "auto": {
+            "default": false,
+            "description": "Make this line as soon as a salary is posted. Off: it waits for approval.",
+            "title": "Auto",
+            "type": "boolean"
+          },
           "goal_id": {
             "anyOf": [
               {
@@ -4356,6 +4362,10 @@
             ],
             "title": "Account Id"
           },
+          "auto": {
+            "title": "Auto",
+            "type": "boolean"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -4406,6 +4416,7 @@
           "target_name",
           "mode",
           "value",
+          "auto",
           "created_at"
         ],
         "title": "SalaryRuleResponse",
@@ -4414,6 +4425,17 @@
       "SalaryRuleUpdate": {
         "description": "Partial update: how much a rule sends. The target can't change; delete the rule instead.",
         "properties": {
+          "auto": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auto"
+          },
           "mode": {
             "anyOf": [
               {
@@ -4468,6 +4490,18 @@
             "description": "What this rule works out to, in the salary's currency",
             "title": "Amount",
             "type": "string"
+          },
+          "auto": {
+            "default": false,
+            "description": "Its rule makes it without asking",
+            "title": "Auto",
+            "type": "boolean"
+          },
+          "done": {
+            "default": false,
+            "description": "Already made (its amount is in `made`, not in `total`)",
+            "title": "Done",
+            "type": "boolean"
           },
           "mode": {
             "$ref": "#/components/schemas/SalaryRuleMode"
@@ -4614,8 +4648,14 @@
             "type": "string"
           },
           "applied": {
-            "description": "True once the split has been made (undo it to redo it)",
+            "description": "True once any of the split has been made",
             "title": "Applied",
+            "type": "boolean"
+          },
+          "complete": {
+            "default": false,
+            "description": "Every rule's line has been made: nothing is left to approve",
+            "title": "Complete",
             "type": "boolean"
           },
           "currency": {
@@ -4630,7 +4670,7 @@
             "type": "array"
           },
           "left": {
-            "description": "What stays in the account (salary less total)",
+            "description": "What stays in the account (salary less made and total)",
             "title": "Left",
             "type": "string"
           },
@@ -4643,17 +4683,35 @@
             "type": "array"
           },
           "over": {
-            "description": "True when the lines add up to more than the salary",
+            "description": "True when what is made and the lines to make pass the salary",
             "title": "Over",
             "type": "boolean"
+          },
+          "salary_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary Date"
           },
           "salary_id": {
             "format": "uuid",
             "title": "Salary Id",
             "type": "string"
           },
+          "title": {
+            "default": "",
+            "description": "The salary's description, else its category",
+            "title": "Title",
+            "type": "string"
+          },
           "total": {
-            "description": "The lines that can be made, added up",
+            "description": "The lines still to make that can be made, added up",
             "title": "Total",
             "type": "string"
           }
@@ -4691,6 +4749,45 @@
           "entries"
         ],
         "title": "SalarySplitResult",
+        "type": "object"
+      },
+      "SalarySplitTaskCount": {
+        "properties": {
+          "count": {
+            "description": "Salaries waiting for their split to be approved",
+            "title": "Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "count"
+        ],
+        "title": "SalarySplitTaskCount",
+        "type": "object"
+      },
+      "SalarySplitTaskResponse": {
+        "description": "A salary waiting on the Pending screen, with its proposed split.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/SalarySplitPlan"
+          }
+        },
+        "required": [
+          "id",
+          "created_at",
+          "plan"
+        ],
+        "title": "SalarySplitTaskResponse",
         "type": "object"
       },
       "SessionResponse": {
@@ -11169,6 +11266,106 @@
           }
         ],
         "summary": "Update Rule",
+        "tags": [
+          "salary"
+        ]
+      }
+    },
+    "/api/v1/salary-split-tasks": {
+      "get": {
+        "description": "The salaries waiting for their split to be approved, newest first, each with its proposal.\nApprove one with `POST /transactions/{id}/salary-split`; or dismiss it.",
+        "operationId": "list_salary_split_tasks_api_v1_salary_split_tasks_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SalarySplitTaskResponse"
+                  },
+                  "title": "Response List Salary Split Tasks Api V1 Salary Split Tasks Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List Salary Split Tasks",
+        "tags": [
+          "salary"
+        ]
+      }
+    },
+    "/api/v1/salary-split-tasks/count": {
+      "get": {
+        "description": "How many are waiting (for the badge in the sidebar).",
+        "operationId": "count_salary_split_tasks_api_v1_salary_split_tasks_count_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalarySplitTaskCount"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Count Salary Split Tasks",
+        "tags": [
+          "salary"
+        ]
+      }
+    },
+    "/api/v1/salary-split-tasks/{task_id}/dismiss": {
+      "post": {
+        "description": "Don't split this salary. It leaves the Pending screen, and can still be split by hand.",
+        "operationId": "dismiss_salary_split_task_api_v1_salary_split_tasks__task_id__dismiss_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Dismiss Salary Split Task",
         "tags": [
           "salary"
         ]

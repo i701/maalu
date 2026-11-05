@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Annotated, Literal, Self
 
@@ -28,6 +28,10 @@ class SalaryRuleCreate(BaseModel):
     value: Value = Field(
         description="A percentage of the salary (up to 100), or an amount in its currency"
     )
+    auto: bool = Field(
+        default=False,
+        description="Make this line as soon as a salary is posted. Off: it waits for approval.",
+    )
 
     @model_validator(mode="after")
     def _one_target(self) -> Self:
@@ -42,6 +46,7 @@ class SalaryRuleUpdate(BaseModel):
 
     mode: SalaryRuleMode | None = None
     value: Value | None = None
+    auto: bool | None = None
 
 
 class SalaryRuleResponse(BaseModel):
@@ -54,6 +59,7 @@ class SalaryRuleResponse(BaseModel):
     target_name: str
     mode: SalaryRuleMode
     value: Decimal
+    auto: bool
     created_at: datetime
 
 
@@ -69,6 +75,10 @@ class SalarySplitItem(BaseModel):
     value: Decimal
     ok: bool = Field(description="False when it can't be made (see `reason`)")
     reason: str | None = None
+    auto: bool = Field(default=False, description="Its rule makes it without asking")
+    done: bool = Field(
+        default=False, description="Already made (its amount is in `made`, not in `total`)"
+    )
 
 
 class SalarySplitMade(BaseModel):
@@ -82,15 +92,20 @@ class SalarySplitPlan(BaseModel):
     """What a salary's rules would send on, or, once it has been split, what was made."""
 
     salary_id: uuid.UUID
+    title: str = Field(default="", description="The salary's description, else its category")
+    salary_date: date | None = None
     amount: Decimal
     currency: str
     account_id: uuid.UUID
     account_name: str
-    applied: bool = Field(description="True once the split has been made (undo it to redo it)")
+    applied: bool = Field(description="True once any of the split has been made")
+    complete: bool = Field(
+        default=False, description="Every rule's line has been made: nothing is left to approve"
+    )
     items: list[SalarySplitItem]
-    total: Decimal = Field(description="The lines that can be made, added up")
-    left: Decimal = Field(description="What stays in the account (salary less total)")
-    over: bool = Field(description="True when the lines add up to more than the salary")
+    total: Decimal = Field(description="The lines still to make that can be made, added up")
+    left: Decimal = Field(description="What stays in the account (salary less made and total)")
+    over: bool = Field(description="True when what is made and the lines to make pass the salary")
     made: list[SalarySplitMade] = Field(default_factory=list, description="What a split made")
 
 
@@ -107,3 +122,15 @@ class SalarySplitApply(BaseModel):
 class SalarySplitResult(BaseModel):
     transfers: int = Field(description="Transfers made between accounts")
     entries: int = Field(description="Amounts set aside for goals tracked by hand")
+
+
+class SalarySplitTaskResponse(BaseModel):
+    """A salary waiting on the Pending screen, with its proposed split."""
+
+    id: uuid.UUID
+    created_at: datetime
+    plan: SalarySplitPlan
+
+
+class SalarySplitTaskCount(BaseModel):
+    count: int = Field(description="Salaries waiting for their split to be approved")

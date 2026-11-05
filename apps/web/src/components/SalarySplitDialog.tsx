@@ -1,5 +1,6 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import TextField from "@mui/material/TextField";
@@ -8,6 +9,7 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { formatMoney } from "#/lib/format";
 import {
+	madeTotal,
 	splitLines,
 	splitRequest,
 	splitTotals,
@@ -85,9 +87,10 @@ function LineRow({
 						</Typography>
 						<Typography
 							variant="caption"
-							sx={{ color: line.reason ? "error.main" : "text.secondary" }}
+							sx={{ color: line.reason && !line.done ? "error.main" : "text.secondary" }}
 						>
 							{line.reason ?? line.rule}
+							{line.auto && !line.done && " · moves automatically"}
 						</Typography>
 					</Box>
 				}
@@ -141,10 +144,58 @@ function ProposedLines({
 	);
 }
 
+/** The dialog's title: where this salary's split stands. */
+const titleFor = (complete: boolean, someMade: boolean) =>
+	complete
+		? "This salary was split"
+		: someMade
+			? "Finish splitting this salary"
+			: "Split this salary";
+
+/** What is inside the dialog once the plan has loaded: what was made, what is left to approve. */
+function SplitBody({
+	plan,
+	lines,
+	totals,
+	edit,
+	onUndo,
+}: {
+	plan: SalarySplitPlan;
+	lines: SplitLine[];
+	totals: SplitTotals;
+	edit: (key: string, change: Partial<SplitLine>) => void;
+	onUndo: () => void;
+}) {
+	const complete = Boolean(plan.complete);
+	const someMade = Boolean(plan.applied);
+	return (
+		<Box sx={{ display: "grid", gap: 1.5 }}>
+			<Typography variant="body2" sx={{ color: "text.secondary" }}>
+				{formatMoney(plan.amount, plan.currency)} arrived in {plan.account_name}.
+			</Typography>
+			{someMade && (
+				<>
+					{!complete && (
+						<Typography sx={{ fontWeight: 600, fontSize: 14 }}>Already made</Typography>
+					)}
+					<MadeList plan={plan} />
+				</>
+			)}
+			{!complete && <ProposedLines plan={plan} lines={lines} totals={totals} edit={edit} />}
+			{someMade && !complete && (
+				<Button color="inherit" size="small" onClick={onUndo} sx={{ justifySelf: "start" }}>
+					Undo what was made
+				</Button>
+			)}
+		</Box>
+	);
+}
+
 /**
  * Splits a salary between accounts and goals, using the rules in Settings. It opens with the
- * proposal: every line pre-filled and editable, nothing made until you confirm. Once a salary has
- * been split it shows what was made and offers to undo it (the transfers go to the trash and the
+ * proposal: every line pre-filled and editable, nothing made until you confirm. Lines an automatic
+ * rule already made are shown as made, and only the rest is left to approve. Once a salary has been
+ * split it shows what was made and offers to undo it (the transfers go to the trash and the
  * set-asides are removed).
  */
 export default function SalarySplitDialog({
@@ -158,46 +209,47 @@ export default function SalarySplitDialog({
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
 	const { plan, lines, failed, edit } = useSalaryPlan(transactionId);
-	const totals = useMemo(() => (plan ? splitTotals(lines, plan.amount) : null), [plan, lines]);
+	const totals = useMemo(
+		() => (plan ? splitTotals(lines, plan.amount, madeTotal(plan)) : null),
+		[plan, lines],
+	);
+	const complete = Boolean(plan?.complete);
+
+	async function undo() {
+		if (await run(() => undoSalarySplitFn({ data: { id: transactionId } }))) {
+			notify("The split was undone");
+			sheet.close();
+		}
+	}
 
 	async function submit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault();
 		if (!plan) return;
-		const ok = plan.applied
-			? await run(() => undoSalarySplitFn({ data: { id: transactionId } }))
-			: await run(() =>
-					applySalarySplitFn({ data: { id: transactionId, items: splitRequest(lines) } }),
-				);
+		if (complete) return undo();
+		const ok = await run(() =>
+			applySalarySplitFn({ data: { id: transactionId, items: splitRequest(lines) } }),
+		);
 		if (ok) {
-			notify(plan.applied ? "The split was undone" : "Salary split");
+			notify("Salary split");
 			sheet.close();
 		}
 	}
 
 	const canSubmit = Boolean(
-		plan && (plan.applied || (totals && !totals.over && !totals.invalid && totals.count > 0)),
+		plan && (complete || (totals && !totals.over && !totals.invalid && totals.count > 0)),
 	);
 	return (
 		<FormDialog
-			title={plan?.applied ? "This salary was split" : "Split this salary"}
+			title={titleFor(complete, Boolean(plan?.applied))}
 			error={failed ?? error}
 			pending={pending}
 			onSubmit={submit}
 			sheet={sheet}
-			submitLabel={plan?.applied ? "Undo the split" : "Make the split"}
+			submitLabel={complete ? "Undo the split" : "Make the split"}
 			submitDisabled={!canSubmit}
 		>
 			{plan && totals ? (
-				<Box sx={{ display: "grid", gap: 1.5 }}>
-					<Typography variant="body2" sx={{ color: "text.secondary" }}>
-						{formatMoney(plan.amount, plan.currency)} arrived in {plan.account_name}.
-					</Typography>
-					{plan.applied ? (
-						<MadeList plan={plan} />
-					) : (
-						<ProposedLines plan={plan} lines={lines} totals={totals} edit={edit} />
-					)}
-				</Box>
+				<SplitBody plan={plan} lines={lines} totals={totals} edit={edit} onUndo={undo} />
 			) : (
 				<Typography variant="body2" sx={{ color: "text.secondary" }}>
 					{failed ? "" : "Working out the split…"}

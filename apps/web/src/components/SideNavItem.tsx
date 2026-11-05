@@ -1,3 +1,4 @@
+import Box from "@mui/material/Box";
 import ButtonBase, { type ButtonBaseProps } from "@mui/material/ButtonBase";
 import { createLink } from "@tanstack/react-router";
 import { forwardRef } from "react";
@@ -21,11 +22,14 @@ export default function SideNavItem({
 	label,
 	symbol,
 	accent,
+	badge,
 }: {
 	to: string;
 	label: string;
 	symbol: string;
 	accent: Accent;
+	/** A count shown at the end of the row (hidden at zero): things waiting for you */
+	badge?: number;
 }) {
 	return (
 		<SideAnchor
@@ -74,6 +78,27 @@ export default function SideNavItem({
 		>
 			<Symbol name={symbol} />
 			<span>{label}</span>
+			{badge ? (
+				<Box
+					component="span"
+					aria-label={`${badge} waiting`}
+					sx={{
+						ml: "auto",
+						minWidth: 22,
+						height: 22,
+						px: 0.75,
+						borderRadius: "11px",
+						display: "grid",
+						placeItems: "center",
+						fontSize: 12,
+						fontWeight: 700,
+						bgcolor: "var(--md-sys-color-error)",
+						color: "var(--md-sys-color-on-error)",
+					}}
+				>
+					{badge > 99 ? "99+" : badge}
+				</Box>
+			) : null}
 		</SideAnchor>
 	);
 }

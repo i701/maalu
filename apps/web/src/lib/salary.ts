@@ -1,4 +1,4 @@
-import { formatMoney } from "./format";
+import { formatMoney, sumDecimals } from "./format";
 import { fromScaled, toScaled } from "./decimal";
 import type { SalaryRule, SalarySplitItem, SalarySplitPlan } from "#/types/api";
 
@@ -36,6 +36,10 @@ export type SplitLine = {
 	on: boolean;
 	/** Why it can't be made, when it can't */
 	reason: string | null;
+	/** Already made (by an automatic rule, or an earlier approval): shown, not made again */
+	done: boolean;
+	/** Its rule makes it without asking */
+	auto: boolean;
 };
 
 /** The lines to confirm, from a plan: those that can be made start ticked, the rest are shown with
@@ -48,8 +52,10 @@ export function splitLines(plan: SalarySplitPlan): SplitLine[] {
 		name: i.target_name,
 		rule: ruleText(i, plan.currency),
 		amount: fromScaled(toScaled(i.amount, SCALE) ?? 0n, SCALE),
-		on: i.ok,
-		reason: i.ok ? null : (i.reason ?? "Can't be made"),
+		on: i.ok && !i.done,
+		reason: i.done ? "Already made" : i.ok ? null : (i.reason ?? "Can't be made"),
+		done: Boolean(i.done),
+		auto: Boolean(i.auto),
 	}));
 }
 
@@ -66,8 +72,9 @@ export type SplitTotals = {
 	count: number;
 };
 
-/** Adds the ticked lines up against the salary, with exact arithmetic. */
-export function splitTotals(lines: SplitLine[], salary: string): SplitTotals {
+/** Adds the ticked lines up against the salary, with exact arithmetic. `made` is what an automatic
+ * rule or an earlier approval already sent, which counts against the salary too. */
+export function splitTotals(lines: SplitLine[], salary: string, made = "0"): SplitTotals {
 	const ticked = lines.filter((l) => l.on);
 	let total = 0n;
 	let invalid = false;
@@ -77,10 +84,11 @@ export function splitTotals(lines: SplitLine[], salary: string): SplitTotals {
 		else total += scaled;
 	}
 	const whole = toScaled(salary, SCALE) ?? 0n;
+	const sent = toScaled(made, SCALE) ?? 0n;
 	return {
 		total: fromScaled(total, SCALE),
-		left: fromScaled(whole - total, SCALE),
-		over: total > whole,
+		left: fromScaled(whole - sent - total, SCALE),
+		over: sent + total > whole,
 		invalid,
 		count: ticked.length,
 	};
@@ -96,3 +104,10 @@ export function splitRequest(lines: SplitLine[]) {
 			amount: fromScaled(toScaled(l.amount, SCALE) ?? 0n, SCALE, 0),
 		}));
 }
+
+/** What the made lines of a plan add up to. */
+export const madeTotal = (plan: Pick<SalarySplitPlan, "made">): string =>
+	sumDecimals((plan.made ?? []).map((m) => m.amount));
+
+/** What is left to approve: lines that can be made and have not been. */
+export const pendingLines = (plan: SalarySplitPlan) => plan.items.filter((i) => i.ok && !i.done);

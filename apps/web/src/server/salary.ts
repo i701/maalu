@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import type { SalaryRule, SalarySplitPlan } from "#/types/api";
+import type { SalaryRule, SalarySplitPlan, SalarySplitTask } from "#/types/api";
 import { apiRequest } from "./api";
 
 const amount = z
@@ -21,6 +21,7 @@ export const createSalaryRuleFn = createServerFn({ method: "POST" })
 			goal_id: z.uuid().optional(),
 			mode,
 			value: amount,
+			auto: z.boolean().optional(),
 		}),
 	)
 	.handler(async ({ data }) =>
@@ -28,7 +29,14 @@ export const createSalaryRuleFn = createServerFn({ method: "POST" })
 	);
 
 export const updateSalaryRuleFn = createServerFn({ method: "POST" })
-	.validator(z.object({ id: z.uuid(), mode: mode.optional(), value: amount.optional() }))
+	.validator(
+		z.object({
+			id: z.uuid(),
+			mode: mode.optional(),
+			value: amount.optional(),
+			auto: z.boolean().optional(),
+		}),
+	)
 	.handler(async ({ data: { id, ...body } }) =>
 		apiRequest<SalaryRule>(`/salary-rules/${id}`, { method: "PATCH", body }),
 	);
@@ -67,4 +75,22 @@ export const undoSalarySplitFn = createServerFn({ method: "POST" })
 	.validator(z.object({ id: z.uuid() }))
 	.handler(async ({ data }) =>
 		apiRequest<void>(`/transactions/${data.id}/salary-split`, { method: "DELETE" }),
+	);
+
+/** The salaries waiting for their split to be approved, newest first. */
+export const listSalarySplitTasksFn = createServerFn({ method: "GET" }).handler(async () =>
+	apiRequest<SalarySplitTask[]>("/salary-split-tasks"),
+);
+
+/** How many are waiting, for the sidebar badge. Never fails the page: 0 when it can't be read. */
+export const pendingSplitCountFn = createServerFn({ method: "GET" }).handler(async () => {
+	const res = await apiRequest<{ count: number }>("/salary-split-tasks/count");
+	return res.ok ? res.data.count : 0;
+});
+
+/** Don't split this salary: it leaves the list and can still be split by hand. */
+export const dismissSalarySplitTaskFn = createServerFn({ method: "POST" })
+	.validator(z.object({ id: z.uuid() }))
+	.handler(async ({ data }) =>
+		apiRequest<void>(`/salary-split-tasks/${data.id}/dismiss`, { method: "POST" }),
 	);

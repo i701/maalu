@@ -9,7 +9,7 @@ import SideNavItem from "./SideNavItem";
  * sits on the page background, with no border. Narrow screens use the bottom bar instead, so the list
  * here can keep growing.
  */
-export default function SideNav() {
+export default function SideNav({ badges = {} }: { badges?: Record<string, number> }) {
 	return (
 		<Box
 			component="nav"
@@ -53,7 +53,7 @@ export default function SideNav() {
 						</Typography>
 						<Box sx={{ display: "grid", gap: 0.5 }}>
 							{items.map((item) => (
-								<SideNavItem key={item.to} {...item} />
+								<SideNavItem key={item.to} {...item} badge={badges[item.to]} />
 							))}
 						</Box>
 					</Box>

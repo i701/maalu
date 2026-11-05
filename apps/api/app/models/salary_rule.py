@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     DateTime,
     Enum,
@@ -60,6 +61,9 @@ class SalaryRule(Base):
     )
     # A percentage (0 to 100) of the salary, or an amount in the salary's currency.
     value: Mapped[Decimal] = mapped_column(Numeric(19, 4))
+    # Off (the default): this line waits for approval on the Pending screen. On: it is made as soon
+    # as a salary is posted, without asking.
+    auto: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

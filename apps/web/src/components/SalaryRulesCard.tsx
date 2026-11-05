@@ -10,8 +10,10 @@ import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import { ruleText, rulesSummary } from "#/lib/salary";
 import type { Account, Goal, SalaryRule } from "#/types/api";
+import { ACCENT } from "#/lib/m3";
 import ConfirmDelete from "./ConfirmDelete";
 import SalaryRuleDialog from "./SalaryRuleDialog";
+import TonalChip from "./TonalChip";
 import { deleteSalaryRuleFn } from "#/server/salary";
 
 /** Settings: what each account or goal gets when a salary is split. Nothing happens by itself: when
@@ -41,8 +43,9 @@ export default function SalaryRulesCard({
 							When my salary arrives
 						</Typography>
 						<Typography variant="body2" sx={{ color: "text.secondary", mt: 0.5 }}>
-							Choose how much of each salary goes to which account or goal. When you add an income
-							in the Salary category, Maalu shows the split for you to confirm.
+							Choose how much of each salary goes to which account or goal. When a salary arrives,
+							its split waits on the Pending screen for you to approve, unless you switch a rule to
+							move automatically.
 						</Typography>
 					</Box>
 					<Button startIcon={<AddIcon />} variant="outlined" onClick={() => setEditing("new")}>
@@ -82,6 +85,13 @@ export default function SalaryRulesCard({
 									</Typography>
 									<Typography variant="body2" sx={{ color: "text.secondary" }}>
 										{ruleText(r, currency)}
+										{r.auto && (
+											<TonalChip
+												accent={ACCENT.orange}
+												label="Moves automatically"
+												sx={{ ml: 1 }}
+											/>
+										)}
 									</Typography>
 								</Box>
 								<Box sx={{ whiteSpace: "nowrap" }}>

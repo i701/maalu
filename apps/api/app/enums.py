@@ -7,6 +7,14 @@ ACCENT_COLORS = ("blue", "green", "orange", "violet", "pink", "amber", "lime", "
 AccentColor = Literal["blue", "green", "orange", "violet", "pink", "amber", "lime", "slate"]
 
 
+class SplitTaskStatus(StrEnum):
+    """Where a salary's split stands on the Pending screen."""
+
+    PENDING = "pending"  # waiting to be approved
+    DONE = "done"  # every line that can be made has been
+    DISMISSED = "dismissed"  # the user chose not to split it (it can still be split by hand)
+
+
 class SalaryRuleMode(StrEnum):
     """How much of a salary a rule sends on: a share of it, or a fixed amount."""
 

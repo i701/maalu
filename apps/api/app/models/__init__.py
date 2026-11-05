@@ -12,6 +12,7 @@ from app.models.link import TransactionLink
 from app.models.notification import Notification
 from app.models.recovery_code import RecoveryCode
 from app.models.salary_rule import SalaryRule
+from app.models.salary_split_task import SalarySplitTask
 from app.models.session import UserSession
 from app.models.subscription import Subscription
 from app.models.tag import Tag, template_tags, transaction_tags, vendor_tags
@@ -38,6 +39,7 @@ __all__ = [
     "Notification",
     "RecoveryCode",
     "SalaryRule",
+    "SalarySplitTask",
     "SnapshotDirty",
     "Subscription",
     "Tag",

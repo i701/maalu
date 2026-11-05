@@ -71,6 +71,7 @@ export const NAV_ITEMS: readonly NavDestination[] = [
 		bottom: true,
 	},
 	{ to: "/plan", label: "Month plan", symbol: "checklist", accent: "amber", group: "plan" },
+	{ to: "/pending", label: "Pending", symbol: "task_alt", accent: "orange", group: "plan" },
 	{ to: "/vendors", label: "Vendors", symbol: "storefront", accent: "orange", group: "organise" },
 	{ to: "/categories", label: "Categories", symbol: "category", accent: "pink", group: "organise" },
 	{ to: "/tags", label: "Tags", symbol: "sell", accent: "violet", group: "organise" },

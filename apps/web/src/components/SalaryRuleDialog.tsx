@@ -1,8 +1,12 @@
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Box from "@mui/material/Box";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
+import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
@@ -39,6 +43,7 @@ export default function SalaryRuleDialog({
 	const [targetId, setTargetId] = useState("");
 	const [mode, setMode] = useState<Mode>(rule?.mode ?? "percent");
 	const [value, setValue] = useState(rule ? String(Number(rule.value)) : "");
+	const [auto, setAuto] = useState(rule?.auto ?? false);
 
 	const taken = new Set(rules.map((r) => r.account_id ?? r.goal_id));
 	const choices = (target === "account" ? accounts : goals).filter((t) => !taken.has(t.id));
@@ -47,11 +52,12 @@ export default function SalaryRuleDialog({
 		e.preventDefault();
 		const ok = await run(() =>
 			rule
-				? updateSalaryRuleFn({ data: { id: rule.id, mode, value } })
+				? updateSalaryRuleFn({ data: { id: rule.id, mode, value, auto } })
 				: createSalaryRuleFn({
 						data: {
 							mode,
 							value,
+							auto,
 							...(target === "account" ? { account_id: targetId } : { goal_id: targetId }),
 						},
 					}),
@@ -138,6 +144,17 @@ export default function SalaryRuleDialog({
 							: "In the currency of the salary"
 					}
 				/>
+				<Box>
+					<FormControlLabel
+						control={<Switch checked={auto} onChange={(_, v) => setAuto(v)} />}
+						label="Move it automatically when a salary arrives"
+					/>
+					<Typography variant="caption" component="p" sx={{ color: "text.secondary" }}>
+						{auto
+							? "Made as soon as a salary is posted, without asking."
+							: "Off: it waits for your approval on the Pending screen."}
+					</Typography>
+				</Box>
 			</Stack>
 		</FormDialog>
 	);

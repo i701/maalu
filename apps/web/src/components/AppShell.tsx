@@ -15,16 +15,19 @@ import TopBar from "./TopBar";
 export default function AppShell({
 	user,
 	unread,
+	pending,
 	children,
 }: {
 	user: SessionUser;
 	unread: number;
+	/** Salary splits waiting for approval, for the sidebar */
+	pending: number;
 	children: ReactNode;
 }) {
 	return (
 		<Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
 			<NavigationProgress />
-			<SideNav />
+			<SideNav badges={{ "/pending": pending }} />
 			<TopBar user={user} unread={unread} />
 			<BottomNav />
 

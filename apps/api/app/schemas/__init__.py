@@ -55,6 +55,8 @@ from app.schemas.salary import (
     SalarySplitMade,
     SalarySplitPlan,
     SalarySplitResult,
+    SalarySplitTaskCount,
+    SalarySplitTaskResponse,
 )
 from app.schemas.subscription import (
     SubscriptionCreate,
@@ -184,6 +186,8 @@ __all__ = [
     "SalarySplitMade",
     "SalarySplitPlan",
     "SalarySplitResult",
+    "SalarySplitTaskCount",
+    "SalarySplitTaskResponse",
     "SessionResponse",
     "SplitInput",
     "SplitResponse",

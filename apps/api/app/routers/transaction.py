@@ -5,7 +5,12 @@ from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, Response, status
 
-from app.dependencies import CurrentUserId, SubscriptionServiceDep, TransactionServiceDep
+from app.dependencies import (
+    CurrentUserId,
+    SalarySplitServiceDep,
+    SubscriptionServiceDep,
+    TransactionServiceDep,
+)
 from app.enums import PaymentMethod, TransactionType
 from app.export import XLSX_MEDIA_TYPE
 from app.pagination import MAX_LIMIT, PageDep, set_total
@@ -64,10 +69,15 @@ _VENDOR_NOT_FOUND = HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Vendor
 
 @router.post("", response_model=TransactionResponse, status_code=status.HTTP_201_CREATED)
 async def create_transaction(
-    data: TransactionCreate, user_id: CurrentUserId, service: TransactionServiceDep
+    data: TransactionCreate,
+    user_id: CurrentUserId,
+    service: TransactionServiceDep,
+    salary: SalarySplitServiceDep,
 ):
     try:
-        return await service.create(user_id, data)
+        created = await service.create(user_id, data)
+        await salary.on_posted(user_id, created)  # a salary waits for its split to be approved
+        return created
     except VendorNotFoundError:
         raise _VENDOR_NOT_FOUND from None
     except ExchangeRateRequiredError:
@@ -516,12 +526,15 @@ async def update_transaction(
     data: TransactionUpdate,
     user_id: CurrentUserId,
     service: TransactionServiceDep,
+    salary: SalarySplitServiceDep,
 ):
     transaction = await service.get(user_id, transaction_id)
     if transaction is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Transaction not found")
     try:
-        return await service.update(transaction, data)
+        updated = await service.update(transaction, data)
+        await salary.on_posted(user_id, updated)  # e.g. a planned salary that is now posted
+        return updated
     except VendorNotFoundError:
         raise _VENDOR_NOT_FOUND from None
     except ExchangeRateRequiredError:
@@ -591,6 +604,7 @@ async def post_planned_transaction(
     transaction_id: uuid.UUID,
     user_id: CurrentUserId,
     service: TransactionServiceDep,
+    salary: SalarySplitServiceDep,
     data: PostPlanned | None = None,
 ):
     """Mark a planned transaction as paid: from now on it counts. Send the actual date or amount if
@@ -599,7 +613,9 @@ async def post_planned_transaction(
     if transaction is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Transaction not found")
     try:
-        return await service.post(transaction, data or PostPlanned())
+        posted = await service.post(transaction, data or PostPlanned())
+        await salary.on_posted(user_id, posted)  # a salary received waits for its split
+        return posted
     except TransactionNotPlannedError:
         raise HTTPException(status.HTTP_409_CONFLICT, "This transaction is not planned") from None
     except TransactionRuleError as exc:

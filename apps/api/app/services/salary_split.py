@@ -1,12 +1,21 @@
 import uuid
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from decimal import ROUND_HALF_EVEN, Decimal
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.enums import SalaryRuleMode, TransactionType
-from app.models import Account, Goal, GoalEntry, SalaryRule, Transaction, User
+from app.enums import SalaryRuleMode, SplitTaskStatus, TransactionType
+from app.models import (
+    Account,
+    Goal,
+    GoalEntry,
+    SalaryRule,
+    SalarySplitTask,
+    Transaction,
+    User,
+)
 from app.schemas import (
     GoalEntryCreate,
     SalaryRuleCreate,
@@ -14,11 +23,14 @@ from app.schemas import (
     SalaryRuleUpdate,
     SalarySplitApply,
     SalarySplitItem,
+    SalarySplitLine,
     SalarySplitMade,
     SalarySplitPlan,
     SalarySplitResult,
+    SalarySplitTaskResponse,
     TransactionCreate,
 )
+from app.services.errors import TransactionRuleError
 from app.services.goal import GoalService
 from app.services.transaction import TransactionService
 
@@ -56,6 +68,18 @@ class _Destination:
     goal: Goal | None
 
 
+@dataclass
+class _MadeRow:
+    """One thing a split made: a transfer into `account_id`, or an amount set aside (`goal_id`)."""
+
+    kind: str
+    id: uuid.UUID
+    name: str
+    amount: Decimal
+    account_id: uuid.UUID | None = None
+    goal_id: uuid.UUID | None = None
+
+
 class SalarySplitService:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
@@ -76,6 +100,7 @@ class SalarySplitService:
             target_name=target.name,
             mode=rule.mode,
             value=rule.value,
+            auto=rule.auto,
             created_at=rule.created_at,
         )
 
@@ -125,6 +150,7 @@ class SalarySplitService:
             goal_id=data.goal_id,
             mode=data.mode,
             value=data.value,
+            auto=data.auto,
         )
         self.db.add(rule)
         await self.db.flush()
@@ -210,7 +236,7 @@ class SalarySplitService:
             return rule.value
         return (salary.amount * rule.value / 100).quantize(QUANTUM, ROUND_HALF_EVEN)
 
-    async def _made(self, user_id: uuid.UUID, salary: Transaction) -> list[SalarySplitMade]:
+    async def _made_rows(self, user_id: uuid.UUID, salary: Transaction) -> list[_MadeRow]:
         transfers = (
             await self.db.scalars(
                 select(Transaction).where(
@@ -227,33 +253,50 @@ class SalarySplitService:
                 .where(Goal.user_id == user_id, GoalEntry.split_from_id == salary.id)
             )
         ).all()
-        made = [
-            SalarySplitMade(
+        rows = [
+            _MadeRow(
                 kind="transfer",
                 id=t.id,
-                target_name=t.to_account.name if t.to_account else "Account",
+                name=t.to_account.name if t.to_account else "Account",
                 amount=t.amount,
+                account_id=t.to_account_id,
             )
             for t in transfers
         ]
-        made += [
-            SalarySplitMade(kind="entry", id=e.id, target_name=name, amount=e.amount)
+        rows += [
+            _MadeRow(kind="entry", id=e.id, name=name, amount=e.amount, goal_id=e.goal_id)
             for e, name in entries
         ]
-        return made
+        return rows
+
+    async def _made(self, user_id: uuid.UUID, salary: Transaction) -> list[SalarySplitMade]:
+        return [
+            SalarySplitMade(kind=m.kind, id=m.id, target_name=m.name, amount=m.amount)
+            for m in await self._made_rows(user_id, salary)
+        ]
+
+    @staticmethod
+    def _is_done(destination: _Destination, made: list[_MadeRow]) -> bool:
+        """Whether a line's money was already sent: its account got a transfer, or its goal an
+        amount set aside."""
+        if destination.account is not None:
+            return any(m.account_id == destination.account.id for m in made)
+        return destination.goal is not None and any(m.goal_id == destination.goal.id for m in made)
 
     async def plan(self, user_id: uuid.UUID, transaction_id: uuid.UUID) -> SalarySplitPlan:
         """What the rules would send on from this salary, or what a split of it made."""
         salary = await self._salary(user_id, transaction_id)
         assert salary.account is not None
         items: list[SalarySplitItem] = []
+        made_rows = await self._made_rows(user_id, salary)
         for rule in await self._rules(user_id):
             target_type = "account" if rule.account_id else "goal"
             target_id = rule.account_id or rule.goal_id
             assert target_id is not None
-            ok, reason = True, None
+            ok, reason, done = True, None, False
             try:
-                await self._destination(user_id, salary, target_type, target_id)
+                destination = await self._destination(user_id, salary, target_type, target_id)
+                done = self._is_done(destination, made_rows)
             except SalarySplitError as exc:
                 ok, reason = False, str(exc)
             items.append(
@@ -267,21 +310,30 @@ class SalarySplitService:
                     value=rule.value,
                     ok=ok,
                     reason=reason,
+                    auto=rule.auto,
+                    done=done,
                 )
             )
-        made = await self._made(user_id, salary)
-        total = sum((i.amount for i in items if i.ok), ZERO)
+        made = [
+            SalarySplitMade(kind=m.kind, id=m.id, target_name=m.name, amount=m.amount)
+            for m in made_rows
+        ]
+        made_total = sum((m.amount for m in made), ZERO)
+        total = sum((i.amount for i in items if i.ok and not i.done), ZERO)
         return SalarySplitPlan(
             salary_id=salary.id,
+            title=salary.description or salary.category,
+            salary_date=salary.transaction_date,
             amount=salary.amount,
             currency=salary.currency,
             account_id=salary.account.id,
             account_name=salary.account.name,
             applied=bool(made),
+            complete=bool(items) and all(i.done for i in items),
             items=items,
             total=total,
-            left=salary.amount - total,
-            over=total > salary.amount,
+            left=salary.amount - made_total - total,
+            over=made_total + total > salary.amount,
             made=made,
         )
 
@@ -293,18 +345,26 @@ class SalarySplitService:
         every line is checked again, and the lines may not add up to more than the salary."""
         salary = await self._salary(user_id, transaction_id)
         assert salary.account is not None
-        if await self._made(user_id, salary):
-            raise SalarySplitAppliedError
+        made_rows = await self._made_rows(user_id, salary)
         seen: set[tuple[str, uuid.UUID]] = set()
         planned: list[tuple[_Destination, Decimal]] = []
+        already: list[str] = []
         for line in data.items:
             key = (line.target_type, line.target_id)
             if key in seen:
                 raise SalarySplitError("Each account or goal can only appear once")
             seen.add(key)
             destination = await self._destination(user_id, salary, line.target_type, line.target_id)
+            if self._is_done(destination, made_rows):
+                already.append(destination.name)
+                continue
             planned.append((destination, line.amount))
-        if sum((a for _d, a in planned), ZERO) > salary.amount:
+        if already and not planned:
+            raise SalarySplitAppliedError
+        if already:
+            raise SalarySplitError(f'"{already[0]}" has already been made. Take it off the list')
+        made_total = sum((m.amount for m in made_rows), ZERO)
+        if made_total + sum((a for _d, a in planned), ZERO) > salary.amount:
             raise SalarySplitError("The lines add up to more than the salary")
 
         transfers = entries = 0
@@ -334,6 +394,7 @@ class SalarySplitService:
                 entry.split_from_id = salary.id
                 entries += 1
         await self.db.flush()
+        await self._settle_task(user_id, salary)
         return SalarySplitResult(transfers=transfers, entries=entries)
 
     async def undo(self, user_id: uuid.UUID, transaction_id: uuid.UUID) -> None:
@@ -350,4 +411,129 @@ class SalarySplitService:
                 entry = await self.db.get(GoalEntry, m.id)
                 if entry is not None:
                     await self.db.delete(entry)
+        await self.db.flush()
+        if await self._rules(user_id):  # undone: it is waiting for approval again
+            await self._reopen_task(user_id, salary)
+
+    # --- pending approvals -------------------------------------------------------------------
+
+    @staticmethod
+    def _splittable(t: Transaction) -> bool:
+        """A posted income in the Salary category, in an account: what a split can be made from."""
+        return (
+            t.type is TransactionType.INCOME
+            and t.category_is_salary
+            and not t.planned
+            and t.account is not None
+            and t.refund_of_id is None
+            and t.deleted_at is None
+        )
+
+    async def _task(self, user_id: uuid.UUID, transaction_id: uuid.UUID) -> SalarySplitTask | None:
+        return await self.db.scalar(
+            select(SalarySplitTask).where(
+                SalarySplitTask.user_id == user_id,
+                SalarySplitTask.transaction_id == transaction_id,
+            )
+        )
+
+    async def _reopen_task(self, user_id: uuid.UUID, salary: Transaction) -> None:
+        task = await self._task(user_id, salary.id)
+        if task is None:
+            task = SalarySplitTask(user_id=user_id, transaction_id=salary.id)
+            self.db.add(task)
+        task.status = SplitTaskStatus.PENDING
+        task.resolved_at = None
+        await self.db.flush()
+
+    async def _settle_task(self, user_id: uuid.UUID, salary: Transaction) -> None:
+        """After lines were made: the task is done when nothing is left that can be made."""
+        task = await self._task(user_id, salary.id)
+        if task is None or task.status is SplitTaskStatus.DISMISSED:
+            return
+        plan = await self.plan(user_id, salary.id)
+        left = any(i.ok and not i.done for i in plan.items)
+        task.status = SplitTaskStatus.PENDING if left else SplitTaskStatus.DONE
+        task.resolved_at = None if left else datetime.now(UTC)
+        await self.db.flush()
+
+    async def on_posted(self, user_id: uuid.UUID, salary: Transaction) -> None:
+        """A transaction was created, posted or changed. When it is a posted salary and the user has
+        rules, queue its split for approval (once per salary), and make at once the lines whose
+        rule is set to move automatically. Never raises: a salary must be saved whatever happens
+        here."""
+        if not self._splittable(salary):
+            return
+        rules = await self._rules(user_id)
+        if not rules or await self._task(user_id, salary.id) is not None:
+            return
+        self.db.add(SalarySplitTask(user_id=user_id, transaction_id=salary.id))
+        await self.db.flush()
+        if not any(r.auto for r in rules):
+            return
+        try:
+            async with self.db.begin_nested():
+                plan = await self.plan(user_id, salary.id)
+                lines = [
+                    SalarySplitLine(
+                        target_type=i.target_type, target_id=i.target_id, amount=i.amount
+                    )
+                    for i in plan.items
+                    if i.auto and i.ok and not i.done and i.amount > 0
+                ]
+                if lines and sum((x.amount for x in lines), ZERO) <= salary.amount:
+                    await self.apply(user_id, salary.id, SalarySplitApply(items=lines))
+        except (SalarySplitError, SalarySplitAppliedError, TransactionRuleError):
+            pass  # what could not be made waits on the Pending screen
+
+    async def list_tasks(self, user_id: uuid.UUID) -> list[SalarySplitTaskResponse]:
+        """The salaries waiting for approval, newest first, each with its proposal."""
+        tasks = (
+            await self.db.scalars(
+                select(SalarySplitTask)
+                .where(
+                    SalarySplitTask.user_id == user_id,
+                    SalarySplitTask.status == SplitTaskStatus.PENDING,
+                )
+                .order_by(SalarySplitTask.created_at.desc())
+            )
+        ).all()
+        out: list[SalarySplitTaskResponse] = []
+        for task in tasks:
+            try:
+                plan = await self.plan(user_id, task.transaction_id)
+            except (SalaryRuleNotFoundError, SalarySplitError):
+                continue  # trashed or changed since: nothing to approve
+            if plan.complete:
+                task.status = SplitTaskStatus.DONE
+                task.resolved_at = datetime.now(UTC)
+                continue
+            out.append(SalarySplitTaskResponse(id=task.id, created_at=task.created_at, plan=plan))
+        await self.db.flush()
+        return out
+
+    async def count_pending(self, user_id: uuid.UUID) -> int:
+        stmt = (
+            select(func.count(SalarySplitTask.id))
+            .join(Transaction, Transaction.id == SalarySplitTask.transaction_id)
+            .where(
+                SalarySplitTask.user_id == user_id,
+                SalarySplitTask.status == SplitTaskStatus.PENDING,
+                Transaction.deleted_at.is_(None),
+                Transaction.planned.is_(False),
+            )
+        )
+        return (await self.db.scalar(stmt)) or 0
+
+    async def dismiss_task(self, user_id: uuid.UUID, task_id: uuid.UUID) -> None:
+        """The user does not want this salary split. It can still be split by hand."""
+        task = await self.db.scalar(
+            select(SalarySplitTask).where(
+                SalarySplitTask.id == task_id, SalarySplitTask.user_id == user_id
+            )
+        )
+        if task is None:
+            raise SalaryRuleNotFoundError
+        task.status = SplitTaskStatus.DISMISSED
+        task.resolved_at = datetime.now(UTC)
         await self.db.flush()

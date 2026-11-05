@@ -133,6 +133,8 @@ export type SalaryRule = Schemas["SalaryRuleResponse"];
 export type SalarySplitPlan = Schemas["SalarySplitPlan"];
 export type SalarySplitItem = Schemas["SalarySplitItem"];
 export type SalarySplitMade = Schemas["SalarySplitMade"];
+/** A salary waiting on the Pending screen, with its proposed split. */
+export type SalarySplitTask = Schemas["SalarySplitTaskResponse"];
 export type Category = Schemas["CategoryResponse"];
 export type TransactionSplit = Schemas["SplitResponse"];
 export type Transaction = Schemas["TransactionResponse"];

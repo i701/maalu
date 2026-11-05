@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { SalaryRule, SalarySplitPlan } from "#/types/api";
-import { ruleText, rulesSummary, splitLines, splitRequest, splitTotals } from "./salary";
+import {
+	madeTotal,
+	pendingLines,
+	ruleText,
+	rulesSummary,
+	splitLines,
+	splitRequest,
+	splitTotals,
+} from "./salary";
 
 const rule = (mode: "percent" | "fixed", value: string) => ({ mode, value }) as SalaryRule;
 
@@ -85,5 +93,52 @@ describe("splitRequest", () => {
 		expect(splitRequest(lines)).toEqual([
 			{ target_type: "account", target_id: "t0", amount: "1234.5" },
 		]);
+	});
+});
+
+describe("lines already made", () => {
+	const mixed = () =>
+		plan([
+			{ target_name: "Savings", amount: "2000.0000", done: true, auto: true },
+			{ target_name: "Bills", amount: "1500.0000" },
+		]);
+
+	it("are shown but not ticked, and say why", () => {
+		const lines = splitLines(mixed());
+		expect(lines.map((l) => [l.name, l.on, l.done, l.reason])).toEqual([
+			["Savings", false, true, "Already made"],
+			["Bills", true, false, null],
+		]);
+		expect(lines[0].auto).toBe(true);
+	});
+
+	it("count against the salary, so what stays is worked out from what is left", () => {
+		const lines = splitLines(mixed());
+		expect(splitTotals(lines, "10000.0000", "2000.0000")).toMatchObject({
+			total: "1500.00",
+			left: "6500.00",
+			over: false,
+		});
+		// 2,000 sent already and 9,000 more is past a 10,000 salary
+		const big = lines.map((l) => (l.on ? { ...l, amount: "9000" } : l));
+		expect(splitTotals(big, "10000.0000", "2000.0000").over).toBe(true);
+		expect(splitTotals(big, "10000.0000").over).toBe(false);
+	});
+
+	it("are never sent again", () => {
+		expect(splitRequest(splitLines(mixed())).map((l) => l.target_id)).toEqual(["t1"]);
+	});
+
+	it("add up to what was made, and leave the rest to approve", () => {
+		const p = {
+			...mixed(),
+			made: [
+				{ kind: "transfer", id: "m1", target_name: "Savings", amount: "2000.0000" },
+				{ kind: "entry", id: "m2", target_name: "Trip", amount: "500.5000" },
+			],
+		} as SalarySplitPlan;
+		expect(madeTotal(p)).toBe("2500.50");
+		expect(pendingLines(p).map((i) => i.target_name)).toEqual(["Bills"]);
+		expect(madeTotal({ made: [] })).toBe("0.00");
 	});
 });

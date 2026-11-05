@@ -1106,6 +1106,67 @@ export interface paths {
         patch: operations["update_rule_api_v1_salary_rules__rule_id__patch"];
         trace?: never;
     };
+    "/api/v1/salary-split-tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Salary Split Tasks
+         * @description The salaries waiting for their split to be approved, newest first, each with its proposal.
+         *     Approve one with `POST /transactions/{id}/salary-split`; or dismiss it.
+         */
+        get: operations["list_salary_split_tasks_api_v1_salary_split_tasks_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/salary-split-tasks/count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Count Salary Split Tasks
+         * @description How many are waiting (for the badge in the sidebar).
+         */
+        get: operations["count_salary_split_tasks_api_v1_salary_split_tasks_count_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/salary-split-tasks/{task_id}/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Dismiss Salary Split Task
+         * @description Don't split this salary. It leaves the Pending screen, and can still be split by hand.
+         */
+        post: operations["dismiss_salary_split_task_api_v1_salary_split_tasks__task_id__dismiss_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/stats/available-to-spend": {
         parameters: {
             query?: never;
@@ -3915,6 +3976,12 @@ export interface components {
              */
             account_id?: string | null;
             /**
+             * Auto
+             * @description Make this line as soon as a salary is posted. Off: it waits for approval.
+             * @default false
+             */
+            auto: boolean;
+            /**
              * Goal Id
              * @description Set money aside for this goal (or move it to its account)
              */
@@ -3936,6 +4003,8 @@ export interface components {
         SalaryRuleResponse: {
             /** Account Id */
             account_id: string | null;
+            /** Auto */
+            auto: boolean;
             /**
              * Created At
              * Format: date-time
@@ -3964,6 +4033,8 @@ export interface components {
          * @description Partial update: how much a rule sends. The target can't change; delete the rule instead.
          */
         SalaryRuleUpdate: {
+            /** Auto */
+            auto?: boolean | null;
             mode?: components["schemas"]["SalaryRuleMode"] | null;
             /** Value */
             value?: number | string | null;
@@ -3983,6 +4054,18 @@ export interface components {
              * @description What this rule works out to, in the salary's currency
              */
             amount: string;
+            /**
+             * Auto
+             * @description Its rule makes it without asking
+             * @default false
+             */
+            auto: boolean;
+            /**
+             * Done
+             * @description Already made (its amount is in `made`, not in `total`)
+             * @default false
+             */
+            done: boolean;
             mode: components["schemas"]["SalaryRuleMode"];
             /**
              * Ok
@@ -4059,16 +4142,22 @@ export interface components {
             amount: string;
             /**
              * Applied
-             * @description True once the split has been made (undo it to redo it)
+             * @description True once any of the split has been made
              */
             applied: boolean;
+            /**
+             * Complete
+             * @description Every rule's line has been made: nothing is left to approve
+             * @default false
+             */
+            complete: boolean;
             /** Currency */
             currency: string;
             /** Items */
             items: components["schemas"]["SalarySplitItem"][];
             /**
              * Left
-             * @description What stays in the account (salary less total)
+             * @description What stays in the account (salary less made and total)
              */
             left: string;
             /**
@@ -4078,17 +4167,25 @@ export interface components {
             made?: components["schemas"]["SalarySplitMade"][];
             /**
              * Over
-             * @description True when the lines add up to more than the salary
+             * @description True when what is made and the lines to make pass the salary
              */
             over: boolean;
+            /** Salary Date */
+            salary_date?: string | null;
             /**
              * Salary Id
              * Format: uuid
              */
             salary_id: string;
             /**
+             * Title
+             * @description The salary's description, else its category
+             * @default
+             */
+            title: string;
+            /**
              * Total
-             * @description The lines that can be made, added up
+             * @description The lines still to make that can be made, added up
              */
             total: string;
         };
@@ -4104,6 +4201,31 @@ export interface components {
              * @description Transfers made between accounts
              */
             transfers: number;
+        };
+        /** SalarySplitTaskCount */
+        SalarySplitTaskCount: {
+            /**
+             * Count
+             * @description Salaries waiting for their split to be approved
+             */
+            count: number;
+        };
+        /**
+         * SalarySplitTaskResponse
+         * @description A salary waiting on the Pending screen, with its proposed split.
+         */
+        SalarySplitTaskResponse: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            plan: components["schemas"]["SalarySplitPlan"];
         };
         /**
          * SessionResponse
@@ -7350,6 +7472,75 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["SalaryRuleResponse"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_salary_split_tasks_api_v1_salary_split_tasks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalarySplitTaskResponse"][];
+                };
+            };
+        };
+    };
+    count_salary_split_tasks_api_v1_salary_split_tasks_count_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalarySplitTaskCount"];
+                };
+            };
+        };
+    };
+    dismiss_salary_split_task_api_v1_salary_split_tasks__task_id__dismiss_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
