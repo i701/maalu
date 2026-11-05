@@ -191,7 +191,6 @@
           "cash",
           "accounts",
           "card",
-          "debit_card",
           "savings",
           "prepaid",
           "investments",
@@ -1673,6 +1672,215 @@
           "ids"
         ],
         "title": "BulkUpdate",
+        "type": "object"
+      },
+      "CardCreate": {
+        "properties": {
+          "account_id": {
+            "description": "A debit card: the bank account it spends from. A credit card: its own account (group card), the one that holds what you owe.",
+            "format": "uuid",
+            "title": "Account Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/CardKind"
+          },
+          "last_digits": {
+            "anyOf": [
+              {
+                "pattern": "^\\d{4}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The last four digits, never the whole number",
+            "title": "Last Digits"
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "repay_account_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Credit cards only: the bank account it is repaid from",
+            "title": "Repay Account Id"
+          }
+        },
+        "required": [
+          "name",
+          "kind",
+          "account_id"
+        ],
+        "title": "CardCreate",
+        "type": "object"
+      },
+      "CardKind": {
+        "description": "A debit card spends from its bank account; a credit card is an account of its own (what you\nowe) that is repaid from a bank account.",
+        "enum": [
+          "debit",
+          "credit"
+        ],
+        "title": "CardKind",
+        "type": "string"
+      },
+      "CardRef": {
+        "description": "Compact form embedded in transaction responses.",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/CardKind"
+          },
+          "last_digits": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Digits"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "last_digits",
+          "kind"
+        ],
+        "title": "CardRef",
+        "type": "object"
+      },
+      "CardResponse": {
+        "properties": {
+          "account": {
+            "$ref": "#/components/schemas/AccountRef"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/CardKind"
+          },
+          "last_digits": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Digits"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "repay_account": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AccountRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "last_digits",
+          "kind",
+          "account",
+          "repay_account",
+          "created_at"
+        ],
+        "title": "CardResponse",
+        "type": "object"
+      },
+      "CardUpdate": {
+        "description": "Partial update. `last_digits` and `repay_account_id` can be set to null.",
+        "properties": {
+          "account_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Id"
+          },
+          "last_digits": {
+            "anyOf": [
+              {
+                "pattern": "^\\d{4}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Digits"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "repay_account_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repay Account Id"
+          }
+        },
+        "title": "CardUpdate",
         "type": "object"
       },
       "CategoryCreate": {
@@ -6147,6 +6355,19 @@
             "description": "Always positive. `type` decides the direction.",
             "title": "Amount"
           },
+          "card_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The card it was paid with. The transaction then takes the card's account (`account_id` may be left out, but must match if given) and, unless `payment_method` is given, the method of its kind. Not for transfers.",
+            "title": "Card Id"
+          },
           "category": {
             "anyOf": [
               {
@@ -6438,6 +6659,16 @@
             "title": "Base Amount",
             "type": "string"
           },
+          "card": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CardRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "category": {
             "title": "Category",
             "type": "string"
@@ -6690,6 +6921,7 @@
           "vendor",
           "subscription",
           "account",
+          "card",
           "to_account",
           "tags",
           "created_at",
@@ -6768,6 +7000,18 @@
               }
             ],
             "title": "Amount"
+          },
+          "card_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Card Id"
           },
           "category": {
             "anyOf": [
@@ -9155,6 +9399,255 @@
         "summary": "Update Line",
         "tags": [
           "budget"
+        ]
+      }
+    },
+    "/api/v1/cards": {
+      "get": {
+        "description": "Every card by name, optionally only the ones tied to an account.",
+        "operationId": "list_cards_api_v1_cards_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "account_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Account Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CardResponse"
+                  },
+                  "title": "Response List Cards Api V1 Cards Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List Cards",
+        "tags": [
+          "cards"
+        ]
+      },
+      "post": {
+        "description": "A card tied to an account. A debit card spends from its bank account; a credit card is its\nown account (group card) and may name the bank account it is repaid from.",
+        "operationId": "create_card_api_v1_cards_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CardCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Create Card",
+        "tags": [
+          "cards"
+        ]
+      }
+    },
+    "/api/v1/cards/{card_id}": {
+      "delete": {
+        "description": "Its transactions are kept, no longer linked to a card.",
+        "operationId": "delete_card_api_v1_cards__card_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "card_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Card Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Delete Card",
+        "tags": [
+          "cards"
+        ]
+      },
+      "get": {
+        "operationId": "get_card_api_v1_cards__card_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "card_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Card Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Get Card",
+        "tags": [
+          "cards"
+        ]
+      },
+      "patch": {
+        "operationId": "update_card_api_v1_cards__card_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "card_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Card Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CardUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Update Card",
+        "tags": [
+          "cards"
         ]
       }
     },
@@ -12717,6 +13210,23 @@
           },
           {
             "in": "query",
+            "name": "card_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Card Id"
+            }
+          },
+          {
+            "in": "query",
             "name": "category_id",
             "required": false,
             "schema": {
@@ -13282,6 +13792,23 @@
           },
           {
             "in": "query",
+            "name": "card_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Card Id"
+            }
+          },
+          {
+            "in": "query",
             "name": "category_id",
             "required": false,
             "schema": {
@@ -13670,6 +14197,23 @@
           },
           {
             "in": "query",
+            "name": "card_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Card Id"
+            }
+          },
+          {
+            "in": "query",
             "name": "category_id",
             "required": false,
             "schema": {
@@ -13956,6 +14500,23 @@
                 }
               ],
               "title": "Account Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "card_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Card Id"
             }
           },
           {
@@ -14389,6 +14950,23 @@
                 }
               ],
               "title": "Account Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "card_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Card Id"
             }
           },
           {

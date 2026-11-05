@@ -6,7 +6,7 @@
 
 The data is what a person with a 10,000 MVR salary would have a month after starting to track their
 money: last calendar month in full and this month so far, so the dashboard is never empty. Accounts
-at BML and MIB (current, savings, an emergency fund) plus a USD account and some cash; the bills
+at BML and MIB (current and savings) plus a USD account and some cash; the bills
 they pay every month (rent, internet, electricity, water, health insurance, phone, Netflix, iCloud,
 a VPS); the salary and how it was split; groceries, taxis and meals; a budget, savings goals, and
 the next bills and salary still to come. Everything goes
@@ -29,6 +29,7 @@ from app.config import settings
 from app.database import SessionLocal
 from app.enums import (
     AccountGroup,
+    CardKind,
     CategoryKind,
     IntervalUnit,
     PaymentMethod,
@@ -40,6 +41,7 @@ from app.schemas import (
     AccountCreate,
     BudgetLineCreate,
     BudgetSettingsUpdate,
+    CardCreate,
     GoalCreate,
     GoalEntryCreate,
     SalaryRuleCreate,
@@ -52,6 +54,7 @@ from app.schemas import (
 from app.services import (
     AccountService,
     BudgetService,
+    CardService,
     CategoryService,
     GoalService,
     SalarySplitService,
@@ -79,8 +82,7 @@ ACCOUNTS = [
     ("bml_save", AccountGroup.SAVINGS, "BML Savings", "3000", BASE, "BML", "7730000000002"),
     ("usd", AccountGroup.ACCOUNTS, "BML USD", "10", "USD", "BML", "7730000000003"),
     ("mib", AccountGroup.ACCOUNTS, "MIB Current", "400", BASE, "MIB", "90101400000001000"),
-    ("mib_save", AccountGroup.SAVINGS, "MIB Savings", "5200", BASE, "MIB", "90101400000002000"),
-    ("fund", AccountGroup.SAVINGS, "MIB Emergency Fund", "7500", BASE, "MIB", "90101400000003000"),
+    ("mib_save", AccountGroup.SAVINGS, "MIB Savings", "6500", BASE, "MIB", "90101400000002000"),
     ("cash", AccountGroup.CASH, "Cash", "300", BASE, None, None),
 ]
 
@@ -274,6 +276,16 @@ async def seed(
         )
     await _categories(db, uid)
 
+    # their debit cards: each spends from its bank account (the card has no balance of its own)
+    cards = {}
+    for key, name, digits in (("bml", "BML Visa debit", "4164"), ("mib", "MIB Visa debit", "2815")):
+        cards[key] = await CardService(db).create(
+            uid,
+            CardCreate(
+                name=name, kind=CardKind.DEBIT, last_digits=digits, account_id=accounts[key].id
+            ),
+        )
+
     counts = {"income": 0, "expense": 0, "transfer": 0}
 
     async def add(**fields) -> Transaction:
@@ -304,6 +316,7 @@ async def seed(
             transaction_time=_clock(rng, *hours),
             vendor_name=vendor,
             account_id=accounts[account].id,
+            card_id=cards[account].id if method is DEBIT and account in cards else None,
             description=note,
             **_spot(vendor, rng),
         )
@@ -316,7 +329,7 @@ async def seed(
             name="Emergency fund",
             target_amount=Decimal("30000"),
             monthly_amount=Decimal("1000"),
-            account_id=accounts["fund"].id,
+            account_id=accounts["mib_save"].id,
         ),
     )
     await goals.create(
@@ -339,7 +352,7 @@ async def seed(
         ),
     )
     split = SalarySplitService(db)
-    for account, amount in (("fund", "1000"), ("bml_save", "500")):
+    for account, amount in (("mib_save", "1000"), ("bml_save", "500")):
         await split.create_rule(
             uid,
             SalaryRuleCreate(
@@ -499,11 +512,11 @@ async def seed(
     await add(
         type=TransactionType.EXPENSE,
         amount=Decimal("385"),
-        payment_method=TRANSFER,
+        payment_method=DEBIT,
         category="Gift cards",
         transaction_date=day(last_month, 8),
         vendor_name="Gift Cards MV",
-        account_id=accounts["bml"].id,
+        card_id=cards["bml"].id,
         description="Apple gift card ($25)",
     )
     # the next salary is expected on the 1st

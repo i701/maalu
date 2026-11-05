@@ -7,6 +7,7 @@ from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator, m
 
 from app.enums import CategoryKind, PaymentMethod, TransactionType
 from app.schemas.account import AccountRef
+from app.schemas.card import CardRef
 from app.schemas.group import GroupRef
 from app.schemas.subscription import SubscriptionRef
 from app.schemas.tag import TagNames, TagRef
@@ -130,6 +131,12 @@ class TransactionCreate(VendorRef):
         description="Income/expense: optional, and the transaction uses its currency. "
         "Transfer: the account the money leaves.",
     )
+    card_id: uuid.UUID | None = Field(
+        default=None,
+        description="The card it was paid with. The transaction then takes the card's account "
+        "(`account_id` may be left out, but must match if given) and, unless `payment_method` is "
+        "given, the method of its kind. Not for transfers.",
+    )
     to_account_id: uuid.UUID | None = Field(
         default=None, description="Transfers only: the account the money arrives in."
     )
@@ -159,6 +166,8 @@ class TransactionCreate(VendorRef):
                 raise ValueError("Choose two different accounts")
             if self.vendor_id or self.vendor_name or self.subscription_id:
                 raise ValueError("Transfers can't have a vendor or subscription")
+            if self.card_id:
+                raise ValueError("A transfer is not paid with a card")
             if self.splits:
                 raise ValueError("Transfers can't be split")
             return self
@@ -166,7 +175,7 @@ class TransactionCreate(VendorRef):
         if self.refund_of_id is None:
             if not self.category and not self.splits:
                 raise ValueError("category is required")
-            if self.payment_method is None:
+            if self.payment_method is None and self.card_id is None:
                 raise ValueError("payment_method is required")
         if self.to_account_id is not None or self.to_amount is not None:
             raise ValueError("Only transfers have to_account_id / to_amount")
@@ -189,6 +198,7 @@ class TransactionUpdate(VendorRef):
     amount: Amount | None = None
     subscription_id: uuid.UUID | None = None  # explicit null unlinks
     account_id: uuid.UUID | None = None  # explicit null unlinks
+    card_id: uuid.UUID | None = None  # explicit null unlinks
     to_account_id: uuid.UUID | None = None  # explicit null unlinks
     to_amount: Amount | None = None
     refund_of_id: uuid.UUID | None = Field(
@@ -282,6 +292,7 @@ class TransactionResponse(BaseModel):
     vendor: VendorResponse | None
     subscription: SubscriptionRef | None
     account: AccountRef | None
+    card: CardRef | None
     to_account: AccountRef | None
     tags: list[TagRef]
     created_at: datetime

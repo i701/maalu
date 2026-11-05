@@ -1,4 +1,5 @@
 import { accountIdentity } from "#/lib/accounts";
+import { cardText } from "#/lib/cards";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
@@ -16,6 +17,7 @@ import {
 	PAYMENT_METHOD_LABELS,
 	TRANSACTION_TYPES,
 	TRANSACTION_TYPE_LABELS,
+	type Card,
 	type PaymentMethod,
 	type Tag,
 	type TransactionType,
@@ -31,6 +33,7 @@ export type TransactionFilterValues = {
 	type?: TransactionType;
 	payment_method?: PaymentMethod;
 	account_id?: string;
+	card_id?: string;
 	vendor_id?: string;
 	category_id?: string;
 	tag_ids?: string[];
@@ -97,6 +100,7 @@ export default function TransactionFilters({
 	selectedAccount,
 	selectedVendor,
 	selectedCategory,
+	cards,
 	tags,
 	baseCurrency,
 	activeCount,
@@ -107,6 +111,8 @@ export default function TransactionFilters({
 	selectedAccount: RemoteOption | null;
 	selectedVendor: RemoteOption | null;
 	selectedCategory: RemoteOption | null;
+	/** Every card, to filter by the one a purchase was paid with. */
+	cards: Card[];
 	/** Every tag, to pick from. */
 	tags: Tag[];
 	baseCurrency: string;
@@ -163,6 +169,22 @@ export default function TransactionFilters({
 				search={searchAccountOptions}
 				onChange={(option) => onChange({ account_id: option?.id })}
 			/>
+
+			{cards.length > 0 && (
+				<TextField
+					select
+					label="Card"
+					value={filters.card_id ?? ""}
+					onChange={(e) => onChange({ card_id: e.target.value || undefined })}
+				>
+					<MenuItem value="">Any card</MenuItem>
+					{cards.map((c) => (
+						<MenuItem key={c.id} value={c.id}>
+							{cardText(c)}
+						</MenuItem>
+					))}
+				</TextField>
+			)}
 
 			<RemoteAutocomplete
 				label="Vendor"

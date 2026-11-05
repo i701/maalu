@@ -1,4 +1,5 @@
 import type { Transaction } from "#/types/api";
+import { cardText } from "./cards";
 
 /** Shared by the transaction table, its cards and the upcoming list, so all show the same facts. */
 export function txTitle(t: Transaction) {
@@ -18,7 +19,11 @@ export function txSubtitle(t: Transaction) {
 	return (
 		t.type === "transfer"
 			? [t.description]
-			: [t.vendor || t.splits.length > 1 ? txCategories(t) : null, t.description]
+			: [
+					t.vendor || t.splits.length > 1 ? txCategories(t) : null,
+					t.description,
+					t.card ? cardText(t.card) : null,
+				]
 	)
 		.filter(Boolean)
 		.join(" · ");

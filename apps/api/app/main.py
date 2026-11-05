@@ -9,6 +9,7 @@ from app.routers import (
     auth,
     backup,
     budget,
+    card,
     category,
     currency,
     goal,
@@ -52,6 +53,7 @@ def create_app() -> FastAPI:
     app.include_router(salary.router, prefix="/api/v1")
     app.include_router(budget.router, prefix="/api/v1")
     app.include_router(category.router, prefix="/api/v1")
+    app.include_router(card.router, prefix="/api/v1")
     app.include_router(tag.router, prefix="/api/v1")
     app.include_router(template.router, prefix="/api/v1")
     app.include_router(vendor.router, prefix="/api/v1")

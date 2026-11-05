@@ -3,6 +3,7 @@ import Button from "@mui/material/Button";
 import { useState } from "react";
 import type {
 	Account,
+	Card,
 	Category,
 	Subscription,
 	Tag,
@@ -24,6 +25,7 @@ import TableCard from "../TableCard";
 import TablePager from "../TablePager";
 import TableToolbar from "../TableToolbar";
 import TransactionForm from "../TransactionForm";
+import type { TransactionSeed } from "../transaction-form/request";
 import AccountTransactions from "./AccountTransactions";
 
 export type AccountFilters = {
@@ -41,6 +43,7 @@ export type FormLists = {
 	categories: Category[];
 	subscriptions: Subscription[];
 	accounts: Account[];
+	cards: Card[];
 	currencies: string[];
 	baseCurrency: string;
 };
@@ -55,6 +58,7 @@ export default function AccountTransactionList({
 	filters,
 	lists,
 	adding,
+	seed,
 	onAddingDone,
 	onFilters,
 	onPage,
@@ -69,6 +73,8 @@ export default function AccountTransactionList({
 	lists: FormLists;
 	/** The "Add transaction" button above was pressed */
 	adding: boolean;
+	/** Pre-fills the new transaction, e.g. a credit card repayment */
+	seed?: TransactionSeed;
 	onAddingDone: () => void;
 	onFilters: (change: AccountFilters) => void;
 	onPage: (page: number) => void;
@@ -155,15 +161,52 @@ export default function AccountTransactionList({
 				</TableCard>
 			</PendingOverlay>
 
+			<TransactionDialogs
+				account={account}
+				lists={lists}
+				editing={editing}
+				adding={adding}
+				seed={seed}
+				deleting={deleting}
+				onEditingDone={() => {
+					setEditing(null);
+					onAddingDone();
+				}}
+				onDeletingDone={() => setDeleting(null)}
+			/>
+		</>
+	);
+}
+
+/** The add / edit form and the delete confirmation for the list above. */
+function TransactionDialogs({
+	account,
+	lists,
+	editing,
+	adding,
+	seed,
+	deleting,
+	onEditingDone,
+	onDeletingDone,
+}: {
+	account: Account;
+	lists: FormLists;
+	editing: Transaction | null;
+	adding: boolean;
+	seed?: TransactionSeed;
+	deleting: Transaction | null;
+	onEditingDone: () => void;
+	onDeletingDone: () => void;
+}) {
+	return (
+		<>
 			{(adding || editing) && (
 				<TransactionForm
 					transaction={editing ?? undefined}
+					seed={editing ? undefined : seed}
 					defaultAccountId={account.id}
 					{...lists}
-					onClose={() => {
-						setEditing(null);
-						onAddingDone();
-					}}
+					onClose={onEditingDone}
 				/>
 			)}
 			{deleting && (
@@ -171,7 +214,7 @@ export default function AccountTransactionList({
 					title="Delete transaction"
 					message={`Move "${txTitle(deleting)}" to the trash? You can restore it from there.`}
 					onConfirm={() => deleteTransactionFn({ data: { id: deleting.id } })}
-					onClose={() => setDeleting(null)}
+					onClose={onDeletingDone}
 				/>
 			)}
 		</>

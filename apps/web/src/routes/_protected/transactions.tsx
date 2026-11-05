@@ -74,6 +74,8 @@ import { transactionCount } from "#/lib/bulk-message";
 import { type SelectionState, useSelection } from "#/lib/selection";
 import { unwrap } from "#/lib/unwrap";
 import { getAccountFn, listAccountsFn } from "#/server/accounts";
+import { listCardsFn } from "#/server/cards";
+import { cardFilterLabel } from "#/lib/cards";
 import { listCurrenciesFn } from "#/server/currencies";
 import { listSubscriptionsFn } from "#/server/subscriptions";
 import { listSalaryRulesFn } from "#/server/salary";
@@ -144,6 +146,7 @@ const searchSchema = z.object({
 	tag_ids: z.array(z.uuid()).max(10).optional().catch(undefined),
 	tag_match: z.enum(["any", "all"]).optional().catch(undefined),
 	account_id: z.uuid().optional().catch(undefined),
+	card_id: z.uuid().optional().catch(undefined),
 	min_amount: decimal,
 	max_amount: decimal,
 	date_from: z.iso.date().optional().catch(undefined),
@@ -165,6 +168,7 @@ export const Route = createFileRoute("/_protected/transactions")({
 				deps.category_id ||
 				deps.tag_ids?.length ||
 				deps.account_id ||
+				deps.card_id ||
 				deps.min_amount ||
 				deps.max_amount ||
 				deps.date_from ||
@@ -190,6 +194,7 @@ export const Route = createFileRoute("/_protected/transactions")({
 			suggestions,
 			groups,
 			salaryRules,
+			cards,
 		] = await Promise.all([
 			listTransactionsFn({ data: deps }),
 			listVendorsFn(),
@@ -215,6 +220,8 @@ export const Route = createFileRoute("/_protected/transactions")({
 			listGroupsFn(),
 			// whether adding a salary should offer to split it
 			listSalaryRulesFn(),
+			// to pick the card a purchase was paid with, and to filter by it
+			listCardsFn(),
 		]);
 		const rows = unwrap(transactions);
 		const last = lastPageIfOutOfRange({
@@ -232,6 +239,7 @@ export const Route = createFileRoute("/_protected/transactions")({
 			vendors: unwrap(vendors),
 			subscriptions: unwrap(subscriptions),
 			accounts: unwrap(accounts),
+			cards: unwrap(cards),
 			// switched off in Settings: no templates to start from (they stay on the Templates page)
 			templates: me.ok && !me.data.start_from_template ? [] : unwrap(templates),
 			allTags: unwrap(allTags),
@@ -856,6 +864,7 @@ function TransactionsPage() {
 		vendors,
 		subscriptions,
 		accounts,
+		cards,
 		templates,
 		allTags,
 		allGroups,
@@ -907,6 +916,7 @@ function TransactionsPage() {
 	const activeFilters = buildActiveFilters({
 		filters: filterValues,
 		selectedAccount,
+		selectedCard: cardFilterLabel(cards, filterValues.card_id),
 		selectedVendor,
 		selectedCategory,
 		tagNames: tagNamesOf(filterValues.tag_ids, allTags),
@@ -920,6 +930,7 @@ function TransactionsPage() {
 			selectedAccount={selectedAccount}
 			selectedVendor={selectedVendor}
 			selectedCategory={selectedCategory}
+			cards={cards}
 			tags={allTags}
 			baseCurrency={user.base_currency}
 			activeCount={activeCount}
@@ -1086,6 +1097,7 @@ function TransactionsPage() {
 					categories={allCategories}
 					subscriptions={subscriptions}
 					accounts={accounts}
+					cards={cards}
 					currencies={currencies}
 					baseCurrency={user.base_currency}
 					onCreated={salary.afterCreate}

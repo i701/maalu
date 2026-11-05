@@ -7,10 +7,12 @@ import {
 	PAYMENT_METHODS,
 	PAYMENT_METHOD_LABELS,
 	type AccountRef,
+	type Card,
 	type Category,
 	type PaymentMethod,
 	type TransactionType,
 } from "#/types/api";
+import { cardText } from "#/lib/cards";
 import CategoryField from "../CategoryField";
 import CurrencyField from "../CurrencyField";
 import RateField from "../RateField";
@@ -26,6 +28,9 @@ export default function OrdinaryFields({
 	accounts,
 	accountId,
 	onPickAccount,
+	cards,
+	cardId,
+	onPickCard,
 	currencies,
 	currency,
 	onCurrencyChange,
@@ -45,6 +50,10 @@ export default function OrdinaryFields({
 	accounts: AccountRef[];
 	accountId: string;
 	onPickAccount: (id: string) => void;
+	/** Every card; only the ones on the chosen account are offered once one is picked. */
+	cards: Card[];
+	cardId: string;
+	onPickCard: (id: string) => void;
 	currencies: string[];
 	currency: string;
 	onCurrencyChange: (currency: string) => void;
@@ -107,6 +116,27 @@ export default function OrdinaryFields({
 					{accountMenuItems(accounts)}
 				</TextField>
 			</Cell>
+
+			{cards.length > 0 && (
+				<Cell size={12} fadeIn={switched}>
+					<TextField
+						select
+						label="Card"
+						value={cardId}
+						onChange={(e) => onPickCard(e.target.value)}
+						helperText="Optional. A card spends from its own account"
+					>
+						<MenuItem value="">None</MenuItem>
+						{cards
+							.filter((c) => !accountId || c.account.id === accountId)
+							.map((c) => (
+								<MenuItem key={c.id} value={c.id}>
+									{cardText(c)} · {c.account.name}
+								</MenuItem>
+							))}
+					</TextField>
+				</Cell>
+			)}
 
 			<Cell size={{ xs: 12, sm: 6 }} fadeIn={switched}>
 				{account ? (

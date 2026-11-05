@@ -7,7 +7,6 @@ export const SUGGESTED_PAYMENT_METHOD: Record<AccountGroup, PaymentMethod> = {
 	cash: "cash",
 	accounts: "bank_transfer",
 	card: "credit_card",
-	debit_card: "debit_card",
 	savings: "bank_transfer",
 	prepaid: "other",
 	investments: "other",
@@ -15,6 +14,26 @@ export const SUGGESTED_PAYMENT_METHOD: Record<AccountGroup, PaymentMethod> = {
 	loan: "other",
 	insurance: "other",
 	others: "other",
+};
+
+/**
+ * What each group means, shown when one is chosen. An account is a place that holds a balance. A
+ * debit card is not one: it spends from its bank account, so it is paid with by choosing "Debit
+ * card" as the payment method, and only a credit card (what you owe) is an account of its own.
+ */
+export const GROUP_HELP: Record<AccountGroup, string> = {
+	cash: "Money you hold as notes and coins: a wallet, a drawer, a safe.",
+	accounts:
+		"A bank account you keep money in and pay from, such as a current account. Its debit card is part of it: spend with the card and the money comes out of this account.",
+	card: "A credit card: you spend the bank's money and pay it back later, so the balance is what you owe. Repay it with a transfer from your bank account. Set a credit limit to see how much is used.",
+	savings:
+		"A bank savings account, or money you keep apart on purpose. Goals can follow its balance.",
+	prepaid: "A top-up balance you spend down: phone credit, a transport card, a gift card.",
+	investments: "Money invested in shares, funds or a business, whose value you track here.",
+	overdrafts: "An overdraft on a bank account: money you owe the bank, up to a limit.",
+	loan: "Money you owe and pay back in instalments, like a car or personal loan.",
+	insurance: "A policy with a cash value, or a premium balance you keep.",
+	others: "Anything that holds money and does not fit the rest.",
 };
 
 /** Banks to suggest when typing an account's bank, on top of the ones already used. */

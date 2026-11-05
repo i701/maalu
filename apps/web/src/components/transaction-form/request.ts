@@ -7,6 +7,7 @@ import type { SplitsState } from "./useSplits";
 import type {
 	Account,
 	AccountRef,
+	CardRef,
 	PaymentMethod,
 	Subscription,
 	Transaction,
@@ -29,6 +30,7 @@ export type TransactionSeed = Pick<
 	| "exchange_rate"
 	| "subscription"
 	| "account"
+	| "card"
 	| "to_account"
 > & { vendorName: string; tags: string[]; location: PlaceValue | null };
 
@@ -51,6 +53,7 @@ export function seedFromTransaction(t: Transaction): TransactionSeed {
 		exchange_rate: "",
 		subscription: t.subscription,
 		account: t.account,
+		card: t.card,
 		to_account: t.to_account,
 		vendorName: t.vendor?.name ?? "",
 		tags: t.tags.map((x) => x.name),
@@ -71,6 +74,7 @@ export function seedFromTemplate(t: TransactionTemplate): TransactionSeed {
 		exchange_rate: "",
 		subscription: null,
 		account: t.account,
+		card: null,
 		to_account: t.to_account,
 		vendorName: t.vendor ?? "",
 		tags: t.tags.map((x) => x.name),
@@ -94,6 +98,7 @@ export function seedAfterSave(f: FormData, s: State): TransactionSeed {
 		exchange_rate: "",
 		subscription: s.subscription,
 		account: s.account,
+		card: s.type === "transfer" ? null : s.card,
 		to_account: s.type === "transfer" ? s.toAccount : null,
 		vendorName: s.type === "transfer" ? "" : text(f, "vendor"),
 		tags: tagNames(f),
@@ -144,6 +149,8 @@ type State = {
 	accountId: string;
 	toAccountId: string;
 	account: AccountRef | null;
+	/** The card it was paid with, when one is picked (not for transfers). */
+	card: CardRef | null;
 	toAccount: AccountRef | null;
 	crossCurrency: boolean;
 	foreign: boolean;
@@ -155,6 +162,34 @@ type State = {
 	/** Where it happened, if marked on the map (not for transfers). */
 	location: PlaceValue | null;
 };
+
+/** The form's controlled values (what `useFormFields` holds) as the state a request is built from. */
+export function stateFrom(
+	fields: Pick<
+		State,
+		| "type"
+		| "accountId"
+		| "toAccountId"
+		| "account"
+		| "card"
+		| "toAccount"
+		| "crossCurrency"
+		| "foreign"
+		| "subscription"
+		| "planned"
+		| "location"
+	>,
+	transaction: Transaction | undefined,
+	splits: SplitsState,
+): State {
+	const transfer = fields.type === "transfer";
+	return {
+		...fields,
+		transaction,
+		splits: !transfer && splits.enabled ? splits : null,
+		location: transfer ? null : fields.location,
+	};
+}
 
 const text = (f: FormData, k: string) => String(f.get(k) ?? "").trim();
 const tagNames = (f: FormData) => f.getAll("tags").map((v) => String(v));
@@ -219,7 +254,7 @@ function splitPayload(splits: SplitsState) {
 }
 
 function ordinaryRequest(f: FormData, s: State): TransactionRequest {
-	const { transaction, accountId, account, subscription } = s;
+	const { transaction, accountId, account, subscription, card } = s;
 	const description = text(f, "description");
 	const vendorName = text(f, "vendor");
 	const split = s.splits ? splitPayload(s.splits) : null;
@@ -248,6 +283,7 @@ function ordinaryRequest(f: FormData, s: State): TransactionRequest {
 						vendor_name: vendorName || undefined,
 						subscription_id: subscription?.id,
 						account_id: accountId || undefined,
+						card_id: card?.id,
 						tags: tagNames(f),
 						...newPlacePayload(s.location),
 					},
@@ -272,6 +308,9 @@ function ordinaryRequest(f: FormData, s: State): TransactionRequest {
 						...(accountId === (transaction.account?.id ?? "")
 							? {}
 							: { account_id: accountId || null }),
+						...(card?.id === (transaction.card?.id ?? undefined)
+							? {}
+							: { card_id: card?.id ?? null }),
 						...(subscription?.id === (transaction.subscription?.id ?? undefined)
 							? {}
 							: { subscription_id: subscription?.id ?? null }),
@@ -307,6 +346,7 @@ export function initialValues(
 			currency: defaultAccount.currency,
 			paymentMethod: SUGGESTED_PAYMENT_METHOD[defaultAccount.group],
 			subscription: null,
+			cardId: "",
 		};
 	const ordinary = seed && seed.type !== "transfer" ? seed : undefined;
 	return {
@@ -316,6 +356,7 @@ export function initialValues(
 		currency: ordinary?.currency ?? baseCurrency,
 		paymentMethod: ordinary?.payment_method ?? ("cash" as PaymentMethod),
 		subscription: seed?.subscription ?? null,
+		cardId: seed?.card?.id ?? "",
 	};
 }
 

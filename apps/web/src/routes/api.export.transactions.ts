@@ -10,6 +10,7 @@ const FILTERS = [
 	"category_id",
 	"tag_match",
 	"account_id",
+	"card_id",
 	"subscription_id",
 	"currency",
 	"min_amount",

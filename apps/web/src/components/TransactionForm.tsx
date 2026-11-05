@@ -9,6 +9,7 @@ import {
 	TRANSACTION_TYPES,
 	TRANSACTION_TYPE_LABELS,
 	type Account,
+	type Card,
 	type Category,
 	type Subscription,
 	type Tag,
@@ -44,6 +45,7 @@ import {
 	buildTransactionRequest,
 	seedAfterSave,
 	seedFromTemplate,
+	stateFrom,
 	subscriptionChoices,
 	type TransactionSeed,
 } from "./transaction-form/request";
@@ -60,6 +62,7 @@ export default function TransactionForm({
 	categories,
 	subscriptions,
 	accounts: activeAccounts,
+	cards,
 	currencies,
 	baseCurrency,
 	onClose,
@@ -79,6 +82,8 @@ export default function TransactionForm({
 	categories: Category[];
 	subscriptions: Subscription[];
 	accounts: Account[];
+	/** Every card, to pick the one a purchase was paid with. */
+	cards: Card[];
 	currencies: string[];
 	baseCurrency: string;
 	onClose: () => void;
@@ -96,6 +101,7 @@ export default function TransactionForm({
 		transaction,
 		startSeed,
 		accounts,
+		cards,
 		baseCurrency,
 		defaultAccount: activeAccounts.find((a) => a.id === defaultAccountId),
 	});
@@ -105,8 +111,6 @@ export default function TransactionForm({
 		isTransfer,
 		accountId,
 		toAccountId,
-		account,
-		toAccount,
 		currency,
 		effectiveCurrency,
 		foreign,
@@ -145,20 +149,7 @@ export default function TransactionForm({
 		setLocalError(null);
 	}
 
-	const formState = () => ({
-		type,
-		transaction,
-		accountId,
-		toAccountId,
-		account,
-		toAccount,
-		crossCurrency,
-		foreign,
-		subscription,
-		planned,
-		splits: type !== "transfer" && splits.enabled ? splits : null,
-		location: type === "transfer" ? null : location,
-	});
+	const formState = () => stateFrom(fields, transaction, splits);
 
 	async function submit(e: FormEvent<HTMLFormElement>) {
 		e.preventDefault();
@@ -243,6 +234,9 @@ export default function TransactionForm({
 							accounts={accounts}
 							accountId={accountId}
 							onPickAccount={fields.pickAccount}
+							cards={cards}
+							cardId={fields.cardId}
+							onPickCard={fields.pickCard}
 							currencies={currencies}
 							currency={currency}
 							onCurrencyChange={fields.setCurrency}

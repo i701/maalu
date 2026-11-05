@@ -518,6 +518,53 @@ export interface paths {
         patch: operations["update_line_api_v1_budget_lines__line_id__patch"];
         trace?: never;
     };
+    "/api/v1/cards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Cards
+         * @description Every card by name, optionally only the ones tied to an account.
+         */
+        get: operations["list_cards_api_v1_cards_get"];
+        put?: never;
+        /**
+         * Create Card
+         * @description A card tied to an account. A debit card spends from its bank account; a credit card is its
+         *     own account (group card) and may name the bank account it is repaid from.
+         */
+        post: operations["create_card_api_v1_cards_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cards/{card_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Card */
+        get: operations["get_card_api_v1_cards__card_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Card
+         * @description Its transactions are kept, no longer linked to a card.
+         */
+        delete: operations["delete_card_api_v1_cards__card_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Card */
+        patch: operations["update_card_api_v1_cards__card_id__patch"];
+        trace?: never;
+    };
     "/api/v1/categories": {
         parameters: {
             query?: never;
@@ -2144,7 +2191,7 @@ export interface components {
          * AccountGroup
          * @enum {string}
          */
-        AccountGroup: "cash" | "accounts" | "card" | "debit_card" | "savings" | "prepaid" | "investments" | "overdrafts" | "loan" | "insurance" | "others";
+        AccountGroup: "cash" | "accounts" | "card" | "savings" | "prepaid" | "investments" | "overdrafts" | "loan" | "insurance" | "others";
         /**
          * AccountRef
          * @description Compact form embedded in transaction responses.
@@ -2814,6 +2861,85 @@ export interface components {
              * @description By name: found or created
              */
             vendor_name?: string | null;
+        };
+        /** CardCreate */
+        CardCreate: {
+            /**
+             * Account Id
+             * Format: uuid
+             * @description A debit card: the bank account it spends from. A credit card: its own account (group card), the one that holds what you owe.
+             */
+            account_id: string;
+            kind: components["schemas"]["CardKind"];
+            /**
+             * Last Digits
+             * @description The last four digits, never the whole number
+             */
+            last_digits?: string | null;
+            /** Name */
+            name: string;
+            /**
+             * Repay Account Id
+             * @description Credit cards only: the bank account it is repaid from
+             */
+            repay_account_id?: string | null;
+        };
+        /**
+         * CardKind
+         * @description A debit card spends from its bank account; a credit card is an account of its own (what you
+         *     owe) that is repaid from a bank account.
+         * @enum {string}
+         */
+        CardKind: "debit" | "credit";
+        /**
+         * CardRef
+         * @description Compact form embedded in transaction responses.
+         */
+        CardRef: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            kind: components["schemas"]["CardKind"];
+            /** Last Digits */
+            last_digits: string | null;
+            /** Name */
+            name: string;
+        };
+        /** CardResponse */
+        CardResponse: {
+            account: components["schemas"]["AccountRef"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            kind: components["schemas"]["CardKind"];
+            /** Last Digits */
+            last_digits: string | null;
+            /** Name */
+            name: string;
+            repay_account: components["schemas"]["AccountRef"] | null;
+        };
+        /**
+         * CardUpdate
+         * @description Partial update. `last_digits` and `repay_account_id` can be set to null.
+         */
+        CardUpdate: {
+            /** Account Id */
+            account_id?: string | null;
+            /** Last Digits */
+            last_digits?: string | null;
+            /** Name */
+            name?: string | null;
+            /** Repay Account Id */
+            repay_account_id?: string | null;
         };
         /** CategoryCreate */
         CategoryCreate: {
@@ -4756,6 +4882,11 @@ export interface components {
              * @description Always positive. `type` decides the direction.
              */
             amount: number | string;
+            /**
+             * Card Id
+             * @description The card it was paid with. The transaction then takes the card's account (`account_id` may be left out, but must match if given) and, unless `payment_method` is given, the method of its kind. Not for transfers.
+             */
+            card_id?: string | null;
             /** Category */
             category?: string | null;
             /**
@@ -4854,6 +4985,7 @@ export interface components {
             attachment_count: number;
             /** Base Amount */
             base_amount: string;
+            card: components["schemas"]["CardRef"] | null;
             /** Category */
             category: string;
             /**
@@ -4981,6 +5113,8 @@ export interface components {
             account_id?: string | null;
             /** Amount */
             amount?: number | string | null;
+            /** Card Id */
+            card_id?: string | null;
             /** Category */
             category?: string | null;
             /** Currency */
@@ -6230,6 +6364,165 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BudgetResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_cards_api_v1_cards_get: {
+        parameters: {
+            query?: {
+                account_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_card_api_v1_cards_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CardCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_card_api_v1_cards__card_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                card_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_card_api_v1_cards__card_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                card_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_card_api_v1_cards__card_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                card_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CardUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardResponse"];
                 };
             };
             /** @description Validation Error */
@@ -8286,6 +8579,7 @@ export interface operations {
                 vendor_id?: string | null;
                 subscription_id?: string | null;
                 account_id?: string | null;
+                card_id?: string | null;
                 category_id?: string | null;
                 /** @description Repeat to filter by several tags; see `tag_match` */
                 tag_id?: string[] | null;
@@ -8506,6 +8800,7 @@ export interface operations {
                 vendor_id?: string | null;
                 subscription_id?: string | null;
                 account_id?: string | null;
+                card_id?: string | null;
                 category_id?: string | null;
                 /** @description Repeat to filter by several tags; see `tag_match` */
                 tag_id?: string[] | null;
@@ -8592,6 +8887,7 @@ export interface operations {
                 vendor_id?: string | null;
                 subscription_id?: string | null;
                 account_id?: string | null;
+                card_id?: string | null;
                 category_id?: string | null;
                 /** @description Repeat to filter by several tags; see `tag_match` */
                 tag_id?: string[] | null;
@@ -8643,6 +8939,7 @@ export interface operations {
                 vendor_id?: string | null;
                 subscription_id?: string | null;
                 account_id?: string | null;
+                card_id?: string | null;
                 category_id?: string | null;
                 /** @description Repeat to filter by several tags; see `tag_match` */
                 tag_id?: string[] | null;
@@ -8762,6 +9059,7 @@ export interface operations {
                 vendor_id?: string | null;
                 subscription_id?: string | null;
                 account_id?: string | null;
+                card_id?: string | null;
                 category_id?: string | null;
                 /** @description Repeat to filter by several tags; see `tag_match` */
                 tag_id?: string[] | null;
@@ -9665,11 +9963,12 @@ export const pathsApiV1TransactionsCategoriesGetParametersQueryTag_matchValues: 
 export const pathsApiV1TransactionsExportGetParametersQueryTag_matchValues: ReadonlyArray<FlattenedDeepRequired<paths>["/api/v1/transactions/export"]["get"]["parameters"]["query"]["tag_match"]> = ["any", "all"];
 export const pathsApiV1TransactionsIdsGetParametersQueryTag_matchValues: ReadonlyArray<FlattenedDeepRequired<paths>["/api/v1/transactions/ids"]["get"]["parameters"]["query"]["tag_match"]> = ["any", "all"];
 export const pathsApiV1TransactionsSummaryGetParametersQueryTag_matchValues: ReadonlyArray<FlattenedDeepRequired<paths>["/api/v1/transactions/summary"]["get"]["parameters"]["query"]["tag_match"]> = ["any", "all"];
-export const accountGroupValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AccountGroup"]> = ["cash", "accounts", "card", "debit_card", "savings", "prepaid", "investments", "overdrafts", "loan", "insurance", "others"];
+export const accountGroupValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AccountGroup"]> = ["cash", "accounts", "card", "savings", "prepaid", "investments", "overdrafts", "loan", "insurance", "others"];
 export const budgetFixedLineStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BudgetFixedLine"]["state"]> = ["upcoming", "active", "ended"];
 export const budgetFixedLineStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BudgetFixedLine"]["status"]> = ["ok", "warning", "over"];
 export const budgetLineResponseStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BudgetLineResponse"]["status"]> = ["ok", "warning", "over"];
 export const budgetTotalsStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BudgetTotals"]["status"]> = ["ok", "warning", "over"];
+export const cardKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CardKind"]> = ["debit", "credit"];
 export const categoryCreateColorAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CategoryCreate"]["color"]> = ["blue", "green", "orange", "violet", "pink", "amber", "lime", "slate"];
 export const categoryKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CategoryKind"]> = ["need", "want"];
 export const categoryMonthRowTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CategoryMonthRow"]["type"]> = ["income", "expense"];

@@ -121,6 +121,18 @@ async def test_links_survive_the_new_ids(client, signup):
     assert any(r["parent_id"] for r in again["categories"])
 
 
+async def test_an_old_backup_with_a_debit_card_account_restores_it_as_an_account(client, signup):
+    raw = await seeded_backup(client)
+
+    def old_group(tables):
+        tables["accounts"][0]["group"] = "debit_card"  # a group that no longer exists
+
+    headers = await signup("legacy@example.com")
+    assert (await restore(client, headers, with_tables(raw, old_group))).status_code == 200
+    names = {a["group"] for a in (await client.get("/api/v1/accounts", headers=headers)).json()}
+    assert "debit_card" not in names
+
+
 async def test_the_same_file_can_go_into_two_accounts(client, signup):
     raw = await seeded_backup(client)
     for email in ("one@example.com", "two@example.com"):

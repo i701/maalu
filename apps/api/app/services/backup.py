@@ -37,6 +37,7 @@ OWNED = (
     "accounts",
     "budget_lines",
     "budgets",
+    "cards",
     "categories",
     "goals",
     "import_aliases",
@@ -64,6 +65,9 @@ CHILDREN = {
 }
 # Deliberately left out. A test checks every table is in one list or the other, so a new table
 # forces a decision here.
+# Account groups that no longer exist, and where an older backup's accounts go.
+LEGACY_ACCOUNT_GROUPS = {"debit_card": "accounts"}
+
 EXCLUDED = (
     "users",
     "sessions",
@@ -300,6 +304,8 @@ class BackupService:
                             f"A row in {table.name} points at something that is not in the backup"
                         )
                 elif column.name in row:
+                    if table.name == "accounts" and column.name == "group":
+                        raw = LEGACY_ACCOUNT_GROUPS.get(raw, raw)
                     values[column.name] = _decode(column, raw)
             for name in own_refs:
                 if values.get(name) is not None:

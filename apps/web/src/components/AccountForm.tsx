@@ -5,7 +5,7 @@ import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
-import { bankChoices, hasCreditLimit } from "#/lib/accounts";
+import { bankChoices, GROUP_HELP, hasCreditLimit } from "#/lib/accounts";
 import { todayIso } from "#/lib/format";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
@@ -108,6 +108,11 @@ export default function AccountForm({
 						autoFocus
 						slotProps={{ htmlInput: { maxLength: 200 } }}
 					/>
+				</Grid>
+				<Grid size={12}>
+					<Typography variant="body2" sx={{ color: "text.secondary", mt: -0.5 }}>
+						{GROUP_HELP[group]}
+					</Typography>
 				</Grid>
 
 				<Grid size={{ xs: 12, sm: 5 }}>

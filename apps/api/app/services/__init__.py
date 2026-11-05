@@ -21,6 +21,7 @@ from app.services.budget import (
     BudgetLineRuleError,
     BudgetService,
 )
+from app.services.card import CardNotFoundError, CardRuleError, CardService
 from app.services.category import (
     CategoryInUseError,
     CategoryNameTakenError,
@@ -100,6 +101,9 @@ __all__ = [
     "BudgetLineNotFoundError",
     "BudgetLineRuleError",
     "BudgetService",
+    "CardNotFoundError",
+    "CardRuleError",
+    "CardService",
     "CategoryInUseError",
     "CategoryNameTakenError",
     "CategoryNotFoundError",

@@ -5,7 +5,7 @@ import { apiAs, open, signUp } from "./helpers";
 async function twoRowTransfer(page: Page, request: APIRequestContext) {
 	const email = await signUp(page);
 	const api = await apiAs(request, email);
-	const mib = await api.account("MIB Debit", "2000", "debit_card");
+	const mib = await api.account("MIB Debit", "2000", "accounts");
 	const bml = await api.account("BML Current", "300");
 	await api.transaction({
 		type: "expense",
@@ -71,7 +71,7 @@ test("two ticked rows can be made into one transfer by hand", async ({ page, req
 test("a lone expense gets no suggestion", async ({ page, request }) => {
 	const email = await signUp(page);
 	const api = await apiAs(request, email);
-	const mib = await api.account("MIB Debit", "2000", "debit_card");
+	const mib = await api.account("MIB Debit", "2000", "accounts");
 	await api.transaction({
 		type: "expense",
 		amount: "500.00",

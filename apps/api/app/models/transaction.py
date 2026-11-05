@@ -28,6 +28,7 @@ from app.enums import PaymentMethod, TransactionType
 from app.models.account import Account
 from app.models.attachment import TransactionAttachment
 from app.models.base import Base
+from app.models.card import Card
 from app.models.category import Category
 from app.models.group import TransactionGroup
 from app.models.link import TransactionLink
@@ -61,6 +62,11 @@ class Transaction(Base):
         Uuid, ForeignKey("accounts.id", ondelete="SET NULL"), index=True, default=None
     )
     account: Mapped[Account | None] = relationship(lazy="joined", foreign_keys=[account_id])
+    # The card it was paid with, if any. Deleting the card only unlinks it.
+    card_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("cards.id", ondelete="SET NULL"), index=True, default=None
+    )
+    card: Mapped[Card | None] = relationship(lazy="joined")
     # Transfers only: the destination account and the amount that arrived there (in that
     # account's currency). `account` is then the source and `amount` what left it.
     to_account_id: Mapped[uuid.UUID | None] = mapped_column(

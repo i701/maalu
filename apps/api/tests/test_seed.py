@@ -7,7 +7,13 @@ import pytest
 from app import seed as seed_module
 from app.enums import TransactionType
 from app.models import Account, Base, Subscription, Transaction, User, Vendor
-from app.services import AccountService, BudgetService, GoalService, SubscriptionService
+from app.services import (
+    AccountService,
+    BudgetService,
+    CardService,
+    GoalService,
+    SubscriptionService,
+)
 from sqlalchemy import event, func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
@@ -50,7 +56,7 @@ async def test_seeds_a_realistic_first_month(db: AsyncSession):
     summary = await run(db)
 
     assert await count(db, User) == 1
-    assert summary.accounts == await count(db, Account) == 7
+    assert summary.accounts == await count(db, Account) == 6
     assert summary.vendors == await count(db, Vendor) > 15
     assert summary.subscriptions == await count(db, Subscription) == 9
     assert sum(summary.transactions.values()) < 200  # a month or so, not a firehose
@@ -82,7 +88,7 @@ async def test_salaries_of_ten_thousand_are_split_and_the_next_is_expected(db: A
     salaries = [t for t in planned if t.type == TransactionType.INCOME]
     assert len(salaries) == 1
     assert salaries[0].transaction_date > TODAY
-    # each month the two rules moved 1,000 to the emergency fund and 500 to the savings
+    # each month: 1,000 to MIB Savings (the emergency fund goal), 500 to BML Savings
     transfers = (
         await db.scalars(
             select(Transaction).where(
@@ -126,7 +132,6 @@ async def test_accounts_goals_and_budget_are_in_place(db: AsyncSession):
         "BML Savings",
         "MIB Current",
         "MIB Savings",
-        "MIB Emergency Fund",
     } <= set(by_name)
     assert by_name["BML USD"].currency == "USD"
     assert all(a.balance >= 0 for a in accounts)  # nothing overdrawn during the month
@@ -136,13 +141,26 @@ async def test_accounts_goals_and_budget_are_in_place(db: AsyncSession):
     assert len(budget.lines) == 4
 
 
+async def test_debit_cards_are_tied_to_their_bank_accounts(db: AsyncSession):
+    await run(db)
+    uid = await user_id(db)
+    cards = await CardService(db).list_for_user(uid)
+    assert {c.name: c.account.name for c in cards} == {
+        "BML Visa debit": "BML Current",
+        "MIB Visa debit": "MIB Current",
+    }
+    paid = await db.scalar(select(func.count()).where(Transaction.card_id.is_not(None)))
+    assert paid is not None
+    assert paid > 10  # day-to-day spending was paid with them
+
+
 async def test_rerunning_replaces_the_demo_user_instead_of_piling_up(db: AsyncSession):
     await run(db, seed=1)
     first_user = await db.scalar(select(User.id))
     await run(db, seed=2)
     assert await count(db, User) == 1
     assert await db.scalar(select(User.id)) != first_user  # a fresh user
-    assert await count(db, Account) == 7  # not 14
+    assert await count(db, Account) == 6  # not 12
     assert await count(db, Subscription) == 9
 
 

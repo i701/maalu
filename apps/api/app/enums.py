@@ -52,11 +52,18 @@ class SubscriptionStatus(StrEnum):
     COMPLETED = "completed"  # an installment plan whose last payment was made
 
 
+class CardKind(StrEnum):
+    """A debit card spends from its bank account; a credit card is an account of its own (what you
+    owe) that is repaid from a bank account."""
+
+    DEBIT = "debit"
+    CREDIT = "credit"
+
+
 class AccountGroup(StrEnum):
     CASH = "cash"
     ACCOUNTS = "accounts"
-    CARD = "card"
-    DEBIT_CARD = "debit_card"
+    CARD = "card"  # a credit card: what you owe. A debit card belongs to its bank account.
     SAVINGS = "savings"
     PREPAID = "prepaid"  # Top-Up / Prepaid
     INVESTMENTS = "investments"
@@ -69,9 +76,7 @@ class AccountGroup(StrEnum):
 # Balances in these groups are money you owe; everything else is an asset.
 LIABILITY_GROUPS = frozenset({AccountGroup.CARD, AccountGroup.OVERDRAFTS, AccountGroup.LOAN})
 # Accounts that hold money you spend from day to day: what "available to spend" starts from.
-SPENDABLE_GROUPS = frozenset(
-    {AccountGroup.CASH, AccountGroup.ACCOUNTS, AccountGroup.DEBIT_CARD, AccountGroup.PREPAID}
-)
+SPENDABLE_GROUPS = frozenset({AccountGroup.CASH, AccountGroup.ACCOUNTS, AccountGroup.PREPAID})
 # Only these have a credit limit: the most you can owe on them.
 CREDIT_LIMIT_GROUPS = frozenset({AccountGroup.CARD, AccountGroup.OVERDRAFTS})
 # The category a balance adjustment is filed under (it is left out of every report anyway).

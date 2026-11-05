@@ -73,6 +73,7 @@ const createSchema = z.object({
 	// Income only: makes this a refund of that expense.
 	refund_of_id: z.uuid().optional(),
 	account_id: z.uuid().optional(),
+	card_id: z.uuid().optional(),
 	to_account_id: z.uuid().optional(),
 	to_amount: amount.optional(),
 	tags: z.array(z.string().trim().min(1).max(50)).max(10).optional(),
@@ -95,6 +96,7 @@ const updateSchema = z.object({
 			refund_of_id: z.uuid().nullable().optional(),
 			subscription_id: z.uuid().nullable().optional(), // explicit null unlinks the subscription
 			account_id: z.uuid().nullable().optional(), // explicit null unlinks the account
+			card_id: z.uuid().nullable().optional(), // explicit null unlinks the card
 			to_account_id: z.uuid().nullable().optional(),
 			splits: z.array(splitSchema).min(1).nullable().optional(), // explicit null removes the split
 		}),
@@ -114,6 +116,7 @@ const listSchema = z.object({
 	tag_ids: z.array(z.uuid()).max(10).optional(),
 	tag_match: z.enum(["any", "all"]).optional(),
 	account_id: z.uuid().optional(),
+	card_id: z.uuid().optional(),
 	currency: currency.optional(),
 	q: z.string().max(100).optional(),
 	// In the user's base currency, inclusive. Decimal strings, never floats.
@@ -139,6 +142,7 @@ const filterQuery = (data: Omit<z.infer<typeof listSchema>, "page" | "pageSize">
 	tag_id: data.tag_ids,
 	tag_match: data.tag_match,
 	account_id: data.account_id,
+	card_id: data.card_id,
 	currency: data.currency,
 	q: data.q,
 	min_amount: data.min_amount,

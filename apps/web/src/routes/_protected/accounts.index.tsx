@@ -82,7 +82,6 @@ const GROUP_TILE: Record<AccountGroup, { symbol: string; accent: string; shape: 
 	cash: { symbol: "payments", accent: ACCENT.green, shape: 1 },
 	accounts: { symbol: "account_balance", accent: ACCENT.blue, shape: 0 },
 	card: { symbol: "credit_card", accent: ACCENT.orange, shape: 3 },
-	debit_card: { symbol: "credit_card", accent: ACCENT.violet, shape: 2 },
 	savings: { symbol: "savings", accent: ACCENT.lime, shape: 5 },
 	prepaid: { symbol: "sell", accent: ACCENT.pink, shape: 4 },
 	investments: { symbol: "savings", accent: ACCENT.amber, shape: 6 },

@@ -23,6 +23,7 @@ const chips = (filters: Parameters<typeof buildActiveFilters>[0]["filters"], pat
 	buildActiveFilters({
 		filters,
 		selectedAccount: null,
+		selectedCard: null,
 		selectedVendor: null,
 		selectedCategory: null,
 		tagNames: ["Trip", "Need"],

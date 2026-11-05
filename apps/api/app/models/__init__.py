@@ -3,6 +3,7 @@ from app.models.attachment import TransactionAttachment
 from app.models.balance_snapshot import BalanceSnapshot, SnapshotDirty
 from app.models.base import Base
 from app.models.budget import Budget, BudgetLine, BudgetLineCategory
+from app.models.card import Card
 from app.models.category import Category
 from app.models.exchange_rate import ExchangeRate
 from app.models.goal import Goal, GoalEntry
@@ -29,6 +30,7 @@ __all__ = [
     "Budget",
     "BudgetLine",
     "BudgetLineCategory",
+    "Card",
     "Category",
     "ExchangeRate",
     "Goal",

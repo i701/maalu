@@ -13,6 +13,7 @@ export type TransactionFilterValues = {
 	type?: TransactionType;
 	payment_method?: PaymentMethod;
 	account_id?: string;
+	card_id?: string;
 	vendor_id?: string;
 	category_id?: string;
 	tag_ids?: string[];
@@ -31,6 +32,7 @@ export function pickFilterValues(s: TransactionFilterValues): TransactionFilterV
 		type: s.type,
 		payment_method: s.payment_method,
 		account_id: s.account_id,
+		card_id: s.card_id,
 		vendor_id: s.vendor_id,
 		category_id: s.category_id,
 		tag_ids: s.tag_ids,
@@ -50,7 +52,8 @@ export function hasAnyFilter(s: TransactionSearch): boolean {
 /** How many structured filters are on (a range counts once). Text search is separate. */
 export function countActiveFilters(s: TransactionFilterValues): number {
 	return (
-		[s.type, s.payment_method, s.account_id, s.vendor_id, s.category_id].filter(Boolean).length +
+		[s.type, s.payment_method, s.account_id, s.card_id, s.vendor_id, s.category_id].filter(Boolean)
+			.length +
 		(s.tag_ids?.length ? 1 : 0) +
 		(s.min_amount || s.max_amount ? 1 : 0) +
 		(s.date_from || s.date_to ? 1 : 0)
@@ -76,6 +79,7 @@ export function tagNamesOf(ids: string[] | undefined, tags: { id: string; name: 
 export function buildActiveFilters({
 	filters,
 	selectedAccount,
+	selectedCard,
 	selectedVendor,
 	selectedCategory,
 	tagNames,
@@ -84,6 +88,8 @@ export function buildActiveFilters({
 }: {
 	filters: TransactionFilterValues;
 	selectedAccount: RemoteOption | null;
+	/** The card filtered on, as "name ••1234" */
+	selectedCard: string | null;
 	selectedVendor: RemoteOption | null;
 	selectedCategory: RemoteOption | null;
 	/** Names of the tags in the filter, in order. */
@@ -112,6 +118,13 @@ export function buildActiveFilters({
 			tone: "success",
 			label: `Account: ${selectedAccount?.label ?? "…"}`,
 			onDelete: () => patch({ account_id: undefined }),
+		});
+	if (filters.card_id)
+		chips.push({
+			key: "card",
+			tone: "success",
+			label: `Card: ${selectedCard ?? "…"}`,
+			onDelete: () => patch({ card_id: undefined }),
 		});
 	if (filters.vendor_id)
 		chips.push({

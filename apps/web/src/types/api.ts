@@ -82,9 +82,8 @@ export type AccountGroup = Schemas["AccountGroup"];
 export const ACCOUNT_GROUPS = accountGroupValues;
 export const ACCOUNT_GROUP_LABELS: Record<AccountGroup, string> = {
 	cash: "Cash",
-	accounts: "Accounts",
-	card: "Card",
-	debit_card: "Debit Card",
+	accounts: "Bank accounts",
+	card: "Credit cards",
 	savings: "Savings",
 	prepaid: "Top-Up/Prepaid",
 	investments: "Investments",
@@ -139,6 +138,13 @@ export type Category = Schemas["CategoryResponse"];
 export type TransactionSplit = Schemas["SplitResponse"];
 export type Transaction = Schemas["TransactionResponse"];
 export type BulkResult = Schemas["BulkResult"];
+export type Card = Schemas["CardResponse"];
+export type CardRef = Schemas["CardRef"];
+export type CardKind = Schemas["CardKind"];
+export const CARD_KIND_LABELS: Record<CardKind, string> = {
+	debit: "Debit card",
+	credit: "Credit card",
+};
 export type TagRef = Schemas["TagRef"];
 export type Tag = Schemas["TagResponse"];
 export type TransactionTemplate = Schemas["TemplateResponse"];

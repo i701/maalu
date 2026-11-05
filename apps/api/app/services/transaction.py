@@ -9,10 +9,11 @@ from sqlalchemy import case, func, literal, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.allocation import allocate_base
-from app.enums import ADJUSTMENT_CATEGORY, CategoryKind, PaymentMethod, TransactionType
+from app.enums import ADJUSTMENT_CATEGORY, CardKind, CategoryKind, PaymentMethod, TransactionType
 from app.export import EXPORT_LIMIT, build_workbook
 from app.models import (
     Account,
+    Card,
     Category,
     Subscription,
     Tag,
@@ -151,6 +152,21 @@ class TransactionService:
         if account.archived_at is not None and not keep_archived:
             raise TransactionRuleError(f'"{account.name}" is archived. Unarchive it to use it')
         return account
+
+    async def _resolve_card(self, user_id: uuid.UUID, card_id: uuid.UUID | None) -> Card | None:
+        if card_id is None:
+            return None
+        card = await self.db.scalar(select(Card).where(Card.id == card_id, Card.user_id == user_id))
+        if card is None:
+            raise TransactionRuleError("Card not found")
+        return card
+
+    @staticmethod
+    def _card_method(card: Card) -> PaymentMethod:
+        """How a purchase with this card is paid, unless the user says otherwise."""
+        return (
+            PaymentMethod.CREDIT_CARD if card.kind is CardKind.CREDIT else PaymentMethod.DEBIT_CARD
+        )
 
     async def base_currency(self, user_id: uuid.UUID) -> str:
         return await self._base_currency(user_id)
@@ -529,7 +545,13 @@ class TransactionService:
 
     async def create(self, user_id: uuid.UUID, data: TransactionCreate) -> Transaction:
         base = await self._base_currency(user_id)
-        account = await self._resolve_account(user_id, data.account_id)
+        card = await self._resolve_card(user_id, data.card_id)
+        account_id = data.account_id
+        if card is not None:  # a card spends from its account
+            if account_id is not None and account_id != card.account_id:
+                raise TransactionRuleError(f'"{card.name}" belongs to another account')
+            account_id = card.account_id
+        account = await self._resolve_account(user_id, account_id)
         to_account = await self._resolve_account(user_id, data.to_account_id)
         original = (
             await self._refund_original(user_id, data.refund_of_id) if data.refund_of_id else None
@@ -573,7 +595,11 @@ class TransactionService:
             refund_of=original,
             payment_method=TRANSFER_PAYMENT_METHOD
             if is_transfer
-            else (data.payment_method or (original.payment_method if original else None)),
+            else (
+                data.payment_method
+                or (self._card_method(card) if card else None)
+                or (original.payment_method if original else None)
+            ),
             description=data.description,
             transaction_date=data.transaction_date,
             transaction_time=data.transaction_time,
@@ -582,6 +608,7 @@ class TransactionService:
             place=data.place or None,
             planned=data.planned,
             account=account,
+            card=card,
             to_account=to_account,
             vendor=await self._resolve_vendor(user_id, data.vendor_id, data.vendor_name)
             or (
@@ -686,6 +713,7 @@ class TransactionService:
         subscription_id: uuid.UUID | None,
         account_id: uuid.UUID | None,
         category_ids: list[uuid.UUID] | None,
+        card_id: uuid.UUID | None = None,
         tag_ids: list[uuid.UUID] | None = None,
         tag_match: TagMatch = "any",
         payment_method: PaymentMethod | None,
@@ -754,6 +782,8 @@ class TransactionService:
             conditions.append(
                 or_(Transaction.account_id == account_id, Transaction.to_account_id == account_id)
             )
+        if card_id is not None:
+            conditions.append(Transaction.card_id == card_id)
         if category_ids:  # the transaction's own category, or any of its items' (a parent's family)
             conditions.append(
                 or_(
@@ -780,6 +810,7 @@ class TransactionService:
         vendor_id: uuid.UUID | None = None,
         subscription_id: uuid.UUID | None = None,
         account_id: uuid.UUID | None = None,
+        card_id: uuid.UUID | None = None,
         category_id: uuid.UUID | None = None,
         tag_ids: list[uuid.UUID] | None = None,
         tag_match: TagMatch = "any",
@@ -800,6 +831,7 @@ class TransactionService:
             vendor_id=vendor_id,
             subscription_id=subscription_id,
             account_id=account_id,
+            card_id=card_id,
             category_id=category_id,
             tag_ids=tag_ids,
             tag_match=tag_match,
@@ -854,6 +886,7 @@ class TransactionService:
         vendor_id: uuid.UUID | None = None,
         subscription_id: uuid.UUID | None = None,
         account_id: uuid.UUID | None = None,
+        card_id: uuid.UUID | None = None,
         category_id: uuid.UUID | None = None,
         tag_ids: list[uuid.UUID] | None = None,
         tag_match: TagMatch = "any",
@@ -872,6 +905,7 @@ class TransactionService:
             vendor_id=vendor_id,
             subscription_id=subscription_id,
             account_id=account_id,
+            card_id=card_id,
             category_id=category_id,
             tag_ids=tag_ids,
             tag_match=tag_match,
@@ -894,6 +928,7 @@ class TransactionService:
         vendor_id: uuid.UUID | None = None,
         subscription_id: uuid.UUID | None = None,
         account_id: uuid.UUID | None = None,
+        card_id: uuid.UUID | None = None,
         category_id: uuid.UUID | None = None,
         tag_ids: list[uuid.UUID] | None = None,
         tag_match: TagMatch = "any",
@@ -912,6 +947,7 @@ class TransactionService:
             vendor_id=vendor_id,
             subscription_id=subscription_id,
             account_id=account_id,
+            card_id=card_id,
             category_id=category_id,
             tag_ids=tag_ids,
             tag_match=tag_match,
@@ -983,6 +1019,7 @@ class TransactionService:
         vendor_id: uuid.UUID | None = None,
         subscription_id: uuid.UUID | None = None,
         account_id: uuid.UUID | None = None,
+        card_id: uuid.UUID | None = None,
         category_id: uuid.UUID | None = None,
         tag_ids: list[uuid.UUID] | None = None,
         tag_match: TagMatch = "any",
@@ -1007,6 +1044,7 @@ class TransactionService:
             vendor_id=vendor_id,
             subscription_id=subscription_id,
             account_id=account_id,
+            card_id=card_id,
             category_id=category_id,
             tag_ids=tag_ids,
             tag_match=tag_match,
@@ -1192,6 +1230,7 @@ class TransactionService:
         vendor_id: uuid.UUID | None = None,
         subscription_id: uuid.UUID | None = None,
         account_id: uuid.UUID | None = None,
+        card_id: uuid.UUID | None = None,
         category_id: uuid.UUID | None = None,
         tag_ids: list[uuid.UUID] | None = None,
         tag_match: TagMatch = "any",
@@ -1212,6 +1251,7 @@ class TransactionService:
             "vendor_id": vendor_id,
             "subscription_id": subscription_id,
             "account_id": account_id,
+            "card_id": card_id,
             "category_id": category_id,
             "tag_ids": tag_ids,
             "tag_match": tag_match,
@@ -1257,6 +1297,7 @@ class TransactionService:
         vendor_id: uuid.UUID | None,
         subscription_id: uuid.UUID | None,
         account_id: uuid.UUID | None,
+        card_id: uuid.UUID | None = None,
         category_id: uuid.UUID | None,
         tag_ids: list[uuid.UUID] | None = None,
         tag_match: TagMatch = "any",
@@ -1284,6 +1325,9 @@ class TransactionService:
         if account_id is not None:
             account = await self._resolve_account_or_none(user_id, account_id)
             labels.append(f"Account: {account.name if account else 'unknown'}")
+        if card_id is not None:
+            card = await self._resolve_card(user_id, card_id)
+            labels.append(f"Card: {card.name if card else 'unknown'}")
         if category_id is not None:
             category = await self.categories.get(user_id, category_id)
             labels.append(f"Category: {category.name if category else 'unknown'}")
@@ -1442,6 +1486,19 @@ class TransactionService:
             )
             if transaction.subscription and new_type is not TransactionType.EXPENSE:
                 raise TransactionRuleError("Only expenses can belong to a subscription")
+        card = transaction.card
+        card_touched = False
+        if "card_id" in changes:
+            card = await self._resolve_card(user_id, changes.pop("card_id"))
+            card_touched = True
+            if card is not None:
+                if is_transfer:
+                    raise TransactionRuleError("A transfer is not paid with a card")
+                if changes.get("account_id", card.account_id) != card.account_id:
+                    raise TransactionRuleError(f'"{card.name}" belongs to another account')
+                changes["account_id"] = card.account_id  # a card spends from its account
+                if "payment_method" not in changes:
+                    changes["payment_method"] = self._card_method(card)
         account = transaction.account
         if "account_id" in changes:
             new_id = changes.pop("account_id")
@@ -1456,9 +1513,13 @@ class TransactionService:
             )
         if not is_transfer:
             to_account = None  # only transfers have a destination
+        if is_transfer:
+            card = None  # a transfer is not paid with a card
+        elif card is not None and (account is None or account.id != card.account_id):
+            raise TransactionRuleError(f'"{card.name}" belongs to another account')
 
         # Money fields: recompute whenever something that feeds them changed.
-        if data.model_fields_set & MONEY_KEYS:
+        if (data.model_fields_set | ({"account_id"} if card_touched else set())) & MONEY_KEYS:
             currency = changes.get("currency", transaction.currency)
             rate = changes.get("exchange_rate")
             # A stored rate only carries over while the currency stays the same: switching to
@@ -1480,6 +1541,7 @@ class TransactionService:
             for key in ("currency", "exchange_rate", "to_amount"):
                 changes.pop(key, None)
         transaction.account = account
+        transaction.card = card
         transaction.to_account = to_account
 
         # Replacing the lines (explicit null removes the split).

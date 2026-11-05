@@ -2,6 +2,7 @@ import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 import AccountActions from "#/components/account/AccountActions";
+import AccountCards from "#/components/account/AccountCards";
 import AccountPlanned from "#/components/account/AccountPlanned";
 import AccountSummary from "#/components/account/AccountSummary";
 import AccountTransactionList from "#/components/account/AccountTransactionList";
@@ -9,6 +10,7 @@ import EmptyState from "#/components/EmptyState";
 import PageHeader from "#/components/PageHeader";
 import { RouterLink } from "#/components/RouterLinks";
 import { accountIdentity } from "#/lib/accounts";
+import { repaymentSeed } from "#/lib/cards";
 import { monthBounds, monthLabel } from "#/lib/dashboard";
 import { lastPageIfOutOfRange, pageSearch } from "#/lib/pagination";
 import { localToday } from "#/lib/planned";
@@ -17,11 +19,12 @@ import { getAccountFn, listAccountsFn } from "#/server/accounts";
 import { listCategoriesFn } from "#/server/categories";
 import { listCurrenciesFn } from "#/server/currencies";
 import { listSubscriptionsFn } from "#/server/subscriptions";
+import { listCardsFn } from "#/server/cards";
 import { listTagsFn } from "#/server/tags";
 import { listTemplatesFn } from "#/server/templates";
 import { getTransactionTotalsFn, listTransactionsFn, listUpcomingFn } from "#/server/transactions";
 import { listVendorsFn } from "#/server/vendors";
-import { ACCOUNT_GROUP_LABELS, TRANSACTION_TYPES } from "#/types/api";
+import { ACCOUNT_GROUP_LABELS, TRANSACTION_TYPES, type Card } from "#/types/api";
 
 const searchSchema = z.object({
 	...pageSearch,
@@ -51,6 +54,7 @@ export const Route = createFileRoute("/_protected/accounts/$id")({
 			tags,
 			categories,
 			currencies,
+			cards,
 		] = await Promise.all([
 			getAccountFn({ data: { id: params.id } }),
 			listTransactionsFn({ data: { ...deps, account_id: params.id } }),
@@ -65,6 +69,7 @@ export const Route = createFileRoute("/_protected/accounts/$id")({
 			listTagsFn(),
 			listCategoriesFn(),
 			listCurrenciesFn(),
+			listCardsFn(),
 		]);
 		if (!account.ok && account.status === 404) throw notFound();
 		const rows = unwrap(list);
@@ -95,6 +100,7 @@ export const Route = createFileRoute("/_protected/accounts/$id")({
 				vendors: unwrap(vendors),
 				subscriptions: unwrap(subscriptions),
 				accounts: unwrap(accounts),
+				cards: unwrap(cards),
 				templates: unwrap(templates),
 				tags: unwrap(tags),
 				categories: unwrap(categories),
@@ -117,6 +123,7 @@ function AccountPage() {
 	const search = Route.useSearch();
 	const navigate = Route.useNavigate();
 	const [adding, setAdding] = useState(false);
+	const [repaying, setRepaying] = useState<Card | null>(null);
 	const identity = accountIdentity(account);
 	const archived = account.archived_at !== null;
 
@@ -150,6 +157,12 @@ function AccountPage() {
 				monthLabel={month}
 			/>
 			<AccountPlanned items={planned} accountId={account.id} today={today} />
+			<AccountCards
+				account={account}
+				accounts={lists.accounts}
+				cards={lists.cards}
+				onRepay={setRepaying}
+			/>
 			<AccountTransactionList
 				account={account}
 				items={items}
@@ -158,8 +171,12 @@ function AccountPage() {
 				pageSize={search.pageSize}
 				filters={search}
 				lists={{ ...lists, baseCurrency: user.base_currency }}
-				adding={adding}
-				onAddingDone={() => setAdding(false)}
+				adding={adding || repaying !== null}
+				seed={repaying ? (repaymentSeed(repaying) ?? undefined) : undefined}
+				onAddingDone={() => {
+					setAdding(false);
+					setRepaying(null);
+				}}
 				onFilters={(change) => navigate({ search: (p) => ({ ...p, ...change, page: 1 }) })}
 				onPage={(page) => navigate({ search: (p) => ({ ...p, page }), replace: true })}
 				onPageSize={(pageSize) => navigate({ search: (p) => ({ ...p, pageSize, page: 1 }) })}
