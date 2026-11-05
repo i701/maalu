@@ -3,17 +3,9 @@ import Typography from "@mui/material/Typography";
 import { Link } from "@tanstack/react-router";
 import { memo, useMemo } from "react";
 import { formatMoney } from "#/lib/format";
-import { KIND_NAMES, kindShares, type KindKey } from "#/lib/needs-wants";
+import { KIND_COLOR, KIND_NAMES, kindShares } from "#/lib/needs-wants";
 import type { CategoryTotals } from "#/types/api";
 import ChartCard from "../charts/ChartCard";
-
-// Needs and wants take the chart's two series colours; what is not sorted is a neutral, so it never
-// reads as a third category of spending.
-const KIND_COLOR: Record<KindKey, string> = {
-	need: "var(--chart-line)",
-	want: "var(--chart-expense)",
-	unsorted: "var(--md-sys-color-outline-variant)",
-};
 
 /** How much of the period's spending was needed, how much was wanted, and how much is not sorted
  * yet: one bar of the three and a line each, with a nudge to sort the rest. */

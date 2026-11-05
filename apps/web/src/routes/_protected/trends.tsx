@@ -11,7 +11,9 @@ import StackedColumns from "#/components/charts/StackedColumns";
 import EmptyState from "#/components/EmptyState";
 import PageHeader from "#/components/PageHeader";
 import PendingOverlay from "#/components/PendingOverlay";
+import KindMonthsTable from "#/components/trends/KindMonthsTable";
 import TrendsTable from "#/components/trends/TrendsTable";
+import { kindMonths } from "#/lib/needs-wants";
 import { ACCENT_NAMES, categoryAccent } from "#/lib/categories";
 import { formatMoney } from "#/lib/format";
 import { localToday } from "#/lib/planned";
@@ -71,6 +73,10 @@ function TrendsPage() {
 			color: accents[i] === null ? "var(--md-sys-color-outline)" : categoryAccent(accents[i]),
 		}));
 	}, [rows]);
+	const kinds = useMemo(
+		() => (kind === "expense" ? kindMonths(data.categories, data.months.length) : []),
+		[data, kind],
+	);
 	const labels = useMemo(() => data.months.map(monthColumn), [data.months]);
 	const titles = useMemo(() => data.months.map(monthTitle), [data.months]);
 
@@ -167,6 +173,14 @@ function TrendsPage() {
 								color={KINDS[kind].color}
 								label={`${KINDS[kind].label} by category and month`}
 							/>
+						)}
+						{view === "table" && kinds.length > 0 && (
+							<Box sx={{ mt: 2 }}>
+								<Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+									Needs and wants
+								</Typography>
+								<KindMonthsTable rows={kinds} months={data.months} />
+							</Box>
 						)}
 						<Typography variant="caption" sx={{ color: "text.secondary", display: "block", mt: 1 }}>
 							In {data.currency}. Transfers and balance adjustments are not counted, and refunds

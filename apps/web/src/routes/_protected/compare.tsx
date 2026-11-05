@@ -23,6 +23,7 @@ import {
 	type Preset,
 } from "#/lib/compare";
 import { formatMoney } from "#/lib/format";
+import { compareKinds } from "#/lib/needs-wants";
 import { localToday } from "#/lib/planned";
 import { unwrap } from "#/lib/unwrap";
 import { getCategoryTotalsFn } from "#/server/transactions";
@@ -102,6 +103,7 @@ function ComparePage() {
 			totals: compareTotals(before.categories, now.categories),
 			spending: compareRows(before.categories, now.categories, "expense"),
 			income: compareRows(before.categories, now.categories, "income"),
+			kinds: compareKinds(before.categories, now.categories),
 		};
 	}, [before, now]);
 	const money = useCallback((amount: string) => formatMoney(amount, currency), [currency]);
@@ -195,6 +197,18 @@ function ComparePage() {
 									goodWhenUp={false}
 									beforeName="Before"
 									nowName="Now"
+								/>
+							</Section>
+						)}
+						{analysis.kinds.length > 0 && (
+							<Section title="Needs and wants">
+								<ChangeTable
+									rows={analysis.kinds}
+									currency={currency}
+									goodWhenUp={false}
+									beforeName="Before"
+									nowName="Now"
+									firstColumn="Kind"
 								/>
 							</Section>
 						)}

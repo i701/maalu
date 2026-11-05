@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { Category, CategoryTotal } from "#/types/api";
-import { kindShares, unsortedCategories } from "./needs-wants";
+import type { Category, CategoryMonthRow, CategoryTotal } from "#/types/api";
+import { compareKinds, kindMonths, kindShares, unsortedCategories } from "./needs-wants";
 
 const cat = (
 	category: string,
@@ -57,5 +57,39 @@ describe("unsortedCategories", () => {
 				(x) => x.name,
 			),
 		).toEqual(["B", "D"]);
+	});
+});
+
+describe("compareKinds", () => {
+	it("puts each kind's spending in the two periods side by side", () => {
+		const rows = compareKinds(
+			[cat("Food", "200", "need"), cat("Games", "50", "want")],
+			[cat("Food", "300.50", "need"), cat("Misc", "40", null), cat("Pay", "999", "need", "income")],
+		);
+		expect(rows.map((r) => [r.category, r.before, r.now, r.change, r.state])).toEqual([
+			["Needs", "200.00", "300.50", "100.50", "both"],
+			["Wants", "50.00", "0.00", "-50.00", "gone"],
+			["Not sorted", "0.00", "40.00", "40.00", "new"],
+		]);
+	});
+
+	it("leaves out a kind with nothing in either period", () => {
+		expect(compareKinds([cat("Food", "10", "need")], [cat("Food", "20", "need")])).toHaveLength(1);
+	});
+});
+
+describe("kindMonths", () => {
+	const row = (kind: CategoryMonthRow["kind"], amounts: string[], type = "expense") =>
+		({ type, kind, amounts }) as CategoryMonthRow;
+
+	it("adds each kind's categories up month by month", () => {
+		const out = kindMonths(
+			[row("need", ["10.00", "20.00"]), row("need", ["5.00", "0.00"]), row(null, ["1.00", "2.00"])],
+			2,
+		);
+		expect(out.map((k) => [k.kind, k.amounts, k.total])).toEqual([
+			["need", ["15.00", "20.00"], "35.00"],
+			["unsorted", ["1.00", "2.00"], "3.00"],
+		]);
 	});
 });

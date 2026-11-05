@@ -19,12 +19,14 @@ const ChangeTable = memo(function ChangeTable({
 	goodWhenUp,
 	beforeName,
 	nowName,
+	firstColumn = "Category",
 }: {
 	rows: CompareRow[];
 	currency: string;
 	goodWhenUp: boolean;
 	beforeName: string;
 	nowName: string;
+	firstColumn?: string;
 }) {
 	return (
 		<ResponsiveTable
@@ -33,7 +35,7 @@ const ChangeTable = memo(function ChangeTable({
 			minWidth={620}
 			head={
 				<TableRow>
-					<TableCell>Category</TableCell>
+					<TableCell>{firstColumn}</TableCell>
 					<TableCell align="right">{beforeName}</TableCell>
 					<TableCell align="right">{nowName}</TableCell>
 					<TableCell align="right">Change</TableCell>
