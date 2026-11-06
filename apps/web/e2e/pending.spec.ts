@@ -45,7 +45,13 @@ test("an automatic rule moves by itself and the other waits to be approved", asy
 	expect(await balance(bills.id)).toBe(0); // still waiting
 
 	await open(page, "/pending");
-	await expect(page.getByLabel("1 waiting")).toBeVisible(); // the badge in the sidebar
+	// the badge in the sidebar (the phone's bottom bar, hidden here, has one on More too)
+	await expect(
+		page
+			.getByRole("navigation", { name: "Main" })
+			.filter({ visible: true })
+			.getByLabel("1 waiting"),
+	).toBeVisible();
 	await expect(page.getByText("November salary")).toBeVisible();
 	await expect(page.getByText(/Savings: MVR\s2,000\.00 moved/)).toBeVisible();
 	await expect(page.getByText("Waiting for you", { exact: true })).toBeVisible();

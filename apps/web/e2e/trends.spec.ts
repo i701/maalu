@@ -78,7 +78,8 @@ test("the chart view stacks each month by category and reads out a column on hov
 	await open(page, "/trends");
 	await page.getByRole("button", { name: "Chart" }).click();
 	await expect(page).toHaveURL(/view=chart/);
-	await expect(page.getByRole("table")).toBeHidden();
+	// no table at all (counting waits for the table view to go, where toBeHidden would trip on two)
+	await expect(page.getByRole("table")).toHaveCount(0);
 
 	// last month's column: 300 + 80, with each category named in the legend
 	const column = page.getByRole("img", {
