@@ -1,13 +1,30 @@
 import { NAV_ITEMS } from "#/lib/nav";
 import { accounts } from "./accounts";
+import { budget } from "./budget";
+import { fixingRecords } from "./fixing-records";
+import { goals } from "./goals";
+import { importStatement } from "./import";
+import { monthPlan } from "./month-plan";
+import { reports } from "./reports";
 import { salarySplit } from "./salary-split";
 import { subscriptions } from "./subscriptions";
 import { varyingBills } from "./varying-bills";
 import type { Doc } from "./types";
 
-/** Every guide, in the order the index shows them. To add one: write it in its own file here, import
- * it below, and it appears on the Docs page. */
-export const DOCS: readonly Doc[] = [accounts, subscriptions, varyingBills, salarySplit];
+/** Every guide, in the order the index shows them: setting up, bills, planning, then reports. To add
+ * one: write it in its own file here, import it below, and it appears on the Docs page. */
+export const DOCS: readonly Doc[] = [
+	accounts,
+	importStatement,
+	fixingRecords,
+	subscriptions,
+	varyingBills,
+	budget,
+	goals,
+	monthPlan,
+	salarySplit,
+	reports,
+];
 
 export const findDoc = (slug: string): Doc | undefined => DOCS.find((d) => d.slug === slug);
 
