@@ -8,6 +8,7 @@ import {
 	fixedWindow,
 	linesNeedingAttention,
 	fixedInPeriod,
+	nextStretch,
 	unsigned,
 } from "./budget";
 
@@ -220,5 +221,18 @@ describe("datesOverlap", () => {
 		expect(datesOverlap(["2026-10-01", "2026-10-10"], ["2026-10-10", "2026-10-20"])).toBe(true);
 		expect(datesOverlap(["2026-10-01", "2026-10-10"], ["2026-10-11", "2026-10-20"])).toBe(false);
 		expect(datesOverlap(["2026-10-05", "2026-10-06"], ["2026-10-01", "2026-10-31"])).toBe(true);
+	});
+});
+
+describe("nextStretch", () => {
+	it("starts the day after and lasts as long", () => {
+		expect(nextStretch({ start_date: "2026-11-01", end_date: "2026-11-30" })).toEqual({
+			start: "2026-12-01",
+			end: "2026-12-30",
+		});
+		expect(nextStretch({ start_date: "2026-12-28", end_date: "2027-01-03" })).toEqual({
+			start: "2027-01-04",
+			end: "2027-01-10",
+		});
 	});
 });

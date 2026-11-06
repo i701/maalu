@@ -57,6 +57,26 @@ export function fixedWindow(line: BudgetFixedLine): string {
 	return line.state === "upcoming" ? `${range} · ${left} to its end` : `${range} · ${left} left`;
 }
 
+/** "Runs 01 Nov 2026 – 31 Jan 2027" for a monthly limit that only runs between two dates. */
+export function runsWindow(line: BudgetLine): string | null {
+	return line.runs_from && line.runs_until
+		? `Runs ${formatDate(line.runs_from)} – ${formatDate(line.runs_until)}`
+		: null;
+}
+
+/** The stretch that follows a limit for set dates, as long as it was: it starts the day after
+ * this one ends. */
+export function nextStretch(line: Pick<BudgetFixedLine, "start_date" | "end_date">): {
+	start: string;
+	end: string;
+} {
+	const [y, m, d] = line.start_date.split("-").map(Number);
+	const [y2, m2, d2] = line.end_date.split("-").map(Number);
+	const days = Math.round((Date.UTC(y2, m2 - 1, d2) - Date.UTC(y, m - 1, d)) / 86_400_000);
+	const start = addDays(line.end_date, 1);
+	return { start, end: addDays(start, days) };
+}
+
 /** Whether two sets of dates share a day. */
 export const datesOverlap = (a: [string, string], b: [string, string]): boolean =>
 	a[0] <= b[1] && b[0] <= a[1];

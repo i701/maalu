@@ -29,7 +29,7 @@ import { deleteBudgetLineFn, undoBudgetMoveFn, getBudgetFn } from "#/server/budg
 import { listAccountsFn } from "#/server/accounts";
 import { listCategoriesFn } from "#/server/categories";
 import { listGoalsFn } from "#/server/goals";
-import type { BudgetLine } from "#/types/api";
+import type { BudgetFixedLine, BudgetLine } from "#/types/api";
 
 const searchSchema = z.object({
 	// Any day inside the period to show; leave it out for the current period.
@@ -60,6 +60,7 @@ function BudgetPage() {
 	const { budget, categories, goals, accounts } = Route.useLoaderData();
 	const navigate = Route.useNavigate();
 	const [editing, setEditing] = useState<BudgetLine | "new" | null>(null);
+	const [repeating, setRepeating] = useState<BudgetFixedLine | null>(null);
 	const [deleting, setDeleting] = useState<BudgetLine | null>(null);
 	const [settings, setSettings] = useState(false);
 	const [movingTo, setMovingTo] = useState<BudgetLine | null>(null);
@@ -202,6 +203,7 @@ function BudgetPage() {
 											currency={budget.currency}
 											onEdit={setEditing}
 											onDelete={setDeleting}
+											onRepeat={setRepeating}
 										/>
 									))}
 								</Box>
@@ -215,12 +217,16 @@ function BudgetPage() {
 				<SavingsGoals goals={goals} accounts={accounts} currency={budget.currency} />
 			</PendingOverlay>
 
-			{editing && (
+			{(editing || repeating) && (
 				<BudgetLineForm
-					line={editing === "new" ? undefined : editing}
+					line={editing && editing !== "new" ? editing : undefined}
+					repeatOf={repeating ?? undefined}
 					budget={budget}
 					categories={categories}
-					onClose={() => setEditing(null)}
+					onClose={() => {
+						setEditing(null);
+						setRepeating(null);
+					}}
 				/>
 			)}
 			{settings && <BudgetSettingsDialog budget={budget} onClose={() => setSettings(false)} />}

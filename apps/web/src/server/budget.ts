@@ -40,6 +40,8 @@ export const createBudgetLineFn = createServerFn({ method: "POST" })
 			// both, to make it a limit for just those dates
 			start_date: day.optional(),
 			end_date: day.optional(),
+			// with both dates: every period that touches them, not one total for the stretch
+			repeat: z.boolean().optional(),
 		}),
 	)
 	.handler(async ({ data }) => apiRequest<Budget>("/budget/lines", { method: "POST", body: data }));
@@ -53,6 +55,7 @@ export const updateBudgetLineFn = createServerFn({ method: "POST" })
 				warn_percent: warnPercent.nullable(), // null goes back to the budget's level
 				start_date: day.optional(),
 				end_date: day.nullable().optional(), // null makes it a limit for every period again
+				repeat: z.boolean().optional(),
 			}),
 		}),
 	)

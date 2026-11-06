@@ -2,8 +2,14 @@ import { morph } from "#/lib/shape";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { memo } from "react";
-import { describeLine, linesNeedingAttention, STATUS_COLOR, STATUS_LABEL } from "#/lib/budget";
-import { formatMoney } from "#/lib/format";
+import {
+	describeLine,
+	linesNeedingAttention,
+	runningFixed,
+	STATUS_COLOR,
+	STATUS_LABEL,
+} from "#/lib/budget";
+import { formatDate, formatMoney } from "#/lib/format";
 import { ACCENT } from "#/lib/m3";
 import type { Budget, Goal } from "#/types/api";
 import { RouterButton } from "../RouterLinks";
@@ -50,6 +56,7 @@ const BudgetGoalsCard = memo(function BudgetGoalsCard({
 }) {
 	const lines = budget && budget.lines.length > 0 ? budget : null;
 	const attention = lines ? linesNeedingAttention(lines).slice(0, 3) : [];
+	const fixed = budget ? runningFixed(budget) : [];
 
 	return (
 		<Box
@@ -109,9 +116,41 @@ const BudgetGoalsCard = memo(function BudgetGoalsCard({
 					</Box>
 				</Box>
 			) : (
-				<Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
-					No budget limits yet. Set one for a category to be warned before you overspend.
-				</Typography>
+				fixed.length === 0 && (
+					<Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
+						No budget limits yet. Set one for a category to be warned before you overspend.
+					</Typography>
+				)
+			)}
+
+			{budget && fixed.length > 0 && (
+				<Box sx={{ display: "grid", gap: 1.5, mb: 2 }}>
+					{fixed.map((l) => (
+						<Box key={l.id}>
+							<Box sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}>
+								<Typography noWrap variant="body2" sx={{ fontWeight: 500 }}>
+									{l.name}
+									<Typography component="span" variant="caption" sx={{ color: "text.secondary" }}>
+										{" "}
+										until {formatDate(l.end_date)}
+									</Typography>
+								</Typography>
+								<Typography
+									variant="body2"
+									sx={{ color: "text.secondary", fontVariantNumeric: "tabular-nums" }}
+								>
+									{formatMoney(l.activity, budget.currency)} of{" "}
+									{formatMoney(l.amount, budget.currency)}
+								</Typography>
+							</Box>
+							<Meter
+								percent={l.percent}
+								color={STATUS_COLOR[l.status]}
+								label={`${l.name} spent against its limit`}
+							/>
+						</Box>
+					))}
+				</Box>
 			)}
 
 			{goals.length > 0 && (

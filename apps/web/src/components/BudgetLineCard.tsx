@@ -6,7 +6,7 @@ import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { memo } from "react";
-import { fixedWindow, STATUS_COLOR, STATUS_LABEL, unsigned } from "#/lib/budget";
+import { fixedWindow, runsWindow, STATUS_COLOR, STATUS_LABEL, unsigned } from "#/lib/budget";
 import { periodLimit, type LineMove } from "#/lib/budget-moves";
 import { formatMoney } from "#/lib/format";
 import type { BudgetFixedLine, BudgetLine } from "#/types/api";
@@ -53,6 +53,7 @@ const BudgetLineCard = memo(function BudgetLineCard({
 	onMove,
 	onUndoMove,
 	onHistory,
+	onRepeat,
 }: {
 	line: BudgetLine | BudgetFixedLine;
 	currency: string;
@@ -65,6 +66,8 @@ const BudgetLineCard = memo(function BudgetLineCard({
 	onUndoMove?: (moveId: string) => void;
 	/** Open the log of every move into or out of this limit */
 	onHistory?: (line: BudgetLine) => void;
+	/** Start the next stretch from a limit for set dates that is running or over */
+	onRepeat?: (line: BudgetFixedLine) => void;
 }) {
 	const color = STATUS_COLOR[line.status];
 	const limit = periodLimit(line);
@@ -86,9 +89,9 @@ const BudgetLineCard = memo(function BudgetLineCard({
 					<Typography variant="subtitle1" sx={{ fontWeight: 600 }} noWrap>
 						{line.name}
 					</Typography>
-					{dated && (
+					{(dated ? fixedWindow(dated) : runsWindow(line)) && (
 						<Typography variant="caption" sx={{ display: "block", color: "text.secondary" }}>
-							{fixedWindow(dated)}
+							{dated ? fixedWindow(dated) : runsWindow(line)}
 						</Typography>
 					)}
 					<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 0.5 }}>
@@ -174,6 +177,13 @@ const BudgetLineCard = memo(function BudgetLineCard({
 					)}
 				</Box>
 			))}
+			{dated && onRepeat && dated.state !== "upcoming" && (
+				<Box sx={{ display: "flex", mt: 1, ml: -1 }}>
+					<Button size="small" onClick={() => onRepeat(dated)}>
+						Repeat for the next stretch
+					</Button>
+				</Box>
+			)}
 			{(onMove || onHistory) && (
 				<Box sx={{ display: "flex", gap: 0.5, mt: 1, ml: -1 }}>
 					{onMove && (

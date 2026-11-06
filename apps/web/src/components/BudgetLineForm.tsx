@@ -7,26 +7,33 @@ import { useMemo, useState } from "react";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
 import { createBudgetLineFn, updateBudgetLineFn } from "#/server/budget";
-import { datesOverlap } from "#/lib/budget";
+import { datesOverlap, nextStretch } from "#/lib/budget";
+import MenuItem from "@mui/material/MenuItem";
 import type { Budget, BudgetFixedLine, BudgetLine, Category } from "#/types/api";
 import FormDialog from "./FormDialog";
 import { useNotify } from "./Notify";
 
 const isDated = (l?: BudgetLine): l is BudgetFixedLine => Boolean(l && "end_date" in l);
+/** A per-period limit that only runs between two dates. */
+const isWindowed = (l?: BudgetLine) => Boolean(l?.runs_from);
 
 /** The "only for certain dates" switch and, when it is on, the two dates. */
 function DatesFields({
 	dated,
+	repeat,
 	start,
 	end,
 	onDated,
+	onRepeat,
 	onStart,
 	onEnd,
 }: {
 	dated: boolean;
+	repeat: boolean;
 	start: string;
 	end: string;
 	onDated: (on: boolean) => void;
+	onRepeat: (on: boolean) => void;
 	onStart: (v: string) => void;
 	onEnd: (v: string) => void;
 }) {
@@ -57,9 +64,24 @@ function DatesFields({
 							required
 							value={end}
 							onChange={(e) => onEnd(e.target.value)}
-							helperText="Inclusive. The limit is one total for the whole stretch"
+							helperText={
+								repeat
+									? "Inclusive. Whole periods count, so the dates snap to them"
+									: "Inclusive. The limit is one total for the whole stretch"
+							}
 							slotProps={{ inputLabel: { shrink: true }, htmlInput: { min: start || undefined } }}
 						/>
+					</Grid>
+					<Grid size={12}>
+						<TextField
+							select
+							label="How it counts"
+							value={repeat ? "monthly" : "total"}
+							onChange={(e) => onRepeat(e.target.value === "monthly")}
+						>
+							<MenuItem value="total">One total for the whole stretch</MenuItem>
+							<MenuItem value="monthly">A limit for every period between these dates</MenuItem>
+						</TextField>
 					</Grid>
 				</>
 			)}
@@ -71,12 +93,15 @@ function DatesFields({
  * set dates), an optional warning level of its own, and whether unspent money rolls over. */
 export default function BudgetLineForm({
 	line,
+	repeatOf,
 	budget,
 	categories,
 	onClose,
 }: {
 	/** undefined = create a new line */
 	line?: BudgetLine;
+	/** A finished limit for set dates to start the next stretch from (a new limit, filled in) */
+	repeatOf?: BudgetFixedLine;
 	budget: Budget;
 	categories: Category[];
 	onClose: () => void;
@@ -84,20 +109,28 @@ export default function BudgetLineForm({
 	const { run, pending, error } = useAction();
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
+	const base = line ?? repeatOf;
+	const next = repeatOf ? nextStretch(repeatOf) : null;
 	const [chosen, setChosen] = useState<Category[]>(() =>
-		line ? categories.filter((c) => line.categories.some((x) => x.id === c.id)) : [],
+		base ? categories.filter((c) => base.categories.some((x) => x.id === c.id)) : [],
 	);
 	const [rollover, setRollover] = useState(line?.rollover ?? false);
-	const [dated, setDated] = useState(() => isDated(line));
-	const [start, setStart] = useState(() => (isDated(line) ? line.start_date : ""));
-	const [end, setEnd] = useState(() => (isDated(line) ? line.end_date : ""));
+	const [dated, setDated] = useState(() => isDated(line) || isWindowed(line) || Boolean(repeatOf));
+	const [repeat, setRepeat] = useState(() => isWindowed(line));
+	const [start, setStart] = useState(
+		() => next?.start ?? (isDated(line) ? line.start_date : (line?.runs_from ?? "")),
+	);
+	const [end, setEnd] = useState(
+		() => next?.end ?? (isDated(line) ? line.end_date : (line?.runs_until ?? "")),
+	);
 	const [localError, setLocalError] = useState<string | null>(null);
 
 	// A category can be in one per-period line only, and in one limit per stretch of dates, so those
 	// taken by other lines are shown but disabled.
 	const takenBy = useMemo(() => {
+		// (a limit that runs between dates is checked by the server, which knows every period)
 		const others: BudgetLine[] =
-			dated && start && end
+			dated && !repeat && start && end
 				? (budget.fixed_lines ?? []).filter((l) =>
 						datesOverlap([start, end], [l.start_date, l.end_date]),
 					)
@@ -110,7 +143,7 @@ export default function BudgetLineForm({
 			for (const c of l.categories) map.set(c.id, l.name);
 		}
 		return map;
-	}, [budget.lines, budget.fixed_lines, line?.id, dated, start, end]);
+	}, [budget.lines, budget.fixed_lines, line?.id, dated, repeat, start, end]);
 
 	async function submit(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault();
@@ -125,9 +158,9 @@ export default function BudgetLineForm({
 			name: text("name"),
 			category_ids: chosen.map((c) => c.id),
 			amount: text("amount"),
-			rollover: dated ? false : rollover,
+			rollover: dated && !repeat ? false : rollover,
 		};
-		const dates = dated ? { start_date: start, end_date: end } : {};
+		const dates = dated ? { start_date: start, end_date: end, repeat } : {};
 		const ok = await run(() =>
 			line
 				? updateBudgetLineFn({
@@ -137,7 +170,7 @@ export default function BudgetLineForm({
 								...fields,
 								...dates,
 								// turning the dates off makes it a limit for every period again
-								...(isDated(line) && !dated ? { end_date: null } : {}),
+								...((isDated(line) || isWindowed(line)) && !dated ? { end_date: null } : {}),
 								warn_percent: warn ? Number(warn) : null,
 							},
 						},
@@ -154,7 +187,7 @@ export default function BudgetLineForm({
 
 	return (
 		<FormDialog
-			title={line ? "Edit limit" : "Add limit"}
+			title={line ? "Edit limit" : repeatOf ? "Repeat limit" : "Add limit"}
 			error={localError ?? error}
 			pending={pending}
 			onSubmit={submit}
@@ -165,7 +198,7 @@ export default function BudgetLineForm({
 					<TextField
 						label="Name"
 						name="name"
-						defaultValue={line?.name}
+						defaultValue={base?.name}
 						placeholder="Food and drink"
 						required
 						autoFocus
@@ -202,12 +235,12 @@ export default function BudgetLineForm({
 				<Grid size={{ xs: 12, sm: 6 }}>
 					<TextField
 						label={
-							dated
+							dated && !repeat
 								? `Limit for these dates (${budget.currency})`
 								: `Limit per period (${budget.currency})`
 						}
 						name="amount"
-						defaultValue={line?.amount}
+						defaultValue={base?.amount}
 						placeholder="4000"
 						required
 						slotProps={{ htmlInput: { inputMode: "decimal" } }}
@@ -225,13 +258,15 @@ export default function BudgetLineForm({
 				</Grid>
 				<DatesFields
 					dated={dated}
+					repeat={repeat}
 					start={start}
 					end={end}
 					onDated={setDated}
+					onRepeat={setRepeat}
 					onStart={setStart}
 					onEnd={setEnd}
 				/>
-				{!dated && (
+				{(!dated || repeat) && (
 					<Grid size={12}>
 						<FormControlLabel
 							control={<Switch checked={rollover} onChange={(_, v) => setRollover(v)} />}
