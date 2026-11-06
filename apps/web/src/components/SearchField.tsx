@@ -71,7 +71,12 @@ export default function SearchField({
 						boxShadow: "var(--elev-2), inset 0 0 0 2px var(--md-sys-color-primary)",
 					},
 				},
-				"& .MuiFilledInput-input": { py: 1.75, fontSize: 16 },
+				"& .MuiFilledInput-input": {
+					py: 1.75,
+					fontSize: 16,
+					// The field has its own clear button; hide the browser's (Chromium and Safari).
+					"&::-webkit-search-cancel-button": { WebkitAppearance: "none", display: "none" },
+				},
 			}}
 			slotProps={{
 				htmlInput: { maxLength: 100 },
