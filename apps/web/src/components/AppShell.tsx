@@ -20,7 +20,7 @@ export default function AppShell({
 }: {
 	user: SessionUser;
 	unread: number;
-	/** Salary splits waiting for approval, for the sidebar */
+	/** Salary splits waiting for approval, for the sidebar and the bottom bar's More button */
 	pending: number;
 	children: ReactNode;
 }) {
@@ -29,7 +29,7 @@ export default function AppShell({
 			<NavigationProgress />
 			<SideNav badges={{ "/pending": pending }} />
 			<TopBar user={user} unread={unread} />
-			<BottomNav />
+			<BottomNav badges={{ "/pending": pending }} />
 
 			<Box
 				component="main"

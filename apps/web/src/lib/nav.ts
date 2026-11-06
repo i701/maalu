@@ -17,13 +17,13 @@ export type NavDestination = {
 	symbol: string;
 	accent: Accent;
 	group: NavGroupKey;
-	/** Also in the phone's bottom bar. That bar only has room for five, so a new destination goes in
-	 * the sidebar only unless it is one of the few used all the time. */
+	/** Also in the phone's bottom bar. It has four of these plus More, which opens every destination,
+	 * so a new destination needs no `bottom` unless it is one of the few used all the time. */
 	bottom?: boolean;
 };
 
 /** Every destination. The sidebar (wide screens) lists them all; the bottom bar (narrow screens)
- * lists the ones marked `bottom`. */
+ * lists the ones marked `bottom`, and its More sheet lists them all again, grouped. */
 export const NAV_ITEMS: readonly NavDestination[] = [
 	{
 		to: "/dashboard",
@@ -55,7 +55,6 @@ export const NAV_ITEMS: readonly NavDestination[] = [
 		symbol: "event_repeat",
 		accent: "violet",
 		group: "money",
-		bottom: true,
 	},
 	{ to: "/net-worth", label: "Net worth", symbol: "finance", accent: "green", group: "money" },
 	{ to: "/compare", label: "Compare", symbol: "insights", accent: "violet", group: "money" },
@@ -82,6 +81,11 @@ export const NAV_ITEMS: readonly NavDestination[] = [
 ];
 
 export const BOTTOM_NAV_ITEMS = NAV_ITEMS.filter((item) => item.bottom);
+
+/** Whether `pathname` is one of the bottom bar's own destinations (or a page under one, like an
+ * account's page under Accounts). When it is not, the More button shows as the current tab. */
+export const inBottomBar = (pathname: string): boolean =>
+	BOTTOM_NAV_ITEMS.some((item) => pathname === item.to || pathname.startsWith(`${item.to}/`));
 
 /** Heights (px) the page leaves clear for the top bar and the bottom bar (bottom excludes the
  * safe-area inset), and the width of the sidebar on wide screens. */
