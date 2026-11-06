@@ -19,7 +19,7 @@ import PageHeader from "#/components/PageHeader";
 import PendingOverlay from "#/components/PendingOverlay";
 import SavingsGoals from "#/components/SavingsGoals";
 import Symbol from "#/components/Symbol";
-import { addDays } from "#/lib/budget";
+import { addDays, fixedInPeriod } from "#/lib/budget";
 import { movesFor } from "#/lib/budget-moves";
 import { formatDate } from "#/lib/format";
 import { staggerChildren } from "#/lib/motion";
@@ -81,7 +81,7 @@ function BudgetPage() {
 	);
 
 	const { period } = budget;
-	const fixedLines = budget.fixed_lines ?? [];
+	const fixedLines = fixedInPeriod(budget);
 	const goTo = (on: string | undefined) => navigate({ search: { on }, replace: true });
 	const periodLabel = `${formatDate(period.start)} – ${formatDate(period.end)}`;
 

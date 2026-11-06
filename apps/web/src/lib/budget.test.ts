@@ -7,6 +7,7 @@ import {
 	describeLine,
 	fixedWindow,
 	linesNeedingAttention,
+	fixedInPeriod,
 	unsigned,
 } from "./budget";
 
@@ -161,6 +162,16 @@ const withFixed = (lines: BudgetFixedLine[], isCurrent = true): Budget => ({
 });
 
 describe("limits for set dates", () => {
+	it("are listed only for the period whose dates they touch", () => {
+		const b = withFixed([
+			fixed("Inside", "ok", ["Trip"]),
+			fixed("Straddles", "ok", ["Trip"], { start_date: "2026-09-20", end_date: "2026-10-02" }),
+			fixed("November", "ok", ["Trip"], { start_date: "2026-11-01", end_date: "2026-11-30" }),
+			fixed("September", "ok", ["Trip"], { start_date: "2026-09-01", end_date: "2026-09-30" }),
+		]);
+		expect(fixedInPeriod(b).map((l) => l.name)).toEqual(["Inside", "Straddles"]);
+	});
+
 	it("count as needing attention only while they run", () => {
 		const b = withFixed([
 			fixed("Running", "warning", ["Trip"]),

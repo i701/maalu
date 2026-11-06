@@ -32,6 +32,14 @@ const RANK: Record<BudgetStatus, number> = { ok: 0, warning: 1, over: 2 };
 export const runningFixed = (budget: Budget): BudgetFixedLine[] =>
 	(budget.fixed_lines ?? []).filter((l) => l.state === "active");
 
+/** The limits for set dates whose dates touch the period on screen (ISO dates compare as text), so
+ * a limit for November is not listed under December. The full list stays in `budget.fixed_lines`
+ * for the form, which needs every limit to tell which categories are taken. */
+export const fixedInPeriod = (budget: Budget): BudgetFixedLine[] =>
+	(budget.fixed_lines ?? []).filter(
+		(l) => l.start_date <= budget.period.end && l.end_date >= budget.period.start,
+	);
+
 /** Lines that are close to their limit or over it, the worst first: the per-period ones of this
  * period and the limits for set dates that are running. */
 export function linesNeedingAttention(budget: Budget): BudgetLine[] {
