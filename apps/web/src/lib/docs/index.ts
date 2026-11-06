@@ -1,4 +1,5 @@
 import { NAV_ITEMS } from "#/lib/nav";
+import { accountPage } from "./account-page";
 import { accounts } from "./accounts";
 import { budget } from "./budget";
 import { fixingRecords } from "./fixing-records";
@@ -15,6 +16,7 @@ import type { Doc } from "./types";
  * one: write it in its own file here, import it below, and it appears on the Docs page. */
 export const DOCS: readonly Doc[] = [
 	accounts,
+	accountPage,
 	importStatement,
 	fixingRecords,
 	subscriptions,

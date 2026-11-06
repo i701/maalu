@@ -97,6 +97,7 @@ export const accounts: Doc = {
 			type: "list",
 			items: [
 				"Give accounts a bank and a number on the [Accounts](/accounts) page if you have several at one bank, so they are easy to tell apart.",
+				"Each account has its own page with a balance chart and a running balance: see [An account's page](/docs/account-page).",
 				"Money moved between two of your own accounts is a **transfer**, not income or spending.",
 				"An account you stop using can be **archived**: it leaves your lists but its history stays.",
 				"Older **Debit Card** accounts were moved into **Bank accounts**, so nothing is lost.",

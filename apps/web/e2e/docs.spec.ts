@@ -60,3 +60,20 @@ test("a guide that does not exist says so and leads back", async ({ page }) => {
 	await page.getByRole("link", { name: "See all the docs" }).click();
 	await expect(page).toHaveURL(/\/docs$/);
 });
+
+test("the accounts guide leads to the guide for an account's page, which finds its own words", async ({
+	page,
+}) => {
+	await signUp(page);
+	await open(page, "/docs/accounts");
+	await page
+		.getByRole("article")
+		.getByRole("link", { name: "An account's page", exact: true })
+		.click();
+	await expect(page).toHaveURL(/\/docs\/account-page$/);
+	await expect(page.getByRole("heading", { name: "Balance over time" })).toBeVisible();
+
+	// the search on the index finds it by something only it says
+	await open(page, "/docs?q=running+balance");
+	await expect(page.getByText("An account's page").first()).toBeVisible();
+});
