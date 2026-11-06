@@ -13,6 +13,7 @@ from pydantic import (
 )
 
 from app.budget_period import MAX_START_DAY
+from app.enums import CategoryKind
 
 LineName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 Limit = Annotated[Decimal, Field(gt=0, max_digits=19, decimal_places=4)]
@@ -129,6 +130,11 @@ class BudgetLineResponse(BaseModel):
         description="Share of (amount + carried + moved_in - moved_out) already spent, rounded"
     )
     status: BudgetStatus
+    kind: CategoryKind | None = Field(
+        default=None,
+        description="Need or want when every category in the limit counts as that (its own kind, "
+        "or its parent's); null when they differ or are not sorted",
+    )
     runs_from: date | None = Field(
         default=None,
         description="For a monthly limit that only runs between two dates: the first day of its "

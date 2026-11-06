@@ -150,3 +150,29 @@ async def test_money_only_moves_between_limits_that_run_that_period(client: Asyn
         headers=auth,
     )
     assert res.status_code == 201, res.text
+
+
+async def test_a_limit_is_a_need_or_a_want_when_its_categories_all_are(client: AsyncClient, auth):
+    from tests.test_budget_dates import CAT, cid
+
+    await client.post(CAT, json={"name": "Rent", "kind": "need"}, headers=auth)
+    await client.post(CAT, json={"name": "Water", "kind": "need"}, headers=auth)
+    await client.post(CAT, json={"name": "Games", "kind": "want"}, headers=auth)
+    await client.post(CAT, json={"name": "Misc"}, headers=auth)
+    await client.post(CAT, json={"name": "Food", "kind": "need"}, headers=auth)
+    await client.post(CAT, json={"name": "Hobby", "kind": "want"}, headers=auth)
+
+    async def kind_of(name: str, categories: list[str]):
+        ids = [await cid(client, auth, c) for c in categories]
+        res = await client.post(
+            f"{BUDGET}/lines",
+            json={"name": name, "category_ids": ids, "amount": "10"},
+            headers=auth,
+        )
+        assert res.status_code == 201, res.text
+        return next(v["kind"] for v in res.json()["lines"] if v["name"] == name)
+
+    assert await kind_of("Home", ["Rent", "Water"]) == "need"
+    assert await kind_of("Fun", ["Games"]) == "want"
+    assert await kind_of("Not sorted", ["Misc"]) is None
+    assert await kind_of("Mixed", ["Food", "Hobby"]) is None  # one of each

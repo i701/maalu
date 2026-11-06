@@ -2763,6 +2763,8 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /** @description Need or want when every category in the limit counts as that (its own kind, or its parent's); null when they differ or are not sorted */
+            kind?: components["schemas"]["CategoryKind"] | null;
             /**
              * Moved In
              * @description Money moved in from other limits, or added, for this period only
@@ -2891,6 +2893,8 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /** @description Need or want when every category in the limit counts as that (its own kind, or its parent's); null when they differ or are not sorted */
+            kind?: components["schemas"]["CategoryKind"] | null;
             /**
              * Moved In
              * @description Money moved in from other limits, or added, for this period only

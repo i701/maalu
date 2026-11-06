@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.allocation import allocate_base
 from app.budget_period import next_period_start, period_bounds, period_start, previous_period_start
+from app.enums import CategoryKind
 from app.models import (
     Budget,
     BudgetLine,
@@ -212,6 +213,26 @@ class BudgetService:
             out.setdefault(parent_id, []).append(child_id)
         return out
 
+    async def _kinds(self, user_id: uuid.UUID) -> dict[uuid.UUID, CategoryKind | None]:
+        """Each category's kind: its own, else its parent's."""
+        rows = (
+            await self.db.execute(
+                select(Category.id, Category.kind, Category.parent_id).where(
+                    Category.user_id == user_id
+                )
+            )
+        ).all()
+        own = {cid: kind for cid, kind, _ in rows}
+        return {cid: kind or own.get(parent) for cid, kind, parent in rows}
+
+    @staticmethod
+    def _line_kind(
+        line: BudgetLine, kinds: dict[uuid.UUID, CategoryKind | None]
+    ) -> CategoryKind | None:
+        """A limit is a need or a want when all its categories are the same kind."""
+        found = {kinds.get(link.category_id) for link in line.category_links}
+        return next(iter(found)) if len(found) == 1 else None
+
     async def _moves(self, user_id: uuid.UUID, first: date, last: date) -> list[BudgetMove]:
         """Moves for periods starting between `first` and `last`, newest first."""
         stmt = (
@@ -237,6 +258,7 @@ class BudgetService:
 
         activity = await self._activity_by_category(user_id, start, end)
         children = await self._children(user_id)
+        kinds = await self._kinds(user_id)
 
         # Earlier periods only matter for lines that roll their leftovers over.
         history: dict[date, dict[uuid.UUID, Decimal]] = {}
@@ -299,13 +321,15 @@ class BudgetService:
                     available=(budgeted - spent).quantize(CENT),
                     percent=_percent(spent, budgeted),
                     status=_status(spent, budgeted, line.warn_percent or budget.warn_percent),
+                    kind=self._line_kind(line, kinds),
                     runs_from=line.start_date if line.active_until else None,
                     runs_until=line.active_until,
                 )
             )
 
         fixed_views = [
-            await self._fixed_view(line, today, children, budget.warn_percent) for line in fixed
+            await self._fixed_view(line, today, children, budget.warn_percent, kinds)
+            for line in fixed
         ]
         fixed_views.sort(key=lambda v: (v.state == "ended", v.start_date, v.name))
 
@@ -340,6 +364,7 @@ class BudgetService:
         today: date,
         children: dict[uuid.UUID, list[uuid.UUID]],
         default_warn: int,
+        kinds: dict[uuid.UUID, CategoryKind | None],
     ) -> BudgetFixedLine:
         """A limit for set dates: everything spent in its categories over the whole range."""
         assert line.ends_on is not None
@@ -362,6 +387,7 @@ class BudgetService:
             available=(line.amount - spent).quantize(CENT),
             percent=_percent(spent, line.amount),
             status=_status(spent, line.amount, line.warn_percent or default_warn),
+            kind=self._line_kind(line, kinds),
             start_date=line.start_date,
             end_date=line.ends_on,
             state=state,

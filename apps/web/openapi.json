@@ -1150,6 +1150,17 @@
             "title": "Id",
             "type": "string"
           },
+          "kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoryKind"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Need or want when every category in the limit counts as that (its own kind, or its parent's); null when they differ or are not sorted"
+          },
           "moved_in": {
             "description": "Money moved in from other limits, or added, for this period only",
             "title": "Moved In",
@@ -1400,6 +1411,17 @@
             "format": "uuid",
             "title": "Id",
             "type": "string"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoryKind"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Need or want when every category in the limit counts as that (its own kind, or its parent's); null when they differ or are not sorted"
           },
           "moved_in": {
             "description": "Money moved in from other limits, or added, for this period only",
