@@ -2302,6 +2302,11 @@ export interface components {
              * @default 0
              */
             opening_amount: number | string;
+            /**
+             * Spendable
+             * @description Whether this is everyday money for available-to-spend. Leave out to follow the account's group (cash, bank accounts and prepaid are). Not for cards, overdrafts or loans.
+             */
+            spendable?: boolean | null;
         };
         /**
          * AccountGroup
@@ -2354,6 +2359,11 @@ export interface components {
              */
             base_balance: string;
             /**
+             * Counts As Spendable
+             * @description Whether it is everyday money for available-to-spend: `spendable` if set, else what its group says. A goal that follows the account still keeps it apart.
+             */
+            counts_as_spendable: boolean;
+            /**
              * Created At
              * Format: date-time
              */
@@ -2383,6 +2393,11 @@ export interface components {
             name: string;
             /** Opening Amount */
             opening_amount: string;
+            /**
+             * Spendable
+             * @description Your own choice, or null to follow the group (see `counts_as_spendable`)
+             */
+            spendable: boolean | null;
             /** Transaction Count */
             transaction_count: number;
         };
@@ -2426,6 +2441,11 @@ export interface components {
             name?: string | null;
             /** Opening Amount */
             opening_amount?: number | string | null;
+            /**
+             * Spendable
+             * @description `null` goes back to what the account's group says
+             */
+            spendable?: boolean | null;
         };
         /** AttachmentResponse */
         AttachmentResponse: {

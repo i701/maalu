@@ -69,6 +69,9 @@ class Account(Base):
     # for reference): its own balance and transactions stay, but it is left out of the totals, the
     # reports, the budget and net worth.
     exclude_from_stats: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+    # Whether this is everyday money for "available to spend". Null = what its group says (cash,
+    # bank accounts and prepaid are). Never true for what is owed (cards, overdrafts, loans).
+    spendable: Mapped[bool | None] = mapped_column(Boolean, default=None)
     # Set when the account is archived: closed, hidden from pickers and the overview, and left out
     # of the totals, but its transactions stay in the history. Reversible.
     archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)

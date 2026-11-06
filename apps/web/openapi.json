@@ -197,6 +197,18 @@
             ],
             "default": "0",
             "title": "Opening Amount"
+          },
+          "spendable": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Whether this is everyday money for available-to-spend. Leave out to follow the account's group (cash, bank accounts and prepaid are). Not for cards, overdrafts or loans.",
+            "title": "Spendable"
           }
         },
         "required": [
@@ -331,6 +343,11 @@
             "title": "Base Balance",
             "type": "string"
           },
+          "counts_as_spendable": {
+            "description": "Whether it is everyday money for available-to-spend: `spendable` if set, else what its group says. A goal that follows the account still keeps it apart.",
+            "title": "Counts As Spendable",
+            "type": "boolean"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -391,6 +408,18 @@
             "title": "Opening Amount",
             "type": "string"
           },
+          "spendable": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Your own choice, or null to follow the group (see `counts_as_spendable`)",
+            "title": "Spendable"
+          },
           "transaction_count": {
             "title": "Transaction Count",
             "type": "integer"
@@ -408,6 +437,8 @@
           "account_number",
           "credit_limit",
           "exclude_from_stats",
+          "spendable",
+          "counts_as_spendable",
           "auto_rate",
           "is_liability",
           "balance",
@@ -586,6 +617,18 @@
               }
             ],
             "title": "Opening Amount"
+          },
+          "spendable": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "`null` goes back to what the account's group says",
+            "title": "Spendable"
           }
         },
         "title": "AccountUpdate",

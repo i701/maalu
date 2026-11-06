@@ -21,6 +21,7 @@ from app.services import (
     AccountHasTransactionsError,
     AccountLimitError,
     AccountNumberTakenError,
+    AccountSpendableError,
     ExchangeRateRequiredError,
     TransactionRuleError,
 )
@@ -36,6 +37,10 @@ _NO_AUTO_RATE = HTTPException(
     "An account in your base currency has no exchange rate to keep up to date",
 )
 _NOT_FOUND = HTTPException(status.HTTP_404_NOT_FOUND, "Account not found")
+_NO_SPENDABLE = HTTPException(
+    status.HTTP_422_UNPROCESSABLE_CONTENT,
+    "Cards, overdrafts and loans are money you owe, so they can't be everyday money",
+)
 _NO_LIMIT = HTTPException(
     status.HTTP_422_UNPROCESSABLE_CONTENT, "Only cards and overdrafts have a credit limit"
 )
@@ -61,6 +66,8 @@ async def create_account(data: AccountCreate, user_id: CurrentUserId, service: A
         raise _number_taken(exc) from None
     except AccountLimitError:
         raise _NO_LIMIT from None
+    except AccountSpendableError:
+        raise _NO_SPENDABLE from None
     except AccountAutoRateError:
         raise _NO_AUTO_RATE from None
     return await _present_one(service, account)
@@ -149,6 +156,8 @@ async def update_account(
         raise _number_taken(exc) from None
     except AccountLimitError:
         raise _NO_LIMIT from None
+    except AccountSpendableError:
+        raise _NO_SPENDABLE from None
     except AccountAutoRateError:
         raise _NO_AUTO_RATE from None
     except AccountHasTransactionsError:

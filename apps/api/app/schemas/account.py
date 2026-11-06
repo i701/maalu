@@ -75,6 +75,12 @@ class AccountCreate(BaseModel):
         default=False,
         description="Leave the account out of totals, reports, budgets and net worth",
     )
+    spendable: bool | None = Field(
+        default=None,
+        description="Whether this is everyday money for available-to-spend. Leave out to follow "
+        "the account's group (cash, bank accounts and prepaid are). Not for cards, overdrafts "
+        "or loans.",
+    )
     auto_rate: bool = Field(
         default=False,
         description="Foreign-currency accounts: keep `exchange_rate` at the market rate, updated "
@@ -111,6 +117,9 @@ class AccountUpdate(BaseModel):
     account_number: str | None = None
     credit_limit: CreditLimit | None = None
     exclude_from_stats: bool | None = None
+    spendable: bool | None = Field(
+        default=None, description="`null` goes back to what the account's group says"
+    )
     auto_rate: bool | None = None
 
     @field_validator(
@@ -153,6 +162,13 @@ class AccountResponse(BaseModel):
         description="Cards and overdrafts: the most that can be owed, in the account's currency"
     )
     exclude_from_stats: bool
+    spendable: bool | None = Field(
+        description="Your own choice, or null to follow the group (see `counts_as_spendable`)"
+    )
+    counts_as_spendable: bool = Field(
+        description="Whether it is everyday money for available-to-spend: `spendable` if set, "
+        "else what its group says. A goal that follows the account still keeps it apart."
+    )
     auto_rate: bool = Field(description="Whether the rate is kept at the market rate daily")
     is_liability: bool
     # Computed: opening amount + linked transactions.

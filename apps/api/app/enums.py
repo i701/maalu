@@ -77,6 +77,16 @@ class AccountGroup(StrEnum):
 LIABILITY_GROUPS = frozenset({AccountGroup.CARD, AccountGroup.OVERDRAFTS, AccountGroup.LOAN})
 # Accounts that hold money you spend from day to day: what "available to spend" starts from.
 SPENDABLE_GROUPS = frozenset({AccountGroup.CASH, AccountGroup.ACCOUNTS, AccountGroup.PREPAID})
+
+
+def is_spendable(group: AccountGroup, override: bool | None) -> bool:
+    """Whether an account's money counts as everyday money: the user's own choice when they made
+    one, otherwise what its group says. What is owed (cards, overdrafts, loans) never does."""
+    if group in LIABILITY_GROUPS:
+        return False
+    return (group in SPENDABLE_GROUPS) if override is None else override
+
+
 # Only these have a credit limit: the most you can owe on them.
 CREDIT_LIMIT_GROUPS = frozenset({AccountGroup.CARD, AccountGroup.OVERDRAFTS})
 # The category a balance adjustment is filed under (it is left out of every report anyway).

@@ -5,7 +5,13 @@ from decimal import Decimal
 from sqlalchemy import case, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.enums import CREDIT_LIMIT_GROUPS, LIABILITY_GROUPS, AccountGroup, TransactionType
+from app.enums import (
+    CREDIT_LIMIT_GROUPS,
+    LIABILITY_GROUPS,
+    AccountGroup,
+    TransactionType,
+    is_spendable,
+)
 from app.models import Account, Transaction, User
 from app.schemas import (
     AccountBalancePoint,
@@ -44,6 +50,10 @@ class AccountAutoRateError(Exception):
 
 class AccountLimitError(Exception):
     """A credit limit on an account that cannot have one."""
+
+
+class AccountSpendableError(Exception):
+    """An account that is owed money (a card, overdraft or loan) can't be everyday money."""
 
 
 class AccountHasTransactionsError(Exception):
@@ -127,6 +137,11 @@ class AccountService:
         if limit is not None and group not in CREDIT_LIMIT_GROUPS:
             raise AccountLimitError
 
+    @staticmethod
+    def _check_spendable(group: AccountGroup, spendable: bool | None) -> None:
+        if spendable and group in LIABILITY_GROUPS:
+            raise AccountSpendableError
+
     async def _follow_market(self, account: Account, base: str) -> None:
         """Set the account's rate from the latest market rate, now. If the source cannot be
         reached the rate stays as it is: the daily job will do it later."""
@@ -139,6 +154,7 @@ class AccountService:
 
     async def create(self, user_id: uuid.UUID, data: AccountCreate) -> Account:
         self._check_limit(data.group, data.credit_limit)
+        self._check_spendable(data.group, data.spendable)
         await self._check_number(user_id, data.account_number)
         base = await self._base_currency(user_id)
         currency = data.currency or base
@@ -157,6 +173,7 @@ class AccountService:
             account_number=data.account_number,
             credit_limit=data.credit_limit,
             exclude_from_stats=data.exclude_from_stats,
+            spendable=data.spendable,
             auto_rate=data.auto_rate,
         )
         if data.auto_rate:
@@ -198,6 +215,11 @@ class AccountService:
             self._check_limit(group, changes["credit_limit"])
         elif group not in CREDIT_LIMIT_GROUPS:
             changes["credit_limit"] = None  # moved out of cards and overdrafts: no limit any more
+        spendable = changes.get("spendable", account.spendable)
+        if group in LIABILITY_GROUPS and "spendable" not in changes:
+            changes["spendable"] = None  # moved to what is owed: no everyday-money choice left
+        else:
+            self._check_spendable(group, spendable)
         if "account_number" in changes:
             await self._check_number(account.user_id, changes["account_number"], exclude=account.id)
 
@@ -287,6 +309,8 @@ class AccountService:
                     account_number=a.account_number,
                     credit_limit=a.credit_limit,
                     exclude_from_stats=a.exclude_from_stats,
+                    spendable=a.spendable,
+                    counts_as_spendable=is_spendable(a.group, a.spendable),
                     auto_rate=a.auto_rate,
                     is_liability=a.group in LIABILITY_GROUPS,
                     balance=balance,

@@ -208,3 +208,75 @@ async def test_each_person_sees_only_their_own(client: AsyncClient, auth, signup
     await account(client, auth, "Main", opening="1000")
     other = await signup("other@example.com")
     assert dec((await get(client, other))["balance"]) == 0
+
+
+async def test_an_account_follows_its_group_until_you_choose(client: AsyncClient, auth):
+    wallet = await account(client, auth, "Wallet", "cash", "100")
+    savings = await account(client, auth, "Savings", "savings", "1000")
+    assert (wallet["spendable"], wallet["counts_as_spendable"]) == (None, True)
+    assert (savings["spendable"], savings["counts_as_spendable"]) == (None, False)
+    body = await get(client, auth)
+    assert [a["name"] for a in body["accounts"]] == ["Wallet"]
+    assert [a["name"] for a in body["kept_apart"]] == ["Savings"]
+
+
+async def test_savings_can_be_everyday_money_and_cash_can_be_kept_apart(client: AsyncClient, auth):
+    wallet = await account(client, auth, "Wallet", "cash", "100")
+    savings = await account(client, auth, "Savings", "savings", "1000")
+    res = await client.patch(f"{ACC}/{savings['id']}", json={"spendable": True}, headers=auth)
+    assert res.status_code == 200, res.text
+    assert res.json()["counts_as_spendable"] is True
+    res = await client.patch(f"{ACC}/{wallet['id']}", json={"spendable": False}, headers=auth)
+    assert res.json()["counts_as_spendable"] is False
+
+    body = await get(client, auth)
+    assert [a["name"] for a in body["accounts"]] == ["Savings"]
+    assert [a["name"] for a in body["kept_apart"]] == ["Wallet"]
+    assert dec(body["balance"]) == 1000
+
+    # null goes back to what the group says
+    res = await client.patch(f"{ACC}/{savings['id']}", json={"spendable": None}, headers=auth)
+    assert (res.json()["spendable"], res.json()["counts_as_spendable"]) == (None, False)
+
+
+async def test_a_bill_from_an_account_kept_apart_is_not_counted(client: AsyncClient, auth):
+    wallet = await account(client, auth, "Wallet", "cash", "100")
+    savings = await account(client, auth, "Savings", "savings", "1000", spendable=True)
+    await client.patch(f"{ACC}/{wallet['id']}", json={"spendable": False}, headers=auth)
+    await planned(client, auth, wallet["id"], "40", date.today())
+    await planned(client, auth, savings["id"], "70", date.today())
+    body = await get(client, auth)
+    assert dec(body["bills_total"]) == 70  # only the one paid from everyday money
+    assert dec(body["available"]) == 930
+
+
+async def test_a_goal_still_keeps_its_account_apart(client: AsyncClient, auth):
+    savings = await account(client, auth, "Savings", "savings", "1000", spendable=True)
+    res = await client.post(
+        GOALS,
+        json={"name": "Fund", "target_amount": "5000", "account_id": savings["id"]},
+        headers=auth,
+    )
+    assert res.status_code == 201, res.text
+    body = await get(client, auth)
+    assert body["accounts"] == []
+    assert [a["name"] for a in body["kept_apart"]] == ["Savings"]
+
+
+async def test_what_is_owed_cannot_be_everyday_money(client: AsyncClient, auth):
+    res = await client.post(
+        ACC,
+        json={"name": "Visa", "group": "card", "currency": "MVR", "spendable": True},
+        headers=auth,
+    )
+    assert res.status_code == 422
+    card = await account(client, auth, "Visa", "card")
+    res = await client.patch(f"{ACC}/{card['id']}", json={"spendable": True}, headers=auth)
+    assert res.status_code == 422
+
+
+async def test_moving_an_account_to_what_is_owed_drops_the_choice(client: AsyncClient, auth):
+    savings = await account(client, auth, "Savings", "savings", "0", spendable=True)
+    res = await client.patch(f"{ACC}/{savings['id']}", json={"group": "loan"}, headers=auth)
+    assert res.status_code == 200, res.text
+    assert (res.json()["spendable"], res.json()["counts_as_spendable"]) == (None, False)

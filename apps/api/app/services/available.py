@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.budget_period import period_bounds
-from app.enums import LIABILITY_GROUPS, SPENDABLE_GROUPS, TransactionType
+from app.enums import LIABILITY_GROUPS, TransactionType, is_spendable
 from app.models import Transaction, User
 from app.schemas.available import (
     AvailableAccount,
@@ -47,7 +47,7 @@ class AvailableService:
             if a.group in LIABILITY_GROUPS:
                 continue  # what is owed isn't money to spend, and isn't money kept apart
             row = AvailableAccount(id=a.id, name=a.name, group=a.group.value, balance=worth[a.id])
-            if a.group in SPENDABLE_GROUPS and a.id not in followed:
+            if is_spendable(a.group, a.spendable) and a.id not in followed:
                 spendable.append(row)
             else:
                 apart.append(row)
