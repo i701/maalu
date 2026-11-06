@@ -15,12 +15,14 @@ import MetricCard from "#/components/dashboard/MetricCard";
 import MoneyFlowCard from "#/components/dashboard/MoneyFlowCard";
 import MonthlyCard from "#/components/dashboard/MonthlyCard";
 import NeedsWantsCard from "#/components/dashboard/NeedsWantsCard";
+import UpcomingSoonCard from "#/components/dashboard/UpcomingSoonCard";
 import SpendingCard from "#/components/dashboard/SpendingCard";
 import PendingOverlay from "#/components/PendingOverlay";
 import Symbol from "#/components/Symbol";
 import { monthBounds, monthLabel, percentChange, shiftMonth } from "#/lib/dashboard";
 import { formatMoney, sumDecimals } from "#/lib/format";
 import { staggerChildren } from "#/lib/motion";
+import { localToday } from "#/lib/planned";
 import { unwrap } from "#/lib/unwrap";
 import { creditUsage } from "#/lib/accounts";
 import { listAccountsFn } from "#/server/accounts";
@@ -31,6 +33,7 @@ import {
 	getCategoryTotalsFn,
 	getTransactionTotalsFn,
 	listTransactionsFn,
+	listUpcomingFn,
 } from "#/server/transactions";
 
 const searchSchema = z.object({
@@ -57,19 +60,31 @@ export const Route = createFileRoute("/_protected/dashboard")({
 		const trendEnd = current.end > now && current.start <= now ? now : current.end;
 		const range = { date_from: current.start, date_to: current.end };
 
-		const [totals, before, categories, monthly, trend, latest, budget, goals, accounts, available] =
-			await Promise.all([
-				getTransactionTotalsFn({ data: range }),
-				getTransactionTotalsFn({ data: { date_from: previous.start, date_to: previous.end } }),
-				getCategoryTotalsFn({ data: range }),
-				getMonthlyStatsFn({ data: { months: 12, to: current.end } }),
-				getBalanceTrendFn({ data: { from: current.start, to: trendEnd } }),
-				listTransactionsFn({ data: { page: 1, pageSize: 10 } }),
-				getBudgetFn({ data: {} }),
-				listGoalsFn({ data: {} }),
-				listAccountsFn(),
-				getAvailableToSpendFn(),
-			]);
+		const [
+			totals,
+			before,
+			categories,
+			monthly,
+			trend,
+			latest,
+			budget,
+			goals,
+			accounts,
+			available,
+			upcoming,
+		] = await Promise.all([
+			getTransactionTotalsFn({ data: range }),
+			getTransactionTotalsFn({ data: { date_from: previous.start, date_to: previous.end } }),
+			getCategoryTotalsFn({ data: range }),
+			getMonthlyStatsFn({ data: { months: 12, to: current.end } }),
+			getBalanceTrendFn({ data: { from: current.start, to: trendEnd } }),
+			listTransactionsFn({ data: { page: 1, pageSize: 10 } }),
+			getBudgetFn({ data: {} }),
+			listGoalsFn({ data: {} }),
+			listAccountsFn(),
+			getAvailableToSpendFn(),
+			listUpcomingFn(),
+		]);
 		return {
 			month: current.start,
 			totals: unwrap(totals),
@@ -78,6 +93,9 @@ export const Route = createFileRoute("/_protected/dashboard")({
 			monthly: unwrap(monthly),
 			trend: unwrap(trend),
 			latest: unwrap(latest).items.slice(0, 5),
+			// planned bills and income, soonest first (the page works without them)
+			upcoming: upcoming.ok ? upcoming.data : [],
+			asOf: localToday(),
 			// the page works without these two
 			available: available.ok ? available.data : null,
 			budget: budget.ok ? budget.data : null,
@@ -104,6 +122,8 @@ function DashboardPage() {
 		goals,
 		creditAccounts,
 		available,
+		upcoming,
+		asOf,
 	} = Route.useLoaderData();
 	const navigate = Route.useNavigate();
 	const goTo = (on: string | undefined) => navigate({ search: { on }, replace: true });
@@ -235,7 +255,10 @@ function DashboardPage() {
 						</Box>
 					)}
 
-					<Box sx={cell(6)}>
+					<Box sx={cell(3)}>
+						<UpcomingSoonCard upcoming={upcoming} today={asOf} />
+					</Box>
+					<Box sx={cell(3)}>
 						<LatestTransactionsCard transactions={latest} />
 					</Box>
 				</Box>
