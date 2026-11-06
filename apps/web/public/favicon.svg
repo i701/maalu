@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+	<!-- The Maalu symbol, a sprout rising out of a bowl. The colour mark on light browser chrome, the
+	     dark-mode mark (lighter blue) on dark chrome. -->
+	<style>
+		.from { stop-color: #1976d2; }
+		@media (prefers-color-scheme: dark) { .from { stop-color: #90caf9; } }
+	</style>
+	<defs>
+		<linearGradient id="g" gradientUnits="userSpaceOnUse" x1="0" y1="58" x2="0" y2="9">
+			<stop offset="0" class="from" />
+			<stop offset="1" stop-color="#10b981" />
+		</linearGradient>
+	</defs>
+	<path d="M9 32C9 47 19 55 32 55C45 55 55 47 55 32M32 54V28" fill="none" stroke="url(#g)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+	<path d="M32 34C32 24 25 20 15 20C15 30 21 34 32 34ZM32 26C32 15 40 9 53 9C53 21 45 26 32 26Z" fill="url(#g)" />
+</svg>
