@@ -54,6 +54,9 @@ export default function SearchField({
 			placeholder={placeholder}
 			aria-label={placeholder}
 			sx={{
+				// In a toolbar row it grows into the space beside its neighbours (a Filters button stays
+				// next to it even on a phone), between these bounds on wider screens.
+				flex: { xs: "1 1 180px", sm: "1 1 auto" },
 				minWidth: { sm: 320 },
 				maxWidth: { sm: 440 },
 				// The demo's search bar: a 56px pill on the highest container with a soft lift. It

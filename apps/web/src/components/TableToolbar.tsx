@@ -6,8 +6,13 @@ import { useViewMode } from "#/lib/view-mode";
 import RefreshButton from "./RefreshButton";
 import ViewToggle from "./ViewToggle";
 
-/** Row above a table: filters on the left, the result count and a refresh button on the right.
- * Stacks vertically on narrow screens. */
+/**
+ * Row above a table: the search and filters on the left, the result count, view toggle and actions
+ * on the right, all centred on one line. The left side grows and keeps its pieces together (a
+ * search box and its Filters button never split up). When the right side doesn't fit beside it,
+ * the whole right side moves to its own line, count on the left and buttons on the right, so
+ * nothing is ever pushed off the edge.
+ */
 export default function TableToolbar({
 	filters,
 	chips,
@@ -28,43 +33,58 @@ export default function TableToolbar({
 	const cards = useViewMode() === "cards";
 	return (
 		<>
-			<Stack
-				direction={{ xs: "column", sm: "row" }}
-				spacing={{ xs: 1.5, sm: 2 }}
-				sx={{ p: cards ? 0 : 2, py: cards ? 2 : 2, alignItems: { xs: "stretch", sm: "center" } }}
+			<Box
+				sx={{
+					display: "flex",
+					flexWrap: "wrap",
+					alignItems: "center",
+					columnGap: 2,
+					rowGap: 1.5,
+					px: cards ? 0 : 2,
+					py: 2,
+				}}
 			>
 				{filters && (
-					<Stack
-						direction={{ xs: "column", sm: "row" }}
-						spacing={{ xs: 1.5, sm: 2 }}
-						useFlexGap
-						sx={{ flexWrap: "wrap", alignItems: { xs: "stretch", sm: "center" } }}
+					<Box
+						sx={{
+							display: "flex",
+							flexWrap: "wrap",
+							alignItems: "center",
+							gap: 1.5,
+							// Its natural width decides the line break: when the filters and the right side
+							// don't both fit, the right side drops to its own line rather than the filters
+							// splitting up. It then grows into the space left over.
+							flex: "1 1 auto",
+							minWidth: 0,
+						}}
 					>
 						{filters}
-					</Stack>
+					</Box>
 				)}
-				<Box sx={{ flexGrow: 1, display: { xs: "none", sm: "block" } }} />
-				<Stack
-					direction="row"
+				<Box
 					sx={{
+						display: "flex",
 						alignItems: "center",
-						justifyContent: { xs: "flex-end", sm: "space-between" },
-						flexWrap: "wrap",
+						justifyContent: { xs: "space-between", sm: "flex-end" },
 						gap: 1,
-						flexShrink: 0,
+						ml: "auto",
+						// a line of its own on a phone; beside the filters when there is room
+						flex: { xs: "1 1 100%", sm: "0 0 auto" },
 					}}
 				>
 					<Typography
 						variant="body2"
-						sx={{ color: "text.secondary", display: { xs: "none", sm: "block" } }}
+						sx={{ color: "text.secondary", whiteSpace: "nowrap", mr: { sm: 1 } }}
 					>
 						{summary}
 					</Typography>
-					{viewToggle && <ViewToggle />}
-					{actions}
-					<RefreshButton />
-				</Stack>
-			</Stack>
+					<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+						{viewToggle && <ViewToggle />}
+						{actions}
+						<RefreshButton />
+					</Box>
+				</Box>
+			</Box>
 			{chips && (
 				<Stack spacing={1} sx={{ px: cards ? 0 : 2, pb: 2 }}>
 					{chips}
