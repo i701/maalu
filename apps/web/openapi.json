@@ -1130,6 +1130,32 @@
             "title": "Rollover",
             "type": "boolean"
           },
+          "runs_from": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "For a monthly limit that only runs between two dates: the first day of its first period. Null for one that runs for ever.",
+            "title": "Runs From"
+          },
+          "runs_until": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Its last day, inclusive",
+            "title": "Runs Until"
+          },
           "start_date": {
             "format": "date",
             "title": "Start Date",
@@ -1231,6 +1257,12 @@
             "minLength": 1,
             "title": "Name",
             "type": "string"
+          },
+          "repeat": {
+            "default": false,
+            "description": "With both dates: the limit applies in every period that touches them (the periods are whole, so the dates snap to them) instead of being one total for the stretch",
+            "title": "Repeat",
+            "type": "boolean"
           },
           "rollover": {
             "default": false,
@@ -1349,6 +1381,32 @@
             "title": "Rollover",
             "type": "boolean"
           },
+          "runs_from": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "For a monthly limit that only runs between two dates: the first day of its first period. Null for one that runs for ever.",
+            "title": "Runs From"
+          },
+          "runs_until": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Its last day, inclusive",
+            "title": "Runs Until"
+          },
           "status": {
             "enum": [
               "ok",
@@ -1448,6 +1506,18 @@
               }
             ],
             "title": "Name"
+          },
+          "repeat": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "With the dates: every period that touches them (true) or one total for the whole stretch (false). Left out, a limit keeps the kind it has.",
+            "title": "Repeat"
           },
           "rollover": {
             "anyOf": [

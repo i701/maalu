@@ -2763,6 +2763,16 @@ export interface components {
             /** Rollover */
             rollover: boolean;
             /**
+             * Runs From
+             * @description For a monthly limit that only runs between two dates: the first day of its first period. Null for one that runs for ever.
+             */
+            runs_from?: string | null;
+            /**
+             * Runs Until
+             * @description Its last day, inclusive
+             */
+            runs_until?: string | null;
+            /**
              * Start Date
              * Format: date
              */
@@ -2800,6 +2810,12 @@ export interface components {
             end_date?: string | null;
             /** Name */
             name: string;
+            /**
+             * Repeat
+             * @description With both dates: the limit applies in every period that touches them (the periods are whole, so the dates snap to them) instead of being one total for the stretch
+             * @default false
+             */
+            repeat: boolean;
             /**
              * Rollover
              * @default false
@@ -2875,6 +2891,16 @@ export interface components {
             /** Rollover */
             rollover: boolean;
             /**
+             * Runs From
+             * @description For a monthly limit that only runs between two dates: the first day of its first period. Null for one that runs for ever.
+             */
+            runs_from?: string | null;
+            /**
+             * Runs Until
+             * @description Its last day, inclusive
+             */
+            runs_until?: string | null;
+            /**
              * Status
              * @enum {string}
              */
@@ -2901,6 +2927,11 @@ export interface components {
             end_date?: string | null;
             /** Name */
             name?: string | null;
+            /**
+             * Repeat
+             * @description With the dates: every period that touches them (true) or one total for the whole stretch (false). Left out, a limit keeps the kind it has.
+             */
+            repeat?: boolean | null;
             /** Rollover */
             rollover?: boolean | null;
             /**

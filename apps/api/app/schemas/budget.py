@@ -49,17 +49,24 @@ class BudgetLineCreate(BaseModel):
         "`amount` is then the most to spend between them, counted once.",
     )
     end_date: date | None = Field(default=None, description="Inclusive; needs `start_date`")
+    repeat: bool = Field(
+        default=False,
+        description="With both dates: the limit applies in every period that touches them (the "
+        "periods are whole, so the dates snap to them) instead of being one total for the stretch",
+    )
 
     @model_validator(mode="after")
     def _dates(self):
         if (self.start_date is None) != (self.end_date is None):
             raise ValueError("Give both a start date and an end date, or neither")
+        if self.start_date is None and self.repeat:
+            raise ValueError("Give the dates it should run between")
         if self.start_date is not None and self.end_date is not None:
             if self.end_date < self.start_date:
                 raise ValueError("The end date can't be before the start date")
             if (self.end_date - self.start_date).days >= MAX_RANGE_DAYS:
                 raise ValueError("A limit can run for at most ten years")
-            if self.rollover:
+            if self.rollover and not self.repeat:
                 raise ValueError("A limit for set dates has nothing to carry over")
         return self
 
@@ -80,8 +87,13 @@ class BudgetLineUpdate(BaseModel):
         description="Makes this a limit for set dates when sent with `start_date`; an explicit "
         "null makes it a limit for every period again",
     )
+    repeat: bool | None = Field(
+        default=None,
+        description="With the dates: every period that touches them (true) or one total for the "
+        "whole stretch (false). Left out, a limit keeps the kind it has.",
+    )
 
-    @field_validator("name", "category_ids", "amount", "rollover")
+    @field_validator("name", "category_ids", "amount", "rollover", "repeat")
     @classmethod
     def _not_null(cls, v):
         if v is None:
@@ -117,6 +129,12 @@ class BudgetLineResponse(BaseModel):
         description="Share of (amount + carried + moved_in - moved_out) already spent, rounded"
     )
     status: BudgetStatus
+    runs_from: date | None = Field(
+        default=None,
+        description="For a monthly limit that only runs between two dates: the first day of its "
+        "first period. Null for one that runs for ever.",
+    )
+    runs_until: date | None = Field(default=None, description="Its last day, inclusive")
 
 
 class BudgetFixedLine(BudgetLineResponse):

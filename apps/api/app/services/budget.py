@@ -69,13 +69,33 @@ def _check_range(start: date, end: date) -> None:
         raise BudgetLineRuleError("A limit can run for at most ten years")
 
 
-def _overlap(a: tuple[date, date] | None, b: tuple[date, date] | None) -> bool:
-    """Whether two limits cover the same days. A per-period limit (None) runs for ever, so it only
-    meets another per-period limit: a limit for set dates is a separate budget, kept out of the
-    per-period totals, so the two don't count one spend twice."""
-    if a is None or b is None:
-        return a is None and b is None
-    return a[0] <= b[1] and b[0] <= a[1]
+# What a limit covers: a limit for set dates ("fixed") or a per-period one ("monthly"), and the
+# days it runs (None = for ever).
+Span = tuple[str, tuple[date, date] | None]
+
+
+def _span_of(line: BudgetLine) -> Span:
+    if line.ends_on is not None:
+        return "fixed", (line.start_date, line.ends_on)
+    if line.active_until is not None:
+        return "monthly", (line.start_date, line.active_until)
+    return "monthly", None
+
+
+def _overlap(a: Span, b: Span) -> bool:
+    """Whether two limits would count the same spend twice. A limit for set dates is a separate
+    budget, kept out of the per-period totals, so it only meets another one of its own kind; a
+    per-period limit meets another per-period limit in any period both run in."""
+    if a[0] != b[0]:
+        return False
+    if a[1] is None or b[1] is None:
+        return True
+    return a[1][0] <= b[1][1] and b[1][0] <= a[1][1]
+
+
+def _runs_in(line: BudgetLine, start: date, end: date) -> bool:
+    """Whether a per-period limit is there in the period `start`..`end`."""
+    return line.active_until is None or (line.start_date <= end and line.active_until >= start)
 
 
 def _percent(activity: Decimal, budgeted: Decimal) -> int:
@@ -212,7 +232,7 @@ class BudgetService:
         day = budget.period_start_day
         start, end = period_bounds(on or today, day)
         every_line = await self._lines(user_id)
-        lines = [line for line in every_line if line.ends_on is None]
+        lines = [line for line in every_line if line.ends_on is None and _runs_in(line, start, end)]
         fixed = [line for line in every_line if line.ends_on is not None]
 
         activity = await self._activity_by_category(user_id, start, end)
@@ -279,6 +299,8 @@ class BudgetService:
                     available=(budgeted - spent).quantize(CENT),
                     percent=_percent(spent, budgeted),
                     status=_status(spent, budgeted, line.warn_percent or budget.warn_percent),
+                    runs_from=line.start_date if line.active_until else None,
+                    runs_until=line.active_until,
                 )
             )
 
@@ -352,7 +374,7 @@ class BudgetService:
         category_ids: list[uuid.UUID],
         *,
         line_id: uuid.UUID | None,
-        window: tuple[date, date] | None = None,
+        span: Span = ("monthly", None),
     ) -> list[Category]:
         resolved: list[Category] = []
         for category_id in dict.fromkeys(category_ids):
@@ -370,6 +392,7 @@ class BudgetService:
                 BudgetLineCategory.category_id,
                 BudgetLine.start_date,
                 BudgetLine.ends_on,
+                BudgetLine.active_until,
             )
             .join(BudgetLineCategory, BudgetLineCategory.line_id == BudgetLine.id)
             .where(BudgetLine.user_id == user_id, BudgetLineCategory.category_id.in_(every))
@@ -378,8 +401,13 @@ class BudgetService:
             stmt = stmt.where(BudgetLine.id != line_id)
         taken = {
             cid: name
-            for name, cid, first, last in (await self.db.execute(stmt)).all()
-            if _overlap(window, None if last is None else (first, last))
+            for name, cid, first, last, until in (await self.db.execute(stmt)).all()
+            if _overlap(
+                span,
+                ("fixed", (first, last))
+                if last is not None
+                else ("monthly", None if until is None else (first, until)),
+            )
         }
         if taken:
             names = dict(
@@ -398,13 +426,21 @@ class BudgetService:
 
     async def create_line(self, user_id: uuid.UUID, data: BudgetLineCreate) -> BudgetLine:
         budget = await self.settings(user_id)
-        window = (
-            (data.start_date, data.end_date)
-            if data.start_date is not None and data.end_date is not None
-            else None
+        day = budget.period_start_day
+        dated = data.start_date is not None and data.end_date is not None
+        first, last, until = period_start(date.today(), day), None, None
+        if dated and data.repeat:  # every period that touches the dates: whole periods
+            first = period_start(data.start_date, day)
+            until = period_bounds(data.end_date, day)[1]
+        elif dated:
+            first, last = data.start_date, data.end_date
+        span: Span = (
+            ("fixed", (first, last))
+            if last is not None
+            else ("monthly", (first, until) if until else None)
         )
         categories = await self._resolve_categories(
-            user_id, data.category_ids, line_id=None, window=window
+            user_id, data.category_ids, line_id=None, span=span
         )
         line = BudgetLine(
             user_id=user_id,
@@ -412,8 +448,9 @@ class BudgetService:
             amount=data.amount,
             warn_percent=data.warn_percent,
             rollover=data.rollover,
-            start_date=window[0] if window else period_start(date.today(), budget.period_start_day),
-            ends_on=window[1] if window else None,
+            start_date=first,
+            ends_on=last,
+            active_until=until,
             category_links=[BudgetLineCategory(category=c) for c in categories],
         )
         self.db.add(line)
@@ -425,14 +462,13 @@ class BudgetService:
     ) -> BudgetLine:
         changes = data.model_dump(exclude_unset=True)
         ids = changes.pop("category_ids", None)
-        dates_changed = "start_date" in changes or "end_date" in changes
+        dates_changed = any(k in changes for k in ("start_date", "end_date", "repeat"))
         if dates_changed:
             await self._change_dates(user_id, line, changes)
         if ids is not None or dates_changed:
             wanted_ids = ids if ids is not None else [c.id for c in line.categories]
-            window = (line.start_date, line.ends_on) if line.ends_on is not None else None
             categories = await self._resolve_categories(
-                user_id, wanted_ids, line_id=line.id, window=window
+                user_id, wanted_ids, line_id=line.id, span=_span_of(line)
             )
             # Keep the links that stay (replacing them would insert a duplicate before the old
             # row is deleted); add the new ones and drop the rest.
@@ -452,27 +488,44 @@ class BudgetService:
         return line
 
     async def _change_dates(self, user_id: uuid.UUID, line: BudgetLine, changes: dict) -> None:
-        """Apply `start_date` / `end_date` from an update (and remove them from `changes`): both
-        dates make it a limit for set dates, an explicit null end date makes it per period again."""
+        """Apply `start_date` / `end_date` / `repeat` from an update (and remove them from
+        `changes`). Both dates make it a limit for set dates, or, with `repeat`, a per-period limit
+        that only runs between them; an explicit null end date makes it run for every period."""
         start = changes.pop("start_date") if "start_date" in changes else None
+        repeat = changes.pop("repeat") if "repeat" in changes else None
         was_fixed = line.ends_on is not None
+        was_windowed = line.active_until is not None
         sent_start = start is not None
-        end = changes.pop("end_date") if "end_date" in changes else line.ends_on
-        if end is None:  # per period
+        if "end_date" in changes:
+            end = changes.pop("end_date")
+        else:
+            end = line.ends_on or line.active_until
+        budget = await self.settings(user_id)
+        day = budget.period_start_day
+        if end is None:  # per period, for ever
             if sent_start:
                 raise BudgetLineRuleError("A limit for every period has no start date")
-            if was_fixed:
-                budget = await self.settings(user_id)
-                line.start_date = period_start(date.today(), budget.period_start_day)
+            if repeat:
+                raise BudgetLineRuleError("Give the dates it should run between")
+            if was_fixed or was_windowed:
+                line.start_date = period_start(date.today(), day)
             line.ends_on = None
+            line.active_until = None
             return
-        if not was_fixed and not sent_start:
+        if not (was_fixed or was_windowed) and not sent_start:
             raise BudgetLineRuleError("Give both a start date and an end date")
         first = start if sent_start else line.start_date
         _check_range(first, end)
+        monthly = repeat if repeat is not None else was_windowed
+        if monthly:
+            line.start_date = period_start(first, day)
+            line.active_until = period_bounds(end, day)[1]
+            line.ends_on = None
+            return
         if changes.get("rollover"):
             raise BudgetLineRuleError("A limit for set dates has nothing to carry over")
         line.start_date, line.ends_on, line.rollover = first, end, False
+        line.active_until = None
         if not was_fixed:  # only monthly limits take moves, so its moves go
             await self.db.execute(
                 delete(BudgetMove).where(
@@ -504,9 +557,14 @@ class BudgetService:
         from_line = (
             await self._monthly_line(user_id, data.from_line_id) if data.from_line_id else None
         )
-        if from_line is not None:
+        if from_line is not None or to_line.active_until is not None:
             view = await self.view(user_id, on)
-            left = next(v.available for v in view.lines if v.id == from_line.id)
+            shown = {v.id: v for v in view.lines}
+            for line in (from_line, to_line):
+                if line is not None and line.id not in shown:
+                    raise BudgetLineRuleError(f'"{line.name}" does not run in that period')
+        if from_line is not None:
+            left = shown[from_line.id].available
             if left <= 0:
                 raise BudgetLineRuleError(f'"{from_line.name}" has nothing left this period')
             if data.amount > left:

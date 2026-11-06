@@ -57,6 +57,10 @@ class BudgetLine(Base):
     # Set for a limit that is not per period: `amount` is then the most to spend in the categories
     # between `start_date` and this day (inclusive), counted once over the whole range.
     ends_on: Mapped[date | None] = mapped_column(Date, default=None)
+    # Set for a per-period limit that only runs between two dates (monthly, but only Nov to Jan):
+    # it counts in the periods from `start_date` to this day (inclusive), both snapped to whole
+    # periods, and is not there outside them. Null = runs for ever. Never set with `ends_on`.
+    active_until: Mapped[date | None] = mapped_column(Date, default=None)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
