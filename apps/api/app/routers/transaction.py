@@ -1,7 +1,7 @@
 import uuid
 from datetime import date
 from decimal import Decimal
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Query, Response, status
 
@@ -105,6 +105,10 @@ async def list_transactions(
     subscription_id: uuid.UUID | None = None,
     account_id: uuid.UUID | None = None,
     card_id: uuid.UUID | None = None,
+    kind: Annotated[
+        Literal["need", "want", "unsorted"] | None,
+        Query(description="Only categories sorted as a need, a want, or not sorted yet"),
+    ] = None,
     category_id: uuid.UUID | None = None,
     tag_id: Annotated[
         list[uuid.UUID] | None,
@@ -149,6 +153,7 @@ async def list_transactions(
         "subscription_id": subscription_id,
         "account_id": account_id,
         "card_id": card_id,
+        "sorted_as": kind,
         "category_id": category_id,
         "tag_ids": tag_id,
         "tag_match": tag_match,
@@ -175,6 +180,10 @@ async def export_transactions(
     subscription_id: uuid.UUID | None = None,
     account_id: uuid.UUID | None = None,
     card_id: uuid.UUID | None = None,
+    kind: Annotated[
+        Literal["need", "want", "unsorted"] | None,
+        Query(description="Only categories sorted as a need, a want, or not sorted yet"),
+    ] = None,
     category_id: uuid.UUID | None = None,
     tag_id: Annotated[
         list[uuid.UUID] | None,
@@ -216,6 +225,7 @@ async def export_transactions(
             subscription_id=subscription_id,
             account_id=account_id,
             card_id=card_id,
+            sorted_as=kind,
             category_id=category_id,
             tag_ids=tag_id,
             tag_match=tag_match,
@@ -246,6 +256,10 @@ async def transaction_totals(
     subscription_id: uuid.UUID | None = None,
     account_id: uuid.UUID | None = None,
     card_id: uuid.UUID | None = None,
+    kind: Annotated[
+        Literal["need", "want", "unsorted"] | None,
+        Query(description="Only categories sorted as a need, a want, or not sorted yet"),
+    ] = None,
     category_id: uuid.UUID | None = None,
     tag_id: Annotated[
         list[uuid.UUID] | None,
@@ -286,6 +300,7 @@ async def transaction_totals(
         subscription_id=subscription_id,
         account_id=account_id,
         card_id=card_id,
+        sorted_as=kind,
         category_id=category_id,
         tag_ids=tag_id,
         tag_match=tag_match,
@@ -307,6 +322,10 @@ async def category_totals(
     subscription_id: uuid.UUID | None = None,
     account_id: uuid.UUID | None = None,
     card_id: uuid.UUID | None = None,
+    kind: Annotated[
+        Literal["need", "want", "unsorted"] | None,
+        Query(description="Only categories sorted as a need, a want, or not sorted yet"),
+    ] = None,
     category_id: uuid.UUID | None = None,
     tag_id: Annotated[
         list[uuid.UUID] | None,
@@ -348,6 +367,7 @@ async def category_totals(
         subscription_id=subscription_id,
         account_id=account_id,
         card_id=card_id,
+        sorted_as=kind,
         category_id=category_id,
         tag_ids=tag_id,
         tag_match=tag_match,
@@ -395,6 +415,10 @@ async def matching_transaction_ids(
     subscription_id: uuid.UUID | None = None,
     account_id: uuid.UUID | None = None,
     card_id: uuid.UUID | None = None,
+    kind: Annotated[
+        Literal["need", "want", "unsorted"] | None,
+        Query(description="Only categories sorted as a need, a want, or not sorted yet"),
+    ] = None,
     category_id: uuid.UUID | None = None,
     tag_id: Annotated[
         list[uuid.UUID] | None,
@@ -434,6 +458,7 @@ async def matching_transaction_ids(
             subscription_id=subscription_id,
             account_id=account_id,
             card_id=card_id,
+            sorted_as=kind,
             category_id=category_id,
             tag_ids=tag_id,
             tag_match=tag_match,

@@ -4109,7 +4109,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "payment_due" | "payment_overdue" | "installments_done" | "budget_warning" | "budget_over" | "goal_reached" | "split_waiting";
+            kind: "payment_due" | "payment_overdue" | "installments_done" | "budget_warning" | "budget_over" | "goal_reached" | "split_waiting" | "money_short";
             /**
              * Link
              * @description A page of the app to open for it
@@ -9001,6 +9001,8 @@ export interface operations {
                 subscription_id?: string | null;
                 account_id?: string | null;
                 card_id?: string | null;
+                /** @description Only categories sorted as a need, a want, or not sorted yet */
+                kind?: ("need" | "want" | "unsorted") | null;
                 category_id?: string | null;
                 /** @description Repeat to filter by several tags; see `tag_match` */
                 tag_id?: string[] | null;
@@ -9222,6 +9224,8 @@ export interface operations {
                 subscription_id?: string | null;
                 account_id?: string | null;
                 card_id?: string | null;
+                /** @description Only categories sorted as a need, a want, or not sorted yet */
+                kind?: ("need" | "want" | "unsorted") | null;
                 category_id?: string | null;
                 /** @description Repeat to filter by several tags; see `tag_match` */
                 tag_id?: string[] | null;
@@ -9309,6 +9313,8 @@ export interface operations {
                 subscription_id?: string | null;
                 account_id?: string | null;
                 card_id?: string | null;
+                /** @description Only categories sorted as a need, a want, or not sorted yet */
+                kind?: ("need" | "want" | "unsorted") | null;
                 category_id?: string | null;
                 /** @description Repeat to filter by several tags; see `tag_match` */
                 tag_id?: string[] | null;
@@ -9361,6 +9367,8 @@ export interface operations {
                 subscription_id?: string | null;
                 account_id?: string | null;
                 card_id?: string | null;
+                /** @description Only categories sorted as a need, a want, or not sorted yet */
+                kind?: ("need" | "want" | "unsorted") | null;
                 category_id?: string | null;
                 /** @description Repeat to filter by several tags; see `tag_match` */
                 tag_id?: string[] | null;
@@ -9481,6 +9489,8 @@ export interface operations {
                 subscription_id?: string | null;
                 account_id?: string | null;
                 card_id?: string | null;
+                /** @description Only categories sorted as a need, a want, or not sorted yet */
+                kind?: ("need" | "want" | "unsorted") | null;
                 category_id?: string | null;
                 /** @description Repeat to filter by several tags; see `tag_match` */
                 tag_id?: string[] | null;
@@ -10379,10 +10389,15 @@ type ReadonlyArray<T> = [
 ] extends [
     unknown[]
 ] ? Readonly<Exclude<T, undefined>> : Readonly<Exclude<T, undefined>[]>;
+export const pathsApiV1TransactionsGetParametersQueryKindAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<paths>["/api/v1/transactions"]["get"]["parameters"]["query"]["kind"]> = ["need", "want", "unsorted"];
 export const pathsApiV1TransactionsGetParametersQueryTag_matchValues: ReadonlyArray<FlattenedDeepRequired<paths>["/api/v1/transactions"]["get"]["parameters"]["query"]["tag_match"]> = ["any", "all"];
+export const pathsApiV1TransactionsCategoriesGetParametersQueryKindAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<paths>["/api/v1/transactions/categories"]["get"]["parameters"]["query"]["kind"]> = ["need", "want", "unsorted"];
 export const pathsApiV1TransactionsCategoriesGetParametersQueryTag_matchValues: ReadonlyArray<FlattenedDeepRequired<paths>["/api/v1/transactions/categories"]["get"]["parameters"]["query"]["tag_match"]> = ["any", "all"];
+export const pathsApiV1TransactionsExportGetParametersQueryKindAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<paths>["/api/v1/transactions/export"]["get"]["parameters"]["query"]["kind"]> = ["need", "want", "unsorted"];
 export const pathsApiV1TransactionsExportGetParametersQueryTag_matchValues: ReadonlyArray<FlattenedDeepRequired<paths>["/api/v1/transactions/export"]["get"]["parameters"]["query"]["tag_match"]> = ["any", "all"];
+export const pathsApiV1TransactionsIdsGetParametersQueryKindAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<paths>["/api/v1/transactions/ids"]["get"]["parameters"]["query"]["kind"]> = ["need", "want", "unsorted"];
 export const pathsApiV1TransactionsIdsGetParametersQueryTag_matchValues: ReadonlyArray<FlattenedDeepRequired<paths>["/api/v1/transactions/ids"]["get"]["parameters"]["query"]["tag_match"]> = ["any", "all"];
+export const pathsApiV1TransactionsSummaryGetParametersQueryKindAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<paths>["/api/v1/transactions/summary"]["get"]["parameters"]["query"]["kind"]> = ["need", "want", "unsorted"];
 export const pathsApiV1TransactionsSummaryGetParametersQueryTag_matchValues: ReadonlyArray<FlattenedDeepRequired<paths>["/api/v1/transactions/summary"]["get"]["parameters"]["query"]["tag_match"]> = ["any", "all"];
 export const accountGroupValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AccountGroup"]> = ["cash", "accounts", "card", "savings", "prepaid", "investments", "overdrafts", "loan", "insurance", "others"];
 export const budgetFixedLineStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BudgetFixedLine"]["state"]> = ["upcoming", "active", "ended"];
@@ -10401,7 +10416,7 @@ export const importRowInTypeValues: ReadonlyArray<FlattenedDeepRequired<componen
 export const importSkippedOutcomeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImportSkipped"]["outcome"]> = ["skipped", "failed"];
 export const intervalUnitValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["IntervalUnit"]> = ["week", "month", "year"];
 export const netWorthDriverKeyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NetWorthDriver"]["key"]> = ["income", "spending", "adjustments", "transfers", "exchange_rates"];
-export const notificationResponseKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NotificationResponse"]["kind"]> = ["payment_due", "payment_overdue", "installments_done", "budget_warning", "budget_over", "goal_reached", "split_waiting"];
+export const notificationResponseKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NotificationResponse"]["kind"]> = ["payment_due", "payment_overdue", "installments_done", "budget_warning", "budget_over", "goal_reached", "split_waiting", "money_short"];
 export const paymentMethodValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PaymentMethod"]> = ["cash", "bank_transfer", "debit_card", "credit_card", "other"];
 export const previewRowDuplicateAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PreviewRow"]["duplicate"]> = ["reference", "transfer", "possible"];
 export const previewRowTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PreviewRow"]["type"]> = ["income", "expense"];

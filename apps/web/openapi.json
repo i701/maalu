@@ -4252,7 +4252,8 @@
               "budget_warning",
               "budget_over",
               "goal_reached",
-              "split_waiting"
+              "split_waiting",
+              "money_short"
             ],
             "title": "Kind",
             "type": "string"
@@ -13817,6 +13818,29 @@
             }
           },
           {
+            "description": "Only categories sorted as a need, a want, or not sorted yet",
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "need",
+                    "want",
+                    "unsorted"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only categories sorted as a need, a want, or not sorted yet",
+              "title": "Kind"
+            }
+          },
+          {
             "in": "query",
             "name": "category_id",
             "required": false,
@@ -14399,6 +14423,29 @@
             }
           },
           {
+            "description": "Only categories sorted as a need, a want, or not sorted yet",
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "need",
+                    "want",
+                    "unsorted"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only categories sorted as a need, a want, or not sorted yet",
+              "title": "Kind"
+            }
+          },
+          {
             "in": "query",
             "name": "category_id",
             "required": false,
@@ -14804,6 +14851,29 @@
             }
           },
           {
+            "description": "Only categories sorted as a need, a want, or not sorted yet",
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "need",
+                    "want",
+                    "unsorted"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only categories sorted as a need, a want, or not sorted yet",
+              "title": "Kind"
+            }
+          },
+          {
             "in": "query",
             "name": "category_id",
             "required": false,
@@ -15108,6 +15178,29 @@
                 }
               ],
               "title": "Card Id"
+            }
+          },
+          {
+            "description": "Only categories sorted as a need, a want, or not sorted yet",
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "need",
+                    "want",
+                    "unsorted"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only categories sorted as a need, a want, or not sorted yet",
+              "title": "Kind"
             }
           },
           {
@@ -15558,6 +15651,29 @@
                 }
               ],
               "title": "Card Id"
+            }
+          },
+          {
+            "description": "Only categories sorted as a need, a want, or not sorted yet",
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "need",
+                    "want",
+                    "unsorted"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only categories sorted as a need, a want, or not sorted yet",
+              "title": "Kind"
             }
           },
           {

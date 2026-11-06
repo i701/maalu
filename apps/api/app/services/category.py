@@ -234,6 +234,24 @@ class CategoryService:
         ids = list((await self.db.scalars(stmt)).all())
         return ids or [category_id]
 
+    async def ids_of_kind(self, user_id: uuid.UUID, kind: str) -> list[uuid.UUID]:
+        """The categories whose effective kind is `kind` (their own, else their parent's), or, for
+        "unsorted", the ones with none: what a needs-and-wants filter covers."""
+        rows = (
+            await self.db.execute(
+                select(Category.id, Category.kind, Category.parent_id).where(
+                    Category.user_id == user_id
+                )
+            )
+        ).all()
+        own = {cid: k for cid, k, _ in rows}
+        out = []
+        for cid, k, parent in rows:
+            effective = k or own.get(parent)
+            if (effective.value if effective else "unsorted") == kind:
+                out.append(cid)
+        return out
+
     async def usage(self, user_id: uuid.UUID) -> dict[uuid.UUID, tuple[int, int, int]]:
         """(transactions, subscriptions, budget lines) per category id. A transaction counts once
         for each category it touches: its own, or any of its items'. Trashed transactions count:

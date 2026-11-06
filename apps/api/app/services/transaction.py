@@ -692,16 +692,23 @@ class TransactionService:
         return sorted(out, key=lambda p: (-p.spent, -p.count))
 
     async def _family(
-        self, user_id: uuid.UUID, category_id: uuid.UUID | None
+        self, user_id: uuid.UUID, category_id: uuid.UUID | None, sorted_as: str | None = None
     ) -> list[uuid.UUID] | None:
-        """The category, and its sub-categories when it is a parent: what a filter on it covers."""
-        return None if category_id is None else await self.categories.family(user_id, category_id)
+        """The category, and its sub-categories when it is a parent: what a filter on it covers.
+        With `sorted_as` (need, want or unsorted) only the categories of that kind (an empty list
+        when there are none, which matches nothing); with both, the ones that are in both."""
+        ids = None if category_id is None else await self.categories.family(user_id, category_id)
+        if sorted_as:
+            of_kind = await self.categories.ids_of_kind(user_id, sorted_as)
+            ids = of_kind if ids is None else [i for i in ids if i in of_kind]
+        return ids
 
     async def _build_conditions(self, user_id: uuid.UUID, **filters) -> list:
         """`_conditions` for the same filters, with a category filter widened to its family."""
         category_id = filters.pop("category_id", None)
+        sorted_as = filters.pop("sorted_as", None)
         return self._conditions(
-            user_id, category_ids=await self._family(user_id, category_id), **filters
+            user_id, category_ids=await self._family(user_id, category_id, sorted_as), **filters
         )
 
     @staticmethod
@@ -784,7 +791,9 @@ class TransactionService:
             )
         if card_id is not None:
             conditions.append(Transaction.card_id == card_id)
-        if category_ids:  # the transaction's own category, or any of its items' (a parent's family)
+        if (
+            category_ids is not None
+        ):  # the transaction's own category, or any of its items' (a parent's family)
             conditions.append(
                 or_(
                     Transaction.category_id.in_(category_ids),
@@ -811,6 +820,7 @@ class TransactionService:
         subscription_id: uuid.UUID | None = None,
         account_id: uuid.UUID | None = None,
         card_id: uuid.UUID | None = None,
+        sorted_as: str | None = None,
         category_id: uuid.UUID | None = None,
         tag_ids: list[uuid.UUID] | None = None,
         tag_match: TagMatch = "any",
@@ -832,6 +842,7 @@ class TransactionService:
             subscription_id=subscription_id,
             account_id=account_id,
             card_id=card_id,
+            sorted_as=sorted_as,
             category_id=category_id,
             tag_ids=tag_ids,
             tag_match=tag_match,
@@ -887,6 +898,7 @@ class TransactionService:
         subscription_id: uuid.UUID | None = None,
         account_id: uuid.UUID | None = None,
         card_id: uuid.UUID | None = None,
+        sorted_as: str | None = None,
         category_id: uuid.UUID | None = None,
         tag_ids: list[uuid.UUID] | None = None,
         tag_match: TagMatch = "any",
@@ -906,6 +918,7 @@ class TransactionService:
             subscription_id=subscription_id,
             account_id=account_id,
             card_id=card_id,
+            sorted_as=sorted_as,
             category_id=category_id,
             tag_ids=tag_ids,
             tag_match=tag_match,
@@ -929,6 +942,7 @@ class TransactionService:
         subscription_id: uuid.UUID | None = None,
         account_id: uuid.UUID | None = None,
         card_id: uuid.UUID | None = None,
+        sorted_as: str | None = None,
         category_id: uuid.UUID | None = None,
         tag_ids: list[uuid.UUID] | None = None,
         tag_match: TagMatch = "any",
@@ -948,6 +962,7 @@ class TransactionService:
             subscription_id=subscription_id,
             account_id=account_id,
             card_id=card_id,
+            sorted_as=sorted_as,
             category_id=category_id,
             tag_ids=tag_ids,
             tag_match=tag_match,
@@ -961,7 +976,7 @@ class TransactionService:
         )
         # reports leave out balance adjustments and excluded accounts (unless you filter to one)
         conditions = [*conditions, Transaction.reported(include_excluded_accounts=bool(account_id))]
-        ids = await self._family(user_id, category_id)
+        ids = await self._family(user_id, category_id, sorted_as)
         money = Transaction.type.in_([TransactionType.INCOME, TransactionType.EXPENSE])
         stmt = (
             select(Transaction.type, Transaction.is_refund(), func.sum(Transaction.base_amount))
@@ -1020,6 +1035,7 @@ class TransactionService:
         subscription_id: uuid.UUID | None = None,
         account_id: uuid.UUID | None = None,
         card_id: uuid.UUID | None = None,
+        sorted_as: str | None = None,
         category_id: uuid.UUID | None = None,
         tag_ids: list[uuid.UUID] | None = None,
         tag_match: TagMatch = "any",
@@ -1045,6 +1061,7 @@ class TransactionService:
             subscription_id=subscription_id,
             account_id=account_id,
             card_id=card_id,
+            sorted_as=sorted_as,
             category_id=category_id,
             tag_ids=tag_ids,
             tag_match=tag_match,
@@ -1058,7 +1075,7 @@ class TransactionService:
         )
         conditions = [*conditions, Transaction.reported(include_excluded_accounts=bool(account_id))]
         buckets = await self._category_buckets(
-            conditions, await self._family(user_id, category_id), monthly=False
+            conditions, await self._family(user_id, category_id, sorted_as), monthly=False
         )
         parents = await self._parent_names([c for c, _total, _count in buckets.values()])
         rows = [
@@ -1231,6 +1248,7 @@ class TransactionService:
         subscription_id: uuid.UUID | None = None,
         account_id: uuid.UUID | None = None,
         card_id: uuid.UUID | None = None,
+        sorted_as: str | None = None,
         category_id: uuid.UUID | None = None,
         tag_ids: list[uuid.UUID] | None = None,
         tag_match: TagMatch = "any",
@@ -1252,6 +1270,7 @@ class TransactionService:
             "subscription_id": subscription_id,
             "account_id": account_id,
             "card_id": card_id,
+            "sorted_as": sorted_as,
             "category_id": category_id,
             "tag_ids": tag_ids,
             "tag_match": tag_match,
@@ -1264,7 +1283,7 @@ class TransactionService:
             "date_to": date_to,
         }
         conditions = await self._build_conditions(user_id, **filters)
-        ids = await self._family(user_id, category_id)
+        ids = await self._family(user_id, category_id, sorted_as)
         matches = (await self.db.scalar(select(func.count(Transaction.id)).where(*conditions))) or 0
         if matches > EXPORT_LIMIT:
             raise TransactionRuleError(
@@ -1298,6 +1317,7 @@ class TransactionService:
         subscription_id: uuid.UUID | None,
         account_id: uuid.UUID | None,
         card_id: uuid.UUID | None = None,
+        sorted_as: str | None = None,
         category_id: uuid.UUID | None,
         tag_ids: list[uuid.UUID] | None = None,
         tag_match: TagMatch = "any",
@@ -1328,6 +1348,8 @@ class TransactionService:
         if card_id is not None:
             card = await self._resolve_card(user_id, card_id)
             labels.append(f"Card: {card.name if card else 'unknown'}")
+        if sorted_as:
+            labels.append(f"Needs and wants: {sorted_as}")
         if category_id is not None:
             category = await self.categories.get(user_id, category_id)
             labels.append(f"Category: {category.name if category else 'unknown'}")
