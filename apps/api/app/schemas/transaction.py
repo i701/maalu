@@ -135,7 +135,7 @@ class TransactionCreate(VendorRef):
         default=None,
         description="The card it was paid with. The transaction then takes the card's account "
         "(`account_id` may be left out, but must match if given) and, unless `payment_method` is "
-        "given, the method of its kind. Not for transfers.",
+        "given, the method of its kind. Only for expenses.",
     )
     to_account_id: uuid.UUID | None = Field(
         default=None, description="Transfers only: the account the money arrives in."
@@ -181,6 +181,8 @@ class TransactionCreate(VendorRef):
             raise ValueError("Only transfers have to_account_id / to_amount")
         if self.subscription_id is not None and self.type is not TransactionType.EXPENSE:
             raise ValueError("Only expenses can belong to a subscription")
+        if self.card_id is not None and self.type is not TransactionType.EXPENSE:
+            raise ValueError("Only an expense is paid with a card")
         if self.refund_of_id is not None and self.type is not TransactionType.INCOME:
             raise ValueError("A refund is income")
         return self

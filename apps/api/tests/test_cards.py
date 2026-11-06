@@ -166,6 +166,34 @@ async def test_a_transfer_is_not_paid_with_a_card(client: AsyncClient, auth):
     assert res.status_code == 422
 
 
+async def test_an_income_is_not_paid_with_a_card(client: AsyncClient, auth):
+    bank = await account(client, auth, "BML Current")
+    visa = await card(client, auth, name="Visa", kind="debit", account_id=bank["id"])
+
+    # not when it is made
+    res = await client.post(TX, json=expense(type="income", card_id=visa["id"]), headers=auth)
+    assert res.status_code == 422
+    assert "Only an expense is paid with a card" in res.text
+
+    # not added to one later
+    income = await client.post(
+        TX, json=expense(type="income", account_id=bank["id"], payment_method="cash"), headers=auth
+    )
+    assert income.status_code == 201, income.text
+    res = await client.patch(
+        f"{TX}/{income.json()['id']}", json={"card_id": visa["id"]}, headers=auth
+    )
+    assert res.status_code == 422
+    assert "Only an expense is paid with a card" in res.text
+
+    # and an expense turned into income drops its card, keeping the account
+    paid = await client.post(TX, json=expense(card_id=visa["id"]), headers=auth)
+    res = await client.patch(f"{TX}/{paid.json()['id']}", json={"type": "income"}, headers=auth)
+    assert res.status_code == 200, res.text
+    assert res.json()["card"] is None
+    assert res.json()["account"]["id"] == bank["id"]
+
+
 async def test_the_card_can_be_changed_cleared_and_filtered_on(client: AsyncClient, auth):
     bank = await account(client, auth, "BML Current")
     visa = await card(client, auth, name="Visa", kind="debit", account_id=bank["id"])

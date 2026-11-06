@@ -4884,7 +4884,7 @@ export interface components {
             amount: number | string;
             /**
              * Card Id
-             * @description The card it was paid with. The transaction then takes the card's account (`account_id` may be left out, but must match if given) and, unless `payment_method` is given, the method of its kind. Not for transfers.
+             * @description The card it was paid with. The transaction then takes the card's account (`account_id` may be left out, but must match if given) and, unless `payment_method` is given, the method of its kind. Only for expenses.
              */
             card_id?: string | null;
             /** Category */

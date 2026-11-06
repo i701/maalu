@@ -98,7 +98,7 @@ export function seedAfterSave(f: FormData, s: State): TransactionSeed {
 		exchange_rate: "",
 		subscription: s.subscription,
 		account: s.account,
-		card: s.type === "transfer" ? null : s.card,
+		card: s.type === "expense" ? s.card : null,
 		to_account: s.type === "transfer" ? s.toAccount : null,
 		vendorName: s.type === "transfer" ? "" : text(f, "vendor"),
 		tags: tagNames(f),

@@ -1494,6 +1494,8 @@ class TransactionService:
             if card is not None:
                 if is_transfer:
                     raise TransactionRuleError("A transfer is not paid with a card")
+                if new_type is not TransactionType.EXPENSE:
+                    raise TransactionRuleError("Only an expense is paid with a card")
                 if changes.get("account_id", card.account_id) != card.account_id:
                     raise TransactionRuleError(f'"{card.name}" belongs to another account')
                 changes["account_id"] = card.account_id  # a card spends from its account
@@ -1513,8 +1515,8 @@ class TransactionService:
             )
         if not is_transfer:
             to_account = None  # only transfers have a destination
-        if is_transfer:
-            card = None  # a transfer is not paid with a card
+        if new_type is not TransactionType.EXPENSE:
+            card = None  # only an expense is paid with a card: turning one into income drops it
         elif card is not None and (account is None or account.id != card.account_id):
             raise TransactionRuleError(f'"{card.name}" belongs to another account')
 

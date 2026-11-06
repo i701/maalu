@@ -26,6 +26,10 @@ test("a debit card is added on its account and picked on a purchase", async ({ p
 	await page.getByRole("button", { name: "Add transaction" }).click();
 	const form = page.getByRole("dialog", { name: "Add transaction" });
 	await form.getByLabel("Amount").fill("120");
+	// cards are for spending: an income does not offer one
+	await form.getByRole("button", { name: "Income" }).click();
+	await expect(form.getByRole("combobox", { name: "Card" })).toBeHidden();
+	await form.getByRole("button", { name: "Expense" }).click();
 	await form.getByRole("combobox", { name: "Card" }).click();
 	await page.getByRole("option", { name: /MIB Visa debit/ }).click();
 	await expect(form.getByRole("combobox", { name: "Payment method" })).toHaveText("Debit card");

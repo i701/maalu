@@ -117,7 +117,7 @@ export default function OrdinaryFields({
 				</TextField>
 			</Cell>
 
-			{cards.length > 0 && (
+			{type === "expense" && cards.length > 0 && (
 				<Cell size={12} fadeIn={switched}>
 					<TextField
 						select

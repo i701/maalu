@@ -20,7 +20,7 @@ export function useFormFields({
 	transaction: Transaction | undefined;
 	startSeed: TransactionSeed | undefined;
 	accounts: AccountRef[];
-	/** Every card, to pick one on an income or expense. */
+	/** Every card, to pick one on an expense. */
 	cards: Card[];
 	baseCurrency: string;
 	/** Where a new transaction starts, when there is one and it is still in use. */
@@ -55,7 +55,9 @@ export function useFormFields({
 	const isTransfer = type === "transfer";
 	const account = accounts.find((a) => a.id === accountId) ?? null;
 	const toAccount = accounts.find((a) => a.id === toAccountId) ?? null;
-	const card = cards.find((c) => c.id === cardId) ?? null;
+	// Cards are for spending: an income or transfer never carries one, so editing an older income
+	// that has a card unlinks it on save.
+	const card = type === "expense" ? (cards.find((c) => c.id === cardId) ?? null) : null;
 	const effectiveCurrency = account ? account.currency : currency;
 	const foreign =
 		effectiveCurrency.length === 3 && effectiveCurrency.toUpperCase() !== baseCurrency;
@@ -91,7 +93,7 @@ export function useFormFields({
 
 	function changeType(next: TransactionType) {
 		setType(next);
-		if (next === "transfer") setCardId("");
+		if (next !== "expense") setCardId("");
 		setSwitched(true);
 		if (next !== "expense") setSubscription(null);
 	}
