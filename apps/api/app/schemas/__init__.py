@@ -13,6 +13,8 @@ from app.schemas.budget import (
     BudgetLineCreate,
     BudgetLineResponse,
     BudgetLineUpdate,
+    BudgetMoveCreate,
+    BudgetMoveResponse,
     BudgetResponse,
     BudgetSettingsUpdate,
 )
@@ -133,6 +135,8 @@ __all__ = [
     "BudgetLineCreate",
     "BudgetLineResponse",
     "BudgetLineUpdate",
+    "BudgetMoveCreate",
+    "BudgetMoveResponse",
     "BudgetResponse",
     "BudgetSettingsUpdate",
     "BulkIds",

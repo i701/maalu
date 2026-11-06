@@ -1,18 +1,28 @@
 import uuid
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import ROUND_FLOOR, Decimal
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.allocation import allocate_base
 from app.budget_period import next_period_start, period_bounds, period_start, previous_period_start
-from app.models import Budget, BudgetLine, BudgetLineCategory, Category, Transaction, User
+from app.models import (
+    Budget,
+    BudgetLine,
+    BudgetLineCategory,
+    BudgetMove,
+    Category,
+    Transaction,
+    User,
+)
 from app.schemas import (
     BudgetLineCreate,
     BudgetLineResponse,
     BudgetLineUpdate,
+    BudgetMoveCreate,
+    BudgetMoveResponse,
     BudgetResponse,
     BudgetSettingsUpdate,
 )
@@ -20,6 +30,7 @@ from app.schemas.budget import (
     MAX_RANGE_DAYS,
     BudgetCategoryRef,
     BudgetFixedLine,
+    BudgetMoveLogEntry,
     BudgetPeriod,
     BudgetStatus,
     BudgetTotals,
@@ -181,6 +192,20 @@ class BudgetService:
             out.setdefault(parent_id, []).append(child_id)
         return out
 
+    async def _moves(self, user_id: uuid.UUID, first: date, last: date) -> list[BudgetMove]:
+        """Moves for periods starting between `first` and `last`, newest first."""
+        stmt = (
+            select(BudgetMove)
+            .where(
+                BudgetMove.user_id == user_id,
+                BudgetMove.undone_at.is_(None),
+                BudgetMove.period_start >= first,
+                BudgetMove.period_start <= last,
+            )
+            .order_by(BudgetMove.created_at.desc())
+        )
+        return list((await self.db.scalars(stmt)).unique().all())
+
     async def view(self, user_id: uuid.UUID, on: date | None = None) -> BudgetResponse:
         today = date.today()
         budget = await self.settings(user_id)
@@ -210,17 +235,35 @@ class BudgetService:
                         )
                     cursor = next_period_start(cursor, day)
 
+        # Money moved between limits (or added) changes a limit's amount for its period only. A
+        # move is matched to a period by its date, so changing the start day later still finds it.
+        moves = await self._moves(user_id, oldest, end)
+        moved: dict[tuple[date, uuid.UUID], tuple[Decimal, Decimal]] = {}  # (in, out)
+        for move in moves:
+            at = period_start(move.period_start, day)
+            got, gave = moved.get((at, move.to_line_id), (ZERO, ZERO))
+            moved[(at, move.to_line_id)] = (got + move.amount, gave)
+            if move.from_line_id is not None:
+                got, gave = moved.get((at, move.from_line_id), (ZERO, ZERO))
+                moved[(at, move.from_line_id)] = (got, gave + move.amount)
+
+        def net(at: date, line_id: uuid.UUID) -> Decimal:
+            got, gave = moved.get((at, line_id), (ZERO, ZERO))
+            return got - gave
+
         views: list[BudgetLineResponse] = []
         for line in lines:
             carried = ZERO
             if line.rollover:
                 cursor = max(period_start(line.start_date, day), oldest)
                 while cursor < start:
-                    left = line.amount + carried - self._spent(line, history[cursor], children)
+                    spent_then = self._spent(line, history[cursor], children)
+                    left = line.amount + net(cursor, line.id) + carried - spent_then
                     carried = max(ZERO, left)
                     cursor = next_period_start(cursor, day)
             spent = self._spent(line, activity, children)
-            budgeted = line.amount + carried
+            moved_in, moved_out = moved.get((start, line.id), (ZERO, ZERO))
+            budgeted = line.amount + carried + moved_in - moved_out
             views.append(
                 BudgetLineResponse(
                     id=line.id,
@@ -230,6 +273,8 @@ class BudgetService:
                     rollover=line.rollover,
                     warn_percent=line.warn_percent,
                     carried=carried.quantize(CENT),
+                    moved_in=moved_in.quantize(CENT),
+                    moved_out=moved_out.quantize(CENT),
                     activity=spent.quantize(CENT),
                     available=(budgeted - spent).quantize(CENT),
                     percent=_percent(spent, budgeted),
@@ -242,7 +287,7 @@ class BudgetService:
         ]
         fixed_views.sort(key=lambda v: (v.state == "ended", v.start_date, v.name))
 
-        budgeted_total = sum((v.amount + v.carried for v in views), ZERO)
+        budgeted_total = sum((v.amount + v.carried + v.moved_in - v.moved_out for v in views), ZERO)
         spent_total = sum((v.activity for v in views), ZERO)
         return BudgetResponse(
             currency=await self._base_currency(user_id),
@@ -251,6 +296,11 @@ class BudgetService:
             period=BudgetPeriod(start=start, end=end, is_current=start <= today <= end),
             lines=views,
             fixed_lines=fixed_views,
+            moves=[
+                BudgetMoveResponse.model_validate(m)
+                for m in moves
+                if start <= m.period_start <= end
+            ],
             totals=BudgetTotals(
                 amount=budgeted_total.quantize(CENT),
                 activity=spent_total.quantize(CENT),
@@ -284,6 +334,8 @@ class BudgetService:
             rollover=False,
             warn_percent=line.warn_percent,
             carried=ZERO.quantize(CENT),
+            moved_in=ZERO.quantize(CENT),
+            moved_out=ZERO.quantize(CENT),
             activity=spent.quantize(CENT),
             available=(line.amount - spent).quantize(CENT),
             percent=_percent(spent, line.amount),
@@ -421,7 +473,95 @@ class BudgetService:
         if changes.get("rollover"):
             raise BudgetLineRuleError("A limit for set dates has nothing to carry over")
         line.start_date, line.ends_on, line.rollover = first, end, False
+        if not was_fixed:  # only monthly limits take moves, so its moves go
+            await self.db.execute(
+                delete(BudgetMove).where(
+                    or_(BudgetMove.from_line_id == line.id, BudgetMove.to_line_id == line.id)
+                )
+            )
 
     async def delete_line(self, line: BudgetLine) -> None:
         await self.db.delete(line)
         await self.db.flush()
+
+    async def _monthly_line(self, user_id: uuid.UUID, line_id: uuid.UUID) -> BudgetLine:
+        line = await self.get_line(user_id, line_id)
+        if line is None:
+            raise BudgetLineNotFoundError
+        if line.ends_on is not None:
+            raise BudgetLineRuleError(
+                f'"{line.name}" is a limit for set dates: money only moves between monthly limits'
+            )
+        return line
+
+    async def create_move(self, user_id: uuid.UUID, data: BudgetMoveCreate) -> date:
+        """Move money from one monthly limit to another for one period, or add to one (no
+        `from_line_id`). The source can give at most what it has left that period, so money already
+        spent can't be moved. Returns a day in the period, to show it."""
+        budget = await self.settings(user_id)
+        on = data.on or date.today()
+        to_line = await self._monthly_line(user_id, data.to_line_id)
+        from_line = (
+            await self._monthly_line(user_id, data.from_line_id) if data.from_line_id else None
+        )
+        if from_line is not None:
+            view = await self.view(user_id, on)
+            left = next(v.available for v in view.lines if v.id == from_line.id)
+            if left <= 0:
+                raise BudgetLineRuleError(f'"{from_line.name}" has nothing left this period')
+            if data.amount > left:
+                raise BudgetLineRuleError(
+                    f'"{from_line.name}" has only {view.currency} {left:,.2f} left this period'
+                )
+        self.db.add(
+            BudgetMove(
+                user_id=user_id,
+                period_start=period_start(on, budget.period_start_day),
+                from_line_id=from_line.id if from_line else None,
+                to_line_id=to_line.id,
+                amount=data.amount,
+                note=data.note or None,
+            )
+        )
+        await self.db.flush()
+        return on
+
+    async def undo_move(self, user_id: uuid.UUID, move_id: uuid.UUID) -> date | None:
+        """Undo a move: the budget stops counting it, and the history keeps it, marked undone.
+        Returns a day in its period, or None when it isn't yours or is already undone."""
+        move = await self.db.scalar(
+            select(BudgetMove).where(
+                BudgetMove.id == move_id,
+                BudgetMove.user_id == user_id,
+                BudgetMove.undone_at.is_(None),
+            )
+        )
+        if move is None:
+            return None
+        move.undone_at = datetime.now(UTC)
+        await self.db.flush()
+        return move.period_start
+
+    async def history(self, user_id: uuid.UUID, line: BudgetLine) -> list[BudgetMoveLogEntry]:
+        """Every move into or out of a limit, in every period, undone ones too; newest first."""
+        day = (await self.settings(user_id)).period_start_day
+        stmt = (
+            select(BudgetMove)
+            .where(
+                BudgetMove.user_id == user_id,
+                or_(BudgetMove.from_line_id == line.id, BudgetMove.to_line_id == line.id),
+            )
+            .order_by(BudgetMove.created_at.desc())
+        )
+        entries = []
+        for move in (await self.db.scalars(stmt)).unique().all():
+            start, end = period_bounds(move.period_start, day)
+            entries.append(
+                BudgetMoveLogEntry(
+                    **BudgetMoveResponse.model_validate(move).model_dump(),
+                    period_start=start,
+                    period_end=end,
+                    undone_at=move.undone_at,
+                )
+            )
+        return entries

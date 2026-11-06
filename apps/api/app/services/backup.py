@@ -36,6 +36,7 @@ CHUNK = 1000
 OWNED = (
     "accounts",
     "budget_lines",
+    "budget_moves",
     "budgets",
     "cards",
     "categories",

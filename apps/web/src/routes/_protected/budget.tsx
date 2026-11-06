@@ -4,7 +4,7 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { z } from "zod";
 import BudgetLineCard from "#/components/BudgetLineCard";
 import BudgetLineForm from "#/components/BudgetLineForm";
@@ -12,15 +12,20 @@ import BudgetSettingsDialog from "#/components/BudgetSettingsDialog";
 import BudgetSummary from "#/components/BudgetSummary";
 import ConfirmDelete from "#/components/ConfirmDelete";
 import EmptyState from "#/components/EmptyState";
+import MoveHistoryDialog from "#/components/MoveHistoryDialog";
+import MoveMoneyDialog from "#/components/MoveMoneyDialog";
+import { useNotify } from "#/components/Notify";
 import PageHeader from "#/components/PageHeader";
 import PendingOverlay from "#/components/PendingOverlay";
 import SavingsGoals from "#/components/SavingsGoals";
 import Symbol from "#/components/Symbol";
 import { addDays } from "#/lib/budget";
+import { movesFor } from "#/lib/budget-moves";
 import { formatDate } from "#/lib/format";
 import { staggerChildren } from "#/lib/motion";
 import { unwrap } from "#/lib/unwrap";
-import { deleteBudgetLineFn, getBudgetFn } from "#/server/budget";
+import { useAction } from "#/lib/use-action";
+import { deleteBudgetLineFn, undoBudgetMoveFn, getBudgetFn } from "#/server/budget";
 import { listAccountsFn } from "#/server/accounts";
 import { listCategoriesFn } from "#/server/categories";
 import { listGoalsFn } from "#/server/goals";
@@ -57,6 +62,23 @@ function BudgetPage() {
 	const [editing, setEditing] = useState<BudgetLine | "new" | null>(null);
 	const [deleting, setDeleting] = useState<BudgetLine | null>(null);
 	const [settings, setSettings] = useState(false);
+	const [movingTo, setMovingTo] = useState<BudgetLine | null>(null);
+	const [historyOf, setHistoryOf] = useState<BudgetLine | null>(null);
+	const { run } = useAction();
+	const notify = useNotify();
+
+	// each card's moves, worked out once per budget so the memoised cards keep their props
+	const movesByLine = useMemo(
+		() =>
+			new Map(budget.lines.map((l) => [l.id, movesFor(budget.moves ?? [], l.id, budget.currency)])),
+		[budget],
+	);
+	const undoMove = useCallback(
+		async (id: string) => {
+			if (await run(() => undoBudgetMoveFn({ data: { id } }))) notify("Move undone");
+		},
+		[run, notify],
+	);
 
 	const { period } = budget;
 	const fixedLines = budget.fixed_lines ?? [];
@@ -151,6 +173,10 @@ function BudgetPage() {
 									currency={budget.currency}
 									onEdit={setEditing}
 									onDelete={setDeleting}
+									moves={movesByLine.get(line.id)}
+									onMove={setMovingTo}
+									onUndoMove={undoMove}
+									onHistory={setHistoryOf}
 								/>
 							))}
 						</Box>
@@ -198,6 +224,16 @@ function BudgetPage() {
 				/>
 			)}
 			{settings && <BudgetSettingsDialog budget={budget} onClose={() => setSettings(false)} />}
+			{movingTo && (
+				<MoveMoneyDialog budget={budget} line={movingTo} onClose={() => setMovingTo(null)} />
+			)}
+			{historyOf && (
+				<MoveHistoryDialog
+					line={historyOf}
+					currency={budget.currency}
+					onClose={() => setHistoryOf(null)}
+				/>
+			)}
 			{deleting && (
 				<ConfirmDelete
 					title="Delete limit"

@@ -46,6 +46,8 @@ const line = (
 	rollover: false,
 	warn_percent: null,
 	carried: "0.0000",
+	moved_in: "0.0000",
+	moved_out: "0.0000",
 	activity: "0.0000",
 	available,
 	percent,

@@ -90,3 +90,38 @@ class BudgetLineCategory(Base):
     )
     line: Mapped[BudgetLine] = relationship(back_populates="category_links")
     category: Mapped[Category] = relationship(lazy="joined")
+
+
+class BudgetMove(Base):
+    """Money moved from one monthly limit to another for one period, or added to one for that
+    period only (a top-up: no `from_line`). It changes nothing else: the limits keep their usual
+    amount, and the next period starts from it again."""
+
+    __tablename__ = "budget_moves"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    # The first day of the period it is for, as periods were when it was made. A view matches it
+    # by range, so changing the period's start day later still finds it.
+    period_start: Mapped[date] = mapped_column(Date)
+    # Deleting a limit deletes the moves it took part in.
+    from_line_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("budget_lines.id", ondelete="CASCADE"), index=True, default=None
+    )
+    to_line_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("budget_lines.id", ondelete="CASCADE"), index=True
+    )
+    # Always positive, in the user's base currency.
+    amount: Mapped[Decimal] = mapped_column(Numeric(19, 4))
+    note: Mapped[str | None] = mapped_column(String(200), default=None)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        default=lambda: datetime.now(UTC),
+    )
+    # Undoing a move keeps the row, so a limit's history shows what happened; the budget ignores it.
+    undone_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+    from_line: Mapped[BudgetLine | None] = relationship(foreign_keys=[from_line_id], lazy="joined")
+    to_line: Mapped[BudgetLine] = relationship(foreign_keys=[to_line_id], lazy="joined")

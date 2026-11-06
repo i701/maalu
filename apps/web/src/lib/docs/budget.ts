@@ -48,7 +48,7 @@ export const budget: Doc = {
 		{
 			type: "list",
 			items: [
-				"**Left** is the limit, plus anything carried over, less what you spent. When you have spent more, the card says **Over by** instead.",
+				"**Left** is the limit, plus anything carried over or moved in, less anything moved out and what you spent. When you have spent more, the card says **Over by** instead.",
 				"A limit turns to a warning once you have spent the **Warn at** share of it (80% unless you change it in **Budget settings** or on the limit), and to over once you pass it.",
 				"Only expenses count. Income and transfers between your accounts never do, and a refund gives back what it refunds.",
 				"Planned transactions count nothing until they are paid.",
@@ -65,6 +65,43 @@ export const budget: Doc = {
 				["Left", "4,000 + 400 − 2,900 = MVR 1,500"],
 			],
 			note: "Rollover only carries unspent money forward. Overspending one month does not take anything away from the next.",
+		},
+
+		{ type: "h2", id: "move-money", text: "Move money between limits" },
+		{
+			type: "p",
+			text: "Running tight on one limit while another has room? Move some across for this period instead of raising the limit for good. Your overall budget stays the same: you have only decided differently where the money goes.",
+		},
+		{
+			type: "steps",
+			items: [
+				"On [Budget](/budget), press **Move money here** on the limit that needs more.",
+				"Choose where it comes **From**. Each limit shows what it has left, and the one with the most is picked for you.",
+				"Enter the amount and, if you like, a note, and press **Move**.",
+			],
+		},
+		{
+			type: "example",
+			title: "Example: guests for the weekend",
+			rows: [
+				["Groceries", "MVR 4,000, with 3,600 spent"],
+				["Eating out", "MVR 2,000, with 200 spent"],
+				["You move", "MVR 600 from Eating out to Groceries"],
+				["Groceries this period", "4,600, so MVR 1,000 left"],
+				["Eating out this period", "1,400, so MVR 1,200 left"],
+			],
+			note: "Next period both are back to 4,000 and 2,000.",
+		},
+		{
+			type: "list",
+			items: [
+				"A limit can give at most what it has left this period. Money already spent can't be moved.",
+				"With nothing to take from, choose **Nowhere: just add to this limit**. That raises this period's budget instead of shifting it.",
+				"Each card lists the moves into and out of it this period. Press **Undo** beside one to take it back.",
+				"**History** on a card lists every move into or out of that limit, in every period: what moved where, the note, when it was made, and whether it was undone. Undone moves stay in the history, marked, so you can always see what happened.",
+				"A move only applies to the period you were looking at, but rollover carries what was left after it.",
+				"Money moves only between monthly limits, not limits for set dates.",
+			],
 		},
 
 		{ type: "h2", id: "set-dates", text: "A limit for set dates" },

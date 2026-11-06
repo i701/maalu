@@ -158,6 +158,10 @@ export type BudgetLine = Schemas["BudgetLineResponse"];
 /** A limit for set dates: its amount is one total between two dates, not per period. */
 export type BudgetFixedLine = Schemas["BudgetFixedLine"];
 export type Budget = Schemas["BudgetResponse"];
+/** Money moved between monthly limits for one period, or added to one (no `from_line`). */
+export type BudgetMove = Schemas["BudgetMoveResponse"];
+/** A move in a limit's history: its period, and when it was undone, if it was. */
+export type BudgetMoveLogEntry = Schemas["BudgetMoveLogEntry"];
 export type GoalEntry = Schemas["GoalEntryResponse"];
 export type Goal = Schemas["GoalResponse"];
 export type MonthlyPoint = Schemas["MonthlyPoint"];

@@ -2,11 +2,13 @@ import { morph } from "#/lib/shape";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { memo } from "react";
 import { fixedWindow, STATUS_COLOR, STATUS_LABEL, unsigned } from "#/lib/budget";
-import { formatMoney, sumDecimals } from "#/lib/format";
+import { periodLimit, type LineMove } from "#/lib/budget-moves";
+import { formatMoney } from "#/lib/format";
 import type { BudgetFixedLine, BudgetLine } from "#/types/api";
 import TonalChip from "./TonalChip";
 
@@ -47,14 +49,25 @@ const BudgetLineCard = memo(function BudgetLineCard({
 	currency,
 	onEdit,
 	onDelete,
+	moves,
+	onMove,
+	onUndoMove,
+	onHistory,
 }: {
 	line: BudgetLine | BudgetFixedLine;
 	currency: string;
 	onEdit: (line: BudgetLine) => void;
 	onDelete: (line: BudgetLine) => void;
+	/** Money moved in or out this period (monthly limits only) */
+	moves?: LineMove[];
+	/** Open "move money here"; left out for limits for set dates */
+	onMove?: (line: BudgetLine) => void;
+	onUndoMove?: (moveId: string) => void;
+	/** Open the log of every move into or out of this limit */
+	onHistory?: (line: BudgetLine) => void;
 }) {
 	const color = STATUS_COLOR[line.status];
-	const limit = sumDecimals([line.amount, line.carried]);
+	const limit = periodLimit(line);
 	const over = line.status === "over";
 	const dated = "end_date" in line ? line : null;
 
@@ -140,6 +153,40 @@ const BudgetLineCard = memo(function BudgetLineCard({
 				<Typography variant="caption" sx={{ display: "block", mt: 0.75, color: "text.secondary" }}>
 					Includes {formatMoney(line.carried, currency)} carried over
 				</Typography>
+			)}
+			{moves?.map((m) => (
+				<Box key={m.id} sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.5 }}>
+					<Typography
+						variant="caption"
+						sx={{
+							color: "text.secondary",
+							flex: 1,
+							minWidth: 0,
+							fontVariantNumeric: "tabular-nums",
+						}}
+					>
+						{m.text} this period{m.note ? ` · ${m.note}` : ""}
+					</Typography>
+					{onUndoMove && (
+						<Button size="small" color="inherit" onClick={() => onUndoMove(m.id)}>
+							Undo
+						</Button>
+					)}
+				</Box>
+			))}
+			{(onMove || onHistory) && (
+				<Box sx={{ display: "flex", gap: 0.5, mt: 1, ml: -1 }}>
+					{onMove && (
+						<Button size="small" onClick={() => onMove(line)}>
+							Move money here
+						</Button>
+					)}
+					{onHistory && (
+						<Button size="small" color="inherit" onClick={() => onHistory(line)}>
+							History
+						</Button>
+					)}
+				</Box>
 			)}
 		</Box>
 	);

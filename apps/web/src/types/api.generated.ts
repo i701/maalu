@@ -518,6 +518,68 @@ export interface paths {
         patch: operations["update_line_api_v1_budget_lines__line_id__patch"];
         trace?: never;
     };
+    "/api/v1/budget/lines/{line_id}/moves": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Line History
+         * @description Every move into or out of a limit, in every period, undone ones too; newest first.
+         */
+        get: operations["line_history_api_v1_budget_lines__line_id__moves_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/budget/moves": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Move
+         * @description Move money from one monthly limit to another for one period, or add to one for that period
+         *     only (leave out `from_line_id`). Returns the budget for that period.
+         */
+        post: operations["create_move_api_v1_budget_moves_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/budget/moves/{move_id}/undo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Undo Move
+         * @description Undo a move: the budget stops counting it, and the limit's history keeps it, marked undone.
+         *     Returns the budget for its period.
+         */
+        post: operations["undo_move_api_v1_budget_moves__move_id__undo_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/cards": {
         parameters: {
             query?: never;
@@ -2575,7 +2637,7 @@ export interface components {
             amount: string;
             /**
              * Available
-             * @description amount + carried - activity (negative when over)
+             * @description amount + carried + moved_in - moved_out - activity (negative when over)
              */
             available: string;
             /**
@@ -2601,11 +2663,21 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /**
+             * Moved In
+             * @description Money moved in from other limits, or added, for this period only
+             */
+            moved_in: string;
+            /**
+             * Moved Out
+             * @description Money moved out to other limits for this period only
+             */
+            moved_out: string;
             /** Name */
             name: string;
             /**
              * Percent
-             * @description Share of (amount + carried) already spent, rounded
+             * @description Share of (amount + carried + moved_in - moved_out) already spent, rounded
              */
             percent: number;
             /** Rollover */
@@ -2664,6 +2736,16 @@ export interface components {
              */
             warn_percent?: number | null;
         };
+        /** BudgetLineRef */
+        BudgetLineRef: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+        };
         /** BudgetLineResponse */
         BudgetLineResponse: {
             /**
@@ -2678,7 +2760,7 @@ export interface components {
             amount: string;
             /**
              * Available
-             * @description amount + carried - activity (negative when over)
+             * @description amount + carried + moved_in - moved_out - activity (negative when over)
              */
             available: string;
             /**
@@ -2693,11 +2775,21 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /**
+             * Moved In
+             * @description Money moved in from other limits, or added, for this period only
+             */
+            moved_in: string;
+            /**
+             * Moved Out
+             * @description Money moved out to other limits for this period only
+             */
+            moved_out: string;
             /** Name */
             name: string;
             /**
              * Percent
-             * @description Share of (amount + carried) already spent, rounded
+             * @description Share of (amount + carried + moved_in - moved_out) already spent, rounded
              */
             percent: number;
             /** Rollover */
@@ -2739,6 +2831,88 @@ export interface components {
             /** Warn Percent */
             warn_percent?: number | null;
         };
+        /** BudgetMoveCreate */
+        BudgetMoveCreate: {
+            /** Amount */
+            amount: number | string;
+            /**
+             * From Line Id
+             * @description The monthly limit the money comes from; at most what it has left this period. Leave it out to add to `to_line_id` for this period only (a top-up).
+             */
+            from_line_id?: string | null;
+            /** Note */
+            note?: string | null;
+            /**
+             * On
+             * @description Any day in the period it is for; defaults to today
+             */
+            on?: string | null;
+            /**
+             * To Line Id
+             * Format: uuid
+             * @description The monthly limit that gets the money
+             */
+            to_line_id: string;
+        };
+        /**
+         * BudgetMoveLogEntry
+         * @description A move in a limit's history: the period it was for, and when it was undone, if it was.
+         */
+        BudgetMoveLogEntry: {
+            /** Amount */
+            amount: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** @description Null for a top-up */
+            from_line: components["schemas"]["BudgetLineRef"] | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Note */
+            note: string | null;
+            /**
+             * Period End
+             * Format: date
+             * @description Inclusive
+             */
+            period_end: string;
+            /**
+             * Period Start
+             * Format: date
+             */
+            period_start: string;
+            to_line: components["schemas"]["BudgetLineRef"];
+            /**
+             * Undone At
+             * @description When it was undone; it then counts for nothing
+             */
+            undone_at: string | null;
+        };
+        /** BudgetMoveResponse */
+        BudgetMoveResponse: {
+            /** Amount */
+            amount: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** @description Null for a top-up */
+            from_line: components["schemas"]["BudgetLineRef"] | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Note */
+            note: string | null;
+            to_line: components["schemas"]["BudgetLineRef"];
+        };
         /** BudgetPeriod */
         BudgetPeriod: {
             /**
@@ -2771,6 +2945,11 @@ export interface components {
             fixed_lines?: components["schemas"]["BudgetFixedLine"][];
             /** Lines */
             lines: components["schemas"]["BudgetLineResponse"][];
+            /**
+             * Moves
+             * @description Money moved between monthly limits, or added to one, in this period; newest first. A top-up raises `totals.amount`; a move between limits leaves it as is.
+             */
+            moves?: components["schemas"]["BudgetMoveResponse"][];
             period: components["schemas"]["BudgetPeriod"];
             /** Period Start Day */
             period_start_day: number;
@@ -6356,6 +6535,101 @@ export interface operations {
                 "application/json": components["schemas"]["BudgetLineUpdate"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BudgetResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    line_history_api_v1_budget_lines__line_id__moves_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                line_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BudgetMoveLogEntry"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_move_api_v1_budget_moves_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BudgetMoveCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BudgetResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    undo_move_api_v1_budget_moves__move_id__undo_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                move_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {

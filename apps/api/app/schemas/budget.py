@@ -1,5 +1,5 @@
 import uuid
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Annotated, Literal
 
@@ -105,9 +105,17 @@ class BudgetLineResponse(BaseModel):
     warn_percent: int | None = Field(description="This line's own level, if it has one")
     # For the requested period:
     carried: Decimal = Field(description="Unspent money carried in from earlier periods")
+    moved_in: Decimal = Field(
+        description="Money moved in from other limits, or added, for this period only"
+    )
+    moved_out: Decimal = Field(description="Money moved out to other limits for this period only")
     activity: Decimal = Field(description="Expenses in the line's categories this period")
-    available: Decimal = Field(description="amount + carried - activity (negative when over)")
-    percent: int = Field(description="Share of (amount + carried) already spent, rounded")
+    available: Decimal = Field(
+        description="amount + carried + moved_in - moved_out - activity (negative when over)"
+    )
+    percent: int = Field(
+        description="Share of (amount + carried + moved_in - moved_out) already spent, rounded"
+    )
     status: BudgetStatus
 
 
@@ -121,6 +129,52 @@ class BudgetFixedLine(BudgetLineResponse):
         description="Relative to today: not started yet, running, or over"
     )
     days_left: int | None = Field(description="Days until it ends, today included; null once over")
+
+
+class BudgetMoveCreate(BaseModel):
+    to_line_id: uuid.UUID = Field(description="The monthly limit that gets the money")
+    from_line_id: uuid.UUID | None = Field(
+        default=None,
+        description="The monthly limit the money comes from; at most what it has left this "
+        "period. Leave it out to add to `to_line_id` for this period only (a top-up).",
+    )
+    amount: Limit
+    on: date | None = Field(
+        default=None, description="Any day in the period it is for; defaults to today"
+    )
+    note: Annotated[str, StringConstraints(strip_whitespace=True, max_length=200)] | None = None
+
+    @model_validator(mode="after")
+    def _two_limits(self):
+        if self.from_line_id is not None and self.from_line_id == self.to_line_id:
+            raise ValueError("Choose two different limits")
+        return self
+
+
+class BudgetLineRef(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    name: str
+
+
+class BudgetMoveResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    from_line: BudgetLineRef | None = Field(description="Null for a top-up")
+    to_line: BudgetLineRef
+    amount: Decimal
+    note: str | None
+    created_at: datetime
+
+
+class BudgetMoveLogEntry(BudgetMoveResponse):
+    """A move in a limit's history: the period it was for, and when it was undone, if it was."""
+
+    period_start: date
+    period_end: date = Field(description="Inclusive")
+    undone_at: datetime | None = Field(description="When it was undone; it then counts for nothing")
 
 
 class BudgetTotals(BaseModel):
@@ -147,6 +201,11 @@ class BudgetResponse(BaseModel):
         default_factory=list,
         description="Limits for set dates, every one whatever period is shown. They are not in "
         "`totals`, which add up the per-period lines.",
+    )
+    moves: list[BudgetMoveResponse] = Field(
+        default_factory=list,
+        description="Money moved between monthly limits, or added to one, in this period; "
+        "newest first. A top-up raises `totals.amount`; a move between limits leaves it as is.",
     )
     totals: BudgetTotals
     attention: int = Field(

@@ -8,10 +8,17 @@ from app.dependencies import BudgetServiceDep, CurrentUserId
 from app.schemas import (
     BudgetLineCreate,
     BudgetLineUpdate,
+    BudgetMoveCreate,
     BudgetResponse,
     BudgetSettingsUpdate,
 )
-from app.services import BudgetCategoryTakenError, BudgetLineRuleError, CategoryNotFoundError
+from app.schemas.budget import BudgetMoveLogEntry
+from app.services import (
+    BudgetCategoryTakenError,
+    BudgetLineNotFoundError,
+    BudgetLineRuleError,
+    CategoryNotFoundError,
+)
 
 router = APIRouter(prefix="/budget", tags=["budget"])
 
@@ -71,6 +78,40 @@ async def update_line(
     except BudgetLineRuleError as exc:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
     return await service.view(user_id)
+
+
+@router.post("/moves", response_model=BudgetResponse, status_code=status.HTTP_201_CREATED)
+async def create_move(data: BudgetMoveCreate, user_id: CurrentUserId, service: BudgetServiceDep):
+    """Move money from one monthly limit to another for one period, or add to one for that period
+    only (leave out `from_line_id`). Returns the budget for that period."""
+    try:
+        on = await service.create_move(user_id, data)
+    except BudgetLineNotFoundError:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT, "Budget line not found"
+        ) from None
+    except BudgetLineRuleError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
+    return await service.view(user_id, on)
+
+
+@router.post("/moves/{move_id}/undo", response_model=BudgetResponse)
+async def undo_move(move_id: uuid.UUID, user_id: CurrentUserId, service: BudgetServiceDep):
+    """Undo a move: the budget stops counting it, and the limit's history keeps it, marked undone.
+    Returns the budget for its period."""
+    on = await service.undo_move(user_id, move_id)
+    if on is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Move not found or already undone")
+    return await service.view(user_id, on)
+
+
+@router.get("/lines/{line_id}/moves", response_model=list[BudgetMoveLogEntry])
+async def line_history(line_id: uuid.UUID, user_id: CurrentUserId, service: BudgetServiceDep):
+    """Every move into or out of a limit, in every period, undone ones too; newest first."""
+    line = await service.get_line(user_id, line_id)
+    if line is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Budget line not found")
+    return await service.history(user_id, line)
 
 
 @router.delete("/lines/{line_id}", status_code=status.HTTP_204_NO_CONTENT)

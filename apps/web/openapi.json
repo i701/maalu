@@ -1005,7 +1005,7 @@
             "type": "string"
           },
           "available": {
-            "description": "amount + carried - activity (negative when over)",
+            "description": "amount + carried + moved_in - moved_out - activity (negative when over)",
             "title": "Available",
             "type": "string"
           },
@@ -1044,12 +1044,22 @@
             "title": "Id",
             "type": "string"
           },
+          "moved_in": {
+            "description": "Money moved in from other limits, or added, for this period only",
+            "title": "Moved In",
+            "type": "string"
+          },
+          "moved_out": {
+            "description": "Money moved out to other limits for this period only",
+            "title": "Moved Out",
+            "type": "string"
+          },
           "name": {
             "title": "Name",
             "type": "string"
           },
           "percent": {
-            "description": "Share of (amount + carried) already spent, rounded",
+            "description": "Share of (amount + carried + moved_in - moved_out) already spent, rounded",
             "title": "Percent",
             "type": "integer"
           },
@@ -1102,6 +1112,8 @@
           "rollover",
           "warn_percent",
           "carried",
+          "moved_in",
+          "moved_out",
           "activity",
           "available",
           "percent",
@@ -1198,6 +1210,25 @@
         "title": "BudgetLineCreate",
         "type": "object"
       },
+      "BudgetLineRef": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "BudgetLineRef",
+        "type": "object"
+      },
       "BudgetLineResponse": {
         "properties": {
           "activity": {
@@ -1211,7 +1242,7 @@
             "type": "string"
           },
           "available": {
-            "description": "amount + carried - activity (negative when over)",
+            "description": "amount + carried + moved_in - moved_out - activity (negative when over)",
             "title": "Available",
             "type": "string"
           },
@@ -1232,12 +1263,22 @@
             "title": "Id",
             "type": "string"
           },
+          "moved_in": {
+            "description": "Money moved in from other limits, or added, for this period only",
+            "title": "Moved In",
+            "type": "string"
+          },
+          "moved_out": {
+            "description": "Money moved out to other limits for this period only",
+            "title": "Moved Out",
+            "type": "string"
+          },
           "name": {
             "title": "Name",
             "type": "string"
           },
           "percent": {
-            "description": "Share of (amount + carried) already spent, rounded",
+            "description": "Share of (amount + carried + moved_in - moved_out) already spent, rounded",
             "title": "Percent",
             "type": "integer"
           },
@@ -1275,6 +1316,8 @@
           "rollover",
           "warn_percent",
           "carried",
+          "moved_in",
+          "moved_out",
           "activity",
           "available",
           "percent",
@@ -1384,6 +1427,206 @@
         "title": "BudgetLineUpdate",
         "type": "object"
       },
+      "BudgetMoveCreate": {
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Amount"
+          },
+          "from_line_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The monthly limit the money comes from; at most what it has left this period. Leave it out to add to `to_line_id` for this period only (a top-up).",
+            "title": "From Line Id"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Any day in the period it is for; defaults to today",
+            "title": "On"
+          },
+          "to_line_id": {
+            "description": "The monthly limit that gets the money",
+            "format": "uuid",
+            "title": "To Line Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "to_line_id",
+          "amount"
+        ],
+        "title": "BudgetMoveCreate",
+        "type": "object"
+      },
+      "BudgetMoveLogEntry": {
+        "description": "A move in a limit's history: the period it was for, and when it was undone, if it was.",
+        "properties": {
+          "amount": {
+            "title": "Amount",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "from_line": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BudgetLineRef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null for a top-up"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "period_end": {
+            "description": "Inclusive",
+            "format": "date",
+            "title": "Period End",
+            "type": "string"
+          },
+          "period_start": {
+            "format": "date",
+            "title": "Period Start",
+            "type": "string"
+          },
+          "to_line": {
+            "$ref": "#/components/schemas/BudgetLineRef"
+          },
+          "undone_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When it was undone; it then counts for nothing",
+            "title": "Undone At"
+          }
+        },
+        "required": [
+          "id",
+          "from_line",
+          "to_line",
+          "amount",
+          "note",
+          "created_at",
+          "period_start",
+          "period_end",
+          "undone_at"
+        ],
+        "title": "BudgetMoveLogEntry",
+        "type": "object"
+      },
+      "BudgetMoveResponse": {
+        "properties": {
+          "amount": {
+            "title": "Amount",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "from_line": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BudgetLineRef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null for a top-up"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "to_line": {
+            "$ref": "#/components/schemas/BudgetLineRef"
+          }
+        },
+        "required": [
+          "id",
+          "from_line",
+          "to_line",
+          "amount",
+          "note",
+          "created_at"
+        ],
+        "title": "BudgetMoveResponse",
+        "type": "object"
+      },
       "BudgetPeriod": {
         "properties": {
           "end": {
@@ -1434,6 +1677,14 @@
               "$ref": "#/components/schemas/BudgetLineResponse"
             },
             "title": "Lines",
+            "type": "array"
+          },
+          "moves": {
+            "description": "Money moved between monthly limits, or added to one, in this period; newest first. A top-up raises `totals.amount`; a move between limits leaves it as is.",
+            "items": {
+              "$ref": "#/components/schemas/BudgetMoveResponse"
+            },
+            "title": "Moves",
             "type": "array"
           },
           "period": {
@@ -9397,6 +9648,155 @@
           }
         ],
         "summary": "Update Line",
+        "tags": [
+          "budget"
+        ]
+      }
+    },
+    "/api/v1/budget/lines/{line_id}/moves": {
+      "get": {
+        "description": "Every move into or out of a limit, in every period, undone ones too; newest first.",
+        "operationId": "line_history_api_v1_budget_lines__line_id__moves_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "line_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Line Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BudgetMoveLogEntry"
+                  },
+                  "title": "Response Line History Api V1 Budget Lines  Line Id  Moves Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Line History",
+        "tags": [
+          "budget"
+        ]
+      }
+    },
+    "/api/v1/budget/moves": {
+      "post": {
+        "description": "Move money from one monthly limit to another for one period, or add to one for that period\nonly (leave out `from_line_id`). Returns the budget for that period.",
+        "operationId": "create_move_api_v1_budget_moves_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BudgetMoveCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BudgetResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Create Move",
+        "tags": [
+          "budget"
+        ]
+      }
+    },
+    "/api/v1/budget/moves/{move_id}/undo": {
+      "post": {
+        "description": "Undo a move: the budget stops counting it, and the limit's history keeps it, marked undone.\nReturns the budget for its period.",
+        "operationId": "undo_move_api_v1_budget_moves__move_id__undo_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "move_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Move Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BudgetResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Undo Move",
         "tags": [
           "budget"
         ]
