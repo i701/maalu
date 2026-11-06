@@ -204,6 +204,28 @@ async def test_looking_is_throttled(client: AsyncClient, auth, monkeypatch):
     assert len(await listed(client, auth)) == 1
 
 
+async def test_a_new_transaction_ends_the_wait_for_the_next_look(
+    client: AsyncClient, auth, monkeypatch
+):
+    monkeypatch.setattr(notifications, "SYNC_EVERY_SECONDS", 300)
+    assert await listed(client, auth) == []  # looks now, and is then left alone for a while
+    res = await client.post(
+        TX,
+        json={
+            "type": "expense",
+            "amount": "10",
+            "payment_method": "cash",
+            "category": "Bills",
+            "description": "Due now",
+            "transaction_date": TODAY.isoformat(),
+            "planned": True,
+        },
+        headers=auth,
+    )
+    assert res.status_code == 201, res.text
+    assert len(await listed(client, auth)) == 1  # the new planned payment is noticed at once
+
+
 async def test_the_daily_job_looks_for_everyone_and_sweeps_old_ones(
     client: AsyncClient, auth, signup: Signup
 ):

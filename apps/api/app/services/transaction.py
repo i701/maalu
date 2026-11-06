@@ -39,6 +39,7 @@ from app.schemas import (
     TransactionTotals,
     TransactionUpdate,
 )
+from app.services import notification
 from app.services.account import AccountCurrencyMismatchError, AccountNotFoundError
 from app.services.category import CategoryService, normalize_name
 from app.services.errors import TransactionNotPlannedError, TransactionRuleError
@@ -544,6 +545,7 @@ class TransactionService:
         return transaction
 
     async def create(self, user_id: uuid.UUID, data: TransactionCreate) -> Transaction:
+        notification._last_sync.pop(user_id, None)  # new data: look for news at the next read
         base = await self._base_currency(user_id)
         card = await self._resolve_card(user_id, data.card_id)
         account_id = data.account_id
@@ -1453,6 +1455,7 @@ class TransactionService:
             )
 
     async def update(self, transaction: Transaction, data: TransactionUpdate) -> Transaction:
+        notification._last_sync.pop(transaction.user_id, None)
         if transaction.adjustment:
             raise TransactionRuleError(
                 "A balance adjustment can't be edited. Delete it and make a new one"
@@ -1624,6 +1627,7 @@ class TransactionService:
         if transaction.type is TransactionType.EXPENSE and self._has_refunds(transaction):
             raise TransactionRuleError("This purchase has refunds. Move them to the trash first")
         transaction.deleted_at = datetime.now(UTC)
+        notification._last_sync.pop(transaction.user_id, None)
         await self.db.flush()
 
     async def post(self, transaction: Transaction, data: PostPlanned) -> Transaction:
