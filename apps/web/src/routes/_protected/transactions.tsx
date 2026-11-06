@@ -145,6 +145,7 @@ const searchSchema = z.object({
 	category_id: z.uuid().optional().catch(undefined),
 	tag_ids: z.array(z.uuid()).max(10).optional().catch(undefined),
 	tag_match: z.enum(["any", "all"]).optional().catch(undefined),
+	sorted_as: z.enum(["need", "want", "unsorted"]).optional().catch(undefined),
 	account_id: z.uuid().optional().catch(undefined),
 	card_id: z.uuid().optional().catch(undefined),
 	min_amount: decimal,
@@ -169,6 +170,7 @@ export const Route = createFileRoute("/_protected/transactions")({
 				deps.tag_ids?.length ||
 				deps.account_id ||
 				deps.card_id ||
+				deps.sorted_as ||
 				deps.min_amount ||
 				deps.max_amount ||
 				deps.date_from ||

@@ -1,6 +1,7 @@
 import type { ActiveFilter } from "#/components/ActiveFilters";
 import type { RemoteOption } from "#/components/RemoteAutocomplete";
 import { formatDate } from "#/lib/format";
+import { KIND_NAMES, type KindKey } from "#/lib/needs-wants";
 import {
 	PAYMENT_METHOD_LABELS,
 	TRANSACTION_TYPE_LABELS,
@@ -18,6 +19,7 @@ export type TransactionFilterValues = {
 	category_id?: string;
 	tag_ids?: string[];
 	tag_match?: "any" | "all";
+	sorted_as?: KindKey;
 	min_amount?: string;
 	max_amount?: string;
 	date_from?: string;
@@ -37,6 +39,7 @@ export function pickFilterValues(s: TransactionFilterValues): TransactionFilterV
 		category_id: s.category_id,
 		tag_ids: s.tag_ids,
 		tag_match: s.tag_match,
+		sorted_as: s.sorted_as,
 		min_amount: s.min_amount,
 		max_amount: s.max_amount,
 		date_from: s.date_from,
@@ -52,8 +55,15 @@ export function hasAnyFilter(s: TransactionSearch): boolean {
 /** How many structured filters are on (a range counts once). Text search is separate. */
 export function countActiveFilters(s: TransactionFilterValues): number {
 	return (
-		[s.type, s.payment_method, s.account_id, s.card_id, s.vendor_id, s.category_id].filter(Boolean)
-			.length +
+		[
+			s.type,
+			s.payment_method,
+			s.account_id,
+			s.card_id,
+			s.vendor_id,
+			s.category_id,
+			s.sorted_as,
+		].filter(Boolean).length +
 		(s.tag_ids?.length ? 1 : 0) +
 		(s.min_amount || s.max_amount ? 1 : 0) +
 		(s.date_from || s.date_to ? 1 : 0)
@@ -146,6 +156,13 @@ export function buildActiveFilters({
 			tone: "secondary",
 			label: `Tags: ${tagNames.join(filters.tag_match === "all" ? " + " : " or ") || "…"}`,
 			onDelete: () => patch({ tag_ids: undefined, tag_match: undefined }),
+		});
+	if (filters.sorted_as)
+		chips.push({
+			key: "kind",
+			tone: "info",
+			label: `Kind: ${KIND_NAMES[filters.sorted_as]}`,
+			onDelete: () => patch({ sorted_as: undefined }),
 		});
 	if (filters.payment_method)
 		chips.push({

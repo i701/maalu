@@ -42,6 +42,9 @@ export const Route = createFileRoute("/api/export/transactions")({
 					const value = incoming.get(key);
 					if (value) url.searchParams.set(key, value);
 				}
+				// The page calls it sorted_as (Trends already uses kind); the API calls it kind.
+				const sortedAs = incoming.get("sorted_as");
+				if (sortedAs) url.searchParams.set("kind", sortedAs);
 				// Several tags arrive as repeated tag_ids and go on as repeated tag_id.
 				for (const id of incoming.getAll("tag_ids")) url.searchParams.append("tag_id", id);
 

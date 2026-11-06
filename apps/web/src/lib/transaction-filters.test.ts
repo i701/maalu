@@ -60,3 +60,19 @@ describe("tag filters", () => {
 		expect(patch).toHaveBeenCalledWith({ tag_ids: undefined, tag_match: undefined });
 	});
 });
+
+describe("needs and wants filter", () => {
+	it("counts as one filter and is kept by pickFilterValues", () => {
+		expect(countActiveFilters({ sorted_as: "need" })).toBe(1);
+		expect(hasAnyFilter({ sorted_as: "unsorted" })).toBe(true);
+		expect(pickFilterValues({ sorted_as: "want" }).sorted_as).toBe("want");
+	});
+
+	it("shows one chip, named, that clears itself", () => {
+		const patch = vi.fn();
+		const [chip] = chips({ sorted_as: "unsorted" }, patch);
+		expect(chip?.label).toBe("Kind: Not sorted");
+		chip?.onDelete();
+		expect(patch).toHaveBeenCalledWith({ sorted_as: undefined });
+	});
+});

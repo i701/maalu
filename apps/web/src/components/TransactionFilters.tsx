@@ -25,6 +25,7 @@ import {
 import AmountRangeField from "./AmountRangeField";
 import DateRangeField from "./DateRangeField";
 import FilterChip from "./FilterChip";
+import { KIND_NAMES, KIND_ORDER, type KindKey } from "#/lib/needs-wants";
 import RemoteAutocomplete, { type RemoteOption } from "./RemoteAutocomplete";
 import TagFilter from "./TagFilter";
 
@@ -38,6 +39,7 @@ export type TransactionFilterValues = {
 	category_id?: string;
 	tag_ids?: string[];
 	tag_match?: "any" | "all";
+	sorted_as?: KindKey;
 	min_amount?: string;
 	max_amount?: string;
 	date_from?: string;
@@ -213,6 +215,25 @@ export default function TransactionFilters({
 					})
 				}
 			/>
+
+			<Section title="Needs and wants">
+				<Stack direction="row" useFlexGap sx={{ flexWrap: "wrap", gap: 1 }}>
+					<FilterChip
+						label="All"
+						symbol="apps"
+						selected={!filters.sorted_as}
+						onClick={() => onChange({ sorted_as: undefined })}
+					/>
+					{KIND_ORDER.map((k) => (
+						<FilterChip
+							key={k}
+							label={KIND_NAMES[k]}
+							selected={filters.sorted_as === k}
+							onClick={() => onChange({ sorted_as: filters.sorted_as === k ? undefined : k })}
+						/>
+					))}
+				</Stack>
+			</Section>
 
 			<Section title="Payment method">
 				<TextField
