@@ -210,12 +210,18 @@ class NotificationService:
             now = time.monotonic()
             if now - _last_sync.get(user_id, -SYNC_EVERY_SECONDS) < SYNC_EVERY_SECONDS:
                 return 0
-            _last_sync[user_id] = now
         stmt = select(User).where(User.is_active.is_(True))
         if user_id is not None:
             stmt = stmt.where(User.id == user_id)
         users = (await self.db.scalars(stmt)).all()
-        return sum([await self._sync_user(u) for u in users])
+        made = sum([await self._sync_user(u) for u in users])
+        if user_id is not None and not force:
+            # Noted once the look is done, not before: a parallel request (the bell's count and the
+            # list load together) would otherwise skip the look and read before this one commits,
+            # and show a count the list cannot match. Two looks at once are safe: the unique key
+            # makes the second wait for the first and make nothing twice.
+            _last_sync[user_id] = time.monotonic()
+        return made
 
     async def purge_old(self, days: int = KEEP_DAYS) -> int:
         cutoff = datetime.now(UTC) - timedelta(days=days)
