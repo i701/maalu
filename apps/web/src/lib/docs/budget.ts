@@ -133,6 +133,12 @@ export const budget: Doc = {
 			],
 		},
 
+		{ type: "h2", id: "needs-wants", text: "Needs and wants in your limits" },
+		{
+			type: "p",
+			text: "A limit is a **Need** or a **Want** when every category in it is that kind (set on the [Categories](/categories) page, sub-categories following their parent). The card says so, and when at least one limit has a kind, the summary at the top adds them up: what you spent on your need limits against what they allow, then the same for wants. A limit that mixes the two, or has unsorted categories, is counted under **Other limits**.",
+		},
+
 		{ type: "h2", id: "warnings", text: "Warnings" },
 		{
 			type: "p",
