@@ -115,6 +115,21 @@ export const budget: Doc = {
 				"These limits are listed under **For set dates**, below the monthly ones, with their dates and how many days are left. They are not in the totals at the top.",
 				"A limit for set dates may share categories with a monthly one, so a holiday limit can cover Food while your monthly Food limit keeps counting too. Two limits for set dates can't share a category on the same days.",
 				"Rollover does not apply to them.",
+				"The card of a running or finished one has **Repeat for the next stretch**: it opens the form filled in with the same name, categories and amount, starting the day after and lasting as long. Change anything you like and save.",
+				"A limit for set dates is only listed under the period whose dates it touches, so a November limit is not shown while you look at December. The dashboard's budget card lists the ones that are running.",
+			],
+		},
+
+		{ type: "h2", id: "between-dates", text: "A monthly limit between two dates" },
+		{
+			type: "p",
+			text: "Sometimes a limit is monthly but only for a while: a food budget for November to January. After switching on **Only for certain dates**, set **How it counts** to **A limit for every period between these dates**. The amount is then **per period**, as usual (and rollover works inside the dates), but the limit only exists in the periods the dates touch. Periods are whole, so the dates snap to them: from 15 Nov to 10 Jan runs 1 Nov to 31 Jan.",
+		},
+		{
+			type: "list",
+			items: [
+				"It sits with the other monthly limits, counts in their totals while it runs, and shows **Runs 01 Nov 2026 – 31 Jan 2027** on its card. Before and after those periods it is not there.",
+				"The same category can be in two such limits as long as they run at different times. It can't be in one that runs for ever, or in one that overlaps.",
 			],
 		},
 
