@@ -282,3 +282,60 @@ async def test_a_salary_split_waiting_is_a_notification(client: AsyncClient, aut
     # once it is split, the notification stays (it was news) and is not made again
     await listed(client, auth)
     assert len([n for n in await listed(client, auth) if n["kind"] == "split_waiting"]) == 1
+
+
+async def test_the_money_running_out_is_a_notification_naming_the_bill(client: AsyncClient, auth):
+    acc = (
+        await client.post(
+            "/api/v1/accounts",
+            json={"name": "Main", "group": "accounts", "currency": "MVR", "opening_amount": "1000"},
+            headers=auth,
+        )
+    ).json()
+    for description, amount in (("Rent", "800"), ("Wifi", "400")):
+        res = await client.post(
+            TX,
+            json={
+                "type": "expense",
+                "amount": amount,
+                "payment_method": "bank_transfer",
+                "category": "Bills",
+                "description": description,
+                "account_id": acc["id"],
+                "transaction_date": TODAY.isoformat(),
+                "planned": True,
+            },
+            headers=auth,
+        )
+        assert res.status_code == 201, res.text
+    found = [n for n in await listed(client, auth) if n["kind"] == "money_short"]
+    assert len(found) == 1
+    assert found[0]["title"] == "The money runs out at Wifi"  # 1,000 less 800 less 400
+    assert found[0]["body"].startswith("Short by MVR 200.00")
+    assert found[0]["link"] == "/plan"
+    # looking again does not repeat it
+    assert len([n for n in await listed(client, auth) if n["kind"] == "money_short"]) == 1
+
+
+async def test_enough_money_for_the_bills_is_no_notification(client: AsyncClient, auth):
+    acc = (
+        await client.post(
+            "/api/v1/accounts",
+            json={"name": "Main", "group": "accounts", "currency": "MVR", "opening_amount": "5000"},
+            headers=auth,
+        )
+    ).json()
+    await client.post(
+        TX,
+        json={
+            "type": "expense",
+            "amount": "800",
+            "payment_method": "bank_transfer",
+            "category": "Bills",
+            "account_id": acc["id"],
+            "transaction_date": TODAY.isoformat(),
+            "planned": True,
+        },
+        headers=auth,
+    )
+    assert not [n for n in await listed(client, auth) if n["kind"] == "money_short"]

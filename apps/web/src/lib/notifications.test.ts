@@ -17,6 +17,7 @@ describe("KIND_META", () => {
 			"budget_warning",
 			"goal_reached",
 			"installments_done",
+			"money_short",
 			"payment_due",
 			"payment_overdue",
 			"split_waiting",

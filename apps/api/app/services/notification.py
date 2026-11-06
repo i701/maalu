@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.enums import SplitTaskStatus, SubscriptionStatus
 from app.models import Notification, SalarySplitTask, Subscription, Transaction, User
+from app.services.available import AvailableService
 from app.services.budget import BudgetService
 from app.services.goal import GoalService
 
@@ -157,6 +158,31 @@ class NotificationService:
             )
         return made
 
+    async def _money_short(self, user: User, known: set[str]) -> int:
+        """The money runs out before the period does: laying the bills still to pay (overdue first,
+        then by date) against what the everyday accounts hold less what is set aside, the first
+        bill that takes the figure below zero is named. One notification per period and bill, so
+        it comes again only when a different bill is the one that runs short. With no everyday
+        account there is nothing to compare against, so there is none."""
+        plan = await AvailableService(self.db).available_to_spend(user.id)
+        if not plan.accounts:
+            return 0  # no everyday account yet: there is nothing to run short of
+        running = plan.balance - plan.reserved_total
+        for bill in plan.bills:
+            running -= bill.amount
+            if running < 0:
+                return await self._add(
+                    user.id,
+                    known,
+                    kind="money_short",
+                    title=f"The money runs out at {bill.title}",
+                    body=f"Short by {_money(-running, plan.currency)} after it, due "
+                    f"{bill.date:%d %b}",
+                    link="/plan",
+                    dedupe_key=f"short:{plan.period_start}:{bill.id}",
+                )
+        return 0
+
     async def _split_waiting(self, user: User, known: set[str]) -> int:
         """A posted salary whose split is waiting for approval on the Pending screen."""
         stmt = (
@@ -196,6 +222,7 @@ class NotificationService:
             made += await self._payments(user, known, today)
             made += await self._installments(user, known)
             made += await self._split_waiting(user, known)
+            made += await self._money_short(user, known)
         if user.notify_budget:
             made += await self._budget(user, known)
         if user.notify_goals:

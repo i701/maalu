@@ -12,6 +12,7 @@ export const KIND_META: Record<NotificationKind, { label: string; accent: string
 	budget_over: { label: "Over budget", accent: ERROR },
 	goal_reached: { label: "Goal", accent: ACCENT.green },
 	split_waiting: { label: "Split waiting", accent: ACCENT.blue },
+	money_short: { label: "Running short", accent: ERROR },
 };
 
 /** "9+" past nine, so the badge stays small. */

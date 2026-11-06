@@ -12,6 +12,7 @@ NotificationKind = Literal[
     "budget_over",
     "goal_reached",
     "split_waiting",
+    "money_short",
 ]
 
 
