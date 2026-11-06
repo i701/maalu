@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Budget, BudgetFixedLine, BudgetLine, BudgetStatus } from "#/types/api";
 import {
 	addDays,
+	budgetByKind,
 	budgetWarning,
 	datesOverlap,
 	describeLine,
@@ -234,5 +235,31 @@ describe("nextStretch", () => {
 			start: "2027-01-04",
 			end: "2027-01-10",
 		});
+	});
+});
+
+describe("budgetByKind", () => {
+	const of = (name: string, kind: BudgetLine["kind"], activity: string, over = {}) =>
+		({ ...line(name, "ok", 10, [name]), kind, activity, ...over }) as BudgetLine;
+
+	it("adds each kind's limits up, with what was carried and moved", () => {
+		const out = budgetByKind(
+			budget([
+				of("Rent", "need", "400.0000"),
+				of("Food", "need", "150.5000", { carried: "50.0000", moved_out: "20.0000" }),
+				of("Fun", "want", "80.0000"),
+				of("Misc", null, "10.0000"),
+			]),
+		);
+		expect(out.map((k) => [k.kind, k.lines, k.spent, k.limit])).toEqual([
+			["need", 2, "550.50", "2030.00"],
+			["want", 1, "80.00", "1000.00"],
+			["unsorted", 1, "10.00", "1000.00"],
+		]);
+	});
+
+	it("is empty while no limit is a need or a want", () => {
+		expect(budgetByKind(budget([of("Misc", null, "10.0000")]))).toEqual([]);
+		expect(budgetByKind(budget([]))).toEqual([]);
 	});
 });

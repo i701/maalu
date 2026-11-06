@@ -1,13 +1,53 @@
 import { morph } from "#/lib/shape";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { STATUS_COLOR, STATUS_LABEL, unsigned } from "#/lib/budget";
+import { budgetByKind, STATUS_COLOR, STATUS_LABEL, unsigned } from "#/lib/budget";
+import { KIND_COLOR, KIND_NAMES } from "#/lib/needs-wants";
 import { formatMoney } from "#/lib/format";
 import type { Budget } from "#/types/api";
 import TonalChip from "./TonalChip";
 
 /** The whole budget at a glance: everything spent against every limit, what is left, and how many
  * lines need attention. A calm surface, so the figures are what you read. */
+/** Needs, wants and the limits that are neither, each with what was spent against what it allows. */
+function KindSplit({ budget }: { budget: Budget }) {
+	const kinds = budgetByKind(budget);
+	if (kinds.length === 0) return null;
+	return (
+		<Box
+			sx={{
+				display: "grid",
+				gap: 1.5,
+				mt: 2,
+				gridTemplateColumns: { xs: "1fr", sm: `repeat(${kinds.length}, 1fr)` },
+			}}
+		>
+			{kinds.map((k) => (
+				<Box key={k.kind} sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
+					<Box
+						aria-hidden
+						sx={{
+							width: 10,
+							height: 10,
+							flexShrink: 0,
+							borderRadius: "var(--shape-full)",
+							bgcolor: KIND_COLOR[k.kind],
+						}}
+					/>
+					<Box sx={{ minWidth: 0 }}>
+						<Typography variant="caption" sx={{ color: "text.secondary", display: "block" }}>
+							{k.kind === "unsorted" ? "Other limits" : KIND_NAMES[k.kind]}
+						</Typography>
+						<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
+							{formatMoney(k.spent, budget.currency)} of {formatMoney(k.limit, budget.currency)}
+						</Typography>
+					</Box>
+				</Box>
+			))}
+		</Box>
+	);
+}
+
 export default function BudgetSummary({ budget }: { budget: Budget }) {
 	const { totals, currency, attention } = budget;
 	const color = STATUS_COLOR[totals.status];
@@ -92,6 +132,7 @@ export default function BudgetSummary({ budget }: { budget: Budget }) {
 					}}
 				/>
 			</Box>
+			<KindSplit budget={budget} />
 			<Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 1.5, flexWrap: "wrap" }}>
 				<TonalChip accent={color} label={`${STATUS_LABEL[totals.status]} · ${totals.percent}%`} />
 				{attention > 0 && (

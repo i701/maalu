@@ -1,5 +1,6 @@
 import { ACCENT } from "#/lib/m3";
-import { formatDate, formatMoney } from "#/lib/format";
+import { formatDate, formatMoney, sumDecimals } from "#/lib/format";
+import { KIND_ORDER, type KindKey } from "#/lib/needs-wants";
 import type { Budget, BudgetFixedLine, BudgetLine, BudgetStatus } from "#/types/api";
 
 /** The colour of a budget line's bar and tag: calm while fine, amber when close, red when over. */
@@ -110,4 +111,37 @@ export function budgetWarning(
 		(a, b) => RANK[b.status] - RANK[a.status] || b.percent - a.percent,
 	)[0];
 	return hit ? describeLine(hit, budget.currency) : null;
+}
+
+export type KindBudget = {
+	kind: KindKey;
+	/** Spent this period in its limits */
+	spent: string;
+	/** What those limits allow this period (carried and moved money included) */
+	limit: string;
+	/** How many limits are this kind */
+	lines: number;
+};
+
+/**
+ * The per-period limits grouped by whether they are for needs or wants (a limit is one when all
+ * its categories are), each with what was spent against what it allows. Empty when no limit is
+ * either, so nothing is shown for a budget nobody has sorted.
+ */
+export function budgetByKind(budget: Budget): KindBudget[] {
+	if (!budget.lines.some((l) => l.kind)) return [];
+	return KIND_ORDER.flatMap((kind) => {
+		const mine = budget.lines.filter((l) => (l.kind ?? "unsorted") === kind);
+		if (mine.length === 0) return [];
+		return [
+			{
+				kind,
+				lines: mine.length,
+				spent: sumDecimals(mine.map((l) => l.activity)),
+				limit: sumDecimals(
+					mine.flatMap((l) => [l.amount, l.carried, l.moved_in, `-${l.moved_out}`]),
+				),
+			},
+		];
+	});
 }

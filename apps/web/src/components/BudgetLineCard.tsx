@@ -9,6 +9,7 @@ import { memo } from "react";
 import { fixedWindow, runsWindow, STATUS_COLOR, STATUS_LABEL, unsigned } from "#/lib/budget";
 import { periodLimit, type LineMove } from "#/lib/budget-moves";
 import { formatMoney } from "#/lib/format";
+import { KIND_COLOR, KIND_NAMES } from "#/lib/needs-wants";
 import type { BudgetFixedLine, BudgetLine } from "#/types/api";
 import TonalChip from "./TonalChip";
 
@@ -95,6 +96,13 @@ const BudgetLineCard = memo(function BudgetLineCard({
 						</Typography>
 					)}
 					<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 0.5 }}>
+						{line.kind && (
+							<TonalChip
+								accent={KIND_COLOR[line.kind]}
+								label={KIND_NAMES[line.kind]}
+								title="Every category in this limit counts as this"
+							/>
+						)}
 						{line.categories.map((c) => (
 							<TonalChip key={c.id} accent="var(--md-sys-color-outline)" label={c.name} />
 						))}
