@@ -133,7 +133,7 @@ export const subscriptions: Doc = {
 				},
 				{
 					q: "The amount was different this month. Does the next one change?",
-					a: "No. The next payment is planned at the usual amount again. Change the amount on the subscription itself if the bill has really gone up.",
+					a: "Not for an ordinary bill: the next payment is planned at its amount again, so change the amount on the subscription if the bill has really gone up. A bill marked as changing from month to month is different: its next payment is estimated at what the last one really came to.",
 				},
 				{
 					q: "Can I pay a subscription in another currency?",

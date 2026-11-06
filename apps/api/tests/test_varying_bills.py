@@ -79,9 +79,41 @@ async def test_paying_a_bill_for_a_different_amount(client: AsyncClient, auth):
     assert res.status_code == 200, res.text
     assert Decimal(res.json()["amount"]) == Decimal("123.45")
     assert res.json()["planned"] is False
-    # the next payment is planned at the usual amount again
+    # the next payment is estimated at what this one really came to
+    [next_one] = await planned(client, auth)
+    assert Decimal(next_one["amount"]) == Decimal("123.45")
+
+
+async def test_a_bill_that_does_not_vary_is_planned_at_its_amount_again(client: AsyncClient, auth):
+    main = await account(client, auth, "Main")
+    await subscription(client, auth, account_id=main["id"], amount="100")
+    [bill] = await planned(client, auth)
+    await client.post(f"{TX}/{bill['id']}/post", json={"amount": "123.45"}, headers=auth)
     [next_one] = await planned(client, auth)
     assert Decimal(next_one["amount"]) == 100
+
+
+async def test_a_varying_dollar_bill_is_estimated_at_the_last_amount_and_rate(
+    client: AsyncClient, auth
+):
+    usd = await account(client, auth, "Dollars", currency="USD", exchange_rate="15.4")
+    await subscription(
+        client,
+        auth,
+        account_id=usd["id"],
+        currency="USD",
+        exchange_rate="15.4",
+        amount="10",
+        amount_varies=True,
+    )
+    [bill] = await planned(client, auth)
+    await client.post(
+        f"{TX}/{bill['id']}/post", json={"amount": "12", "exchange_rate": "15.6"}, headers=auth
+    )
+    [next_one] = await planned(client, auth)
+    assert Decimal(next_one["amount"]) == 12
+    assert Decimal(next_one["exchange_rate"]) == Decimal("15.6")
+    assert Decimal(next_one["base_amount"]) == Decimal("187.2")
 
 
 async def usd_bill(client: AsyncClient, auth) -> dict:

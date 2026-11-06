@@ -63,9 +63,9 @@ test("a varying dollar bill is an estimate, and is paid with the real amount and
 	expect(Number(paid?.exchange_rate)).toBe(15.5);
 	expect(Number(paid?.base_amount)).toBe(186);
 
-	// the next payment is planned at the usual amount again
+	// the next payment is estimated at what this one came to (USD 12), not the usual USD 10
 	const next = await api.get<Tx[]>("/transactions?planned=true");
-	expect(next.map((t) => Number(t.amount))).toEqual([10]);
+	expect(next.map((t) => Number(t.amount))).toEqual([12]);
 });
 
 test("a bill in your own currency has no exchange rate to set", async ({ page, request }) => {

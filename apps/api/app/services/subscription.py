@@ -315,6 +315,20 @@ class SubscriptionService:
         )
         return dict((await self.db.execute(stmt)).all())
 
+    async def _last_payments(self, ids: list[uuid.UUID]) -> dict[uuid.UUID, Transaction]:
+        """The latest posted payment of each subscription (newest date, then newest entered)."""
+        if not ids:
+            return {}
+        stmt = (
+            select(Transaction)
+            .where(Transaction.subscription_id.in_(ids), Transaction.counted())
+            .order_by(Transaction.transaction_date, Transaction.created_at)
+        )
+        # oldest first, so the last row seen for a subscription is its latest payment
+        return {
+            t.subscription_id: t for t in (await self.db.scalars(stmt)).all() if t.subscription_id
+        }
+
     async def _payments_made(self, ids: list[uuid.UUID]) -> dict[uuid.UUID, int]:
         """How many posted payments are linked to each subscription."""
         if not ids:
@@ -438,6 +452,7 @@ class SubscriptionService:
             subscriptions = list((await self.db.scalars(stmt)).all())
         last_paid = await self._last_paid_dates([s.id for s in subscriptions])
         payments = await self._payments_made([s.id for s in subscriptions])
+        latest = await self._last_payments([s.id for s in subscriptions if s.amount_varies])
         horizon = date.today() + timedelta(days=PLAN_AHEAD_DAYS)
         made = 0
         for s in subscriptions:
@@ -466,14 +481,19 @@ class SubscriptionService:
             if due > horizon:
                 continue
             account = s.account if s.account and s.account.archived_at is None else None
+            # A bill that varies is estimated at what it really came to last time (amount, and the
+            # rate it was paid at), the best guess there is; the usual amount is the first guess.
+            last = latest.get(s.id)
+            if last is not None and last.currency != s.currency:
+                last = None  # the bill moved to another currency: start from the usual amount
             self.db.add(
                 Transaction(
                     user_id=s.user_id,
                     type=TransactionType.EXPENSE,
-                    amount=s.amount,
+                    amount=last.amount if last else s.amount,
                     currency=s.currency,
-                    exchange_rate=s.exchange_rate,
-                    base_amount=s.base_amount,
+                    exchange_rate=last.exchange_rate if last else s.exchange_rate,
+                    base_amount=last.base_amount if last else s.base_amount,
                     payment_method=s.payment_method,
                     category_ref=s.category_ref,
                     description=s.name,

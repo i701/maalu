@@ -60,7 +60,7 @@ export const varyingBills: Doc = {
 		{
 			type: "callout",
 			tone: "note",
-			text: "The next month's payment is planned at the **usual** amount again, not at what you just paid. Change the usual amount on the subscription if the bill has really gone up.",
+			text: "The next month's payment is estimated at what this one **really came to** (the amount and, for a bill in another currency, the rate), because that is the best guess there is. Before the first real payment it is estimated at the **usual** amount.",
 		},
 
 		{ type: "h2", id: "good-to-know", text: "Good to know" },
