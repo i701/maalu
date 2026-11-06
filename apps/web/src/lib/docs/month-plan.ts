@@ -36,7 +36,7 @@ export const monthPlan: Doc = {
 		{
 			type: "list",
 			items: [
-				"**Everyday accounts** are cash, bank accounts and prepaid ones. Savings, investments and any account a goal follows are listed as **Kept apart**: their money is already meant for something. Credit cards, overdrafts and loans are not counted at all, because what you owe is not money to spend.",
+				"**Everyday accounts** are cash, bank accounts and prepaid ones, unless you choose otherwise: the switch **I spend from this account** on an account's **Edit** form lets you count a savings account you spend from, or keep a cash account apart. Savings, investments and any account a goal follows are listed as **Kept apart**: their money is already meant for something. Credit cards, overdrafts and loans are not counted at all, because what you owe is not money to spend.",
 				"**Bills to pay** are planned expenses from an everyday account (or no account yet) dated up to the end of the period. A subscription's next payment is one of them. A bill planned on a credit card is not counted, since it will not come out of your everyday money now.",
 				"**Expected income**, like next month's salary, is shown but never counted. The figure only uses money you already have.",
 				"An account left out of totals in its settings, and archived accounts, are not counted.",

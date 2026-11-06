@@ -75,7 +75,7 @@ export const accounts: Doc = {
 		},
 		{
 			type: "p",
-			text: "The group decides a few things: whether the balance is money you have or money you owe, whether it counts as everyday money in your [dashboard's](/dashboard) available-to-spend figure (cash, bank accounts and prepaid do), and which payment method is suggested when you pick the account.",
+			text: "The group decides a few things: whether the balance is money you have or money you owe, whether it counts as everyday money in your [dashboard's](/dashboard) available-to-spend figure (cash, bank accounts and prepaid do, and you can change that for one account with **I spend from this account** on its form), and which payment method is suggested when you pick the account.",
 		},
 
 		{ type: "h2", id: "example", text: "A typical setup" },
