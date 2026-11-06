@@ -59,6 +59,23 @@ export function bankChoices(accounts: { bank?: string | null }[]): string[] {
 /** The groups that can have a credit limit: the most you can owe on them. */
 export const CREDIT_LIMIT_GROUPS: readonly AccountGroup[] = ["card", "overdrafts"];
 
+/** Groups whose money counts as everyday money unless you say otherwise (available to spend). */
+const EVERYDAY_GROUPS: readonly AccountGroup[] = ["cash", "accounts", "prepaid"];
+/** What you owe: never everyday money. */
+const OWED_GROUPS: readonly AccountGroup[] = ["card", "overdrafts", "loan"];
+
+/** Whether the group is money you owe, which has no everyday-money choice. */
+export const isOwedGroup = (group: AccountGroup) => OWED_GROUPS.includes(group);
+
+/** The value to send for the "I spend from this account" switch. `null` (the switch was never
+ * touched, or was put back to what the group says) follows the group, so a later change to what a
+ * group counts reaches the account too. What is owed has no choice at all. */
+export const spendableValue = (spend: boolean | null, group: AccountGroup): boolean | null =>
+	isOwedGroup(group) || spend === null || spend === groupSpendsByDefault(group) ? null : spend;
+
+/** Whether the group counts as everyday money when you have not chosen. */
+export const groupSpendsByDefault = (group: AccountGroup) => EVERYDAY_GROUPS.includes(group);
+
 export const hasCreditLimit = (group: AccountGroup) => CREDIT_LIMIT_GROUPS.includes(group);
 
 /** How much of a credit limit is used: what is owed, the limit, and the share used (a whole

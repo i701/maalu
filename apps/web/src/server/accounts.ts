@@ -31,6 +31,7 @@ const createSchema = z.object({
 		.nullable()
 		.optional(),
 	exclude_from_stats: z.boolean().optional(),
+	spendable: z.boolean().nullable().optional(), // null follows the account's group
 	auto_rate: z.boolean().optional(),
 	bank: z.string().max(100).nullable().optional(),
 	account_number: z.string().max(80).nullable().optional(),

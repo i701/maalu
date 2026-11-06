@@ -5,7 +5,14 @@ import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
-import { bankChoices, GROUP_HELP, hasCreditLimit } from "#/lib/accounts";
+import {
+	bankChoices,
+	GROUP_HELP,
+	hasCreditLimit,
+	isOwedGroup,
+	spendableValue,
+} from "#/lib/accounts";
+import SpendableField from "./SpendableField";
 import { todayIso } from "#/lib/format";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
@@ -37,6 +44,7 @@ export default function AccountForm({
 	const notify = useNotify();
 	const [currency, setCurrency] = useState(account?.currency ?? baseCurrency);
 	const [group, setGroup] = useState<AccountGroup>(account?.group ?? "cash");
+	const [spend, setSpend] = useState<boolean | null>(account?.spendable ?? null);
 	const foreign = currency !== baseCurrency;
 	const locked = (account?.transaction_count ?? 0) > 0;
 	const quick = [...new Set([baseCurrency, ...accounts.map((a) => a.currency)])].slice(0, 5);
@@ -56,6 +64,7 @@ export default function AccountForm({
 			// only cards and overdrafts have one; empty means none
 			credit_limit: hasCreditLimit(group) ? text("credit_limit") || null : null,
 			exclude_from_stats: f.get("exclude_from_stats") === "on",
+			spendable: spendableValue(spend, group),
 			// only a foreign-currency account has a rate to keep up to date
 			auto_rate: foreign && f.get("auto_rate") === "on",
 			bank: text("bank") || null,
@@ -208,6 +217,12 @@ export default function AccountForm({
 						slotProps={{ htmlInput: { maxLength: 1000 } }}
 					/>
 				</Grid>
+
+				{!isOwedGroup(group) && (
+					<Grid size={12}>
+						<SpendableField group={group} value={spend} onChange={setSpend} />
+					</Grid>
+				)}
 
 				<Grid size={12}>
 					<FormControlLabel

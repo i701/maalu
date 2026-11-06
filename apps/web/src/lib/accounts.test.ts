@@ -7,6 +7,9 @@ import {
 	creditUsage,
 	excludedNote,
 	hasCreditLimit,
+	groupSpendsByDefault,
+	isOwedGroup,
+	spendableValue,
 } from "./accounts";
 
 describe("accountIdentity", () => {
@@ -110,5 +113,31 @@ describe("excludedNote", () => {
 		expect(excludedNote(accounts, false)).toContain("left out");
 		expect(excludedNote(accounts, true)).toBeUndefined();
 		expect(excludedNote([{ exclude_from_stats: false }], false)).toBeUndefined();
+	});
+});
+
+describe("the spend-from-this-account switch", () => {
+	it("sends nothing while it is untouched or back at what the group says", () => {
+		expect(spendableValue(null, "cash")).toBeNull();
+		expect(spendableValue(true, "cash")).toBeNull(); // cash counts anyway
+		expect(spendableValue(false, "savings")).toBeNull(); // savings are apart anyway
+	});
+
+	it("sends your choice when it differs from the group", () => {
+		expect(spendableValue(true, "savings")).toBe(true);
+		expect(spendableValue(false, "cash")).toBe(false);
+	});
+
+	it("is never sent for money that is owed", () => {
+		expect(isOwedGroup("card")).toBe(true);
+		expect(isOwedGroup("loan")).toBe(true);
+		expect(isOwedGroup("savings")).toBe(false);
+		expect(spendableValue(true, "card")).toBeNull();
+	});
+
+	it("knows what a group does when you do not choose", () => {
+		expect(groupSpendsByDefault("cash")).toBe(true);
+		expect(groupSpendsByDefault("accounts")).toBe(true);
+		expect(groupSpendsByDefault("savings")).toBe(false);
 	});
 });
