@@ -188,3 +188,20 @@ class AccountAdjust(BaseModel):
         if (self.new_balance is None) == (self.amount is None):
             raise ValueError("Send either new_balance or amount")
         return self
+
+
+class AccountBalancePoint(BaseModel):
+    date: dt.date
+    balance: Decimal = Field(description="What the account held at the end of that day")
+
+
+class BalanceHistory(BaseModel):
+    """An account's balance at the end of each day, in the account's own currency."""
+
+    currency: str
+    points: list[AccountBalancePoint] = Field(description="Oldest first, one per day up to today")
+
+
+class BalanceAfter(BaseModel):
+    transaction_id: uuid.UUID
+    balance: Decimal = Field(description="What the account held right after this transaction")

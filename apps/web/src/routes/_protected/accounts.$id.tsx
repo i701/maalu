@@ -2,6 +2,7 @@ import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 import AccountActions from "#/components/account/AccountActions";
+import AccountBalanceChart from "#/components/account/AccountBalanceChart";
 import AccountCards from "#/components/account/AccountCards";
 import AccountPlanned from "#/components/account/AccountPlanned";
 import AccountSummary from "#/components/account/AccountSummary";
@@ -9,13 +10,19 @@ import AccountTransactionList from "#/components/account/AccountTransactionList"
 import EmptyState from "#/components/EmptyState";
 import PageHeader from "#/components/PageHeader";
 import { RouterLink } from "#/components/RouterLinks";
+import { DEFAULT_HISTORY_RANGE, balanceMap } from "#/lib/account-detail";
 import { accountIdentity } from "#/lib/accounts";
 import { repaymentSeed } from "#/lib/cards";
 import { monthBounds, monthLabel } from "#/lib/dashboard";
 import { lastPageIfOutOfRange, pageSearch } from "#/lib/pagination";
 import { localToday } from "#/lib/planned";
 import { unwrap } from "#/lib/unwrap";
-import { getAccountFn, listAccountsFn } from "#/server/accounts";
+import {
+	getAccountFn,
+	getBalanceHistoryFn,
+	getBalancesAfterFn,
+	listAccountsFn,
+} from "#/server/accounts";
 import { listCategoriesFn } from "#/server/categories";
 import { listCurrenciesFn } from "#/server/currencies";
 import { listSubscriptionsFn } from "#/server/subscriptions";
@@ -33,6 +40,11 @@ const searchSchema = z.object({
 	type: z.enum(TRANSACTION_TYPES).optional().catch(undefined),
 	date_from: z.iso.date().optional().catch(undefined),
 	date_to: z.iso.date().optional().catch(undefined),
+	// how far back the balance chart goes
+	days: z
+		.union([z.literal(30), z.literal(90), z.literal(365)])
+		.optional()
+		.catch(undefined),
 });
 
 export const Route = createFileRoute("/_protected/accounts/$id")({
@@ -55,6 +67,8 @@ export const Route = createFileRoute("/_protected/accounts/$id")({
 			categories,
 			currencies,
 			cards,
+			history,
+			balancesAfter,
 		] = await Promise.all([
 			getAccountFn({ data: { id: params.id } }),
 			listTransactionsFn({ data: { ...deps, account_id: params.id } }),
@@ -70,6 +84,8 @@ export const Route = createFileRoute("/_protected/accounts/$id")({
 			listCategoriesFn(),
 			listCurrenciesFn(),
 			listCardsFn(),
+			getBalanceHistoryFn({ data: { id: params.id, days: deps.days ?? DEFAULT_HISTORY_RANGE } }),
+			getBalancesAfterFn({ data: { id: params.id } }),
 		]);
 		if (!account.ok && account.status === 404) throw notFound();
 		const rows = unwrap(list);
@@ -89,6 +105,8 @@ export const Route = createFileRoute("/_protected/accounts/$id")({
 		return {
 			account: unwrap(account),
 			...rows,
+			history: unwrap(history),
+			balances: balanceMap(balancesAfter.ok ? balancesAfter.data : []),
 			totals: unwrap(totals),
 			// planned ones that touch this account, soonest first (the API already orders them)
 			planned: (upcoming.ok ? upcoming.data : []).filter(
@@ -118,7 +136,8 @@ export const Route = createFileRoute("/_protected/accounts/$id")({
 });
 
 function AccountPage() {
-	const { account, items, total, totals, planned, today, month, lists } = Route.useLoaderData();
+	const { account, items, total, totals, planned, today, month, lists, history, balances } =
+		Route.useLoaderData();
 	const { user } = Route.useRouteContext();
 	const search = Route.useSearch();
 	const navigate = Route.useNavigate();
@@ -156,6 +175,11 @@ function AccountPage() {
 				baseCurrency={user.base_currency}
 				monthLabel={month}
 			/>
+			<AccountBalanceChart
+				history={history}
+				days={search.days ?? DEFAULT_HISTORY_RANGE}
+				onDays={(days) => navigate({ search: (p) => ({ ...p, days }), replace: true })}
+			/>
 			<AccountPlanned items={planned} accountId={account.id} today={today} />
 			<AccountCards
 				account={account}
@@ -171,6 +195,7 @@ function AccountPage() {
 				pageSize={search.pageSize}
 				filters={search}
 				lists={{ ...lists, baseCurrency: user.base_currency }}
+				balances={balances}
 				adding={adding || repaying !== null}
 				seed={repaying ? (repaymentSeed(repaying) ?? undefined) : undefined}
 				onAddingDone={() => {

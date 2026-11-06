@@ -1,10 +1,13 @@
 from app.schemas.account import (
     AccountAdjust,
+    AccountBalancePoint,
     AccountCreate,
     AccountRef,
     AccountResponse,
     AccountSummary,
     AccountUpdate,
+    BalanceAfter,
+    BalanceHistory,
 )
 from app.schemas.attachment import AttachmentResponse
 from app.schemas.backup import BackupRestored
@@ -124,6 +127,7 @@ __all__ = [
     "MAX_SELECT_ALL",
     "MAX_TAGS",
     "AccountAdjust",
+    "AccountBalancePoint",
     "AccountCreate",
     "AccountRef",
     "AccountResponse",
@@ -131,6 +135,8 @@ __all__ = [
     "AccountUpdate",
     "AttachmentResponse",
     "BackupRestored",
+    "BalanceAfter",
+    "BalanceHistory",
     "BudgetFixedLine",
     "BudgetLineCreate",
     "BudgetLineResponse",

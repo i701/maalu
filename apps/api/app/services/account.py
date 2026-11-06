@@ -1,5 +1,5 @@
 import uuid
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 from sqlalchemy import case, func, or_, select, update
@@ -7,7 +7,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.enums import CREDIT_LIMIT_GROUPS, LIABILITY_GROUPS, AccountGroup, TransactionType
 from app.models import Account, Transaction, User
-from app.schemas import AccountCreate, AccountResponse, AccountSummary, AccountUpdate
+from app.schemas import (
+    AccountBalancePoint,
+    AccountCreate,
+    AccountResponse,
+    AccountSummary,
+    AccountUpdate,
+    BalanceAfter,
+    BalanceHistory,
+)
 from app.services.exchange_rate import MarketRateUnavailableError, market_rate
 from app.services.money import BASE_AMOUNT_QUANTUM, price_in_base
 
@@ -289,6 +297,71 @@ class AccountService:
                 )
             )
         return out
+
+    async def _movements(self, account: Account) -> list[tuple[uuid.UUID, date, Decimal]]:
+        """Every counted movement of the account, oldest first, as (transaction id, day, signed
+        change in the account's currency): income and the source of a transfer as in `present`, and
+        a transfer's `to_amount` when it arrived here. Same-day order matches the lists read
+        backwards: untimed before timed, then by when it was entered."""
+        stmt = (
+            select(
+                Transaction.id,
+                Transaction.transaction_date,
+                Transaction.type,
+                Transaction.amount,
+                Transaction.to_amount,
+                Transaction.account_id,
+            )
+            .where(
+                or_(Transaction.account_id == account.id, Transaction.to_account_id == account.id),
+                Transaction.counted(),
+            )
+            .order_by(
+                Transaction.transaction_date,
+                Transaction.transaction_time.asc().nulls_first(),
+                Transaction.created_at,
+            )
+        )
+        moves = []
+        for tid, day, kind, amount, to_amount, source in (await self.db.execute(stmt)).all():
+            if source == account.id:
+                delta = amount if kind is TransactionType.INCOME else -amount
+            else:  # the other side of a transfer
+                delta = to_amount or Decimal(0)
+            moves.append((tid, day, Decimal(str(delta))))
+        return moves
+
+    async def balance_history(
+        self, account: Account, days: int, today: date | None = None
+    ) -> BalanceHistory:
+        """The balance at the end of each of the last `days` days, ending today. A day with
+        nothing on it repeats the one before; what is dated later than today is not in it."""
+        today = today or date.today()
+        start = today - timedelta(days=days - 1)
+        balance = account.opening_amount
+        by_day: dict[date, Decimal] = {}
+        for _, day, delta in await self._movements(account):
+            if day > today:
+                continue
+            if day < start:
+                balance += delta
+            else:
+                by_day[day] = by_day.get(day, Decimal(0)) + delta
+        points = []
+        for offset in range(days):
+            day = start + timedelta(days=offset)
+            balance += by_day.get(day, Decimal(0))
+            points.append(AccountBalancePoint(date=day, balance=balance))
+        return BalanceHistory(currency=account.currency, points=points)
+
+    async def balances_after(self, account: Account, limit: int) -> list[BalanceAfter]:
+        """What the account held right after each of its newest `limit` transactions."""
+        balance = account.opening_amount
+        out = []
+        for tid, _, delta in await self._movements(account):
+            balance += delta
+            out.append(BalanceAfter(transaction_id=tid, balance=balance))
+        return out[-limit:]
 
     async def summary(self, user_id: uuid.UUID) -> AccountSummary:
         # an account excluded from the stats is not part of what you are worth

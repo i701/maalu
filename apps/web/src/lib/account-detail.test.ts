@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
-import type { Transaction } from "#/types/api";
-import { accountEffect, signOf } from "./account-detail";
+import type { BalanceHistory, Transaction } from "#/types/api";
+import {
+	balanceMap,
+	historyPoints,
+	historyRows,
+	historySummary,
+	accountEffect,
+	signOf,
+} from "./account-detail";
 
 const tx = (over: Partial<Transaction>) =>
 	({
@@ -65,5 +72,43 @@ describe("signOf", () => {
 	it("is a plus for money in and a minus for money out", () => {
 		expect(signOf({ positive: true })).toBe("+");
 		expect(signOf({ positive: false })).toBe("−");
+	});
+});
+
+const history = (balances: number[]): BalanceHistory => ({
+	currency: "MVR",
+	points: balances.map((b, i) => ({
+		date: `2026-11-${String(i + 1).padStart(2, "0")}`,
+		balance: `${b}.0000`,
+	})),
+});
+
+describe("balance history", () => {
+	it("is one chart point per day, with the balance as a number", () => {
+		const points = historyPoints(history([100, 250]));
+		expect(points.map((p) => p.value)).toEqual([100, 250]);
+		expect(points[0].label).toContain("2026");
+	});
+
+	it("lists one row a week, newest first, always ending on the latest day", () => {
+		const rows = historyRows(history(Array.from({ length: 15 }, (_, i) => i * 10)));
+		expect(rows.map((r) => r.date)).toEqual(["2026-11-15", "2026-11-08", "2026-11-01"]);
+		expect(rows[0].balance).toBe("140.0000");
+	});
+
+	it("says where the balance started, ended and how low and high it went", () => {
+		expect(historySummary(history([500, 200, 900, 700]))).toEqual({
+			first: 500,
+			last: 700,
+			low: 200,
+			high: 900,
+		});
+		expect(historySummary(history([]))).toBeNull();
+	});
+
+	it("looks a balance up by its transaction", () => {
+		expect(balanceMap([{ transaction_id: "t1", balance: "120.0000" }])).toEqual({
+			t1: "120.0000",
+		});
 	});
 });

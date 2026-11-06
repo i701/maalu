@@ -61,6 +61,26 @@
         "title": "AccountAdjust",
         "type": "object"
       },
+      "AccountBalancePoint": {
+        "properties": {
+          "balance": {
+            "description": "What the account held at the end of that day",
+            "title": "Balance",
+            "type": "string"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "balance"
+        ],
+        "title": "AccountBalancePoint",
+        "type": "object"
+      },
       "AccountCreate": {
         "properties": {
           "account_number": {
@@ -858,6 +878,49 @@
           "restored"
         ],
         "title": "BackupRestored",
+        "type": "object"
+      },
+      "BalanceAfter": {
+        "properties": {
+          "balance": {
+            "description": "What the account held right after this transaction",
+            "title": "Balance",
+            "type": "string"
+          },
+          "transaction_id": {
+            "format": "uuid",
+            "title": "Transaction Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "transaction_id",
+          "balance"
+        ],
+        "title": "BalanceAfter",
+        "type": "object"
+      },
+      "BalanceHistory": {
+        "description": "An account's balance at the end of each day, in the account's own currency.",
+        "properties": {
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "points": {
+            "description": "Oldest first, one per day up to today",
+            "items": {
+              "$ref": "#/components/schemas/AccountBalancePoint"
+            },
+            "title": "Points",
+            "type": "array"
+          }
+        },
+        "required": [
+          "currency",
+          "points"
+        ],
+        "title": "BalanceHistory",
         "type": "object"
       },
       "BalancePoint": {
@@ -8733,6 +8796,134 @@
           }
         ],
         "summary": "Archive Account",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/api/v1/accounts/{account_id}/balance-history": {
+      "get": {
+        "description": "The account's balance at the end of each day, in its own currency (oldest first).",
+        "operationId": "balance_history_api_v1_accounts__account_id__balance_history_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "account_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Account Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "How many days back, ending today",
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "default": 90,
+              "description": "How many days back, ending today",
+              "maximum": 730,
+              "minimum": 7,
+              "title": "Days",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BalanceHistory"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Balance History",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/api/v1/accounts/{account_id}/balances-after": {
+      "get": {
+        "description": "What the account held right after each of its newest `limit` transactions (the running\nbalance for a statement-style list). Planned and trashed transactions have none.",
+        "operationId": "balances_after_api_v1_accounts__account_id__balances_after_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "account_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Account Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 500,
+              "maximum": 2000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BalanceAfter"
+                  },
+                  "title": "Response Balances After Api V1 Accounts  Account Id  Balances After Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Balances After",
         "tags": [
           "accounts"
         ]

@@ -12,6 +12,8 @@ from app.schemas import (
     AccountResponse,
     AccountSummary,
     AccountUpdate,
+    BalanceAfter,
+    BalanceHistory,
     TransactionResponse,
 )
 from app.services import (
@@ -90,6 +92,35 @@ async def list_accounts(
 async def account_summary(user_id: CurrentUserId, service: AccountServiceDep):
     """Assets, liabilities and total in your base currency."""
     return await service.summary(user_id)
+
+
+@router.get("/{account_id}/balance-history", response_model=BalanceHistory)
+async def balance_history(
+    account_id: uuid.UUID,
+    user_id: CurrentUserId,
+    service: AccountServiceDep,
+    days: Annotated[int, Query(ge=7, le=730, description="How many days back, ending today")] = 90,
+):
+    """The account's balance at the end of each day, in its own currency (oldest first)."""
+    account = await service.get(user_id, account_id)
+    if account is None:
+        raise _NOT_FOUND
+    return await service.balance_history(account, days)
+
+
+@router.get("/{account_id}/balances-after", response_model=list[BalanceAfter])
+async def balances_after(
+    account_id: uuid.UUID,
+    user_id: CurrentUserId,
+    service: AccountServiceDep,
+    limit: Annotated[int, Query(ge=1, le=2000)] = 500,
+):
+    """What the account held right after each of its newest `limit` transactions (the running
+    balance for a statement-style list). Planned and trashed transactions have none."""
+    account = await service.get(user_id, account_id)
+    if account is None:
+        raise _NOT_FOUND
+    return await service.balances_after(account, limit)
 
 
 @router.get("/{account_id}", response_model=AccountResponse)

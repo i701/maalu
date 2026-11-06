@@ -1,6 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { ACCOUNT_GROUPS, type Account, type AccountSummary, type Transaction } from "#/types/api";
+import {
+	ACCOUNT_GROUPS,
+	type Account,
+	type AccountSummary,
+	type BalanceAfter,
+	type BalanceHistory,
+	type Transaction,
+} from "#/types/api";
 import { apiRequest } from "./api";
 
 // Signed decimal string (negative = money owed); forwarded untouched, no float round-trip.
@@ -57,6 +64,20 @@ export const searchAccountsFn = createServerFn({ method: "GET" })
 export const getAccountFn = createServerFn({ method: "GET" })
 	.validator(z.object({ id: z.uuid() }))
 	.handler(async ({ data }) => apiRequest<Account>(`/accounts/${data.id}`));
+
+/** What the account held at the end of each of the last `days` days, in its own currency. */
+export const getBalanceHistoryFn = createServerFn({ method: "GET" })
+	.validator(z.object({ id: z.uuid(), days: z.number().int().min(7).max(730) }))
+	.handler(async ({ data }) =>
+		apiRequest<BalanceHistory>(`/accounts/${data.id}/balance-history`, {
+			query: { days: data.days },
+		}),
+	);
+
+/** What the account held right after each of its newest transactions (the running balance). */
+export const getBalancesAfterFn = createServerFn({ method: "GET" })
+	.validator(z.object({ id: z.uuid() }))
+	.handler(async ({ data }) => apiRequest<BalanceAfter[]>(`/accounts/${data.id}/balances-after`));
 
 export const getAccountSummaryFn = createServerFn({ method: "GET" }).handler(async () =>
 	apiRequest<AccountSummary>("/accounts/summary"),

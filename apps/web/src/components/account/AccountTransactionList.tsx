@@ -57,6 +57,7 @@ export default function AccountTransactionList({
 	pageSize,
 	filters,
 	lists,
+	balances,
 	adding,
 	seed,
 	onAddingDone,
@@ -71,6 +72,8 @@ export default function AccountTransactionList({
 	pageSize: number;
 	filters: AccountFilters;
 	lists: FormLists;
+	/** The running balance after each of the newest transactions, by id */
+	balances: Record<string, string>;
 	/** The "Add transaction" button above was pressed */
 	adding: boolean;
 	/** Pre-fills the new transaction, e.g. a credit card repayment */
@@ -145,6 +148,8 @@ export default function AccountTransactionList({
 						<AccountTransactions
 							items={items}
 							accountId={account.id}
+							currency={account.currency}
+							balances={balances}
 							onEdit={setEditing}
 							onDelete={setDeleting}
 						/>

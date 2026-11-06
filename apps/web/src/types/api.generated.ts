@@ -113,6 +113,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/accounts/{account_id}/balance-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Balance History
+         * @description The account's balance at the end of each day, in its own currency (oldest first).
+         */
+        get: operations["balance_history_api_v1_accounts__account_id__balance_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/accounts/{account_id}/balances-after": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Balances After
+         * @description What the account held right after each of its newest `limit` transactions (the running
+         *     balance for a statement-style list). Planned and trashed transactions have none.
+         */
+        get: operations["balances_after_api_v1_accounts__account_id__balances_after_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/accounts/{account_id}/unarchive": {
         parameters: {
             query?: never;
@@ -2199,6 +2240,19 @@ export interface components {
             /** Note */
             note?: string | null;
         };
+        /** AccountBalancePoint */
+        AccountBalancePoint: {
+            /**
+             * Balance
+             * @description What the account held at the end of that day
+             */
+            balance: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+        };
         /** AccountCreate */
         AccountCreate: {
             /**
@@ -2551,6 +2605,32 @@ export interface components {
             restored: {
                 [key: string]: number;
             };
+        };
+        /** BalanceAfter */
+        BalanceAfter: {
+            /**
+             * Balance
+             * @description What the account held right after this transaction
+             */
+            balance: string;
+            /**
+             * Transaction Id
+             * Format: uuid
+             */
+            transaction_id: string;
+        };
+        /**
+         * BalanceHistory
+         * @description An account's balance at the end of each day, in the account's own currency.
+         */
+        BalanceHistory: {
+            /** Currency */
+            currency: string;
+            /**
+             * Points
+             * @description Oldest first, one per day up to today
+             */
+            points: components["schemas"]["AccountBalancePoint"][];
         };
         /** BalancePoint */
         BalancePoint: {
@@ -5890,6 +5970,73 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AccountResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    balance_history_api_v1_accounts__account_id__balance_history_get: {
+        parameters: {
+            query?: {
+                /** @description How many days back, ending today */
+                days?: number;
+            };
+            header?: never;
+            path: {
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BalanceHistory"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    balances_after_api_v1_accounts__account_id__balances_after_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BalanceAfter"][];
                 };
             };
             /** @description Validation Error */

@@ -92,3 +92,52 @@ test("an account that does not exist says so", async ({ page }) => {
 	await page.getByRole("link", { name: "See your accounts" }).click();
 	await expect(page).toHaveURL(/\/accounts$/);
 });
+
+test("an account's page draws its balance over time and a running balance on each row", async ({
+	page,
+	request,
+}) => {
+	test.setTimeout(60_000);
+	const email = await signUp(page);
+	const api = await apiAs(request, email);
+	const main = await api.account("Main", "1000");
+	const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString().slice(0, 10);
+	await api.transaction({
+		type: "expense",
+		amount: "100.00",
+		account_id: main.id,
+		category: "Misc",
+		description: "First",
+		transaction_date: daysAgo(2),
+	});
+	await api.transaction({
+		type: "expense",
+		amount: "50.00",
+		account_id: main.id,
+		category: "Misc",
+		description: "Second",
+		transaction_date: daysAgo(0),
+	});
+
+	await open(page, `/accounts/${main.id}`);
+	// the chart runs from the opening balance to what the account holds now
+	await expect(page.getByText("Balance over time")).toBeVisible();
+	await expect(
+		page.getByRole("img", {
+			name: "Balance over the last 90 days, from MVR 1,000.00 to MVR 850.00",
+		}),
+	).toBeVisible();
+	await expect(page.getByText(/Low MVR\s850\.00 · High MVR\s1,000\.00/)).toBeVisible();
+
+	// the first expense left 900, which only a running balance would show
+	await expect(page.getByText(/MVR\s900\.00/)).toBeVisible();
+
+	// another range is a URL param, and the chart follows it
+	await page.getByRole("button", { name: "30 days", exact: true }).click();
+	await expect(page).toHaveURL(/days=30/);
+	await expect(
+		page.getByRole("img", {
+			name: "Balance over the last 30 days, from MVR 1,000.00 to MVR 850.00",
+		}),
+	).toBeVisible();
+});

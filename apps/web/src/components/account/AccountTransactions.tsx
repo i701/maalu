@@ -98,11 +98,17 @@ function Actions({
 const AccountTransactions = memo(function AccountTransactions({
 	items,
 	accountId,
+	currency,
+	balances,
 	onEdit,
 	onDelete,
 }: {
 	items: Transaction[];
 	accountId: string;
+	/** The account's currency, for the running balance */
+	currency: string;
+	/** What the account held right after each transaction (the newest ones), by id */
+	balances: Record<string, string>;
 	onEdit: (t: Transaction) => void;
 	onDelete: (t: Transaction) => void;
 }) {
@@ -110,12 +116,13 @@ const AccountTransactions = memo(function AccountTransactions({
 		<ResponsiveTable
 			rows={items}
 			getKey={(t) => t.id}
-			minWidth={640}
+			minWidth={760}
 			head={
 				<TableRow>
 					<TableCell>Date</TableCell>
 					<TableCell>Details</TableCell>
 					<TableCell align="right">Amount</TableCell>
+					<TableCell align="right">Balance</TableCell>
 					<TableCell align="right" sx={{ width: 100 }} />
 				</TableRow>
 			}
@@ -134,6 +141,16 @@ const AccountTransactions = memo(function AccountTransactions({
 					</TableCell>
 					<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
 						<Amount t={t} accountId={accountId} />
+					</TableCell>
+					<TableCell
+						align="right"
+						sx={{
+							whiteSpace: "nowrap",
+							color: "text.secondary",
+							fontVariantNumeric: "tabular-nums",
+						}}
+					>
+						{balances[t.id] ? formatMoney(balances[t.id], currency) : "–"}
 					</TableCell>
 					<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
 						<Actions t={t} onEdit={onEdit} onDelete={onDelete} />
@@ -169,6 +186,7 @@ const AccountTransactions = memo(function AccountTransactions({
 						meta={
 							<Typography variant="caption" sx={{ color: "text.secondary" }}>
 								{formatWhen(t.transaction_date, t.transaction_time)}
+								{balances[t.id] && ` · Balance ${formatMoney(balances[t.id], currency)}`}
 							</Typography>
 						}
 						actions={<Actions t={t} onEdit={onEdit} onDelete={onDelete} />}
