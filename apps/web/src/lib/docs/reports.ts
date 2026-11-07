@@ -112,5 +112,19 @@ export const reports: Doc = {
 			type: "p",
 			text: "The **Needs and wants** card on the [dashboard](/dashboard) then splits the month's spending into the two, with anything unsorted shown on its own. [Compare](/compare) and [Trends](/trends) have a needs and wants section too.",
 		},
+		{
+			type: "p",
+			text: "Under that, when the month has income, the card measures your spending against the **50/30/20 rule**: at most 50% of income on needs, at most 30% on wants, and at least 20% kept. Each line has a bar with a tick at its target and says **On target**, **Over target** or **Below target**.",
+		},
+		{
+			type: "example",
+			title: "A month with MVR 10,000 of income",
+			rows: [
+				["Needs MVR 4,500", "45% of income, up to 50%: on target"],
+				["Wants MVR 3,500", "35% of income, up to 30%: over target"],
+				["Kept MVR 2,000", "20% of income, at least 20%: on target"],
+			],
+			note: "**Kept** is income less all spending, the money left over. It is not the same as what you transfer to a savings account, since a transfer is not spending. Spending in categories you have not sorted lowers what was kept but is not judged against either target, and the card says so.",
+		},
 	],
 };
