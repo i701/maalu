@@ -39,6 +39,7 @@ export const monthPlan: Doc = {
 			items: [
 				"**Everyday accounts** are cash, bank accounts and prepaid ones, unless you choose otherwise: the switch **I spend from this account** on an account's **Edit** form lets you count a savings account you spend from, or keep a cash account apart. Savings, investments and any account a goal follows are listed as **Kept apart**: their money is already meant for something. Credit cards, overdrafts and loans are not counted at all, because what you owe is not money to spend.",
 				"**Bills to pay** are planned expenses from an everyday account (or no account yet) dated up to the end of the period. A subscription's next payment is one of them. A bill planned on a credit card is not counted, since it will not come out of your everyday money now.",
+				"**Planned transfers** out of an everyday account, such as the 5th's move into savings, are bills too: see **Planned transfers** below.",
 				"**Card statements** are what is still to pay on a credit card's last statement, when its due date is before the period ends (see [Accounts, cards and groups](/docs/accounts)). Spending on the card since the statement closed is not due yet, so it is not counted. Pay the statement and it drops out of the plan. Press **Open the card** on its row to repay it.",
 				"**Expected income**, like next month's salary, is shown but never counted. The figure only uses money you already have.",
 				"An account left out of totals in its settings, and archived accounts, are not counted.",
@@ -77,6 +78,26 @@ export const monthPlan: Doc = {
 		{
 			type: "p",
 			text: "Planned income has **Received** instead. A salary is never exactly what was planned, so the dialog asks for the amount that really arrived. If you have a salary split, Maalu then offers to split it (see [Split your salary](/docs/salary-split)).",
+		},
+
+		{ type: "h2", id: "transfers", text: "Planned transfers" },
+		{
+			type: "p",
+			text: "Saving is a bill you pay yourself. Plan a **transfer** on [Transactions](/transactions) (turn on **Planned**, choose the account it leaves and the account it goes to) and the plan treats it as money already spoken for, as long as it leaves your everyday accounts.",
+		},
+		{
+			type: "example",
+			title: "Which planned transfers count",
+			rows: [
+				["Main to Savings", "Counts: the money leaves your everyday accounts"],
+				[
+					"Main to a loan or a credit card",
+					"Counts, unless that card's statement is already in the plan",
+				],
+				["Main to Cash", "Ignored: both are everyday accounts, so you can still spend it"],
+				["Savings to Main", "Ignored: money arriving is never counted until it is there"],
+			],
+			note: "A transfer shows a **Transfer** chip. Press **Mark as done** when it happens: only the day and time can change, the amount stays as planned.",
 		},
 
 		{ type: "h2", id: "good-to-know", text: "Good to know" },
