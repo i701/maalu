@@ -20,6 +20,8 @@ export type PlanRow = {
 	short: boolean;
 	/** The first bill that does: where the plan runs out */
 	firstShort: boolean;
+	/** A planned transfer between your accounts rather than a bill or pay */
+	transfer: boolean;
 	/** A credit card statement: the card's id, to open its page (a bill has none) */
 	cardId: string | null;
 };
@@ -83,6 +85,7 @@ export function planDays(data: AvailableToSpend): PlanDay[] {
 			account: "account" in r ? (r.account ?? null) : null,
 			subscription: "subscription" in r ? (r.subscription ?? null) : null,
 			estimate: "estimate" in r && Boolean(r.estimate),
+			transfer: "transfer" in r && Boolean(r.transfer),
 			left,
 			short,
 			firstShort,

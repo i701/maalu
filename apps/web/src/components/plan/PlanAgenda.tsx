@@ -38,6 +38,7 @@ const Row = memo(function Row({
 				</Typography>
 				<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 0.25 }}>
 					{row.cardId && <TonalChip accent={ACCENT.orange} label="Credit card statement" />}
+					{row.transfer && <TonalChip accent={ACCENT.blue} label="Transfer" />}
 					{income && <TonalChip accent={ACCENT.green} label="Expected · not counted" />}
 					{row.estimate && <TonalChip accent={ACCENT.amber} label="Estimate" />}
 					{row.subscription && <TonalChip accent={ACCENT.violet} label={row.subscription} />}
@@ -88,7 +89,13 @@ const Row = memo(function Row({
 					onClick={() => onPay(row.id)}
 					sx={{ gridColumn: { xs: "1 / -1", sm: "auto" }, justifySelf: { xs: "start", sm: "end" } }}
 				>
-					{income ? "Received" : row.estimate ? "Enter the real amount" : "Mark as paid"}
+					{row.transfer
+						? "Mark as done"
+						: income
+							? "Received"
+							: row.estimate
+								? "Enter the real amount"
+								: "Mark as paid"}
 				</Button>
 			)}
 		</Box>

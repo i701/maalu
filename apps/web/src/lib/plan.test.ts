@@ -16,6 +16,7 @@ const bill = (
 	subscription: null,
 	account: "Main",
 	estimate: false,
+	transfer: false,
 	...over,
 });
 
@@ -34,6 +35,24 @@ describe("startingPoint", () => {
 	it("is what the accounts hold less what is set aside, exactly", () => {
 		expect(startingPoint({ balance: "1000.10", reserved_total: "200.05" })).toBe("800.05");
 		expect(startingPoint({ balance: "100", reserved_total: "250" })).toBe("-150.00");
+	});
+});
+
+describe("planDays with planned transfers", () => {
+	it("lists a transfer out among the bills, marked as a transfer", () => {
+		const days = planDays(
+			plan({
+				bills: [
+					bill("Transfer to Pot", "2026-11-06", "300", { transfer: true }),
+					bill("rent", "2026-11-07", "100"),
+				],
+			}),
+		);
+		const rows = days.flatMap((d) => d.rows);
+		expect(rows.map((r) => [r.title, r.transfer, r.left])).toEqual([
+			["Transfer to Pot", true, "500.00"],
+			["rent", false, "400.00"],
+		]);
 	});
 });
 

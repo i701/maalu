@@ -84,6 +84,8 @@ export default function MarkPaidDialog({
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
 	const income = transaction.type === "income";
+	// a transfer moves what was planned: only the day (and time) it happened can differ
+	const transfer = transaction.type === "transfer";
 	const foreign = Boolean(baseCurrency && transaction.currency !== baseCurrency);
 	const plannedRate = tidy(transaction.exchange_rate);
 	const [amount, setAmount] = useState(() => tidy(transaction.amount));
@@ -100,12 +102,16 @@ export default function MarkPaidDialog({
 					id: transaction.id,
 					transaction_date: text("date"),
 					transaction_time: text("time") || null,
-					...payBody({ amount: amount.trim(), foreign, rate, plannedRate, charged }),
+					...(transfer
+						? {}
+						: payBody({ amount: amount.trim(), foreign, rate, plannedRate, charged })),
 				},
 			}),
 		);
 		if (ok) {
-			notify(`"${txTitle(transaction)}" marked as ${income ? "received" : "paid"}`);
+			notify(
+				`"${txTitle(transaction)}" marked as ${transfer ? "done" : income ? "received" : "paid"}`,
+			);
 			onPaid?.(transaction);
 			sheet.close();
 		}
@@ -113,7 +119,7 @@ export default function MarkPaidDialog({
 
 	return (
 		<FormDialog
-			title={income ? "Mark as received" : "Mark as paid"}
+			title={transfer ? "Mark as done" : income ? "Mark as received" : "Mark as paid"}
 			error={error}
 			pending={pending}
 			onSubmit={submit}
@@ -121,23 +127,25 @@ export default function MarkPaidDialog({
 			maxWidth="xs"
 		>
 			<Grid container spacing={2}>
-				<Grid size={12}>
-					<TextField
-						label={income ? "Amount received" : "Amount"}
-						value={amount}
-						onChange={(e) => setAmount(e.target.value)}
-						required
-						autoFocus
-						onFocus={(e) => e.target.select()}
-						helperText={
-							income
-								? `Expected: ${formatMoney(transaction.amount, transaction.currency)}. Type what actually arrived`
-								: `Planned: ${formatMoney(transaction.amount, transaction.currency)}. Change it if the real amount differs`
-						}
-						slotProps={{ htmlInput: { inputMode: "decimal" } }}
-					/>
-				</Grid>
-				{foreign && baseCurrency && (
+				{!transfer && (
+					<Grid size={12}>
+						<TextField
+							label={income ? "Amount received" : "Amount"}
+							value={amount}
+							onChange={(e) => setAmount(e.target.value)}
+							required
+							autoFocus
+							onFocus={(e) => e.target.select()}
+							helperText={
+								income
+									? `Expected: ${formatMoney(transaction.amount, transaction.currency)}. Type what actually arrived`
+									: `Planned: ${formatMoney(transaction.amount, transaction.currency)}. Change it if the real amount differs`
+							}
+							slotProps={{ htmlInput: { inputMode: "decimal" } }}
+						/>
+					</Grid>
+				)}
+				{foreign && baseCurrency && !transfer && (
 					<RateFields
 						rate={rate}
 						charged={charged}
@@ -150,7 +158,7 @@ export default function MarkPaidDialog({
 				)}
 				<Grid size={6}>
 					<TextField
-						label={income ? "Received on" : "Paid on"}
+						label={transfer ? "Done on" : income ? "Received on" : "Paid on"}
 						name="date"
 						type="date"
 						defaultValue={localToday()}
