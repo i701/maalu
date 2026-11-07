@@ -2602,6 +2602,12 @@ export interface components {
              * @description Its description, else its category
              */
             title: string;
+            /**
+             * Transfer
+             * @description A planned transfer out of an everyday account to somewhere else (savings, a loan): money that leaves, so it is a bill
+             * @default false
+             */
+            transfer: boolean;
         };
         /** AvailableCardPayment */
         AvailableCardPayment: {

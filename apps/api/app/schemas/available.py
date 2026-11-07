@@ -25,6 +25,11 @@ class AvailableBill(BaseModel):
         default=False,
         description="Only a guess: its subscription's amount varies from month to month",
     )
+    transfer: bool = Field(
+        default=False,
+        description="A planned transfer out of an everyday account to somewhere else (savings, a "
+        "loan): money that leaves, so it is a bill",
+    )
 
 
 class AvailableCardPayment(BaseModel):

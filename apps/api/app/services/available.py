@@ -55,41 +55,6 @@ class AvailableService:
                 apart.append(row)
         spendable_ids = {a.id for a in spendable}
 
-        # Bills still to pay: planned expenses up to the end of the period, overdue ones included,
-        # paid from a spendable account (or from none yet).
-        planned = (
-            await self.db.scalars(
-                select(Transaction)
-                .where(
-                    Transaction.user_id == user_id,
-                    Transaction.live(),
-                    Transaction.planned.is_(True),
-                    Transaction.adjustment.is_(False),
-                    Transaction.transaction_date <= end,
-                    Transaction.type.in_((TransactionType.EXPENSE, TransactionType.INCOME)),
-                )
-                .order_by(Transaction.transaction_date, Transaction.created_at)
-            )
-        ).all()
-        bills: list[AvailableBill] = []
-        coming: list[AvailableBill] = []
-        for t in planned:
-            if t.account_id is not None and t.account_id not in spendable_ids:
-                continue
-            row = AvailableBill(
-                id=t.id,
-                title=t.description or t.category,
-                date=t.transaction_date,
-                amount=t.base_amount,
-                overdue=t.transaction_date < today,
-                subscription=t.subscription.name if t.subscription else None,
-                account=t.account.name if t.account else None,
-                estimate=bool(t.subscription and t.subscription.amount_varies),
-            )
-            (coming if t.type is TransactionType.INCOME else bills).append(row)
-        expected = sum((c.amount for c in coming), ZERO)
-        bills.sort(key=lambda b: (not b.overdue, b.date, b.title))
-
         # Credit card statements still to pay by the end of the period. What was spent since a
         # statement closed is not due yet, so it is not here.
         in_scope = {a.id for a in accounts}
@@ -105,6 +70,67 @@ class AvailableService:
             if c.account_id in in_scope and c.remaining > 0 and c.due_on <= end
         ]
         cards.sort(key=lambda c: (not c.overdue, c.date, c.title))
+
+        # Bills still to pay: planned expenses up to the end of the period, overdue ones included,
+        # paid from a spendable account (or from none yet).
+        planned = (
+            await self.db.scalars(
+                select(Transaction)
+                .where(
+                    Transaction.user_id == user_id,
+                    Transaction.live(),
+                    Transaction.planned.is_(True),
+                    Transaction.adjustment.is_(False),
+                    Transaction.transaction_date <= end,
+                    Transaction.type.in_(
+                        (TransactionType.EXPENSE, TransactionType.INCOME, TransactionType.TRANSFER)
+                    ),
+                )
+                .order_by(Transaction.transaction_date, Transaction.created_at)
+            )
+        ).all()
+        bills: list[AvailableBill] = []
+        coming: list[AvailableBill] = []
+        carded = {c.account_id for c in cards}
+        for t in planned:
+            if t.type is TransactionType.TRANSFER:
+                # Only money leaving the everyday accounts for somewhere else is a bill. A move
+                # between everyday accounts changes nothing, and money arriving from elsewhere is
+                # never counted (like planned income). A repayment of a card whose statement is
+                # already in the plan would count twice, so it is left out.
+                leaving = t.account_id in spendable_ids and t.to_account_id not in spendable_ids
+                if not leaving or t.to_account_id in carded:
+                    continue
+                other = t.to_account
+                bills.append(
+                    AvailableBill(
+                        id=t.id,
+                        title=t.description
+                        or f"Transfer to {other.name if other else 'another account'}",
+                        date=t.transaction_date,
+                        amount=t.base_amount,
+                        overdue=t.transaction_date < today,
+                        subscription=None,
+                        account=(t.account.name if t.account else None),
+                        transfer=True,
+                    )
+                )
+                continue
+            if t.account_id is not None and t.account_id not in spendable_ids:
+                continue
+            row = AvailableBill(
+                id=t.id,
+                title=t.description or t.category,
+                date=t.transaction_date,
+                amount=t.base_amount,
+                overdue=t.transaction_date < today,
+                subscription=t.subscription.name if t.subscription else None,
+                account=t.account.name if t.account else None,
+                estimate=bool(t.subscription and t.subscription.amount_varies),
+            )
+            (coming if t.type is TransactionType.INCOME else bills).append(row)
+        expected = sum((c.amount for c in coming), ZERO)
+        bills.sort(key=lambda b: (not b.overdue, b.date, b.title))
 
         reserved = [
             AvailableReserve(goal_id=g.id, name=g.name, amount=g.saved)
