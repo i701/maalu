@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
-import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { open } from "./helpers";
 
 /**
@@ -9,7 +9,6 @@ import { open } from "./helpers";
  * WebP of each screen into `public/docs/`. Chromium writes the WebP itself (a canvas), so nothing
  * extra is installed. The sizes it prints are the `width` and `height` of the guides' image blocks.
  */
-const API = "http://localhost:8101/api/v1";
 const EMAIL = "shots@example.com";
 const PASSWORD = "maalu-demo-1234"; // the seed's password
 const DATABASE_URL =
@@ -21,14 +20,6 @@ const PAD = 28; // breathing room round every shot
 const BANNER = 278; // the page banner's height (262px) and the gap under it
 
 test.use({ viewport: { width: WIDTH + 330, height: 1000 }, reducedMotion: "reduce" });
-
-const day = (offset: number) => {
-	const d = new Date();
-	d.setDate(d.getDate() + offset);
-	return d;
-};
-const iso = (d: Date) =>
-	`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 /**
  * A PNG as a small WebP, converted by the browser's own canvas, with `PAD` px of the page's own
@@ -64,7 +55,8 @@ async function toWebp(converter: Page, png: Buffer, background: string, cut: boo
 	return Buffer.from(url.split(",")[1], "base64");
 }
 
-async function setUp(request: APIRequestContext) {
+/** The made-up demo data, in the e2e database, for one user. */
+function seedDemoUser() {
 	execFileSync("uv", ["run", "python", "-m", "app.seed", "--email", EMAIL], {
 		cwd: "../api",
 		env: {
@@ -74,58 +66,12 @@ async function setUp(request: APIRequestContext) {
 		},
 		stdio: "pipe",
 	});
-	const login = await request.post(`${API}/auth/login`, {
-		form: { username: EMAIL, password: PASSWORD },
-	});
-	expect(login.ok()).toBeTruthy();
-	const headers = { Authorization: `Bearer ${(await login.json()).access_token}` };
-	const post = async <T>(path: string, data: object) => {
-		const res = await request.post(`${API}${path}`, { headers, data });
-		expect(res.ok(), `${path}: ${await res.text()}`).toBeTruthy();
-		return (await res.json()) as T;
-	};
-
-	// A credit card whose statement closed five days ago and falls due in a few, repaid from the
-	// bank account the seed made.
-	const accounts = await (await request.get(`${API}/accounts`, { headers })).json();
-	const bank = accounts.find((a: { name: string }) => a.name === "BML Current");
-	const visa = await post<{ id: string }>("/accounts", {
-		name: "BML Visa",
-		group: "card",
-		currency: "MVR",
-		credit_limit: "15000",
-		statement_day: day(-5).getDate(),
-		due_day: day(4).getDate(),
-	});
-	await post("/cards", {
-		name: "BML Visa",
-		kind: "credit",
-		last_digits: "4164",
-		account_id: visa.id,
-		repay_account_id: bank.id,
-	});
-	const spend = (amount: string, category: string, ago: number, description: string) =>
-		post("/transactions", {
-			type: "expense",
-			amount,
-			currency: "MVR",
-			category,
-			description,
-			payment_method: "credit_card",
-			account_id: visa.id,
-			transaction_date: iso(day(-ago)),
-		});
-	await spend("2850.00", "Shopping", 14, "Phone case and charger");
-	await spend("1240.50", "Dining", 9, "Dinner out");
-	await spend("3100.00", "Travel", 7, "Ferry tickets");
-	await spend("420.00", "Dining", 2, "Lunch"); // after the close: on the next statement
-	return { visaId: visa.id };
 }
 
-test("the screenshots for the guides", async ({ page, request, context }) => {
+test("the screenshots for the guides", async ({ page, context }) => {
 	test.setTimeout(240_000);
 	mkdirSync(OUT, { recursive: true });
-	const { visaId } = await setUp(request);
+	seedDemoUser();
 
 	const converter = await context.newPage();
 	await converter.goto("about:blank");
@@ -165,10 +111,6 @@ test("the screenshots for the guides", async ({ page, request, context }) => {
 	await open(page, "/plan");
 	await expect(page.getByRole("heading", { name: "Bills by day" })).toBeVisible();
 	await shoot("month-plan");
-
-	await open(page, `/accounts/${visaId}`);
-	await expect(page.getByRole("heading", { name: "Statement" })).toBeVisible();
-	await shoot("card-statement");
 
 	await open(page, "/budget");
 	await expect(page.getByRole("heading", { name: "Budget", level: 1 })).toBeVisible();

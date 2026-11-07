@@ -1,4 +1,5 @@
 import type { Accent } from "#/lib/m3";
+import type { DemoId } from "./demo-ids";
 
 /**
  * A piece of a guide. Text may use `**bold**` for the name of something on screen (a button, a
@@ -20,6 +21,11 @@ export type DocBlock =
 	 * (`/docs/<name>.webp`), `width` and `height` its real size so the page does not jump while it
 	 * loads, and `alt` what a person who cannot see it needs to know.
 	 */
+	/**
+	 * A live piece of the app drawn with made-up data (`components/docs/Demos.tsx`), shown inert:
+	 * it cannot be clicked and sends nothing. Always the real component, so it never goes stale.
+	 */
+	| { type: "demo"; id: DemoId; title: string; caption?: string }
 	| { type: "image"; src: string; alt: string; width: number; height: number; caption?: string };
 
 /** A page in the in-app guide. */

@@ -60,12 +60,11 @@ export const accounts: Doc = {
 
 		{ type: "h2", id: "statements", text: "Statements and due dates" },
 		{
-			type: "image",
-			src: "/docs/card-statement.webp",
-			alt: "A credit card's page with its Statement panel: what is on the statement, what was paid since, what is still to pay and when it is due, and what was spent since it closed.",
-			width: 1254,
-			height: 956,
-			caption: "A credit card's page. The panel shows the last statement and a Repay button.",
+			type: "demo",
+			id: "card-statement",
+			title: "a credit card's Statement panel",
+			caption:
+				"This is the real panel from a card's page, filled in with made-up numbers. On your own card it shows your last statement and the Repay button works.",
 		},
 		{
 			type: "p",

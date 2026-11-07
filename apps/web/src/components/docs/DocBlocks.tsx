@@ -3,6 +3,7 @@ import Typography from "@mui/material/Typography";
 import { memo } from "react";
 import { blockKey, inlineSegments, type DocBlock } from "#/lib/docs";
 import { RouterLink } from "../RouterLinks";
+import DEMOS from "./Demos";
 import Symbol from "../Symbol";
 
 /** Text with `**bold**` shown bold (the names of buttons and settings) and `[label](/page)` shown as
@@ -99,6 +100,42 @@ function Example({ block }: { block: Extract<DocBlock, { type: "example" }> }) {
 			{block.note && (
 				<Typography variant="body2" sx={{ color: "text.secondary", mt: 1.5 }}>
 					<Inline text={block.note} />
+				</Typography>
+			)}
+		</Box>
+	);
+}
+
+/** A live piece of the app with made-up data, inert so nothing in it can be pressed. The label says
+ * what it is, so nobody thinks it is their own data. */
+function Demo({ block }: { block: Extract<DocBlock, { type: "demo" }> }) {
+	const Specimen = DEMOS[block.id];
+	return (
+		<Box component="figure" sx={{ m: 0, display: "grid", gap: 0.75 }}>
+			<Box
+				role="group"
+				aria-label={`Example: ${block.title}`}
+				sx={{
+					p: { xs: 1, sm: 2 },
+					borderRadius: "var(--shape-lg)",
+					border: "1px dashed var(--md-sys-color-outline-variant)",
+					bgcolor: "var(--md-sys-color-surface)",
+				}}
+			>
+				<Typography
+					variant="overline"
+					sx={{ display: "block", color: "text.secondary", letterSpacing: 0.6, mb: 0.5 }}
+				>
+					Example with made-up data
+				</Typography>
+				{/* inert: not focusable and not clickable, so the example's buttons do nothing */}
+				<Box inert sx={{ pointerEvents: "none", userSelect: "text" }}>
+					<Specimen />
+				</Box>
+			</Box>
+			{block.caption && (
+				<Typography component="figcaption" variant="caption" sx={{ color: "text.secondary" }}>
+					{block.caption}
 				</Typography>
 			)}
 		</Box>
@@ -208,6 +245,8 @@ const DocBlocks = memo(function DocBlocks({ blocks }: { blocks: readonly DocBloc
 						return <Callout key={key} block={block} />;
 					case "example":
 						return <Example key={key} block={block} />;
+					case "demo":
+						return <Demo key={key} block={block} />;
 					case "image":
 						return <Shot key={key} block={block} />;
 					case "faq":

@@ -89,3 +89,19 @@ test("a guide shows its screenshot, loaded and with a caption", async ({ page })
 		.toBeGreaterThan(0);
 	await expect(page.getByText(/^The Month plan with the demo data/)).toBeVisible();
 });
+
+test("a guide can show a live example of the app, filled with made-up data and not clickable", async ({
+	page,
+}) => {
+	test.setTimeout(60_000);
+	await signUp(page);
+	await open(page, "/docs/accounts");
+	const example = page.getByRole("group", { name: "Example: a credit card's Statement panel" });
+	await example.scrollIntoViewIfNeeded();
+	await expect(example.getByText(/^Pay MVR\s7,190\.50 by/)).toBeVisible();
+	// inert: its Repay button cannot be focused or pressed
+	await expect(example.locator("[inert]")).toHaveCount(1);
+	await example.getByRole("button", { name: "Repay" }).focus();
+	// the focus did not move into the example: it is still on the page itself
+	expect(await page.evaluate(() => document.activeElement?.tagName)).toBe("BODY");
+});

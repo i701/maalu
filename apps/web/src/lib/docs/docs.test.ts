@@ -66,6 +66,7 @@ describe("the guides", () => {
 				if (b.type === "steps" || b.type === "list") return b.items;
 				if (b.type === "faq") return b.items.flatMap((i) => [i.q, i.a]);
 				if (b.type === "example") return [...b.rows.flat(), ...(b.note ? [b.note] : [])];
+				if (b.type === "demo") return b.caption ? [b.title, b.caption] : [b.title];
 				if (b.type === "image") return b.caption ? [b.alt, b.caption] : [b.alt];
 				return [];
 			});
