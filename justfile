@@ -115,6 +115,12 @@ e2e *args:
     docker compose exec -T db sh -c "psql -U maalu -d postgres -tc \"SELECT 1 FROM pg_database WHERE datname='maalu_e2e'\" | grep -q 1 || createdb -U maalu maalu_e2e"
     nice -n 19 pnpm --filter @maalu/web e2e {{args}}
 
+# Remake the screenshots in the guides (apps/web/public/docs/*.webp) from a seeded account, in the same
+# e2e environment. Run it when a screen a guide shows has changed, then commit the images.
+docs-shots:
+    docker compose exec -T db sh -c "psql -U maalu -d postgres -tc \"SELECT 1 FROM pg_database WHERE datname='maalu_e2e'\" | grep -q 1 || createdb -U maalu maalu_e2e"
+    DOCS_SHOTS=1 nice -n 19 pnpm --filter @maalu/web e2e
+
 # Download the browser the end-to-end tests drive (once, about 150 MB)
 e2e-install:
     pnpm --filter @maalu/web exec playwright install chromium

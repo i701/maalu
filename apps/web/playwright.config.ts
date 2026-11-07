@@ -9,8 +9,14 @@ const WEB_PORT = 3101;
 const DATABASE_URL =
 	process.env.E2E_DATABASE_URL ?? "postgresql+asyncpg://maalu:maalu@localhost:5432/maalu_e2e";
 
+// `just docs-shots` (DOCS_SHOTS=1) runs only the spec that makes the guides' screenshots; every
+// other run leaves it out, since it writes files into public/docs.
+const SHOTS = Boolean(process.env.DOCS_SHOTS);
+
 export default defineConfig({
 	testDir: "e2e",
+	testMatch: SHOTS ? "docs-shots.spec.ts" : undefined,
+	testIgnore: SHOTS ? undefined : "docs-shots.spec.ts",
 	fullyParallel: true,
 	// Each worker is a whole Chromium, and one API and one web server serve them all, so a few is
 	// plenty: more only makes the machine (and the tests, which hash passwords) slower.
