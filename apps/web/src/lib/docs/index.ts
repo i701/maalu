@@ -1,14 +1,19 @@
 import { NAV_ITEMS } from "#/lib/nav";
 import { accountPage } from "./account-page";
 import { accounts } from "./accounts";
+import { backup } from "./backup";
 import { budget } from "./budget";
+import { categories } from "./categories";
 import { fixingRecords } from "./fixing-records";
 import { goals } from "./goals";
+import { groups } from "./groups";
 import { importStatement } from "./import";
 import { monthPlan } from "./month-plan";
+import { places } from "./places";
 import { reports } from "./reports";
 import { salarySplit } from "./salary-split";
 import { subscriptions } from "./subscriptions";
+import { tags } from "./tags";
 import { varyingBills } from "./varying-bills";
 import type { Doc } from "./types";
 
@@ -19,6 +24,9 @@ export const DOCS: readonly Doc[] = [
 	accountPage,
 	importStatement,
 	fixingRecords,
+	categories,
+	tags,
+	groups,
 	subscriptions,
 	varyingBills,
 	budget,
@@ -26,6 +34,8 @@ export const DOCS: readonly Doc[] = [
 	monthPlan,
 	salarySplit,
 	reports,
+	places,
+	backup,
 ];
 
 export const findDoc = (slug: string): Doc | undefined => DOCS.find((d) => d.slug === slug);

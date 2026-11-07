@@ -146,7 +146,36 @@ test("a page's header links to the guides that explain it", async ({ page, reque
 	await open(page, "/accounts");
 	await expect(page.getByRole("link", { name: "Guide: Accounts, cards and groups" })).toBeVisible();
 
+	// the organising pages, the map and Settings have theirs too
+	for (const [path, title] of [
+		["/categories", "Categories"],
+		["/tags", "Tags"],
+		["/groups", "Groups"],
+		["/places", "Places and the map"],
+		["/settings", "Backups and restoring"],
+	]) {
+		await open(page, path);
+		await expect(page.getByRole("link", { name: `Guide: ${title}` })).toBeVisible();
+	}
+
 	// a page with no guide shows none
 	await open(page, "/vendors");
 	await expect(page.getByRole("link", { name: /^Guide:/ })).toHaveCount(0);
+});
+
+test("the new guides open, and the docs search finds them", async ({ page }) => {
+	test.setTimeout(60_000);
+	await signUp(page);
+	for (const [slug, title] of [
+		["categories", "Categories"],
+		["tags", "Tags"],
+		["groups", "Groups"],
+		["places", "Places and the map"],
+		["backup", "Backups and restoring"],
+	]) {
+		await open(page, `/docs/${slug}`);
+		await expect(page.getByRole("heading", { name: title, level: 1 })).toBeVisible();
+	}
+	await open(page, "/docs?q=restore");
+	await expect(page.getByRole("link", { name: /Backups and restoring/ })).toBeVisible();
 });
