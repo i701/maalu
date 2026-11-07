@@ -31,6 +31,8 @@ function blockTexts(block: DocBlock): string[] {
 			return [block.title, ...block.rows.flat(), ...(block.note ? [block.note] : [])];
 		case "faq":
 			return block.items.flatMap((item) => [item.q, item.a]);
+		case "image":
+			return block.caption ? [block.alt, block.caption] : [block.alt];
 	}
 }
 

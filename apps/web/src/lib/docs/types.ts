@@ -14,7 +14,13 @@ export type DocBlock =
 	| { type: "callout"; tone: "tip" | "note" | "warning"; title?: string; text: string }
 	/** A worked example: a title, rows of label and value, and a closing line */
 	| { type: "example"; title: string; rows: [string, string][]; note?: string }
-	| { type: "faq"; items: { q: string; a: string }[] };
+	| { type: "faq"; items: { q: string; a: string }[] }
+	/**
+	 * A screenshot, made by `just docs-shots` into `public/docs/`. `src` is the file's address
+	 * (`/docs/<name>.webp`), `width` and `height` its real size so the page does not jump while it
+	 * loads, and `alt` what a person who cannot see it needs to know.
+	 */
+	| { type: "image"; src: string; alt: string; width: number; height: number; caption?: string };
 
 /** A page in the in-app guide. */
 export type Doc = {

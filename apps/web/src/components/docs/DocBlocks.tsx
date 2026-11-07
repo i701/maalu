@@ -105,6 +105,35 @@ function Example({ block }: { block: Extract<DocBlock, { type: "example" }> }) {
 	);
 }
 
+/** A screenshot with its caption. Lazy, with its real size set so the page does not jump. */
+function Shot({ block }: { block: Extract<DocBlock, { type: "image" }> }) {
+	return (
+		<Box component="figure" sx={{ m: 0, display: "grid", gap: 0.75 }}>
+			<Box
+				component="img"
+				src={block.src}
+				alt={block.alt}
+				width={block.width}
+				height={block.height}
+				loading="lazy"
+				decoding="async"
+				sx={{
+					display: "block",
+					width: "100%",
+					height: "auto",
+					borderRadius: "var(--shape-lg)",
+					border: "1px solid var(--md-sys-color-outline-variant)",
+				}}
+			/>
+			{block.caption && (
+				<Typography component="figcaption" variant="caption" sx={{ color: "text.secondary" }}>
+					{block.caption}
+				</Typography>
+			)}
+		</Box>
+	);
+}
+
 function Steps({ items }: { items: string[] }) {
 	return (
 		<Box
@@ -179,6 +208,8 @@ const DocBlocks = memo(function DocBlocks({ blocks }: { blocks: readonly DocBloc
 						return <Callout key={key} block={block} />;
 					case "example":
 						return <Example key={key} block={block} />;
+					case "image":
+						return <Shot key={key} block={block} />;
 					case "faq":
 						return (
 							<Box key={key} sx={{ display: "grid", gap: 2 }}>

@@ -1,3 +1,4 @@
+import { existsSync, statSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { blockKey, DOCS, findDoc, inlineSegments, pageExists } from "./index";
 
@@ -65,6 +66,7 @@ describe("the guides", () => {
 				if (b.type === "steps" || b.type === "list") return b.items;
 				if (b.type === "faq") return b.items.flatMap((i) => [i.q, i.a]);
 				if (b.type === "example") return [...b.rows.flat(), ...(b.note ? [b.note] : [])];
+				if (b.type === "image") return b.caption ? [b.alt, b.caption] : [b.alt];
 				return [];
 			});
 		for (const doc of DOCS)
@@ -100,5 +102,30 @@ describe("the guides", () => {
 
 	it("point their links at real pages", () => {
 		for (const doc of DOCS) for (const w of doc.where) expect(pageExists(w.to), w.to).toBe(true);
+	});
+});
+
+describe("screenshots in the guides", () => {
+	const shots = DOCS.flatMap((doc) =>
+		doc.blocks.flatMap((b) => (b.type === "image" ? [{ doc: doc.slug, ...b }] : [])),
+	);
+
+	it("exist as small WebP files with a description and a real size", () => {
+		expect(shots.length).toBeGreaterThan(0);
+		for (const s of shots) {
+			expect(s.src, s.doc).toMatch(/^\/docs\/[a-z0-9-]+\.webp$/);
+			const file = `public${s.src}`;
+			expect(existsSync(file), `${s.doc}: ${file} is missing, run just docs-shots`).toBe(true);
+			// a guide's picture is a few tens of KB; a big one means it was not made by docs-shots
+			expect(statSync(file).size, file).toBeLessThan(150_000);
+			expect(s.alt.length, s.doc).toBeGreaterThan(20);
+			expect(s.width, s.doc).toBeGreaterThan(0);
+			expect(s.height, s.doc).toBeGreaterThan(0);
+		}
+	});
+
+	it("are each used once", () => {
+		const srcs = shots.map((s) => s.src);
+		expect(new Set(srcs).size).toBe(srcs.length);
 	});
 });

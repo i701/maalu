@@ -82,5 +82,7 @@ export function blockKey(block: DocBlock): string {
 			return `${block.type}:${block.items[0]}`;
 		case "faq":
 			return `faq:${block.items[0]?.q}`;
+		case "image":
+			return `image:${block.src}`;
 	}
 }
