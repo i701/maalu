@@ -58,6 +58,30 @@ export const accounts: Doc = {
 			text: "Repaying is a **transfer**, not an expense, so nothing is counted twice: the spending was counted when you made it, and the repayment only moves money from your bank account to clear the debt.",
 		},
 
+		{ type: "h2", id: "statements", text: "Statements and due dates" },
+		{
+			type: "p",
+			text: "A credit card is billed once a month. Give the card the **day its statement closes** and the **day the payment is due** (in its **Edit** form, both or neither) and Maalu keeps track for you. Nothing is stored about a statement: it is worked out from your transactions.",
+		},
+		{
+			type: "list",
+			items: [
+				"**On the statement** is what you owed on the day it closed. What you spent since then goes on the next statement.",
+				"**Paid since** is money put on the card after it closed: a repayment, a refund, any income. It comes off what is on the statement.",
+				"**Still to pay** is the rest, with its due date. The card's page shows it in a panel with a **Repay** button that opens the transfer already filled with that amount, and the [Accounts](/accounts) list shows one line under each card.",
+				"A day past the end of a short month counts as the last day of that month, so a statement on the 31st closes on the 28th in February.",
+			],
+		},
+		{
+			type: "p",
+			text: "Maalu also tells you with a notification three days before a payment is due, again if it is late, and when a card is over 90% of its credit limit (once a month). The [Month plan](/plan) counts a statement that falls due before the period ends as a bill, so the money for it is not shown as available.",
+		},
+		{
+			type: "callout",
+			tone: "tip",
+			text: "Leave the days empty for a card you do not track this way. Everything else about the card works as before.",
+		},
+
 		{ type: "h2", id: "groups", text: "The groups" },
 		{
 			type: "list",
