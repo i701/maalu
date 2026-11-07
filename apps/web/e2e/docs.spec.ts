@@ -77,3 +77,15 @@ test("the accounts guide leads to the guide for an account's page, which finds i
 	await open(page, "/docs?q=running+balance");
 	await expect(page.getByText("An account's page").first()).toBeVisible();
 });
+
+test("a guide shows its screenshot, loaded and with a caption", async ({ page }) => {
+	test.setTimeout(60_000);
+	await signUp(page);
+	await open(page, "/docs/month-plan");
+	const shot = page.getByRole("img", { name: /The Month plan page: four tiles/ });
+	await shot.scrollIntoViewIfNeeded();
+	await expect
+		.poll(() => shot.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth))
+		.toBeGreaterThan(0);
+	await expect(page.getByText(/^The Month plan with the demo data/)).toBeVisible();
+});

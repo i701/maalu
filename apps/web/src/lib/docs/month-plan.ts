@@ -53,6 +53,15 @@ export const monthPlan: Doc = {
 
 		{ type: "h2", id: "the-plan", text: "The Month plan page" },
 		{
+			type: "image",
+			src: "/docs/month-plan.webp",
+			alt: "The Month plan page: four tiles with what you have, bills to pay, money set aside and what is short, then the bills by day with what is left after each, and the accounts it counts on the right.",
+			width: 1254,
+			height: 956,
+			caption:
+				"The Month plan with the demo data: the money runs out at the credit card payment, and the bill that does it is marked.",
+		},
+		{
 			type: "p",
 			text: "Open it from the sidebar or with **Open the month plan** on the dashboard card. Four tiles at the top repeat the sum. Below them, **Bills by day** lists every bill and expected income in date order, overdue ones first, each with what would be left after paying it.",
 		},

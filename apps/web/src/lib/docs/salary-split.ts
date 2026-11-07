@@ -39,6 +39,14 @@ export const salarySplit: Doc = {
 
 		{ type: "h2", id: "set-up-rules", text: "Set up your rules" },
 		{
+			type: "image",
+			src: "/docs/salary-rules.webp",
+			alt: "The When my salary arrives card in Settings, listing two rules: a fixed amount to one savings account and another to a second, each marked as moving automatically.",
+			width: 696,
+			height: 401,
+			caption: "The salary rules in Settings: one rule per account or goal.",
+		},
+		{
 			type: "p",
 			text: "A rule says how much of each salary goes to one account or one goal. You set them once, and they stay until you change them.",
 		},

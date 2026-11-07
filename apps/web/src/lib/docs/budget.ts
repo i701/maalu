@@ -46,6 +46,15 @@ export const budget: Doc = {
 
 		{ type: "h2", id: "reading-it", text: "Reading a limit" },
 		{
+			type: "image",
+			src: "/docs/budget.webp",
+			alt: "The Budget page: a summary of what was spent this period against all the limits, split into needs and wants, then a card for each limit with its meter and what is left.",
+			width: 1254,
+			height: 956,
+			caption:
+				"The Budget page: a summary on top, then one card per limit. Needs and Wants chips come from the categories in each limit.",
+		},
+		{
 			type: "list",
 			items: [
 				"**Left** is the limit, plus anything carried over or moved in, less anything moved out and what you spent. When you have spent more, the card says **Over by** instead.",

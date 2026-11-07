@@ -32,6 +32,14 @@ export const reports: Doc = {
 
 		{ type: "h2", id: "compare", text: "Compare" },
 		{
+			type: "image",
+			src: "/docs/compare.webp",
+			alt: "The Compare page: income, spending and what was kept for this month against last month, a sentence on what changed, and paired bars for each category.",
+			width: 1254,
+			height: 956,
+			caption: "Compare: this month so far against last month, with every category side by side.",
+		},
+		{
 			type: "p",
 			text: "[Compare](/compare) holds one period against another: what you earned, spent and kept in each, then every category with how far it moved, the biggest change first. A sentence at the top sums it up.",
 		},
