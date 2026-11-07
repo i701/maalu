@@ -17,7 +17,7 @@ const OUT = "public/docs";
 const WIDTH = 1180; // the page content's width: the viewport is this plus the sidebar and margins
 const MAX_HEIGHT = 900;
 const PAD = 28; // breathing room round every shot
-const BANNER = 278; // the page banner's height (262px) and the gap under it
+const BANNER_GAP = 16; // the gap kept between the page banner and the shot
 
 test.use({ viewport: { width: WIDTH + 330, height: 1000 }, reducedMotion: "reduce" });
 
@@ -79,13 +79,22 @@ test("the screenshots for the guides", async ({ page, context }) => {
 	const sizes: Record<string, string> = {};
 	/** Save `name`.webp: the page's content below its banner (not the sidebar), or one element, at
 	 * most MAX_HEIGHT tall. */
-	async function shoot(name: string, target?: ReturnType<Page["locator"]>, banner = BANNER) {
+	async function shoot(name: string, target?: ReturnType<Page["locator"]>) {
 		await page.waitForTimeout(500);
 		const box = await (target ?? page.locator("main > .MuiContainer-root")).boundingBox();
 		expect(box, name).not.toBeNull();
 		let top = box!.y;
 		// skip the page banner: every page has the same one and it costs a third of the height
-		if (!target) top += banner;
+		if (!target) {
+			// the banner is the h1's nearest ancestor with the gradient background
+			const bottom = await page.locator("main h1").evaluate((h1) => {
+				let node: HTMLElement | null = h1 as HTMLElement;
+				while (node && !getComputedStyle(node).backgroundImage.includes("linear-gradient"))
+					node = node.parentElement;
+				return node ? node.getBoundingClientRect().bottom : 0;
+			});
+			top = Math.max(top, bottom + BANNER_GAP);
+		}
 		const clip = {
 			x: box!.x,
 			y: top,
@@ -110,7 +119,7 @@ test("the screenshots for the guides", async ({ page, context }) => {
 
 	await open(page, "/compare?preset=this_month");
 	await expect(page.getByRole("heading", { name: "Compare", level: 1 })).toBeVisible();
-	await shoot("compare", undefined, 225); // its banner is a little shorter
+	await shoot("compare");
 
 	console.log(`\nScreenshots written to ${OUT}:\n${JSON.stringify(sizes, null, 2)}`);
 });

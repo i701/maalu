@@ -4,6 +4,7 @@ import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import { type Accent } from "#/lib/m3";
 import GlassPill from "./GlassPill";
+import GuideLinks from "./GuideLinks";
 import ShapeTile from "./ShapeTile";
 import Symbol from "./Symbol";
 
@@ -116,19 +117,24 @@ export default function PageHeader({
 				)}
 			</Box>
 
-			{stats && stats.length > 0 && (
-				<Stack
-					direction="row"
-					useFlexGap
-					sx={{ position: "relative", mt: 2.5, flexWrap: "wrap", gap: 1 }}
-				>
-					{stats.map((s) => (
-						<GlassPill key={s.label} symbol={s.symbol}>
-							{s.label}
-						</GlassPill>
-					))}
-				</Stack>
-			)}
+			<Stack
+				direction="row"
+				useFlexGap
+				sx={{
+					position: "relative",
+					mt: 2.5,
+					flexWrap: "wrap",
+					gap: 1,
+					"&:empty": { display: "none" },
+				}}
+			>
+				{stats?.map((s) => (
+					<GlassPill key={s.label} symbol={s.symbol}>
+						{s.label}
+					</GlassPill>
+				))}
+				<GuideLinks />
+			</Stack>
 		</Box>
 	);
 }

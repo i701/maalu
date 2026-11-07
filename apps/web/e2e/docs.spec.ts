@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { open, signUp } from "./helpers";
+import { apiAs, open, signUp } from "./helpers";
 
 test("the Docs link opens the guides, and a guide links to the pages it describes", async ({
 	page,
@@ -120,4 +120,33 @@ test("the plan, budget and salary guides show live examples", async ({ page }) =
 		await box.scrollIntoViewIfNeeded();
 		await expect(box.getByText(text).first()).toBeVisible();
 	}
+});
+
+test("a page's header links to the guides that explain it", async ({ page, request }) => {
+	test.setTimeout(60_000);
+	const email = await signUp(page);
+	const api = await apiAs(request, email);
+	const account = await api.account("Main", "100");
+
+	await open(page, "/budget");
+	await expect(page.getByRole("link", { name: "Guide: Savings goals" })).toBeVisible();
+	await page.getByRole("link", { name: "Guide: Budget and spending limits" }).click();
+	await expect(page).toHaveURL(/\/docs\/budget$/);
+	await expect(
+		page.getByRole("heading", { name: "Budget and spending limits", level: 1 }),
+	).toBeVisible();
+	// the guide itself has no header link back to itself
+	await expect(page.getByRole("link", { name: "Guide: Budget and spending limits" })).toHaveCount(
+		0,
+	);
+
+	// one account's page has its own guide, not the list's
+	await open(page, `/accounts/${account.id}`);
+	await expect(page.getByRole("link", { name: "Guide: An account's page" })).toBeVisible();
+	await open(page, "/accounts");
+	await expect(page.getByRole("link", { name: "Guide: Accounts, cards and groups" })).toBeVisible();
+
+	// a page with no guide shows none
+	await open(page, "/vendors");
+	await expect(page.getByRole("link", { name: /^Guide:/ })).toHaveCount(0);
 });
