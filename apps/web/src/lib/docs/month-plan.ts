@@ -53,13 +53,11 @@ export const monthPlan: Doc = {
 
 		{ type: "h2", id: "the-plan", text: "The Month plan page" },
 		{
-			type: "image",
-			src: "/docs/month-plan.webp",
-			alt: "The Month plan page: four tiles with what you have, bills to pay, money set aside and what is short, then the bills by day with what is left after each, and the accounts it counts on the right.",
-			width: 1254,
-			height: 956,
+			type: "demo",
+			id: "plan-agenda",
+			title: "the Month plan's bills by day",
 			caption:
-				"The Month plan with the demo data: the money runs out at the credit card payment, and the bill that does it is marked.",
+				"The same list the page shows, with made-up bills. A card statement, a planned transfer and an estimate sit among the bills, and the running figure shows where the money runs out.",
 		},
 		{
 			type: "p",

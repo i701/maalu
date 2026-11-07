@@ -46,13 +46,11 @@ export const budget: Doc = {
 
 		{ type: "h2", id: "reading-it", text: "Reading a limit" },
 		{
-			type: "image",
-			src: "/docs/budget.webp",
-			alt: "The Budget page: a summary of what was spent this period against all the limits, split into needs and wants, then a card for each limit with its meter and what is left.",
-			width: 1254,
-			height: 956,
+			type: "demo",
+			id: "budget-limits",
+			title: "the Budget page's summary and limits",
 			caption:
-				"The Budget page: a summary on top, then one card per limit. Needs and Wants chips come from the categories in each limit.",
+				"The summary and four limits, with made-up figures: two on track, one close to its limit and one over. The Needs and Wants chips come from the categories in each limit.",
 		},
 		{
 			type: "list",

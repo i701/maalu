@@ -25,7 +25,8 @@ test("the Docs link opens the guides, and a guide links to the pages it describe
 	// a link in the text goes to the page it names, inside the app
 	await page.getByRole("article").getByRole("link", { name: "Settings" }).first().click();
 	await expect(page).toHaveURL(/\/settings$/);
-	await expect(page.getByText("When my salary arrives")).toBeVisible();
+	// (the guide has its own example of this card, so wait for the real page by its title)
+	await expect(page.getByRole("heading", { name: "Settings", level: 1 })).toBeVisible();
 });
 
 test("a guide has an On this page list that jumps to its sections", async ({ page }) => {
@@ -81,13 +82,13 @@ test("the accounts guide leads to the guide for an account's page, which finds i
 test("a guide shows its screenshot, loaded and with a caption", async ({ page }) => {
 	test.setTimeout(60_000);
 	await signUp(page);
-	await open(page, "/docs/month-plan");
-	const shot = page.getByRole("img", { name: /The Month plan page: four tiles/ });
+	await open(page, "/docs/reports");
+	const shot = page.getByRole("img", { name: /The Compare page/ });
 	await shot.scrollIntoViewIfNeeded();
 	await expect
 		.poll(() => shot.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth))
 		.toBeGreaterThan(0);
-	await expect(page.getByText(/^The Month plan with the demo data/)).toBeVisible();
+	await expect(page.getByText(/^Compare: this month so far/)).toBeVisible();
 });
 
 test("a guide can show a live example of the app, filled with made-up data and not clickable", async ({
@@ -104,4 +105,19 @@ test("a guide can show a live example of the app, filled with made-up data and n
 	await example.getByRole("button", { name: "Repay" }).focus();
 	// the focus did not move into the example: it is still on the page itself
 	expect(await page.evaluate(() => document.activeElement?.tagName)).toBe("BODY");
+});
+
+test("the plan, budget and salary guides show live examples", async ({ page }) => {
+	test.setTimeout(90_000);
+	await signUp(page);
+	for (const [guide, example, text] of [
+		["month-plan", "the Month plan's bills by day", "BML Visa card payment"],
+		["budget", "the Budget page's summary and limits", "Fun and shopping"],
+		["salary-split", "the salary rules card in Settings", "MIB Savings"],
+	]) {
+		await open(page, `/docs/${guide}`);
+		const box = page.getByRole("group", { name: `Example: ${example}` });
+		await box.scrollIntoViewIfNeeded();
+		await expect(box.getByText(text).first()).toBeVisible();
+	}
 });

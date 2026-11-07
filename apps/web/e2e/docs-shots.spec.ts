@@ -108,21 +108,6 @@ test("the screenshots for the guides", async ({ page, context }) => {
 	await page.getByRole("button", { name: "Sign in" }).click();
 	await expect(page).toHaveURL(/\/dashboard/);
 
-	await open(page, "/plan");
-	await expect(page.getByRole("heading", { name: "Bills by day" })).toBeVisible();
-	await shoot("month-plan");
-
-	await open(page, "/budget");
-	await expect(page.getByRole("heading", { name: "Budget", level: 1 })).toBeVisible();
-	await shoot("budget");
-
-	await open(page, "/settings");
-	const rules = page.locator(".MuiCard-root", {
-		has: page.getByRole("heading", { name: "When my salary arrives" }),
-	});
-	await expect(rules).toBeVisible();
-	await shoot("salary-rules", rules);
-
 	await open(page, "/compare?preset=this_month");
 	await expect(page.getByRole("heading", { name: "Compare", level: 1 })).toBeVisible();
 	await shoot("compare", undefined, 225); // its banner is a little shorter
