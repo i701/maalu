@@ -19,6 +19,7 @@ import ArchivedAccounts from "#/components/ArchivedAccounts";
 import AccountIdentity from "#/components/AccountIdentity";
 import AdjustBalanceDialog from "#/components/AdjustBalanceDialog";
 import CreditUsage from "#/components/CreditUsage";
+import StatementLine from "#/components/StatementLine";
 import RateHistoryDialog from "#/components/RateHistoryDialog";
 import ConfirmDelete from "#/components/ConfirmDelete";
 import EmptyState from "#/components/EmptyState";
@@ -44,6 +45,7 @@ import {
 	deleteAccountFn,
 	getAccountSummaryFn,
 	listAccountsFn,
+	listCardStatementsFn,
 } from "#/server/accounts";
 import { listCurrenciesFn } from "#/server/currencies";
 import { ACCOUNT_GROUP_LABELS, ACCOUNT_GROUPS, type Account, type AccountGroup } from "#/types/api";
@@ -57,11 +59,12 @@ export const Route = createFileRoute("/_protected/accounts/")({
 	validateSearch: searchSchema,
 	loaderDeps: ({ search }) => search,
 	loader: async ({ deps }) => {
-		const [accounts, summary, currencies, archived] = await Promise.all([
+		const [accounts, summary, currencies, archived, statements] = await Promise.all([
 			listAccountsFn({ data: { q: deps.q } }),
 			getAccountSummaryFn(),
 			listCurrenciesFn(),
 			listAccountsFn({ data: { archived: true } }),
+			listCardStatementsFn(),
 		]);
 		const found = unwrap(accounts);
 		// The form offers the currencies of *all* your accounts, so a search must not narrow them.
@@ -71,6 +74,7 @@ export const Route = createFileRoute("/_protected/accounts/")({
 			archived: unwrap(archived),
 			everyAccount,
 			summary: unwrap(summary),
+			statements: statements.ok ? statements.data : [],
 			currencies,
 		};
 	},
@@ -156,7 +160,8 @@ function RateHistoryButton({ account, baseCurrency }: { account: Account; baseCu
 }
 
 function AccountsPage() {
-	const { accounts, archived, everyAccount, summary, currencies } = Route.useLoaderData();
+	const { accounts, archived, everyAccount, summary, currencies, statements } =
+		Route.useLoaderData();
 	// The URL as soon as it changes (the loader data lags behind it), so the box feels instant.
 	const search = useLiveSearch(searchSchema);
 	const navigate = Route.useNavigate();
@@ -307,6 +312,9 @@ function AccountsPage() {
 														<>
 															<AccountIdentity account={a} />
 															<CreditUsage account={a} />
+															<StatementLine
+																statement={statements.find((s) => s.account_id === a.id)}
+															/>
 															{a.description && (
 																<Typography variant="caption" sx={{ color: "text.secondary" }}>
 																	{a.description}

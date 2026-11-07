@@ -14,7 +14,7 @@ import PlanAside from "#/components/plan/PlanAside";
 import { RouterLink } from "#/components/RouterLinks";
 import TonalChip from "#/components/TonalChip";
 import { isShort } from "#/lib/available";
-import { formatDate, formatMoney } from "#/lib/format";
+import { formatDate, formatMoney, sumDecimals } from "#/lib/format";
 import { ACCENT } from "#/lib/m3";
 import { firstShortRow, planDays } from "#/lib/plan";
 import { staggerChildren } from "#/lib/motion";
@@ -68,7 +68,10 @@ function PlanPage() {
 	const short = isShort(available);
 	const culprit = firstShortRow(days);
 	const c = available.currency;
-	const overdue = available.bills.filter((b) => b.overdue).length;
+	const overdue =
+		available.bills.filter((b) => b.overdue).length +
+		available.card_payments.filter((x) => x.overdue).length;
+	const toPay = sumDecimals([available.bills_total, available.card_payments_total]);
 
 	return (
 		<>
@@ -108,7 +111,7 @@ function PlanPage() {
 							<MetricCard label="You have" value={formatMoney(available.balance, c)} />
 							<MetricCard
 								label={`Bills to pay${overdue > 0 ? ` (${overdue} overdue)` : ""}`}
-								value={formatMoney(available.bills_total, c)}
+								value={formatMoney(toPay, c)}
 							/>
 							<MetricCard label="Set aside" value={formatMoney(available.reserved_total, c)} />
 							<MetricCard

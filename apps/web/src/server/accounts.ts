@@ -6,6 +6,7 @@ import {
 	type AccountSummary,
 	type BalanceAfter,
 	type BalanceHistory,
+	type CardStatement,
 	type Transaction,
 } from "#/types/api";
 import { apiRequest } from "./api";
@@ -30,6 +31,9 @@ const createSchema = z.object({
 		.regex(/^\d+(\.\d{1,4})?$/, "Enter a valid limit (max 4 decimals)")
 		.nullable()
 		.optional(),
+	// credit cards only; both or neither (the API says so), null clears them
+	statement_day: z.number().int().min(1).max(31).nullable().optional(),
+	due_day: z.number().int().min(1).max(31).nullable().optional(),
 	exclude_from_stats: z.boolean().optional(),
 	spendable: z.boolean().nullable().optional(), // null follows the account's group
 	auto_rate: z.boolean().optional(),
@@ -53,6 +57,12 @@ export const listAccountsFn = createServerFn({ method: "GET" })
 			query: { q: data?.q || undefined, archived: data?.archived ? "true" : undefined },
 		}),
 	);
+
+/** Where each credit card with its statement days set stands against its last statement,
+ * soonest due first. */
+export const listCardStatementsFn = createServerFn({ method: "GET" }).handler(async () =>
+	apiRequest<CardStatement[]>("/accounts/statements"),
+);
 
 /** Server-side search for pickers/autocompletes: matches name and description. */
 export const searchAccountsFn = createServerFn({ method: "GET" })

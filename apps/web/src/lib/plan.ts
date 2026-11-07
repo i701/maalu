@@ -5,7 +5,7 @@ import type { AvailableToSpend } from "#/types/api";
 /** One planned payment or planned income on the plan, with what is left after it. */
 export type PlanRow = {
 	id: string;
-	kind: "bill" | "income";
+	kind: "bill" | "income" | "card";
 	title: string;
 	date: string;
 	overdue: boolean;
@@ -20,6 +20,8 @@ export type PlanRow = {
 	short: boolean;
 	/** The first bill that does: where the plan runs out */
 	firstShort: boolean;
+	/** A credit card statement: the card's id, to open its page (a bill has none) */
+	cardId: string | null;
 };
 
 /** The rows of one day, or all the overdue ones together. */
@@ -36,13 +38,26 @@ export const startingPoint = (data: Pick<AvailableToSpend, "balance" | "reserved
  */
 export function planDays(data: AvailableToSpend): PlanDay[] {
 	const rows = [
-		...data.bills.map((b) => ({ ...b, kind: "bill" as const })),
-		...(data.expected ?? []).map((b) => ({ ...b, kind: "income" as const })),
+		...data.bills.map((b) => ({ ...b, kind: "bill" as const, cardId: null as string | null })),
+		...(data.card_payments ?? []).map((c) => ({
+			id: c.account_id,
+			title: `${c.title} card payment`,
+			date: c.date,
+			amount: c.amount,
+			overdue: c.overdue,
+			kind: "card" as const,
+			cardId: c.account_id as string | null,
+		})),
+		...(data.expected ?? []).map((b) => ({
+			...b,
+			kind: "income" as const,
+			cardId: null as string | null,
+		})),
 	].toSorted(
 		(a, b) =>
 			Number(b.overdue) - Number(a.overdue) ||
 			a.date.localeCompare(b.date) ||
-			(a.kind === b.kind ? 0 : a.kind === "bill" ? -1 : 1) ||
+			(a.kind === b.kind ? 0 : a.kind === "income" ? 1 : b.kind === "income" ? -1 : 0) ||
 			a.title.localeCompare(b.title),
 	);
 
@@ -51,7 +66,7 @@ export function planDays(data: AvailableToSpend): PlanDay[] {
 	const days: PlanDay[] = [];
 	for (const r of rows) {
 		let left: string | null = null;
-		if (r.kind === "bill") {
+		if (r.kind !== "income") {
 			running = sumDecimals([running, `-${r.amount}`]);
 			left = running;
 		}
@@ -65,12 +80,13 @@ export function planDays(data: AvailableToSpend): PlanDay[] {
 			date: r.date,
 			overdue: r.overdue,
 			amount: r.amount,
-			account: r.account ?? null,
-			subscription: r.subscription ?? null,
-			estimate: Boolean(r.estimate),
+			account: "account" in r ? (r.account ?? null) : null,
+			subscription: "subscription" in r ? (r.subscription ?? null) : null,
+			estimate: "estimate" in r && Boolean(r.estimate),
 			left,
 			short,
 			firstShort,
+			cardId: r.cardId,
 		};
 		const key = r.overdue ? "overdue" : r.date;
 		const last = days[days.length - 1];

@@ -11,6 +11,7 @@ import {
 	hasCreditLimit,
 	isOwedGroup,
 	spendableValue,
+	statementDays,
 } from "#/lib/accounts";
 import SpendableField from "./SpendableField";
 import { todayIso } from "#/lib/format";
@@ -45,6 +46,7 @@ export default function AccountForm({
 	const [currency, setCurrency] = useState(account?.currency ?? baseCurrency);
 	const [group, setGroup] = useState<AccountGroup>(account?.group ?? "cash");
 	const [spend, setSpend] = useState<boolean | null>(account?.spendable ?? null);
+	const [localError, setLocalError] = useState<string | null>(null);
 	const foreign = currency !== baseCurrency;
 	const locked = (account?.transaction_count ?? 0) > 0;
 	const quick = [...new Set([baseCurrency, ...accounts.map((a) => a.currency)])].slice(0, 5);
@@ -53,6 +55,13 @@ export default function AccountForm({
 		e.preventDefault();
 		const f = new FormData(e.currentTarget);
 		const text = (k: string) => String(f.get(k) ?? "").trim();
+
+		const days = group === "card" ? statementDays(text("statement_day"), text("due_day")) : null;
+		if (days && !days.ok) {
+			setLocalError(days.error);
+			return;
+		}
+		setLocalError(null);
 
 		const fields = {
 			group,
@@ -63,6 +72,9 @@ export default function AccountForm({
 			description: text("description") || null,
 			// only cards and overdrafts have one; empty means none
 			credit_limit: hasCreditLimit(group) ? text("credit_limit") || null : null,
+			// credit cards only; both or neither
+			statement_day: days?.ok ? days.statement_day : null,
+			due_day: days?.ok ? days.due_day : null,
 			exclude_from_stats: f.get("exclude_from_stats") === "on",
 			spendable: spendableValue(spend, group),
 			// only a foreign-currency account has a rate to keep up to date
@@ -85,7 +97,7 @@ export default function AccountForm({
 	return (
 		<FormDialog
 			title={account ? "Edit account" : "Add account"}
-			error={error}
+			error={localError ?? error}
 			pending={pending}
 			onSubmit={submit}
 			sheet={sheet}
@@ -205,6 +217,39 @@ export default function AccountForm({
 							slotProps={{ htmlInput: { inputMode: "decimal" } }}
 						/>
 					</Grid>
+				)}
+
+				{group === "card" && (
+					<>
+						<Grid size={{ xs: 12, sm: 6 }}>
+							<TextField
+								label="Statement closes on day"
+								name="statement_day"
+								defaultValue={account?.statement_day ?? ""}
+								placeholder="5"
+								slotProps={{ htmlInput: { inputMode: "numeric", maxLength: 2 } }}
+							/>
+						</Grid>
+						<Grid size={{ xs: 12, sm: 6 }}>
+							<TextField
+								label="Payment due on day"
+								name="due_day"
+								defaultValue={account?.due_day ?? ""}
+								placeholder="25"
+								slotProps={{ htmlInput: { inputMode: "numeric", maxLength: 2 } }}
+							/>
+						</Grid>
+						<Grid size={12}>
+							<Typography
+								variant="caption"
+								sx={{ color: "text.secondary", mt: -1, display: "block" }}
+							>
+								Optional. Day of the month, 1 to 31 (a short month uses its last day). With both
+								set, Maalu shows what is owed on the last statement, when to pay it, and tells you
+								before it is due.
+							</Typography>
+						</Grid>
+					</>
 				)}
 
 				<Grid size={12}>

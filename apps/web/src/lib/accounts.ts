@@ -123,3 +123,22 @@ export function excludedNote(
 	if (filteredToAccount || !accounts.some((a) => a.exclude_from_stats)) return undefined;
 	return "Accounts you left out of your totals, and balance adjustments, are not counted here.";
 }
+
+/** The two statement days from what was typed. Both empty is fine (no statement), one without the
+ * other is not, and a day is a whole number from 1 to 31. */
+export function statementDays(
+	statement: string,
+	due: string,
+):
+	| { ok: true; statement_day: number | null; due_day: number | null }
+	| { ok: false; error: string } {
+	const a = statement.trim();
+	const b = due.trim();
+	if (a === "" && b === "") return { ok: true, statement_day: null, due_day: null };
+	if (a === "" || b === "")
+		return { ok: false, error: "Give both the day the statement closes and the day it is due." };
+	const days = [a, b].map((v) => (/^\d{1,2}$/.test(v) ? Number(v) : Number.NaN));
+	if (days.some((d) => !(d >= 1 && d <= 31)))
+		return { ok: false, error: "Days are whole numbers from 1 to 31." };
+	return { ok: true, statement_day: days[0], due_day: days[1] };
+}

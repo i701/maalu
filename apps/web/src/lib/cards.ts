@@ -29,12 +29,12 @@ export function cardsOf(cards: Card[], accountId: string) {
 }
 
 /** Paying a credit card off: a transfer from the account it is repaid from into the card's own
- * account, ready to be given an amount. Null when the card has no repayment account. */
-export function repaymentSeed(card: Card): TransactionSeed | null {
+ * account, ready to be given an amount (or starting with the one passed). Null when the card has no repayment account. */
+export function repaymentSeed(card: Card, amount = ""): TransactionSeed | null {
 	if (card.kind !== "credit" || !card.repay_account) return null;
 	return {
 		type: "transfer",
-		amount: "",
+		amount,
 		to_amount: null,
 		payment_method: "bank_transfer",
 		category: "",

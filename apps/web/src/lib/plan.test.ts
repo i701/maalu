@@ -37,6 +37,43 @@ describe("startingPoint", () => {
 	});
 });
 
+describe("planDays with credit card statements", () => {
+	const statement = (over = {}) => ({
+		account_id: "visa",
+		title: "Visa",
+		date: "2026-11-09",
+		amount: "250",
+		overdue: false,
+		...over,
+	});
+
+	it("lists a statement among the bills and takes it off the running figure", () => {
+		const days = planDays(
+			plan({
+				bills: [bill("rent", "2026-11-06", "100"), bill("wifi", "2026-11-12", "50")],
+				card_payments: [statement()],
+			}),
+		);
+		const rows = days.flatMap((d) => d.rows);
+		expect(rows.map((r) => r.title)).toEqual(["rent", "Visa card payment", "wifi"]);
+		expect(rows.map((r) => r.left)).toEqual(["700.00", "450.00", "400.00"]);
+		expect(rows[1]).toMatchObject({ kind: "card", cardId: "visa", account: null });
+		expect(rows[0].cardId).toBeNull();
+	});
+
+	it("can be where the money runs out", () => {
+		const days = planDays(plan({ card_payments: [statement({ amount: "900" })] }));
+		expect(firstShortRow(days)?.title).toBe("Visa card payment");
+	});
+
+	it("puts an overdue statement with the overdue bills", () => {
+		const days = planDays(
+			plan({ card_payments: [statement({ overdue: true, date: "2026-11-01" })] }),
+		);
+		expect(days[0]).toMatchObject({ key: "overdue", overdue: true });
+	});
+});
+
 describe("planDays", () => {
 	it("takes each bill off the running figure, in date order", () => {
 		const days = planDays(

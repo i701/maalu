@@ -4,6 +4,7 @@ import { z } from "zod";
 import AccountActions from "#/components/account/AccountActions";
 import AccountBalanceChart from "#/components/account/AccountBalanceChart";
 import AccountCards from "#/components/account/AccountCards";
+import CardStatementPanel from "#/components/account/CardStatementPanel";
 import AccountPlanned from "#/components/account/AccountPlanned";
 import AccountSummary from "#/components/account/AccountSummary";
 import AccountTransactionList from "#/components/account/AccountTransactionList";
@@ -13,6 +14,7 @@ import { RouterLink } from "#/components/RouterLinks";
 import { DEFAULT_HISTORY_RANGE, balanceMap } from "#/lib/account-detail";
 import { accountIdentity } from "#/lib/accounts";
 import { repaymentSeed } from "#/lib/cards";
+import { sumDecimals } from "#/lib/format";
 import { monthBounds, monthLabel } from "#/lib/dashboard";
 import { lastPageIfOutOfRange, pageSearch } from "#/lib/pagination";
 import { localToday } from "#/lib/planned";
@@ -22,6 +24,7 @@ import {
 	getBalanceHistoryFn,
 	getBalancesAfterFn,
 	listAccountsFn,
+	listCardStatementsFn,
 } from "#/server/accounts";
 import { listCategoriesFn } from "#/server/categories";
 import { listCurrenciesFn } from "#/server/currencies";
@@ -69,6 +72,7 @@ export const Route = createFileRoute("/_protected/accounts/$id")({
 			cards,
 			history,
 			balancesAfter,
+			statements,
 		] = await Promise.all([
 			getAccountFn({ data: { id: params.id } }),
 			listTransactionsFn({ data: { ...deps, account_id: params.id } }),
@@ -86,6 +90,7 @@ export const Route = createFileRoute("/_protected/accounts/$id")({
 			listCardsFn(),
 			getBalanceHistoryFn({ data: { id: params.id, days: deps.days ?? DEFAULT_HISTORY_RANGE } }),
 			getBalancesAfterFn({ data: { id: params.id } }),
+			listCardStatementsFn(),
 		]);
 		if (!account.ok && account.status === 404) throw notFound();
 		const rows = unwrap(list);
@@ -106,6 +111,7 @@ export const Route = createFileRoute("/_protected/accounts/$id")({
 			account: unwrap(account),
 			...rows,
 			history: unwrap(history),
+			statement: (statements.ok ? statements.data : []).find((x) => x.account_id === params.id),
 			balances: balanceMap(balancesAfter.ok ? balancesAfter.data : []),
 			totals: unwrap(totals),
 			// planned ones that touch this account, soonest first (the API already orders them)
@@ -136,13 +142,31 @@ export const Route = createFileRoute("/_protected/accounts/$id")({
 });
 
 function AccountPage() {
-	const { account, items, total, totals, planned, today, month, lists, history, balances } =
-		Route.useLoaderData();
+	const {
+		account,
+		items,
+		total,
+		totals,
+		planned,
+		today,
+		month,
+		lists,
+		history,
+		balances,
+		statement,
+	} = Route.useLoaderData();
 	const { user } = Route.useRouteContext();
 	const search = Route.useSearch();
 	const navigate = Route.useNavigate();
 	const [adding, setAdding] = useState(false);
 	const [repaying, setRepaying] = useState<Card | null>(null);
+	// the credit card on this account that has somewhere to be repaid from
+	const repayCard = lists.cards.find(
+		(c) => c.kind === "credit" && c.account.id === account.id && c.repay_account,
+	);
+	// a repayment starts at what is still to pay on the statement
+	const repayAmount =
+		statement && Number(statement.remaining) > 0 ? sumDecimals([statement.remaining]) : "";
 	const identity = accountIdentity(account);
 	const archived = account.archived_at !== null;
 
@@ -175,6 +199,12 @@ function AccountPage() {
 				baseCurrency={user.base_currency}
 				monthLabel={month}
 			/>
+			{statement && (
+				<CardStatementPanel
+					statement={statement}
+					onRepay={repayCard ? () => setRepaying(repayCard) : undefined}
+				/>
+			)}
 			<AccountBalanceChart
 				history={history}
 				days={search.days ?? DEFAULT_HISTORY_RANGE}
@@ -197,7 +227,7 @@ function AccountPage() {
 				lists={{ ...lists, baseCurrency: user.base_currency }}
 				balances={balances}
 				adding={adding || repaying !== null}
-				seed={repaying ? (repaymentSeed(repaying) ?? undefined) : undefined}
+				seed={repaying ? (repaymentSeed(repaying, repayAmount) ?? undefined) : undefined}
 				onAddingDone={() => {
 					setAdding(false);
 					setRepaying(null);

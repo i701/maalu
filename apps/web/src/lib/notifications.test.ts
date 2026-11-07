@@ -15,6 +15,9 @@ describe("KIND_META", () => {
 		expect(Object.keys(KIND_META).toSorted()).toEqual([
 			"budget_over",
 			"budget_warning",
+			"card_due",
+			"card_limit",
+			"card_overdue",
 			"goal_reached",
 			"installments_done",
 			"money_short",

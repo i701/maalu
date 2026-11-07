@@ -14,6 +14,10 @@ export function workingLine(a: AvailableToSpend): string {
 	const less: string[] = [];
 	if (a.bills.length > 0)
 		less.push(`${money(a.bills_total)} for ${plural(a.bills.length, "bill", "bills")}`);
+	if (a.card_payments.length > 0)
+		less.push(
+			`${money(a.card_payments_total)} for ${plural(a.card_payments.length, "card statement", "card statements")}`,
+		);
 	if (a.reserved.length > 0)
 		less.push(
 			`${money(a.reserved_total)} set aside for ${plural(a.reserved.length, "goal", "goals")}`,

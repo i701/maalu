@@ -9,6 +9,8 @@ const base = (over: Partial<AvailableToSpend> = {}) =>
 		accounts: [{}, {}],
 		bills: [],
 		bills_total: "0",
+		card_payments: [],
+		card_payments_total: "0",
 		reserved: [],
 		reserved_total: "0",
 		available: "5200.0000",
@@ -38,6 +40,16 @@ describe("workingLine", () => {
 			}),
 		);
 		expect(line).toMatch(/less MVR\s420\.00 for 2 bills and MVR\s1,000\.00 set aside for 1 goal$/);
+	});
+
+	it("counts credit card statements apart from bills", () => {
+		const line = workingLine(
+			base({
+				card_payments: [{}] as AvailableToSpend["card_payments"],
+				card_payments_total: "300",
+			}),
+		);
+		expect(line).toMatch(/less MVR\s300\.00 for 1 card statement$/);
 	});
 
 	it("mentions only what applies", () => {

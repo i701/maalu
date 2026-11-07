@@ -5,6 +5,7 @@ import { memo } from "react";
 import { dayLabel, type PlanDay, type PlanRow } from "#/lib/plan";
 import { formatMoney } from "#/lib/format";
 import { ACCENT } from "#/lib/m3";
+import { RouterButton } from "../RouterLinks";
 import TonalChip from "../TonalChip";
 
 /** One bill or planned income: what, from where, how much, what is left after it, and a button to
@@ -36,6 +37,7 @@ const Row = memo(function Row({
 					{row.title}
 				</Typography>
 				<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 0.25 }}>
+					{row.cardId && <TonalChip accent={ACCENT.orange} label="Credit card statement" />}
 					{income && <TonalChip accent={ACCENT.green} label="Expected · not counted" />}
 					{row.estimate && <TonalChip accent={ACCENT.amber} label="Estimate" />}
 					{row.subscription && <TonalChip accent={ACCENT.violet} label={row.subscription} />}
@@ -67,15 +69,28 @@ const Row = memo(function Row({
 					</Typography>
 				)}
 			</Box>
-			<Button
-				size="small"
-				variant="outlined"
-				color="inherit"
-				onClick={() => onPay(row.id)}
-				sx={{ gridColumn: { xs: "1 / -1", sm: "auto" }, justifySelf: { xs: "start", sm: "end" } }}
-			>
-				{income ? "Received" : row.estimate ? "Enter the real amount" : "Mark as paid"}
-			</Button>
+			{row.cardId ? (
+				<RouterButton
+					size="small"
+					variant="outlined"
+					color="inherit"
+					to="/accounts/$id"
+					params={{ id: row.cardId }}
+					sx={{ gridColumn: { xs: "1 / -1", sm: "auto" }, justifySelf: { xs: "start", sm: "end" } }}
+				>
+					Open the card
+				</RouterButton>
+			) : (
+				<Button
+					size="small"
+					variant="outlined"
+					color="inherit"
+					onClick={() => onPay(row.id)}
+					sx={{ gridColumn: { xs: "1 / -1", sm: "auto" }, justifySelf: { xs: "start", sm: "end" } }}
+				>
+					{income ? "Received" : row.estimate ? "Enter the real amount" : "Mark as paid"}
+				</Button>
+			)}
 		</Box>
 	);
 });

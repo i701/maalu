@@ -74,7 +74,7 @@ function Working({ data }: { data: AvailableToSpend }) {
 				))}
 			</Section>
 			<Section title="Still to pay">
-				{data.bills.length === 0 && (
+				{data.bills.length === 0 && data.card_payments.length === 0 && (
 					<Typography variant="body2" sx={{ color: "text.secondary" }}>
 						Nothing planned before {formatDate(data.period_end)}.
 					</Typography>
@@ -85,6 +85,15 @@ function Working({ data }: { data: AvailableToSpend }) {
 						name={b.title}
 						note={`${b.overdue ? "overdue" : formatDate(b.date)}${b.estimate ? " · estimate" : ""}`}
 						amount={b.amount}
+						currency={c}
+					/>
+				))}
+				{data.card_payments.map((x) => (
+					<Row
+						key={x.account_id}
+						name={`${x.title} card payment`}
+						note={x.overdue ? "overdue" : formatDate(x.date)}
+						amount={x.amount}
 						currency={c}
 					/>
 				))}

@@ -10,6 +10,7 @@ import {
 	groupSpendsByDefault,
 	isOwedGroup,
 	spendableValue,
+	statementDays,
 } from "./accounts";
 
 describe("accountIdentity", () => {
@@ -139,5 +140,31 @@ describe("the spend-from-this-account switch", () => {
 		expect(groupSpendsByDefault("cash")).toBe(true);
 		expect(groupSpendsByDefault("accounts")).toBe(true);
 		expect(groupSpendsByDefault("savings")).toBe(false);
+	});
+});
+
+describe("statementDays", () => {
+	it("is empty when both are empty", () => {
+		expect(statementDays("", " ")).toEqual({ ok: true, statement_day: null, due_day: null });
+	});
+
+	it("reads two whole days", () => {
+		expect(statementDays("5", " 25 ")).toEqual({ ok: true, statement_day: 5, due_day: 25 });
+	});
+
+	it("needs both or neither", () => {
+		expect(statementDays("5", "")).toMatchObject({ ok: false });
+		expect(statementDays("", "25")).toMatchObject({ ok: false });
+	});
+
+	it("refuses anything that is not a day of the month", () => {
+		for (const [a, b] of [
+			["0", "5"],
+			["5", "32"],
+			["x", "5"],
+			["5.5", "5"],
+			["-1", "5"],
+		])
+			expect(statementDays(a, b)).toMatchObject({ ok: false });
 	});
 });
