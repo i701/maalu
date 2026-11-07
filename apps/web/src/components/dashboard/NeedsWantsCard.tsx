@@ -3,9 +3,11 @@ import Typography from "@mui/material/Typography";
 import { Link } from "@tanstack/react-router";
 import { memo, useMemo } from "react";
 import { formatMoney } from "#/lib/format";
+import { formatPercent, incomeRule, targetText } from "#/lib/budget-rule";
 import { KIND_COLOR, KIND_NAMES, kindShares } from "#/lib/needs-wants";
 import type { CategoryTotals } from "#/types/api";
 import ChartCard from "../charts/ChartCard";
+import IncomeRule from "./IncomeRule";
 
 /** How much of the period's spending was needed, how much was wanted, and how much is not sorted
  * yet: one bar of the three and a line each, with a nudge to sort the rest. */
@@ -18,19 +20,28 @@ const NeedsWantsCard = memo(function NeedsWantsCard({
 }) {
 	const { currency } = categories;
 	const rows = useMemo(() => kindShares(categories.categories), [categories.categories]);
+	const rule = useMemo(() => incomeRule(categories.categories), [categories.categories]);
 	const table = useMemo(
 		() =>
 			rows
 				? {
 						head: ["Kind", "Spent", "Share"],
-						rows: rows.map((r) => [
-							KIND_NAMES[r.kind],
-							formatMoney(r.total, currency),
-							`${Math.round(r.share * 100)}%`,
-						]),
+						rows: [
+							...rows.map((r) => [
+								KIND_NAMES[r.kind],
+								formatMoney(r.total, currency),
+								`${Math.round(r.share * 100)}%`,
+							]),
+							// the 50/30/20 rows: the share here is of income, with the target in the name
+							...(rule?.rows.map((r) => [
+								`${r.label} of income (${targetText(r.key).toLowerCase()})`,
+								formatMoney(r.amount, currency),
+								formatPercent(r.percent),
+							]) ?? []),
+						],
 					}
 				: undefined,
-		[rows, currency],
+		[rows, rule, currency],
 	);
 	const unsorted = rows?.find((r) => r.kind === "unsorted");
 
@@ -95,6 +106,7 @@ const NeedsWantsCard = memo(function NeedsWantsCard({
 							</Link>
 						</Typography>
 					)}
+					{rule && <IncomeRule rule={rule} currency={currency} />}
 				</Box>
 			)}
 		</ChartCard>

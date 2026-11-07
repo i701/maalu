@@ -90,3 +90,34 @@ test("a category can be marked a want from its own form", async ({ page, request
 	await expect(page.getByRole("dialog")).toBeHidden();
 	await expect(page.getByRole("main").getByText("Want", { exact: true })).toBeVisible();
 });
+
+test("the dashboard measures needs, wants and what was kept against 50/30/20 of income", async ({
+	page,
+	request,
+}) => {
+	test.setTimeout(60_000);
+	const email = await signUp(page);
+	const api = await apiAs(request, email);
+	const { id } = await api.account("Wallet", "5000");
+	await api.post("/categories", { name: "Groceries", kind: "need" });
+	await api.post("/categories", { name: "Games", kind: "want" });
+	const base = { account_id: id, transaction_date: thisMonth() };
+	await api.transaction({ ...base, type: "income", amount: "1000.00", category: "Salary" });
+	await api.transaction({ ...base, type: "expense", amount: "300.00", category: "Groceries" });
+	await api.transaction({ ...base, type: "expense", amount: "400.00", category: "Games" });
+
+	await open(page, "/dashboard");
+	await expect(page.getByText("Against 50/30/20 of your income")).toBeVisible();
+	// needs 30% (up to 50), wants 40% (up to 30: over), kept 30% (at least 20)
+	await expect(
+		page.getByRole("img", { name: /^Needs: 30% of income, target up to 50%/ }),
+	).toBeVisible();
+	await expect(
+		page.getByRole("img", { name: /^Wants: 40% of income, target up to 30%/ }),
+	).toBeVisible();
+	await expect(
+		page.getByRole("img", { name: /^Kept: 30% of income, target at least 20%/ }),
+	).toBeVisible();
+	await expect(page.getByText("Over target")).toHaveCount(1);
+	await expect(page.getByText("On target")).toHaveCount(2);
+});
