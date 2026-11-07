@@ -2,7 +2,7 @@ import datetime as dt
 import re
 import uuid
 from decimal import Decimal
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import (
     BaseModel,
@@ -23,6 +23,7 @@ ACCOUNT_NUMBER_PATTERN = re.compile(r"^[0-9A-Za-z*-]{1,34}$")
 # Signed: negative = money owed.
 Balance = Annotated[Decimal, Field(max_digits=19, decimal_places=4)]
 CreditLimit = Annotated[Decimal, Field(max_digits=19, decimal_places=4, ge=0)]
+DayOfMonth = Annotated[int, Field(ge=1, le=31)]
 
 
 def normalize_account_number(value: str | None) -> str | None:
@@ -71,6 +72,15 @@ class AccountCreate(BaseModel):
         description="Cards and overdrafts only: the most that can be owed, in the account's "
         "currency. It changes no balance.",
     )
+    statement_day: DayOfMonth | None = Field(
+        default=None,
+        description="Credit cards only, with `due_day`: the day of the month the statement closes",
+    )
+    due_day: DayOfMonth | None = Field(
+        default=None,
+        description="Credit cards only, with `statement_day`: the day of the month the payment "
+        "for a statement is due (the first such day after it closes)",
+    )
     exclude_from_stats: bool = Field(
         default=False,
         description="Leave the account out of totals, reports, budgets and net worth",
@@ -116,6 +126,10 @@ class AccountUpdate(BaseModel):
     bank: Bank | None = None
     account_number: str | None = None
     credit_limit: CreditLimit | None = None
+    statement_day: DayOfMonth | None = Field(
+        default=None, description="`null` clears it (and `due_day` with it)"
+    )
+    due_day: DayOfMonth | None = Field(default=None, description="`null` clears it")
     exclude_from_stats: bool | None = None
     spendable: bool | None = Field(
         default=None, description="`null` goes back to what the account's group says"
@@ -160,6 +174,12 @@ class AccountResponse(BaseModel):
     account_number: str | None
     credit_limit: Decimal | None = Field(
         description="Cards and overdrafts: the most that can be owed, in the account's currency"
+    )
+    statement_day: int | None = Field(
+        description="Credit cards: the day of the month the statement closes, if set"
+    )
+    due_day: int | None = Field(
+        description="Credit cards: the day of the month its payment is due, if set"
     )
     exclude_from_stats: bool
     spendable: bool | None = Field(
@@ -221,3 +241,38 @@ class BalanceHistory(BaseModel):
 class BalanceAfter(BaseModel):
     transaction_id: uuid.UUID
     balance: Decimal = Field(description="What the account held right after this transaction")
+
+
+CardStatementState = Literal["none", "due", "overdue", "paid"]
+
+
+class CardStatement(BaseModel):
+    """Where a credit card stands against its last statement. Amounts are in the card's own
+    currency except `remaining_base`."""
+
+    account_id: uuid.UUID
+    account_name: str
+    currency: str
+    statement_day: int
+    due_day: int
+    closed_on: dt.date = Field(description="The day the latest statement closed")
+    due_on: dt.date = Field(description="When the payment for it is due")
+    next_closes_on: dt.date = Field(description="When the following statement closes")
+    statement_balance: Decimal = Field(
+        description="What was owed when it closed (0 when nothing was)"
+    )
+    paid_since: Decimal = Field(
+        description="Money put on the card since it closed: repayments, refunds, any income"
+    )
+    remaining: Decimal = Field(description="Still to pay: the statement less what was paid since")
+    remaining_base: Decimal = Field(description="`remaining` in your base currency")
+    spent_since: Decimal = Field(
+        description="Spent on the card since it closed; goes on the next statement"
+    )
+    owed_now: Decimal = Field(description="Everything owed today, the next statement included")
+    credit_limit: Decimal | None
+    state: CardStatementState = Field(
+        description="`none` nothing was owed, `paid` settled, `due` still to pay and not late, "
+        "`overdue` still to pay and past its due date"
+    )
+    days_until_due: int = Field(description="Negative once the due date has passed")

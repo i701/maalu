@@ -7,6 +7,7 @@ from app.services.account import (
     AccountNumberTakenError,
     AccountService,
     AccountSpendableError,
+    AccountStatementError,
 )
 from app.services.attachment import (
     AttachmentNotFoundError,
@@ -91,6 +92,7 @@ __all__ = [
     "AccountNumberTakenError",
     "AccountService",
     "AccountSpendableError",
+    "AccountStatementError",
     "AttachmentNotFoundError",
     "AttachmentRuleError",
     "AttachmentService",

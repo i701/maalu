@@ -7,6 +7,7 @@ from sqlalchemy import (
     DateTime,
     Enum,
     ForeignKey,
+    Integer,
     Numeric,
     String,
     Text,
@@ -65,6 +66,10 @@ class Account(Base):
     # Cards and overdrafts only: the most that can be owed, in the account's currency. It changes
     # no balance; it only says how much of the limit is used.
     credit_limit: Mapped[Decimal | None] = mapped_column(Numeric(19, 4), default=None)
+    # Credit cards only, both or neither: the day of the month the statement closes and the day
+    # the payment for it is due. Nothing is stored about a statement; it is worked out.
+    statement_day: Mapped[int | None] = mapped_column(Integer, default=None)
+    due_day: Mapped[int | None] = mapped_column(Integer, default=None)
     # An account that is not really the user's (a card managed for someone else, an old account kept
     # for reference): its own balance and transactions stay, but it is left out of the totals, the
     # reports, the budget and net worth.

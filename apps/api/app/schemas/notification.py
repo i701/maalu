@@ -13,6 +13,9 @@ NotificationKind = Literal[
     "goal_reached",
     "split_waiting",
     "money_short",
+    "card_due",
+    "card_overdue",
+    "card_limit",
 ]
 
 

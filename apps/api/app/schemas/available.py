@@ -1,3 +1,4 @@
+import datetime as dt
 import uuid
 from datetime import date
 from decimal import Decimal
@@ -26,6 +27,14 @@ class AvailableBill(BaseModel):
     )
 
 
+class AvailableCardPayment(BaseModel):
+    account_id: uuid.UUID
+    title: str = Field(description="The card's name")
+    date: dt.date = Field(description="When the payment for its last statement is due")
+    amount: Decimal = Field(description="Still to pay of that statement, in your base currency")
+    overdue: bool = Field(description="Its due date has passed and it is not paid")
+
+
 class AvailableReserve(BaseModel):
     goal_id: uuid.UUID
     name: str
@@ -50,12 +59,18 @@ class AvailableToSpend(BaseModel):
         "overdue ones first, then by date"
     )
     bills_total: Decimal
+    card_payments: list[AvailableCardPayment] = Field(
+        description="Credit card statements still to pay that fall due by the end of the period "
+        "(overdue ones first). Spending since a statement closed is not here: it is not due yet."
+    )
+    card_payments_total: Decimal
     reserved: list[AvailableReserve] = Field(
         description="Goals tracked by hand: what you set aside is not yours to spend"
     )
     reserved_total: Decimal
     available: Decimal = Field(
-        description="balance - bills_total - reserved_total. Below zero means you are short."
+        description="balance - bills_total - card_payments_total - reserved_total. Below zero "
+        "means you are short."
     )
     expected_income: Decimal = Field(
         description="Planned income up to the end of the period (a salary not yet received). It "

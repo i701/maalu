@@ -5,6 +5,7 @@ from decimal import Decimal
 from sqlalchemy import case, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app import card_cycle
 from app.enums import (
     CREDIT_LIMIT_GROUPS,
     LIABILITY_GROUPS,
@@ -21,6 +22,7 @@ from app.schemas import (
     AccountUpdate,
     BalanceAfter,
     BalanceHistory,
+    CardStatement,
 )
 from app.services.exchange_rate import MarketRateUnavailableError, market_rate
 from app.services.money import BASE_AMOUNT_QUANTUM, price_in_base
@@ -54,6 +56,10 @@ class AccountLimitError(Exception):
 
 class AccountSpendableError(Exception):
     """An account that is owed money (a card, overdraft or loan) can't be everyday money."""
+
+
+class AccountStatementError(Exception):
+    """Statement days on something that is not a credit card, or only one of the two."""
 
 
 class AccountHasTransactionsError(Exception):
@@ -138,6 +144,13 @@ class AccountService:
             raise AccountLimitError
 
     @staticmethod
+    def _check_statement(group: AccountGroup, statement_day: int | None, due_day: int | None):
+        if (statement_day is None) != (due_day is None):
+            raise AccountStatementError("Give both the statement day and the due day, or neither")
+        if statement_day is not None and group is not AccountGroup.CARD:
+            raise AccountStatementError("Only credit cards have a statement")
+
+    @staticmethod
     def _check_spendable(group: AccountGroup, spendable: bool | None) -> None:
         if spendable and group in LIABILITY_GROUPS:
             raise AccountSpendableError
@@ -154,6 +167,7 @@ class AccountService:
 
     async def create(self, user_id: uuid.UUID, data: AccountCreate) -> Account:
         self._check_limit(data.group, data.credit_limit)
+        self._check_statement(data.group, data.statement_day, data.due_day)
         self._check_spendable(data.group, data.spendable)
         await self._check_number(user_id, data.account_number)
         base = await self._base_currency(user_id)
@@ -172,6 +186,8 @@ class AccountService:
             bank=data.bank,
             account_number=data.account_number,
             credit_limit=data.credit_limit,
+            statement_day=data.statement_day,
+            due_day=data.due_day,
             exclude_from_stats=data.exclude_from_stats,
             spendable=data.spendable,
             auto_rate=data.auto_rate,
@@ -215,6 +231,15 @@ class AccountService:
             self._check_limit(group, changes["credit_limit"])
         elif group not in CREDIT_LIMIT_GROUPS:
             changes["credit_limit"] = None  # moved out of cards and overdrafts: no limit any more
+        if group is not AccountGroup.CARD and not changes.keys() & {"statement_day", "due_day"}:
+            changes["statement_day"] = changes["due_day"] = None  # no longer a card: no statement
+        elif changes.get("statement_day", 0) is None and "due_day" not in changes:
+            changes["due_day"] = None  # clearing the statement day clears the due day with it
+        self._check_statement(
+            group,
+            changes.get("statement_day", account.statement_day),
+            changes.get("due_day", account.due_day),
+        )
         spendable = changes.get("spendable", account.spendable)
         if group in LIABILITY_GROUPS and "spendable" not in changes:
             changes["spendable"] = None  # moved to what is owed: no everyday-money choice left
@@ -308,6 +333,8 @@ class AccountService:
                     bank=a.bank,
                     account_number=a.account_number,
                     credit_limit=a.credit_limit,
+                    statement_day=a.statement_day,
+                    due_day=a.due_day,
                     exclude_from_stats=a.exclude_from_stats,
                     spendable=a.spendable,
                     counts_as_spendable=is_spendable(a.group, a.spendable),
@@ -386,6 +413,66 @@ class AccountService:
             balance += delta
             out.append(BalanceAfter(transaction_id=tid, balance=balance))
         return out[-limit:]
+
+    async def statement(self, account: Account, today: date | None = None) -> CardStatement:
+        """Where a credit card stands against the statement that last closed. What was owed on
+        the closing day is the statement; repayments, refunds and income since then are taken
+        off it, and spending since then waits for the next one."""
+        today = today or date.today()
+        assert account.statement_day is not None
+        assert account.due_day is not None
+        closed_on = card_cycle.last_close(today, account.statement_day)
+        due_on = card_cycle.due_date(closed_on, account.due_day)
+        at_close = account.opening_amount
+        paid = spent = Decimal(0)
+        for _, day, delta in await self._movements(account):
+            if day <= closed_on:
+                at_close += delta
+            elif day <= today:
+                if delta > 0:
+                    paid += delta
+                else:
+                    spent -= delta
+        owed_then = max(Decimal(0), -at_close)
+        remaining = max(Decimal(0), owed_then - paid)
+        if owed_then == 0:
+            state = "none"
+        elif remaining == 0:
+            state = "paid"
+        else:
+            state = "overdue" if today > due_on else "due"
+        owed_now = max(Decimal(0), -(at_close + paid - spent))
+        return CardStatement(
+            account_id=account.id,
+            account_name=account.name,
+            currency=account.currency,
+            statement_day=account.statement_day,
+            due_day=account.due_day,
+            closed_on=closed_on,
+            due_on=due_on,
+            next_closes_on=card_cycle.next_close(today, account.statement_day),
+            statement_balance=owed_then,
+            paid_since=paid,
+            remaining=remaining,
+            remaining_base=(remaining * account.exchange_rate).quantize(BASE_AMOUNT_QUANTUM),
+            spent_since=spent,
+            owed_now=owed_now,
+            credit_limit=account.credit_limit,
+            state=state,
+            days_until_due=(due_on - today).days,
+        )
+
+    async def statements(
+        self, user_id: uuid.UUID, today: date | None = None
+    ) -> list[CardStatement]:
+        """The statement of every credit card in use that has its days set, soonest due first."""
+        accounts = await self.list_for_user(user_id)
+        found = [
+            await self.statement(a, today)
+            for a in accounts
+            if a.group is AccountGroup.CARD and a.statement_day is not None
+        ]
+        return sorted(found, key=lambda s: (s.due_on, s.account_name))
 
     async def summary(self, user_id: uuid.UUID) -> AccountSummary:
         # an account excluded from the stats is not part of what you are worth

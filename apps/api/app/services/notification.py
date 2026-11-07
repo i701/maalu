@@ -8,12 +8,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.enums import SplitTaskStatus, SubscriptionStatus
 from app.models import Notification, SalarySplitTask, Subscription, Transaction, User
+from app.services.account import AccountService
 from app.services.available import AvailableService
 from app.services.budget import BudgetService
 from app.services.goal import GoalService
 
 DUE_SOON_DAYS = 3  # a planned payment is "due soon" this many days ahead, and on the day
 MAX_REMIND_DAYS = 60  # the longest lead a subscription can ask for (see RemindDays)
+CARD_LIMIT_PERCENT = 90  # a card this full (of its limit) is told about, once a month
 KEEP_DAYS = 90  # notifications older than this are swept
 # Looking for new notifications costs a few queries, and every page asks for the unread count, so
 # a user's data is looked at once in a while, not on every request. The daily job ignores this.
@@ -168,20 +170,55 @@ class NotificationService:
         if not plan.accounts:
             return 0  # no everyday account yet: there is nothing to run short of
         running = plan.balance - plan.reserved_total
-        for bill in plan.bills:
-            running -= bill.amount
+        # bills and card statements together, overdue first, then by date
+        owed = [(b.overdue, b.date, b.title, b.id, b.amount, b.title) for b in plan.bills]
+        owed += [
+            (c.overdue, c.date, c.title, c.account_id, c.amount, f"{c.title} card payment")
+            for c in plan.card_payments
+        ]
+        owed.sort(key=lambda o: (not o[0], o[1], o[2]))
+        for _, when, _, key, amount, name in owed:
+            running -= amount
             if running < 0:
                 return await self._add(
                     user.id,
                     known,
                     kind="money_short",
-                    title=f"The money runs out at {bill.title}",
-                    body=f"Short by {_money(-running, plan.currency)} after it, due "
-                    f"{bill.date:%d %b}",
+                    title=f"The money runs out at {name}",
+                    body=f"Short by {_money(-running, plan.currency)} after it, due {when:%d %b}",
                     link="/plan",
-                    dedupe_key=f"short:{plan.period_start}:{bill.id}",
+                    dedupe_key=f"short:{plan.period_start}:{key}",
                 )
         return 0
+
+    async def _cards(self, user: User, known: set[str], today: date) -> int:
+        """Credit card statements that are due soon or late, and cards close to their limit."""
+        made = 0
+        for c in await AccountService(self.db).statements(user.id, today):
+            if c.remaining > 0 and c.days_until_due <= DUE_SOON_DAYS:
+                late = c.state == "overdue"
+                made += await self._add(
+                    user.id,
+                    known,
+                    kind="card_overdue" if late else "card_due",
+                    title=f"{c.account_name} payment {_when(c.days_until_due)}",
+                    body=f"{_money(c.remaining, c.currency)} left of the statement "
+                    f"({_money(c.statement_balance, c.currency)})",
+                    link=f"/accounts/{c.account_id}",
+                    dedupe_key=f"card-{'overdue' if late else 'due'}:{c.account_id}:{c.closed_on}",
+                )
+            if c.credit_limit and c.owed_now * 100 >= c.credit_limit * CARD_LIMIT_PERCENT:
+                made += await self._add(
+                    user.id,
+                    known,
+                    kind="card_limit",
+                    title=f"{c.account_name} is close to its limit",
+                    body=f"{_money(c.owed_now, c.currency)} owed of "
+                    f"{_money(c.credit_limit, c.currency)}",
+                    link=f"/accounts/{c.account_id}",
+                    dedupe_key=f"card-limit:{c.account_id}:{today:%Y-%m}",
+                )
+        return made
 
     async def _split_waiting(self, user: User, known: set[str]) -> int:
         """A posted salary whose split is waiting for approval on the Pending screen."""
@@ -223,6 +260,7 @@ class NotificationService:
             made += await self._installments(user, known)
             made += await self._split_waiting(user, known)
             made += await self._money_short(user, known)
+            made += await self._cards(user, known, today)
         if user.notify_budget:
             made += await self._budget(user, known)
         if user.notify_goals:

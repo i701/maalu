@@ -8,6 +8,7 @@ from app.schemas.account import (
     AccountUpdate,
     BalanceAfter,
     BalanceHistory,
+    CardStatement,
 )
 from app.schemas.attachment import AttachmentResponse
 from app.schemas.backup import BackupRestored
@@ -152,6 +153,7 @@ __all__ = [
     "CardCreate",
     "CardRef",
     "CardResponse",
+    "CardStatement",
     "CardUpdate",
     "CategoryCreate",
     "CategoryKindBulk",

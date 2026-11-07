@@ -155,6 +155,20 @@
             ],
             "title": "Description"
           },
+          "due_day": {
+            "anyOf": [
+              {
+                "maximum": 31.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Credit cards only, with `statement_day`: the day of the month the payment for a statement is due (the first such day after it closes)",
+            "title": "Due Day"
+          },
           "exchange_rate": {
             "anyOf": [
               {
@@ -209,6 +223,20 @@
             ],
             "description": "Whether this is everyday money for available-to-spend. Leave out to follow the account's group (cash, bank accounts and prepaid are). Not for cards, overdrafts or loans.",
             "title": "Spendable"
+          },
+          "statement_day": {
+            "anyOf": [
+              {
+                "maximum": 31.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Credit cards only, with `due_day`: the day of the month the statement closes",
+            "title": "Statement Day"
           }
         },
         "required": [
@@ -380,6 +408,18 @@
             ],
             "title": "Description"
           },
+          "due_day": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Credit cards: the day of the month its payment is due, if set",
+            "title": "Due Day"
+          },
           "exchange_rate": {
             "title": "Exchange Rate",
             "type": "string"
@@ -420,6 +460,18 @@
             "description": "Your own choice, or null to follow the group (see `counts_as_spendable`)",
             "title": "Spendable"
           },
+          "statement_day": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Credit cards: the day of the month the statement closes, if set",
+            "title": "Statement Day"
+          },
           "transaction_count": {
             "title": "Transaction Count",
             "type": "integer"
@@ -436,6 +488,8 @@
           "bank",
           "account_number",
           "credit_limit",
+          "statement_day",
+          "due_day",
           "exclude_from_stats",
           "spendable",
           "counts_as_spendable",
@@ -555,6 +609,20 @@
             ],
             "title": "Description"
           },
+          "due_day": {
+            "anyOf": [
+              {
+                "maximum": 31.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "`null` clears it",
+            "title": "Due Day"
+          },
           "exchange_rate": {
             "anyOf": [
               {
@@ -629,6 +697,20 @@
             ],
             "description": "`null` goes back to what the account's group says",
             "title": "Spendable"
+          },
+          "statement_day": {
+            "anyOf": [
+              {
+                "maximum": 31.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "`null` clears it (and `due_day` with it)",
+            "title": "Statement Day"
           }
         },
         "title": "AccountUpdate",
@@ -775,6 +857,45 @@
         "title": "AvailableBill",
         "type": "object"
       },
+      "AvailableCardPayment": {
+        "properties": {
+          "account_id": {
+            "format": "uuid",
+            "title": "Account Id",
+            "type": "string"
+          },
+          "amount": {
+            "description": "Still to pay of that statement, in your base currency",
+            "title": "Amount",
+            "type": "string"
+          },
+          "date": {
+            "description": "When the payment for its last statement is due",
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "overdue": {
+            "description": "Its due date has passed and it is not paid",
+            "title": "Overdue",
+            "type": "boolean"
+          },
+          "title": {
+            "description": "The card's name",
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "account_id",
+          "title",
+          "date",
+          "amount",
+          "overdue"
+        ],
+        "title": "AvailableCardPayment",
+        "type": "object"
+      },
       "AvailableReserve": {
         "properties": {
           "amount": {
@@ -812,7 +933,7 @@
             "type": "array"
           },
           "available": {
-            "description": "balance - bills_total - reserved_total. Below zero means you are short.",
+            "description": "balance - bills_total - card_payments_total - reserved_total. Below zero means you are short.",
             "title": "Available",
             "type": "string"
           },
@@ -831,6 +952,18 @@
           },
           "bills_total": {
             "title": "Bills Total",
+            "type": "string"
+          },
+          "card_payments": {
+            "description": "Credit card statements still to pay that fall due by the end of the period (overdue ones first). Spending since a statement closed is not here: it is not due yet.",
+            "items": {
+              "$ref": "#/components/schemas/AvailableCardPayment"
+            },
+            "title": "Card Payments",
+            "type": "array"
+          },
+          "card_payments_total": {
+            "title": "Card Payments Total",
             "type": "string"
           },
           "currency": {
@@ -896,6 +1029,8 @@
           "balance",
           "bills",
           "bills_total",
+          "card_payments",
+          "card_payments_total",
           "reserved",
           "reserved_total",
           "available",
@@ -2274,6 +2409,128 @@
           "created_at"
         ],
         "title": "CardResponse",
+        "type": "object"
+      },
+      "CardStatement": {
+        "description": "Where a credit card stands against its last statement. Amounts are in the card's own\ncurrency except `remaining_base`.",
+        "properties": {
+          "account_id": {
+            "format": "uuid",
+            "title": "Account Id",
+            "type": "string"
+          },
+          "account_name": {
+            "title": "Account Name",
+            "type": "string"
+          },
+          "closed_on": {
+            "description": "The day the latest statement closed",
+            "format": "date",
+            "title": "Closed On",
+            "type": "string"
+          },
+          "credit_limit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Credit Limit"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "days_until_due": {
+            "description": "Negative once the due date has passed",
+            "title": "Days Until Due",
+            "type": "integer"
+          },
+          "due_day": {
+            "title": "Due Day",
+            "type": "integer"
+          },
+          "due_on": {
+            "description": "When the payment for it is due",
+            "format": "date",
+            "title": "Due On",
+            "type": "string"
+          },
+          "next_closes_on": {
+            "description": "When the following statement closes",
+            "format": "date",
+            "title": "Next Closes On",
+            "type": "string"
+          },
+          "owed_now": {
+            "description": "Everything owed today, the next statement included",
+            "title": "Owed Now",
+            "type": "string"
+          },
+          "paid_since": {
+            "description": "Money put on the card since it closed: repayments, refunds, any income",
+            "title": "Paid Since",
+            "type": "string"
+          },
+          "remaining": {
+            "description": "Still to pay: the statement less what was paid since",
+            "title": "Remaining",
+            "type": "string"
+          },
+          "remaining_base": {
+            "description": "`remaining` in your base currency",
+            "title": "Remaining Base",
+            "type": "string"
+          },
+          "spent_since": {
+            "description": "Spent on the card since it closed; goes on the next statement",
+            "title": "Spent Since",
+            "type": "string"
+          },
+          "state": {
+            "description": "`none` nothing was owed, `paid` settled, `due` still to pay and not late, `overdue` still to pay and past its due date",
+            "enum": [
+              "none",
+              "due",
+              "overdue",
+              "paid"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "statement_balance": {
+            "description": "What was owed when it closed (0 when nothing was)",
+            "title": "Statement Balance",
+            "type": "string"
+          },
+          "statement_day": {
+            "title": "Statement Day",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "account_id",
+          "account_name",
+          "currency",
+          "statement_day",
+          "due_day",
+          "closed_on",
+          "due_on",
+          "next_closes_on",
+          "statement_balance",
+          "paid_since",
+          "remaining",
+          "remaining_base",
+          "spent_since",
+          "owed_now",
+          "credit_limit",
+          "state",
+          "days_until_due"
+        ],
+        "title": "CardStatement",
         "type": "object"
       },
       "CardUpdate": {
@@ -4388,7 +4645,10 @@
               "budget_over",
               "goal_reached",
               "split_waiting",
-              "money_short"
+              "money_short",
+              "card_due",
+              "card_overdue",
+              "card_limit"
             ],
             "title": "Kind",
             "type": "string"
@@ -8658,6 +8918,37 @@
         ]
       }
     },
+    "/api/v1/accounts/statements": {
+      "get": {
+        "description": "Where each credit card with its statement days set stands against its last statement,\nsoonest due first.",
+        "operationId": "card_statements_api_v1_accounts_statements_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CardStatement"
+                  },
+                  "title": "Response Card Statements Api V1 Accounts Statements Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Card Statements",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
     "/api/v1/accounts/summary": {
       "get": {
         "description": "Assets, liabilities and total in your base currency.",
@@ -9060,6 +9351,55 @@
           }
         ],
         "summary": "Balances After",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/api/v1/accounts/{account_id}/statement": {
+      "get": {
+        "description": "One credit card against its last statement. 422 for an account with no statement days.",
+        "operationId": "card_statement_api_v1_accounts__account_id__statement_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "account_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Account Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardStatement"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Card Statement",
         "tags": [
           "accounts"
         ]

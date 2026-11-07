@@ -11,9 +11,11 @@ from app.models import Transaction, User
 from app.schemas.available import (
     AvailableAccount,
     AvailableBill,
+    AvailableCardPayment,
     AvailableReserve,
     AvailableToSpend,
 )
+from app.services.account import AccountService
 from app.services.budget import BudgetService
 from app.services.goal import GoalService
 from app.services.stats import StatsService
@@ -88,6 +90,22 @@ class AvailableService:
         expected = sum((c.amount for c in coming), ZERO)
         bills.sort(key=lambda b: (not b.overdue, b.date, b.title))
 
+        # Credit card statements still to pay by the end of the period. What was spent since a
+        # statement closed is not due yet, so it is not here.
+        in_scope = {a.id for a in accounts}
+        cards = [
+            AvailableCardPayment(
+                account_id=c.account_id,
+                title=c.account_name,
+                date=c.due_on,
+                amount=c.remaining_base,
+                overdue=c.state == "overdue",
+            )
+            for c in await AccountService(self.db).statements(user_id, today)
+            if c.account_id in in_scope and c.remaining > 0 and c.due_on <= end
+        ]
+        cards.sort(key=lambda c: (not c.overdue, c.date, c.title))
+
         reserved = [
             AvailableReserve(goal_id=g.id, name=g.name, amount=g.saved)
             for g in goals
@@ -95,6 +113,7 @@ class AvailableService:
         ]
         balance = sum((a.balance for a in spendable), ZERO)
         bills_total = sum((b.amount for b in bills), ZERO)
+        cards_total = sum((c.amount for c in cards), ZERO)
         reserved_total = sum((r.amount for r in reserved), ZERO)
         return AvailableToSpend(
             currency=user.base_currency,
@@ -105,9 +124,11 @@ class AvailableService:
             balance=balance,
             bills=bills,
             bills_total=bills_total,
+            card_payments=cards,
+            card_payments_total=cards_total,
             reserved=reserved,
             reserved_total=reserved_total,
-            available=balance - bills_total - reserved_total,
+            available=balance - bills_total - cards_total - reserved_total,
             expected_income=expected,
             expected=coming,
             kept_apart=apart,

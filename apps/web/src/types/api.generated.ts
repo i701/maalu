@@ -27,6 +27,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/accounts/statements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Card Statements
+         * @description Where each credit card with its statement days set stands against its last statement,
+         *     soonest due first.
+         */
+        get: operations["card_statements_api_v1_accounts_statements_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/accounts/summary": {
         parameters: {
             query?: never;
@@ -146,6 +167,26 @@ export interface paths {
          *     balance for a statement-style list). Planned and trashed transactions have none.
          */
         get: operations["balances_after_api_v1_accounts__account_id__balances_after_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/accounts/{account_id}/statement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Card Statement
+         * @description One credit card against its last statement. 422 for an account with no statement days.
+         */
+        get: operations["card_statement_api_v1_accounts__account_id__statement_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2284,6 +2325,11 @@ export interface components {
             /** Description */
             description?: string | null;
             /**
+             * Due Day
+             * @description Credit cards only, with `statement_day`: the day of the month the payment for a statement is due (the first such day after it closes)
+             */
+            due_day?: number | null;
+            /**
              * Exchange Rate
              * @description Base-currency units per 1 unit of `currency`. Required when `currency` differs from your base currency.
              */
@@ -2307,6 +2353,11 @@ export interface components {
              * @description Whether this is everyday money for available-to-spend. Leave out to follow the account's group (cash, bank accounts and prepaid are). Not for cards, overdrafts or loans.
              */
             spendable?: boolean | null;
+            /**
+             * Statement Day
+             * @description Credit cards only, with `due_day`: the day of the month the statement closes
+             */
+            statement_day?: number | null;
         };
         /**
          * AccountGroup
@@ -2377,6 +2428,11 @@ export interface components {
             currency: string;
             /** Description */
             description: string | null;
+            /**
+             * Due Day
+             * @description Credit cards: the day of the month its payment is due, if set
+             */
+            due_day: number | null;
             /** Exchange Rate */
             exchange_rate: string;
             /** Exclude From Stats */
@@ -2398,6 +2454,11 @@ export interface components {
              * @description Your own choice, or null to follow the group (see `counts_as_spendable`)
              */
             spendable: boolean | null;
+            /**
+             * Statement Day
+             * @description Credit cards: the day of the month the statement closes, if set
+             */
+            statement_day: number | null;
             /** Transaction Count */
             transaction_count: number;
         };
@@ -2432,6 +2493,11 @@ export interface components {
             currency?: string | null;
             /** Description */
             description?: string | null;
+            /**
+             * Due Day
+             * @description `null` clears it
+             */
+            due_day?: number | null;
             /** Exchange Rate */
             exchange_rate?: number | string | null;
             /** Exclude From Stats */
@@ -2446,6 +2512,11 @@ export interface components {
              * @description `null` goes back to what the account's group says
              */
             spendable?: boolean | null;
+            /**
+             * Statement Day
+             * @description `null` clears it (and `due_day` with it)
+             */
+            statement_day?: number | null;
         };
         /** AttachmentResponse */
         AttachmentResponse: {
@@ -2532,6 +2603,35 @@ export interface components {
              */
             title: string;
         };
+        /** AvailableCardPayment */
+        AvailableCardPayment: {
+            /**
+             * Account Id
+             * Format: uuid
+             */
+            account_id: string;
+            /**
+             * Amount
+             * @description Still to pay of that statement, in your base currency
+             */
+            amount: string;
+            /**
+             * Date
+             * Format: date
+             * @description When the payment for its last statement is due
+             */
+            date: string;
+            /**
+             * Overdue
+             * @description Its due date has passed and it is not paid
+             */
+            overdue: boolean;
+            /**
+             * Title
+             * @description The card's name
+             */
+            title: string;
+        };
         /** AvailableReserve */
         AvailableReserve: {
             /**
@@ -2560,7 +2660,7 @@ export interface components {
             accounts: components["schemas"]["AvailableAccount"][];
             /**
              * Available
-             * @description balance - bills_total - reserved_total. Below zero means you are short.
+             * @description balance - bills_total - card_payments_total - reserved_total. Below zero means you are short.
              */
             available: string;
             /**
@@ -2575,6 +2675,13 @@ export interface components {
             bills: components["schemas"]["AvailableBill"][];
             /** Bills Total */
             bills_total: string;
+            /**
+             * Card Payments
+             * @description Credit card statements still to pay that fall due by the end of the period (overdue ones first). Spending since a statement closed is not here: it is not due yet.
+             */
+            card_payments: components["schemas"]["AvailableCardPayment"][];
+            /** Card Payments Total */
+            card_payments_total: string;
             /** Currency */
             currency: string;
             /**
@@ -3240,6 +3347,87 @@ export interface components {
             /** Name */
             name: string;
             repay_account: components["schemas"]["AccountRef"] | null;
+        };
+        /**
+         * CardStatement
+         * @description Where a credit card stands against its last statement. Amounts are in the card's own
+         *     currency except `remaining_base`.
+         */
+        CardStatement: {
+            /**
+             * Account Id
+             * Format: uuid
+             */
+            account_id: string;
+            /** Account Name */
+            account_name: string;
+            /**
+             * Closed On
+             * Format: date
+             * @description The day the latest statement closed
+             */
+            closed_on: string;
+            /** Credit Limit */
+            credit_limit: string | null;
+            /** Currency */
+            currency: string;
+            /**
+             * Days Until Due
+             * @description Negative once the due date has passed
+             */
+            days_until_due: number;
+            /** Due Day */
+            due_day: number;
+            /**
+             * Due On
+             * Format: date
+             * @description When the payment for it is due
+             */
+            due_on: string;
+            /**
+             * Next Closes On
+             * Format: date
+             * @description When the following statement closes
+             */
+            next_closes_on: string;
+            /**
+             * Owed Now
+             * @description Everything owed today, the next statement included
+             */
+            owed_now: string;
+            /**
+             * Paid Since
+             * @description Money put on the card since it closed: repayments, refunds, any income
+             */
+            paid_since: string;
+            /**
+             * Remaining
+             * @description Still to pay: the statement less what was paid since
+             */
+            remaining: string;
+            /**
+             * Remaining Base
+             * @description `remaining` in your base currency
+             */
+            remaining_base: string;
+            /**
+             * Spent Since
+             * @description Spent on the card since it closed; goes on the next statement
+             */
+            spent_since: string;
+            /**
+             * State
+             * @description `none` nothing was owed, `paid` settled, `due` still to pay and not late, `overdue` still to pay and past its due date
+             * @enum {string}
+             */
+            state: "none" | "due" | "overdue" | "paid";
+            /**
+             * Statement Balance
+             * @description What was owed when it closed (0 when nothing was)
+             */
+            statement_balance: string;
+            /** Statement Day */
+            statement_day: number;
         };
         /**
          * CardUpdate
@@ -4164,7 +4352,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "payment_due" | "payment_overdue" | "installments_done" | "budget_warning" | "budget_over" | "goal_reached" | "split_waiting" | "money_short";
+            kind: "payment_due" | "payment_overdue" | "installments_done" | "budget_warning" | "budget_over" | "goal_reached" | "split_waiting" | "money_short" | "card_due" | "card_overdue" | "card_limit";
             /**
              * Link
              * @description A page of the app to open for it
@@ -5857,6 +6045,26 @@ export interface operations {
             };
         };
     };
+    card_statements_api_v1_accounts_statements_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardStatement"][];
+                };
+            };
+        };
+    };
     account_summary_api_v1_accounts_summary_get: {
         parameters: {
             query?: never;
@@ -6092,6 +6300,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BalanceAfter"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    card_statement_api_v1_accounts__account_id__statement_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardStatement"];
                 };
             };
             /** @description Validation Error */
@@ -10460,6 +10699,7 @@ export const budgetFixedLineStatusValues: ReadonlyArray<FlattenedDeepRequired<co
 export const budgetLineResponseStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BudgetLineResponse"]["status"]> = ["ok", "warning", "over"];
 export const budgetTotalsStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BudgetTotals"]["status"]> = ["ok", "warning", "over"];
 export const cardKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CardKind"]> = ["debit", "credit"];
+export const cardStatementStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CardStatement"]["state"]> = ["none", "due", "overdue", "paid"];
 export const categoryCreateColorAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CategoryCreate"]["color"]> = ["blue", "green", "orange", "violet", "pink", "amber", "lime", "slate"];
 export const categoryKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CategoryKind"]> = ["need", "want"];
 export const categoryMonthRowTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["CategoryMonthRow"]["type"]> = ["income", "expense"];
@@ -10471,7 +10711,7 @@ export const importRowInTypeValues: ReadonlyArray<FlattenedDeepRequired<componen
 export const importSkippedOutcomeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImportSkipped"]["outcome"]> = ["skipped", "failed"];
 export const intervalUnitValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["IntervalUnit"]> = ["week", "month", "year"];
 export const netWorthDriverKeyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NetWorthDriver"]["key"]> = ["income", "spending", "adjustments", "transfers", "exchange_rates"];
-export const notificationResponseKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NotificationResponse"]["kind"]> = ["payment_due", "payment_overdue", "installments_done", "budget_warning", "budget_over", "goal_reached", "split_waiting", "money_short"];
+export const notificationResponseKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NotificationResponse"]["kind"]> = ["payment_due", "payment_overdue", "installments_done", "budget_warning", "budget_over", "goal_reached", "split_waiting", "money_short", "card_due", "card_overdue", "card_limit"];
 export const paymentMethodValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PaymentMethod"]> = ["cash", "bank_transfer", "debit_card", "credit_card", "other"];
 export const previewRowDuplicateAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PreviewRow"]["duplicate"]> = ["reference", "transfer", "possible"];
 export const previewRowTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PreviewRow"]["type"]> = ["income", "expense"];

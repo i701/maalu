@@ -14,6 +14,7 @@ from app.schemas import (
     AccountUpdate,
     BalanceAfter,
     BalanceHistory,
+    CardStatement,
     TransactionResponse,
 )
 from app.services import (
@@ -22,6 +23,7 @@ from app.services import (
     AccountLimitError,
     AccountNumberTakenError,
     AccountSpendableError,
+    AccountStatementError,
     ExchangeRateRequiredError,
     TransactionRuleError,
 )
@@ -46,6 +48,10 @@ _NO_LIMIT = HTTPException(
 )
 
 
+def _bad_statement(exc: AccountStatementError) -> HTTPException:
+    return HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc))
+
+
 def _number_taken(exc: AccountNumberTakenError) -> HTTPException:
     return HTTPException(
         status.HTTP_409_CONFLICT, f'The account "{exc.name}" already has this account number'
@@ -68,6 +74,8 @@ async def create_account(data: AccountCreate, user_id: CurrentUserId, service: A
         raise _NO_LIMIT from None
     except AccountSpendableError:
         raise _NO_SPENDABLE from None
+    except AccountStatementError as exc:
+        raise _bad_statement(exc) from None
     except AccountAutoRateError:
         raise _NO_AUTO_RATE from None
     return await _present_one(service, account)
@@ -99,6 +107,26 @@ async def list_accounts(
 async def account_summary(user_id: CurrentUserId, service: AccountServiceDep):
     """Assets, liabilities and total in your base currency."""
     return await service.summary(user_id)
+
+
+@router.get("/statements", response_model=list[CardStatement])
+async def card_statements(user_id: CurrentUserId, service: AccountServiceDep):
+    """Where each credit card with its statement days set stands against its last statement,
+    soonest due first."""
+    return await service.statements(user_id)
+
+
+@router.get("/{account_id}/statement", response_model=CardStatement)
+async def card_statement(account_id: uuid.UUID, user_id: CurrentUserId, service: AccountServiceDep):
+    """One credit card against its last statement. 422 for an account with no statement days."""
+    account = await service.get(user_id, account_id)
+    if account is None:
+        raise _NOT_FOUND
+    if account.statement_day is None:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT, "This account has no statement days set"
+        )
+    return await service.statement(account)
 
 
 @router.get("/{account_id}/balance-history", response_model=BalanceHistory)
@@ -158,6 +186,8 @@ async def update_account(
         raise _NO_LIMIT from None
     except AccountSpendableError:
         raise _NO_SPENDABLE from None
+    except AccountStatementError as exc:
+        raise _bad_statement(exc) from None
     except AccountAutoRateError:
         raise _NO_AUTO_RATE from None
     except AccountHasTransactionsError:
