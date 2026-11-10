@@ -233,6 +233,97 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/api-keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Keys
+         * @description Your API keys, newest first. A secret is never shown again after it was made.
+         */
+        get: operations["list_keys_api_v1_api_keys_get"];
+        put?: never;
+        /**
+         * Create Key
+         * @description Make a key. Its secret is in the answer, **once**: copy it now.
+         */
+        post: operations["create_key_api_v1_api_keys_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/api-keys/scopes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Scope Catalog
+         * @description The permissions a key can hold, and the roles that bundle them (for the form).
+         */
+        get: operations["scope_catalog_api_v1_api_keys_scopes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/api-keys/{key_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Key
+         * @description Delete a key: it stops working at once.
+         */
+        delete: operations["delete_key_api_v1_api_keys__key_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Key
+         * @description Rename a key, change what it may do, or change how long it works (counted from now; an
+         *     explicit null means it never expires). The secret stays the same.
+         */
+        patch: operations["update_key_api_v1_api_keys__key_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/api-keys/{key_id}/rotate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rotate Key
+         * @description Replace the secret (the new one is in the answer, once). With a grace period the old secret
+         *     keeps working that many hours, so whatever uses it can be switched over; without one it stops
+         *     at once. The permissions, name and end date are unchanged.
+         */
+        post: operations["rotate_key_api_v1_api_keys__key_id__rotate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/attachments/{attachment_id}": {
         parameters: {
             query?: never;
@@ -2366,6 +2457,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/whoami": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Whoami
+         * @description Who is asking and, for a key, what it may do: a script can check itself before it starts.
+         */
+        get: operations["whoami_api_v1_whoami_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -2660,6 +2771,121 @@ export interface components {
              * @description `null` clears it (and `due_day` with it)
              */
             statement_day?: number | null;
+        };
+        /** ApiKeyCreate */
+        ApiKeyCreate: {
+            /**
+             * Expires In Days
+             * @description How long it works from now. Null: it never expires.
+             * @default 90
+             */
+            expires_in_days: number | null;
+            /** Name */
+            name: string;
+            /**
+             * Role
+             * @description Start from a role's scopes. Ignored when `scopes` is given.
+             */
+            role?: string | null;
+            /**
+             * Scopes
+             * @description Exactly what the key may do; overrides `role`.
+             */
+            scopes?: string[] | null;
+        };
+        /**
+         * ApiKeyResponse
+         * @description A key as listed: everything but the secret (shown once, when made or rotated).
+         */
+        ApiKeyResponse: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Expires At
+             * @description Null: it never expires.
+             */
+            expires_at: string | null;
+            /**
+             * Grace Until
+             * @description After a rotation: until when the previous secret still works.
+             */
+            grace_until: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Last Used At */
+            last_used_at: string | null;
+            /** Last Used Ip */
+            last_used_ip: string | null;
+            /** Name */
+            name: string;
+            /**
+             * Prefix
+             * @description The first characters of the secret, to tell keys apart.
+             */
+            prefix: string;
+            /**
+             * Role
+             * @description A named set of scopes, or "custom". `scopes` is what counts.
+             */
+            role: string;
+            /** Rotated At */
+            rotated_at: string | null;
+            /**
+             * Scopes
+             * @description What the key may do, as `area:action`.
+             */
+            scopes: string[];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "active" | "expired";
+        };
+        /** ApiKeyRotate */
+        ApiKeyRotate: {
+            /**
+             * Grace Hours
+             * @description Keep the old secret working this many hours (0: it stops at once), so what uses it can be switched over without a gap.
+             * @default 0
+             */
+            grace_hours: number;
+        };
+        /**
+         * ApiKeySecret
+         * @description A key together with its secret. This is the only time the secret exists in the clear.
+         */
+        ApiKeySecret: {
+            key: components["schemas"]["ApiKeyResponse"];
+            /** Secret */
+            secret: string;
+        };
+        /**
+         * ApiKeyUpdate
+         * @description Only the fields sent change. `expires_in_days` counts from now (extending or shortening it);
+         *     an explicit null makes it never expire.
+         */
+        ApiKeyUpdate: {
+            /** Expires In Days */
+            expires_in_days?: number | null;
+            /** Name */
+            name?: string | null;
+            /** Role */
+            role?: string | null;
+            /** Scopes */
+            scopes?: string[] | null;
+        };
+        /** AreaInfo */
+        AreaInfo: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
         };
         /** AttachmentResponse */
         AttachmentResponse: {
@@ -4809,6 +5035,17 @@ export interface components {
              */
             open: boolean;
         };
+        /** RoleInfo */
+        RoleInfo: {
+            /** Description */
+            description: string;
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Scopes */
+            scopes: string[];
+        };
         /** SalaryRuleCreate */
         SalaryRuleCreate: {
             /**
@@ -5067,6 +5304,15 @@ export interface components {
              */
             id: string;
             plan: components["schemas"]["SalarySplitPlan"];
+        };
+        /** ScopeCatalog */
+        ScopeCatalog: {
+            /** Actions */
+            actions: components["schemas"]["AreaInfo"][];
+            /** Areas */
+            areas: components["schemas"]["AreaInfo"][];
+            /** Roles */
+            roles: components["schemas"]["RoleInfo"][];
         };
         /**
          * SessionResponse
@@ -6237,6 +6483,25 @@ export interface components {
              */
             place?: string | null;
         };
+        /**
+         * WhoAmI
+         * @description Who is asking: a person signed in, or a key (with what it may do).
+         */
+        WhoAmI: {
+            /** Expires At */
+            expires_at: string | null;
+            /** Key Name */
+            key_name: string | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "session" | "api_key";
+            /** Role */
+            role: string | null;
+            /** Scopes */
+            scopes: string[] | null;
+        };
     };
     responses: never;
     parameters: never;
@@ -6665,6 +6930,178 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AccountResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_keys_api_v1_api_keys_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiKeyResponse"][];
+                };
+            };
+        };
+    };
+    create_key_api_v1_api_keys_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiKeyCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiKeySecret"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    scope_catalog_api_v1_api_keys_scopes_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScopeCatalog"];
+                };
+            };
+        };
+    };
+    delete_key_api_v1_api_keys__key_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_key_api_v1_api_keys__key_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiKeyUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiKeyResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rotate_key_api_v1_api_keys__key_id__rotate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiKeyRotate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiKeySecret"];
                 };
             };
             /** @description Validation Error */
@@ -11077,6 +11514,26 @@ export interface operations {
             };
         };
     };
+    whoami_api_v1_whoami_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WhoAmI"];
+                };
+            };
+        };
+    };
     health_health_get: {
         parameters: {
             query?: never;
@@ -11119,6 +11576,7 @@ export const pathsApiV1TransactionsIdsGetParametersQueryTag_matchValues: Readonl
 export const pathsApiV1TransactionsSummaryGetParametersQueryKindAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<paths>["/api/v1/transactions/summary"]["get"]["parameters"]["query"]["kind"]> = ["need", "want", "unsorted"];
 export const pathsApiV1TransactionsSummaryGetParametersQueryTag_matchValues: ReadonlyArray<FlattenedDeepRequired<paths>["/api/v1/transactions/summary"]["get"]["parameters"]["query"]["tag_match"]> = ["any", "all"];
 export const accountGroupValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["AccountGroup"]> = ["cash", "accounts", "card", "savings", "prepaid", "investments", "overdrafts", "loan", "insurance", "others"];
+export const apiKeyResponseStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ApiKeyResponse"]["status"]> = ["active", "expired"];
 export const budgetFixedLineStateValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BudgetFixedLine"]["state"]> = ["upcoming", "active", "ended"];
 export const budgetFixedLineStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BudgetFixedLine"]["status"]> = ["ok", "warning", "over"];
 export const budgetLineResponseStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BudgetLineResponse"]["status"]> = ["ok", "warning", "over"];
@@ -11148,3 +11606,4 @@ export const salarySplitMadeKindValues: ReadonlyArray<FlattenedDeepRequired<comp
 export const subscriptionStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SubscriptionStatus"]> = ["active", "paused", "cancelled", "completed"];
 export const transactionTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TransactionType"]> = ["income", "expense", "transfer"];
 export const vendorLocalityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["VendorLocality"]> = ["local", "foreign", "unknown"];
+export const whoAmIKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["WhoAmI"]["kind"]> = ["session", "api_key"];

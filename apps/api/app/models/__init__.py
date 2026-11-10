@@ -1,4 +1,5 @@
 from app.models.account import Account
+from app.models.api_key import ApiKey
 from app.models.attachment import TransactionAttachment
 from app.models.balance_snapshot import BalanceSnapshot, SnapshotDirty
 from app.models.base import Base
@@ -26,6 +27,7 @@ from app.models.vendor import Vendor
 
 __all__ = [
     "Account",
+    "ApiKey",
     "BalanceSnapshot",
     "Base",
     "Budget",

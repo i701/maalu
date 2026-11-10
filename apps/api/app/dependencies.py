@@ -1,14 +1,17 @@
 import uuid
+from dataclasses import dataclass
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app import api_scopes, rate_limit
 from app.database import get_db
-from app.models import User, UserSession
+from app.models import ApiKey, User, UserSession
 from app.services import (
     AccountService,
+    ApiKeyService,
     AttachmentService,
     AvailableService,
     BackupService,
@@ -32,6 +35,7 @@ from app.services import (
     UserService,
     VendorService,
 )
+from app.services.api_key import KEY_PREFIX
 
 # scope="function": the session commits (or rolls back) as soon as the route returns, **before** the
 # response is sent. Without it FastAPI runs the code after `yield` once the response has gone, so a
@@ -40,6 +44,10 @@ from app.services import (
 DbSession = Annotated[AsyncSession, Depends(get_db, scope="function")]
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+
+
+def get_api_key_service(db: DbSession) -> ApiKeyService:
+    return ApiKeyService(db)
 
 
 def get_user_service(db: DbSession) -> UserService:
@@ -161,29 +169,70 @@ LinkServiceDep = Annotated[LinkService, Depends(get_link_service)]
 BackupServiceDep = Annotated[BackupService, Depends(get_backup_service)]
 
 
-async def get_signed_in(
-    token: Annotated[str, Depends(oauth2_scheme)], sessions: SessionServiceDep
-) -> tuple[UserSession, User]:
+ApiKeyServiceDep = Annotated[ApiKeyService, Depends(get_api_key_service)]
+
+
+@dataclass
+class Principal:
+    """Who is asking: a person with a signed-in session, or an API key (never both)."""
+
+    user: User
+    session: UserSession | None = None
+    key: ApiKey | None = None
+
+
+async def get_principal(
+    request: Request,
+    token: Annotated[str, Depends(oauth2_scheme)],
+    sessions: SessionServiceDep,
+    keys: ApiKeyServiceDep,
+) -> Principal:
+    unauthorized = HTTPException(
+        status.HTTP_401_UNAUTHORIZED,
+        "Invalid or expired session",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    if token.startswith(KEY_PREFIX):
+        found = await keys.authenticate(token, request.client.host if request.client else None)
+        if found is None:
+            raise HTTPException(
+                status.HTTP_401_UNAUTHORIZED,
+                "Invalid, expired or deleted API key",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        key, user = found
+        rate_limit.check_api_key(key.id)
+        path = api_scopes.strip_prefix(request.url.path)
+        if not api_scopes.allowed(set(key.scopes), request.method, path):
+            need = api_scopes.required_scope(request.method, path)
+            raise HTTPException(
+                status.HTTP_403_FORBIDDEN,
+                f"This API key does not have the permission {need}"
+                if need
+                else "API keys cannot use this route",
+            )
+        return Principal(user=user, key=key)
     signed_in = await sessions.authenticate(token)
     if signed_in is None:
+        raise unauthorized
+    return Principal(user=signed_in[1], session=signed_in[0])
+
+
+PrincipalDep = Annotated[Principal, Depends(get_principal)]
+
+
+async def get_current_user(principal: PrincipalDep) -> User:
+    return principal.user
+
+
+async def get_current_session(principal: PrincipalDep) -> UserSession:
+    """For what only a person signed in may do (sessions, password, two-factor, the keys): an API
+    key is refused here whatever permissions it holds."""
+    if principal.session is None:
         raise HTTPException(
-            status.HTTP_401_UNAUTHORIZED,
-            "Invalid or expired session",
-            headers={"WWW-Authenticate": "Bearer"},
+            status.HTTP_403_FORBIDDEN, "This needs a signed-in session, not an API key"
         )
-    return signed_in
-
-
-async def get_current_user(
-    signed_in: Annotated[tuple[UserSession, User], Depends(get_signed_in)],
-) -> User:
-    return signed_in[1]
-
-
-async def get_current_session(
-    signed_in: Annotated[tuple[UserSession, User], Depends(get_signed_in)],
-) -> UserSession:
-    return signed_in[0]
+    return principal.session
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]

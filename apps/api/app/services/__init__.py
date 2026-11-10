@@ -9,6 +9,7 @@ from app.services.account import (
     AccountSpendableError,
     AccountStatementError,
 )
+from app.services.api_key import ApiKeyNotFoundError, ApiKeyRuleError, ApiKeyService
 from app.services.attachment import (
     AttachmentNotFoundError,
     AttachmentRuleError,
@@ -97,6 +98,9 @@ __all__ = [
     "AccountService",
     "AccountSpendableError",
     "AccountStatementError",
+    "ApiKeyNotFoundError",
+    "ApiKeyRuleError",
+    "ApiKeyService",
     "AttachmentNotFoundError",
     "AttachmentRuleError",
     "AttachmentService",

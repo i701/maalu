@@ -73,6 +73,8 @@ LEGACY_ACCOUNT_GROUPS = {"debit_card": "accounts"}
 EXCLUDED = (
     "users",
     "sessions",
+    # credentials: a backup file must never carry a secret that signs in
+    "api_keys",
     "recovery_codes",
     "exchange_rates",
     "balance_snapshots",

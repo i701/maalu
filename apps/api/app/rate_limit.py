@@ -27,6 +27,8 @@ TWO_FACTOR_IP_FAILURES = 20
 REGISTER_WINDOW = 60 * 60
 REGISTER_IP_ATTEMPTS = 10
 PLACE_SEARCH_WINDOW = 60
+API_KEY_WINDOW = 60
+API_KEY_PER_MINUTE = 300  # a script may be quick, but not unbounded
 PLACE_SEARCH_PER_USER = 20  # a search a few seconds apart is a person; more is a script
 
 # Memory bound: when this many keys are held, the ones not seen for the longest window are dropped.
@@ -133,6 +135,14 @@ def check_register(ip: str) -> None:
         return
     limiter.check(f"register:ip:{ip}", REGISTER_IP_ATTEMPTS, REGISTER_WINDOW)
     limiter.record(f"register:ip:{ip}", REGISTER_WINDOW)
+
+
+def check_api_key(key_id: object) -> None:
+    """Every request a key makes counts, so one that runs away is slowed, not the whole server."""
+    if not _on():
+        return
+    limiter.check(f"apikey:{key_id}", API_KEY_PER_MINUTE, API_KEY_WINDOW)
+    limiter.record(f"apikey:{key_id}", API_KEY_WINDOW)
 
 
 def check_place_search(user_id: object) -> None:

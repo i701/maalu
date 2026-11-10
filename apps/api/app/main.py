@@ -5,6 +5,7 @@ from app.config import settings
 from app.rate_limit import RateLimitedError
 from app.routers import (
     account,
+    api_key,
     attachment,
     auth,
     backup,
@@ -45,6 +46,8 @@ def create_app() -> FastAPI:
         return {"status": "ok"}
 
     app.include_router(auth.router, prefix="/api/v1")
+    app.include_router(api_key.router, prefix="/api/v1")
+    app.include_router(api_key.whoami_router, prefix="/api/v1")
     # before the transactions router: its fixed paths must not be read as a transaction id
     app.include_router(transfer_link.router, prefix="/api/v1")
     app.include_router(transaction.router, prefix="/api/v1")

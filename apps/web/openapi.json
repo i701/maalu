@@ -745,6 +745,293 @@
         "title": "AccountUpdate",
         "type": "object"
       },
+      "ApiKeyCreate": {
+        "properties": {
+          "expires_in_days": {
+            "anyOf": [
+              {
+                "maximum": 3650.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": 90,
+            "description": "How long it works from now. Null: it never expires.",
+            "title": "Expires In Days"
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Start from a role's scopes. Ignored when `scopes` is given.",
+            "title": "Role"
+          },
+          "scopes": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Exactly what the key may do; overrides `role`.",
+            "title": "Scopes"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "ApiKeyCreate",
+        "type": "object"
+      },
+      "ApiKeyResponse": {
+        "description": "A key as listed: everything but the secret (shown once, when made or rotated).",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null: it never expires.",
+            "title": "Expires At"
+          },
+          "grace_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "After a rotation: until when the previous secret still works.",
+            "title": "Grace Until"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At"
+          },
+          "last_used_ip": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used Ip"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "prefix": {
+            "description": "The first characters of the secret, to tell keys apart.",
+            "title": "Prefix",
+            "type": "string"
+          },
+          "role": {
+            "description": "A named set of scopes, or \"custom\". `scopes` is what counts.",
+            "title": "Role",
+            "type": "string"
+          },
+          "rotated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rotated At"
+          },
+          "scopes": {
+            "description": "What the key may do, as `area:action`.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Scopes",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "expired"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "role",
+          "scopes",
+          "prefix",
+          "status",
+          "created_at",
+          "expires_at",
+          "rotated_at",
+          "grace_until",
+          "last_used_at",
+          "last_used_ip"
+        ],
+        "title": "ApiKeyResponse",
+        "type": "object"
+      },
+      "ApiKeyRotate": {
+        "properties": {
+          "grace_hours": {
+            "default": 0,
+            "description": "Keep the old secret working this many hours (0: it stops at once), so what uses it can be switched over without a gap.",
+            "maximum": 168.0,
+            "minimum": 0.0,
+            "title": "Grace Hours",
+            "type": "integer"
+          }
+        },
+        "title": "ApiKeyRotate",
+        "type": "object"
+      },
+      "ApiKeySecret": {
+        "description": "A key together with its secret. This is the only time the secret exists in the clear.",
+        "properties": {
+          "key": {
+            "$ref": "#/components/schemas/ApiKeyResponse"
+          },
+          "secret": {
+            "title": "Secret",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "secret"
+        ],
+        "title": "ApiKeySecret",
+        "type": "object"
+      },
+      "ApiKeyUpdate": {
+        "description": "Only the fields sent change. `expires_in_days` counts from now (extending or shortening it);\nan explicit null makes it never expire.",
+        "properties": {
+          "expires_in_days": {
+            "anyOf": [
+              {
+                "maximum": 3650.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires In Days"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "scopes": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scopes"
+          }
+        },
+        "title": "ApiKeyUpdate",
+        "type": "object"
+      },
+      "AreaInfo": {
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "label"
+        ],
+        "title": "AreaInfo",
+        "type": "object"
+      },
       "AttachmentResponse": {
         "properties": {
           "created_at": {
@@ -5394,6 +5681,37 @@
         "title": "RegistrationStatus",
         "type": "object"
       },
+      "RoleInfo": {
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "scopes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Scopes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "description",
+          "scopes"
+        ],
+        "title": "RoleInfo",
+        "type": "object"
+      },
       "SalaryRuleCreate": {
         "properties": {
           "account_id": {
@@ -5901,6 +6219,38 @@
           "plan"
         ],
         "title": "SalarySplitTaskResponse",
+        "type": "object"
+      },
+      "ScopeCatalog": {
+        "properties": {
+          "actions": {
+            "items": {
+              "$ref": "#/components/schemas/AreaInfo"
+            },
+            "title": "Actions",
+            "type": "array"
+          },
+          "areas": {
+            "items": {
+              "$ref": "#/components/schemas/AreaInfo"
+            },
+            "title": "Areas",
+            "type": "array"
+          },
+          "roles": {
+            "items": {
+              "$ref": "#/components/schemas/RoleInfo"
+            },
+            "title": "Roles",
+            "type": "array"
+          }
+        },
+        "required": [
+          "areas",
+          "actions",
+          "roles"
+        ],
+        "title": "ScopeCatalog",
         "type": "object"
       },
       "SessionResponse": {
@@ -9036,6 +9386,76 @@
         },
         "title": "VendorUpdate",
         "type": "object"
+      },
+      "WhoAmI": {
+        "description": "Who is asking: a person signed in, or a key (with what it may do).",
+        "properties": {
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "key_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key Name"
+          },
+          "kind": {
+            "enum": [
+              "session",
+              "api_key"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "scopes": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scopes"
+          }
+        },
+        "required": [
+          "kind",
+          "key_name",
+          "role",
+          "scopes",
+          "expires_at"
+        ],
+        "title": "WhoAmI",
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -9794,6 +10214,267 @@
         "summary": "Unarchive Account",
         "tags": [
           "accounts"
+        ]
+      }
+    },
+    "/api/v1/api-keys": {
+      "get": {
+        "description": "Your API keys, newest first. A secret is never shown again after it was made.",
+        "operationId": "list_keys_api_v1_api_keys_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ApiKeyResponse"
+                  },
+                  "title": "Response List Keys Api V1 Api Keys Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List Keys",
+        "tags": [
+          "api-keys"
+        ]
+      },
+      "post": {
+        "description": "Make a key. Its secret is in the answer, **once**: copy it now.",
+        "operationId": "create_key_api_v1_api_keys_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiKeyCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeySecret"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Create Key",
+        "tags": [
+          "api-keys"
+        ]
+      }
+    },
+    "/api/v1/api-keys/scopes": {
+      "get": {
+        "description": "The permissions a key can hold, and the roles that bundle them (for the form).",
+        "operationId": "scope_catalog_api_v1_api_keys_scopes_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScopeCatalog"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Scope Catalog",
+        "tags": [
+          "api-keys"
+        ]
+      }
+    },
+    "/api/v1/api-keys/{key_id}": {
+      "delete": {
+        "description": "Delete a key: it stops working at once.",
+        "operationId": "delete_key_api_v1_api_keys__key_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Key Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Delete Key",
+        "tags": [
+          "api-keys"
+        ]
+      },
+      "patch": {
+        "description": "Rename a key, change what it may do, or change how long it works (counted from now; an\nexplicit null means it never expires). The secret stays the same.",
+        "operationId": "update_key_api_v1_api_keys__key_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Key Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiKeyUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Update Key",
+        "tags": [
+          "api-keys"
+        ]
+      }
+    },
+    "/api/v1/api-keys/{key_id}/rotate": {
+      "post": {
+        "description": "Replace the secret (the new one is in the answer, once). With a grace period the old secret\nkeeps working that many hours, so whatever uses it can be switched over; without one it stops\nat once. The permissions, name and end date are unchanged.",
+        "operationId": "rotate_key_api_v1_api_keys__key_id__rotate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Key Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiKeyRotate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeySecret"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Rotate Key",
+        "tags": [
+          "api-keys"
         ]
       }
     },
@@ -18286,6 +18967,33 @@
         "summary": "Merge Vendor",
         "tags": [
           "vendors"
+        ]
+      }
+    },
+    "/api/v1/whoami": {
+      "get": {
+        "description": "Who is asking and, for a key, what it may do: a script can check itself before it starts.",
+        "operationId": "whoami_api_v1_whoami_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WhoAmI"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Whoami",
+        "tags": [
+          "api-keys"
         ]
       }
     },
