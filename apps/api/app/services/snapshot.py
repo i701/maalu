@@ -155,6 +155,15 @@ class SnapshotService:
         """Bring snapshots up to date: rebuild what an older change made stale, then add the days
         since each account's last snapshot (everything, for an account with none). For one user,
         or every user when `user_id` is None."""
+        # Several requests can ask at once (a page that loads a few stats together), and two
+        # rebuilds of the same account would both insert the same days: one fails on the unique key
+        # and its request is a 500. A transaction-scoped advisory lock lets one run at a time; the
+        # next waits until the first has committed, then finds nothing left to do. (SQLite, used in
+        # tests, has one writer anyway.)
+        if self.db.get_bind().dialect.name == "postgresql":
+            key = f"snapshot-repair:{user_id}" if user_id is not None else "snapshot-repair:all"
+            await self.db.execute(select(func.pg_advisory_xact_lock(func.hashtextextended(key, 0))))
+
         accounts = select(Account)
         if user_id is not None:
             accounts = accounts.where(Account.user_id == user_id)
