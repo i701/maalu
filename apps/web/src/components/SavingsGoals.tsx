@@ -28,8 +28,16 @@ export default function SavingsGoals({
 
 	return (
 		<Box sx={{ mt: { xs: 2.5, sm: 4 } }}>
-			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
-				<Box>
+			<Box
+				sx={{
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "space-between",
+					gap: 1.5,
+					mb: 1.5,
+				}}
+			>
+				<Box sx={{ minWidth: 0 }}>
 					<Typography variant="h2" sx={{ fontSize: 20 }}>
 						Savings goals
 					</Typography>
@@ -37,7 +45,12 @@ export default function SavingsGoals({
 						Save toward something, like a trip, and see what each month needs.
 					</Typography>
 				</Box>
-				<Button startIcon={<AddIcon />} onClick={() => setEditing("new")}>
+				<Button
+					startIcon={<AddIcon />}
+					onClick={() => setEditing("new")}
+					// one line, never squeezed by the text beside it
+					sx={{ flexShrink: 0, whiteSpace: "nowrap" }}
+				>
 					Add goal
 				</Button>
 			</Box>
