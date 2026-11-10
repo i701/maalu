@@ -92,6 +92,7 @@ import app.maalu.data.withDate
 import app.maalu.data.withVendor
 import app.maalu.ui.components.CompactField
 import app.maalu.ui.components.PickerField
+import app.maalu.ui.components.VendorPickerField
 import app.maalu.ui.components.SegmentedPills
 import app.maalu.ui.components.Section
 import app.maalu.ui.components.TintChip
@@ -373,37 +374,12 @@ private fun Form(o: FormOptions, hasItems: Boolean, saveLabel: String, form: Add
     }
 }
 
-/**
- * The vendor, picked from your own vendors: a sheet that searches them as you type (the server does the
- * searching), with the usual category and tags filled in on pick. A name that matches none can be created.
- */
+/** The vendor, picked from your own vendors; picking one fills its usual category and tags into what is still empty. */
 @Composable
 private fun VendorSection(form: AddForm, onForm: (AddForm) -> Unit) {
-    val api = LocalApi.current
-    var known by remember { mutableStateOf<List<VendorItem>>(emptyList()) }
-    var query by remember { mutableStateOf<String?>(null) }
-    LaunchedEffect(query) {
-        val q = query ?: return@LaunchedEffect
-        if (api == null) return@LaunchedEffect
-        if (q.isNotEmpty()) delay(250) // wait for a pause in typing
-        known = (api.get<List<VendorItem>>("vendors", buildMap { if (q.isNotEmpty()) put("q", q); put("limit", "30") }) as? ApiResult.Ok)?.data.orEmpty()
-    }
+    val api = LocalApi.current ?: return
     Section("Vendor", Icons.Outlined.Storefront, Accents.getValue("orange")) {
-        PickerField(
-            title = "Vendor",
-            value = form.vendor.takeIf { it.isNotBlank() }?.let { Ref("", it) },
-            placeholder = "Choose or add a vendor (optional)",
-            anyLabel = "No vendor",
-            entries = known.map { Ref(it.id, it.name) },
-            searchable = true,
-            allowCreate = true,
-            detail = { r -> known.firstOrNull { it.id == r.id }?.defaultCategory },
-            onQuery = { query = it },
-            onPick = { r ->
-                val picked = known.firstOrNull { it.id == r?.id }
-                onForm(if (picked != null) form.withVendor(picked) else form.copy(vendor = r?.name ?: ""))
-            },
-        )
+        VendorPickerField(api, form.vendor, onPick = { name, picked -> onForm(if (picked != null) form.withVendor(picked) else form.copy(vendor = name)) })
     }
 }
 
