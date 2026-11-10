@@ -16,7 +16,9 @@ export default function MetricCard({
 	return (
 		<Box
 			sx={{
-				p: 2.5,
+				// snug on a phone (label and value share one short row), roomier on a wide screen
+				px: { xs: 2, lg: 2.5 },
+				py: { xs: 1.25, lg: 2.5 },
 				minWidth: 0,
 				...morph("xl"),
 				bgcolor: "var(--md-sys-color-surface-container-low)",
@@ -31,7 +33,7 @@ export default function MetricCard({
 				{label}
 			</Typography>
 			<Typography
-				sx={{ fontSize: { xs: 22, lg: 28 }, fontWeight: 600, lineHeight: 1.25, mt: { lg: 0.5 } }}
+				sx={{ fontSize: { xs: 20, lg: 28 }, fontWeight: 600, lineHeight: 1.25, mt: { lg: 0.5 } }}
 			>
 				{value}
 			</Typography>

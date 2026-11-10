@@ -24,7 +24,7 @@ export default function AccountSummary({
 			<Box
 				sx={{
 					display: "grid",
-					gap: 2,
+					gap: { xs: 1, sm: 2 },
 					gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "repeat(3, minmax(0, 1fr))" },
 				}}
 			>
