@@ -15,7 +15,13 @@ import androidx.compose.material.icons.outlined.ReceiptLong
 import androidx.compose.material.icons.outlined.Savings
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.Menu
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.rememberDrawerState
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -53,97 +59,103 @@ val LocalSnackbar = androidx.compose.runtime.staticCompositionLocalOf<androidx.c
 
 private data class Tab(val label: String, val icon: ImageVector)
 
-// The web's bottom bar: four destinations and More, which will open the full list.
+// The bottom bar keeps the four places used all the time; every destination (these four included) is in the drawer.
 private val Tabs = listOf(
     Tab("Dashboard", Icons.Outlined.GridView),
     Tab("Transactions", Icons.Outlined.ReceiptLong),
     Tab("Accounts", Icons.Outlined.AccountBalance),
     Tab("Budget", Icons.Outlined.Savings),
-    Tab("More", Icons.Outlined.MoreHoriz),
 )
 
 private const val DASHBOARD = 0
 private const val TRANSACTIONS = 1
 private const val ACCOUNTS = 2
 private const val BUDGET = 3
-private const val MORE = 4
 
 /**
- * The signed-in frame: a large top app bar that holds the screen's name and collapses as the content
- * scrolls (the native pattern), and the bottom bar. Dashboard, Transactions, Accounts and Budget are real; the rest are placeholders.
+ * The signed-in frame: a sidebar drawer with every destination (a menu button opens it, or swipe from the left edge),
+ * a top app bar that holds the screen's name and collapses as the content scrolls, and the bottom bar with the four
+ * everyday places. Dashboard, Transactions, Accounts and Budget are real; the other destinations are placeholders.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMode) -> Unit, onSignOut: () -> Unit) {
     var selected by rememberSaveable { mutableIntStateOf(0) }
-    // the dashboard's month lives here so the app bar can move it
+    // a destination reached only from the drawer, or null while one of the four tabs is showing
+    var route by rememberSaveable { mutableStateOf<String?>(null) }
+    val destination = destinationById(route)
+    val drawer = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+    // back from a drawer destination returns to the tab you were on
+    androidx.activity.compose.BackHandler(enabled = destination != null) { route = null }
+    // the month lives here so the app bar can move it for the Dashboard and the Budget
     var month by rememberSaveable { mutableStateOf(LocalDate.now().withDayOfMonth(1).toString()) }
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val snackbar = remember { androidx.compose.material3.SnackbarHostState() }
+    val onTab = destination == null
+    val monthly = onTab && (selected == DASHBOARD || selected == BUDGET)
+    // the drawer's highlighted item: the open destination, else the tab
+    val selectedId = destination?.id ?: MoreDestinations.firstOrNull { it.tabIndex == selected }?.id
 
-    androidx.compose.runtime.CompositionLocalProvider(LocalSnackbar provides snackbar) { Scaffold(
-        snackbarHost = { androidx.compose.material3.SnackbarHost(snackbar) },
-        modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
-        topBar = {
-            MediumFlexibleTopAppBar(
-                title = { Text(Tabs[selected].label.let { if (selected == MORE) "More" else it }) },
-                subtitle = if (selected == DASHBOARD || selected == BUDGET) ({ Text(monthLabel(LocalDate.parse(month))) }) else null,
-                actions = {
-                    if (selected == DASHBOARD || selected == BUDGET) {
-                        IconButton(onClick = { month = LocalDate.parse(month).minusMonths(1).toString() }) {
-                            Icon(Icons.AutoMirrored.Outlined.KeyboardArrowLeft, "Previous month")
-                        }
-                        IconButton(onClick = { month = LocalDate.parse(month).plusMonths(1).toString() }) {
-                            Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, "Next month")
-                        }
-                    }
+    ModalNavigationDrawer(
+        drawerState = drawer,
+        drawerContent = {
+            AppDrawer(
+                server = server, selectedId = selectedId, themeMode = themeMode, onThemeMode = onThemeMode,
+                onOpen = { d ->
+                    if (d.tabIndex != null) { selected = d.tabIndex; route = null } else route = d.id
+                    scope.launch { drawer.close() }
                 },
-                scrollBehavior = scroll,
+                onSignOut = { scope.launch { drawer.close() }; onSignOut() },
             )
         },
-        bottomBar = {
-            NavigationBar {
-                Tabs.forEachIndexed { i, tab ->
-                    NavigationBarItem(
-                        selected = selected == i,
-                        onClick = { selected = i },
-                        icon = { Icon(tab.icon, contentDescription = null) },
-                        // one line: "Transactions" wrapped at 360dp wide at the default size
-                        label = { Text(tab.label, style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false) },
-                    )
-                }
-            }
-        },
-    ) { padding ->
-        Box(Modifier.fillMaxSize().padding(padding)) {
-            when (selected) {
-                DASHBOARD -> DashboardScreen(api, month)
-                TRANSACTIONS -> TransactionsScreen(api)
-                ACCOUNTS -> AccountsScreen(api)
-                BUDGET -> BudgetScreen(api, month)
-                MORE -> Column(
-                    Modifier.fillMaxSize().padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text("Appearance", style = MaterialTheme.typography.titleSmall)
-                    SingleChoiceSegmentedButtonRow {
-                        ThemeMode.entries.forEachIndexed { i, m ->
-                            SegmentedButton(
-                                selected = themeMode == m,
-                                onClick = { onThemeMode(m) },
-                                shape = SegmentedButtonDefaults.itemShape(i, ThemeMode.entries.size),
-                            ) { Text(m.label) }
+    ) {
+        androidx.compose.runtime.CompositionLocalProvider(LocalSnackbar provides snackbar) { Scaffold(
+            snackbarHost = { androidx.compose.material3.SnackbarHost(snackbar) },
+            modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
+            topBar = {
+                MediumFlexibleTopAppBar(
+                    title = { Text(destination?.label ?: Tabs[selected].label) },
+                    navigationIcon = { IconButton(onClick = { scope.launch { drawer.open() } }) { Icon(Icons.Outlined.Menu, "Open the menu") } },
+                    subtitle = if (monthly) ({ Text(monthLabel(LocalDate.parse(month))) }) else null,
+                    actions = {
+                        if (monthly) {
+                            IconButton(onClick = { month = LocalDate.parse(month).minusMonths(1).toString() }) {
+                                Icon(Icons.AutoMirrored.Outlined.KeyboardArrowLeft, "Previous month")
+                            }
+                            IconButton(onClick = { month = LocalDate.parse(month).plusMonths(1).toString() }) {
+                                Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, "Next month")
+                            }
                         }
+                    },
+                    scrollBehavior = scroll,
+                )
+            },
+            bottomBar = {
+                NavigationBar {
+                    Tabs.forEachIndexed { i, tab ->
+                        NavigationBarItem(
+                            // nothing is highlighted while a drawer-only destination is open
+                            selected = onTab && selected == i,
+                            onClick = { selected = i; route = null },
+                            icon = { Icon(tab.icon, contentDescription = null) },
+                            // one line: "Transactions" wrapped at 360dp wide at the default size
+                            label = { Text(tab.label, style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false) },
+                        )
                     }
-                    Text(server, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 16.dp))
-                    OutlinedButton(onClick = onSignOut, shapes = ButtonDefaults.shapes()) { Text("Sign out") }
                 }
-                else -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Coming soon", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            },
+        ) { padding ->
+            Box(Modifier.fillMaxSize().padding(padding)) {
+                if (destination != null) ComingSoon(destination)
+                else when (selected) {
+                    DASHBOARD -> DashboardScreen(api, month)
+                    TRANSACTIONS -> TransactionsScreen(api)
+                    ACCOUNTS -> AccountsScreen(api)
+                    BUDGET -> BudgetScreen(api, month)
                 }
             }
         }
-    }
+        }
     }
 }
