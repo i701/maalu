@@ -1,4 +1,4 @@
-import { morph } from "#/lib/shape";
+import { useCardMorph } from "#/lib/card-morph";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { memo } from "react";
@@ -54,6 +54,7 @@ const BudgetGoalsCard = memo(function BudgetGoalsCard({
 	budget: Budget | null;
 	goals: Goal[];
 }) {
+	const cardMorph = useCardMorph();
 	const lines = budget && budget.lines.length > 0 ? budget : null;
 	const attention = lines ? linesNeedingAttention(lines).slice(0, 3) : [];
 	const fixed = budget ? runningFixed(budget) : [];
@@ -63,7 +64,7 @@ const BudgetGoalsCard = memo(function BudgetGoalsCard({
 			sx={{
 				p: 2.5,
 				minWidth: 0,
-				...morph("xl"),
+				...cardMorph,
 				bgcolor: "var(--md-sys-color-surface-container-low)",
 			}}
 		>

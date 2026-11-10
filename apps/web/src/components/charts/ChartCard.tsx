@@ -1,4 +1,4 @@
-import { morph } from "#/lib/shape";
+import { useCardMorph } from "#/lib/card-morph";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Table from "@mui/material/Table";
@@ -29,6 +29,7 @@ export default function ChartCard({
 	table?: ChartTable;
 	children: ReactNode;
 }) {
+	const cardMorph = useCardMorph();
 	const [asTable, setAsTable] = useState(false);
 
 	return (
@@ -36,7 +37,7 @@ export default function ChartCard({
 			sx={{
 				p: 2.5,
 				minWidth: 0,
-				...morph("xl"),
+				...cardMorph,
 				bgcolor: "var(--md-sys-color-surface-container-low)",
 			}}
 		>

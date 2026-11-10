@@ -1,4 +1,4 @@
-import { morph } from "#/lib/shape";
+import { useCardMorph } from "#/lib/card-morph";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
@@ -13,6 +13,7 @@ export default function MetricCard({
 	value: string;
 	badge?: ReactNode;
 }) {
+	const cardMorph = useCardMorph();
 	return (
 		<Box
 			sx={{
@@ -20,7 +21,7 @@ export default function MetricCard({
 				px: { xs: 2, lg: 2.5 },
 				py: { xs: 1.25, lg: 2.5 },
 				minWidth: 0,
-				...morph("xl"),
+				...cardMorph,
 				bgcolor: "var(--md-sys-color-surface-container-low)",
 				// On a narrow screen the label and value share a row, so three figures don't take a screen
 				display: { xs: "grid", lg: "block" },

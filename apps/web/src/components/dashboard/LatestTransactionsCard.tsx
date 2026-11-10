@@ -1,4 +1,4 @@
-import { morph } from "#/lib/shape";
+import { useCardMorph } from "#/lib/card-morph";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { memo } from "react";
@@ -27,12 +27,13 @@ const LatestTransactionsCard = memo(function LatestTransactionsCard({
 }: {
 	transactions: Transaction[];
 }) {
+	const cardMorph = useCardMorph();
 	return (
 		<Box
 			sx={{
 				p: 2.5,
 				minWidth: 0,
-				...morph("xl"),
+				...cardMorph,
 				bgcolor: "var(--md-sys-color-surface-container-low)",
 			}}
 		>

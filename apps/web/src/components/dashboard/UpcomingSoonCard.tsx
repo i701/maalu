@@ -1,4 +1,4 @@
-import { morph } from "#/lib/shape";
+import { useCardMorph } from "#/lib/card-morph";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { memo } from "react";
@@ -20,6 +20,7 @@ const UpcomingSoonCard = memo(function UpcomingSoonCard({
 	upcoming: Transaction[];
 	today: string;
 }) {
+	const cardMorph = useCardMorph();
 	const shown = upcoming.slice(0, UPCOMING_SHOWN);
 	const more = upcoming.length - shown.length;
 	return (
@@ -27,7 +28,7 @@ const UpcomingSoonCard = memo(function UpcomingSoonCard({
 			sx={{
 				p: 2.5,
 				minWidth: 0,
-				...morph("xl"),
+				...cardMorph,
 				bgcolor: "var(--md-sys-color-surface-container-low)",
 			}}
 		>

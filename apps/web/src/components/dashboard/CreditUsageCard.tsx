@@ -1,4 +1,4 @@
-import { morph } from "#/lib/shape";
+import { useCardMorph } from "#/lib/card-morph";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { memo } from "react";
@@ -9,12 +9,13 @@ import { RouterButton } from "../RouterLinks";
 
 /** Each card or overdraft that has a credit limit: what is owed against it, as a bar. */
 const CreditUsageCard = memo(function CreditUsageCard({ accounts }: { accounts: Account[] }) {
+	const cardMorph = useCardMorph();
 	return (
 		<Box
 			sx={{
 				p: 2.5,
 				minWidth: 0,
-				...morph("xl"),
+				...cardMorph,
 				bgcolor: "var(--md-sys-color-surface-container-low)",
 			}}
 		>

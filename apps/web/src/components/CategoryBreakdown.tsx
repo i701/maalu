@@ -1,4 +1,4 @@
-import { morph } from "#/lib/shape";
+import { useCardMorph } from "#/lib/card-morph";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Reveal from "#/components/Reveal";
@@ -67,6 +67,7 @@ function Section({
 /** Where the filtered money went, by category. A split purchase counts toward each of its items'
  * categories. Opens and closes with the totals, keeping its last numbers while it closes. */
 export default function CategoryBreakdown({ categories }: { categories: CategoryTotals | null }) {
+	const cardMorph = useCardMorph();
 	const shown = useLastDefined(categories);
 	const open = Boolean(categories && categories.categories.length > 0);
 	const both = Boolean(
@@ -84,7 +85,7 @@ export default function CategoryBreakdown({ categories }: { categories: Category
 						display: "grid",
 						gap: 2.5,
 						gridTemplateColumns: { xs: "1fr", md: both ? "1fr 1fr" : "1fr" },
-						...morph("xl"),
+						...cardMorph,
 						bgcolor: "var(--md-sys-color-surface-container-low)",
 					}}
 				>
