@@ -38,8 +38,9 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.material3.ListItemDefaults
-import androidx.compose.material3.SegmentedListItem
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.runtime.CompositionLocalProvider
+import app.maalu.ui.components.MorphTile
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -236,14 +237,27 @@ fun TransactionsScreen(api: Api) {
                             val t = list[i]
                             // the native expressive list item: large outer corners, small inner ones, and the
                             // shape springs toward squarer while it is pressed
-                            SegmentedListItem(
+                            // my own tile: a tonal fill, large outer corners, small inner ones and a 2dp gap, with the
+                            // corners springing toward squarer while pressed (the library's list item draws no fill)
+                            MorphTile(
                                 onClick = { selected = t },
-                                shapes = ListItemDefaults.segmentedShapes(index = i, count = list.size),
-                                modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = ListItemDefaults.SegmentedGap),
-                                leadingContent = { CategoryBadge(t) },
-                                supportingContent = { RowDetails(t) },
-                                trailingContent = { Text(signed(t), style = MaterialTheme.typography.bodyMedium.merge(MoneyStyle), color = amountColor(t)) },
-                            ) { Text(t.title(), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), maxLines = 2, overflow = TextOverflow.Ellipsis) }
+                                first = i == 0,
+                                last = i == list.lastIndex,
+                                modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 2.dp),
+                            ) {
+                                Row(
+                                    Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                ) {
+                                    CategoryBadge(t)
+                                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                        Text(t.title(), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                        CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant) { RowDetails(t) }
+                                    }
+                                    Text(signed(t), style = MaterialTheme.typography.bodyMedium.merge(MoneyStyle), color = amountColor(t))
+                                }
+                            }
                         }
                     }
                     if (loadingMore) item { Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() } }
