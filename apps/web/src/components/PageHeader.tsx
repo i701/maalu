@@ -36,6 +36,7 @@ export default function PageHeader({
 	stats,
 	morph,
 	dock,
+	plainIcon = false,
 }: {
 	title: string;
 	description?: string;
@@ -54,6 +55,8 @@ export default function PageHeader({
 	 * it, so a page's summary tiles take one short line instead of a screen. Shown on a phone
 	 * only; the page keeps its full tiles for wider screens (and hides them on a phone). */
 	dock?: DockItem[];
+	/** Draw the icon on its own, without the shaped tile behind it. */
+	plainIcon?: boolean;
 }) {
 	const [from, to] = HERO[accent];
 	const banner = (
@@ -108,16 +111,31 @@ export default function PageHeader({
 			>
 				{symbol && (
 					<Box sx={{ gridArea: "icon", display: "block" }}>
-						<Box sx={{ display: { xs: "block", md: "none" } }}>
-							<ShapeTile shape={shape} size={40} bg="rgb(255 255 255 / 0.18)" fg="#fff">
-								<Symbol name={symbol} size={22} filled />
-							</ShapeTile>
-						</Box>
-						<Box sx={{ display: { xs: "none", md: "block" } }}>
-							<ShapeTile shape={shape} size={56} bg="rgb(255 255 255 / 0.18)" fg="#fff">
-								<Symbol name={symbol} size={28} filled />
-							</ShapeTile>
-						</Box>
+						{plainIcon ? (
+							// just the icon, no shaped tile behind it
+							<Box sx={{ color: "#fff", pl: { xs: 0.5, md: 1 } }}>
+								{/* the same size the icon had inside its tile */}
+								<Box sx={{ display: { xs: "flex", md: "none" } }}>
+									<Symbol name={symbol} size={22} filled />
+								</Box>
+								<Box sx={{ display: { xs: "none", md: "flex" } }}>
+									<Symbol name={symbol} size={28} filled />
+								</Box>
+							</Box>
+						) : (
+							<>
+								<Box sx={{ display: { xs: "block", md: "none" } }}>
+									<ShapeTile shape={shape} size={40} bg="rgb(255 255 255 / 0.18)" fg="#fff">
+										<Symbol name={symbol} size={22} filled />
+									</ShapeTile>
+								</Box>
+								<Box sx={{ display: { xs: "none", md: "block" } }}>
+									<ShapeTile shape={shape} size={56} bg="rgb(255 255 255 / 0.18)" fg="#fff">
+										<Symbol name={symbol} size={28} filled />
+									</ShapeTile>
+								</Box>
+							</>
+						)}
 					</Box>
 				)}
 				<Box

@@ -17,6 +17,7 @@ import MonthlyCard from "#/components/dashboard/MonthlyCard";
 import NeedsWantsCard from "#/components/dashboard/NeedsWantsCard";
 import UpcomingSoonCard from "#/components/dashboard/UpcomingSoonCard";
 import SpendingCard from "#/components/dashboard/SpendingCard";
+import PageHeader from "#/components/PageHeader";
 import PendingOverlay from "#/components/PendingOverlay";
 import Symbol from "#/components/Symbol";
 import { monthBounds, monthLabel, percentChange, shiftMonth } from "#/lib/dashboard";
@@ -137,39 +138,51 @@ function DashboardPage() {
 
 	return (
 		<>
-			<Box
-				sx={{
-					display: "flex",
-					alignItems: "center",
-					justifyContent: "space-between",
-					gap: 1,
-					flexWrap: "wrap",
-					mb: 2,
-				}}
-			>
-				<Typography variant="h1" sx={{ fontSize: 28, fontWeight: 600 }}>
-					Dashboard
-				</Typography>
-				<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-					<IconButton aria-label="Previous month" onClick={() => goTo(shiftMonth(month, -1))}>
-						<Symbol name="chevron_left" size={24} />
-					</IconButton>
-					<Typography
-						sx={{ fontWeight: 500, minWidth: 150, textAlign: "center" }}
-						aria-live="polite"
-					>
-						{label}
-					</Typography>
-					<IconButton aria-label="Next month" onClick={() => goTo(shiftMonth(month, 1))}>
-						<Symbol name="chevron_right" size={24} />
-					</IconButton>
-					{!isCurrent && (
-						<Button color="inherit" onClick={() => goTo(undefined)}>
-							This month
-						</Button>
-					)}
-				</Box>
-			</Box>
+			<PageHeader
+				title="Dashboard"
+				symbol="grid_view"
+				accent="blue"
+				shape={4}
+				plainIcon
+				description="Your money this month: what came in, what went out, and what is left to spend."
+				action={
+					// the month picker lives in the banner; its controls take the banner's white
+					<Box sx={{ display: "flex", alignItems: "center", gap: 0.5, color: "#fff" }}>
+						<IconButton
+							color="inherit"
+							size="small"
+							aria-label="Previous month"
+							onClick={() => goTo(shiftMonth(month, -1))}
+						>
+							<Symbol name="chevron_left" size={22} />
+						</IconButton>
+						<Typography
+							sx={{
+								fontWeight: 500,
+								minWidth: { xs: 112, sm: 150 },
+								textAlign: "center",
+								fontSize: { xs: 14, sm: 16 },
+							}}
+							aria-live="polite"
+						>
+							{label}
+						</Typography>
+						<IconButton
+							color="inherit"
+							size="small"
+							aria-label="Next month"
+							onClick={() => goTo(shiftMonth(month, 1))}
+						>
+							<Symbol name="chevron_right" size={22} />
+						</IconButton>
+						{!isCurrent && (
+							<Button color="inherit" size="small" onClick={() => goTo(undefined)}>
+								This month
+							</Button>
+						)}
+					</Box>
+				}
+			/>
 
 			<BudgetAlert budget={budget} />
 
