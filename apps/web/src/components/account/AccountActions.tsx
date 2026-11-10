@@ -24,7 +24,20 @@ export default function AccountActions({
 	const [dialog, setDialog] = useState<"edit" | "adjust" | null>(null);
 	const archived = account.archived_at !== null;
 	return (
-		<Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+		<Box
+			sx={{
+				display: "flex",
+				gap: { xs: 0.75, md: 1 },
+				flexWrap: "wrap",
+				// smaller buttons on a phone, so the three fit on one or two short lines
+				"& .MuiButton-root": {
+					minHeight: { xs: 32, md: undefined },
+					px: { xs: 1.5, md: undefined },
+					py: { xs: 0.25, md: undefined },
+					fontSize: { xs: 13, md: undefined },
+				},
+			}}
+		>
 			{!archived && (
 				<Button variant="contained" startIcon={<AddIcon />} onClick={onAdd}>
 					Add transaction

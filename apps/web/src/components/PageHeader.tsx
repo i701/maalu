@@ -88,15 +88,16 @@ export default function PageHeader({
 			<Box
 				sx={{
 					position: "relative",
-					display: "grid",
-					gridTemplateColumns: { xs: "auto minmax(0, 1fr) auto", md: "1fr auto" },
-					gridTemplateAreas: {
-						xs: '"icon title action"',
-						md: '"icon action" "title title"',
-					},
+					// A phone: a wrapping row. The icon and the title share a line with the action when
+					// it fits; a wider action (an account page's three buttons) drops to its own line
+					// instead of squeezing the title or sitting on top of it.
+					display: { xs: "flex", md: "grid" },
+					flexWrap: "wrap",
+					gridTemplateColumns: { md: "1fr auto" },
+					gridTemplateAreas: { md: '"icon action" "title title"' },
 					alignItems: { xs: "center", md: "start" },
 					columnGap: { xs: 1.25, md: 2 },
-					rowGap: { md: 3 },
+					rowGap: { xs: 1, md: 3 },
 				}}
 			>
 				{symbol && (
@@ -113,7 +114,14 @@ export default function PageHeader({
 						</Box>
 					</Box>
 				)}
-				<Box sx={{ gridArea: "title", minWidth: 0, maxWidth: { md: 640 } }}>
+				<Box
+					sx={{
+						gridArea: "title",
+						minWidth: 0,
+						maxWidth: { md: 640 },
+						flex: { xs: "1 1 8rem", md: "none" },
+					}}
+				>
 					<Typography
 						variant="h1"
 						component="h1"
@@ -138,6 +146,8 @@ export default function PageHeader({
 					sx={{
 						gridArea: "action",
 						justifySelf: "end",
+						flex: { xs: "0 1 auto", md: "none" },
+						maxWidth: "100%",
 						"& .MuiButton-contained": {
 							bgcolor: "#fff",
 							color: from,
