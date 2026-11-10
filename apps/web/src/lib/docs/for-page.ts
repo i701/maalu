@@ -1,4 +1,3 @@
-import { NAV_ITEMS } from "#/lib/nav";
 import { findDoc } from "./index";
 import type { Doc } from "./types";
 
@@ -27,15 +26,37 @@ export const GUIDES_FOR_PAGE: Record<string, readonly string[]> = {
 
 const ACCOUNT_PAGE = /^\/accounts\/[^/]+$/;
 
-/** The address of an account's own page when asked for as a docs filter (its id does not matter). */
-const ACCOUNT_PAGE_KEY = "/accounts/page";
+/**
+ * What a page's "Guides" link types into the docs search, so the docs page opens with the search
+ * box filled in and every guide that has to do with the page listed (the ones named in
+ * `GUIDES_FOR_PAGE` and any other that mentions it). A test checks each term finds that page's own
+ * guides. An account's own page uses the key `/accounts/page`.
+ */
+export const GUIDE_SEARCH: Record<string, string> = {
+	"/accounts": "accounts",
+	"/accounts/page": "account",
+	"/transactions": "transactions",
+	"/subscriptions": "subscriptions",
+	"/budget": "budget",
+	"/plan": "month plan",
+	"/pending": "salary",
+	"/import": "statement",
+	"/categories": "categories",
+	"/tags": "tags",
+	"/groups": "groups",
+	"/places": "places",
+	"/settings": "settings",
+	"/compare": "compare",
+	"/trends": "trends",
+	"/net-worth": "net worth",
+};
 
-/** The value for the docs page's `for` filter that shows the guides for the page at `pathname`, or
- * null when the page has none (so no link is offered). */
-export function docsFilterFor(pathname: string): string | null {
+/** The docs search term for the page at `pathname`, or null when the page has no guides (so no
+ * "Guides" link is offered). */
+export function docsSearchFor(pathname: string): string | null {
 	const path = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
 	if (guidesForPath(path).length === 0) return null;
-	return ACCOUNT_PAGE.test(path) ? ACCOUNT_PAGE_KEY : path;
+	return GUIDE_SEARCH[ACCOUNT_PAGE.test(path) ? "/accounts/page" : path] ?? null;
 }
 
 /** The guides for the page at `pathname`, in the order to show them. */
@@ -43,11 +64,4 @@ export function guidesForPath(pathname: string): Doc[] {
 	const path = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
 	const slugs = ACCOUNT_PAGE.test(path) ? ["account-page"] : (GUIDES_FOR_PAGE[path] ?? []);
 	return slugs.flatMap((slug) => findDoc(slug) ?? []);
-}
-
-/** What to call the page at `pathname` in words ("Budget", "an account's page"). */
-export function pageLabel(pathname: string): string {
-	if (pathname === ACCOUNT_PAGE_KEY || ACCOUNT_PAGE.test(pathname)) return "an account's page";
-	if (pathname === "/settings") return "Settings";
-	return NAV_ITEMS.find((item) => item.to === pathname)?.label ?? "this page";
 }

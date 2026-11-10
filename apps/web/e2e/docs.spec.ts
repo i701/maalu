@@ -122,7 +122,7 @@ test("the plan, budget and salary guides show live examples", async ({ page }) =
 	}
 });
 
-test("a page's header has one Guides link that opens the docs for that page", async ({
+test("a page's header has one Guides link that opens the docs searched for that page", async ({
 	page,
 	request,
 }) => {
@@ -135,21 +135,19 @@ test("a page's header has one Guides link that opens the docs for that page", as
 	await open(page, "/budget");
 	await expect(page.getByRole("link", { name: "Guides" })).toHaveCount(1);
 	await page.getByRole("link", { name: "Guides" }).click();
-	await expect(page).toHaveURL(/\/docs\?.*for=/);
-	await expect(page.getByText(/Showing the guides for Budget/)).toBeVisible();
+	await expect(page).toHaveURL(/\/docs\?.*q=budget/);
+	// the search box is filled in, and the guides that have to do with the page are listed
+	await expect(page.getByRole("searchbox", { name: "Search the docs" })).toHaveValue("budget");
 	await expect(
 		page.getByRole("link", { name: /Budget and spending limits/ }).first(),
 	).toBeVisible();
 	await expect(page.getByRole("link", { name: /Savings goals/ }).first()).toBeVisible();
-	// only that page's guides until you ask for all of them
-	await expect(page.getByRole("link", { name: /Backups and restoring/ })).toHaveCount(0);
-	await page.getByRole("link", { name: "Show all guides" }).click();
-	await expect(page.getByRole("link", { name: /Backups and restoring/ }).first()).toBeVisible();
 
-	// one account's page has its own guide, not the list's
+	// one account's page searches for its own guide
 	await open(page, `/accounts/${account.id}`);
 	await page.getByRole("link", { name: "Guides" }).click();
-	await expect(page.getByText(/Showing the guide for an account's page/)).toBeVisible();
+	await expect(page.getByRole("searchbox", { name: "Search the docs" })).toHaveValue("account");
+	await expect(page.getByRole("link", { name: /An account's page/ }).first()).toBeVisible();
 
 	// the other pages that have guides show the same one link
 	for (const path of ["/accounts", "/categories", "/tags", "/groups", "/places", "/settings"]) {

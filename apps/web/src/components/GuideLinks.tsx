@@ -1,19 +1,19 @@
 import { useRouterState } from "@tanstack/react-router";
-import { docsFilterFor } from "#/lib/docs/for-page";
+import { docsSearchFor } from "#/lib/docs/for-page";
 import { RouterLink } from "./RouterLinks";
 import Symbol from "./Symbol";
 
-/** In a page's header: one frosted "Guides" pill that opens the docs filtered to what explains this
- * page. One link however many guides there are (so the banner does not grow with the docs), and
+/** In a page's header: one frosted "Guides" pill that opens the docs with the search box filled in
+ * for this page, listing what explains it. One link however many guides there are (so the banner does not grow with the docs), and
  * the docs page lists them. Nothing for a page that has none. */
 export default function GuideLinks() {
 	const pathname = useRouterState({ select: (s) => s.location.pathname });
-	const filter = docsFilterFor(pathname);
-	if (!filter) return null;
+	const term = docsSearchFor(pathname);
+	if (!term) return null;
 	return (
 		<RouterLink
 			to="/docs"
-			search={{ for: filter }}
+			search={{ q: term }}
 			underline="none"
 			sx={{
 				display: "inline-flex",
