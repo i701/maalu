@@ -31,7 +31,28 @@ data class Account(
     @SerialName("account_number") val accountNumber: String? = null,
     @SerialName("is_liability") val isLiability: Boolean = false,
     @SerialName("exchange_rate") val exchangeRate: String = "1",
+    val description: String? = null,
+    @SerialName("opening_amount") val openingAmount: String = "0",
+    @SerialName("credit_limit") val creditLimit: String? = null,
+    @SerialName("statement_day") val statementDay: Int? = null,
+    @SerialName("due_day") val dueDay: Int? = null,
+    @SerialName("exclude_from_stats") val excludeFromStats: Boolean = false,
+    val spendable: Boolean? = null,
+    @SerialName("auto_rate") val autoRate: Boolean = false,
+    @SerialName("transaction_count") val transactionCount: Int = 0,
 )
+
+@Serializable
+data class AccountSummary(val assets: String, val liabilities: String, val total: String, val currency: String)
+
+@Serializable
+data class AccountTrend(@SerialName("account_id") val accountId: String, val currency: String, val balances: List<String> = emptyList())
+
+@Serializable
+data class CurrencyList(val currencies: List<String> = emptyList())
+
+@Serializable
+data class MarketRate(val rate: String, val exact: Boolean = true)
 
 @Serializable
 data class UserMe(

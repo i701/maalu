@@ -3,6 +3,7 @@ package app.maalu.ui.components
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -59,3 +60,25 @@ fun PairedColumns(values: List<Pair2>, colorA: Color, colorB: Color, modifier: M
         }
     }
 }
+
+/**
+ * A tiny line under an account's balance: green when it rose over the period, orange when it fell, grey
+ * when it did not move. A flat line sits on the bottom edge so every row shares a baseline.
+ */
+@Composable
+fun Sparkline(values: List<Double>, rose: Color, fell: Color, flat: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier.androidx_size()) {
+        if (values.size < 2) return@Canvas
+        val lo = values.min(); val hi = values.max()
+        val span = hi - lo
+        val color = when { values.last() > values.first() -> rose; values.last() < values.first() -> fell; else -> flat }
+        val pad = 2.dp.toPx()
+        fun x(i: Int) = size.width * i / (values.size - 1)
+        fun y(v: Double): Float = if (span <= 0.0) size.height - pad else pad + (size.height - 2 * pad) * (1 - ((v - lo) / span).toFloat())
+        val line = Path().apply { values.forEachIndexed { i, v -> if (i == 0) moveTo(x(i), y(v)) else lineTo(x(i), y(v)) } }
+        drawPath(line, color, style = Stroke(width = 1.5.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+        drawCircle(color, radius = 2.5.dp.toPx(), center = Offset(x(values.lastIndex), y(values.last())))
+    }
+}
+
+private fun Modifier.androidx_size(): Modifier = this.then(Modifier.width(64.dp).height(22.dp))
