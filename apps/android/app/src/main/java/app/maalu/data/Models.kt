@@ -328,3 +328,53 @@ data class CardStatement(
     val state: String,
     @SerialName("days_until_due") val daysUntilDue: Int,
 )
+
+@Serializable
+data class Subscription(
+    val id: String,
+    val name: String,
+    val vendor: NameRef? = null,
+    val amount: String,
+    val currency: String,
+    @SerialName("exchange_rate") val exchangeRate: String = "1",
+    @SerialName("base_amount") val baseAmount: String = amount,
+    val account: NameRef? = null,
+    @SerialName("payment_method") val paymentMethod: String = "other",
+    val category: String = "",
+    @SerialName("interval_unit") val intervalUnit: String = "month",
+    @SerialName("interval_count") val intervalCount: Int = 1,
+    @SerialName("start_date") val startDate: String,
+    val status: String = "active",
+    @SerialName("last_paid_date") val lastPaidDate: String? = null,
+    @SerialName("next_due_date") val nextDueDate: String? = null,
+    @SerialName("is_overdue") val isOverdue: Boolean = false,
+    @SerialName("monthly_base_cost") val monthlyBaseCost: String = "0",
+    @SerialName("installments_total") val installmentsTotal: Int? = null,
+    @SerialName("payments_made") val paymentsMade: Int = 0,
+    @SerialName("installments_left") val installmentsLeft: Int? = null,
+    @SerialName("remind_days_before") val remindDaysBefore: Int? = null,
+    @SerialName("amount_varies") val amountVaries: Boolean = false,
+)
+
+@Serializable
+data class SubscriptionSummary(
+    @SerialName("active_count") val activeCount: Int,
+    @SerialName("monthly_base_total") val monthlyBaseTotal: String,
+    val currency: String,
+)
+
+/** A recurring payment found in the history, offered as a subscription. */
+@Serializable
+data class SubscriptionCandidate(
+    @SerialName("vendor_id") val vendorId: String,
+    @SerialName("vendor_name") val vendorName: String,
+    val currency: String,
+    val amount: String,
+    @SerialName("amount_varies") val amountVaries: Boolean = false,
+    @SerialName("interval_unit") val intervalUnit: String,
+    @SerialName("interval_count") val intervalCount: Int = 1,
+    val occurrences: Int = 0,
+    @SerialName("next_due") val nextDue: String? = null,
+    val confidence: String = "medium",
+    val category: String = "",
+)

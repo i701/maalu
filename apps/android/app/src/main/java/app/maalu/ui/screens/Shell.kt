@@ -76,7 +76,7 @@ private const val BUDGET = 3
 /**
  * The signed-in frame: a sidebar drawer with every destination (a menu button opens it, or swipe from the left edge),
  * a top app bar that holds the screen's name and collapses as the content scrolls, and the bottom bar with the four
- * everyday places. Dashboard, Transactions, Accounts, Budget, Categories, Tags and Vendors are real; the other destinations are placeholders.
+ * everyday places. Dashboard, Transactions, Accounts, Budget, Categories, Tags, Vendors and Subscriptions are real; the other destinations are placeholders.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -162,6 +162,7 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
                     "categories" -> CategoriesScreen(api)
                     "tags" -> TagsScreen(api)
                     "vendors" -> VendorsScreen(api)
+                    "subscriptions" -> SubscriptionsScreen(api)
                     else -> ComingSoon(destination)
                 }
                 else when (selected) {
