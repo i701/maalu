@@ -63,17 +63,17 @@ export default function SearchField({
 			}}
 			slotProps={{
 				htmlInput: { maxLength: 100 },
-					// Cut the label short before the icon on the right, so a long one ends in an ellipsis
-					// beside it instead of running underneath. Once it floats up it has the whole width.
-					inputLabel: {
-						sx: {
-							"&:not(.MuiInputLabel-shrink)": {
-								maxWidth: "calc(100% - 64px)",
-								textOverflow: "ellipsis",
-								overflow: "hidden",
-							},
+				// Cut the label short before the icon on the right, so a long one ends in an ellipsis
+				// beside it instead of running underneath. Once it floats up it has the whole width.
+				inputLabel: {
+					sx: {
+						"&:not(.MuiInputLabel-shrink)": {
+							maxWidth: "calc(100% - 64px)",
+							textOverflow: "ellipsis",
+							overflow: "hidden",
 						},
 					},
+				},
 				input: {
 					// On the right, so the label has the left of the field to itself: the clear button
 					// once there is text, the search icon before that.
