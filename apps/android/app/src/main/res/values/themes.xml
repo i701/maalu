@@ -1,0 +1,4 @@
+<resources>
+    <!-- Compose draws the real theme; this only colours the window before the first frame. -->
+    <style name="Theme.Maalu" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>
