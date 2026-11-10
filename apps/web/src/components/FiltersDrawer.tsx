@@ -59,13 +59,12 @@ export default function FiltersDrawer({
 				anchor="bottom"
 				open={open}
 				onClose={() => setOpen(false)}
-				// The demo's bottom sheet: it slides up on the default spatial spring over a light
-				// scrim, with a grab handle at the top.
-				transitionDuration={{ enter: 484, exit: 250 }}
+				// Same as the "More" sheet, which is smooth: MUI's own slide curve and duration. The earlier
+				// `linear()` spring easing (484ms) is what Safari animates badly. The panel is also kept
+				// mounted, so its many fields are built once, before the drawer is ever opened, instead of
+				// during the slide (that mounting on the main thread is what made it stutter).
+				keepMounted
 				slotProps={{
-					transition: {
-						easing: { enter: "var(--spring-spatial-default)", exit: "var(--ease-emph-accel)" },
-					},
 					backdrop: { sx: { backgroundColor: "rgb(0 0 0 / 0.32)" } },
 					paper: {
 						sx: {
