@@ -21,6 +21,14 @@ KEEP_DAYS = 90  # notifications older than this are swept
 # a user's data is looked at once in a while, not on every request. The daily job ignores this.
 SYNC_EVERY_SECONDS = 300
 _last_sync: dict[uuid.UUID, float] = {}
+_changed_at: dict[uuid.UUID, float] = {}
+
+
+def data_changed(user_id: uuid.UUID) -> None:
+    """The user's data just changed: look for news at the next read. Also tells a look already under
+    way (started before this change) not to note itself as done, since it may not have seen it."""
+    _last_sync.pop(user_id, None)
+    _changed_at[user_id] = time.monotonic()
 
 
 class NotificationNotFoundError(Exception):
@@ -275,16 +283,19 @@ class NotificationService:
             now = time.monotonic()
             if now - _last_sync.get(user_id, -SYNC_EVERY_SECONDS) < SYNC_EVERY_SECONDS:
                 return 0
+        started = time.monotonic()
         stmt = select(User).where(User.is_active.is_(True))
         if user_id is not None:
             stmt = stmt.where(User.id == user_id)
         users = (await self.db.scalars(stmt)).all()
         made = sum([await self._sync_user(u) for u in users])
-        if user_id is not None and not force:
+        if user_id is not None and not force and _changed_at.get(user_id, 0.0) < started:
             # Noted once the look is done, not before: a parallel request (the bell's count and the
             # list load together) would otherwise skip the look and read before this one commits,
             # and show a count the list cannot match. Two looks at once are safe: the unique key
-            # makes the second wait for the first and make nothing twice.
+            # makes the second wait for the first and make nothing twice. Not noted at all when the
+            # data changed while this look ran: it may have missed the change, and noting it would
+            # silence the next reads for minutes.
             _last_sync[user_id] = time.monotonic()
         return made
 

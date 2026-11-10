@@ -470,7 +470,7 @@ class SalarySplitService:
             return
         self.db.add(SalarySplitTask(user_id=user_id, transaction_id=salary.id))
         # the next look for notifications should not wait out its throttle: this is news
-        notification._last_sync.pop(user_id, None)
+        notification.data_changed(user_id)
         await self.db.flush()
         if not any(r.auto for r in rules):
             return

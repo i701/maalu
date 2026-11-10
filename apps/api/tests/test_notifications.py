@@ -226,6 +226,30 @@ async def test_a_new_transaction_ends_the_wait_for_the_next_look(
     assert len(await listed(client, auth)) == 1  # the new planned payment is noticed at once
 
 
+async def test_a_look_that_overlaps_a_change_does_not_silence_the_next_one(
+    client: AsyncClient, auth, monkeypatch
+):
+    """A look that started before a write and ends after it may have missed the change, so it must
+    not note itself as done (that would hide the new news for the next few minutes)."""
+    import uuid
+
+    monkeypatch.setattr(notifications, "SYNC_EVERY_SECONDS", 300)
+    me = uuid.UUID((await client.get("/api/v1/users/me", headers=auth)).json()["id"])
+    notifications._last_sync.clear()
+    real = notifications.NotificationService._sync_user
+
+    async def look_while_data_changes(self, user):
+        notifications.data_changed(user.id)  # a write lands in the middle of the look
+        return await real(self, user)
+
+    monkeypatch.setattr(notifications.NotificationService, "_sync_user", look_while_data_changes)
+    await listed(client, auth)
+    assert me not in notifications._last_sync  # so the next read looks again
+    monkeypatch.setattr(notifications.NotificationService, "_sync_user", real)
+    await listed(client, auth)
+    assert me in notifications._last_sync  # a look that nothing interrupted is noted as before
+
+
 async def test_the_daily_job_looks_for_everyone_and_sweeps_old_ones(
     client: AsyncClient, auth, signup: Signup
 ):
