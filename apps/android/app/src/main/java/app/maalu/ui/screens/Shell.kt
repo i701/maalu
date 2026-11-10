@@ -65,11 +65,12 @@ private val Tabs = listOf(
 private const val DASHBOARD = 0
 private const val TRANSACTIONS = 1
 private const val ACCOUNTS = 2
+private const val BUDGET = 3
 private const val MORE = 4
 
 /**
  * The signed-in frame: a large top app bar that holds the screen's name and collapses as the content
- * scrolls (the native pattern), and the bottom bar. Dashboard, Transactions and Accounts are real; the rest are placeholders.
+ * scrolls (the native pattern), and the bottom bar. Dashboard, Transactions, Accounts and Budget are real; the rest are placeholders.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -86,9 +87,9 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
         topBar = {
             MediumFlexibleTopAppBar(
                 title = { Text(Tabs[selected].label.let { if (selected == MORE) "More" else it }) },
-                subtitle = if (selected == DASHBOARD) ({ Text(monthLabel(LocalDate.parse(month))) }) else null,
+                subtitle = if (selected == DASHBOARD || selected == BUDGET) ({ Text(monthLabel(LocalDate.parse(month))) }) else null,
                 actions = {
-                    if (selected == DASHBOARD) {
+                    if (selected == DASHBOARD || selected == BUDGET) {
                         IconButton(onClick = { month = LocalDate.parse(month).minusMonths(1).toString() }) {
                             Icon(Icons.AutoMirrored.Outlined.KeyboardArrowLeft, "Previous month")
                         }
@@ -119,6 +120,7 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
                 DASHBOARD -> DashboardScreen(api, month)
                 TRANSACTIONS -> TransactionsScreen(api)
                 ACCOUNTS -> AccountsScreen(api)
+                BUDGET -> BudgetScreen(api, month)
                 MORE -> Column(
                     Modifier.fillMaxSize().padding(24.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),

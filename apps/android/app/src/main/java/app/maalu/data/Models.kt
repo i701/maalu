@@ -139,6 +139,12 @@ data class Monthly(val currency: String, val months: List<MonthlyPoint> = emptyL
 data class BudgetTotals(val activity: String, val amount: String, val available: String, val percent: Int, val status: String)
 
 @Serializable
+data class BudgetPeriod(val start: String, val end: String, @SerialName("is_current") val isCurrent: Boolean = false)
+
+@Serializable
+data class IdName(val id: String, val name: String)
+
+@Serializable
 data class BudgetLine(
     val id: String,
     val name: String,
@@ -147,13 +153,40 @@ data class BudgetLine(
     val available: String,
     val percent: Int,
     val status: String,
+    val carried: String = "0",
+    @SerialName("moved_in") val movedIn: String = "0",
+    @SerialName("moved_out") val movedOut: String = "0",
+    val rollover: Boolean = false,
+    val kind: String? = null,
+    val categories: List<IdName> = emptyList(),
+    @SerialName("runs_from") val runsFrom: String? = null,
+    @SerialName("runs_until") val runsUntil: String? = null,
+)
+
+/** A limit for set dates: one total counted over its whole stretch. */
+@Serializable
+data class FixedLine(
+    val id: String,
+    val name: String,
+    val activity: String,
+    val amount: String,
+    val available: String,
+    val percent: Int,
+    val status: String,
+    @SerialName("start_date") val startDate: String,
+    @SerialName("end_date") val endDate: String,
+    val state: String = "active",
+    @SerialName("days_left") val daysLeft: Int? = null,
+    val categories: List<IdName> = emptyList(),
 )
 
 @Serializable
 data class Budget(
     val currency: String,
+    val period: BudgetPeriod? = null,
     val totals: BudgetTotals,
     val lines: List<BudgetLine> = emptyList(),
+    @SerialName("fixed_lines") val fixedLines: List<FixedLine> = emptyList(),
     val attention: Int = 0,
 )
 
@@ -166,6 +199,16 @@ data class Goal(
     @SerialName("target_amount") val targetAmount: String,
     val percent: Int,
     val reached: Boolean = false,
+    val mode: String = "manual",
+    val remaining: String = "0",
+    val account: IdName? = null,
+    @SerialName("monthly_amount") val monthlyAmount: String? = null,
+    @SerialName("target_date") val targetDate: String? = null,
+    @SerialName("months_left") val monthsLeft: Int? = null,
+    @SerialName("needed_per_month") val neededPerMonth: String? = null,
+    @SerialName("period_status") val periodStatus: String? = null,
+    @SerialName("period_planned") val periodPlanned: String? = null,
+    @SerialName("period_contributed") val periodContributed: String? = null,
 )
 
 @Serializable
@@ -208,7 +251,7 @@ data class Transaction(
 
 /** For the filter pickers: a category (with its parent's id, for indenting) and a tag. */
 @Serializable
-data class CategoryItem(val id: String, val name: String, @SerialName("parent_id") val parentId: String? = null)
+data class CategoryItem(val id: String, val name: String, @SerialName("parent_id") val parentId: String? = null, val color: String? = null)
 
 @Serializable
 data class TagItem(val id: String, val name: String)
