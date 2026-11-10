@@ -232,7 +232,8 @@ function Dock({ items, color }: { items: DockItem[]; color: string }) {
 	return (
 		<Box
 			sx={{
-				display: { xs: "grid", md: "none" },
+				// a phone only: from `sm` up the page shows its own tiles instead
+				display: { xs: "grid", sm: "none" },
 				gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))`,
 				mx: 2.5,
 				mt: "-14px", // tucked under the banner's rounded bottom
