@@ -62,6 +62,10 @@ from app.services.subscription import (
     TransactionAlreadyLinkedError,
     TransactionNotFoundError,
 )
+from app.services.subscription_candidates import (
+    CandidateNotFoundError,
+    SubscriptionCandidateService,
+)
 from app.services.tag import TagNameTakenError, TagNotFoundError, TagService
 from app.services.template import (
     TemplateNameTakenError,
@@ -105,6 +109,7 @@ __all__ = [
     "BudgetLineNotFoundError",
     "BudgetLineRuleError",
     "BudgetService",
+    "CandidateNotFoundError",
     "CardNotFoundError",
     "CardRuleError",
     "CardService",
@@ -143,6 +148,7 @@ __all__ = [
     "SnapshotService",
     "StatsRangeError",
     "StatsService",
+    "SubscriptionCandidateService",
     "SubscriptionNotFoundError",
     "SubscriptionService",
     "TagNameTakenError",

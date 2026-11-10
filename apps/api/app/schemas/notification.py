@@ -16,6 +16,7 @@ NotificationKind = Literal[
     "card_due",
     "card_overdue",
     "card_limit",
+    "subscription_candidate",
 ]
 
 

@@ -1505,6 +1505,68 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/subscriptions/candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Candidates
+         * @description Charges that repeat in what you have already paid (same vendor, same rhythm, a similar
+         *     amount) and are not a subscription yet. Nothing is created: these are suggestions.
+         */
+        get: operations["list_candidates_api_v1_subscriptions_candidates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/subscriptions/candidates/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept Candidate
+         * @description Make the suggested subscription and link the payments already made to it, so the next one
+         *     is planned. The pattern is found again here; only the changes in `data` are taken from you.
+         */
+        post: operations["accept_candidate_api_v1_subscriptions_candidates_accept_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/subscriptions/candidates/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Dismiss Candidate
+         * @description "Not a subscription": stop suggesting this vendor (in this currency).
+         */
+        post: operations["dismiss_candidate_api_v1_subscriptions_candidates_dismiss_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/subscriptions/from-transaction/{transaction_id}": {
         parameters: {
             query?: never;
@@ -3330,6 +3392,37 @@ export interface components {
              */
             vendor_name?: string | null;
         };
+        /**
+         * CandidateAccept
+         * @description Accept a suggestion. What the person changed in the confirm step is sent; the rest comes
+         *     from the pattern, which the server finds again and does not take from the client.
+         */
+        CandidateAccept: {
+            /** Amount */
+            amount?: number | string | null;
+            /** Currency */
+            currency: string;
+            /** Interval Count */
+            interval_count?: number | null;
+            interval_unit?: components["schemas"]["IntervalUnit"] | null;
+            /** Name */
+            name?: string | null;
+            /**
+             * Vendor Id
+             * Format: uuid
+             */
+            vendor_id: string;
+        };
+        /** CandidateKey */
+        CandidateKey: {
+            /** Currency */
+            currency: string;
+            /**
+             * Vendor Id
+             * Format: uuid
+             */
+            vendor_id: string;
+        };
         /** CardCreate */
         CardCreate: {
             /**
@@ -4416,7 +4509,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "payment_due" | "payment_overdue" | "installments_done" | "budget_warning" | "budget_over" | "goal_reached" | "split_waiting" | "money_short" | "card_due" | "card_overdue" | "card_limit";
+            kind: "payment_due" | "payment_overdue" | "installments_done" | "budget_warning" | "budget_over" | "goal_reached" | "split_waiting" | "money_short" | "card_due" | "card_overdue" | "card_limit" | "subscription_candidate";
             /**
              * Link
              * @description A page of the app to open for it
@@ -5033,6 +5126,72 @@ export interface components {
             refunded_amount: string;
             /** Tax Amount */
             tax_amount: string | null;
+        };
+        /**
+         * SubscriptionCandidate
+         * @description A charge that repeats, found in what was already paid: what a subscription made from it
+         *     would hold. Worked out each time, never stored.
+         */
+        SubscriptionCandidate: {
+            /** Account Id */
+            account_id: string | null;
+            /** Account Name */
+            account_name: string | null;
+            /**
+             * Amount
+             * @description What the next one will most likely be (the usual amount).
+             */
+            amount: string;
+            /**
+             * Amount Varies
+             * @description The amount is different each time (a utility bill).
+             */
+            amount_varies: boolean;
+            /** Category */
+            category: string;
+            /**
+             * Confidence
+             * @description "high" (regular, alike) or "medium" (a looser fit)
+             */
+            confidence: string;
+            /** Currency */
+            currency: string;
+            /**
+             * First Date
+             * Format: date
+             */
+            first_date: string;
+            /** Interval Count */
+            interval_count: number;
+            interval_unit: components["schemas"]["IntervalUnit"];
+            /**
+             * Last Date
+             * Format: date
+             */
+            last_date: string;
+            /**
+             * Next Due
+             * Format: date
+             */
+            next_due: string;
+            /**
+             * Occurrences
+             * @description How many payments make up the pattern.
+             */
+            occurrences: number;
+            payment_method: components["schemas"]["PaymentMethod"];
+            /**
+             * Transaction Ids
+             * @description The payments it would link, oldest first.
+             */
+            transaction_ids: string[];
+            /**
+             * Vendor Id
+             * Format: uuid
+             */
+            vendor_id: string;
+            /** Vendor Name */
+            vendor_name: string;
         };
         /** SubscriptionCreate */
         SubscriptionCreate: {
@@ -8889,6 +9048,90 @@ export interface operations {
             };
         };
     };
+    list_candidates_api_v1_subscriptions_candidates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubscriptionCandidate"][];
+                };
+            };
+        };
+    };
+    accept_candidate_api_v1_subscriptions_candidates_accept_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CandidateAccept"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubscriptionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dismiss_candidate_api_v1_subscriptions_candidates_dismiss_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CandidateKey"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     subscription_from_transaction_api_v1_subscriptions_from_transaction__transaction_id__post: {
         parameters: {
             query?: never;
@@ -10821,7 +11064,7 @@ export const importRowInTypeValues: ReadonlyArray<FlattenedDeepRequired<componen
 export const importSkippedOutcomeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ImportSkipped"]["outcome"]> = ["skipped", "failed"];
 export const intervalUnitValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["IntervalUnit"]> = ["week", "month", "year"];
 export const netWorthDriverKeyValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NetWorthDriver"]["key"]> = ["income", "spending", "adjustments", "transfers", "exchange_rates"];
-export const notificationResponseKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NotificationResponse"]["kind"]> = ["payment_due", "payment_overdue", "installments_done", "budget_warning", "budget_over", "goal_reached", "split_waiting", "money_short", "card_due", "card_overdue", "card_limit"];
+export const notificationResponseKindValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["NotificationResponse"]["kind"]> = ["payment_due", "payment_overdue", "installments_done", "budget_warning", "budget_over", "goal_reached", "split_waiting", "money_short", "card_due", "card_overdue", "card_limit", "subscription_candidate"];
 export const paymentMethodValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PaymentMethod"]> = ["cash", "bank_transfer", "debit_card", "credit_card", "other"];
 export const previewRowDuplicateAnyOf0Values: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PreviewRow"]["duplicate"]> = ["reference", "transfer", "possible"];
 export const previewRowTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PreviewRow"]["type"]> = ["income", "expense"];

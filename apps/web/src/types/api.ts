@@ -109,6 +109,7 @@ export type EndedSessions = Schemas["EndedSessions"];
 export type RecoveryCodes = Schemas["RecoveryCodes"];
 export type Vendor = Schemas["VendorResponse"];
 export type Subscription = Schemas["SubscriptionResponse"];
+export type SubscriptionCandidate = Schemas["SubscriptionCandidate"];
 export type SubscriptionSummary = Schemas["SubscriptionSummary"];
 export type Account = Schemas["AccountResponse"];
 export type TransferSuggestion = Schemas["TransferSuggestion"];

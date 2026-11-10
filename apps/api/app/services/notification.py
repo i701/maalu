@@ -253,6 +253,29 @@ class NotificationService:
             )
         return made
 
+    async def _candidates(self, user: User, known: set[str]) -> int:
+        """A charge that repeats clearly (regular, alike, still going), not a subscription yet.
+        Only the sure ones are told, one notification per vendor, so a loose guess never nags."""
+        from app.services.subscription_candidates import SubscriptionCandidateService
+
+        made = 0
+        for c in await SubscriptionCandidateService(self.db).candidates(user.id):
+            if c.series.confidence != "high":
+                continue
+            unit = {"week": "week", "month": "month", "year": "year"}[c.series.unit.value]
+            every = unit if c.series.count == 1 else f"{c.series.count} {unit}s"
+            made += await self._add(
+                user.id,
+                known,
+                kind="subscription_candidate",
+                title=f"{c.vendor.name} looks like a subscription",
+                body=f"{_money(c.series.amount, c.currency)} every {every}, "
+                f"seen {len(c.series.charges)} times. Add it to plan the next payment.",
+                link="/subscriptions",
+                dedupe_key=f"subcand:{c.vendor.id}:{c.currency}",
+            )
+        return made
+
     async def _sync_user(self, user: User) -> int:
         known = set(
             (
@@ -269,6 +292,7 @@ class NotificationService:
             made += await self._split_waiting(user, known)
             made += await self._money_short(user, known)
             made += await self._cards(user, known, today)
+            made += await self._candidates(user, known)
         if user.notify_budget:
             made += await self._budget(user, known)
         if user.notify_goals:

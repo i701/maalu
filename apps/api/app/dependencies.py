@@ -23,6 +23,7 @@ from app.services import (
     SalarySplitService,
     SessionService,
     StatsService,
+    SubscriptionCandidateService,
     SubscriptionService,
     TagService,
     TemplateService,
@@ -89,6 +90,10 @@ def get_subscription_service(db: DbSession) -> SubscriptionService:
     return SubscriptionService(db)
 
 
+def get_subscription_candidate_service(db: DbSession) -> SubscriptionCandidateService:
+    return SubscriptionCandidateService(db)
+
+
 def get_card_service(db: DbSession) -> CardService:
     return CardService(db)
 
@@ -141,6 +146,9 @@ SalarySplitServiceDep = Annotated[SalarySplitService, Depends(get_salary_split_s
 CategoryServiceDep = Annotated[CategoryService, Depends(get_category_service)]
 AccountServiceDep = Annotated[AccountService, Depends(get_account_service)]
 SubscriptionServiceDep = Annotated[SubscriptionService, Depends(get_subscription_service)]
+SubscriptionCandidateServiceDep = Annotated[
+    SubscriptionCandidateService, Depends(get_subscription_candidate_service)
+]
 CardServiceDep = Annotated[CardService, Depends(get_card_service)]
 TagServiceDep = Annotated[TagService, Depends(get_tag_service)]
 TemplateServiceDep = Annotated[TemplateService, Depends(get_template_service)]

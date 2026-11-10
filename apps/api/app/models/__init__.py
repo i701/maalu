@@ -16,6 +16,7 @@ from app.models.salary_rule import SalaryRule
 from app.models.salary_split_task import SalarySplitTask
 from app.models.session import UserSession
 from app.models.subscription import Subscription
+from app.models.subscription_dismissal import SubscriptionDismissal
 from app.models.tag import Tag, template_tags, transaction_tags, vendor_tags
 from app.models.template import TransactionTemplate
 from app.models.transaction import Transaction, TransactionSplit
@@ -45,6 +46,7 @@ __all__ = [
     "SalarySplitTask",
     "SnapshotDirty",
     "Subscription",
+    "SubscriptionDismissal",
     "Tag",
     "Transaction",
     "TransactionAttachment",

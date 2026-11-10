@@ -45,6 +45,7 @@ OWNED = (
     "import_batches",
     "salary_rules",
     "salary_split_tasks",
+    "subscription_dismissals",
     "subscriptions",
     "tags",
     "transaction_groups",

@@ -2264,6 +2264,98 @@
         "title": "BulkUpdate",
         "type": "object"
       },
+      "CandidateAccept": {
+        "description": "Accept a suggestion. What the person changed in the confirm step is sent; the rest comes\nfrom the pattern, which the server finds again and does not take from the client.",
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "currency": {
+            "pattern": "^[A-Za-z]{3}$",
+            "title": "Currency",
+            "type": "string"
+          },
+          "interval_count": {
+            "anyOf": [
+              {
+                "maximum": 120.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interval Count"
+          },
+          "interval_unit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IntervalUnit"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "vendor_id": {
+            "format": "uuid",
+            "title": "Vendor Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "vendor_id",
+          "currency"
+        ],
+        "title": "CandidateAccept",
+        "type": "object"
+      },
+      "CandidateKey": {
+        "properties": {
+          "currency": {
+            "pattern": "^[A-Za-z]{3}$",
+            "title": "Currency",
+            "type": "string"
+          },
+          "vendor_id": {
+            "format": "uuid",
+            "title": "Vendor Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "vendor_id",
+          "currency"
+        ],
+        "title": "CandidateKey",
+        "type": "object"
+      },
       "CardCreate": {
         "properties": {
           "account_id": {
@@ -4682,7 +4774,8 @@
               "money_short",
               "card_due",
               "card_overdue",
-              "card_limit"
+              "card_limit",
+              "subscription_candidate"
             ],
             "title": "Kind",
             "type": "string"
@@ -5998,6 +6091,126 @@
           "refunded_amount"
         ],
         "title": "SplitResponse",
+        "type": "object"
+      },
+      "SubscriptionCandidate": {
+        "description": "A charge that repeats, found in what was already paid: what a subscription made from it\nwould hold. Worked out each time, never stored.",
+        "properties": {
+          "account_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Id"
+          },
+          "account_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Name"
+          },
+          "amount": {
+            "description": "What the next one will most likely be (the usual amount).",
+            "title": "Amount",
+            "type": "string"
+          },
+          "amount_varies": {
+            "description": "The amount is different each time (a utility bill).",
+            "title": "Amount Varies",
+            "type": "boolean"
+          },
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "confidence": {
+            "description": "\"high\" (regular, alike) or \"medium\" (a looser fit)",
+            "title": "Confidence",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "first_date": {
+            "format": "date",
+            "title": "First Date",
+            "type": "string"
+          },
+          "interval_count": {
+            "title": "Interval Count",
+            "type": "integer"
+          },
+          "interval_unit": {
+            "$ref": "#/components/schemas/IntervalUnit"
+          },
+          "last_date": {
+            "format": "date",
+            "title": "Last Date",
+            "type": "string"
+          },
+          "next_due": {
+            "format": "date",
+            "title": "Next Due",
+            "type": "string"
+          },
+          "occurrences": {
+            "description": "How many payments make up the pattern.",
+            "title": "Occurrences",
+            "type": "integer"
+          },
+          "payment_method": {
+            "$ref": "#/components/schemas/PaymentMethod"
+          },
+          "transaction_ids": {
+            "description": "The payments it would link, oldest first.",
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Transaction Ids",
+            "type": "array"
+          },
+          "vendor_id": {
+            "format": "uuid",
+            "title": "Vendor Id",
+            "type": "string"
+          },
+          "vendor_name": {
+            "title": "Vendor Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "vendor_id",
+          "vendor_name",
+          "currency",
+          "amount",
+          "amount_varies",
+          "interval_unit",
+          "interval_count",
+          "occurrences",
+          "first_date",
+          "last_date",
+          "next_due",
+          "confidence",
+          "category",
+          "account_id",
+          "account_name",
+          "payment_method",
+          "transaction_ids"
+        ],
+        "title": "SubscriptionCandidate",
         "type": "object"
       },
       "SubscriptionCreate": {
@@ -13473,6 +13686,124 @@
           }
         ],
         "summary": "Create Subscription",
+        "tags": [
+          "subscriptions"
+        ]
+      }
+    },
+    "/api/v1/subscriptions/candidates": {
+      "get": {
+        "description": "Charges that repeat in what you have already paid (same vendor, same rhythm, a similar\namount) and are not a subscription yet. Nothing is created: these are suggestions.",
+        "operationId": "list_candidates_api_v1_subscriptions_candidates_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SubscriptionCandidate"
+                  },
+                  "title": "Response List Candidates Api V1 Subscriptions Candidates Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "List Candidates",
+        "tags": [
+          "subscriptions"
+        ]
+      }
+    },
+    "/api/v1/subscriptions/candidates/accept": {
+      "post": {
+        "description": "Make the suggested subscription and link the payments already made to it, so the next one\nis planned. The pattern is found again here; only the changes in `data` are taken from you.",
+        "operationId": "accept_candidate_api_v1_subscriptions_candidates_accept_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CandidateAccept"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Accept Candidate",
+        "tags": [
+          "subscriptions"
+        ]
+      }
+    },
+    "/api/v1/subscriptions/candidates/dismiss": {
+      "post": {
+        "description": "\"Not a subscription\": stop suggesting this vendor (in this currency).",
+        "operationId": "dismiss_candidate_api_v1_subscriptions_candidates_dismiss_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CandidateKey"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Dismiss Candidate",
         "tags": [
           "subscriptions"
         ]

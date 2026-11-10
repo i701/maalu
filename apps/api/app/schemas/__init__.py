@@ -66,6 +66,9 @@ from app.schemas.salary import (
     SalarySplitTaskResponse,
 )
 from app.schemas.subscription import (
+    CandidateAccept,
+    CandidateKey,
+    SubscriptionCandidate,
     SubscriptionCreate,
     SubscriptionFromTransaction,
     SubscriptionRef,
@@ -150,6 +153,8 @@ __all__ = [
     "BulkResult",
     "BulkSkipped",
     "BulkUpdate",
+    "CandidateAccept",
+    "CandidateKey",
     "CardCreate",
     "CardRef",
     "CardResponse",
@@ -209,6 +214,7 @@ __all__ = [
     "SessionResponse",
     "SplitInput",
     "SplitResponse",
+    "SubscriptionCandidate",
     "SubscriptionCreate",
     "SubscriptionFromTransaction",
     "SubscriptionRef",

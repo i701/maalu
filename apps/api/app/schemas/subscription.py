@@ -149,3 +149,43 @@ class SubscriptionSummary(BaseModel):
     active_count: int
     monthly_base_total: Decimal
     currency: str
+
+
+class SubscriptionCandidate(BaseModel):
+    """A charge that repeats, found in what was already paid: what a subscription made from it
+    would hold. Worked out each time, never stored."""
+
+    vendor_id: uuid.UUID
+    vendor_name: str
+    currency: str
+    amount: Decimal = Field(description="What the next one will most likely be (the usual amount).")
+    amount_varies: bool = Field(description="The amount is different each time (a utility bill).")
+    interval_unit: IntervalUnit
+    interval_count: int
+    occurrences: int = Field(description="How many payments make up the pattern.")
+    first_date: date
+    last_date: date
+    next_due: date
+    confidence: str = Field(description='"high" (regular, alike) or "medium" (a looser fit)')
+    category: str
+    account_id: uuid.UUID | None
+    account_name: str | None
+    payment_method: PaymentMethod
+    transaction_ids: list[uuid.UUID] = Field(
+        description="The payments it would link, oldest first."
+    )
+
+
+class CandidateKey(BaseModel):
+    vendor_id: uuid.UUID
+    currency: CurrencyCode
+
+
+class CandidateAccept(CandidateKey):
+    """Accept a suggestion. What the person changed in the confirm step is sent; the rest comes
+    from the pattern, which the server finds again and does not take from the client."""
+
+    name: Name | None = None
+    interval_unit: IntervalUnit | None = None
+    interval_count: IntervalCount | None = None
+    amount: Cost | None = None

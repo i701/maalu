@@ -3,10 +3,17 @@ from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, Response, status
 
-from app.dependencies import CurrentUserId, SubscriptionServiceDep
+from app.dependencies import (
+    CurrentUserId,
+    SubscriptionCandidateServiceDep,
+    SubscriptionServiceDep,
+)
 from app.enums import IntervalUnit, SubscriptionStatus
 from app.pagination import PageDep, set_total
 from app.schemas import (
+    CandidateAccept,
+    CandidateKey,
+    SubscriptionCandidate,
     SubscriptionCreate,
     SubscriptionFromTransaction,
     SubscriptionResponse,
@@ -15,6 +22,7 @@ from app.schemas import (
 )
 from app.services import (
     AccountNotFoundError,
+    CandidateNotFoundError,
     ExchangeRateRequiredError,
     TransactionAlreadyLinkedError,
     TransactionNotFoundError,
@@ -83,6 +91,80 @@ async def list_subscriptions(
 async def subscription_summary(user_id: CurrentUserId, service: SubscriptionServiceDep):
     """Active count and total monthly cost in your base currency."""
     return await service.summary(user_id)
+
+
+def _candidate_response(c) -> SubscriptionCandidate:
+    s = c.series
+    return SubscriptionCandidate(
+        vendor_id=c.vendor.id,
+        vendor_name=c.vendor.name,
+        currency=c.currency,
+        amount=s.amount,
+        amount_varies=s.varies,
+        interval_unit=s.unit,
+        interval_count=s.count,
+        occurrences=len(s.charges),
+        first_date=s.charges[0].on,
+        last_date=s.charges[-1].on,
+        next_due=s.next_due,
+        confidence=s.confidence,
+        category=c.category,
+        account_id=c.account_id,
+        account_name=c.account_name,
+        payment_method=c.payment_method,
+        transaction_ids=[t.id for t in c.transactions],
+    )
+
+
+# Declared before "/{subscription_id}" so these are not parsed as an id.
+@router.get("/candidates", response_model=list[SubscriptionCandidate])
+async def list_candidates(user_id: CurrentUserId, service: SubscriptionCandidateServiceDep):
+    """Charges that repeat in what you have already paid (same vendor, same rhythm, a similar
+    amount) and are not a subscription yet. Nothing is created: these are suggestions."""
+    return [_candidate_response(c) for c in await service.candidates(user_id)]
+
+
+@router.post(
+    "/candidates/accept",
+    response_model=SubscriptionResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def accept_candidate(
+    data: CandidateAccept,
+    user_id: CurrentUserId,
+    candidates: SubscriptionCandidateServiceDep,
+    service: SubscriptionServiceDep,
+):
+    """Make the suggested subscription and link the payments already made to it, so the next one
+    is planned. The pattern is found again here; only the changes in `data` are taken from you."""
+    try:
+        subscription = await candidates.accept(
+            user_id,
+            data.vendor_id,
+            data.currency,
+            name=data.name,
+            interval_unit=data.interval_unit,
+            interval_count=data.interval_count,
+            amount=data.amount,
+        )
+    except CandidateNotFoundError:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "That suggestion is gone") from None
+    except TransactionRuleError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
+    except ExchangeRateRequiredError:
+        raise _RATE_REQUIRED from None
+    return await _present_one(service, subscription)
+
+
+@router.post("/candidates/dismiss", status_code=status.HTTP_204_NO_CONTENT)
+async def dismiss_candidate(
+    data: CandidateKey, user_id: CurrentUserId, service: SubscriptionCandidateServiceDep
+):
+    """ "Not a subscription": stop suggesting this vendor (in this currency)."""
+    try:
+        await service.dismiss(user_id, data.vendor_id, data.currency)
+    except CandidateNotFoundError:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Vendor not found") from None
 
 
 @router.post(
