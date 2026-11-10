@@ -400,6 +400,7 @@ private fun ActiveFilters(f: TxFilters, onChange: (TxFilters) -> Unit) {
             selected = true, onClick = clear, label = { Text(label) },
             trailingIcon = { Icon(Icons.Outlined.Clear, "Remove $label", Modifier.size(16.dp)) },
             colors = InputChipDefaults.inputChipColors(selectedContainerColor = tint.copy(alpha = 0.4f), selectedLabelColor = MaterialTheme.colorScheme.onSurface),
+            shape = CircleShape,
             border = null,
         )
         if (f.dateFrom != null || f.dateTo != null) chip(rangeLabel(f.dateFrom, f.dateTo), Accents.getValue("blue")) { onChange(f.copy(dateFrom = null, dateTo = null)) }
