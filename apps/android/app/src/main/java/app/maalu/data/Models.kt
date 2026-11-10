@@ -263,3 +263,39 @@ data class VendorItem(
     @SerialName("default_category") val defaultCategory: String? = null,
     @SerialName("default_tags") val defaultTags: List<NameRef> = emptyList(),
 )
+
+/** A category as the Categories screen shows it. */
+@Serializable
+data class Category(
+    val id: String,
+    val name: String,
+    val color: String = "blue",
+    @SerialName("parent_id") val parentId: String? = null,
+    val parent: String? = null,
+    @SerialName("child_count") val childCount: Int = 0,
+    val kind: String? = null,
+    @SerialName("effective_kind") val effectiveKind: String? = null,
+    @SerialName("is_salary") val isSalary: Boolean = false,
+    @SerialName("transaction_count") val transactionCount: Int = 0,
+)
+
+@Serializable
+data class Tag(
+    val id: String,
+    val name: String,
+    val color: String = "blue",
+    @SerialName("transaction_count") val transactionCount: Int = 0,
+)
+
+@Serializable
+data class Vendor(
+    val id: String,
+    val name: String,
+    val address: String? = null,
+    val contact: String? = null,
+    val currency: String? = null,
+    @SerialName("is_local") val isLocal: Boolean? = null,
+    @SerialName("default_category") val defaultCategory: String? = null,
+    @SerialName("default_tags") val defaultTags: List<NameRef> = emptyList(),
+    val place: String? = null,
+)
