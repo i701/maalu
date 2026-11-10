@@ -45,7 +45,15 @@ export default function MobileCard({
 		}
 	};
 	return (
-		<Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5, px: 1.5, py: collapsible ? 1 : 1.5 }}>
+		<Box
+			sx={{
+				display: "flex",
+				alignItems: "flex-start",
+				gap: 1.5,
+				px: 1.5,
+				py: collapsible ? 1 : 1.5,
+			}}
+		>
 			{select}
 			{leading}
 			<Box sx={{ flex: 1, minWidth: 0 }}>
