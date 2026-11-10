@@ -1,4 +1,3 @@
-import { morph } from "#/lib/shape";
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
 import IconButton from "@mui/material/IconButton";
@@ -45,65 +44,47 @@ export default function SearchField({
 
 	return (
 		<TextField
-			variant="filled"
+			// A plain outlined MUI field with a floating label, like the rest of the app's inputs (the
+			// theme's outlined variant: hairline border, rounded corners, a 2px primary ring on focus).
+			// The label is the text callers give as `placeholder`, and it floats up while you type.
 			size="small"
-			hiddenLabel
 			type="search"
+			label={placeholder}
 			value={text}
 			onChange={(e) => setText(e.target.value)}
-			placeholder={placeholder}
-			aria-label={placeholder}
 			sx={{
 				// In a toolbar row it grows into the space beside its neighbours (a Filters button stays
 				// next to it even on a phone), between these bounds on wider screens.
 				flex: { xs: "1 1 180px", sm: "1 1 auto" },
 				minWidth: { sm: 320 },
 				maxWidth: { sm: 440 },
-				// The demo's search bar: a 56px pill on the highest container with a soft lift. It
-				// has no label, so hiddenLabel stops MUI reserving room for one.
-				"& .MuiFilledInput-root": {
-					...morph("xl", "md"),
-					// the morph's spring, then the field's own colour and shadow easing
-					transition:
-						"border-radius var(--spring-spatial-fast-dur) var(--spring-spatial-fast), background-color var(--spring-effects-fast-dur) var(--spring-effects-fast), box-shadow var(--spring-effects-fast-dur) var(--spring-effects-fast)",
-					minHeight: 56,
-					pl: 2.25,
-					pr: 1,
-					boxShadow: "var(--elev-3)",
-					"&.Mui-focused": {
-						boxShadow: "var(--elev-2), inset 0 0 0 2px var(--md-sys-color-primary)",
-					},
-				},
-				"& .MuiFilledInput-input": {
-					py: 1.75,
-					fontSize: 16,
-					// The field has its own clear button; hide the browser's (Chromium and Safari).
-					"&::-webkit-search-cancel-button": { WebkitAppearance: "none", display: "none" },
-				},
+				// The field has its own clear button; hide the browser's (Chromium and Safari).
+				"& input::-webkit-search-cancel-button": { WebkitAppearance: "none", display: "none" },
 			}}
 			slotProps={{
 				htmlInput: { maxLength: 100 },
 				input: {
-					startAdornment: (
-						<InputAdornment position="start">
-							<SearchIcon />
+					// On the right, so the label has the left of the field to itself: the clear button
+					// once there is text, the search icon before that.
+					endAdornment: (
+						<InputAdornment position="end">
+							{text ? (
+								<IconButton
+									size="small"
+									aria-label="Clear search"
+									edge="end"
+									onClick={() => {
+										setText("");
+										onChange("");
+									}}
+								>
+									<ClearIcon fontSize="small" />
+								</IconButton>
+							) : (
+								<SearchIcon aria-hidden sx={{ color: "action.active" }} />
+							)}
 						</InputAdornment>
 					),
-					endAdornment: text ? (
-						<InputAdornment position="end">
-							<IconButton
-								size="small"
-								aria-label="Clear search"
-								edge="end"
-								onClick={() => {
-									setText("");
-									onChange("");
-								}}
-							>
-								<ClearIcon fontSize="small" />
-							</IconButton>
-						</InputAdornment>
-					) : undefined,
 				},
 			}}
 		/>

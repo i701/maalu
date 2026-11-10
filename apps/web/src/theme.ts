@@ -29,10 +29,6 @@ const palette = (c: typeof M3_LIGHT) => ({
 	divider: c.outlineVariant,
 });
 
-// A field a step toward the text colour: its hover and focus fill.
-const HOVERED_FIELD =
-	"color-mix(in srgb, var(--md-sys-color-on-surface) 6%, var(--md-sys-color-surface-container-highest))";
-
 // A selected segment tinted with a palette colour instead of the neutral secondary container.
 const SEGMENT_TINT = (color: "success" | "error" | "info") =>
 	({
@@ -118,8 +114,7 @@ const theme = createTheme({
 			},
 		},
 		// Outlined fields with a 4px corner: a hairline border that darkens on hover and gets a 2px
-		// primary ring when focused. The search bar is the one filled field (see SearchField), styled by
-		// the MuiFilledInput override below.
+		// primary ring when focused. Every text field is this one, the search boxes included.
 		MuiTextField: { defaultProps: { fullWidth: true, variant: "outlined" } },
 		MuiOutlinedInput: {
 			styleOverrides: {
@@ -145,27 +140,6 @@ const theme = createTheme({
 		// No fade on the placeholder: with the label inside the field it must be gone at once, not
 		// linger over the label for a moment after load.
 		MuiInputBase: { styleOverrides: { input: { "&::placeholder": { transition: "none" } } } },
-		MuiFilledInput: {
-			defaultProps: { disableUnderline: true },
-			styleOverrides: {
-				root: {
-					// Filled field: barely rounded top corners (2px) and a square bottom, with a hairline
-					// underline that thickens and turns primary on focus.
-					borderRadius: "var(--shape-xxs) var(--shape-xxs) 0 0",
-					backgroundColor: "var(--md-sys-color-surface-container-highest)",
-					boxShadow: "inset 0 -1px 0 var(--md-sys-color-on-surface-variant)",
-					transition:
-						"background-color var(--spring-effects-fast-dur) var(--spring-effects-fast), box-shadow var(--spring-effects-fast-dur) var(--spring-effects-fast)",
-					"&:hover": { backgroundColor: HOVERED_FIELD },
-					"&.Mui-focused": {
-						backgroundColor: HOVERED_FIELD,
-						boxShadow: "inset 0 -2px 0 var(--md-sys-color-primary)",
-					},
-					"&.Mui-error": { boxShadow: "inset 0 -2px 0 var(--md-sys-color-error)" },
-					"&.Mui-disabled": { opacity: 0.5 },
-				},
-			},
-		},
 		// Segmented toggle: tiny gaps, soft 6px inner corners and fully round outer ones; the selected
 		// segment springs to a full pill in the secondary container (or its colour, if it has one).
 		MuiToggleButtonGroup: {
