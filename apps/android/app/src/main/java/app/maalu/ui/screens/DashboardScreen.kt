@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 package app.maalu.ui.screens
 
 import androidx.compose.foundation.background
@@ -19,6 +21,7 @@ import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.ArrowUpward
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.TextButton
@@ -152,7 +155,7 @@ fun DashboardScreen(api: Api, month: String) {
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(s.message, color = MaterialTheme.colorScheme.error)
-                Button(onClick = { attempt++ }) { Text("Try again") }
+                Button(onClick = { attempt++ }, shapes = ButtonDefaults.shapes()) { Text("Try again") }
             }
             is State.Ready -> PullToRefreshBox(
                 isRefreshing = refreshing,

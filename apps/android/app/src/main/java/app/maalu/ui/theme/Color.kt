@@ -109,3 +109,27 @@ object Gradients {
     val Rose = listOf(Color(0xFFB3263F), Color(0xFF5F0F26))
     val Blue = listOf(Color(0xFF1565C0), Color(0xFF0D3C78))
 }
+
+/** The order accents are handed out in when many chips sit side by side, so neighbours differ. */
+private val ChipPalette = listOf("blue", "violet", "pink", "amber", "green", "orange", "lime", "slate")
+
+/** The i-th colour of the palette, cycling. */
+fun paletteTint(i: Int): Color = Accents.getValue(ChipPalette[Math.floorMod(i, ChipPalette.size)])
+
+/** A stable colour for a thing with an id (a tag): the same tag is the same colour in the sheet and on its chip. */
+fun idTint(id: String): Color = paletteTint(id.hashCode())
+
+fun methodTint(method: String): Color = when (method) {
+    "cash" -> Accents.getValue("green")
+    "bank_transfer" -> Accents.getValue("blue")
+    "debit_card" -> Accents.getValue("violet")
+    "credit_card" -> Accents.getValue("pink")
+    else -> Accents.getValue("slate")
+}
+
+/** Needs are the blue of the net-worth line, wants the orange of expenses, as on the dashboard card. */
+fun kindTint(kind: String): Color = when (kind) {
+    "need" -> Accents.getValue("blue")
+    "want" -> Accents.getValue("orange")
+    else -> Accents.getValue("slate")
+}

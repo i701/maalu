@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 package app.maalu.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
@@ -7,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -54,6 +57,7 @@ fun ServerScreen(onConnected: (String) -> Unit) {
             modifier = Modifier.fillMaxWidth(),
         )
         Button(
+            shapes = ButtonDefaults.shapes(),
             enabled = text.isNotBlank() && !checking,
             modifier = Modifier.fillMaxWidth(),
             onClick = {

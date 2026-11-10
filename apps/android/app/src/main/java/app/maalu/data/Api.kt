@@ -43,9 +43,9 @@ class Api(
     private val token: () -> String?,
     private val onSignedOut: () -> Unit = {},
 ) {
-    suspend fun raw(method: String, path: String, query: Map<String, String> = emptyMap(), body: RequestBody? = null): Raw =
+    suspend fun raw(method: String, path: String, query: Map<String, Any> = emptyMap(), body: RequestBody? = null): Raw =
         withContext(Dispatchers.IO) {
-            val url = "$server/api/v1/$path".toHttpUrl().newBuilder().apply { query.forEach { (k, v) -> addQueryParameter(k, v) } }.build()
+            val url = "$server/api/v1/$path".toHttpUrl().newBuilder().apply { query.forEach { (k, v) -> if (v is List<*>) v.forEach { addQueryParameter(k, it.toString()) } else addQueryParameter(k, v.toString()) } }.build()
             val builder = Request.Builder().url(url).header("User-Agent", "Maalu-Android/0.1").method(method, body)
             token()?.let { builder.header("Authorization", "Bearer $it") }
             http.newCall(builder.build()).execute().use { r ->
@@ -53,7 +53,7 @@ class Api(
             }
         }
 
-    suspend inline fun <reified T> get(path: String, query: Map<String, String> = emptyMap()): ApiResult<T> =
+    suspend inline fun <reified T> get(path: String, query: Map<String, Any> = emptyMap()): ApiResult<T> =
         decode(safely { raw("GET", path, query) })
 
     suspend inline fun <reified T> postJson(path: String, json: String): ApiResult<T> =

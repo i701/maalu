@@ -17,10 +17,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import app.maalu.ui.theme.Accents
+import app.maalu.ui.theme.idTint
+import app.maalu.ui.theme.kindTint
+import app.maalu.ui.theme.methodTint
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -29,6 +33,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.SegmentedListItem
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -60,6 +71,17 @@ import app.maalu.data.Api
 import app.maalu.data.ApiResult
 import app.maalu.data.PaymentMethodLabels
 import app.maalu.data.Totals
+import app.maalu.data.TxFilters
+import app.maalu.data.isAmount
+import app.maalu.data.rangeLabel
+import app.maalu.data.toJson
+import app.maalu.data.txFiltersFromJson
+import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.InputChip
+import androidx.compose.material3.InputChipDefaults
+import app.maalu.ui.components.TintChip
 import app.maalu.data.Transaction
 import app.maalu.data.dayLabel
 import app.maalu.data.formatMoney
@@ -78,19 +100,28 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 private const val PAGE = 30
+/** Income green, expense red, transfer blue; All is the neutral one. */
+@Composable
+private fun typeTint(type: String?): Color = when (type) {
+    "income" -> ChartColors.IncomeLight
+    "expense" -> MaterialTheme.colorScheme.error
+    "transfer" -> ChartColors.Line
+    else -> MaterialTheme.colorScheme.outline
+}
+
 private val TYPES = listOf(null to "All", "income" to "Income", "expense" to "Expense", "transfer" to "Transfer")
 
 /**
  * The list: search, a type filter, the newest first grouped by day, more loading as you reach the end,
  * and a sheet with every detail of the one you tap. Read-only for now; adding and editing come later.
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun TransactionsScreen(api: Api) {
     var query by rememberSaveable { mutableStateOf("") }
     var committed by rememberSaveable { mutableStateOf("") }
-    var type by rememberSaveable { mutableStateOf<String?>(null) }
-    var planned by rememberSaveable { mutableStateOf(false) }
+    var filters by rememberSaveable(stateSaver = FiltersSaver) { mutableStateOf(TxFilters()) }
+    var showFilters by remember { mutableStateOf(false) }
     var reload by remember { mutableIntStateOf(0) }
     var refreshing by remember { mutableStateOf(false) }
 
@@ -108,21 +139,20 @@ fun TransactionsScreen(api: Api) {
     // search waits for a pause in typing, so a request is not made for every letter
     LaunchedEffect(query) { delay(300); committed = query.trim() }
 
-    fun filters(): Map<String, String> = buildMap {
+    fun params(): Map<String, Any> = buildMap {
         if (committed.isNotEmpty()) put("q", committed)
-        type?.let { put("type", it) }
-        if (planned) put("planned", "true")
+        putAll(filters.query())
     }
 
-    LaunchedEffect(committed, type, planned, reload) {
+    LaunchedEffect(committed, filters, reload) {
         generation++
         if (!refreshing) loading = true
         error = null
-        val f = filters()
-        val filtered = committed.isNotEmpty() || type != null
+        val f = params()
+        val filtered = committed.isNotEmpty() || filters.isFiltered()
         coroutineScope {
             val page = async { api.get<List<Transaction>>("transactions", f + mapOf("limit" to "$PAGE", "offset" to "0")) }
-            val sums = async { if (filtered && !planned) api.get<Totals>("transactions/summary", f - "planned") else null }
+            val sums = async { if (filtered && !filters.planned) api.get<Totals>("transactions/summary", f) else null }
             when (val r = page.await()) {
                 is ApiResult.Ok -> { items.clear(); items.addAll(r.data); total = r.total ?: r.data.size }
                 is ApiResult.Failed -> error = r.message
@@ -141,7 +171,7 @@ fun TransactionsScreen(api: Api) {
                 if (!loading && !loadingMore && items.size < all && count > 0 && last >= count - 6) {
                     loadingMore = true
                     val gen = generation
-                    val r = api.get<List<Transaction>>("transactions", filters() + mapOf("limit" to "$PAGE", "offset" to "${items.size}"))
+                    val r = api.get<List<Transaction>>("transactions", params() + mapOf("limit" to "$PAGE", "offset" to "${items.size}"))
                     // the filters may have changed while this was on its way
                     if (gen == generation && r is ApiResult.Ok) items.addAll(r.data)
                     loadingMore = false
@@ -150,17 +180,25 @@ fun TransactionsScreen(api: Api) {
     }
 
     Column(Modifier.fillMaxSize()) {
-        SearchPill(query, onChange = { query = it.take(100) }, modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
+        Row(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            SearchPill(query, onChange = { query = it.take(100) }, modifier = Modifier.weight(1f))
+            IconButton(onClick = { showFilters = true }, shapes = IconButtonDefaults.shapes()) {
+                BadgedBox(badge = { if (filters.detailCount() > 0) Badge { Text("${filters.detailCount()}") } }) {
+                    Icon(Icons.Outlined.Tune, "Filters")
+                }
+            }
+        }
         Row(
             Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             TYPES.forEach { (value, label) ->
-                FilterChip(selected = type == value && !planned, onClick = { type = value; planned = false }, label = { Text(label) })
+                TintChip(typeTint(value), selected = filters.type == value && !filters.planned, onClick = { filters = filters.copy(type = value, planned = false) }, label = { Text(label) })
             }
-            FilterChip(selected = planned, onClick = { planned = !planned; if (planned) type = null }, label = { Text("Planned") })
+            TintChip(Color(0xFFEAB308), selected = filters.planned, onClick = { filters = filters.copy(planned = !filters.planned, type = null) }, label = { Text("Planned") })
         }
 
+        ActiveFilters(filters, onChange = { filters = it })
         totals?.let { SumsLine(it) }
 
         when {
@@ -171,14 +209,14 @@ fun TransactionsScreen(api: Api) {
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(error ?: "", color = MaterialTheme.colorScheme.error)
-                Button(onClick = { reload++ }) { Text("Try again") }
+                Button(onClick = { reload++ }, shapes = ButtonDefaults.shapes()) { Text("Try again") }
             }
             else -> PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
                 val groups by remember { derivedStateOf { groupByDay(items.toList()) } }
                 if (items.isEmpty()) {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
-                            if (committed.isNotEmpty() || type != null || planned) "Nothing matches." else "No transactions yet.",
+                            if (committed.isNotEmpty() || filters.isFiltered()) "Nothing matches." else "No transactions yet.",
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
@@ -195,17 +233,17 @@ fun TransactionsScreen(api: Api) {
                             }
                         }
                         items(list.size, key = { list[it].id }) { i ->
-                            val outer = 20.dp
-                            val inner = 4.dp
-                            val shape = RoundedCornerShape(
-                                topStart = if (i == 0) outer else inner, topEnd = if (i == 0) outer else inner,
-                                bottomStart = if (i == list.lastIndex) outer else inner, bottomEnd = if (i == list.lastIndex) outer else inner,
-                            )
-                            Surface(
-                                shape = shape,
-                                color = MaterialTheme.colorScheme.surfaceContainerLow,
-                                modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 2.dp),
-                            ) { TransactionRow(list[i]) { selected = list[i] } }
+                            val t = list[i]
+                            // the native expressive list item: large outer corners, small inner ones, and the
+                            // shape springs toward squarer while it is pressed
+                            SegmentedListItem(
+                                onClick = { selected = t },
+                                shapes = ListItemDefaults.segmentedShapes(index = i, count = list.size),
+                                modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = ListItemDefaults.SegmentedGap),
+                                leadingContent = { CategoryBadge(t) },
+                                supportingContent = { RowDetails(t) },
+                                trailingContent = { Text(signed(t), style = MaterialTheme.typography.bodyMedium.merge(MoneyStyle), color = amountColor(t)) },
+                            ) { Text(t.title(), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), maxLines = 2, overflow = TextOverflow.Ellipsis) }
                         }
                     }
                     if (loadingMore) item { Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() } }
@@ -215,6 +253,7 @@ fun TransactionsScreen(api: Api) {
     }
 
     selected?.let { t -> DetailSheet(t) { selected = null } }
+    if (showFilters) FiltersSheet(api, filters, onApply = { filters = it; showFilters = false }, onDismiss = { showFilters = false })
 }
 
 @Composable
@@ -222,37 +261,20 @@ private fun SumsLine(t: Totals) {
     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         val small = MaterialTheme.typography.bodySmall
         Row { Text("In ", style = small); MoneyText(t.income, t.currency, style = small, color = ChartColors.IncomeLight) }
-        Row { Text("Out ", style = small); MoneyText(t.expense, t.currency, style = small, color = ChartColors.ExpenseLight) }
+        Row { Text("Out ", style = small); MoneyText(t.expense, t.currency, style = small, color = MaterialTheme.colorScheme.error) }
     }
 }
 
 @Composable
-private fun TransactionRow(t: Transaction, onClick: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        CategoryBadge(t)
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(t.title(), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), maxLines = 2, overflow = TextOverflow.Ellipsis)
-            val sub = listOfNotNull(
-                shortTime(t.time),
-                t.category.takeIf { t.type != "transfer" },
-                t.account?.name,
-            ).joinToString(" · ")
-            Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            val marks = listOfNotNull(
-                "Planned".takeIf { t.planned }, "Refund".takeIf { t.isRefund }, "Adjustment".takeIf { t.adjustment },
-                t.subscription?.let { "Subscription" }, t.group?.name,
-            )
-            if (marks.isNotEmpty()) Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(top = 2.dp)) { marks.forEach { Mark(it) } }
-        }
-        Text(
-            signed(t),
-            style = MaterialTheme.typography.bodyMedium.merge(MoneyStyle),
-            color = amountColor(t),
+private fun RowDetails(t: Transaction) {
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        val sub = listOfNotNull(shortTime(t.time), t.category.takeIf { t.type != "transfer" }, t.account?.name).joinToString(" · ")
+        Text(sub, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        val marks = listOfNotNull(
+            "Planned".takeIf { t.planned }, "Refund".takeIf { t.isRefund }, "Adjustment".takeIf { t.adjustment },
+            t.subscription?.let { "Subscription" }, t.group?.name,
         )
+        if (marks.isNotEmpty()) Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(top = 2.dp)) { marks.forEach { Mark(it) } }
     }
 }
 
@@ -276,7 +298,13 @@ private fun Mark(text: String) {
 /** A quiet pill, not an outlined field: it should recede next to the list it filters. */
 @Composable
 private fun SearchPill(value: String, onChange: (String) -> Unit, modifier: Modifier = Modifier) {
-    Surface(modifier.fillMaxWidth(), shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+    var focused by remember { mutableStateOf(false) }
+    Surface(
+        modifier.fillMaxWidth(),
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        border = if (focused) androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
+    ) {
         Row(Modifier.padding(horizontal = 14.dp).height(40.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Icon(Icons.Outlined.Search, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
             BasicTextField(
@@ -285,7 +313,7 @@ private fun SearchPill(value: String, onChange: (String) -> Unit, modifier: Modi
                 singleLine = true,
                 textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).onFocusChanged { focused = it.isFocused },
                 decorationBox = { inner ->
                     Box(contentAlignment = Alignment.CenterStart) {
                         if (value.isEmpty()) Text("Search transactions", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
@@ -308,7 +336,7 @@ private fun signed(t: Transaction) = when (t.type) {
 @Composable
 private fun amountColor(t: Transaction) = when (t.type) {
     "income" -> ChartColors.IncomeLight
-    "expense" -> ChartColors.ExpenseLight
+    "expense" -> MaterialTheme.colorScheme.error
     else -> MaterialTheme.colorScheme.onSurface
 }
 
@@ -353,5 +381,36 @@ private fun Fact(label: String, value: String?) {
     Row(Modifier.fillMaxWidth()) {
         Text(label, Modifier.weight(0.35f), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(value, Modifier.weight(0.65f), style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+private val FiltersSaver = androidx.compose.runtime.saveable.Saver<TxFilters, String>(save = { it.toJson() }, restore = { txFiltersFromJson(it) })
+
+/** What the sheet applied, as chips you can drop one at a time. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ActiveFilters(f: TxFilters, onChange: (TxFilters) -> Unit) {
+    if (f.detailCount() == 0) return
+    Row(
+        Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        @Composable
+        fun chip(label: String, tint: Color, clear: () -> Unit) = InputChip(
+            selected = true, onClick = clear, label = { Text(label) },
+            trailingIcon = { Icon(Icons.Outlined.Clear, "Remove $label", Modifier.size(16.dp)) },
+            colors = InputChipDefaults.inputChipColors(selectedContainerColor = tint.copy(alpha = 0.4f), selectedLabelColor = MaterialTheme.colorScheme.onSurface),
+            border = null,
+        )
+        if (f.dateFrom != null || f.dateTo != null) chip(rangeLabel(f.dateFrom, f.dateTo), Accents.getValue("blue")) { onChange(f.copy(dateFrom = null, dateTo = null)) }
+        f.account?.let { chip(it.name, Accents.getValue("violet")) { onChange(f.copy(account = null)) } }
+        f.category?.let { chip(it.name, Accents.getValue("amber")) { onChange(f.copy(category = null)) } }
+        f.tags.forEach { tag -> chip("#${tag.name}", idTint(tag.id)) { onChange(f.copy(tags = f.tags - tag)) } }
+        f.method?.let { chip(PaymentMethodLabels[it] ?: it, methodTint(it)) { onChange(f.copy(method = null)) } }
+        f.kind?.let { chip(when (it) { "need" -> "Needs"; "want" -> "Wants"; else -> "Not sorted" }, kindTint(it)) { onChange(f.copy(kind = null)) } }
+        if (isAmount(f.min) || isAmount(f.max)) chip(
+            listOfNotNull(f.min.takeIf { isAmount(it) }?.let { "≥ $it" }, f.max.takeIf { isAmount(it) }?.let { "≤ $it" }).joinToString(" "),
+            Accents.getValue("orange"),
+        ) { onChange(f.copy(min = "", max = "")) }
     }
 }

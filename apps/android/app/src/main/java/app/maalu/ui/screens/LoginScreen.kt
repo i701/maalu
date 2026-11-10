@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 package app.maalu.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
@@ -8,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -86,6 +89,7 @@ fun LoginScreen(api: Api, server: String, onSignedIn: (String) -> Unit, onChange
         error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
 
         Button(
+            shapes = ButtonDefaults.shapes(),
             enabled = !busy && (if (challenge == null) email.isNotBlank() && password.isNotEmpty() else code.isNotBlank()),
             modifier = Modifier.fillMaxWidth(),
             onClick = {

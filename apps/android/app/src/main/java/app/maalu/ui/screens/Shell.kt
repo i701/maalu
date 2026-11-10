@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 package app.maalu.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
@@ -26,6 +28,7 @@ import java.time.LocalDate
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -126,7 +129,7 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
                         }
                     }
                     Text(server, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 16.dp))
-                    OutlinedButton(onClick = onSignOut) { Text("Sign out") }
+                    OutlinedButton(onClick = onSignOut, shapes = ButtonDefaults.shapes()) { Text("Sign out") }
                 }
                 else -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("Coming soon", color = MaterialTheme.colorScheme.onSurfaceVariant)

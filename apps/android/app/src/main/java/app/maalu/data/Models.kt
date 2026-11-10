@@ -180,3 +180,10 @@ data class Transaction(
     @SerialName("link_count") val linkCount: Int = 0,
     val adjustment: Boolean = false,
 )
+
+/** For the filter pickers: a category (with its parent's id, for indenting) and a tag. */
+@Serializable
+data class CategoryItem(val id: String, val name: String, @SerialName("parent_id") val parentId: String? = null)
+
+@Serializable
+data class TagItem(val id: String, val name: String)
