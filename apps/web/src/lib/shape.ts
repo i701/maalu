@@ -8,6 +8,12 @@
  *     sx={{ ...morph("xl"), p: 2 }}                     // a card: 28px -> 16px
  *     sx={{ ...morph("xl", "md") }}                     // a pill: 28px -> 12px
  *
+ * The other way round, for the pages and cards that should feel the opposite (squarer at rest,
+ * rounding up under the pointer): `morphUp("xl")` rests one step squarer than `xl` and springs to
+ * `xl`. Pick it per page or card; the default everywhere else stays `morph`.
+ *
+ *     sx={{ ...morphUp("xl"), p: 2 }}                   // a card: 16px -> 28px
+ *
  * If the element sets its own `transition`, start it with MORPH_TRANSITION so the corners still
  * spring.
  */
@@ -49,4 +55,13 @@ export function morph(rest: Step | (string & {}), active?: Step | (string & {}))
 		// No springing shapes for people who ask for less motion.
 		"@media (prefers-reduced-motion: reduce)": { transition: "none" },
 	} as const;
+}
+
+/**
+ * The reverse of `morph`: rests one step less rounded than `target` and springs up to `target`
+ * under the pointer or focus. `target` is the shape it ends on, so `morphUp("xl")` is 16px at rest
+ * and 28px while hovered.
+ */
+export function morphUp(target: Step, rest?: Step | (string & {})) {
+	return morph(rest ?? LESS[target], target);
 }

@@ -3,6 +3,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import { type Accent } from "#/lib/m3";
+import { morph as morphShape, morphUp } from "#/lib/shape";
 import GlassPill from "./GlassPill";
 import GuideLinks from "./GuideLinks";
 import ShapeTile from "./ShapeTile";
@@ -33,6 +34,7 @@ export default function PageHeader({
 	accent = "slate",
 	shape = 0,
 	stats,
+	morph,
 }: {
 	title: string;
 	description?: string;
@@ -43,6 +45,10 @@ export default function PageHeader({
 	shape?: number;
 	/** Frosted stat pills under the description, e.g. "324 transactions". */
 	stats?: { symbol?: string; label: string }[];
+	/** Make the banner react to the pointer like the cards do: "down" rests rounded and squares
+	 * up on hover (the app's default for cards), "up" rests squarer and rounds up. Left out, it
+	 * stays still. */
+	morph?: "down" | "up";
 }) {
 	const [from, to] = HERO[accent];
 	return (
@@ -54,6 +60,7 @@ export default function PageHeader({
 				p: { xs: 1.5, md: 3.5 },
 				color: "#fff",
 				borderRadius: { xs: "var(--shape-xl)", md: "var(--shape-xxl)" },
+				...(morph && reactive(morph)),
 				background: `linear-gradient(160deg, ${from}, ${to})`,
 			}}
 		>
@@ -162,4 +169,11 @@ export default function PageHeader({
 			</Stack>
 		</Box>
 	);
+}
+
+/** The banner's corners under the pointer: the usual morph, resting at the phone size on a narrow
+ * screen. */
+function reactive(direction: "down" | "up") {
+	const m = direction === "up" ? morphUp("xxl") : morphShape("xxl");
+	return { ...m, borderRadius: { xs: "var(--shape-xl)", md: m.borderRadius } };
 }

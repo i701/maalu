@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { morph } from "./shape";
+import { morph, morphUp } from "./shape";
 
 const HOVER = "@media (pointer: fine) and (hover: hover)";
 
@@ -40,5 +40,24 @@ describe("morph", () => {
 
 	it("uses a media key different from the usual hover query, so spreading it can't be overridden", () => {
 		expect(Object.keys(morph("xl"))).not.toContain("@media (hover: hover) and (pointer: fine)");
+	});
+});
+
+describe("morphUp", () => {
+	it("rests one step squarer and springs up to the target on hover and focus", () => {
+		const card = morphUp("xl");
+		expect(card.borderRadius).toBe("var(--shape-lg)");
+		expect(card[HOVER]["&:hover"].borderRadius).toBe("var(--shape-xl)");
+		expect(card["&:focus-visible, &:focus-within"].borderRadius).toBe("var(--shape-xl)");
+	});
+
+	it("keeps the spring and the reduced-motion rule", () => {
+		const card = morphUp("xxl");
+		expect(card.transition).toContain("border-radius");
+		expect(card["@media (prefers-reduced-motion: reduce)"].transition).toBe("none");
+	});
+
+	it("can rest at a chosen shape", () => {
+		expect(morphUp("xl", "md").borderRadius).toBe("var(--shape-md)");
 	});
 });

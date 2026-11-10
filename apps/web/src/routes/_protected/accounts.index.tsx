@@ -1,4 +1,4 @@
-import { MORPH_TRANSITION, morph } from "#/lib/shape";
+import { MORPH_TRANSITION, morphUp } from "#/lib/shape";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
@@ -181,6 +181,7 @@ function AccountsPage() {
 				symbol="account_balance"
 				accent="green"
 				shape={1}
+				morph="up"
 				stats={[
 					{
 						symbol: "account_balance",
@@ -204,6 +205,7 @@ function AccountsPage() {
 						gradient="emerald"
 						icon="account_balance"
 						shape={0}
+						reverse
 					/>
 				</Grid>
 				<Grid size={{ xs: 12, sm: 4 }}>
@@ -213,6 +215,7 @@ function AccountsPage() {
 						gradient="rose"
 						icon="credit_card"
 						shape={3}
+						reverse
 					/>
 				</Grid>
 				<Grid size={{ xs: 12, sm: 4 }}>
@@ -222,6 +225,7 @@ function AccountsPage() {
 						gradient={isNegative(summary.total) ? "rose" : "navy"}
 						icon="savings"
 						shape={6}
+						reverse
 					/>
 				</Grid>
 			</Grid>
@@ -282,7 +286,7 @@ function AccountsPage() {
 												key={a.id}
 												sx={{
 													bgcolor: "var(--md-sys-color-surface-container-low)",
-													...morph("xl"),
+													...morphUp("xl"),
 													transition: `${MORPH_TRANSITION}, transform var(--spring-spatial-fast-dur) var(--spring-spatial-fast)`,
 													"&:active": { transform: "scale(.97)" },
 												}}
