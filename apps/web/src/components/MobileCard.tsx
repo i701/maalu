@@ -54,7 +54,7 @@ export default function MobileCard({
 				display: "flex",
 				alignItems: "flex-start",
 				gap: 1.5,
-				px: 1.5,
+				px: collapsible ? 2 : 1.5,
 				py: collapsible ? 0.875 : 1.5,
 				// the opened row is tinted, so it reads as the one you pressed
 				bgcolor:
@@ -75,7 +75,12 @@ export default function MobileCard({
 					role={toggle && "button"}
 					tabIndex={toggle && 0}
 					aria-expanded={toggle && open}
-					sx={{ justifyContent: "space-between", cursor: toggle && "pointer" }}
+					sx={{
+						justifyContent: "space-between",
+						// compact: a one-line name sits level with a two-line figure, not stuck at the top
+						alignItems: collapsible ? "center" : undefined,
+						cursor: toggle && "pointer",
+					}}
 				>
 					<Box
 						sx={{
