@@ -10,12 +10,15 @@ import SearchField from "#/components/SearchField";
 import ShapeTile from "#/components/ShapeTile";
 import Symbol from "#/components/Symbol";
 import { DOCS } from "#/lib/docs";
+import { guidesForPath, pageLabel } from "#/lib/docs/for-page";
 import { searchDocs, type DocHit } from "#/lib/docs/search";
 import { ACCENT } from "#/lib/m3";
 import { morph } from "#/lib/shape";
 
 const searchSchema = z.object({
 	q: z.coerce.string().max(100).optional().catch(undefined),
+	// show only the guides for this page (what a page's "Guides" link sends), see `docsFilterFor`
+	for: z.string().max(100).optional().catch(undefined),
 });
 
 export const Route = createFileRoute("/_protected/docs/")({
@@ -24,9 +27,13 @@ export const Route = createFileRoute("/_protected/docs/")({
 });
 
 function DocsIndex() {
-	const { q = "" } = Route.useSearch();
+	const { q = "", for: forPage } = Route.useSearch();
 	const navigate = Route.useNavigate();
-	const hits = useMemo(() => searchDocs(DOCS, q), [q]);
+	// the guides for one page, when asked; otherwise every guide
+	const scoped = forPage ? guidesForPath(forPage) : [];
+	const scope = scoped.length > 0 ? scoped : DOCS;
+	const hits = useMemo(() => searchDocs(scope, q), [scope, q]);
+	const pageName = forPage ? pageLabel(forPage) : null;
 
 	return (
 		<>
@@ -41,9 +48,19 @@ function DocsIndex() {
 				<SearchField
 					value={q}
 					placeholder="Search the docs"
-					onChange={(next) => navigate({ search: { q: next || undefined }, replace: true })}
+					onChange={(next) =>
+						navigate({ search: { q: next || undefined, for: forPage }, replace: true })
+					}
 				/>
 			</Box>
+			{scoped.length > 0 && (
+				<Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
+					Showing the {scoped.length === 1 ? "guide" : "guides"} for {pageName}.{" "}
+					<RouterLink to="/docs" search={{ q: q || undefined }}>
+						Show all guides
+					</RouterLink>
+				</Typography>
+			)}
 			{hits.length === 0 ? (
 				<EmptyState symbol="search" accent="slate" shape={3}>
 					No guide mentions “{q}”. Try another word, or fewer words.

@@ -122,45 +122,44 @@ test("the plan, budget and salary guides show live examples", async ({ page }) =
 	}
 });
 
-test("a page's header links to the guides that explain it", async ({ page, request }) => {
+test("a page's header has one Guides link that opens the docs for that page", async ({
+	page,
+	request,
+}) => {
 	test.setTimeout(60_000);
 	const email = await signUp(page);
 	const api = await apiAs(request, email);
 	const account = await api.account("Main", "100");
 
+	// Budget has two guides, but the banner has one link
 	await open(page, "/budget");
-	await expect(page.getByRole("link", { name: "Guide: Savings goals" })).toBeVisible();
-	await page.getByRole("link", { name: "Guide: Budget and spending limits" }).click();
-	await expect(page).toHaveURL(/\/docs\/budget$/);
+	await expect(page.getByRole("link", { name: "Guides" })).toHaveCount(1);
+	await page.getByRole("link", { name: "Guides" }).click();
+	await expect(page).toHaveURL(/\/docs\?.*for=/);
+	await expect(page.getByText(/Showing the guides for Budget/)).toBeVisible();
 	await expect(
-		page.getByRole("heading", { name: "Budget and spending limits", level: 1 }),
+		page.getByRole("link", { name: /Budget and spending limits/ }).first(),
 	).toBeVisible();
-	// the guide itself has no header link back to itself
-	await expect(page.getByRole("link", { name: "Guide: Budget and spending limits" })).toHaveCount(
-		0,
-	);
+	await expect(page.getByRole("link", { name: /Savings goals/ }).first()).toBeVisible();
+	// only that page's guides until you ask for all of them
+	await expect(page.getByRole("link", { name: /Backups and restoring/ })).toHaveCount(0);
+	await page.getByRole("link", { name: "Show all guides" }).click();
+	await expect(page.getByRole("link", { name: /Backups and restoring/ }).first()).toBeVisible();
 
 	// one account's page has its own guide, not the list's
 	await open(page, `/accounts/${account.id}`);
-	await expect(page.getByRole("link", { name: "Guide: An account's page" })).toBeVisible();
-	await open(page, "/accounts");
-	await expect(page.getByRole("link", { name: "Guide: Accounts, cards and groups" })).toBeVisible();
+	await page.getByRole("link", { name: "Guides" }).click();
+	await expect(page.getByText(/Showing the guide for an account's page/)).toBeVisible();
 
-	// the organising pages, the map and Settings have theirs too
-	for (const [path, title] of [
-		["/categories", "Categories"],
-		["/tags", "Tags"],
-		["/groups", "Groups"],
-		["/places", "Places and the map"],
-		["/settings", "Backups and restoring"],
-	]) {
+	// the other pages that have guides show the same one link
+	for (const path of ["/accounts", "/categories", "/tags", "/groups", "/places", "/settings"]) {
 		await open(page, path);
-		await expect(page.getByRole("link", { name: `Guide: ${title}` })).toBeVisible();
+		await expect(page.getByRole("link", { name: "Guides" })).toBeVisible();
 	}
 
 	// a page with no guide shows none
 	await open(page, "/vendors");
-	await expect(page.getByRole("link", { name: /^Guide:/ })).toHaveCount(0);
+	await expect(page.getByRole("link", { name: "Guides" })).toHaveCount(0);
 });
 
 test("the new guides open, and the docs search finds them", async ({ page }) => {
