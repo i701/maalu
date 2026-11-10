@@ -30,6 +30,9 @@ class UserUpdate(BaseModel):
         default=True, description="Notify when a budget limit is close or over."
     )
     notify_goals: bool = Field(default=True, description="Notify when a savings goal is reached.")
+    notify_email: bool = Field(
+        default=False, description="Also email new notifications to the sign-in address."
+    )
 
 
 class UserResponse(BaseModel):
@@ -43,6 +46,7 @@ class UserResponse(BaseModel):
     notify_payments: bool
     notify_budget: bool
     notify_goals: bool
+    notify_email: bool
     two_factor_enabled: bool = Field(
         description="Whether signing in also needs a code from an authenticator app."
     )

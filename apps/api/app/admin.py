@@ -21,8 +21,8 @@ from app.models.base import Base
 from app.services import SessionService, UserService
 
 USAGE = (
-    "usage: python -m app.admin disable-2fa EMAIL | reset-password EMAIL | create-bucket "
-    "| reset-data"
+    "usage: python -m app.admin disable-2fa EMAIL | reset-password EMAIL | test-email TO "
+    "| create-bucket | reset-data"
 )
 MIN_PASSWORD = 8
 MAX_PASSWORD = 128
@@ -116,7 +116,50 @@ def create_bucket() -> int:
     return 0
 
 
+def test_email(to: str) -> int:
+    """Send a test message with the server's SMTP settings, and say plainly what was used and what
+    went wrong. Needs no account and no running app: the quickest check of the settings."""
+    from app import mailer
+
+    secure = {"starttls": "STARTTLS", "ssl": "SSL/TLS", "none": "no encryption"}[
+        settings.smtp_security
+    ]
+    print(f"Server:   {settings.smtp_host or '(not set)'}:{settings.smtp_port} ({secure})")
+    print(
+        f"Login:    {settings.smtp_username or '(none)'}  password: "
+        f"{'set' if settings.smtp_password else 'NOT SET'}"
+    )
+    print(f"From:     {settings.smtp_from or '(not set)'}")
+    print(f"To:       {to}")
+    if not mailer.configured():
+        print(
+            "\nEmail is off: set SMTP_HOST and SMTP_FROM in the API's environment.", file=sys.stderr
+        )
+        return 1
+    try:
+        asyncio.run(
+            mailer.send(
+                to,
+                "Maalu: a test email",
+                "If you can read this, email from your Maalu server works.\n",
+                "<p>If you can read this, email from your Maalu server works.</p>",
+            )
+        )
+    except mailer.MailError as exc:
+        print(f"\nNot sent: {exc}", file=sys.stderr)
+        print(
+            "Common causes: a wrong SMTP login or key, a sender that is not verified with the "
+            "provider, or a blocked port.",
+            file=sys.stderr,
+        )
+        return 1
+    print("\nSent. Check the inbox (and the spam folder).")
+    return 0
+
+
 def main(argv: list[str]) -> int:
+    if len(argv) == 2 and argv[0] == "test-email":
+        return test_email(argv[1])
     if argv == ["create-bucket"]:
         return create_bucket()
     if argv == ["reset-data"]:

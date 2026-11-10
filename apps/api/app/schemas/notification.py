@@ -31,5 +31,13 @@ class NotificationResponse(BaseModel):
     read_at: datetime | None = Field(description="Null while it is unread")
 
 
+class EmailStatus(BaseModel):
+    """Whether this server can send email, so Settings can say so instead of letting a switch do
+    nothing."""
+
+    configured: bool = Field(description="SMTP_HOST and SMTP_FROM are set on the server.")
+    sender: str | None = Field(description="The address emails come from, when configured.")
+
+
 class UnreadCount(BaseModel):
     count: int

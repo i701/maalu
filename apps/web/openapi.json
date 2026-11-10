@@ -3163,6 +3163,34 @@
         "title": "CurrencyList",
         "type": "object"
       },
+      "EmailStatus": {
+        "description": "Whether this server can send email, so Settings can say so instead of letting a switch do\nnothing.",
+        "properties": {
+          "configured": {
+            "description": "SMTP_HOST and SMTP_FROM are set on the server.",
+            "title": "Configured",
+            "type": "boolean"
+          },
+          "sender": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The address emails come from, when configured.",
+            "title": "Sender"
+          }
+        },
+        "required": [
+          "configured",
+          "sender"
+        ],
+        "title": "EmailStatus",
+        "type": "object"
+      },
       "EndedSessions": {
         "properties": {
           "ended": {
@@ -8201,6 +8229,10 @@
             "title": "Notify Budget",
             "type": "boolean"
           },
+          "notify_email": {
+            "title": "Notify Email",
+            "type": "boolean"
+          },
           "notify_goals": {
             "title": "Notify Goals",
             "type": "boolean"
@@ -8228,6 +8260,7 @@
           "notify_payments",
           "notify_budget",
           "notify_goals",
+          "notify_email",
           "two_factor_enabled",
           "created_at"
         ],
@@ -8254,6 +8287,12 @@
             "default": true,
             "description": "Notify when a budget limit is close or over.",
             "title": "Notify Budget",
+            "type": "boolean"
+          },
+          "notify_email": {
+            "default": false,
+            "description": "Also email new notifications to the sign-in address.",
+            "title": "Notify Email",
             "type": "boolean"
           },
           "notify_goals": {
@@ -11289,6 +11328,53 @@
         "summary": "Get Rate History",
         "tags": [
           "currencies"
+        ]
+      }
+    },
+    "/api/v1/email/status": {
+      "get": {
+        "description": "Whether this server can send email at all (the SMTP settings are an operator's choice).",
+        "operationId": "email_status_api_v1_email_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Email Status",
+        "tags": [
+          "email"
+        ]
+      }
+    },
+    "/api/v1/email/test": {
+      "post": {
+        "description": "Send a short message to your own sign-in address, to check the settings work. The provider's\nown error (a wrong key, an unverified sender) comes back as the reason.",
+        "operationId": "send_test_api_v1_email_test_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Send Test",
+        "tags": [
+          "email"
         ]
       }
     },

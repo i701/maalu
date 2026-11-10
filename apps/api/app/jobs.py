@@ -21,6 +21,7 @@ from app.services import (
     SnapshotService,
     SubscriptionService,
 )
+from app.services.email_digest import send_digests
 from app.services.exchange_rate import refresh_rates
 
 logger = logging.getLogger("maalu.jobs")
@@ -142,3 +143,23 @@ async def refresh_exchange_rates_job(timestamp: int) -> None:
     the next midnight then pick the new rate up."""
     pairs, updated = await refresh_exchange_rates()
     logger.info("looked up %d rates, updated %d accounts", pairs, updated)
+
+
+async def email_notifications(session_factory=SessionLocal) -> int:
+    """Email each user who asked for it their new notifications, as one digest; returns how many
+    emails went out. Does nothing when the server has no SMTP settings."""
+    async with session_factory() as session:
+        sent = await send_digests(session)
+        await session.commit()
+    return sent
+
+
+@app.periodic(cron="*/10 * * * *")
+@app.task(name="email_notifications", queueing_lock="email_notifications")
+async def email_notifications_job(timestamp: int) -> None:
+    """Every ten minutes: send the notifications that have appeared since the last digest to the
+    people who switched email on. Notifications are looked for when the app is opened and daily at
+    04:00; this only delivers what is already there."""
+    sent = await email_notifications()
+    if sent:
+        logger.info("sent %d notification emails", sent)

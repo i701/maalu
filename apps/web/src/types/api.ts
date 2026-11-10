@@ -119,6 +119,7 @@ export type PlaceTotals = Schemas["PlaceTotals"];
 export type RateHistory = Schemas["RateHistoryResponse"];
 /** Not `Notification`: that is the browser's own type. */
 export type AppNotification = Schemas["NotificationResponse"];
+export type EmailStatus = components["schemas"]["EmailStatus"];
 export type NotificationKind = AppNotification["kind"];
 export type ImportPreview = Schemas["ImportPreview"];
 export type PreviewRow = Schemas["PreviewRow"];

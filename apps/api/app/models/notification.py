@@ -35,5 +35,8 @@ class Notification(Base):
         index=True,
     )
     read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+    # When it went out in an email digest (null = not emailed, whether because nobody asked for
+    # email or it has not been sent yet).
+    emailed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
     # Dismissed ones are hidden but kept (until swept), so the event is not announced again.
     dismissed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)

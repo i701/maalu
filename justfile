@@ -146,6 +146,11 @@ seed *args:
 disable-2fa email:
     cd apps/api && uv run python -m app.admin disable-2fa {{email}}
 
+# Send a test email with the API's SMTP settings (apps/api/.env), to check Brevo or any provider works.
+# In Docker: docker compose -f docker-compose.prod.yml exec api python -m app.admin test-email TO
+test-email to:
+    cd apps/api && uv run python -m app.admin test-email {{to}}
+
 # Set a new password for someone who forgot theirs (asks for it, hidden; signs them out everywhere).
 # In Docker: docker compose -f docker-compose.prod.yml exec -it api python -m app.admin reset-password EMAIL
 reset-password email:

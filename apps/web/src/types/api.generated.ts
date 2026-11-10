@@ -859,6 +859,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/email/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Email Status
+         * @description Whether this server can send email at all (the SMTP settings are an operator's choice).
+         */
+        get: operations["email_status_api_v1_email_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/email/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send Test
+         * @description Send a short message to your own sign-in address, to check the settings work. The provider's
+         *     own error (a wrong key, an unverified sender) comes back as the reason.
+         */
+        post: operations["send_test_api_v1_email_test_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/goals": {
         parameters: {
             query?: never;
@@ -3705,6 +3746,23 @@ export interface components {
             /** Currencies */
             currencies: string[];
         };
+        /**
+         * EmailStatus
+         * @description Whether this server can send email, so Settings can say so instead of letting a switch do
+         *     nothing.
+         */
+        EmailStatus: {
+            /**
+             * Configured
+             * @description SMTP_HOST and SMTP_FROM are set on the server.
+             */
+            configured: boolean;
+            /**
+             * Sender
+             * @description The address emails come from, when configured.
+             */
+            sender: string | null;
+        };
         /** EndedSessions */
         EndedSessions: {
             /** Ended */
@@ -5785,6 +5843,8 @@ export interface components {
             id: string;
             /** Notify Budget */
             notify_budget: boolean;
+            /** Notify Email */
+            notify_email: boolean;
             /** Notify Goals */
             notify_goals: boolean;
             /** Notify Payments */
@@ -5813,6 +5873,12 @@ export interface components {
              * @default true
              */
             notify_budget: boolean;
+            /**
+             * Notify Email
+             * @description Also email new notifications to the sign-in address.
+             * @default false
+             */
+            notify_email: boolean;
             /**
              * Notify Goals
              * @description Notify when a savings goal is reached.
@@ -7577,6 +7643,44 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    email_status_api_v1_email_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EmailStatus"];
+                };
+            };
+        };
+    };
+    send_test_api_v1_email_test_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

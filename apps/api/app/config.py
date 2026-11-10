@@ -48,6 +48,22 @@ class Settings(BaseSettings):
     attachment_max_bytes: int = 10 * 1024 * 1024
     attachments_per_transaction: int = 10
     links_per_transaction: int = 10
+    # Email (notifications as a digest, and the test message in Settings). Any SMTP provider works;
+    # Brevo is the one documented: host smtp-relay.brevo.com, port 587, security "starttls", the
+    # SMTP login and key from its SMTP & API page. Leave `smtp_host` empty and email is off: nothing
+    # is sent and Settings says so. `smtp_from` must be an address the provider has verified.
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    # "starttls" (port 587), "ssl" (port 465) or "none" (a local relay only)
+    smtp_security: Literal["starttls", "ssl", "none"] = "starttls"
+    smtp_from: str = ""
+    smtp_from_name: str = "Maalu"
+    smtp_timeout_seconds: float = 15.0
+    # The address people open Maalu at (https://maalu.example.com), so an email can link to a page.
+    # Without it the emails carry no links.
+    app_url: str = ""
 
 
 settings = Settings()  # type: ignore[call-arg]  # secret_key comes from env

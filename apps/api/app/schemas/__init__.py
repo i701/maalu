@@ -51,7 +51,7 @@ from app.schemas.imports import (
     PreviewRow,
 )
 from app.schemas.link import LinkCreate, LinkResponse
-from app.schemas.notification import NotificationResponse, UnreadCount
+from app.schemas.notification import EmailStatus, NotificationResponse, UnreadCount
 from app.schemas.salary import (
     SalaryRuleCreate,
     SalaryRuleResponse,
@@ -165,6 +165,7 @@ __all__ = [
     "CategoryTotal",
     "CategoryTotals",
     "CategoryUpdate",
+    "EmailStatus",
     "EndedSessions",
     "GoalCreate",
     "GoalEntryCreate",
