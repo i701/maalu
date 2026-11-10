@@ -1,3 +1,4 @@
+import { useCardMorph } from "#/lib/card-morph";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
@@ -6,7 +7,6 @@ import { RouterButton } from "../RouterLinks";
 import { memo, useState } from "react";
 import { hasAccounts, isShort, workingLine } from "#/lib/available";
 import { formatDate, formatMoney } from "#/lib/format";
-import { morph } from "#/lib/shape";
 import type { AvailableToSpend } from "#/types/api";
 import TonalChip from "../TonalChip";
 import { ACCENT } from "#/lib/m3";
@@ -124,15 +124,17 @@ function Working({ data }: { data: AvailableToSpend }) {
  * so it can be checked, and the full working a click away.
  */
 const AvailableCard = memo(function AvailableCard({ data }: { data: AvailableToSpend }) {
+	const cardMorph = useCardMorph();
 	const [open, setOpen] = useState(false);
 	const short = isShort(data);
 	return (
 		<Box
 			sx={{
-				p: 2.5,
+				p: { xs: 1.75, sm: 2.5 },
 				minWidth: 0,
-				...morph("xl"),
-				bgcolor: "var(--md-sys-color-surface-container-low)",
+				...cardMorph,
+				// a wash of colour: green while there is room, orange when you are short
+				bgcolor: `color-mix(in srgb, ${short ? ACCENT.orange : ACCENT.green} 14%, var(--md-sys-color-surface-container-low))`,
 			}}
 		>
 			<Box sx={{ display: "flex", justifyContent: "space-between", gap: 1, flexWrap: "wrap" }}>

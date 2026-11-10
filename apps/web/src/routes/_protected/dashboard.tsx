@@ -11,7 +11,9 @@ import BudgetGoalsCard from "#/components/dashboard/BudgetGoalsCard";
 import CreditUsageCard from "#/components/dashboard/CreditUsageCard";
 import DeltaBadge from "#/components/dashboard/DeltaBadge";
 import LatestTransactionsCard from "#/components/dashboard/LatestTransactionsCard";
+import { CardMorph } from "#/lib/card-morph";
 import MetricCard from "#/components/dashboard/MetricCard";
+import MetricStrip from "#/components/dashboard/MetricStrip";
 import MoneyFlowCard from "#/components/dashboard/MoneyFlowCard";
 import MonthlyCard from "#/components/dashboard/MonthlyCard";
 import NeedsWantsCard from "#/components/dashboard/NeedsWantsCard";
@@ -137,13 +139,14 @@ function DashboardPage() {
 	const savedBefore = sumDecimals([before.income, `-${before.expense}`]);
 
 	return (
-		<>
+		<CardMorph direction="up">
 			<PageHeader
 				title="Dashboard"
 				symbol="grid_view"
 				accent="blue"
 				shape={4}
 				plainIcon
+				morph="up"
 				description="Your money this month: what came in, what went out, and what is left to spend."
 				action={
 					// the month picker lives in the banner; its controls take the banner's white
@@ -200,7 +203,33 @@ function DashboardPage() {
 							<AvailableCard data={available} />
 						</Box>
 					)}
-					<Box sx={cell(2)}>
+					{/* On a phone the three tiles are one strip (the tiles are for wider screens). */}
+					<Box sx={{ display: { xs: "block", sm: "none" } }}>
+						<MetricStrip
+							against={previousLabel}
+							items={[
+								{
+									label: "Income",
+									value: formatMoney(totals.income, currency),
+									percent: percentChange(totals.income, before.income),
+									goodWhenUp: true,
+								},
+								{
+									label: "Spent",
+									value: formatMoney(totals.expense, currency),
+									percent: percentChange(totals.expense, before.expense),
+									goodWhenUp: false,
+								},
+								{
+									label: Number(saved) >= 0 ? "Saved" : "Overspent",
+									value: formatMoney(saved, currency),
+									percent: percentChange(saved, savedBefore),
+									goodWhenUp: true,
+								},
+							]}
+						/>
+					</Box>
+					<Box sx={{ ...cell(2), display: { xs: "none", sm: "block" } }}>
 						<MetricCard
 							label={`Income in ${label}`}
 							value={formatMoney(totals.income, currency)}
@@ -213,7 +242,7 @@ function DashboardPage() {
 							}
 						/>
 					</Box>
-					<Box sx={cell(2)}>
+					<Box sx={{ ...cell(2), display: { xs: "none", sm: "block" } }}>
 						<MetricCard
 							label={`Spent in ${label}`}
 							value={formatMoney(totals.expense, currency)}
@@ -226,7 +255,7 @@ function DashboardPage() {
 							}
 						/>
 					</Box>
-					<Box sx={cell(2)}>
+					<Box sx={{ ...cell(2), display: { xs: "none", sm: "block" } }}>
 						<MetricCard
 							label={Number(saved) >= 0 ? "Saved this month" : "Overspent this month"}
 							value={formatMoney(saved, currency)}
@@ -276,6 +305,6 @@ function DashboardPage() {
 					</Box>
 				</Box>
 			</PendingOverlay>
-		</>
+		</CardMorph>
 	);
 }
