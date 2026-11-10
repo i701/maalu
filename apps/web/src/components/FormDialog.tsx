@@ -1,4 +1,5 @@
 import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -40,7 +41,8 @@ export default function FormDialog({
 	return (
 		<Dialog
 			open={sheet.open}
-			onClose={sheet.close}
+			// not while it is saving: Escape or a click outside must not close a form mid-save
+			onClose={pending ? undefined : sheet.close}
 			maxWidth={maxWidth}
 			aria-labelledby="form-dialog-title"
 			slotProps={{
@@ -54,7 +56,15 @@ export default function FormDialog({
 		>
 			<DialogTitle id="form-dialog-title">{title}</DialogTitle>
 			<DialogContent>
-				<div style={{ paddingTop: 8 }}>{children}</div>
+				{/* A disabled fieldset turns every field, switch and button inside it off while the form
+				    is saving, so nothing can be changed or sent twice before it has been committed. */}
+				<Box
+					component="fieldset"
+					disabled={pending}
+					sx={{ border: 0, m: 0, p: 0, pt: 1, minWidth: 0 }}
+				>
+					{children}
+				</Box>
 				<Reveal in={Boolean(error)}>
 					<Alert severity="error" sx={{ mt: 2 }}>
 						{shownError}
@@ -62,7 +72,7 @@ export default function FormDialog({
 				</Reveal>
 			</DialogContent>
 			<DialogActions sx={{ px: 3, pb: 2 }}>
-				<Button onClick={sheet.close} color="inherit">
+				<Button onClick={sheet.close} color="inherit" disabled={pending}>
 					Cancel
 				</Button>
 				<Button type="submit" variant="contained" loading={pending} disabled={submitDisabled}>

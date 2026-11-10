@@ -94,6 +94,9 @@ export default function TransactionForm({
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
 	const [localError, setLocalError] = useState<string | null>(null);
+	// True from pressing Save until everything is done, not only while the save call runs: the
+	// follow-up (budget warning, receipt uploads) happens after it, and the form stays locked then.
+	const [busy, setBusy] = useState(false);
 	const [another, setAnother] = useState(false);
 	const [savingTemplate, setSavingTemplate] = useState<FormData | null>(null);
 	const accounts = accountChoices(activeAccounts, transaction);
@@ -157,30 +160,37 @@ export default function TransactionForm({
 		const request = buildTransactionRequest(form, formState());
 		if ("error" in request) return setLocalError(request.error);
 		setLocalError(null);
-		let created: Transaction | undefined;
-		const send = async () => {
-			const res = await request.send();
-			if (res.ok && !transaction) created = res.data;
-			return res;
-		};
-		if (await run(send)) {
-			const message = await messageAfterSave({
-				success: request.success,
-				type,
-				form,
-				itemCategories: splits.enabled ? splits.rows.map((r) => r.category) : null,
-				planned,
-			});
-			notify(message.text, message.severity);
-			// files picked on a new transaction go up now that it has an id
-			for (const text of created ? await uploadPending(created.id, attachments, links) : [])
-				if (text) notify(text, "warning");
-			if (another && !transaction) {
-				fillFrom(seedAfterSave(form, formState()));
-				focusAmount(); // the form was cleared: ready for the next one
-			} else sheet.close();
-			if (created) onCreated?.(created);
+		let refocus = false;
+		setBusy(true);
+		try {
+			let created: Transaction | undefined;
+			const send = async () => {
+				const res = await request.send();
+				if (res.ok && !transaction) created = res.data;
+				return res;
+			};
+			if (await run(send)) {
+				const message = await messageAfterSave({
+					success: request.success,
+					type,
+					form,
+					itemCategories: splits.enabled ? splits.rows.map((r) => r.category) : null,
+					planned,
+				});
+				notify(message.text, message.severity);
+				// files picked on a new transaction go up now that it has an id
+				for (const text of created ? await uploadPending(created.id, attachments, links) : [])
+					if (text) notify(text, "warning");
+				if (another && !transaction) {
+					fillFrom(seedAfterSave(form, formState()));
+					refocus = true; // the form was cleared: ready for the next one (once it is enabled again)
+				} else sheet.close();
+				if (created) onCreated?.(created);
+			}
+		} finally {
+			setBusy(false);
 		}
+		if (refocus) focusAmount();
 	}
 
 	return (
@@ -188,7 +198,7 @@ export default function TransactionForm({
 			<FormDialog
 				title={transaction ? "Edit transaction" : "Add transaction"}
 				error={localError ?? error}
-				pending={pending}
+				pending={pending || busy}
 				onSubmit={submit}
 				sheet={sheet}
 			>
@@ -343,8 +353,11 @@ export default function TransactionForm({
 	);
 } /** Put the cursor back on the amount. */
 const focusAmount = () =>
+	// two frames: the fields are enabled again only after React has rendered the end of the save
 	requestAnimationFrame(() =>
-		document.querySelector<HTMLInputElement>('input[name="amount"]')?.focus(),
+		requestAnimationFrame(() =>
+			document.querySelector<HTMLInputElement>('input[name="amount"]')?.focus(),
+		),
 	);
 
 /** Files and links picked on a new transaction go up now that it has an id: any that were skipped. */
