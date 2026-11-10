@@ -9,6 +9,7 @@ import { useNotify } from "#/components/Notify";
 import PageHeader from "#/components/PageHeader";
 import BackupCard from "#/components/BackupCard";
 import NotificationSettings from "#/components/NotificationSettings";
+import InstallCard from "#/components/pwa/InstallCard";
 import PasswordCard from "#/components/PasswordCard";
 import SessionsCard from "#/components/SessionsCard";
 import TwoFactorSettings from "#/components/TwoFactorSettings";
@@ -87,6 +88,7 @@ function SettingsPage() {
 					currency={me.base_currency}
 				/>
 				<NotificationSettings me={me} email={email} />
+				<InstallCard />
 				<PasswordCard twoFactor={me.two_factor_enabled} />
 				<TwoFactorSettings enabled={me.two_factor_enabled} />
 				<SessionsCard sessions={sessions} />
