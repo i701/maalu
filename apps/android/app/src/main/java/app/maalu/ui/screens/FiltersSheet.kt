@@ -23,7 +23,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.outlined.ArrowDropDown
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.ui.focus.onFocusChanged
-import app.maalu.ui.components.MorphTile
+import app.maalu.ui.components.CompactField
+import app.maalu.ui.components.PickerField
+import app.maalu.ui.components.Section
+import app.maalu.data.cleanAmount
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.ui.graphics.SolidColor
@@ -138,15 +141,17 @@ fun FiltersSheet(api: Api, initial: TxFilters, onApply: (TxFilters) -> Unit, onD
                     Text("Loading your accounts, categories and tags…", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 } else {
                     Section("Account", Icons.Outlined.AccountBalance, Accents.getValue("violet")) {
-                        Picker(
+                        PickerField(
                             title = "Account", value = draft.account, placeholder = "Any account",
                             entries = o.accounts.map { Ref(it.id, it.name) },
+                            detail = { r -> o.accounts.firstOrNull { it.id == r.id }?.let(::accountDetail) },
                             onPick = { draft = draft.copy(account = it) },
                         )
                     }
                     Section("Category", Icons.Outlined.Category, Accents.getValue("amber")) {
-                        Picker(
+                        PickerField(
                             title = "Category", value = draft.category, placeholder = "Any category",
+                            searchable = true,
                             entries = categoryEntries(o.categories),
                             onPick = { draft = draft.copy(category = it) },
                         )
@@ -185,8 +190,8 @@ fun FiltersSheet(api: Api, initial: TxFilters, onApply: (TxFilters) -> Unit, onD
                 }
                 Section("Amount", Icons.Outlined.Numbers, Accents.getValue("orange")) {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        AmountField("Min", draft.min, Modifier.weight(1f)) { draft = draft.copy(min = it) }
-                        AmountField("Max", draft.max, Modifier.weight(1f)) { draft = draft.copy(max = it) }
+                        CompactField(draft.min, { draft = draft.copy(min = cleanAmount(it)) }, "Min", Modifier.weight(1f), KeyboardOptions(keyboardType = KeyboardType.Decimal))
+                        CompactField(draft.max, { draft = draft.copy(max = cleanAmount(it)) }, "Max", Modifier.weight(1f), KeyboardOptions(keyboardType = KeyboardType.Decimal))
                     }
                     Text("In each transaction's own currency.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
@@ -219,112 +224,11 @@ fun FiltersSheet(api: Api, initial: TxFilters, onApply: (TxFilters) -> Unit, onD
     }
 }
 
-/** A section of the sheet: an accent-coloured icon tile and title, so each group reads as its own thing. */
-@Composable
-private fun Section(title: String, icon: ImageVector, tint: Color, content: @Composable () -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Box(
-                Modifier.size(28.dp).clip(RoundedCornerShape(10.dp)).background(tint.copy(alpha = 0.2f)),
-                contentAlignment = androidx.compose.ui.Alignment.Center,
-            ) { Icon(icon, null, tint = tint, modifier = Modifier.size(18.dp)) }
-            Text(title, style = MaterialTheme.typography.titleSmall)
-        }
-        content()
-    }
-}
-
 /** Sub-categories listed under their parent and shown as "Parent › Child", as on the web. */
 private fun categoryEntries(all: List<CategoryItem>): List<Ref> {
     val byId = all.associateBy { it.id }
     val parents = all.filter { it.parentId == null }.sortedBy { it.name.lowercase() }
     return parents.flatMap { p ->
         listOf(Ref(p.id, p.name)) + all.filter { it.parentId == p.id }.sortedBy { it.name.lowercase() }.map { Ref(it.id, "${byId[it.parentId]?.name ?: ""} › ${it.name}") }
-    }
-}
-
-/** A compact tonal field (44dp) that opens a list sheet to pick from: better than a popup menu for long lists. */
-@Composable
-private fun Picker(title: String, value: Ref?, placeholder: String, entries: List<Ref>, onPick: (Ref?) -> Unit) {
-    var open by remember { mutableStateOf(false) }
-    Surface(
-        onClick = { open = true },
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Row(Modifier.height(44.dp).padding(start = 14.dp, end = 8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-            Text(
-                value?.name ?: placeholder,
-                Modifier.weight(1f),
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (value == null) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-            )
-            Icon(Icons.Outlined.ArrowDropDown, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-    }
-    if (open) PickerSheet(title, placeholder, entries, value?.id, onPick = { onPick(it); open = false }, onDismiss = { open = false })
-}
-
-/** The choices as springy tiles, the chosen one tinted; "Any" at the top clears the filter. */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun PickerSheet(title: String, anyLabel: String, entries: List<Ref>, selectedId: String?, onPick: (Ref?) -> Unit, onDismiss: () -> Unit) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-    ) {
-        Text(title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp))
-        val all = listOf<Ref?>(null) + entries
-        androidx.compose.foundation.lazy.LazyColumn(contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 8.dp)) {
-            items(all.size) { i ->
-                val entry = all[i]
-                val chosen = entry?.id == selectedId
-                MorphTile(
-                    onClick = { onPick(entry) },
-                    first = i == 0,
-                    last = i == all.lastIndex,
-                    modifier = Modifier.padding(bottom = 2.dp),
-                    color = if (chosen) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
-                ) {
-                    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                        Text(entry?.name ?: anyLabel, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, color = if (entry == null) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface)
-                        if (chosen) Icon(Icons.Outlined.Check, null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
-                    }
-                }
-            }
-        }
-        androidx.compose.foundation.layout.Spacer(Modifier.height(24.dp))
-    }
-}
-
-/** A compact tonal number field (44dp) with the same look as the dropdown. */
-@Composable
-private fun AmountField(label: String, value: String, modifier: Modifier, onChange: (String) -> Unit) {
-    var focused by remember { mutableStateOf(false) }
-    Surface(
-        modifier,
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        // the focus ring the compact field would otherwise lack
-        border = if (focused) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
-    ) {
-        BasicTextField(
-            modifier = Modifier.onFocusChanged { focused = it.isFocused },
-            value = value,
-            onValueChange = { onChange(it.filter { c -> c.isDigit() || c == '.' }.take(15)) },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
-            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-            decorationBox = { inner ->
-                Box(Modifier.height(44.dp).padding(horizontal = 14.dp), contentAlignment = androidx.compose.ui.Alignment.CenterStart) {
-                    if (value.isEmpty()) Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    inner()
-                }
-            },
-        )
     }
 }

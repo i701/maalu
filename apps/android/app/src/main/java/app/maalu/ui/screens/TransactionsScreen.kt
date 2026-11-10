@@ -30,7 +30,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Clear
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -123,6 +125,8 @@ fun TransactionsScreen(api: Api) {
     var committed by rememberSaveable { mutableStateOf("") }
     var filters by rememberSaveable(stateSaver = FiltersSaver) { mutableStateOf(TxFilters()) }
     var showFilters by remember { mutableStateOf(false) }
+    var adding by remember { mutableStateOf(false) }
+    val snackbar = LocalSnackbar.current
     var reload by remember { mutableIntStateOf(0) }
     var refreshing by remember { mutableStateOf(false) }
 
@@ -180,6 +184,7 @@ fun TransactionsScreen(api: Api) {
             }
     }
 
+    Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             SearchPill(query, onChange = { query = it.take(100) }, modifier = Modifier.weight(1f))
@@ -265,8 +270,22 @@ fun TransactionsScreen(api: Api) {
             }
         }
     }
+    val expanded by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
+    ExtendedFloatingActionButton(
+        onClick = { adding = true },
+        expanded = expanded,
+        icon = { Icon(Icons.Outlined.Add, null) },
+        text = { Text("Add") },
+        modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
+    )
+    }
 
     selected?.let { t -> DetailSheet(t) { selected = null } }
+    if (adding) AddTransactionScreen(
+        api,
+        onClose = { adding = false },
+        onSaved = { adding = false; reload++; scope.launch { snackbar?.showSnackbar("Transaction added") } },
+    )
     if (showFilters) FiltersSheet(api, filters, onApply = { filters = it; showFilters = false }, onDismiss = { showFilters = false })
 }
 

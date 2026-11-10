@@ -30,6 +30,7 @@ data class Account(
     val bank: String? = null,
     @SerialName("account_number") val accountNumber: String? = null,
     @SerialName("is_liability") val isLiability: Boolean = false,
+    @SerialName("exchange_rate") val exchangeRate: String = "1",
 )
 
 @Serializable
@@ -38,6 +39,7 @@ data class UserMe(
     val email: String,
     @SerialName("base_currency") val baseCurrency: String,
     @SerialName("compact_numbers") val compactNumbers: Boolean = false,
+    @SerialName("default_account_id") val defaultAccountId: String? = null,
 )
 
 @Serializable
@@ -187,3 +189,6 @@ data class CategoryItem(val id: String, val name: String, @SerialName("parent_id
 
 @Serializable
 data class TagItem(val id: String, val name: String)
+
+@Serializable
+data class VendorItem(val id: String, val name: String)

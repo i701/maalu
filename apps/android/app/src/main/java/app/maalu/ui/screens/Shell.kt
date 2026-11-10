@@ -33,6 +33,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -46,6 +47,9 @@ import app.maalu.data.ThemeMode
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+
+/** Lets any screen show a message at the bottom (above the bar). */
+val LocalSnackbar = androidx.compose.runtime.staticCompositionLocalOf<androidx.compose.material3.SnackbarHostState?> { null }
 
 private data class Tab(val label: String, val icon: ImageVector)
 
@@ -74,8 +78,10 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
     // the dashboard's month lives here so the app bar can move it
     var month by rememberSaveable { mutableStateOf(LocalDate.now().withDayOfMonth(1).toString()) }
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val snackbar = remember { androidx.compose.material3.SnackbarHostState() }
 
-    Scaffold(
+    androidx.compose.runtime.CompositionLocalProvider(LocalSnackbar provides snackbar) { Scaffold(
+        snackbarHost = { androidx.compose.material3.SnackbarHost(snackbar) },
         modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
         topBar = {
             MediumFlexibleTopAppBar(
@@ -136,5 +142,6 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
                 }
             }
         }
+    }
     }
 }
