@@ -11,6 +11,7 @@ from app.schemas import (
     AccountCreate,
     AccountResponse,
     AccountSummary,
+    AccountTrend,
     AccountUpdate,
     BalanceAfter,
     BalanceHistory,
@@ -114,6 +115,17 @@ async def card_statements(user_id: CurrentUserId, service: AccountServiceDep):
     """Where each credit card with its statement days set stands against its last statement,
     soonest due first."""
     return await service.statements(user_id)
+
+
+@router.get("/trends", response_model=list[AccountTrend])
+async def account_trends(
+    user_id: CurrentUserId,
+    service: AccountServiceDep,
+    days: Annotated[int, Query(ge=7, le=365, description="How many days back, ending today")] = 30,
+):
+    """Each active account's recent balance curve (one number per day, in the account's own
+    currency), for the small charts on the accounts page: one request instead of one per account."""
+    return await service.trends(user_id, days)
 
 
 @router.get("/{account_id}/statement", response_model=CardStatement)

@@ -19,6 +19,7 @@ from app.schemas import (
     AccountCreate,
     AccountResponse,
     AccountSummary,
+    AccountTrend,
     AccountUpdate,
     BalanceAfter,
     BalanceHistory,
@@ -404,6 +405,23 @@ class AccountService:
             balance += by_day.get(day, Decimal(0))
             points.append(AccountBalancePoint(date=day, balance=balance))
         return BalanceHistory(currency=account.currency, points=points)
+
+    async def trends(
+        self, user_id: uuid.UUID, days: int, today: date | None = None
+    ) -> list[AccountTrend]:
+        """The recent balance curve of every active account, for the small charts on the accounts
+        page: one entry per account, in the same order as the list. An archived account has none."""
+        out = []
+        for account in await self.list_for_user(user_id):
+            history = await self.balance_history(account, days, today)
+            out.append(
+                AccountTrend(
+                    account_id=account.id,
+                    currency=account.currency,
+                    balances=[p.balance for p in history.points],
+                )
+            )
+        return out
 
     async def balances_after(self, account: Account, limit: int) -> list[BalanceAfter]:
         """What the account held right after each of its newest `limit` transactions."""

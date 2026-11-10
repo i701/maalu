@@ -1,3 +1,4 @@
+import AccountSpark from "#/components/account/AccountSpark";
 import { accountTints, tintBackground } from "#/lib/accounts";
 import { MORPH_TRANSITION, morphUp } from "#/lib/shape";
 import AddIcon from "@mui/icons-material/Add";
@@ -46,6 +47,7 @@ import {
 	deleteAccountFn,
 	getAccountSummaryFn,
 	listAccountsFn,
+	listAccountTrendsFn,
 	listCardStatementsFn,
 } from "#/server/accounts";
 import { listCurrenciesFn } from "#/server/currencies";
@@ -60,12 +62,13 @@ export const Route = createFileRoute("/_protected/accounts/")({
 	validateSearch: searchSchema,
 	loaderDeps: ({ search }) => search,
 	loader: async ({ deps }) => {
-		const [accounts, summary, currencies, archived, statements] = await Promise.all([
+		const [accounts, summary, currencies, archived, statements, trends] = await Promise.all([
 			listAccountsFn({ data: { q: deps.q } }),
 			getAccountSummaryFn(),
 			listCurrenciesFn(),
 			listAccountsFn({ data: { archived: true } }),
 			listCardStatementsFn(),
+			listAccountTrendsFn(), // the small balance lines on each row
 		]);
 		const found = unwrap(accounts);
 		// The form offers the currencies of *all* your accounts, so a search must not narrow them.
@@ -76,6 +79,7 @@ export const Route = createFileRoute("/_protected/accounts/")({
 			everyAccount,
 			summary: unwrap(summary),
 			statements: statements.ok ? statements.data : [],
+			trends,
 			currencies,
 		};
 	},
@@ -161,7 +165,7 @@ function RateHistoryButton({ account, baseCurrency }: { account: Account; baseCu
 }
 
 function AccountsPage() {
-	const { accounts, archived, everyAccount, summary, currencies, statements } =
+	const { accounts, archived, everyAccount, summary, currencies, statements, trends } =
 		Route.useLoaderData();
 	// The URL as soon as it changes (the loader data lags behind it), so the box feels instant.
 	const search = useLiveSearch(searchSchema);
@@ -172,6 +176,7 @@ function AccountsPage() {
 
 	// every account (not only the ones a search left) so a colour never changes with the search
 	const tints = accountTints(everyAccount.map((a) => a.id));
+	const trendOf = new Map(trends.map((t) => [t.account_id, t]));
 
 	const groups = ACCOUNT_GROUPS.map((group) => ({
 		group,
@@ -342,27 +347,37 @@ function AccountsPage() {
 																	{a.description}
 																</Typography>
 															)}
+															<AccountSpark trend={trendOf.get(a.id)} />
 														</>
 													}
+													// a compact row keeps just the name and the trend line under it
+													brief={<AccountSpark trend={trendOf.get(a.id)} />}
 													end={
-														<Typography
-															variant="body2"
-															sx={{
-																fontWeight: 600,
-																color: isNegative(a.balance) ? "error.main" : "text.primary",
-															}}
-														>
-															{formatMoney(a.balance, a.currency)}
-														</Typography>
+														<>
+															<Typography
+																variant="body2"
+																sx={{
+																	fontWeight: 600,
+																	color: isNegative(a.balance) ? "error.main" : "text.primary",
+																}}
+															>
+																{formatMoney(a.balance, a.currency)}
+															</Typography>
+														</>
 													}
 													endSecondary={
-														a.currency !== user.base_currency && (
-															<Typography variant="caption" sx={{ color: "text.secondary" }}>
-																≈ {formatMoney(a.base_balance, user.base_currency)} @{" "}
-																{Number(a.exchange_rate)}
-																{a.auto_rate ? " · auto" : ""}
-															</Typography>
-														)
+														<>
+															{a.currency !== user.base_currency && (
+																<Typography
+																	variant="caption"
+																	sx={{ display: "block", color: "text.secondary" }}
+																>
+																	≈ {formatMoney(a.base_balance, user.base_currency)} @{" "}
+																	{Number(a.exchange_rate)}
+																	{a.auto_rate ? " · auto" : ""}
+																</Typography>
+															)}
+														</>
 													}
 													actions={
 														<>

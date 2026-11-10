@@ -4,6 +4,7 @@ import {
 	ACCOUNT_GROUPS,
 	type Account,
 	type AccountSummary,
+	type AccountTrend,
 	type BalanceAfter,
 	type BalanceHistory,
 	type CardStatement,
@@ -139,3 +140,14 @@ export const adjustAccountFn = createServerFn({ method: "POST" })
 	.handler(async ({ data: { id, ...body } }) =>
 		apiRequest<Transaction>(`/accounts/${id}/adjust`, { method: "POST", body }),
 	);
+
+/** Each active account's recent balance curve, for the small charts on the accounts page. A
+ * failure is an empty list: the charts are a nicety and must never break the page. */
+export const listAccountTrendsFn = createServerFn({ method: "GET" })
+	.validator(z.object({ days: z.number().int().min(7).max(365).default(30) }).optional())
+	.handler(async ({ data }): Promise<AccountTrend[]> => {
+		const res = await apiRequest<AccountTrend[]>("/accounts/trends", {
+			query: { days: data?.days ?? 30 },
+		});
+		return res.ok ? res.data : [];
+	});

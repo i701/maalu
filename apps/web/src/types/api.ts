@@ -112,6 +112,7 @@ export type Subscription = Schemas["SubscriptionResponse"];
 export type SubscriptionCandidate = Schemas["SubscriptionCandidate"];
 export type SubscriptionSummary = Schemas["SubscriptionSummary"];
 export type Account = Schemas["AccountResponse"];
+export type AccountTrend = Schemas["AccountTrend"];
 export type TransferSuggestion = Schemas["TransferSuggestion"];
 export type PlaceTotal = Schemas["PlaceTotal"];
 export type PlaceSearchHit = Schemas["PlaceSearchHit"];

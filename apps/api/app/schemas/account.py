@@ -238,6 +238,17 @@ class BalanceHistory(BaseModel):
     points: list[AccountBalancePoint] = Field(description="Oldest first, one per day up to today")
 
 
+class AccountTrend(BaseModel):
+    """The shape of one account's balance over the last days, for a small chart. The balances are
+    in the account's own currency, one per day, oldest first, the last being today's."""
+
+    account_id: uuid.UUID
+    currency: str
+    balances: list[Decimal] = Field(
+        description="The balance at the end of each day, oldest first, ending today"
+    )
+
+
 class BalanceAfter(BaseModel):
     transaction_id: uuid.UUID
     balance: Decimal = Field(description="What the account held right after this transaction")

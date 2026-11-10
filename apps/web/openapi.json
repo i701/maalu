@@ -533,6 +533,35 @@
         "title": "AccountSummary",
         "type": "object"
       },
+      "AccountTrend": {
+        "description": "The shape of one account's balance over the last days, for a small chart. The balances are\nin the account's own currency, one per day, oldest first, the last being today's.",
+        "properties": {
+          "account_id": {
+            "format": "uuid",
+            "title": "Account Id",
+            "type": "string"
+          },
+          "balances": {
+            "description": "The balance at the end of each day, oldest first, ending today",
+            "items": {
+              "type": "string"
+            },
+            "title": "Balances",
+            "type": "array"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          }
+        },
+        "required": [
+          "account_id",
+          "currency",
+          "balances"
+        ],
+        "title": "AccountTrend",
+        "type": "object"
+      },
       "AccountUpdate": {
         "description": "Partial update. `description: null` clears it.",
         "properties": {
@@ -9229,6 +9258,63 @@
           }
         ],
         "summary": "Account Summary",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/api/v1/accounts/trends": {
+      "get": {
+        "description": "Each active account's recent balance curve (one number per day, in the account's own\ncurrency), for the small charts on the accounts page: one request instead of one per account.",
+        "operationId": "account_trends_api_v1_accounts_trends_get",
+        "parameters": [
+          {
+            "description": "How many days back, ending today",
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "description": "How many days back, ending today",
+              "maximum": 365,
+              "minimum": 7,
+              "title": "Days",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AccountTrend"
+                  },
+                  "title": "Response Account Trends Api V1 Accounts Trends Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Account Trends",
         "tags": [
           "accounts"
         ]

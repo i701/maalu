@@ -68,6 +68,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/accounts/trends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Account Trends
+         * @description Each active account's recent balance curve (one number per day, in the account's own
+         *     currency), for the small charts on the accounts page: one request instead of one per account.
+         */
+        get: operations["account_trends_api_v1_accounts_trends_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/accounts/{account_id}": {
         parameters: {
             query?: never;
@@ -2578,6 +2599,25 @@ export interface components {
             liabilities: string;
             /** Total */
             total: string;
+        };
+        /**
+         * AccountTrend
+         * @description The shape of one account's balance over the last days, for a small chart. The balances are
+         *     in the account's own currency, one per day, oldest first, the last being today's.
+         */
+        AccountTrend: {
+            /**
+             * Account Id
+             * Format: uuid
+             */
+            account_id: string;
+            /**
+             * Balances
+             * @description The balance at the end of each day, oldest first, ending today
+             */
+            balances: string[];
+            /** Currency */
+            currency: string;
         };
         /**
          * AccountUpdate
@@ -6312,6 +6352,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AccountSummary"];
+                };
+            };
+        };
+    };
+    account_trends_api_v1_accounts_trends_get: {
+        parameters: {
+            query?: {
+                /** @description How many days back, ending today */
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountTrend"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

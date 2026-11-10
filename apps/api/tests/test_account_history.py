@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from decimal import Decimal
 
 from httpx import AsyncClient
 
@@ -129,3 +130,62 @@ async def test_history_is_private_and_the_days_are_bounded(client: AsyncClient, 
     assert (
         await client.get(f"{ACCOUNTS}/{main['id']}/balances-after", headers=other)
     ).status_code == 404
+
+
+async def test_trends_give_every_active_account_a_short_balance_curve(client: AsyncClient, auth):
+    main = await account(client, auth, "Main", "1000")
+    savings = await account(client, auth, "Savings", "200", group="savings")
+    await tx(
+        client, auth, type="expense", amount="100", account_id=main["id"], transaction_date=day(10)
+    )
+    await tx(
+        client,
+        auth,
+        type="transfer",
+        amount="50",
+        account_id=main["id"],
+        to_account_id=savings["id"],
+        to_amount="50",
+        transaction_date=day(3),
+    )
+    res = await client.get(f"{ACCOUNTS}/trends?days=14", headers=auth)
+    assert res.status_code == 200, res.text
+    by_id = {t["account_id"]: t for t in res.json()}
+    assert set(by_id) == {main["id"], savings["id"]}
+    for trend in by_id.values():
+        assert len(trend["balances"]) == 14
+        assert trend["currency"] == "MVR"
+    # Main: 1000, 900 after the expense, 850 after the transfer out; Savings gains the 50 on day 3
+    assert Decimal(by_id[main["id"]]["balances"][0]) == Decimal("1000")
+    assert Decimal(by_id[main["id"]]["balances"][-1]) == Decimal("850")
+    assert Decimal(by_id[savings["id"]]["balances"][-1]) == Decimal("250")
+    assert Decimal(by_id[savings["id"]]["balances"][0]) == Decimal("200")
+
+
+async def test_trends_leave_out_planned_money_and_archived_accounts(client: AsyncClient, auth):
+    main = await account(client, auth, "Main", "1000")
+    old = await account(client, auth, "Old", "5")
+    await tx(
+        client,
+        auth,
+        type="expense",
+        amount="400",
+        account_id=main["id"],
+        transaction_date=day(0),
+        planned=True,
+    )
+    await client.post(f"{ACCOUNTS}/{old['id']}/archive", headers=auth)
+    trends = (await client.get(f"{ACCOUNTS}/trends", headers=auth)).json()
+    assert [t["account_id"] for t in trends] == [main["id"]]
+    assert len(trends[0]["balances"]) == 30
+    assert Decimal(trends[0]["balances"][-1]) == Decimal(
+        "1000"
+    )  # a planned bill counts for nothing
+
+
+async def test_trends_are_per_person_and_validate_the_range(client: AsyncClient, auth, signup):
+    await account(client, auth, "Main")
+    other = await signup("bob@example.com")
+    assert (await client.get(f"{ACCOUNTS}/trends", headers=other)).json() == []
+    assert (await client.get(f"{ACCOUNTS}/trends?days=3", headers=auth)).status_code == 422
+    assert (await client.get(f"{ACCOUNTS}/trends?days=400", headers=auth)).status_code == 422
