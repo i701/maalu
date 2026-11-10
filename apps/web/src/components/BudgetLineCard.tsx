@@ -1,6 +1,8 @@
+import { useCompactCard } from "#/lib/compact-card";
 import { morph } from "#/lib/shape";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
@@ -22,8 +24,8 @@ function Bar({ percent, color }: { percent: number; color: string }) {
 			aria-valuemax={100}
 			aria-valuenow={Math.min(percent, 100)}
 			sx={{
-				mt: 1.5,
-				height: 10,
+				mt: { xs: 0.75, sm: 1.5 },
+				height: { xs: 6, sm: 10 },
 				borderRadius: "var(--shape-full)",
 				bgcolor: "var(--md-sys-color-surface-container-highest)",
 				overflow: "hidden",
@@ -33,7 +35,7 @@ function Bar({ percent, color }: { percent: number; color: string }) {
 				sx={{
 					height: "100%",
 					width: `${Math.min(percent, 100)}%`,
-					minWidth: percent > 0 ? 10 : 0,
+					minWidth: percent > 0 ? 6 : 0,
 					borderRadius: "var(--shape-full)",
 					bgcolor: color,
 					transition: "width var(--spring-spatial-default-dur) var(--spring-spatial-default)",
@@ -74,13 +76,19 @@ const BudgetLineCard = memo(function BudgetLineCard({
 	const limit = periodLimit(line);
 	const over = line.status === "over";
 	const dated = "end_date" in line ? line : null;
+	const card = useCompactCard();
 
 	return (
 		<Box
+			{...card.rootProps}
 			sx={{
-				p: 2.5,
+				p: { xs: 1.5, sm: 2.5 },
 				...morph("xl"),
-				bgcolor: "var(--md-sys-color-surface-container-low)",
+				// an opened card on a phone is tinted, like an opened row
+				bgcolor: card.opened
+					? "color-mix(in srgb, var(--md-sys-color-secondary-container) 55%, transparent)"
+					: "var(--md-sys-color-surface-container-low)",
+				cursor: { xs: "pointer", sm: "default" },
 			}}
 		>
 			<Box
@@ -95,7 +103,7 @@ const BudgetLineCard = memo(function BudgetLineCard({
 							{dated ? fixedWindow(dated) : runsWindow(line)}
 						</Typography>
 					)}
-					<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 0.5 }}>
+					<Box sx={{ display: card.show("flex"), flexWrap: "wrap", gap: 0.5, mt: 0.5 }}>
 						{line.kind && (
 							<TonalChip
 								accent={KIND_COLOR[line.kind]}
@@ -109,13 +117,31 @@ const BudgetLineCard = memo(function BudgetLineCard({
 					</Box>
 				</Box>
 				<Box sx={{ display: "flex", flexShrink: 0, mr: -0.75, mt: -0.5 }}>
-					<IconButton aria-label="Edit" title="Edit" size="small" onClick={() => onEdit(line)}>
+					<IconButton
+						{...card.toggleProps}
+						size="small"
+						sx={{
+							display: { xs: "inline-flex", sm: "none" },
+							transform: card.open ? "rotate(180deg)" : "none",
+							transition: "transform var(--spring-spatial-fast-dur) var(--spring-spatial-fast)",
+						}}
+					>
+						<ExpandMoreIcon fontSize="small" />
+					</IconButton>
+					<IconButton
+						aria-label="Edit"
+						title="Edit"
+						size="small"
+						sx={{ display: card.show("inline-flex") }}
+						onClick={() => onEdit(line)}
+					>
 						<EditOutlinedIcon fontSize="small" />
 					</IconButton>
 					<IconButton
 						aria-label="Delete"
 						title="Delete"
 						size="small"
+						sx={{ display: card.show("inline-flex") }}
 						onClick={() => onDelete(line)}
 					>
 						<DeleteOutlineIcon fontSize="small" />
@@ -123,10 +149,18 @@ const BudgetLineCard = memo(function BudgetLineCard({
 				</Box>
 			</Box>
 
-			<Box sx={{ display: "flex", alignItems: "baseline", gap: 1, mt: 2, flexWrap: "wrap" }}>
+			<Box
+				sx={{
+					display: "flex",
+					alignItems: "baseline",
+					gap: 1,
+					mt: { xs: 0.5, sm: 2 },
+					flexWrap: "wrap",
+				}}
+			>
 				<Typography
 					sx={{
-						fontSize: 24,
+						fontSize: { xs: 18, sm: 24 },
 						fontWeight: 600,
 						fontVariantNumeric: "tabular-nums",
 						lineHeight: 1.2,
@@ -146,7 +180,7 @@ const BudgetLineCard = memo(function BudgetLineCard({
 					display: "flex",
 					justifyContent: "space-between",
 					alignItems: "center",
-					mt: 1.25,
+					mt: { xs: 0.5, sm: 1.25 },
 					gap: 1,
 				}}
 			>
@@ -161,12 +195,18 @@ const BudgetLineCard = memo(function BudgetLineCard({
 				</Typography>
 			</Box>
 			{Number(line.carried) > 0 && (
-				<Typography variant="caption" sx={{ display: "block", mt: 0.75, color: "text.secondary" }}>
+				<Typography
+					variant="caption"
+					sx={{ display: card.show("block"), mt: 0.75, color: "text.secondary" }}
+				>
 					Includes {formatMoney(line.carried, currency)} carried over
 				</Typography>
 			)}
 			{moves?.map((m) => (
-				<Box key={m.id} sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.5 }}>
+				<Box
+					key={m.id}
+					sx={{ display: card.show("flex"), alignItems: "center", gap: 0.5, mt: 0.5 }}
+				>
 					<Typography
 						variant="caption"
 						sx={{
@@ -186,14 +226,14 @@ const BudgetLineCard = memo(function BudgetLineCard({
 				</Box>
 			))}
 			{dated && onRepeat && dated.state !== "upcoming" && (
-				<Box sx={{ display: "flex", mt: 1, ml: -1 }}>
+				<Box sx={{ display: card.show("flex"), mt: 1, ml: -1 }}>
 					<Button size="small" onClick={() => onRepeat(dated)}>
 						Repeat for the next stretch
 					</Button>
 				</Box>
 			)}
 			{(onMove || onHistory) && (
-				<Box sx={{ display: "flex", gap: 0.5, mt: 1, ml: -1 }}>
+				<Box sx={{ display: card.show("flex"), gap: 0.5, mt: 1, ml: -1 }}>
 					{onMove && (
 						<Button size="small" onClick={() => onMove(line)}>
 							Move money here

@@ -162,7 +162,7 @@ function BudgetPage() {
 						<Box
 							sx={{
 								display: "grid",
-								gap: 2,
+								gap: { xs: 1, sm: 2 },
 								gridTemplateColumns: { xs: "1fr", md: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" },
 								...staggerChildren(),
 							}}
@@ -183,7 +183,10 @@ function BudgetPage() {
 						</Box>
 						{fixedLines.length > 0 && (
 							<>
-								<Typography variant="h2" sx={{ fontSize: 18, fontWeight: 600, mt: 4, mb: 0.5 }}>
+								<Typography
+									variant="h2"
+									sx={{ fontSize: 18, fontWeight: 600, mt: { xs: 2.5, sm: 4 }, mb: 0.5 }}
+								>
 									For set dates
 								</Typography>
 								<Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
@@ -192,7 +195,7 @@ function BudgetPage() {
 								<Box
 									sx={{
 										display: "grid",
-										gap: 2,
+										gap: { xs: 1, sm: 2 },
 										gridTemplateColumns: { xs: "1fr", md: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" },
 									}}
 								>

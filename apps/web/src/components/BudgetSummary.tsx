@@ -16,14 +16,19 @@ function KindSplit({ budget }: { budget: Budget }) {
 	return (
 		<Box
 			sx={{
-				display: "grid",
+				// side by side as columns, wrapping to fewer per row (down to one) only when a column
+				// would be narrower than its basis, so a very small screen stacks them
+				display: "flex",
+				flexWrap: "wrap",
 				gap: 1.5,
-				mt: 2,
-				gridTemplateColumns: { xs: "1fr", sm: `repeat(${kinds.length}, 1fr)` },
+				mt: { xs: 1.25, sm: 2 },
 			}}
 		>
 			{kinds.map((k) => (
-				<Box key={k.kind} sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
+				<Box
+					key={k.kind}
+					sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0, flex: "1 1 96px" }}
+				>
 					<Box
 						aria-hidden
 						sx={{
@@ -57,8 +62,8 @@ export default function BudgetSummary({ budget }: { budget: Budget }) {
 	return (
 		<Box
 			sx={{
-				mb: 2,
-				p: 2.5,
+				mb: { xs: 1, sm: 2 },
+				p: { xs: 1.5, sm: 2.5 },
 				...morph("xl"),
 				bgcolor: "var(--md-sys-color-surface-container-low)",
 			}}
@@ -79,7 +84,7 @@ export default function BudgetSummary({ budget }: { budget: Budget }) {
 					<Box sx={{ display: "flex", alignItems: "baseline", gap: 1, flexWrap: "wrap" }}>
 						<Typography
 							sx={{
-								fontSize: 32,
+								fontSize: { xs: 24, sm: 32 },
 								fontWeight: 600,
 								fontVariantNumeric: "tabular-nums",
 								lineHeight: 1.2,
@@ -98,7 +103,7 @@ export default function BudgetSummary({ budget }: { budget: Budget }) {
 					</Typography>
 					<Typography
 						sx={{
-							fontSize: 22,
+							fontSize: { xs: 18, sm: 22 },
 							fontWeight: 600,
 							fontVariantNumeric: "tabular-nums",
 							color: over ? color : "text.primary",
@@ -114,8 +119,8 @@ export default function BudgetSummary({ budget }: { budget: Budget }) {
 				aria-valuemax={100}
 				aria-valuenow={width}
 				sx={{
-					mt: 2,
-					height: 12,
+					mt: { xs: 1, sm: 2 },
+					height: { xs: 8, sm: 12 },
 					borderRadius: "var(--shape-full)",
 					bgcolor: "var(--md-sys-color-surface-container-highest)",
 					overflow: "hidden",
@@ -133,7 +138,15 @@ export default function BudgetSummary({ budget }: { budget: Budget }) {
 				/>
 			</Box>
 			<KindSplit budget={budget} />
-			<Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 1.5, flexWrap: "wrap" }}>
+			<Box
+				sx={{
+					display: "flex",
+					alignItems: "center",
+					gap: 1,
+					mt: { xs: 1, sm: 1.5 },
+					flexWrap: "wrap",
+				}}
+			>
 				<TonalChip accent={color} label={`${STATUS_LABEL[totals.status]} · ${totals.percent}%`} />
 				{attention > 0 && (
 					<Typography variant="body2" sx={{ color: "text.secondary" }}>

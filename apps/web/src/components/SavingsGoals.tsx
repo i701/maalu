@@ -27,7 +27,7 @@ export default function SavingsGoals({
 	const [deleting, setDeleting] = useState<Goal | null>(null);
 
 	return (
-		<Box sx={{ mt: 4 }}>
+		<Box sx={{ mt: { xs: 2.5, sm: 4 } }}>
 			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
 				<Box>
 					<Typography variant="h2" sx={{ fontSize: 20 }}>
@@ -46,7 +46,7 @@ export default function SavingsGoals({
 				<Box
 					sx={{
 						display: "grid",
-						gap: 2,
+						gap: { xs: 1, sm: 2 },
 						gridTemplateColumns: { xs: "1fr", md: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" },
 						...staggerChildren(),
 					}}

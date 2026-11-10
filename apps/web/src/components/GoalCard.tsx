@@ -1,6 +1,8 @@
+import { useCompactCard } from "#/lib/compact-card";
 import { morph } from "#/lib/shape";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
@@ -21,8 +23,8 @@ function Bar({ percent, color }: { percent: number; color: string }) {
 			aria-valuemax={100}
 			aria-valuenow={width}
 			sx={{
-				mt: 1.5,
-				height: 10,
+				mt: { xs: 0.75, sm: 1.5 },
+				height: { xs: 6, sm: 10 },
 				borderRadius: "var(--shape-full)",
 				bgcolor: "var(--md-sys-color-surface-container-highest)",
 				overflow: "hidden",
@@ -66,13 +68,18 @@ const GoalCard = memo(function GoalCard({
 }) {
 	const color = goal.reached ? ACCENT.green : ACCENT.blue;
 	const plan = planLine(goal);
+	const card = useCompactCard();
 
 	return (
 		<Box
+			{...card.rootProps}
 			sx={{
-				p: 2.5,
+				p: { xs: 1.5, sm: 2.5 },
 				...morph("xl"),
-				bgcolor: "var(--md-sys-color-surface-container-low)",
+				bgcolor: card.opened
+					? "color-mix(in srgb, var(--md-sys-color-secondary-container) 55%, transparent)"
+					: "var(--md-sys-color-surface-container-low)",
+				cursor: { xs: "pointer", sm: "default" },
 			}}
 		>
 			<Box
@@ -82,7 +89,7 @@ const GoalCard = memo(function GoalCard({
 					<Typography variant="subtitle1" sx={{ fontWeight: 600 }} noWrap>
 						{goal.name}
 					</Typography>
-					<Box sx={{ mt: 0.5 }}>
+					<Box sx={{ display: card.show("block"), mt: 0.5 }}>
 						<TonalChip
 							accent="var(--md-sys-color-outline)"
 							label={goal.account ? `Follows ${goal.account.name}` : "Set aside by hand"}
@@ -90,13 +97,31 @@ const GoalCard = memo(function GoalCard({
 					</Box>
 				</Box>
 				<Box sx={{ display: "flex", flexShrink: 0, mr: -0.75, mt: -0.5 }}>
-					<IconButton aria-label="Edit" title="Edit" size="small" onClick={() => onEdit(goal)}>
+					<IconButton
+						{...card.toggleProps}
+						size="small"
+						sx={{
+							display: { xs: "inline-flex", sm: "none" },
+							transform: card.open ? "rotate(180deg)" : "none",
+							transition: "transform var(--spring-spatial-fast-dur) var(--spring-spatial-fast)",
+						}}
+					>
+						<ExpandMoreIcon fontSize="small" />
+					</IconButton>
+					<IconButton
+						aria-label="Edit"
+						title="Edit"
+						size="small"
+						sx={{ display: card.show("inline-flex") }}
+						onClick={() => onEdit(goal)}
+					>
 						<EditOutlinedIcon fontSize="small" />
 					</IconButton>
 					<IconButton
 						aria-label="Delete"
 						title="Delete"
 						size="small"
+						sx={{ display: card.show("inline-flex") }}
 						onClick={() => onDelete(goal)}
 					>
 						<DeleteOutlineIcon fontSize="small" />
@@ -104,10 +129,18 @@ const GoalCard = memo(function GoalCard({
 				</Box>
 			</Box>
 
-			<Box sx={{ display: "flex", alignItems: "baseline", gap: 1, mt: 2, flexWrap: "wrap" }}>
+			<Box
+				sx={{
+					display: "flex",
+					alignItems: "baseline",
+					gap: 1,
+					mt: { xs: 0.5, sm: 2 },
+					flexWrap: "wrap",
+				}}
+			>
 				<Typography
 					sx={{
-						fontSize: 24,
+						fontSize: { xs: 18, sm: 24 },
 						fontWeight: 600,
 						fontVariantNumeric: "tabular-nums",
 						lineHeight: 1.2,
@@ -127,7 +160,7 @@ const GoalCard = memo(function GoalCard({
 					display: "flex",
 					justifyContent: "space-between",
 					alignItems: "center",
-					mt: 1.25,
+					mt: { xs: 0.5, sm: 1.25 },
 					gap: 1,
 				}}
 			>
@@ -141,13 +174,24 @@ const GoalCard = memo(function GoalCard({
 			</Box>
 
 			{plan && (
-				<Typography variant="caption" sx={{ display: "block", mt: 1, color: "text.secondary" }}>
+				<Typography
+					variant="caption"
+					sx={{ display: card.show("block"), mt: 1, color: "text.secondary" }}
+				>
 					{plan}
 				</Typography>
 			)}
 
 			{goal.period_status && goal.period_planned && goal.period_contributed && (
-				<Box sx={{ mt: 1.5, display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+				<Box
+					sx={{
+						mt: 1.5,
+						display: card.show("flex"),
+						alignItems: "center",
+						gap: 1,
+						flexWrap: "wrap",
+					}}
+				>
 					<TonalChip
 						accent={goal.period_status === "funded" ? ACCENT.green : ACCENT.amber}
 						label={
@@ -167,7 +211,11 @@ const GoalCard = memo(function GoalCard({
 			)}
 
 			{goal.mode === "manual" && (
-				<Button size="small" sx={{ mt: 1.5, ml: -1 }} onClick={() => onAddMoney(goal)}>
+				<Button
+					size="small"
+					sx={{ display: card.show("inline-flex"), mt: 1.5, ml: -1 }}
+					onClick={() => onAddMoney(goal)}
+				>
 					Add or take out money
 				</Button>
 			)}
