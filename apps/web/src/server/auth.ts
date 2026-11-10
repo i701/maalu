@@ -125,6 +125,7 @@ export const updateMeFn = createServerFn({ method: "POST" })
 			notify_payments: z.boolean().optional(),
 			notify_budget: z.boolean().optional(),
 			notify_goals: z.boolean().optional(),
+			notify_email: z.boolean().optional(),
 		}),
 	)
 	.handler(async ({ data }) => apiRequest<User>("/users/me", { method: "PATCH", body: data }));

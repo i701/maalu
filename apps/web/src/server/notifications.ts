@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZES, type PageResult } from "#/lib/pagination";
-import type { AppNotification } from "#/types/api";
+import type { AppNotification, EmailStatus } from "#/types/api";
 import { apiRequest } from "./api";
 
 /** How many are unread, for the badge on the bell (the API also looks for new ones, at most every
@@ -60,3 +60,13 @@ export const markAllNotificationsReadFn = createServerFn({ method: "POST" }).han
 export const dismissNotificationFn = createServerFn({ method: "POST" })
 	.validator(z.object({ id: z.uuid() }))
 	.handler(async ({ data }) => apiRequest<void>(`/notifications/${data.id}`, { method: "DELETE" }));
+
+/** Whether the server can send email (its SMTP settings are the operator's). */
+export const emailStatusFn = createServerFn({ method: "GET" }).handler(async () =>
+	apiRequest<EmailStatus>("/email/status"),
+);
+
+/** Send a test message to the signed-in address; a failure carries the provider's own reason. */
+export const sendTestEmailFn = createServerFn({ method: "POST" }).handler(async () =>
+	apiRequest<void>("/email/test", { method: "POST" }),
+);
