@@ -1,3 +1,4 @@
+import { accountTints, tintBackground } from "#/lib/accounts";
 import { MORPH_TRANSITION, morphUp } from "#/lib/shape";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
@@ -169,6 +170,9 @@ function AccountsPage() {
 	const [editing, setEditing] = useState<Account | "new" | null>(null);
 	const [deleting, setDeleting] = useState<Account | null>(null);
 
+	// every account (not only the ones a search left) so a colour never changes with the search
+	const tints = accountTints(everyAccount.map((a) => a.id));
+
 	const groups = ACCOUNT_GROUPS.map((group) => ({
 		group,
 		items: accounts.filter((a) => a.group === group),
@@ -182,6 +186,15 @@ function AccountsPage() {
 				accent="green"
 				shape={1}
 				morph="up"
+				dock={[
+					{ label: "Assets", value: formatMoney(summary.assets, summary.currency) },
+					{ label: "Liabilities", value: formatMoney(summary.liabilities, summary.currency) },
+					{
+						label: "Total",
+						value: formatMoney(summary.total, summary.currency),
+						tone: isNegative(summary.total) ? "negative" : undefined,
+					},
+				]}
 				stats={[
 					{
 						symbol: "account_balance",
@@ -197,7 +210,12 @@ function AccountsPage() {
 				}
 			/>
 
-			<Grid container spacing={2} sx={{ mb: 3, ...staggerChildren() }}>
+			{/* On a phone these three live in the banner's dock (above); the tiles are for wider screens. */}
+			<Grid
+				container
+				spacing={2}
+				sx={{ mb: 3, display: { xs: "none", sm: "flex" }, ...staggerChildren() }}
+			>
 				<Grid size={{ xs: 12, sm: 4 }}>
 					<StatCard
 						label="Assets"
@@ -285,7 +303,7 @@ function AccountsPage() {
 											<Box
 												key={a.id}
 												sx={{
-													bgcolor: "var(--md-sys-color-surface-container-low)",
+													bgcolor: tintBackground(tints.get(a.id) ?? "slate"),
 													...morphUp("xl"),
 													transition: `${MORPH_TRANSITION}, transform var(--spring-spatial-fast-dur) var(--spring-spatial-fast)`,
 													"&:active": { transform: "scale(.97)" },

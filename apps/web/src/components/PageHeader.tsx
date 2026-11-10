@@ -35,6 +35,7 @@ export default function PageHeader({
 	shape = 0,
 	stats,
 	morph,
+	dock,
 }: {
 	title: string;
 	description?: string;
@@ -49,14 +50,19 @@ export default function PageHeader({
 	 * up on hover (the app's default for cards), "up" rests squarer and rounds up. Left out, it
 	 * stays still. */
 	morph?: "down" | "up";
+	/** Headline figures for a phone: a slim strip tucked under the banner, like a tab hanging off
+	 * it, so a page's summary tiles take one short line instead of a screen. Shown on a phone
+	 * only; the page keeps its full tiles for wider screens (and hides them on a phone). */
+	dock?: DockItem[];
 }) {
 	const [from, to] = HERO[accent];
-	return (
+	const banner = (
 		<Box
 			sx={{
 				position: "relative",
 				overflow: "hidden",
-				mb: { xs: 1.5, md: 2 },
+				mb: { xs: dock?.length ? 0 : 1.5, md: 2 },
+				zIndex: dock?.length ? 1 : undefined,
 				p: { xs: 1.5, md: 3.5 },
 				color: "#fff",
 				borderRadius: { xs: "var(--shape-xl)", md: "var(--shape-xxl)" },
@@ -179,6 +185,13 @@ export default function PageHeader({
 			</Stack>
 		</Box>
 	);
+	if (!dock?.length) return banner;
+	return (
+		<>
+			{banner}
+			<Dock items={dock} color={to} />
+		</>
+	);
 }
 
 /** The banner's corners under the pointer: the usual morph, resting at the phone size on a narrow
@@ -186,4 +199,63 @@ export default function PageHeader({
 function reactive(direction: "down" | "up") {
 	const m = direction === "up" ? morphUp("xxl") : morphShape("xxl");
 	return { ...m, borderRadius: { xs: "var(--shape-xl)", md: m.borderRadius } };
+}
+
+export type DockItem = {
+	label: string;
+	value: string;
+	/** Colours the figure: a debt or a shortfall reads as a warm tint. */
+	tone?: "negative";
+};
+
+/** The strip under a phone banner: two or three figures side by side, in the banner's own deep
+ * colour, a little narrower than the banner and tucked under its rounded bottom edge. */
+function Dock({ items, color }: { items: DockItem[]; color: string }) {
+	return (
+		<Box
+			sx={{
+				display: { xs: "grid", md: "none" },
+				gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))`,
+				mx: 2.5,
+				mt: "-14px", // tucked under the banner's rounded bottom
+				mb: 1.5,
+				pt: "24px", // the 14px under the banner plus room above the labels
+				pb: 1.25,
+				borderRadius: "0 0 var(--shape-lg) var(--shape-lg)",
+				bgcolor: color,
+				color: "#fff",
+			}}
+		>
+			{items.map((item, i) => (
+				<Box
+					key={item.label}
+					sx={{
+						px: 1.25,
+						minWidth: 0,
+						borderLeft: i === 0 ? 0 : "1px solid rgb(255 255 255 / 0.16)",
+						textAlign: "center",
+					}}
+				>
+					<Typography
+						variant="caption"
+						sx={{ display: "block", color: "rgb(255 255 255 / 0.72)", lineHeight: 1.3 }}
+					>
+						{item.label}
+					</Typography>
+					<Typography
+						sx={{
+							fontSize: 13,
+							fontWeight: 600,
+							lineHeight: 1.3,
+							fontVariantNumeric: "tabular-nums",
+							color: item.tone === "negative" ? "#ffb4ab" : "#fff",
+							overflowWrap: "anywhere",
+						}}
+					>
+						{item.value}
+					</Typography>
+				</Box>
+			))}
+		</Box>
+	);
 }

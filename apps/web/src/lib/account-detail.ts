@@ -1,6 +1,14 @@
 import type { AreaPoint } from "#/components/charts/AreaChart";
-import type { BalanceAfter, BalanceHistory, Transaction } from "#/types/api";
-import { formatDate } from "./format";
+import type { DockItem } from "#/components/PageHeader";
+import type {
+	Account,
+	BalanceAfter,
+	BalanceHistory,
+	Transaction,
+	TransactionTotals,
+} from "#/types/api";
+import { creditUsage } from "./accounts";
+import { formatDate, formatMoney } from "./format";
 
 /** What a transaction did to one particular account, for that account's own page. */
 export type AccountEffect = {
@@ -84,4 +92,29 @@ export function historySummary(history: BalanceHistory) {
 		low: Math.min(...values),
 		high: Math.max(...values),
 	};
+}
+
+/** "November 2026" -> "Nov": the dock has little room for a label. */
+const shortMonth = (monthLabel: string) => monthLabel.split(" ")[0]?.slice(0, 3) ?? monthLabel;
+
+/**
+ * The three figures of an account's page for a phone's banner dock: what it holds (or owes), and
+ * what came in and went out this month. The balance is in the account's own currency, the month's
+ * figures in your base currency, as on the full tiles. A debt reads as a warm tint.
+ */
+export function accountDock(
+	account: Pick<Account, "balance" | "currency" | "credit_limit" | "group">,
+	totals: Pick<TransactionTotals, "income" | "expense" | "currency">,
+	monthLabel: string,
+): DockItem[] {
+	const month = shortMonth(monthLabel);
+	return [
+		{
+			label: creditUsage(account) ? "Owed" : "Balance",
+			value: formatMoney(account.balance, account.currency),
+			tone: account.balance.startsWith("-") ? "negative" : undefined,
+		},
+		{ label: `In ${month}`, value: formatMoney(totals.income, totals.currency) },
+		{ label: `Out ${month}`, value: formatMoney(totals.expense, totals.currency) },
+	];
 }

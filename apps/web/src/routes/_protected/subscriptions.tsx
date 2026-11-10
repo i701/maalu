@@ -309,7 +309,12 @@ function SubscriptionsPage() {
 				}
 			/>
 
-			<Grid container spacing={2} sx={{ mb: 3, ...staggerChildren() }}>
+			{/* On a phone the banner's pills already say "N active" and the monthly total. */}
+			<Grid
+				container
+				spacing={2}
+				sx={{ mb: 3, display: { xs: "none", sm: "flex" }, ...staggerChildren() }}
+			>
 				<Grid size={{ xs: 12, sm: 6, md: 4 }}>
 					<StatCard
 						label="Monthly total"

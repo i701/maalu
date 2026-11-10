@@ -1,4 +1,5 @@
 import { sumDecimals } from "#/lib/format";
+import { ACCENT, type Accent } from "#/lib/m3";
 import type { AccountGroup, PaymentMethod } from "#/types/api";
 
 /** Payment method to suggest when a transaction is placed in an account of this group. The user
@@ -142,3 +143,46 @@ export function statementDays(
 		return { ok: false, error: "Days are whole numbers from 1 to 31." };
 	return { ok: true, statement_day: days[0], due_day: days[1] };
 }
+
+/** The hues an account row can be tinted with (grey is left out: it is the "no colour" look). */
+const TINTS: readonly Accent[] = ["violet", "orange", "amber", "blue", "green", "lime", "pink"];
+
+/** A small stable hash of an id (FNV-1a), so the same account gets the same colour every time. */
+function hash(text: string): number {
+	let h = 0x811c9dc5;
+	for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 0x01000193) >>> 0;
+	return h;
+}
+
+/**
+ * A colour for each account, from its id: stable (an account keeps its colour), and different from
+ * the others where the palette allows. Two accounts that hash to the same hue are told apart by
+ * moving the later one (in id order) to the next free hue, so with up to seven accounts every one
+ * is unique, and past that the colours repeat. Give it every account, not the filtered list, so a
+ * search does not change anyone's colour.
+ */
+export function accountTints(ids: readonly string[]): Map<string, Accent> {
+	const taken = new Set<Accent>();
+	const out = new Map<string, Accent>();
+	for (const id of [...ids].toSorted()) {
+		const start = hash(id) % TINTS.length;
+		let pick = TINTS[start] as Accent;
+		if (taken.size < TINTS.length) {
+			for (let step = 0; step < TINTS.length; step++) {
+				const candidate = TINTS[(start + step) % TINTS.length] as Accent;
+				if (!taken.has(candidate)) {
+					pick = candidate;
+					break;
+				}
+			}
+			taken.add(pick);
+		}
+		out.set(id, pick);
+	}
+	return out;
+}
+
+/** A subtle wash of the account's hue over the card surface: it follows light and dark mode
+ * because it mixes with the theme's own surface colour. */
+export const tintBackground = (accent: Accent) =>
+	`color-mix(in srgb, ${ACCENT[accent]} 13%, var(--md-sys-color-surface-container-low))`;

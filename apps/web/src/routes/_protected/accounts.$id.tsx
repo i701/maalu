@@ -11,7 +11,7 @@ import AccountTransactionList from "#/components/account/AccountTransactionList"
 import EmptyState from "#/components/EmptyState";
 import PageHeader from "#/components/PageHeader";
 import { RouterLink } from "#/components/RouterLinks";
-import { DEFAULT_HISTORY_RANGE, balanceMap } from "#/lib/account-detail";
+import { DEFAULT_HISTORY_RANGE, accountDock, balanceMap } from "#/lib/account-detail";
 import { accountIdentity } from "#/lib/accounts";
 import { repaymentSeed } from "#/lib/cards";
 import { sumDecimals } from "#/lib/format";
@@ -183,6 +183,7 @@ function AccountPage() {
 					...(archived ? [{ symbol: "inventory_2", label: "Archived" }] : []),
 				]}
 				description={[identity, account.description].filter(Boolean).join(" · ") || "An account"}
+				dock={accountDock(account, totals, month)}
 				action={
 					<AccountActions
 						account={account}

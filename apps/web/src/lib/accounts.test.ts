@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
 	accountIdentity,
+	accountTints,
+	tintBackground,
 	adjustmentPreview,
 	BANKS,
 	bankChoices,
@@ -166,5 +168,30 @@ describe("statementDays", () => {
 			["-1", "5"],
 		])
 			expect(statementDays(a, b)).toMatchObject({ ok: false });
+	});
+});
+
+describe("accountTints", () => {
+	const ids = ["a1", "b2", "c3", "d4", "e5", "f6", "g7"];
+
+	it("gives the same account the same colour every time", () => {
+		expect(accountTints(ids)).toEqual(accountTints([...ids].toReversed()));
+		expect(accountTints(ids).get("c3")).toBe(accountTints(ids).get("c3"));
+	});
+
+	it("gives up to seven accounts seven different colours", () => {
+		expect(new Set(accountTints(ids).values()).size).toBe(7);
+	});
+
+	it("repeats colours only past what the palette holds, and never uses grey", () => {
+		const many = accountTints([...ids, "h8", "i9"]);
+		expect(many.size).toBe(9);
+		expect(new Set(many.values()).size).toBe(7);
+		expect([...many.values()]).not.toContain("slate");
+	});
+
+	it("tints with a subtle wash that follows the theme surface", () => {
+		expect(tintBackground("green")).toContain("color-mix");
+		expect(tintBackground("green")).toContain("--md-sys-color-surface-container-low");
 	});
 });

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { BalanceHistory, Transaction } from "#/types/api";
 import {
+	accountDock,
 	balanceMap,
 	historyPoints,
 	historyRows,
@@ -110,5 +111,35 @@ describe("balance history", () => {
 		expect(balanceMap([{ transaction_id: "t1", balance: "120.0000" }])).toEqual({
 			t1: "120.0000",
 		});
+	});
+});
+
+describe("accountDock", () => {
+	const account = {
+		balance: "1053.78",
+		currency: "MVR",
+		credit_limit: null,
+		group: "accounts",
+	} as const;
+	const totals = { income: "0.00", expense: "83.00", currency: "MVR" };
+
+	it("gives the balance and the month's in and out, with a short month", () => {
+		const dock = accountDock(account, totals, "November 2026");
+		expect(dock.map((d) => d.label)).toEqual(["Balance", "In Nov", "Out Nov"]);
+		expect(dock[0]?.value).toContain("1,053.78");
+		expect(dock[2]?.value).toContain("83.00");
+		expect(dock[0]?.tone).toBeUndefined();
+	});
+
+	it("tints a negative balance and calls a credit card's balance what is owed", () => {
+		const card = {
+			balance: "-250.00",
+			currency: "MVR",
+			credit_limit: "1000.00",
+			group: "card",
+		} as const;
+		const [first] = accountDock(card, totals, "March 2026");
+		expect(first?.label).toBe("Owed");
+		expect(first?.tone).toBe("negative");
 	});
 });

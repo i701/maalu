@@ -21,9 +21,10 @@ export default function AccountSummary({
 	const foreign = account.currency !== baseCurrency;
 	return (
 		<Box sx={{ mb: 2.5 }}>
+			{/* On a phone these three figures live in the banner's dock; the tiles are for wider screens. */}
 			<Box
 				sx={{
-					display: "grid",
+					display: { xs: "none", sm: "grid" },
 					gap: { xs: 1, sm: 2 },
 					gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "repeat(3, minmax(0, 1fr))" },
 				}}
