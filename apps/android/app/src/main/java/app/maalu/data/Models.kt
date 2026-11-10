@@ -146,9 +146,12 @@ data class Goal(
 )
 
 @Serializable
-data class NameRef(val name: String)
+data class NameRef(val name: String, val currency: String? = null)
 
-/** A transaction as the dashboard lists show it; the full record has far more. */
+@Serializable
+data class CardRef(val name: String, @SerialName("last_digits") val lastDigits: String? = null)
+
+/** A transaction as the lists and the detail sheet show it; the full record has more (items, places, links). */
 @Serializable
 data class Transaction(
     val id: String,
@@ -156,12 +159,24 @@ data class Transaction(
     val amount: String,
     val currency: String,
     val category: String,
+    @SerialName("category_color") val categoryColor: String? = null,
     val description: String? = null,
     @SerialName("transaction_date") val date: String,
     @SerialName("transaction_time") val time: String? = null,
     val planned: Boolean = false,
     val account: NameRef? = null,
     @SerialName("to_account") val toAccount: NameRef? = null,
+    @SerialName("to_amount") val toAmount: String? = null,
     val vendor: NameRef? = null,
     @SerialName("refund_of") val refundOf: kotlinx.serialization.json.JsonElement? = null,
+    @SerialName("payment_method") val paymentMethod: String? = null,
+    @SerialName("exchange_rate") val exchangeRate: String = "1",
+    @SerialName("base_amount") val baseAmount: String? = null,
+    val tags: List<NameRef> = emptyList(),
+    val card: CardRef? = null,
+    val subscription: NameRef? = null,
+    val group: NameRef? = null,
+    @SerialName("attachment_count") val attachmentCount: Int = 0,
+    @SerialName("link_count") val linkCount: Int = 0,
+    val adjustment: Boolean = false,
 )

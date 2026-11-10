@@ -43,3 +43,7 @@ fun formatMoneyShort(amount: String, currency: String, from: Long = 10_000): Str
     val text = value.abs().divide(unit, 2, RoundingMode.HALF_EVEN).stripTrailingZeros().toPlainString()
     return (if (value.signum() < 0) "-" else "") + "$currency $text$suffix"
 }
+
+/** `"1234.5"` becomes `1,234.50`, with no currency (when one is not known). */
+fun formatNumber(amount: String): String =
+    amount.toBigDecimalOrNull()?.let { (if (it.signum() < 0) "-" else "") + Money.format(it.abs()) } ?: amount

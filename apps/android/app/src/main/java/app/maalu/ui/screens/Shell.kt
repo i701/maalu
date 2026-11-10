@@ -56,12 +56,13 @@ private val Tabs = listOf(
 )
 
 private const val DASHBOARD = 0
+private const val TRANSACTIONS = 1
 private const val ACCOUNTS = 2
 private const val MORE = 4
 
 /**
  * The signed-in frame: a large top app bar that holds the screen's name and collapses as the content
- * scrolls (the native pattern), and the bottom bar. Dashboard and Accounts are real; the rest are placeholders.
+ * scrolls (the native pattern), and the bottom bar. Dashboard, Transactions and Accounts are real; the rest are placeholders.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -107,6 +108,7 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
         Box(Modifier.fillMaxSize().padding(padding)) {
             when (selected) {
                 DASHBOARD -> DashboardScreen(api, month)
+                TRANSACTIONS -> TransactionsScreen(api)
                 ACCOUNTS -> AccountsScreen(api)
                 MORE -> Column(
                     Modifier.fillMaxSize().padding(24.dp),
