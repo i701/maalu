@@ -238,10 +238,10 @@ describe("nextStretch", () => {
 	});
 });
 
-describe("budgetByKind", () => {
-	const of = (name: string, kind: BudgetLine["kind"], activity: string, over = {}) =>
-		({ ...line(name, "ok", 10, [name]), kind, activity, ...over }) as BudgetLine;
+const of = (name: string, kind: BudgetLine["kind"], activity: string, over = {}) =>
+	({ ...line(name, "ok", 10, [name]), kind, activity, ...over }) as BudgetLine;
 
+describe("budgetByKind", () => {
 	it("adds each kind's limits up, with what was carried and moved", () => {
 		const out = budgetByKind(
 			budget([

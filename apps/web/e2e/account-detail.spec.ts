@@ -3,6 +3,8 @@ import { apiAs, open, signUp } from "./helpers";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
+const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString().slice(0, 10);
+
 test("an account's page lists its own transactions, a transfer from each side", async ({
 	page,
 	request,
@@ -101,7 +103,6 @@ test("an account's page draws its balance over time and a running balance on eac
 	const email = await signUp(page);
 	const api = await apiAs(request, email);
 	const main = await api.account("Main", "1000");
-	const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString().slice(0, 10);
 	await api.transaction({
 		type: "expense",
 		amount: "100.00",

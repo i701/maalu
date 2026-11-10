@@ -54,19 +54,18 @@ export const KIND_COLOR: Record<KindKey, string> = {
 	unsorted: "var(--md-sys-color-outline-variant)",
 };
 
+const sumOfKind = (cats: CategoryTotal[], kind: KindKey) =>
+	sumDecimals(
+		cats.filter((c) => c.type === "expense" && (c.kind ?? "unsorted") === kind).map((c) => c.total),
+	);
+
 /**
  * Needs, wants and not sorted held across two periods, as rows the Compare table can draw (the
  * kind stands in for the category). A kind with nothing in either period is left out.
  */
 export function compareKinds(before: CategoryTotal[], now: CategoryTotal[]): CompareRow[] {
-	const sum = (cats: CategoryTotal[], kind: KindKey) =>
-		sumDecimals(
-			cats
-				.filter((c) => c.type === "expense" && (c.kind ?? "unsorted") === kind)
-				.map((c) => c.total),
-		);
 	return KIND_ORDER.flatMap((kind) => {
-		const [b, n] = [sum(before, kind), sum(now, kind)];
+		const [b, n] = [sumOfKind(before, kind), sumOfKind(now, kind)];
 		if (Number(b) === 0 && Number(n) === 0) return [];
 		const change = sumDecimals([n, `-${b}`]);
 		return [

@@ -96,13 +96,13 @@ describe("splitRequest", () => {
 	});
 });
 
-describe("lines already made", () => {
-	const mixed = () =>
-		plan([
-			{ target_name: "Savings", amount: "2000.0000", done: true, auto: true },
-			{ target_name: "Bills", amount: "1500.0000" },
-		]);
+const mixed = () =>
+	plan([
+		{ target_name: "Savings", amount: "2000.0000", done: true, auto: true },
+		{ target_name: "Bills", amount: "1500.0000" },
+	]);
 
+describe("lines already made", () => {
 	it("are shown but not ticked, and say why", () => {
 		const lines = splitLines(mixed());
 		expect(lines.map((l) => [l.name, l.on, l.done, l.reason])).toEqual([

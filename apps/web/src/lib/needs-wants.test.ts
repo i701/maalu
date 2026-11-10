@@ -78,10 +78,10 @@ describe("compareKinds", () => {
 	});
 });
 
-describe("kindMonths", () => {
-	const row = (kind: CategoryMonthRow["kind"], amounts: string[], type = "expense") =>
-		({ type, kind, amounts }) as CategoryMonthRow;
+const row = (kind: CategoryMonthRow["kind"], amounts: string[], type = "expense") =>
+	({ type, kind, amounts }) as CategoryMonthRow;
 
+describe("kindMonths", () => {
 	it("adds each kind's categories up month by month", () => {
 		const out = kindMonths(
 			[row("need", ["10.00", "20.00"]), row("need", ["5.00", "0.00"]), row(null, ["1.00", "2.00"])],

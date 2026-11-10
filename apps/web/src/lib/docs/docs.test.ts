@@ -2,6 +2,17 @@ import { existsSync, statSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { blockKey, DOCS, findDoc, inlineSegments, pageExists } from "./index";
 
+const texts = (doc: (typeof DOCS)[number]) =>
+	doc.blocks.flatMap((b) => {
+		if (b.type === "p" || b.type === "callout") return [b.text];
+		if (b.type === "steps" || b.type === "list") return b.items;
+		if (b.type === "faq") return b.items.flatMap((i) => [i.q, i.a]);
+		if (b.type === "example") return [...b.rows.flat(), ...(b.note ? [b.note] : [])];
+		if (b.type === "demo") return b.caption ? [b.title, b.caption] : [b.title];
+		if (b.type === "image") return b.caption ? [b.alt, b.caption] : [b.alt];
+		return [];
+	});
+
 describe("inlineSegments", () => {
 	it("splits bold from plain text", () => {
 		expect(inlineSegments("Press **Save** now")).toEqual([
@@ -60,16 +71,6 @@ describe("the guides", () => {
 	});
 
 	it("balance their bold markers, and link only to pages that exist", () => {
-		const texts = (doc: (typeof DOCS)[number]) =>
-			doc.blocks.flatMap((b) => {
-				if (b.type === "p" || b.type === "callout") return [b.text];
-				if (b.type === "steps" || b.type === "list") return b.items;
-				if (b.type === "faq") return b.items.flatMap((i) => [i.q, i.a]);
-				if (b.type === "example") return [...b.rows.flat(), ...(b.note ? [b.note] : [])];
-				if (b.type === "demo") return b.caption ? [b.title, b.caption] : [b.title];
-				if (b.type === "image") return b.caption ? [b.alt, b.caption] : [b.alt];
-				return [];
-			});
 		for (const doc of DOCS)
 			for (const t of [doc.summary, ...texts(doc)]) {
 				expect(t.split("**").length % 2, `${doc.slug}: ${t.slice(0, 40)}`).toBe(1);

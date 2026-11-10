@@ -56,16 +56,16 @@ describe("planDays with planned transfers", () => {
 	});
 });
 
-describe("planDays with credit card statements", () => {
-	const statement = (over = {}) => ({
-		account_id: "visa",
-		title: "Visa",
-		date: "2026-11-09",
-		amount: "250",
-		overdue: false,
-		...over,
-	});
+const statement = (over = {}) => ({
+	account_id: "visa",
+	title: "Visa",
+	date: "2026-11-09",
+	amount: "250",
+	overdue: false,
+	...over,
+});
 
+describe("planDays with credit card statements", () => {
 	it("lists a statement among the bills and takes it off the running figure", () => {
 		const days = planDays(
 			plan({
@@ -173,9 +173,9 @@ describe("planDays", () => {
 	});
 });
 
-describe("dayLabel", () => {
-	const day = (date: string | null) => ({ key: date ?? "overdue", overdue: !date, date, rows: [] });
+const day = (date: string | null) => ({ key: date ?? "overdue", overdue: !date, date, rows: [] });
 
+describe("dayLabel", () => {
 	it("says overdue, today and tomorrow in words", () => {
 		expect(dayLabel(day(null), "2026-11-05")).toBe("Overdue");
 		expect(dayLabel(day("2026-11-05"), "2026-11-05")).toBe("Today");
