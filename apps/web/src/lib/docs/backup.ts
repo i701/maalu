@@ -5,7 +5,8 @@ import type { Doc } from "./types";
 export const backup: Doc = {
 	slug: "backup",
 	title: "Backups and restoring",
-	summary: "Download everything you own as one file, and put it back into a new, empty account.",
+	summary:
+		"Download everything you own as one file and put it back into an empty account, and, for whoever runs the server, the nightly backup of the whole database.",
 	symbol: "upload_file",
 	accent: "slate",
 	where: [
@@ -52,6 +53,31 @@ export const backup: Doc = {
 				"Your base currency, default account and settings come from the file.",
 				"Balance history is rebuilt the first time you open the charts, so give them a moment.",
 			],
+		},
+
+		{ type: "h2", id: "nightly", text: "A nightly backup of everything (for whoever runs Maalu)" },
+		{
+			type: "p",
+			text: "The file above is your own account's data. To protect the **whole database** against a lost disk or a broken server, whoever runs Maalu can use the backup script that comes with it. Every night it dumps the database, encrypts the dump so only you can read it, and uploads it to a bucket (for example Cloudflare R2) with `rclone`.",
+		},
+		{
+			type: "list",
+			items: [
+				"**Encrypted before it leaves the server**, with a public key. The private key stays with you, not on the server, so someone who steals the server cannot read your backups.",
+				"**Named with the date and the version that made it**, for example `maalu-2026-11-09T023000Z-abc1234abcde.dump.age`, so you know which version of Maalu can restore it.",
+				"**Old ones are deleted** after 30 days (you can change that), and only files named like backups are ever touched.",
+				"**It tells you when it fails**, with a Telegram message if you set one up. A quiet night means a good night.",
+			],
+		},
+		{
+			type: "p",
+			text: "It is set up once on the server with a few lines in the same `.env` file that Maalu uses, and a line in `cron`. The deployment guide has the steps. To restore, you decrypt the file with your private key and follow the restore steps for the whole database; the script `restore-drill.sh` proves a restore works without touching your live data.",
+		},
+		{
+			type: "callout",
+			tone: "warning",
+			title: "Keep the same SECRET_KEY",
+			text: "A backup holds your two-factor secrets encrypted with the server's `SECRET_KEY`. Restore onto a server with a different key and everything works except two-factor, which has to be set up again. Keep the key with your backups.",
 		},
 
 		{ type: "h2", id: "not-included", text: "What is not in it" },
