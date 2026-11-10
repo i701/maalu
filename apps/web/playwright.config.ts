@@ -18,10 +18,16 @@ export default defineConfig({
 	testMatch: SHOTS ? "docs-shots.spec.ts" : undefined,
 	testIgnore: SHOTS ? undefined : "docs-shots.spec.ts",
 	fullyParallel: true,
-	// Each worker is a whole Chromium, and one API and one web server serve them all, so a few is
-	// plenty: more only makes the machine (and the tests, which hash passwords) slower.
-	// `E2E_WORKERS=4 just e2e` for more.
-	workers: Number(process.env.E2E_WORKERS) || 2,
+	// Each worker is a whole Chromium, and one API and one web server serve them all. Locally that is
+	// half the cores ("50%"), which is quick and leaves the machine usable; CI keeps 2, since its
+	// runners are small. `E2E_WORKERS=4 just e2e` picks a number (or a percentage, "50%") instead.
+	workers: process.env.E2E_WORKERS
+		? process.env.E2E_WORKERS.endsWith("%")
+			? process.env.E2E_WORKERS
+			: Number(process.env.E2E_WORKERS)
+		: process.env.CI
+			? 2
+			: "50%",
 	expect: { timeout: 15_000 }, // sign-up and sign-in hash a password, which is slow when tests run side by side
 	forbidOnly: !!process.env.CI,
 	retries: process.env.CI ? 1 : 0,

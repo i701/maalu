@@ -110,7 +110,8 @@ test-web:
 # web app, on their own ports (8101, 3101) and their own database (maalu_e2e), so `just dev` and its
 # data are untouched. Needs `just db-up` and, once, `just e2e-install`. Pass Playwright options after
 # the recipe, for example `just e2e --headed` or `just e2e e2e/auth.spec.ts`. It runs at the lowest
-# CPU priority with 2 workers (`E2E_WORKERS=4 just e2e` for more) so the machine stays usable.
+# CPU priority so the machine stays usable, with half the cores as workers (`E2E_WORKERS=4 just e2e` or
+# `E2E_WORKERS=100% just e2e` to pick; CI uses 2).
 e2e *args:
     docker compose exec -T db sh -c "psql -U maalu -d postgres -tc \"SELECT 1 FROM pg_database WHERE datname='maalu_e2e'\" | grep -q 1 || createdb -U maalu maalu_e2e"
     nice -n 19 pnpm --filter @maalu/web e2e {{args}}
