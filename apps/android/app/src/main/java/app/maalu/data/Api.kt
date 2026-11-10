@@ -3,11 +3,6 @@ package app.maalu.data
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.serializer
 import okhttp3.FormBody
 import okhttp3.HttpUrl.Companion.toHttpUrl
@@ -23,7 +18,7 @@ val AppJson = Json { ignoreUnknownKeys = true; explicitNulls = false }
 /** What a call came to. Errors carry text for a person (the API's `detail`). */
 sealed interface ApiResult<out T> {
     data class Ok<T>(val data: T, val total: Int? = null) : ApiResult<T>
-    data class Failed(val status: Int, val message: String) : ApiResult<Nothing>
+    data class Failed(val status: Int, val message: String, val fields: Map<String, String> = emptyMap()) : ApiResult<Nothing>
 }
 
 private val http = OkHttpClient.Builder()
@@ -94,23 +89,13 @@ class Api(
         is Outcome.Down -> ApiResult.Failed(0, outcome.message)
         is Outcome.Got -> {
             if (outcome.raw.code == 401 && token() != null) onSignedOut()
-            ApiResult.Failed(outcome.raw.code, detail(outcome.raw))
+            parseDetail(outcome.raw.body, fallbackFor(outcome.raw.code)).let { ApiResult.Failed(outcome.raw.code, it.message, it.fields) }
         }
     }
 
-    private fun detail(r: Raw): String {
-        val fallback = when (r.code) {
-            401 -> "Wrong email or password, or the session ended."
-            429 -> "Too many attempts. Try again in a few minutes."
-            else -> "Something went wrong (${r.code})."
-        }
-        return try {
-            when (val d = AppJson.parseToJsonElement(r.body).jsonObject["detail"]) {
-                is JsonPrimitive -> d.contentOrNull ?: fallback
-                else -> fallback
-            }
-        } catch (e: Exception) {
-            fallback
-        }
+    private fun fallbackFor(code: Int): String = when (code) {
+        401 -> "Wrong email or password, or the session ended."
+        429 -> "Too many attempts. Try again in a few minutes."
+        else -> "Something went wrong ($code)."
     }
 }
