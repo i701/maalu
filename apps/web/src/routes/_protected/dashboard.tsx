@@ -272,11 +272,11 @@ function DashboardPage() {
 						/>
 					</Box>
 
-					<Box sx={cell(4)}>
-						<BalanceTrendCard trend={trend} against={monthLabel(month, true)} />
-					</Box>
 					<Box sx={cell(2)}>
 						<SpendingCard categories={categories} period={label} />
+					</Box>
+					<Box sx={cell(4)}>
+						<BalanceTrendCard trend={trend} against={monthLabel(month, true)} />
 					</Box>
 
 					<Box sx={cell(4)}>
