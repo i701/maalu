@@ -203,3 +203,53 @@ async def test_seeding_another_email_leaves_the_demo_user_alone(db: AsyncSession
     await run(db, seed=3, email="sample@maalu.dev")  # replaces only theirs
     assert await count(db, User) == 2
     assert await rows_of(seed_module.DEMO_EMAIL) == demo_rows
+
+
+async def test_scaling_multiplies_every_amount_and_nothing_else(db: AsyncSession):
+    await run(db)
+    uid = await user_id(db)
+    before = {
+        "tx": sorted(
+            (await db.scalars(select(Transaction.amount).where(Transaction.user_id == uid))).all()
+        ),
+        "base": sorted(
+            (
+                await db.scalars(select(Transaction.base_amount).where(Transaction.user_id == uid))
+            ).all()
+        ),
+        "opening": sorted(
+            (await db.scalars(select(Account.opening_amount).where(Account.user_id == uid))).all()
+        ),
+        "rates": sorted(
+            (await db.scalars(select(Account.exchange_rate).where(Account.user_id == uid))).all()
+        ),
+    }
+    await seed_module.scale_money(db, uid, 1000)
+    await db.commit()
+    after_tx = sorted(
+        (await db.scalars(select(Transaction.amount).where(Transaction.user_id == uid))).all()
+    )
+    after_base = sorted(
+        (await db.scalars(select(Transaction.base_amount).where(Transaction.user_id == uid))).all()
+    )
+    after_open = sorted(
+        (await db.scalars(select(Account.opening_amount).where(Account.user_id == uid))).all()
+    )
+    after_rates = sorted(
+        (await db.scalars(select(Account.exchange_rate).where(Account.user_id == uid))).all()
+    )
+    assert after_tx == [a * 1000 for a in before["tx"]]
+    assert after_base == [a * 1000 for a in before["base"]]
+    assert after_open == [a * 1000 for a in before["opening"]]
+    assert after_rates == before["rates"]  # rates are not amounts
+    assert max(after_tx) >= Decimal("10000000")  # the 10,000 salary is ten million now
+
+
+async def test_scaling_by_one_changes_nothing_and_zero_is_refused(db: AsyncSession):
+    await run(db)
+    uid = await user_id(db)
+    before = (await db.scalar(select(func.sum(Transaction.amount)))) or 0
+    await seed_module.scale_money(db, uid, 1)
+    assert (await db.scalar(select(func.sum(Transaction.amount)))) == before
+    with pytest.raises(ValueError, match="at least 1"):
+        await seed_module.scale_money(db, uid, 0)

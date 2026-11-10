@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from datetime import date, time, timedelta
 from decimal import Decimal
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -36,7 +36,21 @@ from app.enums import (
     SalaryRuleMode,
     TransactionType,
 )
-from app.models import Account, Subscription, Transaction, User, Vendor
+from app.models import (
+    Account,
+    BalanceSnapshot,
+    BudgetLine,
+    BudgetMove,
+    Goal,
+    GoalEntry,
+    SalaryRule,
+    Subscription,
+    Transaction,
+    TransactionSplit,
+    TransactionTemplate,
+    User,
+    Vendor,
+)
 from app.schemas import (
     AccountCreate,
     BudgetLineCreate,
@@ -206,6 +220,53 @@ async def _categories(db: AsyncSession, uid) -> None:
         category.kind = kind
         if parent:
             category.parent_id = (await svc.get_or_create(uid, parent)).id
+    await db.flush()
+
+
+async def scale_money(db: AsyncSession, user_id, factor: int) -> None:
+    """Multiply every amount of the user's data by `factor`, to see how the app copes with big
+    numbers (millions, billions): `just seed --scale 1000` turns a 10,000 salary into 10,000,000.
+    Only amounts change (balances, budgets and goals follow from them, and a percent salary rule is
+    left alone). The balance history is derived, so it is dropped and built again from the new
+    figures the first time it is read."""
+    if factor < 1:
+        raise ValueError("The scale must be at least 1")
+    if factor == 1:
+        return
+
+    def times(table, *names):
+        return {n: getattr(table, n) * factor for n in names}
+
+    for table, names in (
+        (Account, ("opening_amount", "credit_limit")),
+        (Transaction, ("amount", "base_amount", "to_amount")),
+        (Subscription, ("amount", "base_amount")),
+        (Goal, ("target_amount", "monthly_amount")),
+        (BudgetLine, ("amount",)),
+        (BudgetMove, ("amount",)),
+        (TransactionTemplate, ("amount",)),
+    ):
+        await db.execute(
+            update(table).where(table.user_id == user_id).values(**times(table, *names))
+        )
+    mine = select(Transaction.id).where(Transaction.user_id == user_id)
+    await db.execute(
+        update(TransactionSplit)
+        .where(TransactionSplit.transaction_id.in_(mine))
+        .values(**times(TransactionSplit, "amount", "tax_amount"))
+    )
+    await db.execute(
+        update(GoalEntry)
+        .where(GoalEntry.goal_id.in_(select(Goal.id).where(Goal.user_id == user_id)))
+        .values(**times(GoalEntry, "amount"))
+    )
+    await db.execute(
+        update(SalaryRule)
+        .where(SalaryRule.user_id == user_id, SalaryRule.mode == SalaryRuleMode.FIXED)
+        .values(**times(SalaryRule, "value"))
+    )
+    accounts = select(Account.id).where(Account.user_id == user_id)
+    await db.execute(delete(BalanceSnapshot).where(BalanceSnapshot.account_id.in_(accounts)))
     await db.flush()
 
 
@@ -597,6 +658,12 @@ async def main() -> None:
     parser = argparse.ArgumentParser(description="Seed the database with a realistic first month.")
     parser.add_argument("--seed", type=int, default=None, help="random seed, for reproducible data")
     parser.add_argument(
+        "--scale",
+        type=int,
+        default=1,
+        help="multiply every amount by this (1000 = salaries in the millions), to try big numbers",
+    )
+    parser.add_argument(
         "--email",
         default=DEMO_EMAIL,
         help="seed this user instead of the demo user (its data is replaced; yours is untouched)",
@@ -607,6 +674,9 @@ async def main() -> None:
     rng = random.Random(args.seed)
     async with SessionLocal() as db:
         summary = await seed(db, rng=rng, today=date.today(), email=args.email)
+        if args.scale != 1:
+            user_id = await db.scalar(select(User.id).where(User.email == args.email))
+            await scale_money(db, user_id, args.scale)
         await db.commit()
 
     t = summary.transactions
