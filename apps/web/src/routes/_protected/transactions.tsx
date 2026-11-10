@@ -657,6 +657,16 @@ const TransactionsTable = memo(function TransactionsTable({
 							{formatWhen(t.transaction_date, t.transaction_time)}
 						</Typography>
 					}
+					brief={
+						<>
+							{t.type !== "transfer" && t.account && (
+								<Typography variant="caption" noWrap sx={{ color: "text.secondary", minWidth: 0 }}>
+									{t.account.name}
+								</Typography>
+							)}
+							<TagChips tags={t.tags} />
+						</>
+					}
 					meta={
 						<>
 							<TxMethodChip t={t} />

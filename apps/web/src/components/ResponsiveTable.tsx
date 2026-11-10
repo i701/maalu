@@ -147,6 +147,11 @@ export default function ResponsiveTable<T>({
 					sx={{
 						...FRAME,
 						[wide]: { display: "none" },
+						// a very faint rule between rows, and nothing else
+						"& > * + *": {
+							borderTop:
+								"1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 30%, transparent)",
+						},
 					}}
 				>
 					{rows.map((row) => (

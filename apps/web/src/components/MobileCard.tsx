@@ -5,8 +5,9 @@ import { useViewMode } from "#/lib/view-mode";
 
 /** One record in the narrow (card) view of a ResponsiveTable. Keep it to the same facts as the
  * desktop row: a title, the key figure on the right, a line of tags/meta, and the actions.
- * In the Table view the row is compact: the title and the key figure only, and the tags/meta and
- * the actions show when the row is tapped (the cards view always shows everything). */
+ * In the Table view the row is compact: the title and the key figure only (no subtitle),
+ * and the subtitle, tags/meta and actions show when the row is tapped (the cards view always shows
+ * everything). The icon tile is for desktop widths only: on a phone it just takes room. */
 export default function MobileCard({
 	select,
 	leading,
@@ -14,6 +15,7 @@ export default function MobileCard({
 	secondary,
 	end,
 	endSecondary,
+	brief,
 	meta,
 	actions,
 }: {
@@ -29,6 +31,8 @@ export default function MobileCard({
 	end?: ReactNode;
 	/** Smaller line under the key figure. */
 	endSecondary?: ReactNode;
+	/** A short line (account, tags) a compact row keeps showing; open, the meta says it all. */
+	brief?: ReactNode;
 	/** Chips, dates and other tags, wrapped on one line. */
 	meta?: ReactNode;
 	/** Icon buttons, right-aligned. */
@@ -51,11 +55,17 @@ export default function MobileCard({
 				alignItems: "flex-start",
 				gap: 1.5,
 				px: 1.5,
-				py: collapsible ? 1 : 1.5,
+				py: collapsible ? 0.875 : 1.5,
+				// the opened row is tinted, so it reads as the one you pressed
+				bgcolor:
+					collapsible && open
+						? "color-mix(in srgb, var(--md-sys-color-secondary-container) 55%, transparent)"
+						: "transparent",
+				transition: "background-color var(--spring-effects-fast-dur) var(--spring-effects-fast)",
 			}}
 		>
 			{select}
-			{leading}
+			{leading && <Box sx={{ display: { xs: "none", md: "block" }, flexShrink: 0 }}>{leading}</Box>}
 			<Box sx={{ flex: 1, minWidth: 0 }}>
 				<Stack
 					direction="row"
@@ -67,9 +77,40 @@ export default function MobileCard({
 					aria-expanded={toggle && open}
 					sx={{ justifyContent: "space-between", cursor: toggle && "pointer" }}
 				>
-					<Box sx={{ minWidth: 0 }}>
+					<Box
+						sx={{
+							minWidth: 0,
+							// compact: the title on up to two lines, everything else waits for a tap
+							...(collapsible &&
+								!open && {
+									// up to two lines, so a long name is not cut short
+									"& .MuiTypography-root": {
+										display: "-webkit-box",
+										WebkitBoxOrient: "vertical",
+										WebkitLineClamp: 2,
+										overflow: "hidden",
+									},
+								}),
+						}}
+					>
 						{primary}
-						{secondary}
+						{showMore && secondary}
+						{!showMore && brief && (
+							<Stack
+								direction="row"
+								onClick={toggle}
+								sx={{
+									alignItems: "center",
+									gap: 0.75,
+									mt: 0.25,
+									lineHeight: 1.2,
+									overflow: "hidden",
+									cursor: "pointer",
+								}}
+							>
+								{brief}
+							</Stack>
+						)}
 					</Box>
 					{(end || endSecondary) && (
 						<Box sx={{ textAlign: "right", flexShrink: 0 }}>
