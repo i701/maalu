@@ -1,4 +1,5 @@
-import { MORPH_TRANSITION, morph } from "#/lib/shape";
+import { useCardMorph } from "#/lib/card-morph";
+import { MORPH_TRANSITION } from "#/lib/shape";
 import Box from "@mui/material/Box";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -81,6 +82,7 @@ export default function ResponsiveTable<T>({
 	minWidth?: number;
 }) {
 	const cardsMode = useViewMode() === "cards";
+	const cardMorph = useCardMorph();
 	const wide = `@container (min-width: ${minWidth}px)`;
 	// null until measured: render both views and let the container query decide.
 	const [isWide, setIsWide] = useState<boolean | null>(null);
@@ -112,7 +114,7 @@ export default function ResponsiveTable<T>({
 						key={getKey(row)}
 						sx={{
 							bgcolor: "var(--md-sys-color-surface-container-low)",
-							...morph("xl"),
+							...cardMorph,
 							// the site's .press: every card dips to 0.97 while held
 							transition: `${MORPH_TRANSITION}, transform var(--spring-spatial-fast-dur) var(--spring-spatial-fast)`,
 							"&:active": { transform: "scale(.97)" },

@@ -1,7 +1,8 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { GRADIENT, type Gradient } from "#/lib/m3";
-import { MORPH_TRANSITION, morph, morphUp } from "#/lib/shape";
+import { useCardMorph } from "#/lib/card-morph";
+import { MORPH_TRANSITION, morphUp } from "#/lib/shape";
 
 /** Solid tonal containers (adapt to light and dark), like the site's cyan and lavender tiles. */
 const TONAL = {
@@ -28,7 +29,7 @@ export default function StatCard({
 	tone,
 	icon,
 	shape = 0,
-	reverse = false,
+	reverse,
 }: {
 	label: string;
 	value: string;
@@ -38,9 +39,10 @@ export default function StatCard({
 	/** Material Symbols ligature name */
 	icon: string;
 	shape?: number;
-	/** Squarer at rest, rounding up under the pointer (the opposite of the app's default). */
+	/** Squarer at rest, rounding up under the pointer. Left out, it follows the page (`CardMorph`). */
 	reverse?: boolean;
 }) {
+	const pageMorph = useCardMorph();
 	const [from, to] = GRADIENT[gradient];
 	const fg = tone ? TONAL[tone].fg : "#fff";
 	return (
@@ -52,7 +54,7 @@ export default function StatCard({
 				p: 2.5,
 				height: "100%",
 				color: fg,
-				...(reverse ? morphUp("xl") : morph("xl")),
+				...(reverse === undefined ? pageMorph : reverse ? morphUp("xl") : pageMorph),
 				background: tone ? TONAL[tone].bg : `linear-gradient(135deg, ${from}, ${to})`,
 				transition: `${MORPH_TRANSITION}, transform var(--spring-spatial-default-dur) var(--spring-spatial-default)`,
 				"&:active": { transform: "scale(.97)" }, // the site's .press

@@ -51,6 +51,7 @@ import TableToolbar from "#/components/TableToolbar";
 import TransactionFilters from "#/components/TransactionFilters";
 import TransactionForm from "#/components/TransactionForm";
 import { seedFromTransaction } from "#/components/transaction-form/request";
+import { CardMorph } from "#/lib/card-morph";
 import TransactionTotals from "#/components/TransactionTotals";
 import BudgetAlert from "#/components/BudgetAlert";
 import TransferSuggestionsCard from "#/components/TransferSuggestionsCard";
@@ -954,12 +955,13 @@ function TransactionsPage() {
 	);
 
 	return (
-		<>
+		<CardMorph direction="up">
 			<PageHeader
 				title="Transactions"
 				symbol="receipt_long"
 				accent="blue"
 				shape={0}
+				morph="up"
 				description={`Amounts are totalled in ${user.base_currency}.`}
 				stats={heroStats(total, activeCount, upcoming.length)}
 				action={
@@ -1138,6 +1140,6 @@ function TransactionsPage() {
 					onClose={() => setDeleting(null)}
 				/>
 			)}
-		</>
+		</CardMorph>
 	);
 }
