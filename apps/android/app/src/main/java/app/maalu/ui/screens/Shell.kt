@@ -15,6 +15,7 @@ import androidx.compose.material.icons.outlined.ReceiptLong
 import androidx.compose.material.icons.outlined.Savings
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -84,16 +85,21 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
     // a destination reached only from the drawer, or null while one of the four tabs is showing
     var route by rememberSaveable { mutableStateOf<String?>(null) }
     val destination = destinationById(route)
+    // an account's own page (its id and name), opened from the Accounts tab
+    var openAccountId by rememberSaveable { mutableStateOf<String?>(null) }
+    var openAccountName by rememberSaveable { mutableStateOf("") }
     val drawer = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     // back from a drawer destination returns to the tab you were on
     androidx.activity.compose.BackHandler(enabled = destination != null) { route = null }
+    androidx.activity.compose.BackHandler(enabled = destination == null && openAccountId != null) { openAccountId = null }
     // the month lives here so the app bar can move it for the Dashboard and the Budget
     var month by rememberSaveable { mutableStateOf(LocalDate.now().withDayOfMonth(1).toString()) }
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val snackbar = remember { androidx.compose.material3.SnackbarHostState() }
     val onTab = destination == null
-    val monthly = onTab && (selected == DASHBOARD || selected == BUDGET)
+    val onAccountPage = onTab && selected == ACCOUNTS && openAccountId != null
+    val monthly = onTab && !onAccountPage && (selected == DASHBOARD || selected == BUDGET)
     // the drawer's highlighted item: the open destination, else the tab
     val selectedId = destination?.id ?: MoreDestinations.firstOrNull { it.tabIndex == selected }?.id
 
@@ -115,8 +121,12 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
             modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
             topBar = {
                 MediumFlexibleTopAppBar(
-                    title = { Text(destination?.label ?: Tabs[selected].label) },
-                    navigationIcon = { IconButton(onClick = { scope.launch { drawer.open() } }) { Icon(Icons.Outlined.Menu, "Open the menu") } },
+                    title = { Text(destination?.label ?: if (onAccountPage) openAccountName else Tabs[selected].label) },
+                    navigationIcon = {
+                        // on an account's page the button goes back to the list; elsewhere it opens the drawer
+                        if (onAccountPage) IconButton(onClick = { openAccountId = null }) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back to accounts") }
+                        else IconButton(onClick = { scope.launch { drawer.open() } }) { Icon(Icons.Outlined.Menu, "Open the menu") }
+                    },
                     subtitle = if (monthly) ({ Text(monthLabel(LocalDate.parse(month))) }) else null,
                     actions = {
                         if (monthly) {
@@ -137,7 +147,8 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
                         NavigationBarItem(
                             // nothing is highlighted while a drawer-only destination is open
                             selected = onTab && selected == i,
-                            onClick = { selected = i; route = null },
+                            // choosing the Accounts tab again from an account's page goes back to the list
+                            onClick = { if (i == ACCOUNTS) openAccountId = null; selected = i; route = null },
                             icon = { Icon(tab.icon, contentDescription = null) },
                             // one line: "Transactions" wrapped at 360dp wide at the default size
                             label = { Text(tab.label, style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false) },
@@ -156,7 +167,11 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
                 else when (selected) {
                     DASHBOARD -> DashboardScreen(api, month)
                     TRANSACTIONS -> TransactionsScreen(api)
-                    ACCOUNTS -> AccountsScreen(api)
+                    ACCOUNTS -> {
+                        val id = openAccountId
+                        if (id == null) AccountsScreen(api, onOpen = { openAccountId = it.id; openAccountName = it.name })
+                        else AccountDetailScreen(api, id, onBack = { openAccountId = null })
+                    }
                     BUDGET -> BudgetScreen(api, month)
                 }
             }

@@ -299,3 +299,32 @@ data class Vendor(
     @SerialName("default_tags") val defaultTags: List<NameRef> = emptyList(),
     val place: String? = null,
 )
+
+@Serializable
+data class AccountBalancePoint(val date: String, val balance: String)
+
+@Serializable
+data class BalanceHistory(val currency: String, val points: List<AccountBalancePoint> = emptyList())
+
+@Serializable
+data class BalanceAfter(@SerialName("transaction_id") val transactionId: String, val balance: String)
+
+/** A credit card's latest statement, worked out by the server each time. */
+@Serializable
+data class CardStatement(
+    @SerialName("account_id") val accountId: String,
+    val currency: String,
+    @SerialName("statement_day") val statementDay: Int,
+    @SerialName("due_day") val dueDay: Int,
+    @SerialName("closed_on") val closedOn: String,
+    @SerialName("due_on") val dueOn: String,
+    @SerialName("statement_balance") val statementBalance: String,
+    @SerialName("paid_since") val paidSince: String,
+    val remaining: String,
+    @SerialName("spent_since") val spentSince: String,
+    @SerialName("owed_now") val owedNow: String,
+    @SerialName("credit_limit") val creditLimit: String? = null,
+    /** none, paid, due or overdue. */
+    val state: String,
+    @SerialName("days_until_due") val daysUntilDue: Int,
+)

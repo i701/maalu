@@ -85,13 +85,10 @@ private sealed interface Load {
  * 30-day trend line and, for a card, how much of its limit is used. Tap one for its details; Add makes a new one.
  */
 @Composable
-fun AccountsScreen(api: Api) {
+fun AccountsScreen(api: Api, onOpen: (Account) -> Unit) {
     var attempt by remember { mutableIntStateOf(0) }
     var refreshing by remember { mutableStateOf(false) }
-    var selected by remember { mutableStateOf<Account?>(null) }
-    var editing by remember { mutableStateOf<Account?>(null) }
     var adding by remember { mutableStateOf(false) }
-    var deleting by remember { mutableStateOf<Account?>(null) }
     val snackbar = LocalSnackbar.current
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
@@ -140,7 +137,7 @@ fun AccountsScreen(api: Api) {
                             }
                             items(list.size, key = { list[it].id }) { i ->
                                 val a = list[i]
-                                MorphTile(onClick = { selected = a }, first = i == 0, last = i == list.lastIndex, modifier = Modifier.padding(bottom = 2.dp)) {
+                                MorphTile(onClick = { onOpen(a) }, first = i == 0, last = i == list.lastIndex, modifier = Modifier.padding(bottom = 2.dp)) {
                                     AccountRow(a, s.data.trends[a.id], s.data.summary?.currency ?: "")
                                 }
                             }
@@ -158,54 +155,7 @@ fun AccountsScreen(api: Api) {
     }
 
     val all = (state as? Load.Loaded)?.data?.accounts.orEmpty()
-    selected?.let { a ->
-        AccountSheet(
-            a,
-            onEdit = { editing = a; selected = null },
-            onArchive = {
-                selected = null
-                scope.launch {
-                    when (val r = api.post("accounts/${a.id}/archive")) {
-                        is ApiResult.Ok -> {
-                            attempt++
-                            if (snackbar?.showSnackbar("${a.name} archived", actionLabel = "Undo", duration = SnackbarDuration.Long) == SnackbarResult.ActionPerformed) {
-                                api.post("accounts/${a.id}/unarchive"); attempt++
-                            }
-                        }
-                        is ApiResult.Failed -> snackbar?.showSnackbar(r.message.lines().first())
-                    }
-                }
-            },
-            onDelete = { deleting = a; selected = null },
-            onClose = { selected = null },
-        )
-    }
     if (adding) AccountFormScreen(api, all, null, onClose = { adding = false }, onSaved = { adding = false; attempt++; scope.launch { snackbar?.showSnackbar("Account added") } })
-    editing?.let { a -> AccountFormScreen(api, all, a, onClose = { editing = null }, onSaved = { editing = null; attempt++; scope.launch { snackbar?.showSnackbar("Changes saved") } }) }
-    deleting?.let { a ->
-        AlertDialog(
-            onDismissRequest = { deleting = null },
-            title = { Text("Delete ${a.name}?") },
-            text = {
-                Text(
-                    if (a.transactionCount > 0) "Its ${a.transactionCount} transactions stay in your history but lose this account. Archive it instead to keep them tied to it. This can't be undone."
-                    else "This can't be undone.",
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    deleting = null
-                    scope.launch {
-                        when (val r = api.delete("accounts/${a.id}")) {
-                            is ApiResult.Ok -> { attempt++; snackbar?.showSnackbar("${a.name} deleted") }
-                            is ApiResult.Failed -> snackbar?.showSnackbar(r.message.lines().first())
-                        }
-                    }
-                }) { Text("Delete", color = MaterialTheme.colorScheme.error) }
-            },
-            dismissButton = { TextButton(onClick = { deleting = null }) { Text("Cancel") } },
-        )
-    }
 }
 
 /** What you own, what you owe and what is left, each in its own tint. */
@@ -258,50 +208,5 @@ private fun AccountRow(a: Account, trend: List<Double>?, baseCurrency: String) {
             }
             trend?.let { Sparkline(it, ChartColors.IncomeLight, ChartColors.ExpenseLight, MaterialTheme.colorScheme.outline) }
         }
-    }
-}
-
-@Composable
-private fun AccountSheet(a: Account, onEdit: () -> Unit, onArchive: () -> Unit, onDelete: () -> Unit, onClose: () -> Unit) {
-    ModalBottomSheet(onDismissRequest = onClose, containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(a.name, style = MaterialTheme.typography.titleMedium)
-            Text(
-                formatMoney(a.balance, a.currency), style = MaterialTheme.typography.titleLarge.merge(MoneyStyle),
-                color = if (a.balance.startsWith("-")) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
-            )
-            Fact("Kind", groupLabel(a.group))
-            Fact("Bank", a.bank)
-            Fact("Number", a.accountNumber)
-            val rate = a.exchangeRate.toBigDecimalOrNull()
-            Fact("Currency", a.currency + if (rate != null && rate.compareTo(java.math.BigDecimal.ONE) != 0) " · rate ${app.maalu.data.tidyRate(a.exchangeRate)}" + if (a.autoRate) " (follows the market)" else "" else "")
-            Fact("Opening", formatMoney(a.openingAmount, a.currency))
-            if (a.group in CreditLimitGroups) Fact("Credit limit", a.creditLimit?.let { formatMoney(it, a.currency) })
-            if (a.statementDay != null && a.dueDay != null) Fact("Statement", "closes on the ${a.statementDay}, due on the ${a.dueDay}")
-            Fact("Transactions", "${a.transactionCount}")
-            Fact("Counting", listOfNotNull("Left out of totals".takeIf { a.excludeFromStats }, when (a.spendable) { true -> "Counts as everyday money"; false -> "Not everyday money"; null -> null }).joinToString(", ").ifBlank { null })
-            Fact("Note", a.description)
-            Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = onEdit, shapes = ButtonDefaults.shapes(), modifier = Modifier.weight(1f), colors = ButtonDefaults.filledTonalButtonColors()) {
-                    Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Edit")
-                }
-                Button(onClick = onArchive, shapes = ButtonDefaults.shapes(), modifier = Modifier.weight(1f), colors = ButtonDefaults.filledTonalButtonColors()) {
-                    Icon(Icons.Outlined.Archive, null, Modifier.padding(end = 6.dp)); Text("Archive")
-                }
-            }
-            Button(
-                onClick = onDelete, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer),
-            ) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 6.dp)); Text("Delete") }
-        }
-    }
-}
-
-@Composable
-private fun Fact(label: String, value: String?) {
-    if (value.isNullOrBlank()) return
-    Row(Modifier.fillMaxWidth()) {
-        Text(label, Modifier.weight(0.35f), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(value, Modifier.weight(0.65f), style = MaterialTheme.typography.bodyMedium)
     }
 }

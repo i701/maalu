@@ -122,12 +122,12 @@ private val TYPES = listOf("expense" to "Expense", "income" to "Income", "transf
  * what arrived. The form locks while it saves and stays open, with what was typed, if the server refuses.
  */
 @Composable
-fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit, editing: Transaction? = null) {
+fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit, editing: Transaction? = null, initial: AddForm? = null) {
     var options by remember { mutableStateOf<FormOptions?>(null) }
     var loadError by remember { mutableStateOf<String?>(null) }
     // editing starts from the saved transaction; the form to compare changes against stays as it was loaded
     val before = remember(editing) { editing?.let(::formFrom) }
-    var form by remember { mutableStateOf(before ?: AddForm()) }
+    var form by remember { mutableStateOf(before ?: initial ?: AddForm()) }
     var error by remember { mutableStateOf<String?>(null) }
     var errorField by remember { mutableStateOf<FormField?>(null) }
     val snackbar = remember { SnackbarHostState() }
@@ -145,7 +145,11 @@ fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit, edi
             // a new transaction starts in the default account (or the first one), with its currency's rate and usual way of
             // paying; an edit keeps what the transaction has
             val start = list.firstOrNull { it.id == me.data.defaultAccountId } ?: list.firstOrNull { !it.isLiability } ?: list.firstOrNull()
-            if (editing == null && start != null) form = form.copy(accountId = start.id, rate = tidyRate(start.exchangeRate), method = suggestedMethod(start.group))
+            if (editing == null && initial == null && start != null) form = form.copy(accountId = start.id, rate = tidyRate(start.exchangeRate), method = suggestedMethod(start.group))
+            // a form started from somewhere (repaying a card) that has no source account yet takes an everyday one
+            if (editing == null && initial != null && initial.accountId == null) {
+                list.firstOrNull { !it.isLiability && it.id != initial.toAccountId }?.let { form = form.copy(accountId = it.id, rate = tidyRate(it.exchangeRate), method = suggestedMethod(it.group)) }
+            }
         } else {
             loadError = (me as? ApiResult.Failed)?.message ?: (accounts as? ApiResult.Failed)?.message ?: "Could not load your accounts."
         }
