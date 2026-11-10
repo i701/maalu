@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { type KeyboardEvent, type ReactNode, useState } from "react";
 import { useViewMode } from "#/lib/view-mode";
 
@@ -38,7 +39,9 @@ export default function MobileCard({
 	/** Icon buttons, right-aligned. */
 	actions?: ReactNode;
 }) {
-	const collapsible = useViewMode() === "table" && Boolean(meta || actions);
+	// compact (tap to open) only on a phone, in the Table view; wider screens show everything
+	const phone = useMediaQuery((theme) => theme.breakpoints.down("sm"));
+	const collapsible = useViewMode() === "table" && phone && Boolean(meta || actions);
 	const [open, setOpen] = useState(false);
 	const showMore = !collapsible || open;
 	const toggle = collapsible ? () => setOpen((o) => !o) : undefined;
@@ -51,6 +54,8 @@ export default function MobileCard({
 	return (
 		<Box
 			sx={{
+				// follow the rounded card this sits in, so the opened tint has no square corners
+				borderRadius: "inherit",
 				display: "flex",
 				alignItems: "flex-start",
 				gap: 1.5,
