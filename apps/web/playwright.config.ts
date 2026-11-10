@@ -1,3 +1,5 @@
+import { cpus } from "node:os";
+
 import { defineConfig, devices } from "@playwright/test";
 
 // End-to-end tests: a real browser against a real API and a production build of the web app. They
@@ -18,16 +20,17 @@ export default defineConfig({
 	testMatch: SHOTS ? "docs-shots.spec.ts" : undefined,
 	testIgnore: SHOTS ? undefined : "docs-shots.spec.ts",
 	fullyParallel: true,
-	// Each worker is a whole Chromium, and one API and one web server serve them all. Locally that is
-	// half the cores ("50%"), which is quick and leaves the machine usable; CI keeps 2, since its
-	// runners are small. `E2E_WORKERS=4 just e2e` picks a number (or a percentage, "50%") instead.
+	// Each worker is a whole Chromium, but ONE API process and ONE web server serve them all, and
+	// every sign-up hashes a password. More workers do not make it faster, they make it fail: on a
+	// 22-core machine half the cores (11 workers) timed out on sign-up and page loads. So locally it is
+	// half the cores but at most 4; CI keeps 2. `E2E_WORKERS=6 just e2e` picks a number (or "50%").
 	workers: process.env.E2E_WORKERS
 		? process.env.E2E_WORKERS.endsWith("%")
 			? process.env.E2E_WORKERS
 			: Number(process.env.E2E_WORKERS)
 		: process.env.CI
 			? 2
-			: "50%",
+			: Math.max(1, Math.min(4, Math.floor(cpus().length / 2))),
 	expect: { timeout: 15_000 }, // sign-up and sign-in hash a password, which is slow when tests run side by side
 	forbidOnly: !!process.env.CI,
 	retries: process.env.CI ? 1 : 0,

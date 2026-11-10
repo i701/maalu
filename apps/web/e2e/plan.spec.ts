@@ -47,7 +47,7 @@ test("the month plan shows where the money runs out, and receiving the salary fi
 	await expect(
 		page.getByText("Every bill planned until the end of the period is covered."),
 	).toBeVisible();
-	await expect(page.getByText("Available to spend")).toBeVisible();
+	await expect(page.getByText("Available to spend", { exact: true })).toBeVisible();
 	await expect(page.getByText("Short from here")).toBeHidden();
 	const balance = Number((await api.get<{ balance: string }>(`/accounts/${id}`)).balance);
 	expect(balance).toBe(9750);
