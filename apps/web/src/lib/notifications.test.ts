@@ -24,6 +24,7 @@ describe("KIND_META", () => {
 			"payment_due",
 			"payment_overdue",
 			"split_waiting",
+			"subscription_candidate",
 		]);
 	});
 });

@@ -21,6 +21,26 @@ export const subscriptions: Doc = {
 			text: "A subscription is anything you pay again and again: a monthly bill, a yearly renewal, a server, a phone you pay off over twelve months. You tell Maalu once how much, how often and from which account. From then on it keeps the **next payment** planned, so you can see what is coming, and it counts the payment only when you say it was made.",
 		},
 
+		{ type: "h2", id: "suggested", text: "Suggested subscriptions" },
+		{
+			type: "p",
+			text: "You do not have to type every subscription in. When a charge repeats in what you have already paid (the same vendor, the same rhythm and a similar amount, for example Netflix on the 5th for four months), Maalu shows it under **Suggested subscriptions** on the [Subscriptions](/subscriptions) page, closed until you open it, and puts a note in the bell for the clear ones.",
+		},
+		{
+			type: "steps",
+			items: [
+				"Open **Suggested subscriptions** and look at what Maalu found: the amount, how often, and how many times it saw it.",
+				"Press **Add** to see what the subscription will hold. Change the name, amount or rhythm if it is not quite right.",
+				"Press **Add subscription**. The payments you already made are linked to it, and the next one is planned.",
+				"If it is not a subscription (shopping at the same shop, say), press **Not a subscription** and it is not suggested again.",
+			],
+		},
+		{
+			type: "callout",
+			tone: "note",
+			text: "Maalu only suggests a charge that is still going (paid recently), has at least three payments (two for a yearly one) and has the same vendor each time. A bill that changes each month, such as electricity, is suggested as one whose **amount varies**. Nothing is made until you press Add.",
+		},
+
 		{ type: "h2", id: "add-one", text: "Add a subscription" },
 		{
 			type: "steps",

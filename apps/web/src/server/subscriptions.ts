@@ -6,6 +6,7 @@ import {
 	PAYMENT_METHODS,
 	SUBSCRIPTION_STATUSES,
 	type Subscription,
+	type SubscriptionCandidate,
 	type SubscriptionSummary,
 } from "#/types/api";
 import { apiRequest } from "./api";
@@ -128,3 +129,31 @@ export const createSubscriptionFromTransactionFn = createServerFn({ method: "POS
 			body,
 		});
 	});
+
+/** Charges that repeat in what you have already paid and are not a subscription yet. */
+export const listSubscriptionCandidatesFn = createServerFn({ method: "GET" }).handler(async () =>
+	apiRequest<SubscriptionCandidate[]>("/subscriptions/candidates"),
+);
+
+const candidateKey = z.object({ vendor_id: z.uuid(), currency });
+
+/** Make the suggested subscription (with any changes) and link the payments already made. */
+export const acceptSubscriptionCandidateFn = createServerFn({ method: "POST" })
+	.validator(
+		candidateKey.extend({
+			name: name.optional(),
+			amount: cost.optional(),
+			interval_unit: z.enum(INTERVAL_UNITS).optional(),
+			interval_count: intervalCount.optional(),
+		}),
+	)
+	.handler(async ({ data }) =>
+		apiRequest<Subscription>("/subscriptions/candidates/accept", { method: "POST", body: data }),
+	);
+
+/** "Not a subscription": stop suggesting this vendor. */
+export const dismissSubscriptionCandidateFn = createServerFn({ method: "POST" })
+	.validator(candidateKey)
+	.handler(async ({ data }) =>
+		apiRequest<void>("/subscriptions/candidates/dismiss", { method: "POST", body: data }),
+	);

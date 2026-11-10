@@ -21,6 +21,7 @@ import StatCard from "#/components/StatCard";
 import ResponsiveTable from "#/components/ResponsiveTable";
 import SearchField from "#/components/SearchField";
 import SubscriptionForm from "#/components/SubscriptionForm";
+import SubscriptionSuggestionsCard from "#/components/SubscriptionSuggestionsCard";
 import ChipFilter from "#/components/ChipFilter";
 import ShapeTile from "#/components/ShapeTile";
 import Symbol from "#/components/Symbol";
@@ -40,6 +41,7 @@ import { listCurrenciesFn } from "#/server/currencies";
 import {
 	deleteSubscriptionFn,
 	getSubscriptionSummaryFn,
+	listSubscriptionCandidatesFn,
 	listSubscriptionsPageFn,
 } from "#/server/subscriptions";
 import { listCategoriesFn } from "#/server/categories";
@@ -64,14 +66,16 @@ export const Route = createFileRoute("/_protected/subscriptions")({
 	validateSearch: searchSchema,
 	loaderDeps: ({ search }) => search,
 	loader: async ({ deps }) => {
-		const [subscriptions, summary, vendors, categories, currencies, accounts] = await Promise.all([
-			listSubscriptionsPageFn({ data: deps }),
-			getSubscriptionSummaryFn(),
-			listVendorsFn(), // every vendor, for the form's picker
-			listCategoriesFn(),
-			listCurrenciesFn(),
-			listAccountsFn(), // the accounts it can be paid from
-		]);
+		const [subscriptions, summary, vendors, categories, currencies, accounts, candidates] =
+			await Promise.all([
+				listSubscriptionsPageFn({ data: deps }),
+				getSubscriptionSummaryFn(),
+				listVendorsFn(), // every vendor, for the form's picker
+				listCategoriesFn(),
+				listCurrenciesFn(),
+				listAccountsFn(), // the accounts it can be paid from
+				listSubscriptionCandidatesFn(), // charges that repeat and are not one yet
+			]);
 		const rows = unwrap(subscriptions);
 		const last = lastPageIfOutOfRange({
 			page: deps.page,
@@ -88,6 +92,7 @@ export const Route = createFileRoute("/_protected/subscriptions")({
 			categories: unwrap(categories),
 			currencies,
 			accounts: unwrap(accounts),
+			candidates: unwrap(candidates),
 		};
 	},
 	component: SubscriptionsPage,
@@ -261,7 +266,7 @@ const SubscriptionsTable = memo(function SubscriptionsTable({
 });
 
 function SubscriptionsPage() {
-	const { items, total, summary, vendors, categories, currencies, accounts } =
+	const { items, total, summary, vendors, categories, currencies, accounts, candidates } =
 		Route.useLoaderData();
 	const { user } = Route.useRouteContext();
 	const [editing, setEditing] = useState<Subscription | "new" | null>(null);
@@ -324,6 +329,8 @@ function SubscriptionsPage() {
 					/>
 				</Grid>
 			</Grid>
+
+			<SubscriptionSuggestionsCard candidates={candidates} />
 
 			<PendingOverlay>
 				<TableCard>

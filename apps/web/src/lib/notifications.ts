@@ -16,6 +16,7 @@ export const KIND_META: Record<NotificationKind, { label: string; accent: string
 	card_due: { label: "Card payment", accent: ACCENT.blue },
 	card_overdue: { label: "Card overdue", accent: ERROR },
 	card_limit: { label: "Card limit", accent: ACCENT.amber },
+	subscription_candidate: { label: "Looks like a subscription", accent: ACCENT.green },
 };
 
 /** "9+" past nine, so the badge stays small. */
