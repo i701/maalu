@@ -42,6 +42,7 @@ import { Route as ProtectedDocsSlugRouteImport } from './routes/_protected/docs.
 import { Route as ApiAttachmentsIdRouteImport } from './routes/api.attachments.$id'
 import { Route as ApiExportTransactionsRouteImport } from './routes/api.export.transactions'
 import { Route as ApiImportsPreviewRouteImport } from './routes/api.imports.preview'
+import { Route as ApiV1SplatRouteImport } from './routes/api.v1.$'
 import { Route as ApiImportsIdReportRouteImport } from './routes/api.imports.$id.report'
 
 const IndexRoute = IndexRouteImport.update({
@@ -208,6 +209,11 @@ const ApiImportsPreviewRoute = ApiImportsPreviewRouteImport.update({
   path: '/api/imports/preview',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiV1SplatRoute = ApiV1SplatRouteImport.update({
+  id: '/api/v1/$',
+  path: '/api/v1/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiImportsIdReportRoute = ApiImportsIdReportRouteImport.update({
   id: '/api/imports/$id/report',
   path: '/api/imports/$id/report',
@@ -245,6 +251,7 @@ export interface FileRoutesByFullPath {
   '/api/attachments/$id': typeof ApiAttachmentsIdRoute
   '/api/export/transactions': typeof ApiExportTransactionsRoute
   '/api/imports/preview': typeof ApiImportsPreviewRoute
+  '/api/v1/$': typeof ApiV1SplatRoute
   '/accounts/': typeof ProtectedAccountsIndexRoute
   '/docs/': typeof ProtectedDocsIndexRoute
   '/api/imports/$id/report': typeof ApiImportsIdReportRoute
@@ -280,6 +287,7 @@ export interface FileRoutesByTo {
   '/api/attachments/$id': typeof ApiAttachmentsIdRoute
   '/api/export/transactions': typeof ApiExportTransactionsRoute
   '/api/imports/preview': typeof ApiImportsPreviewRoute
+  '/api/v1/$': typeof ApiV1SplatRoute
   '/accounts': typeof ProtectedAccountsIndexRoute
   '/docs': typeof ProtectedDocsIndexRoute
   '/api/imports/$id/report': typeof ApiImportsIdReportRoute
@@ -317,6 +325,7 @@ export interface FileRoutesById {
   '/api/attachments/$id': typeof ApiAttachmentsIdRoute
   '/api/export/transactions': typeof ApiExportTransactionsRoute
   '/api/imports/preview': typeof ApiImportsPreviewRoute
+  '/api/v1/$': typeof ApiV1SplatRoute
   '/_protected/accounts/': typeof ProtectedAccountsIndexRoute
   '/_protected/docs/': typeof ProtectedDocsIndexRoute
   '/api/imports/$id/report': typeof ApiImportsIdReportRoute
@@ -354,6 +363,7 @@ export interface FileRouteTypes {
     | '/api/attachments/$id'
     | '/api/export/transactions'
     | '/api/imports/preview'
+    | '/api/v1/$'
     | '/accounts/'
     | '/docs/'
     | '/api/imports/$id/report'
@@ -389,6 +399,7 @@ export interface FileRouteTypes {
     | '/api/attachments/$id'
     | '/api/export/transactions'
     | '/api/imports/preview'
+    | '/api/v1/$'
     | '/accounts'
     | '/docs'
     | '/api/imports/$id/report'
@@ -425,6 +436,7 @@ export interface FileRouteTypes {
     | '/api/attachments/$id'
     | '/api/export/transactions'
     | '/api/imports/preview'
+    | '/api/v1/$'
     | '/_protected/accounts/'
     | '/_protected/docs/'
     | '/api/imports/$id/report'
@@ -439,6 +451,7 @@ export interface RootRouteChildren {
   ApiBackupRoute: typeof ApiBackupRoute
   ApiExportTransactionsRoute: typeof ApiExportTransactionsRoute
   ApiImportsPreviewRoute: typeof ApiImportsPreviewRoute
+  ApiV1SplatRoute: typeof ApiV1SplatRoute
   ApiImportsIdReportRoute: typeof ApiImportsIdReportRoute
 }
 
@@ -675,6 +688,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiImportsPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/v1/$': {
+      id: '/api/v1/$'
+      path: '/api/v1/$'
+      fullPath: '/api/v1/$'
+      preLoaderRoute: typeof ApiV1SplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/imports/$id/report': {
       id: '/api/imports/$id/report'
       path: '/api/imports/$id/report'
@@ -764,6 +784,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiBackupRoute: ApiBackupRoute,
   ApiExportTransactionsRoute: ApiExportTransactionsRoute,
   ApiImportsPreviewRoute: ApiImportsPreviewRoute,
+  ApiV1SplatRoute: ApiV1SplatRoute,
   ApiImportsIdReportRoute: ApiImportsIdReportRoute,
 }
 export const routeTree = rootRouteImport
