@@ -17,7 +17,13 @@ import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.ArrowDownward
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.ArrowUpward
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import app.maalu.data.shortDate
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -56,7 +62,7 @@ import app.maalu.data.MonthlyPoint
 import app.maalu.data.Transaction
 import app.maalu.data.kindShares
 import app.maalu.data.formatMoney
-import app.maalu.data.formatMoneyShort
+import app.maalu.ui.components.MoneyText
 import app.maalu.data.kept
 import app.maalu.data.monthBounds
 import app.maalu.data.monthLabel
@@ -90,13 +96,16 @@ private sealed interface State {
 }
 
 /** Home: available to spend, the month's income, spending and what was kept, and where it went. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(api: Api, month: String) {
     var attempt by remember { mutableIntStateOf(0) }
+    // a pull keeps what is on screen and shows only the pull indicator; a new month or a retry blanks it
+    var refreshing by remember { mutableStateOf(false) }
     val on = LocalDate.parse(month)
 
     val state by produceState<State>(State.Loading, month, attempt) {
-        value = State.Loading
+        if (!refreshing) value = State.Loading
         val (start, end) = monthBounds(on)
         val (pStart, pEnd) = monthBounds(on.minusMonths(1))
         value = coroutineScope {
@@ -131,6 +140,7 @@ fun DashboardScreen(api: Api, month: String) {
                 )
             }
         }
+        refreshing = false
     }
 
     Column(Modifier.fillMaxSize()) {
@@ -144,7 +154,11 @@ fun DashboardScreen(api: Api, month: String) {
                 Text(s.message, color = MaterialTheme.colorScheme.error)
                 Button(onClick = { attempt++ }) { Text("Try again") }
             }
-            is State.Ready -> LazyColumn(
+            is State.Ready -> PullToRefreshBox(
+                isRefreshing = refreshing,
+                onRefresh = { refreshing = true; attempt++ },
+                modifier = Modifier.fillMaxSize(),
+            ) { LazyColumn(
                 Modifier.fillMaxSize(),
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -160,7 +174,7 @@ fun DashboardScreen(api: Api, month: String) {
                 item { NeedsWantsCard(kindShares(s.data.categories), s.data.totals.currency) }
                 item { TransactionsCard("Coming up", null, s.data.upcoming, "Nothing planned.", LocalDate.now().toString()) }
                 item { TransactionsCard("Latest transactions", null, s.data.latest, "No transactions yet.", LocalDate.now().toString()) }
-            }
+            } }
         }
     }
 }
@@ -177,6 +191,7 @@ private fun working(a: AvailableToSpend): String {
 @Composable
 private fun AvailableCard(a: AvailableToSpend) {
     val short = a.available.startsWith("-")
+    var open by rememberSaveable { mutableStateOf(false) }
     Surface(
         shape = MaterialTheme.shapes.extraLarge,
         color = if (short) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer,
@@ -188,9 +203,54 @@ private fun AvailableCard(a: AvailableToSpend) {
                 formatMoney(a.available.removePrefix("-"), a.currency),
                 style = MaterialTheme.typography.headlineLarge.merge(MoneyStyle),
             )
-            Text("until ${a.periodEnd}", style = MaterialTheme.typography.bodySmall)
+            Text("until ${shortDate(a.periodEnd)}", style = MaterialTheme.typography.bodySmall)
             Text(working(a), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
+            TextButton(onClick = { open = !open }, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) {
+                Text(if (open) "Hide the working" else "Show the working")
+            }
+            AnimatedVisibility(open) { Working(a) }
         }
+    }
+}
+
+/** Every figure behind the number: what each account holds, each bill, card payment and goal. */
+@Composable
+private fun Working(a: AvailableToSpend) {
+    @Composable
+    fun line(label: String, amount: String, note: String? = null, bad: Boolean = false) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+            Column(Modifier.weight(1f)) {
+                Text(label, style = MaterialTheme.typography.bodyMedium)
+                if (note != null) Text(note, style = MaterialTheme.typography.bodySmall, color = if (bad) MaterialTheme.colorScheme.error else LocalContentColor.current.copy(alpha = 0.75f))
+            }
+            Text(formatMoney(amount, a.currency), style = MaterialTheme.typography.bodyMedium.merge(MoneyStyle))
+        }
+    }
+    @Composable
+    fun heading(text: String) = Text(text, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 10.dp))
+
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        heading("In your everyday accounts")
+        a.accounts.forEach { line(it.name, it.balance) }
+        if (a.bills.isNotEmpty()) {
+            heading("Bills still to pay")
+            a.bills.forEach { b ->
+                line(b.title, b.amount, (if (b.overdue) "Overdue · " else "") + shortDate(b.date) + if (b.estimate) " · estimate" else "", b.overdue)
+            }
+        }
+        if (a.cardPayments.isNotEmpty()) {
+            heading("Credit card payments")
+            a.cardPayments.forEach { line(it.title, it.amount, (if (it.overdue) "Overdue · " else "") + shortDate(it.date), it.overdue) }
+        }
+        if (a.reserved.isNotEmpty()) {
+            heading("Set aside for goals")
+            a.reserved.forEach { line(it.name, it.amount) }
+        }
+        Text(
+            "Planned income is not counted until it arrives.",
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.padding(top = 8.dp),
+        )
     }
 }
 
@@ -222,7 +282,7 @@ private fun StripCell(label: String, amount: String, currency: String, percent: 
     ) {
         Text(label, style = MaterialTheme.typography.labelSmall, color = white.copy(alpha = 0.78f))
         // tight place: short from 10,000 up (the exact figure is on the Transactions totals later)
-        Text(formatMoneyShort(amount, currency), color = white, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, style = MoneyStyle, textAlign = TextAlign.Center)
+        MoneyText(amount, currency, color = white, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp, fontWeight = FontWeight.SemiBold), textAlign = TextAlign.Center)
         val rounded = percent?.let { Math.round(it).toInt() }
         when {
             rounded == null -> Unit

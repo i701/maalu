@@ -12,6 +12,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountBalance
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -41,15 +44,18 @@ private sealed interface Load {
 }
 
 /** Read-only for now: the accounts grouped like the web app, each with its balance. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountsScreen(api: Api) {
     var attempt by remember { mutableIntStateOf(0) }
+    var refreshing by remember { mutableStateOf(false) }
     val state by produceState<Load>(Load.Loading, attempt) {
-        value = Load.Loading
+        if (!refreshing) value = Load.Loading
         value = when (val r = api.get<List<Account>>("accounts")) {
             is ApiResult.Ok -> Load.Loaded(r.data)
             is ApiResult.Failed -> Load.Failed(r.message)
         }
+        refreshing = false
     }
 
     when (val s = state) {
@@ -64,7 +70,7 @@ fun AccountsScreen(api: Api) {
         }
         is Load.Loaded -> {
             val groups = s.accounts.groupBy { it.group }
-            LazyColumn(
+            PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; attempt++ }, modifier = Modifier.fillMaxSize()) { LazyColumn(
                 Modifier.fillMaxSize(),
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -76,7 +82,7 @@ fun AccountsScreen(api: Api) {
                     }
                     items(list, key = { it.id }) { AccountRow(it) }
                 }
-            }
+            } }
         }
     }
 }

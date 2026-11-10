@@ -28,10 +28,10 @@ import app.maalu.data.KindShare
 import app.maalu.data.MonthlyPoint
 import app.maalu.data.Transaction
 import app.maalu.data.formatMoney
-import app.maalu.data.formatMoneyShort
 import app.maalu.data.shortDate
 import app.maalu.data.title
 import app.maalu.ui.components.LineChart
+import app.maalu.ui.components.MoneyText
 import app.maalu.ui.components.Pair2
 import app.maalu.ui.components.PairedColumns
 import app.maalu.ui.theme.ChartColors
@@ -96,10 +96,15 @@ fun CashFlowCard(months: List<MonthlyPoint>, currency: String) {
             Legend("Expenses", ChartColors.ExpenseLight)
         }
         val m = months.last()
-        Text(
-            "Latest month: ${formatMoneyShort(m.income, currency)} in, ${formatMoneyShort(m.expense, currency)} out",
-            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        val small = MaterialTheme.typography.bodySmall
+        val dim = MaterialTheme.colorScheme.onSurfaceVariant
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Latest month: ", style = small, color = dim)
+            MoneyText(m.income, currency, style = small, color = dim)
+            Text(" in, ", style = small, color = dim)
+            MoneyText(m.expense, currency, style = small, color = dim)
+            Text(" out", style = small, color = dim)
+        }
     }
 }
 
@@ -119,7 +124,12 @@ fun BudgetGoalsCard(budget: Budget?, goals: List<Goal>) {
             val t = budget.totals
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Row {
-                    Text("Spent ${formatMoneyShort(t.activity, budget.currency)} of ${formatMoneyShort(t.amount, budget.currency)}", Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                    Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                        Text("Spent ", style = MaterialTheme.typography.bodyMedium)
+                        MoneyText(t.activity, budget.currency, style = MaterialTheme.typography.bodyMedium)
+                        Text(" of ", style = MaterialTheme.typography.bodyMedium)
+                        MoneyText(t.amount, budget.currency, style = MaterialTheme.typography.bodyMedium)
+                    }
                     Text("${t.percent}%", style = MaterialTheme.typography.bodyMedium.merge(MoneyStyle), color = statusColor(t.status))
                 }
                 Bar(t.percent / 100f, statusColor(t.status), 10)
@@ -129,7 +139,11 @@ fun BudgetGoalsCard(budget: Budget?, goals: List<Goal>) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Row {
                         Text(line.name, Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Text("${formatMoneyShort(line.activity, budget.currency)} / ${formatMoneyShort(line.amount, budget.currency)}", style = MaterialTheme.typography.bodySmall.merge(MoneyStyle))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            MoneyText(line.activity, budget.currency, style = MaterialTheme.typography.bodySmall)
+                            Text(" / ", style = MaterialTheme.typography.bodySmall)
+                            MoneyText(line.amount, budget.currency, style = MaterialTheme.typography.bodySmall)
+                        }
                     }
                     Bar(line.percent / 100f, statusColor(line.status), 6)
                 }
@@ -139,7 +153,11 @@ fun BudgetGoalsCard(budget: Budget?, goals: List<Goal>) {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Row {
                     Text(goal.name + if (goal.reached) " ✓" else "", Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text("${formatMoneyShort(goal.saved, goal.currency)} of ${formatMoneyShort(goal.targetAmount, goal.currency)}", style = MaterialTheme.typography.bodySmall.merge(MoneyStyle))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        MoneyText(goal.saved, goal.currency, style = MaterialTheme.typography.bodySmall)
+                        Text(" of ", style = MaterialTheme.typography.bodySmall)
+                        MoneyText(goal.targetAmount, goal.currency, style = MaterialTheme.typography.bodySmall)
+                    }
                 }
                 Bar(goal.percent / 100f, MaterialTheme.colorScheme.primary, 6)
             }
@@ -161,7 +179,10 @@ fun NeedsWantsCard(shares: List<KindShare>?, currency: String) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Box(Modifier.size(10.dp).clip(CircleShape).background(kindColor(s)))
                 Text(s.kind.label, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-                Text(formatMoneyShort(s.total.toPlainString(), currency) + "  ${Math.round(s.share * 100)}%", style = MaterialTheme.typography.bodyMedium.merge(MoneyStyle))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    MoneyText(s.total.toPlainString(), currency, style = MaterialTheme.typography.bodyMedium)
+                    Text("  ${Math.round(s.share * 100)}%", style = MaterialTheme.typography.bodyMedium.merge(MoneyStyle))
+                }
             }
         }
     }
