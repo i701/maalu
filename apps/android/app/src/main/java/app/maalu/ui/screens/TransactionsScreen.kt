@@ -134,8 +134,6 @@ fun TransactionsScreen(api: Api) {
     var filters by rememberSaveable(stateSaver = FiltersSaver) { mutableStateOf(TxFilters()) }
     var showFilters by remember { mutableStateOf(false) }
     var adding by remember { mutableStateOf(false) }
-    var editing by remember { mutableStateOf<Transaction?>(null) }
-    var deleting by remember { mutableStateOf<Transaction?>(null) }
     val snackbar = LocalSnackbar.current
     var reload by remember { mutableIntStateOf(0) }
     var refreshing by remember { mutableStateOf(false) }
@@ -291,41 +289,7 @@ fun TransactionsScreen(api: Api) {
     }
 
     selected?.let { t ->
-        DetailSheet(t, onEdit = if (t.canEdit()) ({ editing = t; selected = null }) else null, onDelete = { deleting = t; selected = null }, onClose = { selected = null })
-    }
-    editing?.let { t ->
-        AddTransactionScreen(
-            api, editing = t,
-            onClose = { editing = null },
-            onSaved = { editing = null; reload++; scope.launch { snackbar?.showSnackbar("Changes saved") } },
-        )
-    }
-    deleting?.let { t ->
-        AlertDialog(
-            onDismissRequest = { deleting = null },
-            title = { Text("Move to the trash?") },
-            text = { Text("${t.title()} (${signed(t)}) will leave your balances and reports. You can undo this right after.") },
-            confirmButton = {
-                TextButton(onClick = {
-                    deleting = null
-                    scope.launch {
-                        when (val r = api.delete("transactions/${t.id}")) {
-                            is ApiResult.Ok -> {
-                                reload++
-                                val answer = snackbar?.showSnackbar("Moved to the trash", actionLabel = "Undo", duration = SnackbarDuration.Long)
-                                if (answer == SnackbarResult.ActionPerformed) {
-                                    api.post("transactions/${t.id}/restore")
-                                    reload++
-                                }
-                            }
-                            // for example a purchase with refunds: the refunds have to go first
-                            is ApiResult.Failed -> snackbar?.showSnackbar(r.message.lines().first())
-                        }
-                    }
-                }) { Text("Move to trash", color = MaterialTheme.colorScheme.error) }
-            },
-            dismissButton = { TextButton(onClick = { deleting = null }) { Text("Cancel") } },
-        )
+        TransactionDetailHost(api, t, scope, onClose = { selected = null }, onChanged = { reload++ })
     }
     if (adding) AddTransactionScreen(
         api,
@@ -341,109 +305,6 @@ private fun SumsLine(t: Totals) {
         val small = MaterialTheme.typography.bodySmall
         Row { Text("In ", style = small); MoneyText(t.income, t.currency, style = small, color = ChartColors.IncomeLight) }
         Row { Text("Out ", style = small); MoneyText(t.expense, t.currency, style = small, color = MaterialTheme.colorScheme.error) }
-    }
-}
-
-@Composable
-private fun RowDetails(t: Transaction) {
-    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        val sub = listOfNotNull(shortTime(t.time), t.category.takeIf { t.type != "transfer" }, t.account?.name).joinToString(" · ")
-        Text(sub, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        val marks = listOfNotNull(
-            "Planned".takeIf { t.planned }, "Refund".takeIf { t.isRefund }, "Adjustment".takeIf { t.adjustment },
-            t.subscription?.let { "Subscription" }, t.group?.name,
-        )
-        if (marks.isNotEmpty()) Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(top = 2.dp)) { marks.forEach { Mark(it) } }
-    }
-}
-
-/** A small tinted disc with the category's first letter, in its own accent (the web's category dot, as a native avatar). */
-@Composable
-private fun CategoryBadge(t: Transaction) {
-    val accent = Accents[t.categoryColor] ?: MaterialTheme.colorScheme.outline
-    val letter = (if (t.type == "transfer") "⇄" else t.category.firstOrNull()?.uppercase() ?: "?")
-    Box(Modifier.size(36.dp).clip(CircleShape).background(accent.copy(alpha = 0.18f)), contentAlignment = Alignment.Center) {
-        Text(letter, style = MaterialTheme.typography.labelLarge, color = accent, fontWeight = FontWeight.SemiBold)
-    }
-}
-
-@Composable
-private fun Mark(text: String) {
-    Surface(shape = RoundedCornerShape(6.dp), color = MaterialTheme.colorScheme.secondaryContainer) {
-        Text(text, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp))
-    }
-}
-
-
-/** An expense is money out, income (and a refund) money in; a transfer has no sign. */
-private fun signed(t: Transaction) = when (t.type) {
-    "expense" -> "-" + formatMoney(t.amount, t.currency)
-    "income" -> "+" + formatMoney(t.amount, t.currency)
-    else -> formatMoney(t.amount, t.currency)
-}
-
-@Composable
-private fun amountColor(t: Transaction) = when (t.type) {
-    "income" -> ChartColors.IncomeLight
-    "expense" -> MaterialTheme.colorScheme.error
-    else -> MaterialTheme.colorScheme.onSurface
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun DetailSheet(t: Transaction, onEdit: (() -> Unit)?, onDelete: () -> Unit, onClose: () -> Unit) {
-    ModalBottomSheet(onDismissRequest = onClose) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(t.title(), style = MaterialTheme.typography.titleMedium)
-            Text(signed(t), style = MaterialTheme.typography.titleLarge.merge(MoneyStyle), color = amountColor(t))
-            val rate = t.exchangeRate.toBigDecimalOrNull()
-            if (rate != null && rate.compareTo(java.math.BigDecimal.ONE) != 0 && t.baseAmount != null) {
-                Text(
-                    "Rate ${rate.stripTrailingZeros().toPlainString()} · ${formatNumber(t.baseAmount)} in your base currency",
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Fact("When", dayLabel(t.date) + (shortTime(t.time)?.let { ", $it" } ?: "") + if (t.planned) " (planned)" else "")
-            Fact("Type", t.type.replaceFirstChar { it.uppercase() } + if (t.isRefund) " · refund" else "")
-            if (t.type == "transfer") {
-                Fact("From", t.account?.name)
-                Fact("To", listOfNotNull(t.toAccount?.name, t.toAmount?.let { formatMoney(it, t.toAccount?.currency ?: t.currency) }).joinToString(" · "))
-            } else {
-                Fact("Account", t.account?.name)
-                Fact("Category", t.category)
-                Fact("Vendor", t.vendor?.name)
-            }
-            Fact("Payment", PaymentMethodLabels[t.paymentMethod])
-            Fact("Card", t.card?.let { it.name + (it.lastDigits?.let { d -> " ••$d" } ?: "") })
-            Fact("Subscription", t.subscription?.name)
-            Fact("Group", t.group?.name)
-            if (t.tags.isNotEmpty()) Fact("Tags", t.tags.joinToString(", ") { it.name })
-            Fact("Note", t.description)
-            if (t.attachmentCount > 0 || t.linkCount > 0) Fact("Attached", "${t.attachmentCount} file(s), ${t.linkCount} link(s)")
-            if (onEdit == null) Text(
-                if (t.adjustment) "A balance adjustment can only be deleted." else "A refund is changed on the web.",
-                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (onEdit != null) Button(
-                    onClick = onEdit, shapes = ButtonDefaults.shapes(), modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.filledTonalButtonColors(),
-                ) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 8.dp)); Text("Edit") }
-                Button(
-                    onClick = onDelete, shapes = ButtonDefaults.shapes(), modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer),
-                ) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 8.dp)); Text("Delete") }
-            }
-        }
-    }
-}
-
-@Composable
-private fun Fact(label: String, value: String?) {
-    if (value.isNullOrBlank()) return
-    Row(Modifier.fillMaxWidth()) {
-        Text(label, Modifier.weight(0.35f), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(value, Modifier.weight(0.65f), style = MaterialTheme.typography.bodyMedium)
     }
 }
 
