@@ -110,4 +110,64 @@ class AddTransactionTest {
         assertEquals("Food", form.category)
         assertTrue(form.tags.isEmpty())
     }
+
+    private val saved = Transaction(
+        id = "t1", type = "expense", amount = "45.0000", currency = "MVR", category = "Food", date = "2026-11-10", time = "14:30:00",
+        description = "Lunch", paymentMethod = "cash", exchangeRate = "1.00000000",
+        account = NameRef("BML", id = "a1"), vendor = NameRef("Cafe", id = "v1"), tags = listOf(NameRef("weekly")),
+    )
+
+    @Test fun aSavedTransactionFillsTheForm() {
+        val f = formFrom(saved)
+        assertEquals("45", f.amount)
+        assertEquals("a1", f.accountId)
+        assertEquals("14:30", f.time)
+        assertEquals("Cafe", f.vendor)
+        assertEquals("cash", f.method)
+        assertEquals(listOf("weekly"), f.tags)
+        assertEquals("1", f.rate)
+    }
+
+    @Test fun nothingChangedSendsNothing() {
+        val f = formFrom(saved)
+        assertTrue(f.patchJson(f, accounts, "MVR").isEmpty())
+        // 45 and 45.00 are the same amount
+        assertTrue(f.copy(amount = "45.00").patchJson(f, accounts, "MVR").isEmpty())
+    }
+
+    @Test fun onlyWhatChangedIsSent() {
+        val before = formFrom(saved)
+        val j = before.copy(amount = "50", category = "Dining").patchJson(before, accounts, "MVR")
+        assertEquals(setOf("amount", "category"), j.keys)
+        assertEquals("50", j["amount"]!!.jsonPrimitive.content)
+    }
+
+    @Test fun clearingAFieldSendsAnExplicitNull() {
+        val before = formFrom(saved)
+        val j = before.copy(vendor = "", note = "", time = null).patchJson(before, accounts, "MVR")
+        assertEquals(setOf("vendor_name", "description", "transaction_time"), j.keys)
+        assertTrue(j["vendor_name"] is kotlinx.serialization.json.JsonNull)
+        assertTrue(j["description"] is kotlinx.serialization.json.JsonNull)
+        assertTrue(j["transaction_time"] is kotlinx.serialization.json.JsonNull)
+    }
+
+    @Test fun clearingTagsSendsAnEmptyList() {
+        val before = formFrom(saved)
+        val j = before.copy(tags = emptyList()).patchJson(before, accounts, "MVR")
+        assertEquals(0, j["tags"]!!.jsonArray.size)
+    }
+
+    @Test fun movingToAForeignAccountCarriesItsCurrencyAndRate() {
+        val before = formFrom(saved.copy(account = NameRef("BML", id = "a1")))
+        val j = before.copy(accountId = "a2", rate = "15.42").patchJson(before, accounts, "MVR")
+        assertEquals("a2", j["account_id"]!!.jsonPrimitive.content)
+        assertEquals("USD", j["currency"]!!.jsonPrimitive.content)
+        assertEquals("15.42", j["exchange_rate"]!!.jsonPrimitive.content)
+    }
+
+    @Test fun refundsAndAdjustmentsAreNotEditedHere() {
+        assertTrue(saved.canEdit())
+        assertFalse(saved.copy(adjustment = true).canEdit())
+        assertFalse(saved.copy(refundOf = AppJson.parseToJsonElement("""{"id":"x"}""")).canEdit())
+    }
 }

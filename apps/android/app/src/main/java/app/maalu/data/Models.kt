@@ -148,7 +148,7 @@ data class Goal(
 )
 
 @Serializable
-data class NameRef(val name: String, val currency: String? = null)
+data class NameRef(val name: String, val currency: String? = null, val id: String? = null)
 
 @Serializable
 data class CardRef(val name: String, @SerialName("last_digits") val lastDigits: String? = null)
@@ -181,6 +181,8 @@ data class Transaction(
     @SerialName("attachment_count") val attachmentCount: Int = 0,
     @SerialName("link_count") val linkCount: Int = 0,
     val adjustment: Boolean = false,
+    /** The items of a split purchase (only counted here; they are edited on the web). */
+    val splits: List<kotlinx.serialization.json.JsonElement> = emptyList(),
 )
 
 /** For the filter pickers: a category (with its parent's id, for indenting) and a tag. */

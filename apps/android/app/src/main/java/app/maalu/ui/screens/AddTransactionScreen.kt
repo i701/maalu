@@ -81,6 +81,8 @@ import app.maalu.data.UserMe
 import app.maalu.data.VendorItem
 import app.maalu.data.cleanAmount
 import app.maalu.data.formatMoney
+import app.maalu.data.formFrom
+import app.maalu.data.patchJson
 import app.maalu.data.problem
 import app.maalu.data.shortDate
 import app.maalu.data.suggestedMethod
@@ -120,10 +122,12 @@ private val TYPES = listOf("expense" to "Expense", "income" to "Income", "transf
  * what arrived. The form locks while it saves and stays open, with what was typed, if the server refuses.
  */
 @Composable
-fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit) {
+fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit, editing: Transaction? = null) {
     var options by remember { mutableStateOf<FormOptions?>(null) }
     var loadError by remember { mutableStateOf<String?>(null) }
-    var form by remember { mutableStateOf(AddForm()) }
+    // editing starts from the saved transaction; the form to compare changes against stays as it was loaded
+    val before = remember(editing) { editing?.let(::formFrom) }
+    var form by remember { mutableStateOf(before ?: AddForm()) }
     var error by remember { mutableStateOf<String?>(null) }
     var errorField by remember { mutableStateOf<FormField?>(null) }
     val snackbar = remember { SnackbarHostState() }
@@ -138,9 +142,10 @@ fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit) {
         if (me is ApiResult.Ok && accounts is ApiResult.Ok) {
             val list = accounts.data
             options = FormOptions(me.data, list, (categories as? ApiResult.Ok)?.data.orEmpty(), (tags as? ApiResult.Ok)?.data.orEmpty())
-            // start in the default account (or the first one), with its currency's rate and its usual way of paying
+            // a new transaction starts in the default account (or the first one), with its currency's rate and usual way of
+            // paying; an edit keeps what the transaction has
             val start = list.firstOrNull { it.id == me.data.defaultAccountId } ?: list.firstOrNull { !it.isLiability } ?: list.firstOrNull()
-            if (start != null) form = form.copy(accountId = start.id, rate = tidyRate(start.exchangeRate), method = suggestedMethod(start.group))
+            if (editing == null && start != null) form = form.copy(accountId = start.id, rate = tidyRate(start.exchangeRate), method = suggestedMethod(start.group))
         } else {
             loadError = (me as? ApiResult.Failed)?.message ?: (accounts as? ApiResult.Failed)?.message ?: "Could not load your accounts."
         }
@@ -151,7 +156,7 @@ fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit) {
             snackbarHost = { SnackbarHost(snackbar) },
             topBar = {
                 TopAppBar(
-                    title = { Text("New " + (TYPES.first { it.first == form.type }.second.lowercase())) },
+                    title = { Text((if (editing == null) "New " else "Edit ") + (TYPES.first { it.first == form.type }.second.lowercase())) },
                     navigationIcon = { IconButton(onClick = onClose, enabled = !busy) { Icon(Icons.Outlined.Close, "Close") } },
                 )
             },
@@ -164,7 +169,7 @@ fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit) {
                 }
                 o == null -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
                 else -> Form(
-                    o, form, { errorField = null; form = it }, error, errorField, busy, Modifier.padding(padding),
+                    o, editing?.splits?.isNotEmpty() == true, if (editing != null) "Save changes" else "Save", form, { errorField = null; form = it }, error, errorField, busy, Modifier.padding(padding),
                     onSave = {
                         val base = o.me.baseCurrency
                         val problem = form.problem(o.accounts, base)
@@ -174,9 +179,14 @@ fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit) {
                             scope.launch { snackbar.currentSnackbarData?.dismiss(); snackbar.showSnackbar(problem.message) }
                             return@Form
                         }
+                        // nothing changed in an edit: just close
+                        val patch = if (editing != null && before != null) form.patchJson(before, o.accounts, base) else null
+                        if (patch != null && patch.isEmpty()) { onClose(); return@Form }
                         busy = true; error = null; errorField = null
                         scope.launch {
-                            when (val r = api.postJson<Transaction>("transactions", form.toJson(o.accounts, base).toString())) {
+                            val result = if (editing != null && patch != null) api.patchJson<Transaction>("transactions/${editing.id}", patch.toString())
+                            else api.postJson<Transaction>("transactions", form.toJson(o.accounts, base).toString())
+                            when (val r = result) {
                                 is ApiResult.Ok -> onSaved()
                                 is ApiResult.Failed -> {
                                     error = r.message; busy = false
@@ -201,7 +211,7 @@ private fun typeTint(type: String): Color = when (type) {
 }
 
 @Composable
-private fun Form(o: FormOptions, form: AddForm, onForm: (AddForm) -> Unit, error: String?, errorField: FormField?, busy: Boolean, modifier: Modifier, onSave: () -> Unit) {
+private fun Form(o: FormOptions, hasItems: Boolean, saveLabel: String, form: AddForm, onForm: (AddForm) -> Unit, error: String?, errorField: FormField?, busy: Boolean, modifier: Modifier, onSave: () -> Unit) {
     val base = o.me.baseCurrency
     val account = o.accounts.firstOrNull { it.id == form.accountId }
     val toAccount = o.accounts.firstOrNull { it.id == form.toAccountId }
@@ -264,7 +274,11 @@ private fun Form(o: FormOptions, form: AddForm, onForm: (AddForm) -> Unit, error
                 )
             }
 
-            if (form.type != "transfer") {
+            if (form.type != "transfer" && hasItems) Text(
+                "This purchase is split into items. Edit the items on the web; the rest can be changed here.",
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            if (form.type != "transfer" && !hasItems) {
                 Section("Category", Icons.Outlined.Category, Accents.getValue("amber")) {
                     PickerField(
                         isError = errorField == FormField.Category,
@@ -324,7 +338,7 @@ private fun Form(o: FormOptions, form: AddForm, onForm: (AddForm) -> Unit, error
         Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
             Button(onClick = onSave, enabled = !busy, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth()) {
-                Text(if (busy) "Saving…" else "Save")
+                Text(if (busy) "Saving…" else saveLabel)
             }
         }
     }

@@ -54,6 +54,14 @@ class Api(
     suspend inline fun <reified T> postJson(path: String, json: String): ApiResult<T> =
         decode(safely { raw("POST", path, body = json.toRequestBody("application/json".toMediaType())) })
 
+    suspend inline fun <reified T> patchJson(path: String, json: String): ApiResult<T> =
+        decode(safely { raw("PATCH", path, body = json.toRequestBody("application/json".toMediaType())) })
+
+    suspend fun delete(path: String): ApiResult<Unit> {
+        val r = safely { raw("DELETE", path) }
+        return if (r is Outcome.Got && r.raw.code in 200..299) ApiResult.Ok(Unit) else failure(r)
+    }
+
     suspend inline fun <reified T> postForm(path: String, fields: Map<String, String>): ApiResult<T> =
         decode(safely { raw("POST", path, body = FormBody.Builder().apply { fields.forEach { (k, v) -> add(k, v) } }.build()) })
 

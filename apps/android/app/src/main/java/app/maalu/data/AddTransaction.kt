@@ -3,6 +3,7 @@ package app.maalu.data
 import java.math.BigDecimal
 import java.time.LocalDate
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -135,4 +136,67 @@ fun VendorItem.defaultsFor(form: AddForm): VendorFill = VendorFill(
 fun AddForm.withVendor(vendor: VendorItem): AddForm {
     val fill = vendor.defaultsFor(this)
     return copy(vendor = vendor.name, category = fill.category ?: category, tags = fill.tags ?: tags)
+}
+
+/** "100.0000" as "100", "45.5000" as "45.5": what the API stored, as a person would type it. */
+fun tidyAmount(amount: String): String = amount.toBigDecimalOrNull()?.stripTrailingZeros()?.toPlainString() ?: amount
+
+/** Refunds and balance adjustments have their own rules, so they are not edited in this form. */
+fun Transaction.canEdit(): Boolean = !adjustment && !isRefund
+
+/** The form filled in from a saved transaction, ready to edit. */
+fun formFrom(t: Transaction): AddForm = AddForm(
+    type = t.type,
+    amount = tidyAmount(t.amount),
+    accountId = t.account?.id,
+    toAccountId = t.toAccount?.id,
+    toAmount = t.toAmount?.let(::tidyAmount).orEmpty(),
+    category = if (t.type == "transfer") "" else t.category,
+    vendor = t.vendor?.name.orEmpty(),
+    date = t.date,
+    time = shortTime(t.time),
+    // an existing transaction keeps what it has: the date does not flip "planned" under the person
+    planned = t.planned,
+    plannedTouched = true,
+    method = t.paymentMethod ?: "other",
+    methodTouched = true,
+    rate = tidyRate(t.exchangeRate),
+    tags = t.tags.map { it.name },
+    note = t.description.orEmpty(),
+)
+
+private fun sameNumber(a: String, b: String): Boolean {
+    val x = a.trim().toBigDecimalOrNull() ?: return a.trim() == b.trim()
+    val y = b.trim().toBigDecimalOrNull() ?: return false
+    return x.compareTo(y) == 0
+}
+
+/**
+ * The body for `PATCH /transactions/{id}`: only what changed from [before], because the API changes only
+ * the fields it is sent (so items, a card or a place the form does not show are left alone). Clearing a
+ * vendor, a note or a time is an explicit null. An empty object means nothing changed.
+ */
+fun AddForm.patchJson(before: AddForm, accounts: List<Account>, baseCurrency: String): JsonObject = buildJsonObject {
+    if (type != before.type) put("type", type)
+    if (!sameNumber(amount, before.amount)) put("amount", amount.trim())
+    if (date != before.date) put("transaction_date", date)
+    if (time != before.time) { if (time == null) put("transaction_time", JsonNull) else put("transaction_time", "$time:00") }
+    if (planned != before.planned) put("planned", planned)
+    if (accountId != before.accountId) accountId?.let { put("account_id", it) }
+    if (type == "transfer") {
+        if (toAccountId != before.toAccountId) toAccountId?.let { put("to_account_id", it) }
+        if (!sameNumber(toAmount, before.toAmount) && toAmount.isNotBlank()) put("to_amount", toAmount.trim())
+    } else {
+        if (category.trim() != before.category.trim()) put("category", category.trim())
+        if (method != before.method) put("payment_method", method)
+        if (tags != before.tags) put("tags", JsonArray(tags.map { JsonPrimitive(it) }))
+        // a new account or a new rate carries its currency; the rate only matters away from the base currency
+        if (accountId != before.accountId || !sameNumber(rate, before.rate)) {
+            val currency = accounts.firstOrNull { it.id == accountId }?.currency ?: baseCurrency
+            put("currency", currency)
+            if (currency != baseCurrency) put("exchange_rate", rate.trim())
+        }
+    }
+    if (vendor.trim() != before.vendor.trim()) { if (vendor.isBlank()) put("vendor_name", JsonNull) else put("vendor_name", vendor.trim()) }
+    if (note.trim() != before.note.trim()) { if (note.isBlank()) put("description", JsonNull) else put("description", note.trim()) }
 }

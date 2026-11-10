@@ -31,6 +31,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.TextButton
+import app.maalu.data.canEdit
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material.icons.outlined.Search
@@ -126,6 +133,8 @@ fun TransactionsScreen(api: Api) {
     var filters by rememberSaveable(stateSaver = FiltersSaver) { mutableStateOf(TxFilters()) }
     var showFilters by remember { mutableStateOf(false) }
     var adding by remember { mutableStateOf(false) }
+    var editing by remember { mutableStateOf<Transaction?>(null) }
+    var deleting by remember { mutableStateOf<Transaction?>(null) }
     val snackbar = LocalSnackbar.current
     var reload by remember { mutableIntStateOf(0) }
     var refreshing by remember { mutableStateOf(false) }
@@ -280,7 +289,43 @@ fun TransactionsScreen(api: Api) {
     )
     }
 
-    selected?.let { t -> DetailSheet(t) { selected = null } }
+    selected?.let { t ->
+        DetailSheet(t, onEdit = if (t.canEdit()) ({ editing = t; selected = null }) else null, onDelete = { deleting = t; selected = null }, onClose = { selected = null })
+    }
+    editing?.let { t ->
+        AddTransactionScreen(
+            api, editing = t,
+            onClose = { editing = null },
+            onSaved = { editing = null; reload++; scope.launch { snackbar?.showSnackbar("Changes saved") } },
+        )
+    }
+    deleting?.let { t ->
+        AlertDialog(
+            onDismissRequest = { deleting = null },
+            title = { Text("Move to the trash?") },
+            text = { Text("${t.title()} (${signed(t)}) will leave your balances and reports. You can undo this right after.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    deleting = null
+                    scope.launch {
+                        when (val r = api.delete("transactions/${t.id}")) {
+                            is ApiResult.Ok -> {
+                                reload++
+                                val answer = snackbar?.showSnackbar("Moved to the trash", actionLabel = "Undo", duration = SnackbarDuration.Long)
+                                if (answer == SnackbarResult.ActionPerformed) {
+                                    api.post("transactions/${t.id}/restore")
+                                    reload++
+                                }
+                            }
+                            // for example a purchase with refunds: the refunds have to go first
+                            is ApiResult.Failed -> snackbar?.showSnackbar(r.message.lines().first())
+                        }
+                    }
+                }) { Text("Move to trash", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = { TextButton(onClick = { deleting = null }) { Text("Cancel") } },
+        )
+    }
     if (adding) AddTransactionScreen(
         api,
         onClose = { adding = false },
@@ -375,7 +420,7 @@ private fun amountColor(t: Transaction) = when (t.type) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DetailSheet(t: Transaction, onClose: () -> Unit) {
+private fun DetailSheet(t: Transaction, onEdit: (() -> Unit)?, onDelete: () -> Unit, onClose: () -> Unit) {
     ModalBottomSheet(onDismissRequest = onClose) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(t.title(), style = MaterialTheme.typography.titleMedium)
@@ -404,6 +449,20 @@ private fun DetailSheet(t: Transaction, onClose: () -> Unit) {
             if (t.tags.isNotEmpty()) Fact("Tags", t.tags.joinToString(", ") { it.name })
             Fact("Note", t.description)
             if (t.attachmentCount > 0 || t.linkCount > 0) Fact("Attached", "${t.attachmentCount} file(s), ${t.linkCount} link(s)")
+            if (onEdit == null) Text(
+                if (t.adjustment) "A balance adjustment can only be deleted." else "A refund is changed on the web.",
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (onEdit != null) Button(
+                    onClick = onEdit, shapes = ButtonDefaults.shapes(), modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.filledTonalButtonColors(),
+                ) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 8.dp)); Text("Edit") }
+                Button(
+                    onClick = onDelete, shapes = ButtonDefaults.shapes(), modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer),
+                ) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 8.dp)); Text("Delete") }
+            }
         }
     }
 }
