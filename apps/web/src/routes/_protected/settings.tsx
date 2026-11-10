@@ -9,6 +9,7 @@ import { useNotify } from "#/components/Notify";
 import PageHeader from "#/components/PageHeader";
 import BackupCard from "#/components/BackupCard";
 import NotificationSettings from "#/components/NotificationSettings";
+import ApiKeysCard from "#/components/api-keys/ApiKeysCard";
 import InstallCard from "#/components/pwa/InstallCard";
 import PasswordCard from "#/components/PasswordCard";
 import SessionsCard from "#/components/SessionsCard";
@@ -19,19 +20,22 @@ import { getMeFn, updateMeFn } from "#/server/auth";
 import { listAccountsFn } from "#/server/accounts";
 import { listGoalsFn } from "#/server/goals";
 import { listSalaryRulesFn } from "#/server/salary";
+import { getScopeCatalogFn, listApiKeysFn } from "#/server/api-keys";
 import { emailStatusFn } from "#/server/notifications";
 import { listSessionsFn } from "#/server/sessions";
 import SalaryRulesCard from "#/components/SalaryRulesCard";
 
 export const Route = createFileRoute("/_protected/settings")({
 	loader: async () => {
-		const [me, sessions, rules, accounts, goals, email] = await Promise.all([
+		const [me, sessions, rules, accounts, goals, email, apiKeys, catalog] = await Promise.all([
 			getMeFn(),
 			listSessionsFn(),
 			listSalaryRulesFn(),
 			listAccountsFn(),
 			listGoalsFn({ data: {} }),
 			emailStatusFn(),
+			listApiKeysFn(),
+			getScopeCatalogFn(),
 		]);
 		return {
 			me: unwrap(me),
@@ -40,13 +44,15 @@ export const Route = createFileRoute("/_protected/settings")({
 			accounts: unwrap(accounts),
 			goals: unwrap(goals),
 			email: unwrap(email),
+			apiKeys: unwrap(apiKeys),
+			catalog: unwrap(catalog),
 		};
 	},
 	component: SettingsPage,
 });
 
 function SettingsPage() {
-	const { me, sessions, rules, accounts, goals, email } = Route.useLoaderData();
+	const { me, sessions, rules, accounts, goals, email, apiKeys, catalog } = Route.useLoaderData();
 	const { run, pending, error } = useAction();
 	const notify = useNotify();
 
@@ -92,6 +98,7 @@ function SettingsPage() {
 				<PasswordCard twoFactor={me.two_factor_enabled} />
 				<TwoFactorSettings enabled={me.two_factor_enabled} />
 				<SessionsCard sessions={sessions} />
+				<ApiKeysCard keys={apiKeys} catalog={catalog} />
 				<BackupCard />
 			</Stack>
 		</>
