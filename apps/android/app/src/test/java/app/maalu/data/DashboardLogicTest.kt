@@ -37,4 +37,24 @@ class DashboardLogicTest {
         assertEquals("MVR 513.58M", formatMoneyShort("513580000", "MVR"))
         assertEquals("-MVR 12.5K", formatMoneyShort("-12500", "MVR"))
     }
+
+    @Test fun kindSharesSplitSpendingAndIgnoreIncome() {
+        val cats = listOf(
+            CategoryTotal("Rent", "1", "orange", "300", "expense", kind = "need"),
+            CategoryTotal("Cinema", "2", "pink", "100", "expense", kind = "want"),
+            CategoryTotal("Misc", "3", "slate", "100", "expense"),
+            CategoryTotal("Pay", "4", "green", "9999", "income", kind = "need"),
+        )
+        val shares = kindShares(cats)!!
+        assertEquals(listOf(0.6, 0.2, 0.2), shares.map { it.share })
+        assertNull(kindShares(emptyList()))
+    }
+
+    @Test fun transactionTitlePrefersDescriptionThenVendorThenCategory() {
+        val base = Transaction("1", "expense", "5", "MVR", "Dining", date = "2026-11-10")
+        assertEquals("Dining", base.title())
+        assertEquals("Ensis", base.copy(vendor = NameRef("Ensis")).title())
+        assertEquals("Lunch", base.copy(vendor = NameRef("Ensis"), description = "Lunch").title())
+        assertEquals("A → B", base.copy(type = "transfer", account = NameRef("A"), toAccount = NameRef("B")).title())
+    }
 }

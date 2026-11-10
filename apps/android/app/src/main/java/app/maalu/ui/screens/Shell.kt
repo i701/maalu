@@ -5,14 +5,24 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountBalance
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.ReceiptLong
 import androidx.compose.material.icons.outlined.Savings
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MediumFlexibleTopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.runtime.mutableStateOf
+import app.maalu.data.monthLabel
+import java.time.LocalDate
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -29,6 +39,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import app.maalu.data.Api
+import app.maalu.data.ThemeMode
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 
 private data class Tab(val label: String, val icon: ImageVector)
 
@@ -45,11 +59,37 @@ private const val DASHBOARD = 0
 private const val ACCOUNTS = 2
 private const val MORE = 4
 
-/** The signed-in frame. Dashboard and Accounts are real; the other tabs are placeholders until their calls are built. */
+/**
+ * The signed-in frame: a large top app bar that holds the screen's name and collapses as the content
+ * scrolls (the native pattern), and the bottom bar. Dashboard and Accounts are real; the rest are placeholders.
+ */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun Shell(api: Api, server: String, onSignOut: () -> Unit) {
+fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMode) -> Unit, onSignOut: () -> Unit) {
     var selected by rememberSaveable { mutableIntStateOf(0) }
+    // the dashboard's month lives here so the app bar can move it
+    var month by rememberSaveable { mutableStateOf(LocalDate.now().withDayOfMonth(1).toString()) }
+    val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
     Scaffold(
+        modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
+        topBar = {
+            MediumFlexibleTopAppBar(
+                title = { Text(Tabs[selected].label.let { if (selected == MORE) "More" else it }) },
+                subtitle = if (selected == DASHBOARD) ({ Text(monthLabel(LocalDate.parse(month))) }) else null,
+                actions = {
+                    if (selected == DASHBOARD) {
+                        IconButton(onClick = { month = LocalDate.parse(month).minusMonths(1).toString() }) {
+                            Icon(Icons.AutoMirrored.Outlined.KeyboardArrowLeft, "Previous month")
+                        }
+                        IconButton(onClick = { month = LocalDate.parse(month).plusMonths(1).toString() }) {
+                            Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, "Next month")
+                        }
+                    }
+                },
+                scrollBehavior = scroll,
+            )
+        },
         bottomBar = {
             NavigationBar {
                 Tabs.forEachIndexed { i, tab ->
@@ -64,21 +104,30 @@ fun Shell(api: Api, server: String, onSignOut: () -> Unit) {
             }
         },
     ) { padding ->
-        // the bottom bar's padding comes from the Scaffold; the status bar is added here for every tab
-        Box(Modifier.fillMaxSize().padding(padding).statusBarsPadding()) {
+        Box(Modifier.fillMaxSize().padding(padding)) {
             when (selected) {
-                DASHBOARD -> DashboardScreen(api)
+                DASHBOARD -> DashboardScreen(api, month)
                 ACCOUNTS -> AccountsScreen(api)
                 MORE -> Column(
                     Modifier.fillMaxSize().padding(24.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Text(server, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Appearance", style = MaterialTheme.typography.titleSmall)
+                    SingleChoiceSegmentedButtonRow {
+                        ThemeMode.entries.forEachIndexed { i, m ->
+                            SegmentedButton(
+                                selected = themeMode == m,
+                                onClick = { onThemeMode(m) },
+                                shape = SegmentedButtonDefaults.itemShape(i, ThemeMode.entries.size),
+                            ) { Text(m.label) }
+                        }
+                    }
+                    Text(server, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 16.dp))
                     OutlinedButton(onClick = onSignOut) { Text("Sign out") }
                 }
                 else -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("${Tabs[selected].label}\nComing soon", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Coming soon", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }

@@ -93,8 +93,75 @@ data class CategoryTotal(
     val total: String,
     val type: String,
     val count: Int = 0,
+    val kind: String? = null,
 )
 
 /** `/transactions/categories` answers an object, not a bare list. */
 @Serializable
 data class CategoryTotals(val currency: String, val categories: List<CategoryTotal> = emptyList())
+
+@Serializable
+data class BalancePoint(val date: String, val total: String, val assets: String = "0", val liabilities: String = "0")
+
+@Serializable
+data class BalanceTrend(val currency: String, val points: List<BalancePoint> = emptyList())
+
+@Serializable
+data class MonthlyPoint(val month: String, val income: String, val expense: String)
+
+@Serializable
+data class Monthly(val currency: String, val months: List<MonthlyPoint> = emptyList())
+
+@Serializable
+data class BudgetTotals(val activity: String, val amount: String, val available: String, val percent: Int, val status: String)
+
+@Serializable
+data class BudgetLine(
+    val id: String,
+    val name: String,
+    val activity: String,
+    val amount: String,
+    val available: String,
+    val percent: Int,
+    val status: String,
+)
+
+@Serializable
+data class Budget(
+    val currency: String,
+    val totals: BudgetTotals,
+    val lines: List<BudgetLine> = emptyList(),
+    val attention: Int = 0,
+)
+
+@Serializable
+data class Goal(
+    val id: String,
+    val name: String,
+    val currency: String,
+    val saved: String,
+    @SerialName("target_amount") val targetAmount: String,
+    val percent: Int,
+    val reached: Boolean = false,
+)
+
+@Serializable
+data class NameRef(val name: String)
+
+/** A transaction as the dashboard lists show it; the full record has far more. */
+@Serializable
+data class Transaction(
+    val id: String,
+    val type: String,
+    val amount: String,
+    val currency: String,
+    val category: String,
+    val description: String? = null,
+    @SerialName("transaction_date") val date: String,
+    @SerialName("transaction_time") val time: String? = null,
+    val planned: Boolean = false,
+    val account: NameRef? = null,
+    @SerialName("to_account") val toAccount: NameRef? = null,
+    val vendor: NameRef? = null,
+    @SerialName("refund_of") val refundOf: kotlinx.serialization.json.JsonElement? = null,
+)

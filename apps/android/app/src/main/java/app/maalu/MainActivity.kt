@@ -3,7 +3,14 @@ package app.maalu
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
+import android.graphics.Color
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
+import app.maalu.data.ThemeMode
+import app.maalu.data.ThemeStore
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,7 +33,23 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MaaluTheme {
+            val themes = remember { ThemeStore(applicationContext) }
+            val themeScope = rememberCoroutineScope()
+            val mode by themes.mode.collectAsState(initial = ThemeMode.System)
+            val dark = when (mode) {
+                ThemeMode.System -> isSystemInDarkTheme()
+                ThemeMode.Light -> false
+                ThemeMode.Dark -> true
+            }
+            // status and navigation bar icons follow the chosen theme, not only the phone's
+            DisposableEffect(dark) {
+                enableEdgeToEdge(
+                    statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { dark },
+                    navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { dark },
+                )
+                onDispose {}
+            }
+            MaaluTheme(darkTheme = dark) {
                 Surface {
                     val servers = remember { ServerStore(applicationContext) }
                     val tokens = remember { TokenStore(applicationContext) }
@@ -58,9 +81,12 @@ class MainActivity : ComponentActivity() {
                                 onChangeServer = { server = null; scope.launch { servers.clear() } },
                             )
                         } else {
-                            Shell(api, current, onSignOut = {
-                                scope.launch { api.post("auth/logout"); signedOut() }
-                            })
+                            Shell(
+                                api, current,
+                                themeMode = mode,
+                                onThemeMode = { themeScope.launch { themes.save(it) } },
+                                onSignOut = { scope.launch { api.post("auth/logout"); signedOut() } },
+                            )
                         }
                     }
                 }

@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.ArrowDownward
+import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.ArrowUpward
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -46,6 +47,14 @@ import app.maalu.data.AvailableToSpend
 import app.maalu.data.CategoryTotal
 import app.maalu.data.CategoryTotals
 import app.maalu.data.Totals
+import app.maalu.data.BalancePoint
+import app.maalu.data.BalanceTrend
+import app.maalu.data.Budget
+import app.maalu.data.Goal
+import app.maalu.data.Monthly
+import app.maalu.data.MonthlyPoint
+import app.maalu.data.Transaction
+import app.maalu.data.kindShares
 import app.maalu.data.formatMoney
 import app.maalu.data.formatMoneyShort
 import app.maalu.data.kept
@@ -65,6 +74,13 @@ private data class DashboardData(
     val before: Totals,
     val categories: List<CategoryTotal>,
     val available: AvailableToSpend?,
+    // the page works without any of these
+    val trend: List<BalancePoint> = emptyList(),
+    val monthly: List<MonthlyPoint> = emptyList(),
+    val budget: Budget? = null,
+    val goals: List<Goal> = emptyList(),
+    val latest: List<Transaction> = emptyList(),
+    val upcoming: List<Transaction> = emptyList(),
 )
 
 private sealed interface State {
@@ -75,8 +91,7 @@ private sealed interface State {
 
 /** Home: available to spend, the month's income, spending and what was kept, and where it went. */
 @Composable
-fun DashboardScreen(api: Api) {
-    var month by rememberSaveable { mutableStateOf(LocalDate.now().withDayOfMonth(1).toString()) }
+fun DashboardScreen(api: Api, month: String) {
     var attempt by remember { mutableIntStateOf(0) }
     val on = LocalDate.parse(month)
 
@@ -89,6 +104,14 @@ fun DashboardScreen(api: Api) {
             val before = async { api.get<Totals>("transactions/summary", mapOf("date_from" to "$pStart", "date_to" to "$pEnd")) }
             val cats = async { api.get<CategoryTotals>("transactions/categories", mapOf("date_from" to "$start", "date_to" to "$end")) }
             val avail = async { api.get<AvailableToSpend>("stats/available-to-spend") }
+            val today = LocalDate.now()
+            val trendEnd = if (end > today && start <= today) today else end
+            val trendCall = async { api.get<BalanceTrend>("stats/balance-trend", mapOf("from" to "$start", "to" to "$trendEnd")) }
+            val monthlyCall = async { api.get<Monthly>("stats/monthly", mapOf("months" to "6", "to" to "$end")) }
+            val budgetCall = async { api.get<Budget>("budget", mapOf("on" to "$start")) }
+            val goalsCall = async { api.get<List<Goal>>("goals") }
+            val latestCall = async { api.get<List<Transaction>>("transactions", mapOf("limit" to "5")) }
+            val upcomingCall = async { api.get<List<Transaction>>("transactions", mapOf("planned" to "true", "limit" to "5")) }
             val t = totals.await(); val b = before.await(); val c = cats.await(); val a = avail.await()
             when {
                 t is ApiResult.Failed -> State.Failed(t.message)
@@ -97,7 +120,13 @@ fun DashboardScreen(api: Api) {
                 else -> State.Ready(
                     DashboardData(
                         (t as ApiResult.Ok).data, (b as ApiResult.Ok).data, (c as ApiResult.Ok).data.categories,
-                        (a as? ApiResult.Ok)?.data, // the page works without it
+                        (a as? ApiResult.Ok)?.data,
+                        (trendCall.await() as? ApiResult.Ok)?.data?.points.orEmpty(),
+                        (monthlyCall.await() as? ApiResult.Ok)?.data?.months.orEmpty(),
+                        (budgetCall.await() as? ApiResult.Ok)?.data,
+                        (goalsCall.await() as? ApiResult.Ok)?.data.orEmpty(),
+                        (latestCall.await() as? ApiResult.Ok)?.data.orEmpty(),
+                        (upcomingCall.await() as? ApiResult.Ok)?.data.orEmpty(),
                     ),
                 )
             }
@@ -105,7 +134,6 @@ fun DashboardScreen(api: Api) {
     }
 
     Column(Modifier.fillMaxSize()) {
-        MonthPicker(on, onChange = { month = it.toString() })
         when (val s = state) {
             State.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             is State.Failed -> Column(
@@ -126,17 +154,14 @@ fun DashboardScreen(api: Api) {
                 s.data.available?.takeIf { isThisMonth }?.let { item { AvailableCard(it) } }
                 item { MonthStrip(s.data.totals, s.data.before) }
                 item { SpendingCard(s.data.categories, s.data.totals.currency) }
+                item { NetWorthCard(s.data.trend, s.data.totals.currency) }
+                item { CashFlowCard(s.data.monthly, s.data.totals.currency) }
+                item { BudgetGoalsCard(s.data.budget, s.data.goals) }
+                item { NeedsWantsCard(kindShares(s.data.categories), s.data.totals.currency) }
+                item { TransactionsCard("Coming up", null, s.data.upcoming, "Nothing planned.", LocalDate.now().toString()) }
+                item { TransactionsCard("Latest transactions", null, s.data.latest, "No transactions yet.", LocalDate.now().toString()) }
             }
         }
-    }
-}
-
-@Composable
-private fun MonthPicker(on: LocalDate, onChange: (LocalDate) -> Unit) {
-    Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = { onChange(on.minusMonths(1)) }) { Icon(Icons.AutoMirrored.Outlined.KeyboardArrowLeft, "Previous month") }
-        Text(monthLabel(on), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
-        IconButton(onClick = { onChange(on.plusMonths(1)) }) { Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, "Next month") }
     }
 }
 
