@@ -1,9 +1,9 @@
 import { morph } from "#/lib/shape";
+import Money from "#/components/Money";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { budgetByKind, STATUS_COLOR, STATUS_LABEL, unsigned } from "#/lib/budget";
 import { KIND_COLOR, KIND_NAMES } from "#/lib/needs-wants";
-import { formatMoney } from "#/lib/format";
 import type { Budget } from "#/types/api";
 import TonalChip from "./TonalChip";
 
@@ -44,7 +44,8 @@ function KindSplit({ budget }: { budget: Budget }) {
 							{k.kind === "unsorted" ? "Other limits" : KIND_NAMES[k.kind]}
 						</Typography>
 						<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
-							{formatMoney(k.spent, budget.currency)} of {formatMoney(k.limit, budget.currency)}
+							<Money amount={k.spent} currency={budget.currency} /> of{" "}
+							<Money amount={k.limit} currency={budget.currency} />
 						</Typography>
 					</Box>
 				</Box>
@@ -90,10 +91,10 @@ export default function BudgetSummary({ budget }: { budget: Budget }) {
 								lineHeight: 1.2,
 							}}
 						>
-							{formatMoney(totals.activity, currency)}
+							<Money amount={totals.activity} currency={currency} />
 						</Typography>
 						<Typography variant="body2" sx={{ color: "text.secondary" }}>
-							of {formatMoney(totals.amount, currency)}
+							of <Money amount={totals.amount} currency={currency} />
 						</Typography>
 					</Box>
 				</Box>
@@ -109,7 +110,10 @@ export default function BudgetSummary({ budget }: { budget: Budget }) {
 							color: over ? color : "text.primary",
 						}}
 					>
-						{formatMoney(over ? unsigned(totals.available) : totals.available, currency)}
+						<Money
+							amount={over ? unsigned(totals.available) : totals.available}
+							currency={currency}
+						/>
 					</Typography>
 				</Box>
 			</Box>

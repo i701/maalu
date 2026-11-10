@@ -1,11 +1,11 @@
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
+import Money from "#/components/Money";
 import UnarchiveOutlinedIcon from "@mui/icons-material/UnarchiveOutlined";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
-import { formatMoney } from "#/lib/format";
 import { ACCENT } from "#/lib/m3";
 import { useAction } from "#/lib/use-action";
 import { unarchiveAccountFn } from "#/server/accounts";
@@ -92,7 +92,7 @@ export default function ArchivedAccounts({
 								secondary={<AccountIdentity account={a} />}
 								end={
 									<Typography variant="body2" sx={{ color: "text.secondary" }}>
-										{formatMoney(a.balance, a.currency)}
+										<Money amount={a.balance} currency={a.currency} />
 									</Typography>
 								}
 								actions={

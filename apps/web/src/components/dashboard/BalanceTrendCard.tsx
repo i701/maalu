@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import Money from "#/components/Money";
 import Typography from "@mui/material/Typography";
 import { memo, useMemo } from "react";
 import { formatDate, formatMoney } from "#/lib/format";
@@ -46,7 +47,7 @@ const BalanceTrendCard = memo(function BalanceTrendCard({
 			<Box sx={{ display: "flex", alignItems: "baseline", gap: 1.5, flexWrap: "wrap", mb: 2 }}>
 				{/* 28px on a wide screen, the same as the figure tiles (larger read as too big); scaled down so it still fits a phone */}
 				<Typography sx={{ fontSize: "clamp(22px, 7vw, 28px)", fontWeight: 600, lineHeight: 1.1 }}>
-					{formatMoney(last.total, currency)}
+					<Money amount={last.total} currency={currency} />
 				</Typography>
 				<DeltaBadge percent={percentChange(last.total, first.total)} goodWhenUp against={against} />
 			</Box>
@@ -57,8 +58,8 @@ const BalanceTrendCard = memo(function BalanceTrendCard({
 				ariaLabel={`Net worth from ${chart[0].label} to ${chart[chart.length - 1].label}, ending at ${formatMoney(last.total, currency)}`}
 			/>
 			<Typography variant="caption" sx={{ display: "block", mt: 0.5, color: "text.secondary" }}>
-				Assets {formatMoney(last.assets, currency)} · Debts{" "}
-				{formatMoney(last.liabilities, currency)}
+				Assets <Money amount={last.assets} currency={currency} /> · Debts{" "}
+				<Money amount={last.liabilities} currency={currency} />
 			</Typography>
 		</ChartCard>
 	);

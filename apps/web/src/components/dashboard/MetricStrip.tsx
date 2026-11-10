@@ -1,4 +1,5 @@
 import { useCardMorph } from "#/lib/card-morph";
+import { FullAmountTip } from "#/components/Money";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { GRADIENT } from "#/lib/m3";
@@ -84,7 +85,6 @@ export default function MetricStrip({ items, against }: { items: StripItem[]; ag
 						{item.label}
 					</Typography>
 					<Typography
-						title={item.full}
 						sx={{
 							fontSize: 13,
 							fontWeight: 600,
@@ -93,7 +93,7 @@ export default function MetricStrip({ items, against }: { items: StripItem[]; ag
 							overflowWrap: "anywhere",
 						}}
 					>
-						{item.value}
+						{item.full ? <FullAmountTip full={item.full}>{item.value}</FullAmountTip> : item.value}
 					</Typography>
 					<Delta item={item} against={against} />
 				</Box>

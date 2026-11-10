@@ -1,10 +1,10 @@
 import Box from "@mui/material/Box";
+import Money from "#/components/Money";
 import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import { memo } from "react";
 import type { CompareRow } from "#/lib/compare";
-import { formatMoney } from "#/lib/format";
 import CategoryDot from "../CategoryDot";
 import MobileCard from "../MobileCard";
 import ResponsiveTable from "../ResponsiveTable";
@@ -50,10 +50,10 @@ const ChangeTable = memo(function ChangeTable({
 						</Box>
 					</TableCell>
 					<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
-						{formatMoney(r.before, currency)}
+						<Money amount={r.before} currency={currency} />
 					</TableCell>
 					<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>
-						{formatMoney(r.now, currency)}
+						<Money amount={r.now} currency={currency} />
 					</TableCell>
 					<TableCell align="right">
 						<DeltaChip row={r} currency={currency} goodWhenUp={goodWhenUp} />
@@ -72,7 +72,8 @@ const ChangeTable = memo(function ChangeTable({
 					}
 					secondary={
 						<Typography variant="caption" sx={{ color: "text.secondary", display: "block" }}>
-							{formatMoney(r.before, currency)} → {formatMoney(r.now, currency)}
+							<Money amount={r.before} currency={currency} /> →{" "}
+							<Money amount={r.now} currency={currency} />
 						</Typography>
 					}
 					end={<DeltaChip row={r} currency={currency} goodWhenUp={goodWhenUp} />}

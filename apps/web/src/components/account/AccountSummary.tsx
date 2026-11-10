@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import Money from "#/components/Money";
 import { creditUsage } from "#/lib/accounts";
 import { formatMoney } from "#/lib/format";
 import type { Account, TransactionTotals } from "#/types/api";
@@ -44,7 +45,7 @@ export default function AccountSummary({
 			</Box>
 			{foreign && (
 				<Box sx={{ color: "text.secondary", fontSize: 13, mt: 1 }}>
-					Worth about {formatMoney(account.base_balance, baseCurrency)} at{" "}
+					Worth about <Money amount={account.base_balance} currency={baseCurrency} /> at{" "}
 					{Number(account.exchange_rate)}. This month's figures are in {baseCurrency}.
 				</Box>
 			)}

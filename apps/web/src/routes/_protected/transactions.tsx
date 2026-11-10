@@ -1,4 +1,5 @@
 import AddIcon from "@mui/icons-material/Add";
+import Money from "#/components/Money";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import InsertLinkOutlinedIcon from "@mui/icons-material/InsertLinkOutlined";
@@ -412,17 +413,17 @@ function TxAmount({ t, baseCurrency }: { t: Transaction; baseCurrency: string })
 		<>
 			<Typography variant="body2" sx={{ fontWeight: 600, color: TYPE_AMOUNT_COLOR[t.type] }}>
 				{TYPE_SIGN[t.type]}
-				{formatMoney(t.amount, t.currency)}
+				<Money amount={t.amount} currency={t.currency} />
 			</Typography>
 			{t.type === "transfer" && t.to_account && t.to_account.currency !== t.currency && (
 				<Typography variant="caption" sx={{ color: "text.secondary", display: "block" }}>
-					→ {formatMoney(t.to_amount ?? "0", t.to_account.currency)}
+					→ <Money amount={t.to_amount ?? "0"} currency={t.to_account.currency} />
 				</Typography>
 			)}
 			{t.type !== "transfer" && t.currency !== baseCurrency && (
 				<Typography variant="caption" sx={{ color: "text.secondary", display: "block" }}>
 					≈ {TYPE_SIGN[t.type]}
-					{formatMoney(t.base_amount, baseCurrency)} @ {Number(t.exchange_rate)}
+					<Money amount={t.base_amount} currency={baseCurrency} /> @ {Number(t.exchange_rate)}
 				</Typography>
 			)}
 		</>

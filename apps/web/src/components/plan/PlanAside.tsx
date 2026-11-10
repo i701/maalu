@@ -1,6 +1,6 @@
 import Box from "@mui/material/Box";
+import Money from "#/components/Money";
 import Typography from "@mui/material/Typography";
-import { formatMoney } from "#/lib/format";
 import type { AvailableToSpend } from "#/types/api";
 
 function Line({ name, amount, currency }: { name: string; amount: string; currency: string }) {
@@ -13,7 +13,7 @@ function Line({ name, amount, currency }: { name: string; amount: string; curren
 				{name}
 			</Typography>
 			<Typography sx={{ fontSize: 14, fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>
-				{formatMoney(amount, currency)}
+				<Money amount={amount} currency={currency} />
 			</Typography>
 		</Box>
 	);

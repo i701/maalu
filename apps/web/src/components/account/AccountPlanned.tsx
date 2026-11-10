@@ -1,7 +1,8 @@
 import Box from "@mui/material/Box";
+import Money from "#/components/Money";
 import Typography from "@mui/material/Typography";
 import { accountEffect, signOf } from "#/lib/account-detail";
-import { formatDate, formatMoney } from "#/lib/format";
+import { formatDate } from "#/lib/format";
 import { dueLabel } from "#/lib/planned";
 import { txTitle } from "#/lib/tx-display";
 import type { Transaction } from "#/types/api";
@@ -63,7 +64,7 @@ export default function AccountPlanned({
 								sx={{ fontVariantNumeric: "tabular-nums", flexShrink: 0 }}
 							>
 								{signOf(effect)}
-								{formatMoney(effect.amount, effect.currency)}
+								<Money amount={effect.amount} currency={effect.currency} />
 							</Typography>
 						</Box>
 					);

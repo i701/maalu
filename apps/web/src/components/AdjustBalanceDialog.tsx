@@ -1,4 +1,5 @@
 import Alert from "@mui/material/Alert";
+import Money from "#/components/Money";
 import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
@@ -95,10 +96,12 @@ export default function AdjustBalanceDialog({
 
 			{preview && preview.kind !== null && (
 				<Alert severity="info" sx={{ mb: 2 }}>
-					{formatMoney(account.balance, account.currency)} →{" "}
-					{formatMoney(preview.after, account.currency)}. {KIND[preview.kind][0].toUpperCase()}
-					{KIND[preview.kind].slice(1)} of {formatMoney(preview.amount, account.currency)} will be
-					recorded, and it is not counted as income or spending.
+					<Money amount={account.balance} currency={account.currency} /> →{" "}
+					<Money amount={preview.after} currency={account.currency} />.{" "}
+					{KIND[preview.kind][0].toUpperCase()}
+					{KIND[preview.kind].slice(1)} of{" "}
+					<Money amount={preview.amount} currency={account.currency} /> will be recorded, and it is
+					not counted as income or spending.
 				</Alert>
 			)}
 			{preview && preview.kind === null && (

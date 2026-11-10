@@ -1,4 +1,5 @@
 import { useCardMorph } from "#/lib/card-morph";
+import Money from "#/components/Money";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
@@ -6,7 +7,7 @@ import { Link } from "@tanstack/react-router";
 import { RouterButton } from "../RouterLinks";
 import { memo, useState } from "react";
 import { hasAccounts, isShort, workingLine } from "#/lib/available";
-import { formatDate, formatMoney } from "#/lib/format";
+import { formatDate } from "#/lib/format";
 import type { AvailableToSpend } from "#/types/api";
 import TonalChip from "../TonalChip";
 import { ACCENT } from "#/lib/m3";
@@ -37,7 +38,7 @@ function Row({
 				)}
 			</Typography>
 			<Typography sx={{ fontSize: 14, fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>
-				{formatMoney(amount, currency)}
+				<Money amount={amount} currency={currency} />
 			</Typography>
 		</Box>
 	);
@@ -110,8 +111,8 @@ function Working({ data }: { data: AvailableToSpend }) {
 			</Section>
 			{Number(data.expected_income) > 0 && (
 				<Typography variant="caption" sx={{ color: "text.secondary", gridColumn: "1 / -1" }}>
-					{formatMoney(data.expected_income, c)} of income is planned before then. It is not counted
-					until it arrives.
+					<Money amount={data.expected_income} currency={c} /> of income is planned before then. It
+					is not counted until it arrives.
 				</Typography>
 			)}
 		</Box>
@@ -154,7 +155,7 @@ const AvailableCard = memo(function AvailableCard({ data }: { data: AvailableToS
 							color: short ? "var(--chart-expense)" : "text.primary",
 						}}
 					>
-						{formatMoney(data.available, data.currency)}
+						<Money amount={data.available} currency={data.currency} />
 					</Typography>
 					<Typography variant="body2" sx={{ color: "text.secondary", mt: 0.5 }}>
 						{workingLine(data)}

@@ -1,4 +1,5 @@
 import AddIcon from "@mui/icons-material/Add";
+import Money from "#/components/Money";
 import DeleteIcon from "@mui/icons-material/DeleteOutlined";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -178,7 +179,9 @@ export default function SplitEditor({
 				<Button startIcon={<AddIcon />} onClick={add}>
 					Add item
 				</Button>
-				<Typography sx={{ fontWeight: 600 }}>Total {formatMoney(total, currency)}</Typography>
+				<Typography sx={{ fontWeight: 600 }}>
+					Total <Money amount={total} currency={currency} />
+				</Typography>
 			</Box>
 		</Box>
 	);

@@ -1,8 +1,9 @@
 import Grid from "@mui/material/Grid";
+import Money from "#/components/Money";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { formatDate, formatMoney } from "#/lib/format";
+import { formatDate } from "#/lib/format";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
 import { createSubscriptionFromTransactionFn } from "#/server/subscriptions";
@@ -52,7 +53,7 @@ export default function MakeSubscriptionDialog({
 			maxWidth="xs"
 		>
 			<Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
-				{formatMoney(transaction.amount.replace("-", ""), transaction.currency)} on{" "}
+				<Money amount={transaction.amount.replace("-", "")} currency={transaction.currency} /> on{" "}
 				{formatDate(transaction.transaction_date)} becomes the first payment. Amount, currency,
 				rate, vendor and category are copied.
 			</Typography>

@@ -1,9 +1,10 @@
 import Checkbox from "@mui/material/Checkbox";
+import Money from "#/components/Money";
 import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import { memo } from "react";
-import { formatMoney, formatWhen } from "#/lib/format";
+import { formatWhen } from "#/lib/format";
 import { ACCENT } from "#/lib/m3";
 import type { ReviewRow, RowPatch } from "#/lib/imports";
 import type { SelectionState } from "#/lib/selection";
@@ -38,7 +39,7 @@ function Amount({ row, currency }: { row: ReviewRow; currency: string }) {
 			}}
 		>
 			{row.type === "income" ? "+" : "−"}
-			{formatMoney(row.amount, currency)}
+			<Money amount={row.amount} currency={currency} />
 		</Typography>
 	);
 }

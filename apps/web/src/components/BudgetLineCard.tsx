@@ -1,4 +1,5 @@
 import { useCompactCard } from "#/lib/compact-card";
+import Money from "#/components/Money";
 import { morph } from "#/lib/shape";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
@@ -166,10 +167,10 @@ const BudgetLineCard = memo(function BudgetLineCard({
 						lineHeight: 1.2,
 					}}
 				>
-					{formatMoney(line.activity, currency)}
+					<Money amount={line.activity} currency={currency} />
 				</Typography>
 				<Typography variant="body2" sx={{ color: "text.secondary" }}>
-					of {formatMoney(limit, currency)}
+					of <Money amount={limit} currency={currency} />
 				</Typography>
 			</Box>
 
@@ -199,7 +200,7 @@ const BudgetLineCard = memo(function BudgetLineCard({
 					variant="caption"
 					sx={{ display: card.show("block"), mt: 0.75, color: "text.secondary" }}
 				>
-					Includes {formatMoney(line.carried, currency)} carried over
+					Includes <Money amount={line.carried} currency={currency} /> carried over
 				</Typography>
 			)}
 			{moves?.map((m) => (

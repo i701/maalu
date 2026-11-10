@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import Money from "#/components/Money";
 import Typography from "@mui/material/Typography";
 import { memo } from "react";
 import {
@@ -9,7 +10,6 @@ import {
 	type RuleRow,
 	type RuleStatus,
 } from "#/lib/budget-rule";
-import { formatMoney } from "#/lib/format";
 import { ACCENT } from "#/lib/m3";
 import { KIND_COLOR } from "#/lib/needs-wants";
 import TonalChip from "../TonalChip";
@@ -41,7 +41,7 @@ function RuleLine({ row, currency }: { row: RuleRow; currency: string }) {
 				</Typography>
 				<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 					<Typography sx={{ fontSize: 14, fontVariantNumeric: "tabular-nums" }}>
-						{formatMoney(row.amount, currency)}
+						<Money amount={row.amount} currency={currency} />
 						<Typography component="span" sx={{ ml: 1, fontSize: 12, color: "text.secondary" }}>
 							{formatPercent(row.percent)} of income
 						</Typography>
@@ -102,8 +102,8 @@ const IncomeRule = memo(function IncomeRule({ rule, currency }: { rule: Rule; cu
 					Against 50/30/20 of your income
 				</Typography>
 				<Typography variant="caption" sx={{ color: "text.secondary" }}>
-					Income {formatMoney(rule.income, currency)}. Kept is what is left after all spending. The
-					tick marks each target.
+					Income <Money amount={rule.income} currency={currency} />. Kept is what is left after all
+					spending. The tick marks each target.
 				</Typography>
 			</Box>
 			{rule.rows.map((row) => (
@@ -111,9 +111,9 @@ const IncomeRule = memo(function IncomeRule({ rule, currency }: { rule: Rule; cu
 			))}
 			{rule.unsorted && (
 				<Typography variant="caption" sx={{ color: "text.secondary" }}>
-					{formatMoney(rule.unsorted.amount, currency)} ({formatPercent(rule.unsorted.percent)} of
-					income) is in categories not sorted into a need or a want. It lowers what was kept but
-					counts toward neither target.
+					<Money amount={rule.unsorted.amount} currency={currency} /> (
+					{formatPercent(rule.unsorted.percent)} of income) is in categories not sorted into a need
+					or a want. It lowers what was kept but counts toward neither target.
 				</Typography>
 			)}
 		</Box>

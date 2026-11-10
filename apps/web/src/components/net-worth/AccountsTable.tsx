@@ -1,9 +1,9 @@
 import Box from "@mui/material/Box";
+import Money from "#/components/Money";
 import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import { memo } from "react";
-import { formatMoney } from "#/lib/format";
 import type { NetWorthAccountChange } from "#/types/api";
 import DeltaChip from "../compare/DeltaChip";
 import MobileCard from "../MobileCard";
@@ -47,10 +47,10 @@ const AccountsTable = memo(function AccountsTable({
 						</Typography>
 					</TableCell>
 					<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
-						{formatMoney(a.start, currency)}
+						<Money amount={a.start} currency={currency} />
 					</TableCell>
 					<TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>
-						{formatMoney(a.end, currency)}
+						<Money amount={a.end} currency={currency} />
 					</TableCell>
 					<TableCell align="right">
 						<DeltaChip row={asChange(a)} currency={currency} goodWhenUp />
@@ -66,7 +66,8 @@ const AccountsTable = memo(function AccountsTable({
 					}
 					secondary={
 						<Box component="span" sx={{ color: "text.secondary", fontSize: 12 }}>
-							{formatMoney(a.start, currency)} → {formatMoney(a.end, currency)}
+							<Money amount={a.start} currency={currency} /> →{" "}
+							<Money amount={a.end} currency={currency} />
 						</Box>
 					}
 					end={<DeltaChip row={asChange(a)} currency={currency} goodWhenUp />}

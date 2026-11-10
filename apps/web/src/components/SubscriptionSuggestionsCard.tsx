@@ -1,4 +1,5 @@
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import Money from "#/components/Money";
 import Accordion from "@mui/material/Accordion";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
@@ -7,7 +8,7 @@ import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { memo, useState } from "react";
-import { formatDate, formatMoney } from "#/lib/format";
+import { formatDate } from "#/lib/format";
 import { ACCENT } from "#/lib/m3";
 import {
 	amountPrefix,
@@ -86,7 +87,7 @@ const SubscriptionSuggestionsCard = memo(function SubscriptionSuggestionsCard({
 									</Typography>
 									<Typography variant="caption" sx={{ color: "text.secondary" }}>
 										{amountPrefix(c)}
-										{formatMoney(c.amount, c.currency)}{" "}
+										<Money amount={c.amount} currency={c.currency} />{" "}
 										{everyText(c.interval_unit, c.interval_count)} · seen {c.occurrences} times,
 										last {formatDate(c.last_date)}
 									</Typography>

@@ -1,4 +1,5 @@
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import Money from "#/components/Money";
 import CheckIcon from "@mui/icons-material/Check";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
@@ -12,7 +13,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import { ACCENT } from "#/lib/m3";
-import { formatMoney, formatWhen } from "#/lib/format";
+import { formatWhen } from "#/lib/format";
 import { dueLabel, isOverdue, localToday } from "#/lib/planned";
 import { txTitle } from "#/lib/tx-display";
 import type { Transaction } from "#/types/api";
@@ -111,7 +112,7 @@ export default function UpcomingCard({
 									</Box>
 									<Typography variant="body2" sx={{ fontWeight: 600 }}>
 										{SIGN[t.type]}
-										{formatMoney(t.amount, t.currency)}
+										<Money amount={t.amount} currency={t.currency} />
 									</Typography>
 									<Stack direction="row" sx={{ alignItems: "center" }}>
 										<Button

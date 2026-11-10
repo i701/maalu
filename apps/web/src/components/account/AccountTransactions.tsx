@@ -1,4 +1,5 @@
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
+import Money from "#/components/Money";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
@@ -37,7 +38,7 @@ function Amount({ t, accountId }: { t: Transaction; accountId: string }) {
 				}}
 			>
 				{signOf(effect)}
-				{formatMoney(effect.amount, effect.currency)}
+				<Money amount={effect.amount} currency={effect.currency} />
 			</Typography>
 			{effect.counterpart && (
 				<Typography variant="caption" sx={{ display: "block", color: "text.secondary" }}>

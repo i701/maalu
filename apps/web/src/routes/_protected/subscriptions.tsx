@@ -1,4 +1,5 @@
 import AddIcon from "@mui/icons-material/Add";
+import Money from "#/components/Money";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import Button from "@mui/material/Button";
@@ -127,7 +128,7 @@ function SubCost({ s, baseCurrency }: { s: Subscription; baseCurrency: string })
 		<>
 			<Typography variant="body2">
 				{s.amount_varies && "about "}
-				{formatMoney(s.amount, s.currency)}{" "}
+				<Money amount={s.amount} currency={s.currency} />{" "}
 				<Typography component="span" variant="caption" sx={{ color: "text.secondary" }}>
 					{formatInterval(s.interval_unit, s.interval_count)}
 				</Typography>
@@ -139,7 +140,7 @@ function SubCost({ s, baseCurrency }: { s: Subscription; baseCurrency: string })
 			)}
 			{s.currency !== baseCurrency && (
 				<Typography variant="caption" sx={{ color: "text.secondary", display: "block" }}>
-					≈ {formatMoney(s.base_amount, baseCurrency)} @ {Number(s.exchange_rate)}
+					≈ <Money amount={s.base_amount} currency={baseCurrency} /> @ {Number(s.exchange_rate)}
 				</Typography>
 			)}
 		</>
@@ -223,7 +224,7 @@ const SubscriptionsTable = memo(function SubscriptionsTable({
 						<StatusChip s={s} />
 					</TableCell>
 					<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-						{formatMoney(s.monthly_base_cost, baseCurrency)}
+						<Money amount={s.monthly_base_cost} currency={baseCurrency} />
 					</TableCell>
 					<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
 						<SubActions onEdit={() => onEdit(s)} onDelete={() => onDelete(s)} />
@@ -260,7 +261,7 @@ const SubscriptionsTable = memo(function SubscriptionsTable({
 								</>
 							)}
 							<Typography variant="caption" sx={{ color: "text.secondary" }}>
-								{formatMoney(s.monthly_base_cost, baseCurrency)} / month
+								<Money amount={s.monthly_base_cost} currency={baseCurrency} /> / month
 							</Typography>
 						</>
 					}

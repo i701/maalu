@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import Money from "#/components/Money";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import { memo } from "react";
@@ -50,7 +51,7 @@ const PendingSplitCard = memo(function PendingSplitCard({
 					</Typography>
 				</Box>
 				<Typography sx={{ fontWeight: 600, fontSize: 18, fontVariantNumeric: "tabular-nums" }}>
-					{formatMoney(plan.amount, plan.currency)}
+					<Money amount={plan.amount} currency={plan.currency} />
 				</Typography>
 			</Box>
 
@@ -61,7 +62,7 @@ const PendingSplitCard = memo(function PendingSplitCard({
 					</Typography>
 					{made.map((m) => (
 						<Typography key={m.id} variant="body2">
-							{m.target_name}: {formatMoney(m.amount, plan.currency)}{" "}
+							{m.target_name}: <Money amount={m.amount} currency={plan.currency} />{" "}
 							{m.kind === "transfer" ? "moved" : "set aside"}
 						</Typography>
 					))}
@@ -98,7 +99,7 @@ const PendingSplitCard = memo(function PendingSplitCard({
 							</Typography>
 						</Typography>
 						<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>
-							{formatMoney(i.amount, plan.currency)}
+							<Money amount={i.amount} currency={plan.currency} />
 						</Typography>
 					</Box>
 				))}

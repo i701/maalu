@@ -1,9 +1,9 @@
 import { useCardMorph } from "#/lib/card-morph";
+import Money from "#/components/Money";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { memo } from "react";
 import { creditUsage } from "#/lib/accounts";
-import { formatMoney } from "#/lib/format";
 import type { Account } from "#/types/api";
 import { RouterButton } from "../RouterLinks";
 
@@ -53,8 +53,8 @@ const CreditUsageCard = memo(function CreditUsageCard({ accounts }: { accounts: 
 										color: high ? "error.main" : "text.secondary",
 									}}
 								>
-									{formatMoney(usage.owed, a.currency)} of {formatMoney(usage.limit, a.currency)} ·{" "}
-									{usage.percent}%
+									<Money amount={usage.owed} currency={a.currency} /> of{" "}
+									<Money amount={usage.limit} currency={a.currency} /> · {usage.percent}%
 								</Typography>
 							</Box>
 							<Box

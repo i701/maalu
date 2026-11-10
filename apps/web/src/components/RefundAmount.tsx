@@ -1,4 +1,5 @@
 import TextField from "@mui/material/TextField";
+import Money from "#/components/Money";
 import Typography from "@mui/material/Typography";
 import { formatMoney } from "#/lib/format";
 import type { RefundItem } from "#/lib/refund";
@@ -30,7 +31,7 @@ export default function RefundAmount({
 			<>
 				<RefundItems items={items} currency={currency} locked={locked} onChange={onItems} />
 				<Typography variant="caption" sx={{ display: "block", color: "text.secondary", my: 1.5 }}>
-					Refund total: {formatMoney(total, currency)}
+					Refund total: <Money amount={total} currency={currency} />
 				</Typography>
 			</>
 		);

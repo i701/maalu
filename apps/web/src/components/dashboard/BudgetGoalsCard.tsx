@@ -1,4 +1,5 @@
 import { useCardMorph } from "#/lib/card-morph";
+import Money from "#/components/Money";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { memo } from "react";
@@ -9,7 +10,7 @@ import {
 	STATUS_COLOR,
 	STATUS_LABEL,
 } from "#/lib/budget";
-import { formatDate, formatMoney } from "#/lib/format";
+import { formatDate } from "#/lib/format";
 import { ACCENT } from "#/lib/m3";
 import type { Budget, Goal } from "#/types/api";
 import { RouterButton } from "../RouterLinks";
@@ -91,8 +92,8 @@ const BudgetGoalsCard = memo(function BudgetGoalsCard({
 							Spent this period
 						</Typography>
 						<Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>
-							{formatMoney(lines.totals.activity, lines.currency)} of{" "}
-							{formatMoney(lines.totals.amount, lines.currency)}
+							<Money amount={lines.totals.activity} currency={lines.currency} /> of{" "}
+							<Money amount={lines.totals.amount} currency={lines.currency} />
 						</Typography>
 					</Box>
 					<Meter
@@ -140,8 +141,8 @@ const BudgetGoalsCard = memo(function BudgetGoalsCard({
 									variant="body2"
 									sx={{ color: "text.secondary", fontVariantNumeric: "tabular-nums" }}
 								>
-									{formatMoney(l.activity, budget.currency)} of{" "}
-									{formatMoney(l.amount, budget.currency)}
+									<Money amount={l.activity} currency={budget.currency} /> of{" "}
+									<Money amount={l.amount} currency={budget.currency} />
 								</Typography>
 							</Box>
 							<Meter

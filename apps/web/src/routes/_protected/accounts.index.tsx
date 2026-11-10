@@ -1,4 +1,5 @@
 import AccountSpark from "#/components/account/AccountSpark";
+import Money from "#/components/Money";
 import { accountTints, tintBackground } from "#/lib/accounts";
 import { MORPH_TRANSITION, morphUp } from "#/lib/shape";
 import AddIcon from "@mui/icons-material/Add";
@@ -373,7 +374,7 @@ function AccountsPage() {
 																	color: isNegative(a.balance) ? "error.main" : "text.primary",
 																}}
 															>
-																{formatMoney(a.balance, a.currency)}
+																<Money amount={a.balance} currency={a.currency} />
 															</Typography>
 														</>
 													}
@@ -384,8 +385,8 @@ function AccountsPage() {
 																	variant="caption"
 																	sx={{ display: "block", color: "text.secondary" }}
 																>
-																	≈ {formatMoney(a.base_balance, user.base_currency)} @{" "}
-																	{Number(a.exchange_rate)}
+																	≈ <Money amount={a.base_balance} currency={user.base_currency} />{" "}
+																	@ {Number(a.exchange_rate)}
 																	{a.auto_rate ? " · auto" : ""}
 																</Typography>
 															)}

@@ -1,4 +1,5 @@
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import Money from "#/components/Money";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import Accordion from "@mui/material/Accordion";
 import AccordionDetails from "@mui/material/AccordionDetails";
@@ -9,7 +10,7 @@ import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { memo } from "react";
-import { formatDate, formatMoney } from "#/lib/format";
+import { formatDate } from "#/lib/format";
 import { ACCENT } from "#/lib/m3";
 import { daysApartText } from "#/lib/transfer-link";
 import { useAction } from "#/lib/use-action";
@@ -26,7 +27,7 @@ function Side({ t, sign }: { t: Transaction; sign: "−" | "+" }) {
 			</Typography>
 			<Typography variant="caption" sx={{ color: "text.secondary" }}>
 				{sign}
-				{formatMoney(t.amount, t.currency)} · {formatDate(t.transaction_date)}
+				<Money amount={t.amount} currency={t.currency} /> · {formatDate(t.transaction_date)}
 			</Typography>
 		</Box>
 	);

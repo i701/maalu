@@ -1,4 +1,5 @@
 import { useCompactCard } from "#/lib/compact-card";
+import Money from "#/components/Money";
 import { morph } from "#/lib/shape";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
@@ -146,10 +147,10 @@ const GoalCard = memo(function GoalCard({
 						lineHeight: 1.2,
 					}}
 				>
-					{formatMoney(goal.saved, goal.currency)}
+					<Money amount={goal.saved} currency={goal.currency} />
 				</Typography>
 				<Typography variant="body2" sx={{ color: "text.secondary" }}>
-					of {formatMoney(goal.target_amount, goal.currency)}
+					of <Money amount={goal.target_amount} currency={goal.currency} />
 				</Typography>
 			</Box>
 
@@ -204,8 +205,8 @@ const GoalCard = memo(function GoalCard({
 						variant="caption"
 						sx={{ color: "text.secondary", fontVariantNumeric: "tabular-nums" }}
 					>
-						{formatMoney(goal.period_contributed, goal.currency)} of{" "}
-						{formatMoney(goal.period_planned, goal.currency)}
+						<Money amount={goal.period_contributed} currency={goal.currency} /> of{" "}
+						<Money amount={goal.period_planned} currency={goal.currency} />
 					</Typography>
 				</Box>
 			)}

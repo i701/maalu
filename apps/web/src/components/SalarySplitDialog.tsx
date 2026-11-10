@@ -1,4 +1,5 @@
 import Alert from "@mui/material/Alert";
+import Money from "#/components/Money";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
@@ -7,7 +8,6 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { formatMoney } from "#/lib/format";
 import {
 	madeTotal,
 	splitLines,
@@ -53,7 +53,7 @@ function MadeList({ plan }: { plan: SalarySplitPlan }) {
 			{(plan.made ?? []).map((m) => (
 				<li key={m.id}>
 					<Typography variant="body2">
-						{m.target_name}: {formatMoney(m.amount, plan.currency)}{" "}
+						{m.target_name}: <Money amount={m.amount} currency={plan.currency} />{" "}
 						{m.kind === "transfer" ? "moved" : "set aside"}
 					</Typography>
 				</li>
@@ -135,8 +135,8 @@ function ProposedLines({
 			))}
 			{!totals.over && (
 				<Typography variant="body2" sx={{ color: "text.secondary" }}>
-					Moving {formatMoney(totals.total, plan.currency)}.{" "}
-					{formatMoney(totals.left, plan.currency)} stays in {plan.account_name}.
+					Moving <Money amount={totals.total} currency={plan.currency} />.{" "}
+					<Money amount={totals.left} currency={plan.currency} /> stays in {plan.account_name}.
 				</Typography>
 			)}
 			{totals.over && <Alert severity="error">These add up to more than the salary.</Alert>}
@@ -171,7 +171,7 @@ function SplitBody({
 	return (
 		<Box sx={{ display: "grid", gap: 1.5 }}>
 			<Typography variant="body2" sx={{ color: "text.secondary" }}>
-				{formatMoney(plan.amount, plan.currency)} arrived in {plan.account_name}.
+				<Money amount={plan.amount} currency={plan.currency} /> arrived in {plan.account_name}.
 			</Typography>
 			{someMade && (
 				<>

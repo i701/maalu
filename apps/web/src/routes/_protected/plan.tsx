@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import Money from "#/components/Money";
 import Typography from "@mui/material/Typography";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
@@ -166,9 +167,9 @@ function PlanPage() {
 										component="p"
 										sx={{ color: "text.secondary", mt: 2 }}
 									>
-										{formatMoney(available.expected_income, c)} of income is expected before then.
-										It is listed on its day but never counted until it arrives. Press Received to
-										enter what you actually got.
+										<Money amount={available.expected_income} currency={c} /> of income is expected
+										before then. It is listed on its day but never counted until it arrives. Press
+										Received to enter what you actually got.
 									</Typography>
 								)}
 							</Box>

@@ -1,8 +1,8 @@
 import { useCardMorph } from "#/lib/card-morph";
+import Money from "#/components/Money";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { memo } from "react";
-import { formatMoney } from "#/lib/format";
 import { dueLabel, isOverdue } from "#/lib/planned";
 import { txTitle } from "#/lib/tx-display";
 import type { Transaction } from "#/types/api";
@@ -74,7 +74,7 @@ const UpcomingSoonCard = memo(function UpcomingSoonCard({
 									}}
 								>
 									{income ? "+" : "-"}
-									{formatMoney(t.amount, t.currency)}
+									<Money amount={t.amount} currency={t.currency} />
 								</Typography>
 							</Box>
 						);

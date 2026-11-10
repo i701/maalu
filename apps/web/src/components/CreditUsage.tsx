@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
+import Money from "#/components/Money";
 import Typography from "@mui/material/Typography";
 import { creditUsage } from "#/lib/accounts";
-import { formatMoney } from "#/lib/format";
 import type { Account } from "#/types/api";
 import TonalChip from "./TonalChip";
 
@@ -16,8 +16,8 @@ export default function CreditUsage({ account }: { account: Account }) {
 			{usage && (
 				<>
 					<Typography variant="caption" sx={{ color: over ? "error.main" : "text.secondary" }}>
-						{formatMoney(usage.owed, account.currency)} of{" "}
-						{formatMoney(usage.limit, account.currency)} used ({usage.percent}%)
+						<Money amount={usage.owed} currency={account.currency} /> of{" "}
+						<Money amount={usage.limit} currency={account.currency} /> used ({usage.percent}%)
 					</Typography>
 					<Box
 						role="progressbar"

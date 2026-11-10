@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import { FullAmountTip } from "#/components/Money";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
@@ -264,7 +265,6 @@ function Dock({ items, color }: { items: DockItem[]; color: string }) {
 						{item.label}
 					</Typography>
 					<Typography
-						title={item.full}
 						sx={{
 							fontSize: 13,
 							fontWeight: 600,
@@ -274,7 +274,7 @@ function Dock({ items, color }: { items: DockItem[]; color: string }) {
 							overflowWrap: "anywhere",
 						}}
 					>
-						{item.value}
+						{item.full ? <FullAmountTip full={item.full}>{item.value}</FullAmountTip> : item.value}
 					</Typography>
 				</Box>
 			))}

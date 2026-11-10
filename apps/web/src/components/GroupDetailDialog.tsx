@@ -1,4 +1,5 @@
 import CloseIcon from "@mui/icons-material/Close";
+import Money from "#/components/Money";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import Box from "@mui/material/Box";
@@ -82,7 +83,7 @@ function Members({
 						}}
 					>
 						{t.type === "income" ? "+" : "−"}
-						{formatMoney(t.amount, t.currency)}
+						<Money amount={t.amount} currency={t.currency} />
 					</Typography>
 					<IconButton
 						size="small"

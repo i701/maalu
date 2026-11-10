@@ -1,9 +1,10 @@
 import Grid from "@mui/material/Grid";
+import Money from "#/components/Money";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Reveal from "#/components/Reveal";
 import StatCard from "#/components/StatCard";
-import { formatMoney, formatMoneyCompact, formatMoneyFull } from "#/lib/format";
+import { formatMoney } from "#/lib/format";
 import { GRADIENT } from "#/lib/m3";
 import { staggerChildren, useLastDefined } from "#/lib/motion";
 import { useCardMorph } from "#/lib/card-morph";
@@ -67,7 +68,6 @@ export default function TransactionTotals({
 										{part.label}
 									</Typography>
 									<Typography
-										title={formatMoneyFull(part.value, shown.currency)}
 										sx={{
 											fontSize: 15,
 											fontWeight: 600,
@@ -76,7 +76,7 @@ export default function TransactionTotals({
 											overflowWrap: "anywhere",
 										}}
 									>
-										{formatMoneyCompact(part.value, shown.currency)}
+										<Money amount={part.value} currency={shown.currency} compact />
 									</Typography>
 								</Box>
 							))}

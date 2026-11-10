@@ -1,8 +1,9 @@
 import { useCardMorph } from "#/lib/card-morph";
+import Money from "#/components/Money";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { memo } from "react";
-import { formatMoney, formatWhen } from "#/lib/format";
+import { formatWhen } from "#/lib/format";
 import { ACCENT } from "#/lib/m3";
 import type { Transaction } from "#/types/api";
 import { RouterButton } from "../RouterLinks";
@@ -90,7 +91,7 @@ const LatestTransactionsCard = memo(function LatestTransactionsCard({
 									}}
 								>
 									{kind.sign}
-									{formatMoney(t.amount, t.currency)}
+									<Money amount={t.amount} currency={t.currency} />
 								</Typography>
 							</Box>
 						);

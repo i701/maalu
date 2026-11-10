@@ -1,4 +1,5 @@
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
+import Money from "#/components/Money";
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import IconButton from "@mui/material/IconButton";
@@ -7,7 +8,7 @@ import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
-import { formatDate, formatMoney } from "#/lib/format";
+import { formatDate } from "#/lib/format";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
 import { addGoalEntryFn, deleteGoalEntryFn } from "#/server/goals";
@@ -127,7 +128,7 @@ function EntryRow({ goal, entry }: { goal: Goal; entry: Goal["entries"][number] 
 				sx={{ fontVariantNumeric: "tabular-nums", color: negative ? "error.main" : "success.main" }}
 			>
 				{negative ? "" : "+"}
-				{formatMoney(entry.amount, goal.currency)}
+				<Money amount={entry.amount} currency={goal.currency} />
 			</Typography>
 			<IconButton
 				aria-label="Remove entry"

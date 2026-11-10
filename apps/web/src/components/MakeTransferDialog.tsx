@@ -1,4 +1,5 @@
 import Alert from "@mui/material/Alert";
+import Money from "#/components/Money";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -51,7 +52,7 @@ export default function MakeTransferDialog({
 			<DialogTitle id="make-transfer-title">Make one transfer</DialogTitle>
 			<DialogContent>
 				<DialogContentText>
-					Move {formatMoney(expense.amount, expense.currency)} from {from} to {to}
+					Move <Money amount={expense.amount} currency={expense.currency} /> from {from} to {to}
 					{expense.currency === income.currency
 						? ""
 						: `, arriving as ${formatMoney(income.amount, income.currency)}`}

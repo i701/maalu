@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import Money from "#/components/Money";
 import Typography from "@mui/material/Typography";
 import { Link } from "@tanstack/react-router";
 import { memo, useMemo } from "react";
@@ -87,7 +88,7 @@ const NeedsWantsCard = memo(function NeedsWantsCard({
 									</Typography>
 								</Box>
 								<Typography sx={{ fontSize: 14, fontVariantNumeric: "tabular-nums" }}>
-									{formatMoney(r.total, currency)}
+									<Money amount={r.total} currency={currency} />
 									<Typography
 										component="span"
 										sx={{ ml: 1, fontSize: 12, color: "text.secondary" }}

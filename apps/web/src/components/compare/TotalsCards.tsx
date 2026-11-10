@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import Money from "#/components/Money";
 import { memo } from "react";
 import type { Totals } from "#/lib/compare";
 import { formatMoney } from "#/lib/format";
@@ -32,7 +33,7 @@ const TotalsCards = memo(function TotalsCards({
 						<Box sx={{ display: "grid", gap: 0.75, justifyItems: "start" }}>
 							<DeltaChip row={change} currency={currency} goodWhenUp={goodWhenUp} />
 							<Box component="span" sx={{ fontSize: 13, color: "text.secondary" }}>
-								{formatMoney(change.before, currency)} in {against}
+								<Money amount={change.before} currency={currency} /> in {against}
 							</Box>
 						</Box>
 					}

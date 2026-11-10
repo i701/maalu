@@ -1,4 +1,5 @@
 import Alert from "@mui/material/Alert";
+import Money from "#/components/Money";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Radio from "@mui/material/Radio";
 import RadioGroup from "@mui/material/RadioGroup";
@@ -92,8 +93,8 @@ export default function LinkRefundDialog({
 		>
 			<Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
 				{txTitle(income)} · {formatDate(income.transaction_date)} ·{" "}
-				{formatMoney(income.amount, income.currency)}. Choose the purchase this money was for. It
-				then counts as spending given back, not as income.
+				<Money amount={income.amount} currency={income.currency} />. Choose the purchase this money
+				was for. It then counts as spending given back, not as income.
 			</Typography>
 			<SearchField value="" placeholder="Search purchases" onChange={(q) => void search(q)} />
 			<Stack sx={{ mt: 2, maxHeight: 300, overflowY: "auto" }}>
@@ -145,8 +146,8 @@ export default function LinkRefundDialog({
 						sx={{ color: itemsAdd ? "text.secondary" : "error.main" }}
 						aria-live="polite"
 					>
-						The items add up to {formatMoney(itemsTotal, chosen.currency)}; the money that came back
-						is {formatMoney(income.amount, income.currency)}.
+						The items add up to <Money amount={itemsTotal} currency={chosen.currency} />; the money
+						that came back is <Money amount={income.amount} currency={income.currency} />.
 					</Typography>
 				</Stack>
 			)}

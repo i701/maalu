@@ -1,9 +1,9 @@
 import Box from "@mui/material/Box";
+import Money from "#/components/Money";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import { memo } from "react";
 import { dayLabel, type PlanDay, type PlanRow } from "#/lib/plan";
-import { formatMoney } from "#/lib/format";
 import { ACCENT } from "#/lib/m3";
 import { RouterButton } from "../RouterLinks";
 import TonalChip from "../TonalChip";
@@ -56,7 +56,7 @@ const Row = memo(function Row({
 					}}
 				>
 					{income ? "+" : row.estimate ? "≈ −" : "−"}
-					{formatMoney(row.amount, currency)}
+					<Money amount={row.amount} currency={currency} />
 				</Typography>
 				{row.left !== null && (
 					<Typography
@@ -66,7 +66,7 @@ const Row = memo(function Row({
 							color: row.short ? "var(--chart-expense)" : "text.secondary",
 						}}
 					>
-						{formatMoney(row.left, currency)} left
+						<Money amount={row.left} currency={currency} /> left
 					</Typography>
 				)}
 			</Box>

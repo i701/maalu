@@ -1,8 +1,8 @@
 import { useCardMorph } from "#/lib/card-morph";
+import Money from "#/components/Money";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Reveal from "#/components/Reveal";
-import { formatMoney } from "#/lib/format";
 import { categoryAccent } from "#/lib/categories";
 import { staggerChildren, useLastDefined } from "#/lib/motion";
 import type { CategoryTotal, CategoryTotals } from "#/types/api";
@@ -32,7 +32,7 @@ function Section({
 							{row.category}
 						</Typography>
 						<Typography sx={{ fontSize: 14, fontVariantNumeric: "tabular-nums" }}>
-							{formatMoney(row.total, currency)}
+							<Money amount={row.total} currency={currency} />
 						</Typography>
 					</Box>
 					<Box

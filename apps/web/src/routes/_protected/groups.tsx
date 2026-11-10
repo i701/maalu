@@ -1,4 +1,5 @@
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
+import Money from "#/components/Money";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
@@ -22,7 +23,6 @@ import Symbol from "#/components/Symbol";
 import TableCard from "#/components/TableCard";
 import TablePager from "#/components/TablePager";
 import TableToolbar from "#/components/TableToolbar";
-import { formatMoney } from "#/lib/format";
 import { dateSpan } from "#/lib/groups";
 import { useLiveSearch } from "#/lib/live-search";
 import { ACCENT } from "#/lib/m3";
@@ -69,7 +69,7 @@ function Net({ group }: { group: TransactionGroup }) {
 				color: Number(group.net) < 0 ? "error.main" : "text.primary",
 			}}
 		>
-			{formatMoney(group.net, group.currency)}
+			<Money amount={group.net} currency={group.currency} />
 		</Typography>
 	);
 }
