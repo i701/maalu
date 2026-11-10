@@ -10,6 +10,7 @@ import PageHeader from "#/components/PageHeader";
 import BackupCard from "#/components/BackupCard";
 import NotificationSettings from "#/components/NotificationSettings";
 import ApiKeysCard from "#/components/api-keys/ApiKeysCard";
+import NumbersCard from "#/components/NumbersCard";
 import InstallCard from "#/components/pwa/InstallCard";
 import PasswordCard from "#/components/PasswordCard";
 import SessionsCard from "#/components/SessionsCard";
@@ -94,6 +95,7 @@ function SettingsPage() {
 					currency={me.base_currency}
 				/>
 				<NotificationSettings me={me} email={email} />
+				<NumbersCard me={me} />
 				<InstallCard />
 				<PasswordCard twoFactor={me.two_factor_enabled} />
 				<TwoFactorSettings enabled={me.two_factor_enabled} />

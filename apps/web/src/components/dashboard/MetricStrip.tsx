@@ -1,12 +1,14 @@
 import { useCardMorph } from "#/lib/card-morph";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { ACCENT } from "#/lib/m3";
+import { GRADIENT } from "#/lib/m3";
 import Symbol from "../Symbol";
 
 export type StripItem = {
 	label: string;
 	value: string;
+	/** The full amount, shown on hover when `value` is the short form. */
+	full?: string;
 	/** The change against the period before, in percent; null when there is nothing to compare. */
 	percent: number | null;
 	/** Whether a rise is good news (income, savings) or bad (spending). */
@@ -21,7 +23,7 @@ function Delta({ item, against }: { item: StripItem; against: string }) {
 		return (
 			<Typography
 				variant="caption"
-				sx={{ color: "text.secondary" }}
+				sx={{ color: "rgb(255 255 255 / 0.8)" }}
 				title={`No change vs ${against}`}
 			>
 				No change
@@ -38,7 +40,8 @@ function Delta({ item, against }: { item: StripItem; against: string }) {
 				alignItems: "center",
 				gap: 0.25,
 				fontWeight: 600,
-				color: good ? ACCENT.green : "var(--md-sys-color-error)",
+				// pale tints that read on the dark gradient; the arrow and the title carry the meaning too
+				color: good ? "#a7f3d0" : "#fecdd3",
 			}}
 		>
 			<Symbol name={up ? "arrow_upward" : "arrow_downward"} size={12} />
@@ -61,7 +64,10 @@ export default function MetricStrip({ items, against }: { items: StripItem[]; ag
 				gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))`,
 				py: 1.25,
 				...cardMorph,
-				bgcolor: "var(--md-sys-color-surface-container-low)",
+				color: "#fff",
+				// one blend across the strip: green for income, red for spending, blue for what was kept,
+				// with deep stops between so the colours do not turn muddy where they meet
+				background: `linear-gradient(90deg, ${GRADIENT.emerald[0]} 0%, ${GRADIENT.emerald[1]} 22%, ${GRADIENT.rose[1]} 38%, ${GRADIENT.rose[0]} 50%, ${GRADIENT.rose[1]} 62%, ${GRADIENT.blue[1]} 78%, ${GRADIENT.blue[0]} 100%)`,
 			}}
 		>
 			{items.map((item, i) => (
@@ -71,13 +77,14 @@ export default function MetricStrip({ items, against }: { items: StripItem[]; ag
 						px: 1.25,
 						minWidth: 0,
 						textAlign: "center",
-						borderLeft: i === 0 ? 0 : "1px solid var(--md-sys-color-outline-variant)",
+						borderLeft: i === 0 ? 0 : "1px solid rgb(255 255 255 / 0.16)",
 					}}
 				>
-					<Typography variant="caption" sx={{ display: "block", color: "text.secondary" }}>
+					<Typography variant="caption" sx={{ display: "block", color: "rgb(255 255 255 / 0.78)" }}>
 						{item.label}
 					</Typography>
 					<Typography
+						title={item.full}
 						sx={{
 							fontSize: 13,
 							fontWeight: 600,

@@ -116,7 +116,13 @@ class UserService:
             user.default_account_id = account_id
         if "start_from_template" in changes:
             user.start_from_template = changes["start_from_template"]
-        for flag in ("notify_payments", "notify_budget", "notify_goals", "notify_email"):
+        for flag in (
+            "notify_payments",
+            "notify_budget",
+            "notify_goals",
+            "notify_email",
+            "compact_numbers",
+        ):
             if flag in changes:
                 setattr(user, flag, changes[flag])
         await self.db.flush()

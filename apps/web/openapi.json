@@ -8790,6 +8790,10 @@
             "title": "Base Currency",
             "type": "string"
           },
+          "compact_numbers": {
+            "title": "Compact Numbers",
+            "type": "boolean"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -8853,6 +8857,7 @@
           "notify_budget",
           "notify_goals",
           "notify_email",
+          "compact_numbers",
           "two_factor_enabled",
           "created_at"
         ],
@@ -8862,6 +8867,12 @@
       "UserUpdate": {
         "description": "Partial update of your settings: only provided fields change.",
         "properties": {
+          "compact_numbers": {
+            "default": false,
+            "description": "Show amounts of a thousand and over in a short form (1.2K, 3.4M) everywhere.",
+            "title": "Compact Numbers",
+            "type": "boolean"
+          },
           "default_account_id": {
             "anyOf": [
               {

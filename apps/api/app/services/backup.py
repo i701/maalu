@@ -176,6 +176,7 @@ class BackupService:
                 "notify_budget": user.notify_budget,
                 "notify_goals": user.notify_goals,
                 "notify_email": user.notify_email,
+                "compact_numbers": user.compact_numbers,
                 "default_account_id": _encode(user.default_account_id),
             },
             "counts": {name: len(rows) for name, rows in tables.items()},
@@ -261,6 +262,7 @@ class BackupService:
         user.notify_budget = bool(settings.get("notify_budget", True))
         user.notify_goals = bool(settings.get("notify_goals", True))
         user.notify_email = bool(settings.get("notify_email", False))
+        user.compact_numbers = bool(settings.get("compact_numbers", False))
         default = settings.get("default_account_id")
         user.default_account_id = new_ids["accounts"].get(default) if default else None
 

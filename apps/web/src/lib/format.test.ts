@@ -1,5 +1,16 @@
-import { describe, expect, it } from "vitest";
-import { formatAgo, formatDate, formatTime, formatWhen, sumDecimals, trimRate } from "./format";
+import { afterEach, describe, expect, it } from "vitest";
+import {
+	formatAgo,
+	formatDate,
+	formatMoney,
+	formatMoneyCompact,
+	formatMoneyFull,
+	setShortNumbers,
+	formatTime,
+	formatWhen,
+	sumDecimals,
+	trimRate,
+} from "./format";
 
 describe("sumDecimals", () => {
 	it("adds decimal strings exactly", () => {
@@ -82,5 +93,60 @@ describe("formatAgo", () => {
 
 	it("is the date after a month", () => {
 		expect(formatAgo(ago(40 * 86400), now)).toBe(formatDate(ago(40 * 86400)));
+	});
+});
+
+// Intl puts a no-break space between the code and the number (so it never wraps there); read it as a space.
+const plain = (text: string) => text.replaceAll("\u00a0", " ");
+
+describe("formatMoneyCompact", () => {
+	it("keeps the full figure below ten thousand", () => {
+		expect(formatMoneyCompact("9999.99", "MVR")).toBe(formatMoney("9999.99", "MVR"));
+		expect(formatMoneyCompact("0", "MVR")).toBe(formatMoney("0", "MVR"));
+		expect(formatMoneyCompact("-250.5", "USD")).toBe(formatMoney("-250.5", "USD"));
+	});
+
+	it("shortens ten thousand and over to K, M, B and T", () => {
+		expect(plain(formatMoneyCompact("10000", "MVR"))).toBe("MVR 10K");
+		expect(plain(formatMoneyCompact("12345.67", "MVR"))).toBe("MVR 12.35K");
+		expect(plain(formatMoneyCompact("513577000", "MVR"))).toBe("MVR 513.58M");
+		expect(plain(formatMoneyCompact("1000000000", "USD"))).toBe("$1B");
+		expect(plain(formatMoneyCompact("2400000000000", "USD"))).toBe("$2.4T");
+	});
+
+	it("keeps the sign of a debt", () => {
+		expect(plain(formatMoneyCompact("-1500000", "MVR"))).toBe("-MVR 1.5M");
+	});
+
+	it("falls back to the full figure for something that is not a number or a currency", () => {
+		expect(formatMoneyCompact("abc", "MVR")).toBe(formatMoney("abc", "MVR"));
+	});
+});
+
+describe("the short numbers setting", () => {
+	afterEach(() => setShortNumbers(false));
+
+	it("leaves amounts in full by default", () => {
+		expect(plain(formatMoney("1234.5", "MVR"))).toBe("MVR 1,234.50");
+		expect(plain(formatMoney("513577000", "MVR"))).toBe("MVR 513,577,000.00");
+	});
+
+	it("shortens every amount from a thousand up when it is on, and only those", () => {
+		setShortNumbers(true);
+		expect(plain(formatMoney("999.99", "MVR"))).toBe("MVR 999.99");
+		expect(plain(formatMoney("1234.5", "MVR"))).toBe("MVR 1.23K");
+		expect(plain(formatMoney("513577000", "MVR"))).toBe("MVR 513.58M");
+		expect(plain(formatMoney("-2500", "USD"))).toBe("-$2.5K");
+	});
+
+	it("shortens the tight places from a thousand too when it is on", () => {
+		expect(plain(formatMoneyCompact("5000", "MVR"))).toBe("MVR 5,000.00");
+		setShortNumbers(true);
+		expect(plain(formatMoneyCompact("5000", "MVR"))).toBe("MVR 5K");
+	});
+
+	it("always has the exact amount for a hover title", () => {
+		setShortNumbers(true);
+		expect(plain(formatMoneyFull("1234.5", "MVR"))).toBe("MVR 1,234.50");
 	});
 });

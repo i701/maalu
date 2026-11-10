@@ -58,6 +58,14 @@ describe("compact", () => {
 		expect(compact(3_400_000)).toBe("3.4M");
 	});
 
+	it("goes on to billions and trillions", () => {
+		expect(compact(2_400_000_000)).toBe("2.4B");
+		expect(compact(513_577_000)).toBe("514M");
+		expect(compact(1_000_000_000)).toBe("1B");
+		expect(compact(7_250_000_000_000)).toBe("7.3T");
+		expect(compact(-3_000_000_000)).toBe("-3B");
+	});
+
 	it("keeps the sign", () => {
 		expect(compact(-1500)).toBe("-1.5K");
 		expect(compact(-42)).toBe("-42");

@@ -1,5 +1,5 @@
 /** Display only. Amounts stay decimal strings everywhere else. */
-export function formatMoney(amount: string, currency: string): string {
+function fullMoney(amount: string, currency: string): string {
 	try {
 		return new Intl.NumberFormat("en", { style: "currency", currency }).format(
 			amount as unknown as number, // Intl accepts decimal strings and keeps them exact
@@ -8,6 +8,59 @@ export function formatMoney(amount: string, currency: string): string {
 		return `${amount} ${currency}`;
 	}
 }
+
+/** From this size up, `formatMoneyCompact` shortens: 10,000 and over becomes 10K, 1.2M, 3.4B. */
+export const COMPACT_FROM = 10_000;
+/** With the "short numbers" setting on, everything from a thousand up is shortened. */
+export const COMPACT_FROM_EVERYWHERE = 1_000;
+
+// The person's "short numbers" setting. It is set once per render by the signed-in layout (from the
+// session), so every `formatMoney` call on the page follows it without each one being told.
+let shortEverywhere = false;
+
+/** Turn the "short numbers" setting on or off for what is formatted next. */
+export function setShortNumbers(on: boolean): void {
+	shortEverywhere = on;
+}
+
+function compactMoney(value: number, currency: string): string | null {
+	try {
+		return new Intl.NumberFormat("en", {
+			style: "currency",
+			currency,
+			notation: "compact",
+			maximumFractionDigits: 2,
+		}).format(value);
+	} catch {
+		return null;
+	}
+}
+
+/** An amount for display. Full ("MVR 1,234.50") unless the person turned on short numbers, which
+ * shortens a thousand and over ("MVR 1.23K"). */
+export function formatMoney(amount: string, currency: string): string {
+	const value = Number(amount);
+	if (shortEverywhere && Number.isFinite(value) && Math.abs(value) >= COMPACT_FROM_EVERYWHERE)
+		return compactMoney(value, currency) ?? fullMoney(amount, currency);
+	return fullMoney(amount, currency);
+}
+
+/**
+ * A short form for tight places (a strip of three figures on a phone): "MVR 513.58M", "$1.2B",
+ * "MVR 12K". Below ten thousand it is the full figure, cents and all, since a short form there
+ * would hide detail for no gain (a thousand, with short numbers on). The short form is for reading
+ * at a glance, so the full amount should stay available (a title on the element), which is what
+ * `fullMoney` is for: it never shortens.
+ */
+export function formatMoneyCompact(amount: string, currency: string): string {
+	const value = Number(amount);
+	const from = shortEverywhere ? COMPACT_FROM_EVERYWHERE : COMPACT_FROM;
+	if (!Number.isFinite(value) || Math.abs(value) < from) return fullMoney(amount, currency);
+	return compactMoney(value, currency) ?? fullMoney(amount, currency);
+}
+
+/** The exact amount whatever the setting, for a hover title next to a short form. */
+export const formatMoneyFull = fullMoney;
 
 export function formatDate(iso: string): string {
 	return new Date(iso.length === 10 ? `${iso}T00:00:00` : iso).toLocaleDateString("en-GB", {

@@ -24,7 +24,14 @@ export function compact(value: number): string {
 	const abs = Math.abs(value);
 	const sign = value < 0 ? "-" : "";
 	if (abs < 1000) return `${sign}${Math.round(abs)}`;
-	const [n, unit] = abs < 1_000_000 ? [abs / 1000, "K"] : [abs / 1_000_000, "M"];
+	const [n, unit] =
+		abs < 1_000_000
+			? [abs / 1000, "K"]
+			: abs < 1_000_000_000
+				? [abs / 1_000_000, "M"]
+				: abs < 1_000_000_000_000
+					? [abs / 1_000_000_000, "B"]
+					: [abs / 1_000_000_000_000, "T"];
 	return `${sign}${n >= 100 ? Math.round(n) : Number(n.toFixed(1))}${unit}`;
 }
 

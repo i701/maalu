@@ -30,6 +30,9 @@ class User(Base):
     notify_goals: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     # Also email new notifications to the sign-in address, as one digest (needs SMTP on the server).
     notify_email: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    # Show big amounts in a short form (1.2K, 3.4M) everywhere, from a thousand up. Off, the short
+    # form is only used in tight places (a strip of figures on a phone), from ten thousand up.
+    compact_numbers: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     # Two-factor (an authenticator app). The secret is kept encrypted (`app/two_factor.py`); it is
     # set during setup but only counts once `two_factor_enabled` is true.
     two_factor_secret: Mapped[str | None] = mapped_column(String(255), default=None)

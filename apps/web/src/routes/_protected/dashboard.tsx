@@ -23,7 +23,7 @@ import PageHeader from "#/components/PageHeader";
 import PendingOverlay from "#/components/PendingOverlay";
 import Symbol from "#/components/Symbol";
 import { monthBounds, monthLabel, percentChange, shiftMonth } from "#/lib/dashboard";
-import { formatMoney, sumDecimals } from "#/lib/format";
+import { formatMoney, formatMoneyCompact, sumDecimals, formatMoneyFull } from "#/lib/format";
 import { staggerChildren } from "#/lib/motion";
 import { localToday } from "#/lib/planned";
 import { unwrap } from "#/lib/unwrap";
@@ -210,19 +210,22 @@ function DashboardPage() {
 							items={[
 								{
 									label: "Income",
-									value: formatMoney(totals.income, currency),
+									value: formatMoneyCompact(totals.income, currency),
+									full: formatMoneyFull(totals.income, currency),
 									percent: percentChange(totals.income, before.income),
 									goodWhenUp: true,
 								},
 								{
 									label: "Spent",
-									value: formatMoney(totals.expense, currency),
+									value: formatMoneyCompact(totals.expense, currency),
+									full: formatMoneyFull(totals.expense, currency),
 									percent: percentChange(totals.expense, before.expense),
 									goodWhenUp: false,
 								},
 								{
 									label: Number(saved) >= 0 ? "Saved" : "Overspent",
-									value: formatMoney(saved, currency),
+									value: formatMoneyCompact(saved, currency),
+									full: formatMoneyFull(saved, currency),
 									percent: percentChange(saved, savedBefore),
 									goodWhenUp: true,
 								},

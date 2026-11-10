@@ -4,6 +4,8 @@ export type SessionUser = {
 	id: string;
 	email: string;
 	base_currency: string;
+	/** The "short numbers" setting, cached like the base currency so every page knows it. */
+	compact_numbers?: boolean;
 };
 
 // The API's session token lives only in this encrypted, httpOnly cookie; the browser never sees it.

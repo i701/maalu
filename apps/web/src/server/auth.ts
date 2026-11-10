@@ -30,7 +30,12 @@ async function finishSession(token: string) {
 	await session.update({
 		token,
 		refreshedAt: Date.now(),
-		user: { id: me.data.id, email: me.data.email, base_currency: me.data.base_currency },
+		user: {
+			id: me.data.id,
+			email: me.data.email,
+			base_currency: me.data.base_currency,
+			compact_numbers: me.data.compact_numbers,
+		},
 	});
 	return { ok: true as const, data: { twoFactor: false } };
 }
@@ -126,9 +131,21 @@ export const updateMeFn = createServerFn({ method: "POST" })
 			notify_budget: z.boolean().optional(),
 			notify_goals: z.boolean().optional(),
 			notify_email: z.boolean().optional(),
+			compact_numbers: z.boolean().optional(),
 		}),
 	)
-	.handler(async ({ data }) => apiRequest<User>("/users/me", { method: "PATCH", body: data }));
+	.handler(async ({ data }) => {
+		const res = await apiRequest<User>("/users/me", { method: "PATCH", body: data });
+		// the cookie caches this one setting (every page formats amounts by it), so keep it in step
+		if (res.ok && data.compact_numbers !== undefined) {
+			const session = await getAppSession();
+			if (session.data.user)
+				await session.update({
+					user: { ...session.data.user, compact_numbers: res.data.compact_numbers },
+				});
+		}
+		return res;
+	});
 
 export const getMeFn = createServerFn({ method: "GET" }).handler(async () =>
 	apiRequest<User>("/users/me"),

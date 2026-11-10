@@ -3,6 +3,7 @@ import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import AppShell from "#/components/AppShell";
 import RevalidateOnFocus from "#/components/RevalidateOnFocus";
 import { getSessionFn } from "#/server/auth";
+import { setShortNumbers } from "#/lib/format";
 import { MapConfigProvider } from "#/lib/map-config";
 import { getMapConfigFn } from "#/server/map";
 import { unreadCountFn } from "#/server/notifications";
@@ -27,6 +28,8 @@ export const Route = createFileRoute("/_protected")({
 function ProtectedLayout() {
 	const { user } = Route.useRouteContext();
 	const { unread, pending, map } = Route.useLoaderData();
+	// every amount below is written by the person's "short numbers" setting (cached in the session)
+	setShortNumbers(Boolean(user.compact_numbers));
 	return (
 		<AppShell user={user} unread={unread} pending={pending}>
 			<RevalidateOnFocus />

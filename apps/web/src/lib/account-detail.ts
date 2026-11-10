@@ -8,7 +8,7 @@ import type {
 	TransactionTotals,
 } from "#/types/api";
 import { creditUsage } from "./accounts";
-import { formatDate, formatMoney } from "./format";
+import { formatDate, formatMoneyCompact, formatMoneyFull } from "./format";
 
 /** What a transaction did to one particular account, for that account's own page. */
 export type AccountEffect = {
@@ -111,10 +111,19 @@ export function accountDock(
 	return [
 		{
 			label: creditUsage(account) ? "Owed" : "Balance",
-			value: formatMoney(account.balance, account.currency),
+			value: formatMoneyCompact(account.balance, account.currency),
+			full: formatMoneyFull(account.balance, account.currency),
 			tone: account.balance.startsWith("-") ? "negative" : undefined,
 		},
-		{ label: `In ${month}`, value: formatMoney(totals.income, totals.currency) },
-		{ label: `Out ${month}`, value: formatMoney(totals.expense, totals.currency) },
+		{
+			label: `In ${month}`,
+			value: formatMoneyCompact(totals.income, totals.currency),
+			full: formatMoneyFull(totals.income, totals.currency),
+		},
+		{
+			label: `Out ${month}`,
+			value: formatMoneyCompact(totals.expense, totals.currency),
+			full: formatMoneyFull(totals.expense, totals.currency),
+		},
 	];
 }

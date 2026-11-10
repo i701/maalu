@@ -186,3 +186,14 @@ def test_the_admin_command_says_why_it_failed(monkeypatch, capsys):
     assert "bad key" in capsys.readouterr().err
     monkeypatch.setattr(settings, "smtp_host", "")
     assert admin.test_email("me@example.test") == 1
+
+
+async def test_short_numbers_is_a_setting_that_defaults_off_and_is_in_backups(
+    client: AsyncClient, auth
+):
+    assert (await client.get(ME, headers=auth)).json()["compact_numbers"] is False
+    res = await client.patch(ME, json={"compact_numbers": True}, headers=auth)
+    assert res.status_code == 200, res.text
+    assert res.json()["compact_numbers"] is True
+    backup = (await client.get("/api/v1/backup", headers=auth)).json()
+    assert backup["settings"]["compact_numbers"] is True

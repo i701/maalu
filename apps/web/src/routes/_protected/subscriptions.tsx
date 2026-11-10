@@ -29,7 +29,13 @@ import TonalChip from "#/components/TonalChip";
 import TableCard from "#/components/TableCard";
 import TablePager from "#/components/TablePager";
 import TableToolbar from "#/components/TableToolbar";
-import { daysUntil, formatDate, formatInterval, formatMoney } from "#/lib/format";
+import {
+	daysUntil,
+	formatDate,
+	formatInterval,
+	formatMoney,
+	formatMoneyCompact,
+} from "#/lib/format";
 import { STATUS_ACCENT } from "#/lib/accents";
 import { installmentsText } from "#/lib/subscription";
 import { useLiveSearch } from "#/lib/live-search";
@@ -298,7 +304,7 @@ function SubscriptionsPage() {
 					{ symbol: "event_repeat", label: `${summary.active_count} active` },
 					{
 						symbol: "payments",
-						label: `${formatMoney(summary.monthly_base_total, summary.currency)} / month`,
+						label: `${formatMoneyCompact(summary.monthly_base_total, summary.currency)} / month`,
 					},
 				]}
 				description="Recurring charges. Link a transaction to a subscription to mark it paid."

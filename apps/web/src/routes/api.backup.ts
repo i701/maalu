@@ -48,7 +48,12 @@ async function forward(
 			.catch(() => null);
 		if (me)
 			await session.update({
-				user: { id: me.id, email: me.email, base_currency: me.base_currency },
+				user: {
+					id: me.id,
+					email: me.email,
+					base_currency: me.base_currency,
+					compact_numbers: me.compact_numbers,
+				},
 			});
 	}
 

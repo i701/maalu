@@ -222,6 +222,8 @@ function reactive(direction: "down" | "up") {
 export type DockItem = {
 	label: string;
 	value: string;
+	/** The full amount, shown on hover when `value` is the short form. */
+	full?: string;
 	/** Colours the figure: a debt or a shortfall reads as a warm tint. */
 	tone?: "negative";
 };
@@ -262,6 +264,7 @@ function Dock({ items, color }: { items: DockItem[]; color: string }) {
 						{item.label}
 					</Typography>
 					<Typography
+						title={item.full}
 						sx={{
 							fontSize: 13,
 							fontWeight: 600,

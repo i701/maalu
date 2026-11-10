@@ -6269,6 +6269,8 @@ export interface components {
         UserResponse: {
             /** Base Currency */
             base_currency: string;
+            /** Compact Numbers */
+            compact_numbers: boolean;
             /**
              * Created At
              * Format: date-time
@@ -6307,6 +6309,12 @@ export interface components {
          * @description Partial update of your settings: only provided fields change.
          */
         UserUpdate: {
+            /**
+             * Compact Numbers
+             * @description Show amounts of a thousand and over in a short form (1.2K, 3.4M) everywhere.
+             * @default false
+             */
+            compact_numbers: boolean;
             /**
              * Default Account Id
              * @description The account a new transaction starts in. Explicit null clears it.

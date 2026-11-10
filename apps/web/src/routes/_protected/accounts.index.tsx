@@ -36,7 +36,7 @@ import StatCard from "#/components/StatCard";
 import SearchField from "#/components/SearchField";
 import TableCard from "#/components/TableCard";
 import TableToolbar from "#/components/TableToolbar";
-import { formatMoney, sumDecimals } from "#/lib/format";
+import { formatMoney, formatMoneyCompact, sumDecimals, formatMoneyFull } from "#/lib/format";
 import { useLiveSearch } from "#/lib/live-search";
 import { ACCENT } from "#/lib/m3";
 import { staggerChildren } from "#/lib/motion";
@@ -192,11 +192,20 @@ function AccountsPage() {
 				shape={1}
 				morph="up"
 				dock={[
-					{ label: "Assets", value: formatMoney(summary.assets, summary.currency) },
-					{ label: "Liabilities", value: formatMoney(summary.liabilities, summary.currency) },
+					{
+						label: "Assets",
+						value: formatMoneyCompact(summary.assets, summary.currency),
+						full: formatMoneyFull(summary.assets, summary.currency),
+					},
+					{
+						label: "Liabilities",
+						value: formatMoneyCompact(summary.liabilities, summary.currency),
+						full: formatMoneyFull(summary.liabilities, summary.currency),
+					},
 					{
 						label: "Total",
-						value: formatMoney(summary.total, summary.currency),
+						value: formatMoneyCompact(summary.total, summary.currency),
+						full: formatMoneyFull(summary.total, summary.currency),
 						tone: isNegative(summary.total) ? "negative" : undefined,
 					},
 				]}
@@ -205,7 +214,10 @@ function AccountsPage() {
 						symbol: "account_balance",
 						label: `${accounts.length} ${accounts.length === 1 ? "account" : "accounts"}`,
 					},
-					{ symbol: "savings", label: `Net ${formatMoney(summary.total, summary.currency)}` },
+					{
+						symbol: "savings",
+						label: `Net ${formatMoneyCompact(summary.total, summary.currency)}`,
+					},
 				]}
 				description="Wallets, bank accounts, cards and loans. Balances follow the transactions you link to them."
 				action={
