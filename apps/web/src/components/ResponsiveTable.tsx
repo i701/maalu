@@ -11,30 +11,38 @@ import { useViewMode } from "#/lib/view-mode";
 /** The fill of a row bar. One step up from the card they sit in, so they show in light mode too. */
 export const ROW_FILL = "var(--md-sys-color-surface-container-high)";
 
-/** The desktop table's rows as separate rounded bars, like the cards of the narrow view: a gap
- * between rows, a tonal fill, and the row's corners on its first and last cell. Hover and selection
- * tint the cells (a row's own background would sit behind them). */
-const ROW_CARDS = {
-	borderCollapse: "separate",
-	borderSpacing: "0 8px",
-	"& .MuiTableBody-root .MuiTableCell-root": {
-		bgcolor: ROW_FILL,
+/** The table mode's desktop table: a real table. One framed surface, a header row with small
+ * capitals, no rules between rows and a tint under the pointer. (The cards mode is the one
+ * with separate rounded cards, so the two modes no longer look alike.) */
+const TABLE = {
+	"& .MuiTableCell-root": { borderBottom: 0, py: 1 },
+	"& .MuiTableHead-root .MuiTableCell-root": {
+		bgcolor: "var(--md-sys-color-surface-container)",
+		color: "var(--md-sys-color-on-surface-variant)",
+		fontSize: "0.6875rem",
+		fontWeight: 600,
+		letterSpacing: "0.06em",
+		textTransform: "uppercase",
+		py: 0.75,
+	},
+	"& .MuiTableBody-root .MuiTableRow-root": {
 		transition: "background-color var(--spring-effects-fast-dur) var(--spring-effects-fast)",
 	},
-	"& .MuiTableBody-root .MuiTableCell-root:first-of-type": {
-		borderStartStartRadius: "var(--shape-md)",
-		borderEndStartRadius: "var(--shape-md)",
+	"& .MuiTableBody-root .MuiTableRow-root:hover": {
+		bgcolor: "color-mix(in srgb, var(--md-sys-color-secondary-container) 45%, transparent)",
 	},
-	"& .MuiTableBody-root .MuiTableCell-root:last-of-type": {
-		borderStartEndRadius: "var(--shape-md)",
-		borderEndEndRadius: "var(--shape-md)",
-	},
-	"& .MuiTableBody-root .MuiTableRow-root:hover .MuiTableCell-root": {
-		bgcolor: `color-mix(in srgb, var(--md-sys-color-secondary-container) 55%, ${ROW_FILL})`,
-	},
-	"& .MuiTableBody-root .MuiTableRow-root.Mui-selected .MuiTableCell-root": {
+	"& .MuiTableBody-root .MuiTableRow-root.Mui-selected": {
 		bgcolor: "var(--md-sys-color-secondary-container)",
 	},
+} as const;
+
+/** The frame round the table or the dense list: one surface with rounded corners. */
+const FRAME = {
+	mx: 1.5,
+	mb: 1.5,
+	overflow: "hidden",
+	borderRadius: "var(--shape-md)",
+	bgcolor: "var(--md-sys-color-surface-container-low)",
 } as const;
 
 /**
@@ -122,8 +130,8 @@ export default function ResponsiveTable<T>({
 		<Box ref={measure} sx={{ containerType: "inline-size" }}>
 			{isWide !== false && (
 				<Box sx={{ display: "none", [wide]: { display: "block" } }}>
-					<TableContainer sx={{ px: 1.5, pb: 1.5 }}>
-						<Table sx={ROW_CARDS}>
+					<TableContainer sx={FRAME}>
+						<Table sx={TABLE}>
 							<TableHead>{head}</TableHead>
 							<TableBody sx={staggerChildren()}>
 								{rows.map((row) => (
@@ -137,25 +145,12 @@ export default function ResponsiveTable<T>({
 			{isWide !== true && (
 				<Box
 					sx={{
-						display: "flex",
-						flexDirection: "column",
-						gap: 1,
-						px: 1.5,
-						pb: 1.5,
+						...FRAME,
 						[wide]: { display: "none" },
-						...staggerChildren(),
 					}}
 				>
 					{rows.map((row) => (
-						<Box
-							key={getKey(row)}
-							sx={{
-								bgcolor: ROW_FILL,
-								borderRadius: "var(--shape-md)",
-							}}
-						>
-							{renderCard(row)}
-						</Box>
+						<Box key={getKey(row)}>{renderCard(row)}</Box>
 					))}
 				</Box>
 			)}

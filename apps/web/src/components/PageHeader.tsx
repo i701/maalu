@@ -50,10 +50,10 @@ export default function PageHeader({
 			sx={{
 				position: "relative",
 				overflow: "hidden",
-				mb: 2,
-				p: { xs: 2.5, md: 3.5 },
+				mb: { xs: 1.5, md: 2 },
+				p: { xs: 1.5, md: 3.5 },
 				color: "#fff",
-				borderRadius: "var(--shape-xxl)",
+				borderRadius: { xs: "var(--shape-xl)", md: "var(--shape-xxl)" },
 				background: `linear-gradient(160deg, ${from}, ${to})`,
 			}}
 		>
@@ -64,6 +64,7 @@ export default function PageHeader({
 					position: "absolute",
 					top: -60,
 					right: -40,
+					display: { xs: "none", md: "block" },
 					opacity: 0.12,
 					transform: "rotate(18deg)",
 					pointerEvents: "none",
@@ -74,23 +75,62 @@ export default function PageHeader({
 				</ShapeTile>
 			</Box>
 
-			<Stack
-				direction="row"
+			{/* Wide: icon and action on one row, the title and description under them. On a phone all
+			    three share one row (icon, title, action) and the description is left out, so the
+			    banner takes a strip, not a screen. */}
+			<Box
 				sx={{
 					position: "relative",
-					justifyContent: "space-between",
-					alignItems: "flex-start",
-					gap: 2,
+					display: "grid",
+					gridTemplateColumns: { xs: "auto minmax(0, 1fr) auto", md: "1fr auto" },
+					gridTemplateAreas: {
+						xs: '"icon title action"',
+						md: '"icon action" "title title"',
+					},
+					alignItems: { xs: "center", md: "start" },
+					columnGap: { xs: 1.25, md: 2 },
+					rowGap: { md: 3 },
 				}}
 			>
 				{symbol && (
-					<ShapeTile shape={shape} size={56} bg="rgb(255 255 255 / 0.18)" fg="#fff">
-						<Symbol name={symbol} size={28} filled />
-					</ShapeTile>
+					<Box sx={{ gridArea: "icon", display: "block" }}>
+						<Box sx={{ display: { xs: "block", md: "none" } }}>
+							<ShapeTile shape={shape} size={40} bg="rgb(255 255 255 / 0.18)" fg="#fff">
+								<Symbol name={symbol} size={22} filled />
+							</ShapeTile>
+						</Box>
+						<Box sx={{ display: { xs: "none", md: "block" } }}>
+							<ShapeTile shape={shape} size={56} bg="rgb(255 255 255 / 0.18)" fg="#fff">
+								<Symbol name={symbol} size={28} filled />
+							</ShapeTile>
+						</Box>
+					</Box>
 				)}
+				<Box sx={{ gridArea: "title", minWidth: 0, maxWidth: { md: 640 } }}>
+					<Typography
+						variant="h1"
+						component="h1"
+						sx={{
+							color: "#fff",
+							fontSize: { xs: "1.375rem", md: "2.25rem" },
+							lineHeight: 1.2,
+						}}
+					>
+						{title}
+					</Typography>
+					{description && (
+						<Typography
+							variant="body1"
+							sx={{ mt: 1, color: "rgb(255 255 255 / 0.85)", display: { xs: "none", md: "block" } }}
+						>
+							{description}
+						</Typography>
+					)}
+				</Box>
 				<Box
 					sx={{
-						ml: "auto",
+						gridArea: "action",
+						justifySelf: "end",
 						"& .MuiButton-contained": {
 							bgcolor: "#fff",
 							color: from,
@@ -100,21 +140,6 @@ export default function PageHeader({
 				>
 					{action}
 				</Box>
-			</Stack>
-
-			<Box sx={{ position: "relative", mt: { xs: 2, md: 3 }, maxWidth: 640 }}>
-				<Typography
-					variant="h1"
-					component="h1"
-					sx={{ color: "#fff", fontSize: { xs: "2rem", md: "2.25rem" }, lineHeight: 1.2 }}
-				>
-					{title}
-				</Typography>
-				{description && (
-					<Typography variant="body1" sx={{ mt: 1, color: "rgb(255 255 255 / 0.85)" }}>
-						{description}
-					</Typography>
-				)}
 			</Box>
 
 			<Stack
@@ -122,7 +147,7 @@ export default function PageHeader({
 				useFlexGap
 				sx={{
 					position: "relative",
-					mt: 2.5,
+					mt: { xs: 1.25, md: 2.5 },
 					flexWrap: "wrap",
 					gap: 1,
 					"&:empty": { display: "none" },

@@ -652,11 +652,13 @@ const TransactionsTable = memo(function TransactionsTable({
 						(txSubtitle(t) || t.attachment_count + t.link_count > 0) && <TxSubtitle t={t} />
 					}
 					end={<TxAmount t={t} baseCurrency={baseCurrency} />}
+					endSecondary={
+						<Typography variant="caption" sx={{ display: "block", color: "text.secondary" }}>
+							{formatWhen(t.transaction_date, t.transaction_time)}
+						</Typography>
+					}
 					meta={
 						<>
-							<Typography variant="caption" sx={{ color: "text.secondary" }}>
-								{formatWhen(t.transaction_date, t.transaction_time)}
-							</Typography>
 							<TxMethodChip t={t} />
 							{t.type !== "transfer" && t.account && (
 								<Typography variant="caption" sx={{ color: "text.secondary" }}>
