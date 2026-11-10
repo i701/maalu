@@ -46,6 +46,8 @@ fun PickerField(
     allowCreate: Boolean = false,
     detail: ((Ref) -> String?)? = null,
     isError: Boolean = false,
+    /** When set, [entries] are the server's answer to the typed text: they are not filtered again here. */
+    onQuery: ((String) -> Unit)? = null,
 ) {
     var open by remember { mutableStateOf(false) }
     Surface(
@@ -66,7 +68,7 @@ fun PickerField(
             Icon(Icons.Outlined.ArrowDropDown, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
-    if (open) PickerSheet(title, anyLabel, entries, value?.id, searchable, allowCreate, detail, onPick = { onPick(it); open = false }, onDismiss = { open = false })
+    if (open) PickerSheet(title, anyLabel, entries, value?.id, searchable, allowCreate, detail, onQuery, onPick = { onPick(it); open = false }, onDismiss = { open = false })
 }
 
 /** The choices as springy tiles, the chosen one tinted. A search box filters long lists. */
@@ -80,10 +82,12 @@ fun PickerSheet(
     searchable: Boolean,
     allowCreate: Boolean,
     detail: ((Ref) -> String?)?,
+    onQuery: ((String) -> Unit)?,
     onPick: (Ref?) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var query by remember { mutableStateOf("") }
+    androidx.compose.runtime.LaunchedEffect(query) { onQuery?.invoke(query.trim()) }
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -94,7 +98,7 @@ fun PickerSheet(
             if (searchable || allowCreate) CompactField(query, { query = it }, "Search or type a name", Modifier.padding(top = 12.dp))
         }
         val q = query.trim()
-        val shown = if (q.isEmpty()) entries else entries.filter { it.name.contains(q, ignoreCase = true) }
+        val shown = if (q.isEmpty() || onQuery != null) entries else entries.filter { it.name.contains(q, ignoreCase = true) }
         // [null] is "any"; a Ref with an empty id is a name to create
         val rows: List<Ref?> = buildList {
             if (anyLabel != null && q.isEmpty()) add(null)

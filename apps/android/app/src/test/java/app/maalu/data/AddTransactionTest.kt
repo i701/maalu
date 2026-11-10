@@ -91,4 +91,23 @@ class AddTransactionTest {
         assertEquals("15.42", tidyRate("15.42000000"))
         assertEquals("1", tidyRate("1.00000000"))
     }
+
+    @Test fun aVendorFillsOnlyWhatIsEmpty() {
+        val v = VendorItem("v1", "Ensis Mart", defaultCategory = "Groceries", defaultTags = listOf(NameRef("weekly")))
+        val filled = AddForm().withVendor(v)
+        assertEquals("Ensis Mart", filled.vendor)
+        assertEquals("Groceries", filled.category)
+        assertEquals(listOf("weekly"), filled.tags)
+        // what was already chosen stays
+        val kept = AddForm(category = "Dining", tags = listOf("trip")).withVendor(v)
+        assertEquals("Dining", kept.category)
+        assertEquals(listOf("trip"), kept.tags)
+    }
+
+    @Test fun aVendorWithNoDefaultsChangesOnlyTheName() {
+        val form = AddForm(category = "Food").withVendor(VendorItem("v2", "Cafe"))
+        assertEquals("Cafe", form.vendor)
+        assertEquals("Food", form.category)
+        assertTrue(form.tags.isEmpty())
+    }
 }

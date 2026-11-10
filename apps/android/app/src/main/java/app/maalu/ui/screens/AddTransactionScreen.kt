@@ -87,6 +87,7 @@ import app.maalu.data.suggestedMethod
 import app.maalu.data.tidyRate
 import app.maalu.data.toJson
 import app.maalu.data.withDate
+import app.maalu.data.withVendor
 import app.maalu.ui.components.CompactField
 import app.maalu.ui.components.PickerField
 import app.maalu.ui.components.SegmentedPills
@@ -273,7 +274,7 @@ private fun Form(o: FormOptions, form: AddForm, onForm: (AddForm) -> Unit, error
                         onPick = { r -> onForm(form.copy(category = r?.name ?: "")) },
                     )
                 }
-                VendorSection(form, onForm, enabled = !busy)
+                VendorSection(form, onForm)
             }
 
             Section("When", Icons.Outlined.CalendarMonth, Accents.getValue("blue")) {
@@ -354,28 +355,39 @@ private fun Form(o: FormOptions, form: AddForm, onForm: (AddForm) -> Unit, error
     }
 }
 
-/** The vendor: type a name (kept as typed, the server finds or creates it) or tap a suggestion. */
+/**
+ * The vendor, picked from your own vendors: a sheet that searches them as you type (the server does the
+ * searching), with the usual category and tags filled in on pick. A name that matches none can be created.
+ */
 @Composable
-private fun VendorSection(form: AddForm, onForm: (AddForm) -> Unit, enabled: Boolean) {
-    val vendorApi = LocalApi.current
-    var suggestions by remember { mutableStateOf<List<VendorItem>>(emptyList()) }
-    LaunchedEffect(form.vendor) {
-        val q = form.vendor.trim()
-        if (q.isEmpty() || vendorApi == null) { suggestions = emptyList(); return@LaunchedEffect }
-        delay(250)
-        suggestions = (vendorApi.get<List<VendorItem>>("vendors", mapOf("q" to q, "limit" to "5")) as? ApiResult.Ok)?.data.orEmpty()
-            .filterNot { it.name.equals(q, ignoreCase = true) }
+private fun VendorSection(form: AddForm, onForm: (AddForm) -> Unit) {
+    val api = LocalApi.current
+    var known by remember { mutableStateOf<List<VendorItem>>(emptyList()) }
+    var query by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(query) {
+        val q = query ?: return@LaunchedEffect
+        if (api == null) return@LaunchedEffect
+        if (q.isNotEmpty()) delay(250) // wait for a pause in typing
+        known = (api.get<List<VendorItem>>("vendors", buildMap { if (q.isNotEmpty()) put("q", q); put("limit", "30") }) as? ApiResult.Ok)?.data.orEmpty()
     }
     Section("Vendor", Icons.Outlined.Storefront, Accents.getValue("orange")) {
-        CompactField(form.vendor, { onForm(form.copy(vendor = it.take(100))) }, "Where or who (optional)", enabled = enabled)
-        if (suggestions.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            suggestions.forEach { v -> TintChip(idTint(v.id), false, { onForm(form.copy(vendor = v.name)) }, { Text(v.name) }) }
-        }
+        PickerField(
+            title = "Vendor",
+            value = form.vendor.takeIf { it.isNotBlank() }?.let { Ref("", it) },
+            placeholder = "Choose or add a vendor (optional)",
+            anyLabel = "No vendor",
+            entries = known.map { Ref(it.id, it.name) },
+            searchable = true,
+            allowCreate = true,
+            detail = { r -> known.firstOrNull { it.id == r.id }?.defaultCategory },
+            onQuery = { query = it },
+            onPick = { r ->
+                val picked = known.firstOrNull { it.id == r?.id }
+                onForm(if (picked != null) form.withVendor(picked) else form.copy(vendor = r?.name ?: ""))
+            },
+        )
     }
 }
-
-/** The signed-in API, for the vendor suggestions deep inside the form. */
-private val LocalApi = androidx.compose.runtime.staticCompositionLocalOf<Api?> { null }
 
 /** What the account list shows under a name: the balance, then the bank and number that tell look-alikes apart. */
 fun accountDetail(a: Account): String =
@@ -391,3 +403,6 @@ private fun fieldOf(apiName: String?): FormField? = when (apiName) {
     "exchange_rate" -> FormField.Rate
     else -> null
 }
+
+/** The signed-in API, for the vendor search deep inside the form. */
+private val LocalApi = androidx.compose.runtime.staticCompositionLocalOf<Api?> { null }

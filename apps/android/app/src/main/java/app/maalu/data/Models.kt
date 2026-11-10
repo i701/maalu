@@ -191,4 +191,9 @@ data class CategoryItem(val id: String, val name: String, @SerialName("parent_id
 data class TagItem(val id: String, val name: String)
 
 @Serializable
-data class VendorItem(val id: String, val name: String)
+data class VendorItem(
+    val id: String,
+    val name: String,
+    @SerialName("default_category") val defaultCategory: String? = null,
+    @SerialName("default_tags") val defaultTags: List<NameRef> = emptyList(),
+)

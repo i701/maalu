@@ -118,3 +118,21 @@ fun AddForm.toJson(accounts: List<Account>, baseCurrency: String): JsonObject {
 fun tidyRate(rate: String): String = rate.toBigDecimalOrNull()?.stripTrailingZeros()?.toPlainString() ?: rate
 
 val BigDecimal.isOne: Boolean get() = compareTo(BigDecimal.ONE) == 0
+
+/** What picking a vendor adds to the form: its usual category and tags. */
+data class VendorFill(val category: String? = null, val tags: List<String>? = null)
+
+/**
+ * A vendor's defaults fill only what is still empty (port of defaultsToFill): the category when none is
+ * chosen, the tags when there are none. What was already chosen is never overwritten.
+ */
+fun VendorItem.defaultsFor(form: AddForm): VendorFill = VendorFill(
+    category = defaultCategory?.takeIf { form.category.isBlank() },
+    tags = defaultTags.map { it.name }.takeIf { it.isNotEmpty() && form.tags.isEmpty() },
+)
+
+/** The form after picking [vendor]: its name, plus whatever its defaults may fill in. */
+fun AddForm.withVendor(vendor: VendorItem): AddForm {
+    val fill = vendor.defaultsFor(this)
+    return copy(vendor = vendor.name, category = fill.category ?: category, tags = fill.tags ?: tags)
+}
