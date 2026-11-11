@@ -2371,6 +2371,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/transactions/{transaction_id}/transfer-candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Transfer Candidates
+         * @description Entries this one could be the other half of: the opposite side (an income for an expense, an
+         *     expense for an income), exactly the same amount and currency, in a different account, on any
+         *     date, that `POST /transactions/link-transfer` would accept. Closest date first; empty when
+         *     there is none, which is when a client should not offer a merge. 422 for a transfer or anything
+         *     that can never be a side.
+         */
+        get: operations["transfer_candidates_api_v1_transactions__transaction_id__transfer_candidates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/me": {
         parameters: {
             query?: never;
@@ -11266,6 +11290,39 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    transfer_candidates_api_v1_transactions__transaction_id__transfer_candidates_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                transaction_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransactionResponse"][];
+                };
             };
             /** @description Validation Error */
             422: {

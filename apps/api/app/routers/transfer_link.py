@@ -1,3 +1,4 @@
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, Response, status
@@ -26,6 +27,26 @@ async def transfer_suggestions(
         TransferSuggestion(expense=e, income=i, days_apart=days)
         for e, i, days in await service.suggestions(user_id, limit)
     ]
+
+
+@router.get("/{transaction_id}/transfer-candidates", response_model=list[TransactionResponse])
+async def transfer_candidates(
+    transaction_id: uuid.UUID,
+    user_id: CurrentUserId,
+    service: TransferLinkServiceDep,
+    limit: Annotated[int, Query(ge=1, le=50)] = 20,
+):
+    """Entries this one could be the other half of: the opposite side (an income for an expense, an
+    expense for an income), exactly the same amount and currency, in a different account, on any
+    date, that `POST /transactions/link-transfer` would accept. Closest date first; empty when
+    there is none, which is when a client should not offer a merge. 422 for a transfer or anything
+    that can never be a side."""
+    try:
+        return await service.candidates(user_id, transaction_id, limit)
+    except TransferLinkNotFoundError:
+        raise _NOT_FOUND from None
+    except TransactionRuleError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from None
 
 
 @router.post("/transfer-suggestions/dismiss", status_code=status.HTTP_204_NO_CONTENT)

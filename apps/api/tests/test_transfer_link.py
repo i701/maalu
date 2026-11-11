@@ -440,3 +440,45 @@ async def test_a_link_survives_a_backup_and_so_do_dismissals(
     assert await suggestions(client, fresh) == []  # the dismissal came across
     kinds = sorted(t["type"] for t in (await client.get(TX, headers=fresh)).json())
     assert kinds == ["expense", "income", "transfer"]  # the merged one, and the two dismissed
+
+
+async def test_candidates_are_the_exact_same_amount_on_the_other_side(client: AsyncClient, auth):
+    bml, mib, out, inn = await pair(client, auth, amount=700, gap=30)  # a month apart still counts
+    await entry(client, auth, "income", 701, mib, days_ago=1)  # another amount
+    await entry(client, auth, "income", 700, bml, days_ago=1)  # the same account
+    await entry(client, auth, "expense", 700, mib, days_ago=1)  # the same side
+    resp = await client.get(f"{TX}/{out['id']}/transfer-candidates", headers=auth)
+    assert resp.status_code == 200, resp.text
+    assert [t["id"] for t in resp.json()] == [inn["id"]]
+    back = await client.get(f"{TX}/{inn['id']}/transfer-candidates", headers=auth)
+    assert [t["id"] for t in back.json()] == [out["id"]]
+
+
+async def test_no_candidates_is_an_empty_list_and_dismissed_pairs_are_left_out(
+    client: AsyncClient, auth
+):
+    bml, _mib, out, inn = await pair(client, auth, amount=300)
+    lonely = await entry(client, auth, "expense", 12345, bml)
+    assert (await client.get(f"{TX}/{lonely['id']}/transfer-candidates", headers=auth)).json() == []
+    resp = await client.post(
+        f"{SUGGEST}/dismiss", json={"expense_id": out["id"], "income_id": inn["id"]}, headers=auth
+    )
+    assert resp.status_code == 204
+    assert (await client.get(f"{TX}/{out['id']}/transfer-candidates", headers=auth)).json() == []
+
+
+async def test_candidates_refuse_what_is_not_a_side_and_other_peoples_rows(
+    client: AsyncClient, auth, signup: Signup
+):
+    _bml, _mib, out, inn = await pair(client, auth)
+    done = await client.post(
+        LINK, json={"expense_id": out["id"], "income_id": inn["id"]}, headers=auth
+    )
+    assert done.status_code == 200
+    assert (
+        await client.get(f"{TX}/{out['id']}/transfer-candidates", headers=auth)
+    ).status_code == 422  # it is a transfer now
+    other = await signup("someone.else@example.com")
+    assert (
+        await client.get(f"{TX}/{out['id']}/transfer-candidates", headers=other)
+    ).status_code == 404

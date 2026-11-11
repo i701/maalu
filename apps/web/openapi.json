@@ -18565,6 +18565,71 @@
         ]
       }
     },
+    "/api/v1/transactions/{transaction_id}/transfer-candidates": {
+      "get": {
+        "description": "Entries this one could be the other half of: the opposite side (an income for an expense, an\nexpense for an income), exactly the same amount and currency, in a different account, on any\ndate, that `POST /transactions/link-transfer` would accept. Closest date first; empty when\nthere is none, which is when a client should not offer a merge. 422 for a transfer or anything\nthat can never be a side.",
+        "operationId": "transfer_candidates_api_v1_transactions__transaction_id__transfer_candidates_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "transaction_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Transaction Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TransactionResponse"
+                  },
+                  "title": "Response Transfer Candidates Api V1 Transactions  Transaction Id  Transfer Candidates Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Transfer Candidates",
+        "tags": [
+          "transfers"
+        ]
+      }
+    },
     "/api/v1/users/me": {
       "get": {
         "operationId": "read_me_api_v1_users_me_get",

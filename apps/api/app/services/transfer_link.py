@@ -168,6 +168,57 @@ class TransferLinkService:
         out.sort(key=lambda pair: pair[0].transaction_date, reverse=True)
         return out[:limit]
 
+    async def candidates(
+        self, user_id: uuid.UUID, transaction_id: uuid.UUID, limit: int = 20
+    ) -> list[Transaction]:
+        """The entries that could be the other half of this one: the opposite side, the same amount
+        in the same currency, in a different account, on any date, that pass the same rules as
+        `link`. Closest in date first. A pair that was marked "Not a pair" is left out. Raises
+        TransactionRuleError when this entry cannot be a side at all."""
+        row = await self._row(user_id, transaction_id)
+        if row.type not in (TransactionType.EXPENSE, TransactionType.INCOME):
+            raise TransactionRuleError("Only an expense or an income can be merged into a transfer")
+        opposite = (
+            TransactionType.INCOME
+            if row.type is TransactionType.EXPENSE
+            else TransactionType.EXPENSE
+        )
+        others = (
+            await self.db.scalars(
+                select(Transaction)
+                .where(
+                    Transaction.user_id == user_id,
+                    Transaction.type == opposite,
+                    Transaction.amount == row.amount,
+                    Transaction.currency == row.currency,
+                    Transaction.account_id != row.account_id,
+                    *self._eligible(),
+                )
+                .order_by(Transaction.transaction_date.desc())
+                .limit(SCAN_LIMIT)
+            )
+        ).all()
+        dismissed = {
+            (d.expense_id, d.income_id)
+            for d in (
+                await self.db.scalars(
+                    select(TransferDismissal).where(TransferDismissal.user_id == user_id)
+                )
+            ).all()
+        }
+        found = []
+        for other in others:
+            expense, income = (row, other) if row.type is TransactionType.EXPENSE else (other, row)
+            if (expense.id, income.id) in dismissed:
+                continue
+            try:
+                self._check_pair(expense, income)
+            except TransactionRuleError:
+                continue
+            found.append(other)
+        found.sort(key=lambda t: abs((t.transaction_date - row.transaction_date).days))
+        return found[:limit]
+
     async def dismiss(
         self, user_id: uuid.UUID, expense_id: uuid.UUID, income_id: uuid.UUID
     ) -> None:
