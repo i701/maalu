@@ -2,6 +2,14 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.PickerSheet
+import app.maalu.data.templateSummary
+import app.maalu.data.templateNameProblem
+import app.maalu.data.toTemplateJson
+import app.maalu.data.formFromTemplate
+import app.maalu.data.Template
+import androidx.compose.material.icons.outlined.BookmarkAdd
+import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -114,6 +122,7 @@ private class FormOptions(
     val accounts: List<Account>,
     val categories: List<CategoryItem>,
     val tags: List<TagItem>,
+    val templates: List<Template>,
 )
 
 private val TYPES = listOf("expense" to "Expense", "income" to "Income", "transfer" to "Transfer")
@@ -134,6 +143,8 @@ fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit, edi
     var errorField by remember { mutableStateOf<FormField?>(null) }
     val snackbar = remember { SnackbarHostState() }
     var busy by remember { mutableStateOf(false) }
+    var pickingTemplate by remember { mutableStateOf(false) }
+    var savingTemplate by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
@@ -141,9 +152,11 @@ fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit, edi
         val accounts = api.get<List<Account>>("accounts")
         val categories = api.get<List<CategoryItem>>("categories")
         val tags = api.get<List<TagItem>>("tags")
+        // templates are offered only when the person has them switched on
+        val templates = if ((me as? ApiResult.Ok)?.data?.startFromTemplate != false) (api.get<List<Template>>("templates") as? ApiResult.Ok)?.data.orEmpty() else emptyList()
         if (me is ApiResult.Ok && accounts is ApiResult.Ok) {
             val list = accounts.data
-            options = FormOptions(me.data, list, (categories as? ApiResult.Ok)?.data.orEmpty(), (tags as? ApiResult.Ok)?.data.orEmpty())
+            options = FormOptions(me.data, list, (categories as? ApiResult.Ok)?.data.orEmpty(), (tags as? ApiResult.Ok)?.data.orEmpty(), templates)
             // a new transaction starts in the default account (or the first one), with its currency's rate and usual way of
             // paying; an edit keeps what the transaction has
             val start = list.firstOrNull { it.id == me.data.defaultAccountId } ?: list.firstOrNull { !it.isLiability } ?: list.firstOrNull()
@@ -164,6 +177,13 @@ fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit, edi
                 TopAppBar(
                     title = { Text((if (editing == null) "New " else "Edit ") + (TYPES.first { it.first == form.type }.second.lowercase())) },
                     navigationIcon = { IconButton(onClick = onClose, enabled = !busy) { Icon(Icons.Outlined.Close, "Close") } },
+                    actions = {
+                        // starting from a saved template, and saving what is on the form as one (a new transaction only)
+                        if (editing == null && options != null) {
+                            if (options?.templates?.isNotEmpty() == true) IconButton(onClick = { pickingTemplate = true }, enabled = !busy) { Icon(Icons.Outlined.Bookmark, "Start from a template") }
+                            IconButton(onClick = { savingTemplate = true }, enabled = !busy) { Icon(Icons.Outlined.BookmarkAdd, "Save as a template") }
+                        }
+                    },
                 )
             },
         ) { padding ->
@@ -206,7 +226,61 @@ fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit, edi
                 )
             }
         }
+        val o = options
+        if (pickingTemplate && o != null) PickerSheet(
+            title = "Start from a template", anyLabel = null, entries = o.templates.map { Ref(it.id, it.name) }, selectedId = null,
+            searchable = o.templates.size > 8, allowCreate = false, detail = { r -> o.templates.firstOrNull { it.id == r.id }?.let(::templateSummary) },
+            onQuery = null,
+            onPick = { r ->
+                pickingTemplate = false
+                o.templates.firstOrNull { it.id == r?.id }?.let { t ->
+                    val f = formFromTemplate(t, o.accounts)
+                    // a template with no account of its own keeps the one the form already has
+                    form = if (f.accountId != null) f else f.copy(accountId = form.accountId, rate = form.rate)
+                    errorField = null
+                }
+            },
+            onDismiss = { pickingTemplate = false },
+        )
+        if (savingTemplate && o != null) SaveTemplateDialog(
+            api, form, o.accounts, onClose = { savingTemplate = false },
+            onSaved = { savingTemplate = false; scope.launch { snackbar.showSnackbar("Template saved.") } },
+        )
     } }
+}
+
+/** Names the form as it stands and saves it as a template: what is empty is left out, so the template does not fill it. */
+@Composable
+private fun SaveTemplateDialog(api: Api, form: AddForm, accounts: List<Account>, onClose: () -> Unit, onSaved: () -> Unit) {
+    var name by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf<String?>(null) }
+    var busy by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = { if (!busy) onClose() },
+        title = { Text("Save as a template") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("It will fill in the type, account, category, vendor, way of paying, tags and note, and the amount if you typed one.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                CompactField(name, { name = it; error = null }, "Name, for example Weekly shop", enabled = !busy, isError = error != null)
+                error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+            }
+        },
+        confirmButton = {
+            TextButton(enabled = !busy, onClick = {
+                error = templateNameProblem(name)
+                if (error != null) return@TextButton
+                busy = true
+                scope.launch {
+                    when (val r = api.postJson<Template>("templates", form.toTemplateJson(name, accounts).toString())) {
+                        is ApiResult.Ok -> onSaved()
+                        is ApiResult.Failed -> { error = r.message.lines().first(); busy = false }
+                    }
+                }
+            }) { Text(if (busy) "Saving…" else "Save") }
+        },
+        dismissButton = { TextButton(onClick = onClose, enabled = !busy) { Text("Cancel") } },
+    )
 }
 
 @Composable

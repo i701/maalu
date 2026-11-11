@@ -183,6 +183,8 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
                     "subscriptions" -> SubscriptionsScreen(api)
                     "settings" -> SettingsScreen(api)
                     "pending" -> PendingScreen(api, onChanged = { bellTick++ })
+                    "trash" -> TrashScreen(api)
+                    "templates" -> TemplatesScreen(api)
                     "notifications" -> NotificationsScreen(
                         api, onChanged = { bellTick++ },
                         onOpen = { target ->
