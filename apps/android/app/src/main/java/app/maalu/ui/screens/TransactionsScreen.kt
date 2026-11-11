@@ -79,14 +79,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.maalu.data.Api
+import app.maalu.data.selectAllState
+import app.maalu.data.bulkEditJson
 import app.maalu.ui.components.PickerSheet
 import app.maalu.data.transactionCount
 import app.maalu.data.toggled
-import app.maalu.data.tagBulkJson
 import app.maalu.data.mergeBulk
 import app.maalu.data.keepVisible
 import app.maalu.data.idsJson
-import app.maalu.data.categoryBulkJson
 import app.maalu.data.bulkMessage
 import app.maalu.data.batches
 import app.maalu.data.TagItem
@@ -165,8 +165,9 @@ fun TransactionsScreen(api: Api) {
     // rows picked for a bulk action (a long press starts it); [choosing] is the category or tag being picked for them
     var picked by remember { mutableStateOf(emptySet<String>()) }
     var bulkBusy by remember { mutableStateOf(false) }
-    var choosing by remember { mutableStateOf<String?>(null) }
-    var choices by remember { mutableStateOf<List<Ref>>(emptyList()) }
+    var editing by remember { mutableStateOf(false) }
+    // the selection reaches past what is loaded (every row that matches the filters); it ends when the filters or the search change
+    var wide by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
@@ -197,16 +198,10 @@ fun TransactionsScreen(api: Api) {
         }
         loading = false
         refreshing = false
-        picked = keepVisible(picked, items.map { it.id })
+        if (!wide) picked = keepVisible(picked, items.map { it.id })
     }
 
-    LaunchedEffect(choosing) {
-        choices = when (choosing) {
-            "category" -> (api.get<List<CategoryItem>>("categories") as? ApiResult.Ok)?.data.orEmpty().map { Ref(it.id, it.name) }
-            "tag" -> (api.get<List<TagItem>>("tags") as? ApiResult.Ok)?.data.orEmpty().map { Ref(it.id, it.name) }
-            else -> emptyList()
-        }
-    }
+    LaunchedEffect(committed, filters) { picked = emptySet(); wide = false }
 
     /** Runs one bulk request over the picked rows (up to 500), says what happened and reloads. Returns the ids it changed. */
     fun bulk(done: (Int) -> String, request: suspend (List<String>) -> ApiResult<BulkResult>, undo: (suspend (List<String>) -> Unit)? = null) {
@@ -223,7 +218,7 @@ fun TransactionsScreen(api: Api) {
             }
             val merged = mergeBulk(results)
             val text = failed?.let { f -> if (merged.updated > 0) bulkMessage(done, merged) + ". $f" else f } ?: bulkMessage(done, merged)
-            picked = emptySet(); bulkBusy = false; reload++
+            picked = emptySet(); wide = false; bulkBusy = false; reload++
             if (undo != null && merged.updated > 0) {
                 val answer = snackbar?.showSnackbar(text, actionLabel = "Undo", duration = androidx.compose.material3.SnackbarDuration.Long)
                 if (answer == androidx.compose.material3.SnackbarResult.ActionPerformed) { undo(ids.filter { id -> merged.skipped.none { it.id == id } }); reload++ }
@@ -231,7 +226,7 @@ fun TransactionsScreen(api: Api) {
         }
     }
 
-    androidx.activity.compose.BackHandler(enabled = picked.isNotEmpty()) { picked = emptySet() }
+    androidx.activity.compose.BackHandler(enabled = picked.isNotEmpty()) { picked = emptySet(); wide = false }
 
     // load the next page when the end is near
     LaunchedEffect(listState) {
@@ -343,7 +338,8 @@ fun TransactionsScreen(api: Api) {
     }
     val expanded by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
     if (picked.isNotEmpty()) TransactionSelectionBar(
-        count = picked.size, busy = bulkBusy, modifier = Modifier.align(Alignment.BottomCenter),
+        count = picked.size, selectAll = selectAllState(total ?: items.size, items.size, picked.size, wide), busy = bulkBusy, modifier = Modifier.align(Alignment.BottomCenter),
+        onEdit = { editing = true },
         onDelete = {
             bulk(
                 done = { "Moved ${transactionCount(it)} to the trash" },
@@ -351,7 +347,17 @@ fun TransactionsScreen(api: Api) {
                 undo = { ids -> for (b in batches(ids)) api.postJson<BulkResult>("transactions/bulk/restore", idsJson(b).toString()) },
             )
         },
-        onCategory = { choosing = "category" }, onTag = { choosing = "tag" }, onClear = { picked = emptySet() },
+        onSelectAll = {
+            scope.launch {
+                bulkBusy = true
+                when (val r = api.get<List<String>>("transactions/ids", params())) {
+                    is ApiResult.Ok -> { picked = r.data.toSet(); wide = true }
+                    is ApiResult.Failed -> snackbar?.showSnackbar(r.message.lines().first())
+                }
+                bulkBusy = false
+            }
+        },
+        onClear = { picked = emptySet(); wide = false },
     ) else ExtendedFloatingActionButton(
         onClick = { adding = true },
         expanded = expanded,
@@ -370,19 +376,13 @@ fun TransactionsScreen(api: Api) {
         onSaved = { adding = false; reload++; scope.launch { snackbar?.showSnackbar("Transaction added") } },
         onAdded = { reload++ },
     )
-    choosing?.let { kind ->
-        PickerSheet(
-            title = if (kind == "category") "Set the category for ${transactionCount(picked.size)}" else "Add a tag to ${transactionCount(picked.size)}",
-            anyLabel = null, entries = choices, selectedId = null, searchable = true, allowCreate = true, detail = null, onQuery = null,
-            onPick = { r ->
-                choosing = null
-                val name = r?.name ?: return@PickerSheet
-                if (kind == "category") bulk(done = { "Category set on ${transactionCount(it)}" }, request = { ids -> api.patchJson<BulkResult>("transactions/bulk", categoryBulkJson(ids, name).toString()) })
-                else bulk(done = { "Tagged ${transactionCount(it)}" }, request = { ids -> api.patchJson<BulkResult>("transactions/bulk", tagBulkJson(ids, name).toString()) })
-            },
-            onDismiss = { choosing = null },
-        )
-    }
+    if (editing) BulkEditSheet(
+        api, picked.size, onClose = { editing = false },
+        onApply = { change ->
+            editing = false
+            bulk(done = { "Updated ${transactionCount(it)}" }, request = { ids -> api.patchJson<BulkResult>("transactions/bulk", bulkEditJson(ids, change).toString()) })
+        },
+    )
     if (showFilters) FiltersSheet(api, filters, onApply = { filters = it; showFilters = false }, onDismiss = { showFilters = false })
 }
 

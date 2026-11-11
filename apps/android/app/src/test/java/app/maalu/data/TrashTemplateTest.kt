@@ -78,8 +78,18 @@ class TrashTemplateTest {
         assertEquals("Transfer · BML Current → BML USD", templateSummary(Template("t", "n", "transfer", account = TemplateAccount("a1", "BML Current"), toAccount = TemplateAccount("a2", "BML USD"))))
     }
 
-    @Test fun bulkEditBodies() {
-        assertEquals("""{"ids":["a","b"],"category":"Groceries"}""", categoryBulkJson(listOf("a", "b"), " Groceries ").toString())
-        assertEquals("""{"ids":["a"],"add_tags":["trip"]}""", tagBulkJson(listOf("a"), "trip").toString())
+    @Test fun bulkEditBodiesCarryOnlyWhatWasChosen() {
+        assertEquals("""{"ids":["a","b"],"category":"Groceries"}""", bulkEditJson(listOf("a", "b"), BulkEdit(category = " Groceries ")).toString())
+        assertEquals("""{"ids":["a"],"vendor_name":"Ensis","payment_method":"cash","add_tags":["trip"],"remove_tags":["tmp"]}""",
+            bulkEditJson(listOf("a"), BulkEdit(vendor = "Ensis", method = "cash", addTags = listOf("trip"), removeTags = listOf("tmp"))).toString())
+        assertEquals(true, BulkEdit().isEmpty); assertEquals(false, BulkEdit(method = "cash").isEmpty); assertEquals(true, BulkEdit(category = "  ").isEmpty)
+    }
+
+    @Test fun selectingEverythingThatMatches() {
+        assertEquals(SelectAll.None, selectAllState(total = 300, loaded = 50, picked = 10, wide = false))      // not every loaded row ticked
+        assertEquals(SelectAll.None, selectAllState(total = 50, loaded = 50, picked = 50, wide = false))       // everything is already loaded
+        assertEquals(SelectAll.Offer(300), selectAllState(total = 300, loaded = 50, picked = 50, wide = false))
+        assertEquals(SelectAll.TooMany(6000), selectAllState(total = 6000, loaded = 50, picked = 50, wide = false))
+        assertEquals(SelectAll.Wide(300), selectAllState(total = 300, loaded = 50, picked = 300, wide = true))
     }
 }

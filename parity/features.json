@@ -633,12 +633,12 @@
         ]
       },
       "android": {
-        "status": "partial",
+        "status": "done",
         "evidence": [
           "apps/android/app/src/main/java/app/maalu/ui/screens/TransactionSelection.kt",
-          "apps/android/app/src/main/java/app/maalu/ui/screens/TransactionsScreen.kt"
-        ],
-        "note": "Long press to select, then Category, Add tag and Delete (with Undo). No vendor or payment method, no removing tags, no select all matching."
+          "apps/android/app/src/main/java/app/maalu/ui/screens/TransactionsScreen.kt",
+          "apps/android/app/src/main/java/app/maalu/data/TrashLogic.kt"
+        ]
       },
       "ios": {
         "status": "missing"

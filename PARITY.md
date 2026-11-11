@@ -9,14 +9,13 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 67 | 52 | 0 |
-| 🟡 partial | 0 | 5 | 0 |
+| ✅ done | 67 | 53 | 0 |
+| 🟡 partial | 0 | 4 | 0 |
 | ❌ missing | 0 | 6 | 63 |
 | ➖ n/a | 1 | 5 | 5 |
 
-## Still to build on Android (11)
+## Still to build on Android (10)
 
-- 🟡 **Bulk actions on selected rows** (Transactions). Long press to select, then Category, Add tag and Delete (with Undo). No vendor or payment method, no removing tags, no select all matching.
 - 🟡 **Refunds** (Transactions). Refund rows are tagged and shown; a refund cannot be made or linked from the app.
 - 🟡 **Budget limits** (Budget, goals and planning). Monthly limits can be made, edited and deleted. The budget settings (period start day, warning percent) are changed on the web.
 - 🟡 **Limits for set dates** (Budget, goals and planning). Limits for set dates are listed on the Budget page (dates, days left, spent, what is left) and on the dashboard. They cannot be made, edited, or repeated for the next stretch, and monthly limits that run between two dates are not shown as such.
@@ -135,7 +134,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Add and edit a transaction**<br>Expense, income or transfer with account, rate, category, vendor, date and time, way of paying, tags, note and planned. | ✅ done | ✅ done | ❌ missing |
 | **Save and add another, and duplicate**<br>Keep the form open for the next entry, or copy a transaction. | ✅ done | ✅ done | ❌ missing |
 | **Templates**<br>Start from a saved template and save a form as one; the Templates page to rename and delete them. | ✅ done | ✅ done | ❌ missing |
-| **Bulk actions on selected rows**<br>Select rows, then change category, tags, vendor or payment method, or delete them; select all that match. | ✅ done | 🟡 partial | ❌ missing |
+| **Bulk actions on selected rows**<br>Select rows, then change category, tags, vendor or payment method, or delete them; select all that match. | ✅ done | ✅ done | ❌ missing |
 | **Trash**<br>Deleted transactions wait to be restored or deleted for good, singly or in bulk. | ✅ done | ✅ done | ❌ missing |
 | **Planned transactions and Mark as paid**<br>Something coming up that counts toward nothing until it is paid with the real day and amount. | ✅ done | ✅ done | ❌ missing |
 | **Refunds**<br>Give money back for a purchase (whole or by item), or link existing income to a purchase. | ✅ done | 🟡 partial | ❌ missing |
@@ -147,7 +146,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Export to Excel**<br>Download what the filters show as a workbook with a summary and a sheet by category. | ✅ done | ❌ missing | ❌ missing |
 | **Import a bank statement**<br>Read a bank's CSV, review the rows, assign vendors and categories, import as one undoable batch. | ✅ done | ➖ n/a | ➖ n/a |
 
-- **Bulk actions on selected rows** (Android): Long press to select, then Category, Add tag and Delete (with Undo). No vendor or payment method, no removing tags, no select all matching.
 - **Refunds** (Android): Refund rows are tagged and shown; a refund cannot be made or linked from the app.
 - **Import a bank statement** (Android): Web only, by choice: importing a statement is done on the web, where the rows are easier to review.
 - **Import a bank statement** (iOS): Web only, by choice: importing a statement is done on the web, where the rows are easier to review.
