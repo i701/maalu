@@ -97,6 +97,10 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
     var month by rememberSaveable { mutableStateOf(LocalDate.now().withDayOfMonth(1).toString()) }
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val snackbar = remember { androidx.compose.material3.SnackbarHostState() }
+    // the short-numbers setting is the person's, so it is read once when the app opens
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        (api.get<app.maalu.data.UserMe>("users/me") as? app.maalu.data.ApiResult.Ok)?.let { app.maalu.data.NumberPrefs.short = it.data.compactNumbers }
+    }
     val onTab = destination == null
     val onAccountPage = onTab && selected == ACCOUNTS && openAccountId != null
     val monthly = onTab && !onAccountPage && (selected == DASHBOARD || selected == BUDGET)

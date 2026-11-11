@@ -62,7 +62,28 @@ data class UserMe(
     @SerialName("compact_numbers") val compactNumbers: Boolean = false,
     @SerialName("default_account_id") val defaultAccountId: String? = null,
     @SerialName("two_factor_enabled") val twoFactorEnabled: Boolean = false,
+    @SerialName("start_from_template") val startFromTemplate: Boolean = true,
+    @SerialName("notify_payments") val notifyPayments: Boolean = true,
+    @SerialName("notify_budget") val notifyBudget: Boolean = true,
+    @SerialName("notify_goals") val notifyGoals: Boolean = true,
+    @SerialName("notify_email") val notifyEmail: Boolean = false,
 )
+
+/** One sign-in of the person's, for "Where you are signed in". */
+@Serializable
+data class SessionRow(
+    val id: String,
+    @SerialName("last_used_at") val lastUsedAt: String,
+    @SerialName("user_agent") val userAgent: String? = null,
+    @SerialName("ip_address") val ipAddress: String? = null,
+    val current: Boolean = false,
+)
+
+@Serializable
+data class EndedSessions(val ended: Int = 0)
+
+@Serializable
+data class EmailStatus(val configured: Boolean = false, val sender: String? = null)
 
 @Serializable
 data class AvailableAccount(val id: String, val name: String, val group: String, val balance: String)
