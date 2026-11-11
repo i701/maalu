@@ -48,6 +48,7 @@ import app.maalu.data.AvailableToSpend
 import app.maalu.data.PlanKind
 import app.maalu.data.PlanRow
 import app.maalu.data.Transaction
+import app.maalu.data.isSalaryToSplit
 import app.maalu.data.firstShortRow
 import app.maalu.data.formatMoney
 import app.maalu.data.isShort
@@ -76,6 +77,7 @@ fun PlanScreen(api: Api, onOpenAccount: (id: String, name: String) -> Unit) {
     var planned by remember { mutableStateOf<Map<String, Transaction>>(emptyMap()) }
     var error by remember { mutableStateOf<String?>(null) }
     var paying by remember { mutableStateOf<Transaction?>(null) }
+    var splitting by remember { mutableStateOf<String?>(null) }
     var opened by remember { mutableStateOf<Transaction?>(null) }
     val snackbar = LocalSnackbar.current
     val scope = rememberCoroutineScope()
@@ -138,9 +140,15 @@ fun PlanScreen(api: Api, onOpenAccount: (id: String, name: String) -> Unit) {
     paying?.let { t ->
         MarkPaidDialog(
             api, t, d?.currency, onClose = { paying = null },
-            onPaid = { paying = null; reload++; scope.launch { snackbar?.showSnackbar(markedMessage(t)) } },
+            onPaid = {
+                paying = null; reload++
+                scope.launch { snackbar?.showSnackbar(markedMessage(t)) }
+                // pay that has just arrived: offer to split it, when there are rules to split it by
+                if (isSalaryToSplit(t)) scope.launch { if (api.hasSalaryRules()) splitting = t.id }
+            },
         )
     }
+    splitting?.let { id -> SalarySplitDialog(api, id, onClose = { splitting = null; reload++ }, onDone = { msg -> splitting = null; reload++; scope.launch { snackbar?.showSnackbar(msg) } }) }
 }
 
 @Composable

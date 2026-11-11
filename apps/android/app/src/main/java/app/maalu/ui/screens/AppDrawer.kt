@@ -46,6 +46,8 @@ fun AppDrawer(
     onThemeMode: (ThemeMode) -> Unit,
     onOpen: (Destination) -> Unit,
     onSignOut: () -> Unit,
+    /** A count shown at the end of a destination's row, by its id (Pending's waiting salaries). */
+    badges: Map<String, Int> = emptyMap(),
 ) {
     ModalDrawerSheet(drawerContainerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
         Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 12.dp).padding(bottom = 16.dp)) {
@@ -70,6 +72,7 @@ fun AppDrawer(
                         icon = { Icon(d.icon, null, tint = tint) },
                         selected = d.id == selectedId,
                         onClick = { onOpen(d) },
+                        badge = badges[d.id]?.takeIf { it > 0 }?.let { n -> { androidx.compose.material3.Badge { Text(app.maalu.data.badgeText(n)) } } },
                         colors = NavigationDrawerItemDefaults.colors(selectedContainerColor = tint.copy(alpha = 0.22f), unselectedContainerColor = androidx.compose.ui.graphics.Color.Transparent),
                     )
                 }

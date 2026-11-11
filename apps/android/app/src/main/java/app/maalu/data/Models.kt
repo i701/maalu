@@ -255,6 +255,7 @@ data class Transaction(
     val currency: String,
     val category: String,
     @SerialName("category_color") val categoryColor: String? = null,
+    @SerialName("category_is_salary") val categoryIsSalary: Boolean = false,
     val description: String? = null,
     @SerialName("transaction_date") val date: String,
     @SerialName("transaction_time") val time: String? = null,

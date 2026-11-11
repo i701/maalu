@@ -47,6 +47,8 @@ import app.maalu.data.Api
 import app.maalu.data.ApiResult
 import app.maalu.data.Account
 import app.maalu.data.EmailStatus
+import app.maalu.data.Goal
+import app.maalu.data.SalaryRule
 import app.maalu.data.EndedSessions
 import app.maalu.data.NumberPrefs
 import app.maalu.data.Ref
@@ -77,6 +79,9 @@ fun SettingsScreen(api: Api) {
     var afterCodes by remember { mutableStateOf("") }
     var changingPassword by remember { mutableStateOf(false) }
     var accounts by remember { mutableStateOf<List<Account>>(emptyList()) }
+    var allAccounts by remember { mutableStateOf<List<Account>>(emptyList()) }
+    var goals by remember { mutableStateOf<List<Goal>>(emptyList()) }
+    var rules by remember { mutableStateOf<List<SalaryRule>>(emptyList()) }
     var sessions by remember { mutableStateOf<List<SessionRow>>(emptyList()) }
     var emailOn by remember { mutableStateOf<EmailStatus?>(null) }
     var busy by remember { mutableStateOf(false) }
@@ -90,7 +95,9 @@ fun SettingsScreen(api: Api) {
             is ApiResult.Failed -> error = r.message
         }
         // the rest is extra: a failure leaves that card empty rather than the whole screen
-        (api.get<List<Account>>("accounts") as? ApiResult.Ok)?.let { accounts = it.data.filter { a -> !a.isLiability } }
+        (api.get<List<Account>>("accounts") as? ApiResult.Ok)?.let { allAccounts = it.data; accounts = it.data.filter { a -> !a.isLiability } }
+        (api.get<List<Goal>>("goals") as? ApiResult.Ok)?.let { goals = it.data }
+        (api.get<List<SalaryRule>>("salary-rules") as? ApiResult.Ok)?.let { rules = it.data }
         (api.get<List<SessionRow>>("auth/sessions") as? ApiResult.Ok)?.let { sessions = it.data }
         (api.get<EmailStatus>("email/status") as? ApiResult.Ok)?.let { emailOn = it.data }
         refreshing = false
@@ -136,6 +143,7 @@ fun SettingsScreen(api: Api) {
                         Text("A new transaction starts in this account.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
+                item { SalaryRulesCard(api, rules, allAccounts, goals, user.baseCurrency, onChanged = { reload++ }) }
                 item {
                     SettingsGroup("Notifications", Icons.Outlined.Notifications) {
                         SettingSwitch("Payments", "A planned payment that is due soon or late, and when the money would run out.", user.notifyPayments) { on -> save({ it.copy(notifyPayments = on) }, switchJson("notify_payments", on)) }

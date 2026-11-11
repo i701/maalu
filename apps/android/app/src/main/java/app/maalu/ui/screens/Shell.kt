@@ -104,9 +104,11 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
     }
     // the bell's count: asked again whenever the screen changes and after the notifications page changes something
     var unread by remember { mutableIntStateOf(0) }
+    var pending by remember { mutableIntStateOf(0) }
     var bellTick by remember { mutableIntStateOf(0) }
     androidx.compose.runtime.LaunchedEffect(route, selected, bellTick) {
         (api.get<app.maalu.data.UnreadCount>("notifications/unread-count") as? app.maalu.data.ApiResult.Ok)?.let { unread = it.data.count }
+        (api.get<app.maalu.data.SplitCount>("salary-split-tasks/count") as? app.maalu.data.ApiResult.Ok)?.let { pending = it.data.count }
     }
     val onTab = destination == null
     val onAccountPage = onTab && selected == ACCOUNTS && openAccountId != null
@@ -118,7 +120,7 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
         drawerState = drawer,
         drawerContent = {
             AppDrawer(
-                server = server, selectedId = selectedId, themeMode = themeMode, onThemeMode = onThemeMode,
+                server = server, selectedId = selectedId, themeMode = themeMode, onThemeMode = onThemeMode, badges = mapOf("pending" to pending),
                 onOpen = { d ->
                     if (d.tabIndex != null) { selected = d.tabIndex; route = null } else route = d.id
                     scope.launch { drawer.close() }
@@ -180,6 +182,7 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
                     "vendors" -> VendorsScreen(api)
                     "subscriptions" -> SubscriptionsScreen(api)
                     "settings" -> SettingsScreen(api)
+                    "pending" -> PendingScreen(api, onChanged = { bellTick++ })
                     "notifications" -> NotificationsScreen(
                         api, onChanged = { bellTick++ },
                         onOpen = { target ->
