@@ -68,6 +68,7 @@ import app.maalu.data.Api
 import app.maalu.data.ApiResult
 import app.maalu.data.BalanceAfter
 import app.maalu.data.BalanceHistory
+import app.maalu.data.Card
 import app.maalu.data.CardStatement
 import app.maalu.data.HistoryRange
 import app.maalu.data.Totals
@@ -141,6 +142,7 @@ fun AccountDetailScreen(api: Api, accountId: String, onBack: () -> Unit) {
     var editing by remember { mutableStateOf(false) }
     var deleting by remember { mutableStateOf(false) }
     var repaying by remember { mutableStateOf<AddForm?>(null) }
+    var cards by remember { mutableStateOf<List<Card>>(emptyList()) }
     val snackbar = LocalSnackbar.current
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
@@ -160,6 +162,7 @@ fun AccountDetailScreen(api: Api, accountId: String, onBack: () -> Unit) {
         val acc = (a as ApiResult.Ok).data
         account = acc
         allAccounts = (api.get<List<Account>>("accounts") as? ApiResult.Ok)?.data.orEmpty()
+        cards = (api.get<List<Card>>("cards") as? ApiResult.Ok)?.data.orEmpty()
         val (from, to) = monthBounds(LocalDate.now())
         month = (api.get<Totals>("transactions/summary", mapOf("account_id" to accountId, "date_from" to "$from", "date_to" to "$to")) as? ApiResult.Ok)?.data
         statement = if (acc.group == "card" && acc.statementDay != null) (api.get<CardStatement>("accounts/$accountId/statement") as? ApiResult.Ok)?.data else null
@@ -220,7 +223,17 @@ fun AccountDetailScreen(api: Api, accountId: String, onBack: () -> Unit) {
                         onDelete = { deleting = true },
                     )
                 }
-                statement?.let { st -> item { StatementPanel(st) { repaying = repayForm(acc, st.remaining, null) } } }
+                statement?.let { st ->
+                    // the statement's Repay pays from the account the card is repaid from, when its card names one
+                    val from = cards.firstOrNull { it.kind == "credit" && it.account.id == acc.id }?.repayAccount?.id
+                    item { StatementPanel(st) { repaying = repayForm(acc, st.remaining, from) } }
+                }
+                item {
+                    AccountCardsSection(
+                        api, acc, allAccounts, cards, archived = false, onRepay = { form -> repaying = form },
+                        onChanged = { reload++ }, say = { m -> scope.launch { snackbar?.showSnackbar(m) } },
+                    )
+                }
                 item { BalanceChart(acc, history, range) { range = it } }
                 item {
                     Column {

@@ -3,6 +3,7 @@ package app.maalu.data
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -53,5 +54,11 @@ class TxFiltersTest {
         val f = TxFilters(type = "expense", account = Ref("a", "BML"), tags = listOf(Ref("t", "x")))
         assertEquals(f, txFiltersFromJson(f.toJson()))
         assertEquals(TxFilters(), txFiltersFromJson("not json"))
+    }
+
+    @Test fun aCardFilterIsSentAndCounted() {
+        val f = TxFilters(card = Ref("c1", "MIB Visa ••2815"))
+        assertEquals("c1", f.query()["card_id"]); assertEquals(1, f.detailCount()); assertTrue(f.isFiltered())
+        assertNull(f.clearDetails().card)
     }
 }

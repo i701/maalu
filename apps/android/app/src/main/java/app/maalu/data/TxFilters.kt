@@ -19,6 +19,7 @@ data class TxFilters(
     val dateFrom: String? = null,
     val dateTo: String? = null,
     val account: Ref? = null,
+    val card: Ref? = null,
     val category: Ref? = null,
     val tags: List<Ref> = emptyList(),
     val tagMatch: String = "any",
@@ -34,6 +35,7 @@ data class TxFilters(
         dateFrom?.let { put("date_from", it) }
         dateTo?.let { put("date_to", it) }
         account?.let { put("account_id", it.id) }
+        card?.let { put("card_id", it.id) }
         category?.let { put("category_id", it.id) }
         if (tags.isNotEmpty()) { put("tag_id", tags.map { it.id }); put("tag_match", tagMatch) }
         method?.let { put("payment_method", it) }
@@ -44,7 +46,7 @@ data class TxFilters(
 
     /** How many filters the sheet holds (not counting the type and planned chips). */
     fun detailCount(): Int = listOfNotNull(
-        (dateFrom ?: dateTo), account, category, tags.firstOrNull(), method, kind,
+        (dateFrom ?: dateTo), account, card, category, tags.firstOrNull(), method, kind,
         min.takeIf { isAmount(it) }, max.takeIf { isAmount(it) },
     ).size
 

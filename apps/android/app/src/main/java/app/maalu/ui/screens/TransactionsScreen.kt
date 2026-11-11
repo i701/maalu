@@ -416,6 +416,7 @@ private fun ActiveFilters(f: TxFilters, onChange: (TxFilters) -> Unit) {
         )
         if (f.dateFrom != null || f.dateTo != null) chip(rangeLabel(f.dateFrom, f.dateTo), Accents.getValue("blue")) { onChange(f.copy(dateFrom = null, dateTo = null)) }
         f.account?.let { chip(it.name, Accents.getValue("violet")) { onChange(f.copy(account = null)) } }
+        f.card?.let { chip(it.name, Accents.getValue("pink")) { onChange(f.copy(card = null)) } }
         f.category?.let { chip(it.name, Accents.getValue("amber")) { onChange(f.copy(category = null)) } }
         f.tags.forEach { tag -> chip("#${tag.name}", idTint(tag.id)) { onChange(f.copy(tags = f.tags - tag)) } }
         f.method?.let { chip(PaymentMethodLabels[it] ?: it, methodTint(it)) { onChange(f.copy(method = null)) } }

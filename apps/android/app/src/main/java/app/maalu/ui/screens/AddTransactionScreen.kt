@@ -81,6 +81,10 @@ import androidx.compose.ui.window.DialogProperties
 import app.maalu.data.Account
 import app.maalu.data.AddForm
 import app.maalu.data.Api
+import app.maalu.data.withCard
+import app.maalu.data.text
+import app.maalu.data.cardsForForm
+import app.maalu.data.Card
 import app.maalu.data.linkJson
 import app.maalu.data.attachmentProblem
 import app.maalu.data.humanSize
@@ -132,6 +136,7 @@ private class FormOptions(
     val categories: List<CategoryItem>,
     val tags: List<TagItem>,
     val templates: List<Template>,
+    val cards: List<Card> = emptyList(),
 )
 
 private val TYPES = listOf("expense" to "Expense", "income" to "Income", "transfer" to "Transfer")
@@ -169,7 +174,7 @@ fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit, edi
         val templates = if ((me as? ApiResult.Ok)?.data?.startFromTemplate != false) (api.get<List<Template>>("templates") as? ApiResult.Ok)?.data.orEmpty() else emptyList()
         if (me is ApiResult.Ok && accounts is ApiResult.Ok) {
             val list = accounts.data
-            options = FormOptions(me.data, list, (categories as? ApiResult.Ok)?.data.orEmpty(), (tags as? ApiResult.Ok)?.data.orEmpty(), templates)
+            options = FormOptions(me.data, list, (categories as? ApiResult.Ok)?.data.orEmpty(), (tags as? ApiResult.Ok)?.data.orEmpty(), templates, (api.get<List<Card>>("cards") as? ApiResult.Ok)?.data.orEmpty())
             // a new transaction starts in the default account (or the first one), with its currency's rate and usual way of
             // paying; an edit keeps what the transaction has
             val start = list.firstOrNull { it.id == me.data.defaultAccountId } ?: list.firstOrNull { !it.isLiability } ?: list.firstOrNull()
@@ -361,6 +366,14 @@ private fun Form(o: FormOptions, hasItems: Boolean, saveLabel: String, form: Add
                     detail = { r -> o.accounts.firstOrNull { it.id == r.id }?.let(::accountDetail) },
                     // built from the form as it is now: a function reference to a local helper kept an older copy of the form
                     onPick = { r -> o.accounts.firstOrNull { it.id == r?.id }?.let { a -> onForm(form.withAccount(a)) } },
+                )
+                // a card spends from its own account: picking one sets the account and the way of paying (an expense only)
+                val cardChoices = cardsForForm(o.cards, form.accountId)
+                if (form.type == "expense" && o.cards.isNotEmpty()) PickerField(
+                    title = "Card", value = o.cards.firstOrNull { it.id == form.cardId }?.let { Ref(it.id, it.text()) }, placeholder = "Card (optional)", anyLabel = "No card",
+                    entries = cardChoices.map { Ref(it.id, it.text()) },
+                    detail = { r -> cardChoices.firstOrNull { it.id == r.id }?.account?.name },
+                    onPick = { r -> val c = cardChoices.firstOrNull { it.id == r?.id }; onForm(if (c == null) form.copy(cardId = null) else form.withCard(c, o.accounts)) },
                 )
                 if (foreign) CompactField(
                     form.rate, { onForm(form.copy(rate = cleanAmount(it))) }, "Exchange rate: 1 $currency = ? $base",

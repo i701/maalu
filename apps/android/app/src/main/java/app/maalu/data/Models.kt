@@ -245,7 +245,7 @@ data class Goal(
 data class NameRef(val name: String, val currency: String? = null, val id: String? = null)
 
 @Serializable
-data class CardRef(val name: String, @SerialName("last_digits") val lastDigits: String? = null)
+data class CardRef(val name: String, @SerialName("last_digits") val lastDigits: String? = null, val id: String = "", val kind: String = "debit")
 
 /** A transaction as the lists and the detail sheet show it; the full record has more (items, places, links). */
 @Serializable
@@ -430,3 +430,14 @@ data class Attachment(val id: String, val filename: String, @SerialName("mime_ty
 
 @Serializable
 data class TxLink(val id: String, val url: String, val title: String? = null)
+
+/** A card tied to an account: a debit card spends from its bank account, a credit card is its own account and may name the account it is repaid from. */
+@Serializable
+data class Card(
+    val id: String,
+    val name: String,
+    @SerialName("last_digits") val lastDigits: String? = null,
+    val kind: String,
+    val account: NameRef,
+    @SerialName("repay_account") val repayAccount: NameRef? = null,
+)

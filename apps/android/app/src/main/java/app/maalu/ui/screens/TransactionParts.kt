@@ -107,6 +107,7 @@ import app.maalu.data.formatMoney
 import app.maalu.data.formatNumber
 import app.maalu.data.groupByDay
 import app.maalu.data.canDuplicate
+import app.maalu.data.text
 import app.maalu.data.duplicateForm
 import app.maalu.data.isRefund
 import app.maalu.data.shortTime
@@ -125,7 +126,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun RowDetails(t: Transaction) {
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        val sub = listOfNotNull(shortTime(t.time), t.category.takeIf { t.type != "transfer" }, t.account?.name).joinToString(" · ")
+        val sub = listOfNotNull(shortTime(t.time), t.category.takeIf { t.type != "transfer" }, t.account?.name, t.card?.takeIf { it.name.isNotBlank() }?.text()).joinToString(" · ")
         Text(sub, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
         val marks = listOfNotNull(
             "Planned".takeIf { t.planned }, "Refund".takeIf { t.isRefund }, "Adjustment".takeIf { t.adjustment },
@@ -195,7 +196,7 @@ fun DetailSheet(t: Transaction, onEdit: (() -> Unit)?, onDelete: () -> Unit, onC
                 DetailFact("Vendor", t.vendor?.name)
             }
             DetailFact("Payment", PaymentMethodLabels[t.paymentMethod])
-            DetailFact("Card", t.card?.let { it.name + (it.lastDigits?.let { d -> " ••$d" } ?: "") })
+            DetailFact("Card", t.card?.text())
             DetailFact("Subscription", t.subscription?.name)
             DetailFact("Group", t.group?.name)
             if (t.tags.isNotEmpty()) DetailFact("Tags", t.tags.joinToString(", ") { it.name })

@@ -32,6 +32,8 @@ data class AddForm(
     val latitude: String = "",
     val longitude: String = "",
     val place: String = "",
+    /** The card used (an expense only); picking one sets the account and the way of paying. */
+    val cardId: String? = null,
 )
 
 /** What each account group suggests as the payment method (port of SUGGESTED_PAYMENT_METHOD). */
@@ -67,7 +69,7 @@ fun isFuture(date: String, today: LocalDate = LocalDate.now()): Boolean =
  * paying come with it, and everything else (the type, the amount, the other account, the note) stays exactly as it was.
  */
 fun AddForm.withAccount(a: Account): AddForm =
-    copy(accountId = a.id, rate = tidyRate(a.exchangeRate), method = if (methodTouched) method else suggestedMethod(a.group))
+    copy(accountId = a.id, cardId = if (a.id == accountId) cardId else null, rate = tidyRate(a.exchangeRate), method = if (methodTouched) method else suggestedMethod(a.group))
 
 /** Moving the date also moves "planned", until the person has chosen it themselves (as on the web). */
 fun AddForm.withDate(date: String, today: LocalDate = LocalDate.now()): AddForm =
@@ -118,6 +120,7 @@ fun AddForm.toJson(accounts: List<Account>, baseCurrency: String): JsonObject {
             category.trim().takeIf { it.isNotEmpty() }?.let { put("category", it) }
             vendor.trim().takeIf { it.isNotEmpty() }?.let { put("vendor_name", it) }
             put("payment_method", method)
+            if (type == "expense") cardId?.let { put("card_id", it) }
             val currency = from?.currency ?: baseCurrency
             if (currency != baseCurrency) { put("currency", currency); put("exchange_rate", rate.trim()) }
             if (tags.isNotEmpty()) put("tags", JsonArray(tags.map { JsonPrimitive(it) }))
@@ -179,6 +182,7 @@ fun formFrom(t: Transaction): AddForm = AddForm(
     tags = t.tags.map { it.name },
     note = t.description.orEmpty(),
     latitude = t.latitude.orEmpty(), longitude = t.longitude.orEmpty(), place = t.place.orEmpty(),
+    cardId = t.card?.id?.takeIf { it.isNotEmpty() },
 )
 
 private fun sameNumber(a: String, b: String): Boolean {
@@ -205,6 +209,7 @@ fun AddForm.patchJson(before: AddForm, accounts: List<Account>, baseCurrency: St
     } else {
         if (category.trim() != before.category.trim()) put("category", category.trim())
         if (method != before.method) put("payment_method", method)
+        if (type == "expense" && cardId != before.cardId) { if (cardId == null) put("card_id", JsonNull) else put("card_id", cardId) }
         if (tags != before.tags) put("tags", JsonArray(tags.map { JsonPrimitive(it) }))
         // a new account or a new rate carries its currency; the rate only matters away from the base currency
         if (accountId != before.accountId || !sameNumber(rate, before.rate)) {

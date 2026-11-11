@@ -71,6 +71,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import app.maalu.data.Account
+import app.maalu.data.Card
+import app.maalu.data.text
+import androidx.compose.material.icons.outlined.CreditCard
 import app.maalu.data.Api
 import app.maalu.data.ApiResult
 import app.maalu.data.CategoryItem
@@ -84,7 +87,7 @@ import app.maalu.data.rangeLabel
 import java.time.Instant
 import java.time.ZoneOffset
 
-private class Options(val accounts: List<Account>, val categories: List<CategoryItem>, val tags: List<TagItem>)
+private class Options(val accounts: List<Account>, val categories: List<CategoryItem>, val tags: List<TagItem>, val cards: List<Card> = emptyList())
 
 private val KINDS = listOf("need" to "Needs", "want" to "Wants", "unsorted" to "Not sorted")
 
@@ -108,6 +111,7 @@ fun FiltersSheet(api: Api, initial: TxFilters, onApply: (TxFilters) -> Unit, onD
             (a as? ApiResult.Ok)?.data.orEmpty(),
             (c as? ApiResult.Ok)?.data.orEmpty(),
             (t as? ApiResult.Ok)?.data.orEmpty(),
+            (api.get<List<Card>>("cards") as? ApiResult.Ok)?.data.orEmpty(),
         )
     }
 
@@ -146,6 +150,14 @@ fun FiltersSheet(api: Api, initial: TxFilters, onApply: (TxFilters) -> Unit, onD
                             entries = o.accounts.map { Ref(it.id, it.name) },
                             detail = { r -> o.accounts.firstOrNull { it.id == r.id }?.let(::accountDetail) },
                             onPick = { draft = draft.copy(account = it) },
+                        )
+                    }
+                    if (o.cards.isNotEmpty()) Section("Card", Icons.Outlined.CreditCard, Accents.getValue("pink")) {
+                        PickerField(
+                            title = "Card", value = draft.card, placeholder = "Any card",
+                            entries = o.cards.map { Ref(it.id, it.text()) },
+                            detail = { r -> o.cards.firstOrNull { it.id == r.id }?.account?.name },
+                            onPick = { draft = draft.copy(card = it) },
                         )
                     }
                     Section("Category", Icons.Outlined.Category, Accents.getValue("amber")) {
