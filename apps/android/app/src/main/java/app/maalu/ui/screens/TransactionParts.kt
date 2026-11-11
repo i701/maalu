@@ -111,6 +111,7 @@ import app.maalu.data.summary
 import app.maalu.data.text
 import app.maalu.data.duplicateForm
 import app.maalu.data.isRefund
+import app.maalu.data.refundOfRef
 import app.maalu.data.shortTime
 import app.maalu.data.title
 import app.maalu.ui.components.MoneyText
@@ -174,7 +175,7 @@ fun amountColor(t: Transaction) = when (t.type) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailSheet(t: Transaction, onEdit: (() -> Unit)?, onDelete: () -> Unit, onClose: () -> Unit, onPay: (() -> Unit)? = null, onSplit: (() -> Unit)? = null, onLinkTransfer: (() -> Unit)? = null, matchCount: Int = 0, onDuplicate: (() -> Unit)? = null, receipts: (@Composable () -> Unit)? = null) {
+fun DetailSheet(t: Transaction, onEdit: (() -> Unit)?, onDelete: () -> Unit, onClose: () -> Unit, onPay: (() -> Unit)? = null, onSplit: (() -> Unit)? = null, onLinkTransfer: (() -> Unit)? = null, matchCount: Int = 0, onDuplicate: (() -> Unit)? = null, onRefund: (() -> Unit)? = null, onLinkRefund: (() -> Unit)? = null, receipts: (@Composable () -> Unit)? = null) {
     ModalBottomSheet(onDismissRequest = onClose) {
         Column(Modifier.fillMaxWidth().verticalScroll(androidx.compose.foundation.rememberScrollState()).padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(t.title(), style = MaterialTheme.typography.titleMedium)
@@ -197,6 +198,8 @@ fun DetailSheet(t: Transaction, onEdit: (() -> Unit)?, onDelete: () -> Unit, onC
                 if (t.splits.isNotEmpty()) DetailFact("Items", t.splits.joinToString("\n") { it.summary(t.currency) })
                 DetailFact("Vendor", t.vendor?.name)
             }
+            if (t.isRefund) t.refundOfRef()?.let { DetailFact("Refund of", app.maalu.data.refundContext(null, t)) }
+            if (app.maalu.data.wasRefunded(t)) DetailFact("Refunded", if (app.maalu.data.canRefund(t)) formatMoney(t.refundedAmount, t.currency) else "Fully refunded")
             DetailFact("Payment", PaymentMethodLabels[t.paymentMethod])
             DetailFact("Card", t.card?.text())
             DetailFact("Subscription", t.subscription?.name)
@@ -211,10 +214,12 @@ fun DetailSheet(t: Transaction, onEdit: (() -> Unit)?, onDelete: () -> Unit, onC
             }
             // the same money entered twice (an expense here and an income in another account): pair them into one transfer
             if (onLinkTransfer != null) OutlinedButton(onClick = onLinkTransfer, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) { Text(app.maalu.data.mergeLabel(matchCount)) }
+            if (onRefund != null) OutlinedButton(onClick = onRefund, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) { Text("Refund") }
+            if (onLinkRefund != null) OutlinedButton(onClick = onLinkRefund, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) { Text("Link to a purchase") }
             if (onDuplicate != null) OutlinedButton(onClick = onDuplicate, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) { Text("Duplicate as a new transaction") }
             if (onSplit != null) Button(onClick = onSplit, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth().padding(top = 4.dp), colors = ButtonDefaults.filledTonalButtonColors()) { Text("Split salary") }
-            if (onEdit == null) Text(
-                if (t.adjustment) "A balance adjustment can only be deleted." else "A refund is changed on the web.",
+            if (onEdit == null && t.adjustment) Text(
+                if (t.adjustment) "A balance adjustment can only be deleted." else "",
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -256,7 +261,7 @@ fun TransactionDetailHost(api: Api, t: Transaction, scope: kotlinx.coroutines.Co
         if (canLinkAsTransfer(t)) (api.get<List<Transaction>>("transactions/${t.id}/transfer-candidates") as? ApiResult.Ok)?.let { matches = it.data }
     }
     when (phase) {
-        "sheet" -> DetailSheet(t, onEdit = if (t.canEdit()) ({ phase = "edit" }) else null, onDelete = { phase = "delete" }, onClose = onClose, onPay = if (t.planned) ({ phase = "pay" }) else null, onSplit = if (canSplitSalary(t)) ({ phase = "split" }) else null, onLinkTransfer = if (matches.isNotEmpty()) ({ phase = "link" }) else null, matchCount = matches.size, onDuplicate = if (t.canDuplicate()) ({ phase = "duplicate" }) else null, receipts = { ReceiptsSection(api, t, onChanged = onChanged, say = { m -> scope.launch { snackbar?.showSnackbar(m) } }) })
+        "sheet" -> DetailSheet(t, onEdit = if (t.canEdit()) ({ phase = "edit" }) else if (t.isRefund && !t.adjustment) ({ phase = "refund-edit" }) else null, onRefund = if (app.maalu.data.canRefund(t)) ({ phase = "refund" }) else null, onLinkRefund = if (app.maalu.data.canLinkRefund(t)) ({ phase = "link-refund" }) else null, onDelete = { phase = "delete" }, onClose = onClose, onPay = if (t.planned) ({ phase = "pay" }) else null, onSplit = if (canSplitSalary(t)) ({ phase = "split" }) else null, onLinkTransfer = if (matches.isNotEmpty()) ({ phase = "link" }) else null, matchCount = matches.size, onDuplicate = if (t.canDuplicate()) ({ phase = "duplicate" }) else null, receipts = { ReceiptsSection(api, t, onChanged = onChanged, say = { m -> scope.launch { snackbar?.showSnackbar(m) } }) })
         "pay" -> MarkPaidDialog(api, t, null, onClose = onClose, onPaid = {
             onChanged()
             // pay that has just arrived: offer to split it, when there are rules to split it by
@@ -268,6 +273,8 @@ fun TransactionDetailHost(api: Api, t: Transaction, scope: kotlinx.coroutines.Co
             onSaved = { onChanged(); onClose(); scope.launch { snackbar?.showSnackbar("Transaction added") } },
         )
         "link" -> LinkTransferFlow(api, t, matches, onClose = onClose, onDone = { msg -> onChanged(); onClose(); scope.launch { snackbar?.showSnackbar(msg) } })
+        "refund", "refund-edit" -> RefundDialog(api, if (phase == "refund") t else null, if (phase == "refund-edit") t else null, onClose = onClose, onDone = { msg -> onChanged(); onClose(); scope.launch { snackbar?.showSnackbar(msg) } })
+        "link-refund" -> LinkRefundDialog(api, t, onClose = onClose, onDone = { msg -> onChanged(); onClose(); scope.launch { snackbar?.showSnackbar(msg) } })
         "split" -> SalarySplitDialog(api, t.id, onClose = { onChanged(); onClose() }, onDone = { msg -> onChanged(); onClose(); scope.launch { snackbar?.showSnackbar(msg) } })
         "edit" -> AddTransactionScreen(
             api, editing = t, onClose = onClose,

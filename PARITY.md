@@ -9,14 +9,13 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 67 | 56 | 20 |
-| 🟡 partial | 0 | 2 | 9 |
+| ✅ done | 67 | 57 | 20 |
+| 🟡 partial | 0 | 1 | 9 |
 | ❌ missing | 0 | 5 | 34 |
 | ➖ n/a | 1 | 5 | 5 |
 
-## Still to build on Android (7)
+## Still to build on Android (6)
 
-- 🟡 **Refunds** (Transactions). Refund rows are tagged and shown; a refund cannot be made or linked from the app.
 - 🟡 **Email digest** (Notifications). The switch and the email status are in Settings; sending a test email is not.
 - ❌ **Export to Excel** (Transactions).
 - ❌ **Sort every category into need or want** (Categories, tags and vendors). Each category's kind can be set one by one in its form.
@@ -117,7 +116,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Bulk actions on selected rows**<br>Select rows, then change category, tags, vendor or payment method, or delete them; select all that match. | ✅ done | ✅ done | ❌ missing |
 | **Trash**<br>Deleted transactions wait to be restored or deleted for good, singly or in bulk. | ✅ done | ✅ done | ✅ done |
 | **Planned transactions and Mark as paid**<br>Something coming up that counts toward nothing until it is paid with the real day and amount. | ✅ done | ✅ done | ✅ done |
-| **Refunds**<br>Give money back for a purchase (whole or by item), or link existing income to a purchase. | ✅ done | 🟡 partial | ❌ missing |
+| **Refunds**<br>Give money back for a purchase (whole or by item), or link existing income to a purchase. | ✅ done | ✅ done | ❌ missing |
 | **Split a purchase into items**<br>Items with quantity, category and tax (GST included or excluded) that add up to the amount. | ✅ done | ✅ done | ❌ missing |
 | **Receipts and web links**<br>Photos and PDFs and web links on a transaction. | ✅ done | ✅ done | ❌ missing |
 | **Mark a transaction on the map**<br>A pin and an optional place name, with place search by name. | ✅ done | ✅ done | ❌ missing |
@@ -130,7 +129,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - **Filters** (iOS): Type, date range (with quick ranges), account, category, tags (any or all) and amount. No payment method, card, needs or wants, or planned filter.
 - **Add and edit a transaction** (iOS): Income, expense and transfer with amount, account, category, vendor, payment method, date, note and an exchange rate for a foreign account. No time, tags, card, items, location, receipts or planned switch (a future date is planned by itself).
 - **Trash** (iOS): Restore and delete for good one by one; bulk actions wait for tx-bulk.
-- **Refunds** (Android): Refund rows are tagged and shown; a refund cannot be made or linked from the app.
 - **Import a bank statement** (Android): Web only, by choice: importing a statement is done on the web, where the rows are easier to review.
 - **Import a bank statement** (iOS): Web only, by choice: importing a statement is done on the web, where the rows are easier to review.
 

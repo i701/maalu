@@ -221,3 +221,60 @@ class BudgetSettingsLogicTest {
         org.junit.Assert.assertEquals("Months start on the 13th · Warn at 80%", settingsText(budget.copy(periodStartDay = 13)))
     }
 }
+
+class RefundLogicTest {
+    private fun tx(type: String = "expense", amount: String = "100.00", refunded: String = "0", planned: Boolean = false, salary: Boolean = false, splits: List<PurchaseItem> = emptyList()) =
+        Transaction(id = "t", type = type, amount = amount, currency = "MVR", category = "Food", date = "2026-11-01", planned = planned, categoryIsSalary = salary, refundedAmount = refunded, splits = splits)
+
+    @org.junit.Test fun whatCanBeRefundedOrLinked() {
+        org.junit.Assert.assertTrue(canRefund(tx()))
+        org.junit.Assert.assertTrue(canRefund(tx(refunded = "40.00")))
+        org.junit.Assert.assertFalse(canRefund(tx(refunded = "100.0000")))
+        org.junit.Assert.assertFalse(canRefund(tx(planned = true)))
+        org.junit.Assert.assertFalse(canRefund(tx(type = "income")))
+        org.junit.Assert.assertTrue(canLinkRefund(tx(type = "income")))
+        org.junit.Assert.assertFalse(canLinkRefund(tx(type = "income", salary = true)))
+        org.junit.Assert.assertFalse(canLinkRefund(tx()))
+        org.junit.Assert.assertEquals("60.00", amountLeft("100.00", "40.00"))
+    }
+
+    @org.junit.Test fun checksTheAmounts() {
+        org.junit.Assert.assertNull(refundAmountProblem("60", "60.00"))
+        org.junit.Assert.assertNotNull(refundAmountProblem("60.01", "60.00"))
+        org.junit.Assert.assertNotNull(refundAmountProblem("0", "60.00"))
+        org.junit.Assert.assertNull(refundAmountProblem("500", null))
+        val items = listOf(RefundItem("a", "Milk", "Food", "10.00", "10.00", true), RefundItem("b", "Bread", "Food", "5.00", "5.00", false))
+        org.junit.Assert.assertNull(itemsProblem(items))
+        org.junit.Assert.assertNotNull(itemsProblem(items.map { it.copy(on = false) }))
+        org.junit.Assert.assertNotNull(itemsProblem(listOf(items[0].copy(amount = "10.01"))))
+        org.junit.Assert.assertNull(itemsProblem(listOf(items[0].copy(amount = "10.01")), locked = true))
+        org.junit.Assert.assertEquals("10.00", itemsTotal(items).toPlainString())
+    }
+
+    @org.junit.Test fun picksItemsAtWhatIsLeft() {
+        val p = tx(splits = listOf(PurchaseItem(id = "a", name = "Milk", category = "Food", amount = "10.00", refundedAmount = "4.00")))
+        val items = itemsToPick(p)
+        org.junit.Assert.assertEquals("6.00", items[0].amount)
+        org.junit.Assert.assertFalse(items[0].on)
+        val refund = tx(type = "income", splits = listOf(PurchaseItem(id = "r", name = "Milk", category = "Food", amount = "3.00", refundOfSplitId = "a")))
+        org.junit.Assert.assertEquals("a", itemsOfRefund(refund)[0].id)
+        org.junit.Assert.assertTrue(itemsOfRefund(refund)[0].on)
+    }
+
+    @org.junit.Test fun buildsTheBodies() {
+        org.junit.Assert.assertEquals(
+            """{"type":"income","refund_of_id":"p1","amount":"25","transaction_date":"2026-11-02","exchange_rate":"15.4","description":"Damaged","account_id":"a1"}""",
+            refundJson("p1", "25", "2026-11-02", null, "15.4", " Damaged ", "a1", null, editing = false).toString(),
+        )
+        org.junit.Assert.assertEquals(
+            """{"amount":"25","transaction_date":"2026-11-02","transaction_time":null,"description":null,"account_id":null}""",
+            refundJson(null, "25", "2026-11-02", null, null, "", null, null, editing = true).toString(),
+        )
+        val items = listOf(RefundItem("a", "Milk", "Food", "10.00", "10.00", true))
+        org.junit.Assert.assertEquals(
+            """{"refund_of_id":"p1","splits":[{"name":"Milk","quantity":"1","category":"Food","amount":"10.00","refund_of_split_id":"a"}]}""",
+            linkRefundJson("p1", items).toString(),
+        )
+        org.junit.Assert.assertEquals("""{"refund_of_id":"p1"}""", linkRefundJson("p1", null).toString())
+    }
+}

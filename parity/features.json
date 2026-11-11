@@ -772,11 +772,12 @@
         ]
       },
       "android": {
-        "status": "partial",
+        "status": "done",
         "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/RefundUi.kt",
+          "apps/android/app/src/main/java/app/maalu/data/RefundLogic.kt",
           "apps/android/app/src/main/java/app/maalu/ui/screens/TransactionParts.kt"
-        ],
-        "note": "Refund rows are tagged and shown; a refund cannot be made or linked from the app."
+        ]
       },
       "ios": {
         "status": "missing"

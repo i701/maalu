@@ -23,6 +23,10 @@ data class PurchaseItem(
     val category: String = "",
     val amount: String,
     @SerialName("tax_amount") val taxAmount: String? = null,
+    /** On a refund's line: the item of the purchase it gives back. */
+    @SerialName("refund_of_split_id") val refundOfSplitId: String? = null,
+    /** On a purchase's item: how much of it refunds have given back. */
+    @SerialName("refunded_amount") val refundedAmount: String = "0",
 )
 
 /** How prices on a receipt relate to GST. */
