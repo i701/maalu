@@ -424,3 +424,9 @@ data class TwoFactorSetup(
 
 @Serializable
 data class RecoveryCodes(@SerialName("recovery_codes") val recoveryCodes: List<String> = emptyList())
+
+@Serializable
+data class Attachment(val id: String, val filename: String, @SerialName("mime_type") val mimeType: String, val size: Long = 0)
+
+@Serializable
+data class TxLink(val id: String, val url: String, val title: String? = null)

@@ -7,6 +7,7 @@ import app.maalu.data.canLinkAsTransfer
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -171,9 +172,9 @@ fun amountColor(t: Transaction) = when (t.type) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailSheet(t: Transaction, onEdit: (() -> Unit)?, onDelete: () -> Unit, onClose: () -> Unit, onPay: (() -> Unit)? = null, onSplit: (() -> Unit)? = null, onLinkTransfer: (() -> Unit)? = null, matchCount: Int = 0, onDuplicate: (() -> Unit)? = null) {
+fun DetailSheet(t: Transaction, onEdit: (() -> Unit)?, onDelete: () -> Unit, onClose: () -> Unit, onPay: (() -> Unit)? = null, onSplit: (() -> Unit)? = null, onLinkTransfer: (() -> Unit)? = null, matchCount: Int = 0, onDuplicate: (() -> Unit)? = null, receipts: (@Composable () -> Unit)? = null) {
     ModalBottomSheet(onDismissRequest = onClose) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.fillMaxWidth().verticalScroll(androidx.compose.foundation.rememberScrollState()).padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(t.title(), style = MaterialTheme.typography.titleMedium)
             MoneyText(t.amount, t.currency, prefix = signPrefix(t), style = MaterialTheme.typography.titleLarge, color = amountColor(t))
             val rate = t.exchangeRate.toBigDecimalOrNull()
@@ -200,7 +201,7 @@ fun DetailSheet(t: Transaction, onEdit: (() -> Unit)?, onDelete: () -> Unit, onC
             if (t.tags.isNotEmpty()) DetailFact("Tags", t.tags.joinToString(", ") { it.name })
             DetailFact("Note", t.description)
             if (t.hasPlace()) DetailFact("Place", app.maalu.data.placeLabel(t.place, t.latitude, t.longitude))
-            if (t.attachmentCount > 0 || t.linkCount > 0) DetailFact("Attached", "${t.attachmentCount} file(s), ${t.linkCount} link(s)")
+            receipts?.invoke()
             // something planned becomes real here, with the real day, amount and rate
             if (onPay != null) Button(onClick = onPay, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
                 Text(app.maalu.data.payTitle(t.type))
@@ -252,7 +253,7 @@ fun TransactionDetailHost(api: Api, t: Transaction, scope: kotlinx.coroutines.Co
         if (canLinkAsTransfer(t)) (api.get<List<Transaction>>("transactions/${t.id}/transfer-candidates") as? ApiResult.Ok)?.let { matches = it.data }
     }
     when (phase) {
-        "sheet" -> DetailSheet(t, onEdit = if (t.canEdit()) ({ phase = "edit" }) else null, onDelete = { phase = "delete" }, onClose = onClose, onPay = if (t.planned) ({ phase = "pay" }) else null, onSplit = if (canSplitSalary(t)) ({ phase = "split" }) else null, onLinkTransfer = if (matches.isNotEmpty()) ({ phase = "link" }) else null, matchCount = matches.size, onDuplicate = if (t.canDuplicate()) ({ phase = "duplicate" }) else null)
+        "sheet" -> DetailSheet(t, onEdit = if (t.canEdit()) ({ phase = "edit" }) else null, onDelete = { phase = "delete" }, onClose = onClose, onPay = if (t.planned) ({ phase = "pay" }) else null, onSplit = if (canSplitSalary(t)) ({ phase = "split" }) else null, onLinkTransfer = if (matches.isNotEmpty()) ({ phase = "link" }) else null, matchCount = matches.size, onDuplicate = if (t.canDuplicate()) ({ phase = "duplicate" }) else null, receipts = { ReceiptsSection(api, t, onChanged = onChanged, say = { m -> scope.launch { snackbar?.showSnackbar(m) } }) })
         "pay" -> MarkPaidDialog(api, t, null, onClose = onClose, onPaid = {
             onChanged()
             // pay that has just arrived: offer to split it, when there are rules to split it by

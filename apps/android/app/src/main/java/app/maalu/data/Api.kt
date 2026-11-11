@@ -76,6 +76,23 @@ class Api(
         return if (r is Outcome.Got && r.raw.code in 200..299) ApiResult.Ok(Unit) else failure(r)
     }
 
+    /** The bytes of a file (a receipt). The first is null when it could not be fetched; the second says why. */
+    suspend fun bytes(path: String): Pair<ByteArray?, String?> = withContext(Dispatchers.IO) {
+        try {
+            val builder = Request.Builder().url("$server/api/v1/$path".toHttpUrl()).header("User-Agent", "Maalu-Android/0.1")
+            token()?.let { builder.header("Authorization", "Bearer $it") }
+            http.newCall(builder.build()).execute().use { r ->
+                if (r.code in 200..299) r.body?.bytes() to null else null to "The file could not be loaded (${r.code})."
+            }
+        } catch (e: Exception) {
+            null to "Cannot reach the server. Check the connection."
+        }
+    }
+
+    /** Attach a file to a transaction: the file itself is the request body, its name goes in the query. */
+    suspend inline fun <reified T> upload(path: String, filename: String, bytes: ByteArray): ApiResult<T> =
+        decode(safely { raw("POST", path, mapOf("filename" to filename), bytes.toRequestBody("application/octet-stream".toMediaType())) })
+
     sealed interface Outcome {
         data class Got(val raw: Raw) : Outcome
         data class Down(val message: String) : Outcome

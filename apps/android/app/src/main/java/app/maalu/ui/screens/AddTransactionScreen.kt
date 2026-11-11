@@ -62,6 +62,7 @@ import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -80,6 +81,11 @@ import androidx.compose.ui.window.DialogProperties
 import app.maalu.data.Account
 import app.maalu.data.AddForm
 import app.maalu.data.Api
+import app.maalu.data.linkJson
+import app.maalu.data.attachmentProblem
+import app.maalu.data.humanSize
+import app.maalu.data.TxLink
+import app.maalu.data.Attachment
 import app.maalu.data.ApiResult
 import app.maalu.data.CategoryItem
 import app.maalu.data.FormField
@@ -149,6 +155,10 @@ fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit, edi
     var pickingTemplate by remember { mutableStateOf(false) }
     var savingTemplate by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    // receipts and links picked while the transaction does not exist yet: they go up as soon as it is saved
+    val pendingFiles = remember { mutableStateListOf<PickedFile>() }
+    val pendingLinks = remember { mutableStateListOf<Pair<String, String>>() }
+    var addingLink by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         val me = api.get<UserMe>("users/me")
@@ -191,12 +201,17 @@ fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit, edi
             val result = if (editing != null && patch != null) api.patchJson<Transaction>("transactions/${editing.id}", patch.toString())
             else api.postJson<Transaction>("transactions", form.toJson(o.accounts, base).toString())
             when (val r = result) {
-                is ApiResult.Ok -> if (another) {
+                is ApiResult.Ok -> {
+                    val problem = if (editing == null) attachPending(api, r.data.id, pendingFiles.toList(), pendingLinks.toList()) else null
+                    pendingFiles.clear(); pendingLinks.clear()
+                    if (problem != null) snackbar.showSnackbar(problem)
+                    if (another) {
                     onAdded?.invoke()
                     form = seedAfterSave(form); busy = false
                     snackbar.currentSnackbarData?.dismiss()
                     launch { snackbar.showSnackbar("Saved. Ready for the next one.") }
-                } else onSaved()
+                    } else onSaved()
+                }
                 is ApiResult.Failed -> {
                     error = r.message; busy = false
                     errorField = fieldOf(r.fields.keys.firstOrNull())
@@ -233,6 +248,9 @@ fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit, edi
                 o == null -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
                 else -> Form(
                     o, editing?.splits?.isNotEmpty() == true, if (editing != null) "Save changes" else "Save", form, { errorField = null; form = it }, error, errorField, busy, Modifier.padding(padding),
+                    extra = if (editing == null) ({
+                        PendingReceipts(pendingFiles, pendingLinks, busy, onProblem = { m -> scope.launch { snackbar.showSnackbar(m) } }, onAddLink = { addingLink = true })
+                    }) else null,
                     onSave = { save(o, false) },
                     onSaveAnother = if (editing == null && onAdded != null) ({ save(o, true) }) else null,
                 )
@@ -254,6 +272,7 @@ fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit, edi
             },
             onDismiss = { pickingTemplate = false },
         )
+        if (addingLink) AddLinkDialog(pendingLinks.size, onClose = { addingLink = false }, onAdd = { url, title -> addingLink = false; pendingLinks += url to title })
         if (savingTemplate && o != null) SaveTemplateDialog(
             api, form, o.accounts, onClose = { savingTemplate = false },
             onSaved = { savingTemplate = false; scope.launch { snackbar.showSnackbar("Template saved.") } },
@@ -303,7 +322,7 @@ private fun typeTint(type: String): Color = when (type) {
 }
 
 @Composable
-private fun Form(o: FormOptions, hasItems: Boolean, saveLabel: String, form: AddForm, onForm: (AddForm) -> Unit, error: String?, errorField: FormField?, busy: Boolean, modifier: Modifier, onSave: () -> Unit, onSaveAnother: (() -> Unit)? = null) {
+private fun Form(o: FormOptions, hasItems: Boolean, saveLabel: String, form: AddForm, onForm: (AddForm) -> Unit, error: String?, errorField: FormField?, busy: Boolean, modifier: Modifier, onSave: () -> Unit, onSaveAnother: (() -> Unit)? = null, extra: (@Composable () -> Unit)? = null) {
     val base = o.me.baseCurrency
     val account = o.accounts.firstOrNull { it.id == form.accountId }
     val toAccount = o.accounts.firstOrNull { it.id == form.toAccountId }
@@ -438,6 +457,7 @@ private fun Form(o: FormOptions, hasItems: Boolean, saveLabel: String, form: Add
                     onDone = { spot -> marking = false; onForm(if (spot == null) form.copy(latitude = "", longitude = "", place = "") else form.copy(latitude = spot.latitude, longitude = spot.longitude, place = spot.place)) },
                 )
             }
+            extra?.invoke()
             Box(Modifier.padding(bottom = 8.dp))
         }
 
@@ -502,3 +522,38 @@ private fun fieldOf(apiName: String?): FormField? = when (apiName) {
 
 /** The signed-in API, for the vendor search deep inside the form. */
 private val LocalApi = androidx.compose.runtime.staticCompositionLocalOf<Api?> { null }
+
+/** Receipts and links picked on a form for a transaction that is not saved yet: listed here, removable, and sent after it is saved. */
+@Composable
+private fun PendingReceipts(files: MutableList<PickedFile>, links: MutableList<Pair<String, String>>, busy: Boolean, onProblem: (String) -> Unit, onAddLink: () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text("Receipts and links", style = MaterialTheme.typography.titleSmall)
+        files.forEachIndexed { i, f ->
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text("${f.name} · ${humanSize(f.bytes.size.toLong())}", Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                TextButton(onClick = { files.removeAt(i) }, enabled = !busy) { Text("Remove") }
+            }
+        }
+        links.forEachIndexed { i, (url, title) ->
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(title.ifBlank { url }, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                TextButton(onClick = { links.removeAt(i) }, enabled = !busy) { Text("Remove") }
+            }
+        }
+        AddReceiptButtons(
+            enabled = !busy, onProblem = onProblem, onLink = onAddLink,
+            onFile = { f ->
+                val problem = attachmentProblem(f.bytes.size.toLong(), files.size)
+                if (problem != null) onProblem(problem) else files += f
+            },
+        )
+    }
+}
+
+/** Sends the receipts and links picked on the form to the transaction that was just made. Returns a sentence about what did not go up, or null. */
+private suspend fun attachPending(api: Api, id: String, files: List<PickedFile>, links: List<Pair<String, String>>): String? {
+    val failed = mutableListOf<String>()
+    for (f in files) if (api.upload<Attachment>("transactions/$id/attachments", f.name, f.bytes) is ApiResult.Failed) failed += f.name
+    for ((url, title) in links) if (api.postJson<TxLink>("transactions/$id/links", linkJson(url, title).toString()) is ApiResult.Failed) failed += title.ifBlank { url }
+    return if (failed.isEmpty()) null else "Saved, but could not attach: ${failed.joinToString(", ")}. Add them from the transaction."
+}
