@@ -737,7 +737,7 @@
       "id": "tx-splits",
       "area": "transactions",
       "name": "Split a purchase into items",
-      "summary": "Items with quantity, category and tax that add up to the amount.",
+      "summary": "Items with quantity, category and tax (GST included or excluded) that add up to the amount.",
       "web": {
         "status": "done",
         "evidence": [
@@ -745,11 +745,11 @@
         ]
       },
       "android": {
-        "status": "partial",
+        "status": "done",
         "evidence": [
+          "apps/android/app/src/main/java/app/maalu/data/SplitLogic.kt",
           "apps/android/app/src/main/java/app/maalu/ui/screens/AddTransactionScreen.kt"
-        ],
-        "note": "A purchase with items keeps them when its other fields are edited; the items themselves are edited on the web."
+        ]
       },
       "ios": {
         "status": "missing"

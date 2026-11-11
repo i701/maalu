@@ -81,6 +81,15 @@ import androidx.compose.ui.window.DialogProperties
 import app.maalu.data.Account
 import app.maalu.data.AddForm
 import app.maalu.data.Api
+import app.maalu.ui.components.MoneyText
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.material.icons.outlined.ReceiptLong
+import app.maalu.data.splitTotal
+import app.maalu.data.newItem
+import app.maalu.data.lines
+import app.maalu.data.effectiveAmount
+import app.maalu.data.TaxMode
+import app.maalu.data.ItemRow
 import app.maalu.data.withCard
 import app.maalu.data.text
 import app.maalu.data.cardsForForm
@@ -252,7 +261,7 @@ fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit, edi
                 }
                 o == null -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
                 else -> Form(
-                    o, editing?.splits?.isNotEmpty() == true, if (editing != null) "Save changes" else "Save", form, { errorField = null; form = it }, error, errorField, busy, Modifier.padding(padding),
+                    o, if (editing != null) "Save changes" else "Save", form, { errorField = null; form = it }, error, errorField, busy, Modifier.padding(padding),
                     extra = if (editing == null) ({
                         PendingReceipts(pendingFiles, pendingLinks, busy, onProblem = { m -> scope.launch { snackbar.showSnackbar(m) } }, onAddLink = { addingLink = true })
                     }) else null,
@@ -327,7 +336,7 @@ private fun typeTint(type: String): Color = when (type) {
 }
 
 @Composable
-private fun Form(o: FormOptions, hasItems: Boolean, saveLabel: String, form: AddForm, onForm: (AddForm) -> Unit, error: String?, errorField: FormField?, busy: Boolean, modifier: Modifier, onSave: () -> Unit, onSaveAnother: (() -> Unit)? = null, extra: (@Composable () -> Unit)? = null) {
+private fun Form(o: FormOptions, saveLabel: String, form: AddForm, onForm: (AddForm) -> Unit, error: String?, errorField: FormField?, busy: Boolean, modifier: Modifier, onSave: () -> Unit, onSaveAnother: (() -> Unit)? = null, extra: (@Composable () -> Unit)? = null) {
     val base = o.me.baseCurrency
     val account = o.accounts.firstOrNull { it.id == form.accountId }
     val toAccount = o.accounts.firstOrNull { it.id == form.toAccountId }
@@ -351,7 +360,13 @@ private fun Form(o: FormOptions, hasItems: Boolean, saveLabel: String, form: Add
 
             // the amount: a regular field like the rest, with the currency at its end; the tile takes the type's colour
             Section("Amount", Icons.Outlined.Numbers, tint) {
-                CompactField(
+                // with items the amount is their total: it is shown, not typed
+                if (form.splitOn && form.type != "transfer") {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        MoneyText(form.effectiveAmount(), currency, style = MaterialTheme.typography.titleLarge)
+                        Text("  total of the items", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                } else CompactField(
                     form.amount, { onForm(form.copy(amount = cleanAmount(it))) }, "0.00",
                     keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     enabled = !busy, isError = errorField == FormField.Amount, suffix = currency,
@@ -395,12 +410,9 @@ private fun Form(o: FormOptions, hasItems: Boolean, saveLabel: String, form: Add
                 )
             }
 
-            if (form.type != "transfer" && hasItems) Text(
-                "This purchase is split into items. Edit the items on the web; the rest can be changed here.",
-                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            if (form.type != "transfer" && !hasItems) {
-                Section("Category", Icons.Outlined.Category, Accents.getValue("amber")) {
+            if (form.type != "transfer") {
+                // with items each item has its own category, and the transaction takes the biggest item's
+                if (!form.splitOn) Section("Category", Icons.Outlined.Category, Accents.getValue("amber")) {
                     PickerField(
                         isError = errorField == FormField.Category,
                         title = "Category", value = form.category.takeIf { it.isNotBlank() }?.let { Ref("", it) }, placeholder = "Choose or type a category",
@@ -410,6 +422,19 @@ private fun Form(o: FormOptions, hasItems: Boolean, saveLabel: String, form: Add
                     )
                 }
                 VendorSection(form, onForm)
+                Section("Items", Icons.Outlined.ReceiptLong, Accents.getValue("orange")) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(32.dp)) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Split by items", style = MaterialTheme.typography.bodyMedium)
+                            Text("List what was bought, each with its own category and price. The items make the amount.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Switch(
+                            checked = form.splitOn, enabled = !busy,
+                            onCheckedChange = { on -> onForm(form.copy(splitOn = on, items = if (on && form.items.isEmpty()) listOf(newItem(), newItem()) else form.items)) },
+                        )
+                    }
+                    if (form.splitOn) ItemsEditor(form, onForm, o.categories, currency, busy)
+                }
             }
 
             Section("When", Icons.Outlined.CalendarMonth, Accents.getValue("blue")) {
@@ -569,4 +594,57 @@ private suspend fun attachPending(api: Api, id: String, files: List<PickedFile>,
     for (f in files) if (api.upload<Attachment>("transactions/$id/attachments", f.name, f.bytes) is ApiResult.Failed) failed += f.name
     for ((url, title) in links) if (api.postJson<TxLink>("transactions/$id/links", linkJson(url, title).toString()) is ApiResult.Failed) failed += title.ifBlank { url }
     return if (failed.isEmpty()) null else "Saved, but could not attach: ${failed.joinToString(", ")}. Add them from the transaction."
+}
+
+/** The item-by-item table: a GST choice, then a card per item (name, quantity, price each, category and its line total) and the total. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ItemsEditor(form: AddForm, onForm: (AddForm) -> Unit, categories: List<CategoryItem>, currency: String, busy: Boolean) {
+    val lines = form.lines()
+    // changing how GST applies recalculates every row from its typed price
+    fun unlocked(rows: List<ItemRow>) = rows.map { it.copy(lockedAmount = null, lockedTax = null) }
+    fun edit(key: String, change: (ItemRow) -> ItemRow) = onForm(form.copy(items = form.items.map { if (it.key == key) change(it) else it }))
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TaxMode.entries.forEach { m -> TintChip(paletteTint(m.ordinal), form.taxMode == m, { onForm(form.copy(taxMode = m, items = unlocked(form.items))) }, { Text(m.label) }) }
+        }
+        if (form.taxMode != TaxMode.None) CompactField(
+            form.taxRate, { onForm(form.copy(taxRate = cleanAmount(it), items = unlocked(form.items))) }, "GST rate (%), for example 8",
+            keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !busy,
+        )
+        form.items.forEachIndexed { i, row ->
+            androidx.compose.runtime.key(row.key) {
+                androidx.compose.material3.Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLow) {
+                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            CompactField(row.name, { v -> edit(row.key) { it.copy(name = v.take(200)) } }, "Item", Modifier.weight(1f), enabled = !busy)
+                            androidx.compose.material3.IconButton(onClick = { onForm(form.copy(items = form.items.filter { it.key != row.key })) }, enabled = !busy && form.items.size > 1) {
+                                androidx.compose.material3.Icon(Icons.Outlined.Close, "Remove item ${i + 1}")
+                            }
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            CompactField(row.quantity, { v -> edit(row.key) { it.copy(quantity = cleanAmount(v), lockedAmount = null, lockedTax = null) } }, "Qty", Modifier.weight(0.35f), keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !busy)
+                            CompactField(row.price, { v -> edit(row.key) { it.copy(price = cleanAmount(v), lockedAmount = null, lockedTax = null) } }, "Price each", Modifier.weight(0.65f), keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !busy, suffix = currency)
+                        }
+                        PickerField(
+                            title = "Category", value = row.category.takeIf { it.isNotBlank() }?.let { Ref("", it) }, placeholder = "Category",
+                            anyLabel = null, searchable = true, allowCreate = true, entries = categories.map { Ref(it.id, it.name) },
+                            onPick = { r -> edit(row.key) { it.copy(category = r?.name ?: "") } },
+                        )
+                        val line = lines[i]
+                        Text(
+                            if (line == null) "Enter quantity and price" else formatMoney(line.amount.toPlainString(), currency) + (line.tax?.let { " (GST ${formatMoney(it.toPlainString(), currency)})" } ?: ""),
+                            style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.align(Alignment.End),
+                        )
+                    }
+                }
+            }
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            TextButton(onClick = { onForm(form.copy(items = form.items + newItem())) }, enabled = !busy) { Text("Add item") }
+            Spacer(Modifier.weight(1f))
+            Text("Total ", style = MaterialTheme.typography.bodyMedium)
+            MoneyText(splitTotal(lines).toPlainString(), currency, style = MaterialTheme.typography.titleSmall)
+        }
+    }
 }

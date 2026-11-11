@@ -34,6 +34,11 @@ data class AddForm(
     val place: String = "",
     /** The card used (an expense only); picking one sets the account and the way of paying. */
     val cardId: String? = null,
+    /** Split into items: each with a quantity, a price and a category; their totals make the amount. */
+    val splitOn: Boolean = false,
+    val items: List<ItemRow> = emptyList(),
+    val taxMode: TaxMode = TaxMode.None,
+    val taxRate: String = "",
 )
 
 /** What each account group suggests as the payment method (port of SUGGESTED_PAYMENT_METHOD). */
@@ -75,7 +80,7 @@ fun AddForm.withAccount(a: Account): AddForm =
 fun AddForm.withDate(date: String, today: LocalDate = LocalDate.now()): AddForm =
     copy(date = date, planned = if (plannedTouched) planned else isFuture(date, today))
 
-enum class FormField { Amount, Account, ToAccount, ToAmount, Category, Rate }
+enum class FormField { Amount, Account, ToAccount, ToAmount, Category, Rate, Items }
 
 /** What is wrong, in words, and where. */
 data class FormProblem(val field: FormField, val message: String)
@@ -85,8 +90,10 @@ data class FormProblem(val field: FormField, val message: String)
  * (and its own refusals are shown too); this saves a trip for the common slips.
  */
 fun AddForm.problem(accounts: List<Account>, baseCurrency: String): FormProblem? {
-    if (!isPositive(amount)) return FormProblem(FormField.Amount, "Enter an amount above zero.")
     val from = accounts.firstOrNull { it.id == accountId }
+    val itemised = splitOn && type != "transfer"
+    if (itemised) itemsProblem()?.let { return FormProblem(FormField.Items, it) }
+    else if (!isPositive(amount)) return FormProblem(FormField.Amount, "Enter an amount above zero.")
     if (type == "transfer") {
         val to = accounts.firstOrNull { it.id == toAccountId }
         if (from == null) return FormProblem(FormField.Account, "Pick the account the money leaves.")
@@ -95,8 +102,8 @@ fun AddForm.problem(accounts: List<Account>, baseCurrency: String): FormProblem?
         if (from.currency != to.currency && !isPositive(toAmount)) return FormProblem(FormField.ToAmount, "Enter how much arrives in ${to.currency}.")
         return null
     }
-    // the API refuses an income or expense with no category
-    if (category.isBlank()) return FormProblem(FormField.Category, "Choose a category.")
+    // the API refuses an income or expense with no category (with items, each item has its own)
+    if (!itemised && category.isBlank()) return FormProblem(FormField.Category, "Choose a category.")
     val currency = from?.currency ?: baseCurrency
     if (currency != baseCurrency && !isPositive(rate)) return FormProblem(FormField.Rate, "Enter the exchange rate.")
     return null
@@ -108,7 +115,7 @@ fun AddForm.toJson(accounts: List<Account>, baseCurrency: String): JsonObject {
     val to = accounts.firstOrNull { it.id == toAccountId }
     return buildJsonObject {
         put("type", type)
-        put("amount", amount.trim())
+        put("amount", effectiveAmount().trim())
         put("transaction_date", date)
         time?.let { put("transaction_time", if (it.length == 5) "$it:00" else it) }
         if (planned) put("planned", true)
@@ -117,7 +124,8 @@ fun AddForm.toJson(accounts: List<Account>, baseCurrency: String): JsonObject {
             to?.let { put("to_account_id", it.id) }
             if (from != null && to != null && from.currency != to.currency) put("to_amount", toAmount.trim())
         } else {
-            category.trim().takeIf { it.isNotEmpty() }?.let { put("category", it) }
+            // with items the category comes from the biggest item
+            if (splitOn) put("splits", splitsJson()) else category.trim().takeIf { it.isNotEmpty() }?.let { put("category", it) }
             vendor.trim().takeIf { it.isNotEmpty() }?.let { put("vendor_name", it) }
             put("payment_method", method)
             if (type == "expense") cardId?.let { put("card_id", it) }
@@ -188,6 +196,7 @@ fun formFrom(t: Transaction): AddForm = AddForm(
     note = t.description.orEmpty(),
     latitude = t.latitude.orEmpty(), longitude = t.longitude.orEmpty(), place = t.place.orEmpty(),
     cardId = t.card?.id?.takeIf { it.isNotEmpty() },
+    splitOn = t.splits.isNotEmpty(), items = rowsFromSplits(t.splits),
 )
 
 private fun sameNumber(a: String, b: String): Boolean {
@@ -203,7 +212,8 @@ private fun sameNumber(a: String, b: String): Boolean {
  */
 fun AddForm.patchJson(before: AddForm, accounts: List<Account>, baseCurrency: String): JsonObject = buildJsonObject {
     if (type != before.type) put("type", type)
-    if (!sameNumber(amount, before.amount)) put("amount", amount.trim())
+    val itemised = splitOn && type != "transfer"
+    if (!itemised && !sameNumber(amount, before.amount)) put("amount", amount.trim())
     if (date != before.date) put("transaction_date", date)
     if (time != before.time) { if (time == null) put("transaction_time", JsonNull) else put("transaction_time", "$time:00") }
     if (planned != before.planned) put("planned", planned)
@@ -212,7 +222,14 @@ fun AddForm.patchJson(before: AddForm, accounts: List<Account>, baseCurrency: St
         if (toAccountId != before.toAccountId) toAccountId?.let { put("to_account_id", it) }
         if (!sameNumber(toAmount, before.toAmount) && toAmount.isNotBlank()) put("to_amount", toAmount.trim())
     } else {
-        if (category.trim() != before.category.trim()) put("category", category.trim())
+        if (itemised) {
+            // the items go with their total when anything about them changed; unchanged ones are left alone so links to them hold
+            if (items != before.items || taxMode != before.taxMode || taxRate != before.taxRate || !before.splitOn) { put("amount", effectiveAmount()); put("splits", splitsJson()) }
+        } else {
+            if (category.trim() != before.category.trim()) put("category", category.trim())
+            // switching the items off on a split transaction removes them
+            if (before.splitOn) { put("splits", JsonNull); put("amount", amount.trim()); put("category", category.trim()) }
+        }
         if (method != before.method) put("payment_method", method)
         if (type == "expense" && cardId != before.cardId) { if (cardId == null) put("card_id", JsonNull) else put("card_id", cardId) }
         if (tags != before.tags) put("tags", JsonArray(tags.map { JsonPrimitive(it) }))
@@ -238,7 +255,7 @@ fun AddForm.patchJson(before: AddForm, accounts: List<Account>, baseCurrency: St
  */
 fun seedAfterSave(f: AddForm, today: LocalDate = LocalDate.now()): AddForm = f.copy(
     amount = "", toAmount = "", note = "", time = null, latitude = "", longitude = "", place = "",
-    date = today.toString(), planned = false, plannedTouched = false,
+    date = today.toString(), planned = false, plannedTouched = false, splitOn = false, items = emptyList(),
 )
 
 /** A copy of a saved transaction as a new one: everything the same, but today, with no time, and not planned until the date says so. */

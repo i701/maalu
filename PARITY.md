@@ -9,16 +9,15 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 67 | 51 | 0 |
-| 🟡 partial | 0 | 6 | 0 |
+| ✅ done | 67 | 52 | 0 |
+| 🟡 partial | 0 | 5 | 0 |
 | ❌ missing | 0 | 6 | 63 |
 | ➖ n/a | 1 | 5 | 5 |
 
-## Still to build on Android (12)
+## Still to build on Android (11)
 
 - 🟡 **Bulk actions on selected rows** (Transactions). Long press to select, then Category, Add tag and Delete (with Undo). No vendor or payment method, no removing tags, no select all matching.
 - 🟡 **Refunds** (Transactions). Refund rows are tagged and shown; a refund cannot be made or linked from the app.
-- 🟡 **Split a purchase into items** (Transactions). A purchase with items keeps them when its other fields are edited; the items themselves are edited on the web.
 - 🟡 **Budget limits** (Budget, goals and planning). Monthly limits can be made, edited and deleted. The budget settings (period start day, warning percent) are changed on the web.
 - 🟡 **Limits for set dates** (Budget, goals and planning). Limits for set dates are listed on the Budget page (dates, days left, spent, what is left) and on the dashboard. They cannot be made, edited, or repeated for the next stretch, and monthly limits that run between two dates are not shown as such.
 - 🟡 **Email digest** (Notifications). The switch and the email status are in Settings; sending a test email is not.
@@ -140,7 +139,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Trash**<br>Deleted transactions wait to be restored or deleted for good, singly or in bulk. | ✅ done | ✅ done | ❌ missing |
 | **Planned transactions and Mark as paid**<br>Something coming up that counts toward nothing until it is paid with the real day and amount. | ✅ done | ✅ done | ❌ missing |
 | **Refunds**<br>Give money back for a purchase (whole or by item), or link existing income to a purchase. | ✅ done | 🟡 partial | ❌ missing |
-| **Split a purchase into items**<br>Items with quantity, category and tax that add up to the amount. | ✅ done | 🟡 partial | ❌ missing |
+| **Split a purchase into items**<br>Items with quantity, category and tax (GST included or excluded) that add up to the amount. | ✅ done | ✅ done | ❌ missing |
 | **Receipts and web links**<br>Photos and PDFs and web links on a transaction. | ✅ done | ✅ done | ❌ missing |
 | **Mark a transaction on the map**<br>A pin and an optional place name, with place search by name. | ✅ done | ✅ done | ❌ missing |
 | **Merge two entries into one transfer**<br>A suggestion card for pairs entered twice, and a manual merge when an entry has an exact match. | ✅ done | ✅ done | ❌ missing |
@@ -150,7 +149,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 - **Bulk actions on selected rows** (Android): Long press to select, then Category, Add tag and Delete (with Undo). No vendor or payment method, no removing tags, no select all matching.
 - **Refunds** (Android): Refund rows are tagged and shown; a refund cannot be made or linked from the app.
-- **Split a purchase into items** (Android): A purchase with items keeps them when its other fields are edited; the items themselves are edited on the web.
 - **Import a bank statement** (Android): Web only, by choice: importing a statement is done on the web, where the rows are easier to review.
 - **Import a bank statement** (iOS): Web only, by choice: importing a statement is done on the web, where the rows are easier to review.
 

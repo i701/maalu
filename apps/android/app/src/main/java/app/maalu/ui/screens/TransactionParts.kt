@@ -107,6 +107,7 @@ import app.maalu.data.formatMoney
 import app.maalu.data.formatNumber
 import app.maalu.data.groupByDay
 import app.maalu.data.canDuplicate
+import app.maalu.data.summary
 import app.maalu.data.text
 import app.maalu.data.duplicateForm
 import app.maalu.data.isRefund
@@ -193,6 +194,7 @@ fun DetailSheet(t: Transaction, onEdit: (() -> Unit)?, onDelete: () -> Unit, onC
             } else {
                 DetailFact("Account", t.account?.name)
                 DetailFact("Category", t.category)
+                if (t.splits.isNotEmpty()) DetailFact("Items", t.splits.joinToString("\n") { it.summary(t.currency) })
                 DetailFact("Vendor", t.vendor?.name)
             }
             DetailFact("Payment", PaymentMethodLabels[t.paymentMethod])

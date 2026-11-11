@@ -283,7 +283,7 @@ data class Transaction(
     /** How much of this purchase refunds have given back (zero when none). */
     @SerialName("refunded_amount") val refundedAmount: String = "0",
     /** The items of a split purchase (only counted here; they are edited on the web). */
-    val splits: List<kotlinx.serialization.json.JsonElement> = emptyList(),
+    val splits: List<PurchaseItem> = emptyList(),
 )
 
 /** For the filter pickers: a category (with its parent's id, for indenting) and a tag. */

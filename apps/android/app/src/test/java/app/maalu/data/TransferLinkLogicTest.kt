@@ -10,7 +10,7 @@ class TransferLinkLogicTest {
     private fun tx(id: String, type: String, account: String, amount: String = "50", date: String = "2026-11-11", currency: String = "MVR", planned: Boolean = false, adjustment: Boolean = false, refunded: String = "0", splits: Int = 0) =
         Transaction(
             id = id, type = type, amount = amount, currency = currency, category = "Other", date = date, planned = planned, adjustment = adjustment,
-            account = NameRef(account, id = account), refundedAmount = refunded, splits = List(splits) { kotlinx.serialization.json.JsonNull },
+            account = NameRef(account, id = account), refundedAmount = refunded, splits = List(splits) { PurchaseItem(name = "i", amount = "1") },
         )
 
     @Test fun whichEntriesCanBeASide() {
