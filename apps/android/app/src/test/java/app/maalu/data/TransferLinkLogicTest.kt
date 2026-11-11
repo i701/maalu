@@ -31,20 +31,15 @@ class TransferLinkLogicTest {
         assertNull(pairOf(e, tx("e2", "expense", "mib")))
     }
 
-    @Test fun theSameAmountComesFirstAndFarAwayEntriesAreLeftOut() {
+    @Test fun onlyTheExactSameAmountIsOffered() {
         val base = tx("e", "expense", "bml", "50", "2026-11-11")
-        val same = tx("i1", "income", "mib", "50", "2026-11-12")
-        val sameOld = tx("i5", "income", "mib", "50", "2026-09-01")      // the same amount is always offered, however old
-        val nearer = tx("i2", "income", "mib", "75", "2026-11-11")
-        val otherCurrency = tx("i3", "income", "mib", "50", "2026-11-10", currency = "USD")
-        val sameAccount = tx("i4", "income", "bml", "50")
-        val salary = tx("i6", "income", "mib", "10000", "2026-10-01")    // 41 days away, a different amount: not offered
-        val tenDays = tx("i7", "income", "mib", "10000", "2026-11-01")   // 10 days away: offered, after the near ones
-        val g = counterpartGroups(base, listOf(nearer, otherCurrency, sameAccount, same, salary, sameOld, tenDays))
-        assertEquals(listOf("i1", "i5"), g.sameAmount.map { it.id })
-        assertEquals(listOf("i2", "i3", "i7"), g.others.map { it.id })
-        // searching lifts the date limit
-        assertEquals(listOf("i2", "i3", "i7", "i6"), counterpartGroups(base, listOf(nearer, otherCurrency, salary, tenDays), searching = true).others.map { it.id }.let { it })
+        val near = tx("i1", "income", "mib", "50", "2026-11-12")
+        val old = tx("i2", "income", "mib", "50.00", "2026-09-01")
+        val g = counterpartGroups(base, listOf(
+            old, near, tx("i3", "income", "mib", "75"), tx("i4", "income", "mib", "10000", "2026-11-01"),
+            tx("i5", "income", "mib", "3.2", currency = "USD").copy(baseAmount = "49.40"), tx("i6", "income", "bml", "50"),
+        ))
+        assertEquals(listOf("i1", "i2"), g.sameAmount.map { it.id })
         assertTrue(counterpartGroups(base, emptyList()).isEmpty)
     }
 

@@ -42,25 +42,15 @@ fun pairOf(a: Transaction, b: Transaction): Pair<Transaction, Transaction>? = wh
 
 private fun amountOf(t: Transaction): BigDecimal = t.amount.toBigDecimalOrNull() ?: BigDecimal.ZERO
 
-/** How far from an entry's date another entry may be to be offered as its other half, unless the person is searching. */
-const val COUNTERPART_DAYS = 30L
-
-/** The choices for the other half of an entry: those with the same amount first (the likely ones), then the rest, closest date first. */
-data class Counterparts(val sameAmount: List<Transaction>, val others: List<Transaction>) {
-    val isEmpty: Boolean get() = sameAmount.isEmpty() && others.isEmpty()
+/** The choices for the other half of an entry: only entries for exactly the same amount in the same currency, closest date first. */
+data class Counterparts(val sameAmount: List<Transaction>) {
+    val isEmpty: Boolean get() = sameAmount.isEmpty()
 }
 
-/**
- * [candidates] that could be the other half of [base]. Same amount in the same currency goes first, on any date. The rest are only offered
- * within [COUNTERPART_DAYS] of the entry (a salary from last month is not the other half of a 50 expense) unless [searching], where
- * whatever was typed decides. Different currencies are allowed (the money arrives as what the destination received).
- */
-fun counterpartGroups(base: Transaction, candidates: List<Transaction>, searching: Boolean = false): Counterparts {
-    val fit = candidates.filter { isCounterpart(base, it) }
-    val (same, rest) = fit.partition { it.currency == base.currency && amountOf(it).compareTo(amountOf(base)) == 0 }
-    val near = if (searching) rest else rest.filter { dayGap(base.date, it.date) <= COUNTERPART_DAYS }
-    return Counterparts(same.sortedBy { dayGap(base.date, it.date) }, near.sortedBy { dayGap(base.date, it.date) })
-}
+fun counterpartGroups(base: Transaction, candidates: List<Transaction>): Counterparts = Counterparts(
+    candidates.filter { isCounterpart(base, it) && it.currency == base.currency && amountOf(it).compareTo(amountOf(base)) == 0 }
+        .sortedBy { dayGap(base.date, it.date) },
+)
 
 private fun dayGap(a: String, b: String): Long = runCatching { Math.abs(java.time.temporal.ChronoUnit.DAYS.between(java.time.LocalDate.parse(a), java.time.LocalDate.parse(b))) }.getOrDefault(Long.MAX_VALUE)
 

@@ -191,7 +191,7 @@ private fun CounterpartPicker(api: Api, base: Transaction, onClose: () -> Unit, 
     val wanted = if (base.type == "expense") "income" else "expense"
     LaunchedEffect(query, reload) {
         if (items != null) delay(300)
-        val params = buildMap<String, Any> { put("limit", 50); put("type", wanted); if (query.isNotBlank()) put("q", query.trim()) }
+        val params = buildMap<String, Any> { put("limit", 50); put("type", wanted); put("min_amount", base.amount); put("max_amount", base.amount); if (query.isNotBlank()) put("q", query.trim()) }
         when (val r = api.get<List<Transaction>>("transactions", params)) {
             is ApiResult.Ok -> { items = r.data; error = null }
             is ApiResult.Failed -> error = r.message
@@ -203,14 +203,14 @@ private fun CounterpartPicker(api: Api, base: Transaction, onClose: () -> Unit, 
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     SideRow(if (base.type == "expense") "Out" else "In", base)
                     Text(
-                        if (base.type == "expense") "Which income is this same money arriving in another account? Entries with the same amount come first."
-                        else "Which expense is this same money leaving another account? Entries with the same amount come first.",
+                        if (base.type == "expense") "Which income is this same money arriving in another account? Only entries for exactly the same amount are shown."
+                        else "Which expense is this same money leaving another account? Only entries for exactly the same amount are shown.",
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     CompactField(query, { query = it }, "Search")
                 }
-                val groups = items?.let { counterpartGroups(base, it, searching = query.isNotBlank()) }
-                val ranked = groups?.let { it.sameAmount + it.others }
+                val groups = items?.let { counterpartGroups(base, it) }
+                val ranked = groups?.let { it.sameAmount }
                 when {
                     ranked == null && error != null -> Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(error ?: "", color = MaterialTheme.colorScheme.error)
@@ -219,12 +219,12 @@ private fun CounterpartPicker(api: Api, base: Transaction, onClose: () -> Unit, 
                     ranked == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
                     ranked.isEmpty() -> Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
                         Text(
-                            "No $wanted in another account matches" + if (query.isBlank()) " in the last 30 days. Search to look further back." else ".",
+                            "No $wanted for exactly this amount in another account.",
                             color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                         )
                     }
                     else -> LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        val sections = listOf("Same amount" to groups.sameAmount, "Other entries, closest date first" to groups.others).filter { it.second.isNotEmpty() }
+                        val sections = listOf("Same amount" to groups.sameAmount)
                         sections.forEach { (heading, list) ->
                             item(key = "h-$heading") { Text(heading, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp, top = 10.dp, bottom = 4.dp)) }
                             itemsIndexed(list, key = { _, t -> t.id }) { i, t ->
