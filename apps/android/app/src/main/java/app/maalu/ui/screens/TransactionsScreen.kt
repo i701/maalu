@@ -79,6 +79,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.maalu.data.Api
+import app.maalu.ui.components.PickerSheet
+import app.maalu.data.transactionCount
+import app.maalu.data.toggled
+import app.maalu.data.tagBulkJson
+import app.maalu.data.mergeBulk
+import app.maalu.data.keepVisible
+import app.maalu.data.idsJson
+import app.maalu.data.categoryBulkJson
+import app.maalu.data.bulkMessage
+import app.maalu.data.batches
+import app.maalu.data.TagItem
+import app.maalu.data.Ref
+import app.maalu.data.CategoryItem
+import app.maalu.data.BulkResult
 import app.maalu.data.ApiResult
 import app.maalu.data.PaymentMethodLabels
 import app.maalu.data.Totals
@@ -148,6 +162,11 @@ fun TransactionsScreen(api: Api) {
     var selected by remember { mutableStateOf<Transaction?>(null) }
     var suggestions by remember { mutableStateOf<List<TransferSuggestion>>(emptyList()) }
     var generation by remember { mutableIntStateOf(0) }
+    // rows picked for a bulk action (a long press starts it); [choosing] is the category or tag being picked for them
+    var picked by remember { mutableStateOf(emptySet<String>()) }
+    var bulkBusy by remember { mutableStateOf(false) }
+    var choosing by remember { mutableStateOf<String?>(null) }
+    var choices by remember { mutableStateOf<List<Ref>>(emptyList()) }
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
@@ -178,7 +197,41 @@ fun TransactionsScreen(api: Api) {
         }
         loading = false
         refreshing = false
+        picked = keepVisible(picked, items.map { it.id })
     }
+
+    LaunchedEffect(choosing) {
+        choices = when (choosing) {
+            "category" -> (api.get<List<CategoryItem>>("categories") as? ApiResult.Ok)?.data.orEmpty().map { Ref(it.id, it.name) }
+            "tag" -> (api.get<List<TagItem>>("tags") as? ApiResult.Ok)?.data.orEmpty().map { Ref(it.id, it.name) }
+            else -> emptyList()
+        }
+    }
+
+    /** Runs one bulk request over the picked rows (up to 500), says what happened and reloads. Returns the ids it changed. */
+    fun bulk(done: (Int) -> String, request: suspend (List<String>) -> ApiResult<BulkResult>, undo: (suspend (List<String>) -> Unit)? = null) {
+        val ids = picked.toList()
+        bulkBusy = true
+        scope.launch {
+            val results = mutableListOf<BulkResult>()
+            var failed: String? = null
+            for (batch in batches(ids)) {
+                when (val r = request(batch)) {
+                    is ApiResult.Ok -> results += r.data
+                    is ApiResult.Failed -> { failed = r.message.lines().first(); break }
+                }
+            }
+            val merged = mergeBulk(results)
+            val text = failed?.let { f -> if (merged.updated > 0) bulkMessage(done, merged) + ". $f" else f } ?: bulkMessage(done, merged)
+            picked = emptySet(); bulkBusy = false; reload++
+            if (undo != null && merged.updated > 0) {
+                val answer = snackbar?.showSnackbar(text, actionLabel = "Undo", duration = androidx.compose.material3.SnackbarDuration.Long)
+                if (answer == androidx.compose.material3.SnackbarResult.ActionPerformed) { undo(ids.filter { id -> merged.skipped.none { it.id == id } }); reload++ }
+            } else snackbar?.showSnackbar(text)
+        }
+    }
+
+    androidx.activity.compose.BackHandler(enabled = picked.isNotEmpty()) { picked = emptySet() }
 
     // load the next page when the end is near
     LaunchedEffect(listState) {
@@ -260,7 +313,9 @@ fun TransactionsScreen(api: Api) {
                             // my own tile: a tonal fill, large outer corners, small inner ones and a 2dp gap, with the
                             // corners springing toward squarer while pressed (the library's list item draws no fill)
                             MorphTile(
-                                onClick = { selected = t },
+                                onClick = { if (picked.isNotEmpty()) picked = toggled(picked, t.id) else selected = t },
+                                onLongClick = { picked = toggled(picked, t.id) },
+                                color = if (t.id in picked) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
                                 first = i == 0,
                                 last = i == list.lastIndex,
                                 modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 2.dp),
@@ -270,7 +325,8 @@ fun TransactionsScreen(api: Api) {
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                                 ) {
-                                    CategoryBadge(t)
+                                    // a picked row swaps its badge for a tick, in the same 36dp, so nothing shifts when picking starts
+                                    if (t.id in picked) PickedBadge() else CategoryBadge(t)
                                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                         Text(t.title(), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), maxLines = 2, overflow = TextOverflow.Ellipsis)
                                         CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant) { RowDetails(t) }
@@ -286,7 +342,17 @@ fun TransactionsScreen(api: Api) {
         }
     }
     val expanded by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
-    ExtendedFloatingActionButton(
+    if (picked.isNotEmpty()) TransactionSelectionBar(
+        count = picked.size, busy = bulkBusy, modifier = Modifier.align(Alignment.BottomCenter),
+        onDelete = {
+            bulk(
+                done = { "Moved ${transactionCount(it)} to the trash" },
+                request = { ids -> api.postJson<BulkResult>("transactions/bulk/trash", idsJson(ids).toString()) },
+                undo = { ids -> for (b in batches(ids)) api.postJson<BulkResult>("transactions/bulk/restore", idsJson(b).toString()) },
+            )
+        },
+        onCategory = { choosing = "category" }, onTag = { choosing = "tag" }, onClear = { picked = emptySet() },
+    ) else ExtendedFloatingActionButton(
         onClick = { adding = true },
         expanded = expanded,
         icon = { Icon(Icons.Outlined.Add, null) },
@@ -302,7 +368,21 @@ fun TransactionsScreen(api: Api) {
         api,
         onClose = { adding = false },
         onSaved = { adding = false; reload++; scope.launch { snackbar?.showSnackbar("Transaction added") } },
+        onAdded = { reload++ },
     )
+    choosing?.let { kind ->
+        PickerSheet(
+            title = if (kind == "category") "Set the category for ${transactionCount(picked.size)}" else "Add a tag to ${transactionCount(picked.size)}",
+            anyLabel = null, entries = choices, selectedId = null, searchable = true, allowCreate = true, detail = null, onQuery = null,
+            onPick = { r ->
+                choosing = null
+                val name = r?.name ?: return@PickerSheet
+                if (kind == "category") bulk(done = { "Category set on ${transactionCount(it)}" }, request = { ids -> api.patchJson<BulkResult>("transactions/bulk", categoryBulkJson(ids, name).toString()) })
+                else bulk(done = { "Tagged ${transactionCount(it)}" }, request = { ids -> api.patchJson<BulkResult>("transactions/bulk", tagBulkJson(ids, name).toString()) })
+            },
+            onDismiss = { choosing = null },
+        )
+    }
     if (showFilters) FiltersSheet(api, filters, onApply = { filters = it; showFilters = false }, onDismiss = { showFilters = false })
 }
 

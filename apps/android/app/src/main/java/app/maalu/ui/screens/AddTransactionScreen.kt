@@ -96,6 +96,7 @@ import app.maalu.data.patchJson
 import app.maalu.data.problem
 import app.maalu.data.shortDate
 import app.maalu.data.suggestedMethod
+import app.maalu.data.seedAfterSave
 import app.maalu.data.tidyRate
 import app.maalu.data.toJson
 import app.maalu.data.withAccount
@@ -135,7 +136,7 @@ private val TYPES = listOf("expense" to "Expense", "income" to "Income", "transf
  * what arrived. The form locks while it saves and stays open, with what was typed, if the server refuses.
  */
 @Composable
-fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit, editing: Transaction? = null, initial: AddForm? = null) {
+fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit, editing: Transaction? = null, initial: AddForm? = null, onAdded: (() -> Unit)? = null) {
     var options by remember { mutableStateOf<FormOptions?>(null) }
     var loadError by remember { mutableStateOf<String?>(null) }
     // editing starts from the saved transaction; the form to compare changes against stays as it was loaded
@@ -172,6 +173,40 @@ fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit, edi
         }
     }
 
+    // [another] keeps the form open for the next entry (same account, category, vendor and way of paying; the amount and note cleared)
+    fun save(o: FormOptions, another: Boolean) {
+        val base = o.me.baseCurrency
+        val problem = form.problem(o.accounts, base)
+        if (problem != null) {
+            // the same message as a toast, with the field outlined
+            errorField = problem.field; error = null
+            scope.launch { snackbar.currentSnackbarData?.dismiss(); snackbar.showSnackbar(problem.message) }
+            return
+        }
+        // nothing changed in an edit: just close
+        val patch = if (editing != null && before != null) form.patchJson(before, o.accounts, base) else null
+        if (patch != null && patch.isEmpty()) { onClose(); return }
+        busy = true; error = null; errorField = null
+        scope.launch {
+            val result = if (editing != null && patch != null) api.patchJson<Transaction>("transactions/${editing.id}", patch.toString())
+            else api.postJson<Transaction>("transactions", form.toJson(o.accounts, base).toString())
+            when (val r = result) {
+                is ApiResult.Ok -> if (another) {
+                    onAdded?.invoke()
+                    form = seedAfterSave(form); busy = false
+                    snackbar.currentSnackbarData?.dismiss()
+                    launch { snackbar.showSnackbar("Saved. Ready for the next one.") }
+                } else onSaved()
+                is ApiResult.Failed -> {
+                    error = r.message; busy = false
+                    errorField = fieldOf(r.fields.keys.firstOrNull())
+                    snackbar.currentSnackbarData?.dismiss()
+                    launch { snackbar.showSnackbar(r.message.lines().first()) }
+                }
+            }
+        }
+    }
+
     androidx.compose.runtime.CompositionLocalProvider(LocalApi provides api) { Dialog(onDismissRequest = { if (!busy) onClose() }, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         Scaffold(
             snackbarHost = { SnackbarHost(snackbar) },
@@ -198,33 +233,8 @@ fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit, edi
                 o == null -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
                 else -> Form(
                     o, editing?.splits?.isNotEmpty() == true, if (editing != null) "Save changes" else "Save", form, { errorField = null; form = it }, error, errorField, busy, Modifier.padding(padding),
-                    onSave = {
-                        val base = o.me.baseCurrency
-                        val problem = form.problem(o.accounts, base)
-                        if (problem != null) {
-                            // the same message as a toast, with the field outlined
-                            errorField = problem.field; error = null
-                            scope.launch { snackbar.currentSnackbarData?.dismiss(); snackbar.showSnackbar(problem.message) }
-                            return@Form
-                        }
-                        // nothing changed in an edit: just close
-                        val patch = if (editing != null && before != null) form.patchJson(before, o.accounts, base) else null
-                        if (patch != null && patch.isEmpty()) { onClose(); return@Form }
-                        busy = true; error = null; errorField = null
-                        scope.launch {
-                            val result = if (editing != null && patch != null) api.patchJson<Transaction>("transactions/${editing.id}", patch.toString())
-                            else api.postJson<Transaction>("transactions", form.toJson(o.accounts, base).toString())
-                            when (val r = result) {
-                                is ApiResult.Ok -> onSaved()
-                                is ApiResult.Failed -> {
-                                    error = r.message; busy = false
-                                    errorField = fieldOf(r.fields.keys.firstOrNull())
-                                    snackbar.currentSnackbarData?.dismiss()
-                                    launch { snackbar.showSnackbar(r.message.lines().first()) }
-                                }
-                            }
-                        }
-                    },
+                    onSave = { save(o, false) },
+                    onSaveAnother = if (editing == null && onAdded != null) ({ save(o, true) }) else null,
                 )
             }
         }
@@ -293,7 +303,7 @@ private fun typeTint(type: String): Color = when (type) {
 }
 
 @Composable
-private fun Form(o: FormOptions, hasItems: Boolean, saveLabel: String, form: AddForm, onForm: (AddForm) -> Unit, error: String?, errorField: FormField?, busy: Boolean, modifier: Modifier, onSave: () -> Unit) {
+private fun Form(o: FormOptions, hasItems: Boolean, saveLabel: String, form: AddForm, onForm: (AddForm) -> Unit, error: String?, errorField: FormField?, busy: Boolean, modifier: Modifier, onSave: () -> Unit, onSaveAnother: (() -> Unit)? = null) {
     val base = o.me.baseCurrency
     val account = o.accounts.firstOrNull { it.id == form.accountId }
     val toAccount = o.accounts.firstOrNull { it.id == form.toAccountId }
@@ -436,6 +446,7 @@ private fun Form(o: FormOptions, hasItems: Boolean, saveLabel: String, form: Add
             Button(onClick = onSave, enabled = !busy, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth()) {
                 Text(if (busy) "Saving…" else saveLabel)
             }
+            if (onSaveAnother != null) OutlinedButton(onClick = onSaveAnother, enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text("Save and add another") }
         }
     }
 

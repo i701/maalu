@@ -186,4 +186,26 @@ class AddTransactionTest {
         assertEquals("bank_transfer", AddForm(type = "income", method = "other").withAccount(mvr).method)
         assertEquals("credit_card", AddForm(method = "other").withAccount(Account("c", "Visa", "card", "MVR", "0", "0")).method)
     }
+
+    @Test fun addAnotherKeepsWhereItWentAndClearsWhatWasSpecific() {
+        val saved = AddForm(
+            type = "expense", amount = "45", accountId = "a1", category = "Groceries", vendor = "Ensis Mart", method = "debit_card", methodTouched = true,
+            tags = listOf("weekly"), note = "milk", time = "16:41", date = "2026-10-01", latitude = "4.17", longitude = "73.51", place = "Shop", planned = true, plannedTouched = true,
+        )
+        val next = seedAfterSave(saved, LocalDate.of(2026, 11, 11))
+        assertEquals("", next.amount); assertEquals("", next.note); assertNull(next.time)
+        assertEquals("", next.latitude); assertEquals("", next.place)
+        assertEquals("2026-11-11", next.date); assertFalse(next.planned); assertFalse(next.plannedTouched)
+        assertEquals("a1", next.accountId); assertEquals("Groceries", next.category); assertEquals("Ensis Mart", next.vendor)
+        assertEquals("debit_card", next.method); assertEquals(listOf("weekly"), next.tags)
+    }
+
+    @Test fun aDuplicateIsTheSameEntryForToday() {
+        val t = Transaction(id = "t", type = "expense", amount = "45.0000", currency = "MVR", category = "Groceries", date = "2026-10-01", time = "16:41:00", planned = true, description = "milk")
+        val f = duplicateForm(t, LocalDate.of(2026, 11, 11))
+        assertEquals("45", f.amount); assertEquals("Groceries", f.category); assertEquals("milk", f.note)
+        assertEquals("2026-11-11", f.date); assertNull(f.time); assertFalse(f.planned)
+        assertTrue(t.canDuplicate())
+        assertFalse(t.copy(adjustment = true).canDuplicate())
+    }
 }

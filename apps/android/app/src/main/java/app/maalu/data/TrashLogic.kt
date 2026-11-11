@@ -5,6 +5,7 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 // The Trash: deleted transactions, kept until they are restored or deleted for good. Bulk actions report instead of failing.
 
@@ -42,3 +43,13 @@ fun toggled(selected: Set<String>, id: String): Set<String> = if (id in selected
 
 /** The selection after rows are gone (restored or deleted) or the list changed: only ids still on screen stay. */
 fun keepVisible(selected: Set<String>, visible: List<String>): Set<String> = selected.intersect(visible.toSet())
+
+/** The body of `PATCH /transactions/bulk` that sets the category of the chosen transactions (the server skips what cannot take one). */
+fun categoryBulkJson(ids: List<String>, category: String): JsonObject = buildJsonObject {
+    put("ids", JsonArray(ids.map { JsonPrimitive(it) })); put("category", category.trim())
+}
+
+/** The same, adding one tag to each. */
+fun tagBulkJson(ids: List<String>, tag: String): JsonObject = buildJsonObject {
+    put("ids", JsonArray(ids.map { JsonPrimitive(it) })); put("add_tags", JsonArray(listOf(JsonPrimitive(tag.trim()))))
+}

@@ -221,3 +221,19 @@ fun AddForm.patchJson(before: AddForm, accounts: List<Account>, baseCurrency: St
         else { put("latitude", latitude.trim()); put("longitude", longitude.trim()); if (place.isBlank()) put("place", JsonNull) else put("place", place.trim()) }
     }
 }
+
+/**
+ * The form for the next entry after one was saved ("Add another"): the same type, accounts, category, vendor, way of paying and tags,
+ * with the amount, note, time and place cleared and the date back to today (a kept time or place would be stale).
+ */
+fun seedAfterSave(f: AddForm, today: LocalDate = LocalDate.now()): AddForm = f.copy(
+    amount = "", toAmount = "", note = "", time = null, latitude = "", longitude = "", place = "",
+    date = today.toString(), planned = false, plannedTouched = false,
+)
+
+/** A copy of a saved transaction as a new one: everything the same, but today, with no time, and not planned until the date says so. */
+fun duplicateForm(t: Transaction, today: LocalDate = LocalDate.now()): AddForm =
+    formFrom(t).copy(date = today.toString(), time = null, planned = false, plannedTouched = false)
+
+/** Refunds and balance adjustments are not copied (they have their own rules). */
+fun Transaction.canDuplicate(): Boolean = !adjustment && !isRefund

@@ -256,7 +256,7 @@ fun AccountDetailScreen(api: Api, accountId: String, onBack: () -> Unit) {
 
     selected?.let { t -> TransactionDetailHost(api, t, scope, onClose = { selected = null }, onChanged = { reload++ }) }
     if (adding && acc != null) AddTransactionScreen(
-        api, onClose = { adding = false }, onSaved = { adding = false; reload++; scope.launch { snackbar?.showSnackbar("Transaction added") } },
+        api, onClose = { adding = false }, onSaved = { adding = false; reload++; scope.launch { snackbar?.showSnackbar("Transaction added") } }, onAdded = { reload++ },
         initial = AddForm(accountId = acc.id, rate = tidyRate(acc.exchangeRate), method = suggestedMethod(acc.group)),
     )
     repaying?.let { form ->

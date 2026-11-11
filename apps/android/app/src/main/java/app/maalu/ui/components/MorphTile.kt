@@ -1,12 +1,16 @@
 package app.maalu.ui.components
 
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.ripple
+import androidx.compose.ui.draw.clip
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -36,6 +40,8 @@ fun MorphTile(
     last: Boolean,
     modifier: Modifier = Modifier,
     color: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.surfaceContainerLow,
+    /** A long press (starting a selection); when set the tile is drawn with a combined click instead of the Surface's own. */
+    onLongClick: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
     val source = remember { MutableInteractionSource() }
@@ -45,12 +51,10 @@ fun MorphTile(
     else (if (pressed) TileCorners.InnerPressed else TileCorners.Inner)
     val top by animateDpAsState(corner(first), spring, label = "top")
     val bottom by animateDpAsState(corner(last), spring, label = "bottom")
-    Surface(
-        onClick = onClick,
-        modifier = modifier,
-        shape = RoundedCornerShape(topStart = top, topEnd = top, bottomStart = bottom, bottomEnd = bottom),
-        color = color,
-        interactionSource = source,
-        content = content,
+    val shape = RoundedCornerShape(topStart = top, topEnd = top, bottomStart = bottom, bottomEnd = bottom)
+    if (onLongClick == null) Surface(onClick = onClick, modifier = modifier, shape = shape, color = color, interactionSource = source, content = content)
+    else Surface(
+        modifier = modifier.clip(shape).combinedClickable(interactionSource = source, indication = ripple(), onClick = onClick, onLongClick = onLongClick),
+        shape = shape, color = color, content = content,
     )
 }

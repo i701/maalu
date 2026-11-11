@@ -77,4 +77,9 @@ class TrashTemplateTest {
         assertEquals("Income", templateSummary(Template("t", "n", "income")))
         assertEquals("Transfer · BML Current → BML USD", templateSummary(Template("t", "n", "transfer", account = TemplateAccount("a1", "BML Current"), toAccount = TemplateAccount("a2", "BML USD"))))
     }
+
+    @Test fun bulkEditBodies() {
+        assertEquals("""{"ids":["a","b"],"category":"Groceries"}""", categoryBulkJson(listOf("a", "b"), " Groceries ").toString())
+        assertEquals("""{"ids":["a"],"add_tags":["trip"]}""", tagBulkJson(listOf("a"), "trip").toString())
+    }
 }
