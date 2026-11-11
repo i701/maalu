@@ -9,14 +9,13 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 67 | 49 | 0 |
-| 🟡 partial | 0 | 7 | 0 |
+| ✅ done | 67 | 50 | 0 |
+| 🟡 partial | 0 | 6 | 0 |
 | ❌ missing | 0 | 7 | 63 |
 | ➖ n/a | 1 | 5 | 5 |
 
-## Still to build on Android (14)
+## Still to build on Android (13)
 
-- 🟡 **Archive and unarchive an account** (Accounts and cards). Archive and unarchive from an account's page; there is no list of archived accounts to restore from.
 - 🟡 **Bulk actions on selected rows** (Transactions). Long press to select, then Category, Add tag and Delete (with Undo). No vendor or payment method, no removing tags, no select all matching.
 - 🟡 **Refunds** (Transactions). Refund rows are tagged and shown; a refund cannot be made or linked from the app.
 - 🟡 **Split a purchase into items** (Transactions). A purchase with items keeps them when its other fields are edited; the items themselves are edited on the web.
@@ -121,15 +120,13 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 |---|:---:|:---:|:---:|
 | **Accounts list**<br>Accounts by group with balances, credit use, small balance lines and the net worth summary. | ✅ done | ✅ done | ❌ missing |
 | **Add and edit an account**<br>Group, bank and number, currency and rate, credit limit, statement days, spendable switch, exclude from stats. | ✅ done | ✅ done | ❌ missing |
-| **Archive and unarchive an account**<br>Hide an account without losing its history. | ✅ done | 🟡 partial | ❌ missing |
+| **Archive and unarchive an account**<br>Hide an account without losing its history. | ✅ done | ✅ done | ❌ missing |
 | **Adjust balance**<br>Set the balance to what the bank shows, or add or take away, as a transaction that reports ignore. | ✅ done | ✅ done | ❌ missing |
 | **An account's page**<br>Balance, this month, its own transactions, balance over time and the balance after each row. | ✅ done | ✅ done | ❌ missing |
 | **Market exchange rates**<br>A suggested rate for a foreign amount on a date, and the currency list. | ✅ done | ✅ done | ❌ missing |
 | **Rate history**<br>How the market rate of a foreign account's currency moved, 30 days to a year. | ✅ done | ✅ done | ❌ missing |
 | **Cards**<br>Debit cards on a bank account and credit cards with a repayment account; a Card field on a purchase and a card filter. | ✅ done | ✅ done | ❌ missing |
 | **Credit card statements and due dates**<br>The statement balance, what is left, the due date and a Repay button, worked out each time. | ✅ done | ✅ done | ❌ missing |
-
-- **Archive and unarchive an account** (Android): Archive and unarchive from an account's page; there is no list of archived accounts to restore from.
 
 ## Transactions
 

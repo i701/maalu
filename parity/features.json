@@ -327,11 +327,11 @@
         ]
       },
       "android": {
-        "status": "partial",
+        "status": "done",
         "evidence": [
-          "apps/android/app/src/main/java/app/maalu/ui/screens/AccountDetailScreen.kt"
-        ],
-        "note": "Archive and unarchive from an account's page; there is no list of archived accounts to restore from."
+          "apps/android/app/src/main/java/app/maalu/ui/screens/AccountDetailScreen.kt",
+          "apps/android/app/src/main/java/app/maalu/ui/screens/AccountsScreen.kt"
+        ]
       },
       "ios": {
         "status": "missing"

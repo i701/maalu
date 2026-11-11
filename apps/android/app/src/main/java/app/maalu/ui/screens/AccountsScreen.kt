@@ -19,6 +19,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
+import app.maalu.ui.components.ConfirmDialog
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.outlined.Unarchive
+import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
@@ -72,7 +77,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
-private class AccountsData(val accounts: List<Account>, val summary: AccountSummary?, val trends: Map<String, List<Double>>)
+private class AccountsData(val accounts: List<Account>, val summary: AccountSummary?, val trends: Map<String, List<Double>>, val archived: List<Account> = emptyList())
 
 private sealed interface Load {
     data object Loading : Load
@@ -89,6 +94,8 @@ fun AccountsScreen(api: Api, onOpen: (Account) -> Unit) {
     var attempt by remember { mutableIntStateOf(0) }
     var refreshing by remember { mutableStateOf(false) }
     var adding by remember { mutableStateOf(false) }
+    var showArchived by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    var deletingArchived by remember { mutableStateOf<Account?>(null) }
     val snackbar = LocalSnackbar.current
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
@@ -99,6 +106,7 @@ fun AccountsScreen(api: Api, onOpen: (Account) -> Unit) {
             val accounts = async { api.get<List<Account>>("accounts") }
             val summary = async { api.get<AccountSummary>("accounts/summary") }
             val trends = async { api.get<List<AccountTrend>>("accounts/trends", mapOf("days" to "30")) }
+            val archivedCall = async { api.get<List<Account>>("accounts", mapOf("archived" to "true")) }
             when (val a = accounts.await()) {
                 is ApiResult.Failed -> Load.Failed(a.message)
                 is ApiResult.Ok -> Load.Loaded(
@@ -107,6 +115,7 @@ fun AccountsScreen(api: Api, onOpen: (Account) -> Unit) {
                         (summary.await() as? ApiResult.Ok)?.data,
                         // the trend lines are a nicety: without them the page is the same
                         (trends.await() as? ApiResult.Ok)?.data.orEmpty().associate { t -> t.accountId to t.balances.map { it.toDoubleOrNull() ?: 0.0 } },
+                        (archivedCall.await() as? ApiResult.Ok)?.data.orEmpty(),
                     ),
                 )
             }
@@ -142,6 +151,41 @@ fun AccountsScreen(api: Api, onOpen: (Account) -> Unit) {
                                 }
                             }
                         }
+                        // closed accounts: out of the totals and the pickers, history kept; collapsed, since they are not what you came for
+                        if (s.data.archived.isNotEmpty()) {
+                            item(key = "archived-header") {
+                                TextButton(onClick = { showArchived = !showArchived }, modifier = Modifier.padding(top = 12.dp)) {
+                                    Icon(if (showArchived) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, null, Modifier.padding(end = 6.dp))
+                                    Text("Archived (${s.data.archived.size})")
+                                }
+                            }
+                            if (showArchived) {
+                                item(key = "archived-note") {
+                                    Text("Not counted in your totals or offered on new transactions. Their past transactions are kept.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp, bottom = 8.dp))
+                                }
+                                items(s.data.archived.size, key = { "archived-" + s.data.archived[it].id }) { i ->
+                                    val a = s.data.archived[i]
+                                    Surface(Modifier.fillMaxWidth().padding(bottom = 2.dp), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLow) {
+                                        Row(Modifier.padding(start = 14.dp, top = 6.dp, bottom = 6.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            Column(Modifier.weight(1f)) {
+                                                Text(a.name, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                                Text(listOfNotNull(groupLabel(a.group), a.bank).joinToString(" · "), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                            }
+                                            MoneyText(a.balance, a.currency, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            IconButton(onClick = {
+                                                scope.launch {
+                                                    when (val r = api.post("accounts/${a.id}/unarchive")) {
+                                                        is ApiResult.Ok -> { attempt++; snackbar?.showSnackbar("\"${a.name}\" is back in use") }
+                                                        is ApiResult.Failed -> snackbar?.showSnackbar(r.message.lines().first())
+                                                    }
+                                                }
+                                            }) { Icon(Icons.Outlined.Unarchive, "Unarchive ${a.name}") }
+                                            IconButton(onClick = { deletingArchived = a }) { Icon(Icons.Outlined.Delete, "Delete ${a.name}") }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -154,6 +198,22 @@ fun AccountsScreen(api: Api, onOpen: (Account) -> Unit) {
         )
     }
 
+    deletingArchived?.let { a ->
+        ConfirmDialog(
+            "Delete ${a.name}?",
+            if (a.transactionCount > 0) "Its ${a.transactionCount} transactions stay in your history but lose this account. This can't be undone." else "This can't be undone.",
+            "Delete", onDismiss = { deletingArchived = null },
+            onConfirm = {
+                deletingArchived = null
+                scope.launch {
+                    when (val r = api.delete("accounts/${a.id}")) {
+                        is ApiResult.Ok -> { attempt++; snackbar?.showSnackbar("${a.name} deleted") }
+                        is ApiResult.Failed -> snackbar?.showSnackbar(r.message.lines().first())
+                    }
+                }
+            },
+        )
+    }
     val all = (state as? Load.Loaded)?.data?.accounts.orEmpty()
     if (adding) AccountFormScreen(api, all, null, onClose = { adding = false }, onSaved = { adding = false; attempt++; scope.launch { snackbar?.showSnackbar("Account added") } })
 }

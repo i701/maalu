@@ -215,7 +215,7 @@ fun AccountDetailScreen(api: Api, accountId: String, onBack: () -> Unit) {
                                 when (val r = api.post("accounts/${acc.id}/archive")) {
                                     is ApiResult.Ok -> {
                                         onBack()
-                                        if (snackbar?.showSnackbar("${acc.name} archived", actionLabel = "Undo", duration = SnackbarDuration.Long) == SnackbarResult.ActionPerformed) api.post("accounts/${acc.id}/unarchive")
+                                        if (snackbar?.showSnackbar("${acc.name} archived. Find it under Archived on the Accounts list", actionLabel = "Undo", duration = SnackbarDuration.Long) == SnackbarResult.ActionPerformed) api.post("accounts/${acc.id}/unarchive")
                                     }
                                     is ApiResult.Failed -> snackbar?.showSnackbar(r.message.lines().first())
                                 }
