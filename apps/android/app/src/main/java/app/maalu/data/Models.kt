@@ -299,6 +299,9 @@ data class VendorItem(
     val name: String,
     @SerialName("default_category") val defaultCategory: String? = null,
     @SerialName("default_tags") val defaultTags: List<NameRef> = emptyList(),
+    val latitude: String? = null,
+    val longitude: String? = null,
+    val place: String? = null,
 )
 
 /** A category as the Categories screen shows it. */
@@ -335,6 +338,8 @@ data class Vendor(
     @SerialName("default_category") val defaultCategory: String? = null,
     @SerialName("default_tags") val defaultTags: List<NameRef> = emptyList(),
     val place: String? = null,
+    val latitude: String? = null,
+    val longitude: String? = null,
 )
 
 @Serializable

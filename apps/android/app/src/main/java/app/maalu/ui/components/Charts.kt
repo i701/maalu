@@ -82,3 +82,28 @@ fun Sparkline(values: List<Double>, rose: Color, fell: Color, flat: Color, modif
 }
 
 private fun Modifier.androidx_size(): Modifier = this.then(Modifier.width(64.dp).height(22.dp))
+
+/**
+ * One column per month from a zero line: up (what was kept) in [up], down (overspent) in [down], on one scale. A month at zero draws nothing.
+ * The zero line sits where the biggest rise and the biggest fall put it, so neither is squashed.
+ */
+@Composable
+fun NetColumns(values: List<Double>, up: Color, down: Color, zeroLine: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier.fillMaxWidth().height(110.dp)) {
+        if (values.isEmpty()) return@Canvas
+        val hi = values.maxOf { maxOf(it, 0.0) }
+        val lo = values.minOf { minOf(it, 0.0) }
+        val span = (hi - lo).takeIf { it > 0 } ?: 1.0
+        val zeroY = (size.height * (hi / span)).toFloat()
+        val slot = size.width / values.size
+        val bar = minOf(18.dp.toPx(), slot / 1.8f)
+        val tip = CornerRadius(4.dp.toPx())
+        values.forEachIndexed { i, v ->
+            val left = slot * i + (slot - bar) / 2
+            val h = (size.height * (kotlin.math.abs(v) / span)).toFloat().coerceAtLeast(if (v != 0.0) 3.dp.toPx() else 0f)
+            if (v > 0) drawRoundRect(up, Offset(left, zeroY - h), Size(bar, h), tip)
+            else if (v < 0) drawRoundRect(down, Offset(left, zeroY), Size(bar, h), tip)
+        }
+        drawLine(zeroLine, Offset(0f, zeroY), Offset(size.width, zeroY), strokeWidth = 1.dp.toPx())
+    }
+}

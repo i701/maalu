@@ -91,4 +91,16 @@ class OrganiseLogicTest {
     @Test fun aMergeBodyNamesItsTarget() {
         assertEquals("c1", mergeJson("c1")["into_id"]!!.jsonPrimitive.content)
     }
+
+    @Test fun aVendorsUsualPlaceTravelsWithTheForm() {
+        val v = Vendor("v", "Ensis Mart", latitude = "4.175500", longitude = "73.509400", place = "Ensis")
+        val f = vendorFormFrom(v)
+        assertEquals("4.175500", f.latitude); assertEquals("Ensis", f.place)
+        assertEquals(4.1755, f.toJson()["latitude"]!!.toString().trim('"').toDouble(), 1e-9)
+        // nothing changed: nothing sent; a moved pin sends all three; removing it sends three nulls
+        assertEquals(0, f.patchJson(f).size)
+        assertEquals("73.510000", f.copy(longitude = "73.510000").patchJson(f)["longitude"]!!.toString().trim('"'))
+        assertEquals("""{"latitude":null,"longitude":null,"place":null}""", f.copy(latitude = "", longitude = "", place = "").patchJson(f).toString())
+        assertEquals(false, VendorForm(name = "x").toJson().containsKey("latitude"))
+    }
 }

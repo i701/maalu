@@ -4,6 +4,10 @@ package app.maalu.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import app.maalu.data.placeLabel
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -286,6 +290,7 @@ private fun VendorFormScreen(api: Api, editing: Vendor?, onClose: () -> Unit, on
     var nameError by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
+    var marking by remember { mutableStateOf(false) }
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     LaunchedEffect(Unit) {
@@ -318,6 +323,20 @@ private fun VendorFormScreen(api: Api, editing: Vendor?, onClose: () -> Unit, on
     ) {
         Section("Name", Icons.Outlined.Storefront, Accents.getValue("orange")) {
             CompactField(form.name, { nameError = false; form = form.copy(name = it.take(100)) }, "For example Ensis Mart", enabled = !busy, isError = nameError)
+        }
+        Section("Usual place", Icons.Outlined.LocationOn, Accents.getValue("pink")) {
+            val marked = form.latitude.isNotBlank() && form.longitude.isNotBlank()
+            if (!marked) OutlinedButton(onClick = { marking = true }, enabled = !busy, shapes = ButtonDefaults.shapes()) {
+                Icon(Icons.Outlined.LocationOn, null, Modifier.padding(end = 6.dp)); Text("Mark where it is")
+            } else Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TintChip(Accents.getValue("pink"), selected = true, onClick = { marking = true }, label = { Text(placeLabel(form.place, form.latitude, form.longitude), maxLines = 1) }, modifier = Modifier.weight(1f, fill = false))
+                IconButton(onClick = { form = form.copy(latitude = "", longitude = "", place = "") }, enabled = !busy) { Icon(Icons.Outlined.Close, "Remove the place") }
+            }
+            Text("Picking this vendor on a transaction marks this place on it, unless one is already marked.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (marking) LocationDialog(
+                api, initial = if (marked) Spot(form.latitude, form.longitude, form.place) else null, onClose = { marking = false },
+                onDone = { spot -> marking = false; form = if (spot == null) form.copy(latitude = "", longitude = "", place = "") else form.copy(latitude = spot.latitude, longitude = spot.longitude, place = spot.place) },
+            )
         }
         Section("Usually", Icons.Outlined.Category, Accents.getValue("amber")) {
             PickerField(

@@ -86,6 +86,10 @@ data class VendorForm(
     val isLocal: Boolean? = null,
     val defaultCategory: String = "",
     val defaultTags: List<String> = emptyList(),
+    /** The vendor's usual place: both coordinates as typed to six decimals, or both blank, and an optional name for the spot. */
+    val latitude: String = "",
+    val longitude: String = "",
+    val place: String = "",
 )
 
 fun VendorForm.problem(): OrganiseProblem? =
@@ -99,10 +103,15 @@ fun VendorForm.toJson(): JsonObject = buildJsonObject {
     isLocal?.let { put("is_local", it) }
     defaultCategory.trim().takeIf { it.isNotEmpty() }?.let { put("default_category", it) }
     if (defaultTags.isNotEmpty()) put("default_tags", JsonArray(defaultTags.map { JsonPrimitive(it) }))
+    if (latitude.isNotBlank() && longitude.isNotBlank()) {
+        put("latitude", latitude.trim()); put("longitude", longitude.trim())
+        place.trim().takeIf { it.isNotEmpty() }?.let { put("place", it) }
+    }
 }
 
 fun vendorFormFrom(v: Vendor): VendorForm = VendorForm(
     v.name, v.address.orEmpty(), v.contact.orEmpty(), v.currency.orEmpty(), v.isLocal, v.defaultCategory.orEmpty(), v.defaultTags.map { it.name },
+    v.latitude.orEmpty(), v.longitude.orEmpty(), v.place.orEmpty(),
 )
 
 /** Only what changed; clearing a text field, the usual category or the tags is an explicit null or empty list. */
@@ -117,6 +126,11 @@ fun VendorForm.patchJson(before: VendorForm): JsonObject = buildJsonObject {
     if (isLocal != before.isLocal) { if (isLocal == null) put("is_local", JsonNull) else put("is_local", isLocal) }
     text("default_category", defaultCategory, before.defaultCategory)
     if (defaultTags != before.defaultTags) put("default_tags", JsonArray(defaultTags.map { JsonPrimitive(it) }))
+    // the spot goes as all three together: new values, or an explicit null each to remove it
+    if (latitude != before.latitude || longitude != before.longitude || place.trim() != before.place.trim()) {
+        if (latitude.isBlank() || longitude.isBlank()) { put("latitude", JsonNull); put("longitude", JsonNull); put("place", JsonNull) }
+        else { put("latitude", latitude.trim()); put("longitude", longitude.trim()); if (place.isBlank()) put("place", JsonNull) else put("place", place.trim()) }
+    }
 }
 
 /** Local, Foreign, or nothing yet. */

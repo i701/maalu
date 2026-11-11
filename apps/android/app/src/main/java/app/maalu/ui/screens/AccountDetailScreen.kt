@@ -142,6 +142,7 @@ fun AccountDetailScreen(api: Api, accountId: String, onBack: () -> Unit) {
     var editing by remember { mutableStateOf(false) }
     var deleting by remember { mutableStateOf(false) }
     var repaying by remember { mutableStateOf<AddForm?>(null) }
+    var ratesFor by remember { mutableStateOf<Account?>(null) }
     var cards by remember { mutableStateOf<List<Card>>(emptyList()) }
     val snackbar = LocalSnackbar.current
     val scope = rememberCoroutineScope()
@@ -221,6 +222,8 @@ fun AccountDetailScreen(api: Api, accountId: String, onBack: () -> Unit) {
                             }
                         },
                         onDelete = { deleting = true },
+                        // a foreign-currency account can show how its currency's market rate moved
+                        onRates = if (month != null && acc.currency != month?.currency) ({ ratesFor = acc }) else null,
                     )
                 }
                 statement?.let { st ->
@@ -272,6 +275,7 @@ fun AccountDetailScreen(api: Api, accountId: String, onBack: () -> Unit) {
         api, onClose = { adding = false }, onSaved = { adding = false; reload++; scope.launch { snackbar?.showSnackbar("Transaction added") } }, onAdded = { reload++ },
         initial = AddForm(accountId = acc.id, rate = tidyRate(acc.exchangeRate), method = suggestedMethod(acc.group)),
     )
+    ratesFor?.let { a -> RateHistorySheet(api, a, onClose = { ratesFor = null }) }
     repaying?.let { form ->
         AddTransactionScreen(api, onClose = { repaying = null }, onSaved = { repaying = null; reload++; scope.launch { snackbar?.showSnackbar("Repayment added") } }, initial = form)
     }
@@ -337,13 +341,14 @@ private fun MonthCard(label: String, amount: String, currency: String, tint: Col
 }
 
 @Composable
-private fun Actions(a: Account, onAdd: () -> Unit, onAdjust: () -> Unit, onEdit: () -> Unit, onArchive: () -> Unit, onDelete: () -> Unit) {
+private fun Actions(a: Account, onAdd: () -> Unit, onAdjust: () -> Unit, onEdit: () -> Unit, onArchive: () -> Unit, onDelete: () -> Unit, onRates: (() -> Unit)? = null) {
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = onAdd, shapes = ButtonDefaults.shapes()) { Icon(Icons.Outlined.Add, null, Modifier.padding(end = 6.dp)); Text("Add transaction") }
             Button(onClick = onAdjust, shapes = ButtonDefaults.shapes(), colors = ButtonDefaults.filledTonalButtonColors()) { Icon(Icons.Outlined.Tune, null, Modifier.padding(end = 6.dp)); Text("Adjust balance") }
             Button(onClick = onEdit, shapes = ButtonDefaults.shapes(), colors = ButtonDefaults.filledTonalButtonColors()) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Edit") }
             Button(onClick = onArchive, shapes = ButtonDefaults.shapes(), colors = ButtonDefaults.filledTonalButtonColors()) { Icon(Icons.Outlined.Archive, null, Modifier.padding(end = 6.dp)); Text("Archive") }
+            if (onRates != null) Button(onClick = onRates, shapes = ButtonDefaults.shapes(), colors = ButtonDefaults.filledTonalButtonColors()) { Icon(Icons.Outlined.Tune, null, Modifier.padding(end = 6.dp)); Text("Rate history") }
             OutlinedButton(onClick = onDelete, shapes = ButtonDefaults.shapes(), colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 6.dp)); Text("Delete") }
         }
     }

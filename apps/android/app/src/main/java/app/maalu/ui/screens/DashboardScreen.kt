@@ -51,6 +51,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.maalu.data.Api
+import app.maalu.data.incomeRule
+import app.maalu.data.Account
 import app.maalu.data.ApiResult
 import app.maalu.data.AvailableToSpend
 import app.maalu.data.CategoryTotal
@@ -90,6 +92,7 @@ private data class DashboardData(
     val goals: List<Goal> = emptyList(),
     val latest: List<Transaction> = emptyList(),
     val upcoming: List<Transaction> = emptyList(),
+    val accounts: List<Account> = emptyList(),
 )
 
 private sealed interface State {
@@ -119,10 +122,11 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
             val today = LocalDate.now()
             val trendEnd = if (end > today && start <= today) today else end
             val trendCall = async { api.get<BalanceTrend>("stats/balance-trend", mapOf("from" to "$start", "to" to "$trendEnd")) }
-            val monthlyCall = async { api.get<Monthly>("stats/monthly", mapOf("months" to "6", "to" to "$end")) }
+            val monthlyCall = async { api.get<Monthly>("stats/monthly", mapOf("months" to "12", "to" to "$end")) }
             val budgetCall = async { api.get<Budget>("budget", mapOf("on" to "$start")) }
             val goalsCall = async { api.get<List<Goal>>("goals") }
             val latestCall = async { api.get<List<Transaction>>("transactions", mapOf("limit" to "5")) }
+            val accountsCall = async { api.get<List<Account>>("accounts") }
             val upcomingCall = async { api.get<List<Transaction>>("transactions", mapOf("planned" to "true", "limit" to "5")) }
             val t = totals.await(); val b = before.await(); val c = cats.await(); val a = avail.await()
             when {
@@ -139,6 +143,7 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
                         (goalsCall.await() as? ApiResult.Ok)?.data.orEmpty(),
                         (latestCall.await() as? ApiResult.Ok)?.data.orEmpty(),
                         (upcomingCall.await() as? ApiResult.Ok)?.data.orEmpty(),
+                        (accountsCall.await() as? ApiResult.Ok)?.data.orEmpty(),
                     ),
                 )
             }
@@ -174,7 +179,9 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
                 item { NetWorthCard(s.data.trend, s.data.totals.currency) }
                 item { CashFlowCard(s.data.monthly, s.data.totals.currency) }
                 item { BudgetGoalsCard(s.data.budget, s.data.goals) }
-                item { NeedsWantsCard(kindShares(s.data.categories), s.data.totals.currency) }
+                item { NeedsWantsCard(kindShares(s.data.categories), s.data.totals.currency, incomeRule(s.data.categories)) }
+                item { MoneyFlowCard(s.data.categories, s.data.totals.currency) }
+                item { CreditUsageCard(s.data.accounts) }
                 item { TransactionsCard("Coming up", null, s.data.upcoming, "Nothing planned.", LocalDate.now().toString()) }
                 item { TransactionsCard("Latest transactions", null, s.data.latest, "No transactions yet.", LocalDate.now().toString()) }
             } }

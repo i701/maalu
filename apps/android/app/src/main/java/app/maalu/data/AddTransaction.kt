@@ -150,10 +150,15 @@ fun VendorItem.defaultsFor(form: AddForm): VendorFill = VendorFill(
     tags = defaultTags.map { it.name }.takeIf { it.isNotEmpty() && form.tags.isEmpty() },
 )
 
-/** The form after picking [vendor]: its name, plus whatever its defaults may fill in. */
+/** The form after picking [vendor]: its name, plus whatever its defaults may fill in, and its usual place when no location is marked yet. */
 fun AddForm.withVendor(vendor: VendorItem): AddForm {
     val fill = vendor.defaultsFor(this)
-    return copy(vendor = vendor.name, category = fill.category ?: category, tags = fill.tags ?: tags)
+    val marked = latitude.isNotBlank() && longitude.isNotBlank()
+    val spot = !marked && !vendor.latitude.isNullOrBlank() && !vendor.longitude.isNullOrBlank()
+    return copy(
+        vendor = vendor.name, category = fill.category ?: category, tags = fill.tags ?: tags,
+        latitude = if (spot) vendor.latitude!! else latitude, longitude = if (spot) vendor.longitude!! else longitude, place = if (spot) vendor.place.orEmpty() else place,
+    )
 }
 
 /** "100.0000" as "100", "45.5000" as "45.5": what the API stored, as a person would type it. */

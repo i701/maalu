@@ -208,4 +208,13 @@ class AddTransactionTest {
         assertTrue(t.canDuplicate())
         assertFalse(t.copy(adjustment = true).canDuplicate())
     }
+
+    @Test fun pickingAVendorMarksItsUsualPlaceOnlyWhenNoneIsMarked() {
+        val shop = VendorItem("v", "Ensis", latitude = "4.1755", longitude = "73.5094", place = "Ensis Mart")
+        val f = AddForm().withVendor(shop)
+        assertEquals("4.1755", f.latitude); assertEquals("Ensis Mart", f.place); assertEquals("Ensis", f.vendor)
+        val kept = AddForm(latitude = "1.0", longitude = "2.0", place = "Mine").withVendor(shop)
+        assertEquals("1.0", kept.latitude); assertEquals("Mine", kept.place)
+        assertEquals("", AddForm().withVendor(VendorItem("w", "No place")).latitude)
+    }
 }
