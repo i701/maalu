@@ -94,6 +94,7 @@ import androidx.compose.material3.InputChip
 import androidx.compose.material3.InputChipDefaults
 import app.maalu.ui.components.TintChip
 import app.maalu.data.Transaction
+import app.maalu.data.TransferSuggestion
 import app.maalu.data.dayLabel
 import app.maalu.data.formatMoney
 import app.maalu.data.formatNumber
@@ -145,6 +146,7 @@ fun TransactionsScreen(api: Api) {
     var loadingMore by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var selected by remember { mutableStateOf<Transaction?>(null) }
+    var suggestions by remember { mutableStateOf<List<TransferSuggestion>>(emptyList()) }
     var generation by remember { mutableIntStateOf(0) }
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
@@ -171,6 +173,8 @@ fun TransactionsScreen(api: Api) {
                 is ApiResult.Failed -> error = r.message
             }
             totals = (sums.await() as? ApiResult.Ok)?.data
+            // pairs that look like one move of your own money entered twice; a failure just means no card
+            suggestions = (api.get<List<TransferSuggestion>>("transactions/transfer-suggestions") as? ApiResult.Ok)?.data.orEmpty()
         }
         loading = false
         refreshing = false
@@ -235,6 +239,9 @@ fun TransactionsScreen(api: Api) {
                         )
                     }
                 } else LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(bottom = 16.dp)) {
+                    if (suggestions.isNotEmpty() && committed.isEmpty() && !filters.isFiltered()) item(key = "transfer-suggestions") {
+                        Box(Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) { TransferSuggestionsCard(api, suggestions, onChanged = { reload++ }, onSay = { msg -> scope.launch { snackbar?.showSnackbar(msg) } }) }
+                    }
                     groups.forEach { (day, list) ->
                         stickyHeader(key = "d-$day") {
                             Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxWidth()) {
