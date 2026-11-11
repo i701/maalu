@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { keyFromAuthorization, upstreamPath } from "./key-proxy";
+import {
+	credentialFromAuthorization,
+	isOpenRoute,
+	keyFromAuthorization,
+	upstreamPath,
+} from "./key-proxy";
 
 describe("keyFromAuthorization", () => {
 	it("takes an API key sent as a bearer token", () => {
@@ -38,5 +43,55 @@ describe("upstreamPath", () => {
 		expect(upstreamPath("a b")).toBeNull();
 		expect(upstreamPath("a".repeat(301))).toBeNull();
 		expect(upstreamPath("accounts\\x")).toBeNull();
+	});
+});
+
+// What the API makes with secrets.token_urlsafe(32): 43 URL-safe characters.
+const SESSION = "Zs4Qf0aV2uYxkq3nT8mHc7LrPbN1eGd6WjXvAoUiK-_";
+
+describe("credentialFromAuthorization", () => {
+	it("tells an API key from a session token", () => {
+		expect(credentialFromAuthorization("Bearer mlk_AbC123-_x")).toEqual({
+			kind: "key",
+			token: "mlk_AbC123-_x",
+		});
+		expect(credentialFromAuthorization(`Bearer ${SESSION}`)).toEqual({
+			kind: "session",
+			token: SESSION,
+		});
+		expect(credentialFromAuthorization(`  Bearer ${SESSION}  `)).toEqual({
+			kind: "session",
+			token: SESSION,
+		});
+	});
+
+	it("refuses a missing header, another scheme and tokens of the wrong shape", () => {
+		expect(credentialFromAuthorization(null)).toBeNull();
+		expect(credentialFromAuthorization("")).toBeNull();
+		expect(credentialFromAuthorization(`Basic ${SESSION}`)).toBeNull();
+		expect(credentialFromAuthorization(`bearer ${SESSION}`)).toBeNull();
+		expect(credentialFromAuthorization("Bearer short")).toBeNull();
+		expect(credentialFromAuthorization(`Bearer ${SESSION}x`)).toBeNull(); // 44 characters
+		expect(credentialFromAuthorization(`Bearer ${SESSION.slice(0, 42)}!`)).toBeNull();
+		expect(credentialFromAuthorization(`Bearer ${SESSION} extra`)).toBeNull();
+	});
+
+	it("never mistakes a key for a session token or the other way round", () => {
+		expect(credentialFromAuthorization("Bearer mlk_" + "a".repeat(32))?.kind).toBe("key");
+		expect(credentialFromAuthorization(`Bearer ${"a".repeat(43)}`)?.kind).toBe("session");
+	});
+});
+
+describe("isOpenRoute", () => {
+	it("lets a person sign in without a credential, and only that", () => {
+		expect(isOpenRoute("POST", "auth/login")).toBe(true);
+		expect(isOpenRoute("post", "auth/login/2fa")).toBe(true);
+		expect(isOpenRoute("GET", "auth/login")).toBe(false);
+		expect(isOpenRoute("POST", "auth/register")).toBe(false);
+		expect(isOpenRoute("POST", "auth/password")).toBe(false);
+		expect(isOpenRoute("POST", "auth/logout")).toBe(false);
+		expect(isOpenRoute("POST", "auth/login/")).toBe(false);
+		expect(isOpenRoute("POST", "auth/login/2fa/extra")).toBe(false);
+		expect(isOpenRoute("GET", "accounts")).toBe(false);
 	});
 });
