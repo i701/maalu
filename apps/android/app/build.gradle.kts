@@ -49,5 +49,6 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.datastore.preferences)
     debugImplementation(libs.compose.ui.tooling)
+    implementation(libs.zxing.core)
     testImplementation(libs.junit)
 }

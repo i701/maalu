@@ -28,6 +28,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import app.maalu.data.Api
+import app.maalu.ui.components.OtpInput
+import androidx.compose.foundation.layout.Box
 import app.maalu.data.ApiResult
 import app.maalu.data.Token
 import app.maalu.data.TwoFactorChallenge
@@ -40,6 +42,7 @@ fun LoginScreen(api: Api, server: String, onSignedIn: (String) -> Unit, onChange
     var password by rememberSaveable { mutableStateOf("") }
     var code by rememberSaveable { mutableStateOf("") }
     var challenge by rememberSaveable { mutableStateOf<String?>(null) }
+    var recoveryMode by rememberSaveable { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -47,7 +50,7 @@ fun LoginScreen(api: Api, server: String, onSignedIn: (String) -> Unit, onChange
     fun finish(result: ApiResult<Token>) {
         busy = false
         when (result) {
-            is ApiResult.Failed -> error = result.message
+            is ApiResult.Failed -> { error = result.message; if (challenge != null) code = "" }
             is ApiResult.Ok -> {
                 val t = result.data
                 when {
@@ -57,6 +60,14 @@ fun LoginScreen(api: Api, server: String, onSignedIn: (String) -> Unit, onChange
                 }
             }
         }
+    }
+
+    // the second step: send the code (the sixth digit does this by itself)
+    fun verify(entered: String) {
+        val c = challenge ?: return
+        if (busy || entered.isBlank()) return
+        busy = true; error = null
+        scope.launch { finish(api.postJson("auth/login/2fa", AppJsonEncode(TwoFactorChallenge(c, entered.trim())))) }
     }
 
     Column(
@@ -79,12 +90,20 @@ fun LoginScreen(api: Api, server: String, onSignedIn: (String) -> Unit, onChange
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             )
         } else {
-            Text("Enter the code from your authenticator app, or a recovery code.", style = MaterialTheme.typography.bodyLarge)
-            OutlinedTextField(
-                value = code, onValueChange = { code = it; error = null }, label = { Text("Code") },
+            Text(
+                if (recoveryMode) "Enter one of your recovery codes." else "Enter the 6-digit code from your authenticator app.",
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            if (recoveryMode) OutlinedTextField(
+                value = code, onValueChange = { code = it; error = null }, label = { Text("Recovery code") },
                 singleLine = true, enabled = !busy, modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii),
-            )
+            ) else Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                OtpInput(code, { code = it; error = null }, enabled = !busy, isError = error != null, autoFocus = true, onComplete = { verify(it) })
+            }
+            TextButton(onClick = { recoveryMode = !recoveryMode; code = ""; error = null }, enabled = !busy) {
+                Text(if (recoveryMode) "Use an authenticator code" else "Use a recovery code instead")
+            }
         }
         error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
 
@@ -93,19 +112,14 @@ fun LoginScreen(api: Api, server: String, onSignedIn: (String) -> Unit, onChange
             enabled = !busy && (if (challenge == null) email.isNotBlank() && password.isNotEmpty() else code.isNotBlank()),
             modifier = Modifier.fillMaxWidth(),
             onClick = {
-                busy = true; error = null
-                scope.launch {
-                    val c = challenge
-                    if (c == null) {
-                        finish(api.postForm("auth/login", mapOf("username" to email.trim(), "password" to password)))
-                    } else {
-                        finish(api.postJson("auth/login/2fa", AppJsonEncode(TwoFactorChallenge(c, code.trim()))))
-                    }
-                }
+                if (challenge == null) {
+                    busy = true; error = null
+                    scope.launch { finish(api.postForm("auth/login", mapOf("username" to email.trim(), "password" to password))) }
+                } else verify(code)
             },
         ) { Text(if (busy) "Signing in…" else if (challenge == null) "Sign in" else "Verify") }
 
-        TextButton(onClick = { if (challenge != null) { challenge = null; code = "" } else onChangeServer() }, enabled = !busy) {
+        TextButton(onClick = { if (challenge != null) { challenge = null; code = ""; recoveryMode = false } else onChangeServer() }, enabled = !busy) {
             Text(if (challenge != null) "Back" else "Use a different server")
         }
     }
