@@ -205,9 +205,9 @@ private fun PlanRowContent(row: PlanRow, currency: String, canPay: Boolean, onPa
                 } }
             }
             Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    (if (row.estimate) "≈ " else if (row.kind == PlanKind.Income) "+" else "") + formatMoney(row.amount, currency),
-                    style = MaterialTheme.typography.bodyMedium.merge(MoneyStyle),
+                MoneyText(
+                    row.amount, currency, prefix = if (row.estimate) "≈ " else if (row.kind == PlanKind.Income) "+" else "",
+                    style = MaterialTheme.typography.bodyMedium,
                     color = if (row.kind == PlanKind.Income) ChartColors.IncomeLight else MaterialTheme.colorScheme.onSurface,
                 )
                 row.left?.let { left ->

@@ -268,7 +268,7 @@ fun TransactionsScreen(api: Api) {
                                         Text(t.title(), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), maxLines = 2, overflow = TextOverflow.Ellipsis)
                                         CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant) { RowDetails(t) }
                                     }
-                                    Text(signed(t), style = MaterialTheme.typography.bodyMedium.merge(MoneyStyle), color = amountColor(t))
+                                    MoneyText(t.amount, t.currency, prefix = signPrefix(t), style = MaterialTheme.typography.bodyMedium, color = amountColor(t))
                                 }
                             }
                         }

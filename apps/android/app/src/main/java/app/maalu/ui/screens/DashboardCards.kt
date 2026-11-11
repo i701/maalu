@@ -72,7 +72,7 @@ fun NetWorthCard(points: List<BalancePoint>, currency: String) {
     val last = points.last().total.toBigDecimalOrNull() ?: return
     val change = last - first
     SectionCard("Net worth") {
-        Text(formatMoney(points.last().total, currency), style = MaterialTheme.typography.headlineSmall.merge(MoneyStyle))
+        MoneyText(points.last().total, currency, style = MaterialTheme.typography.headlineSmall)
         // the arrow and the sign say which way it went, not only the colour
         Text(
             (if (change.signum() >= 0) "↑ " else "↓ ") + formatMoney(change.abs().toPlainString(), currency) + " this month",
@@ -213,9 +213,9 @@ fun TransactionsCard(title: String, trailing: String?, items: List<Transaction>,
                     )
                 }
                 val sign = when (t.type) { "expense" -> "-"; "income" -> "+"; else -> "" }
-                Text(
-                    sign + formatMoney(t.amount, t.currency),
-                    style = MaterialTheme.typography.bodyMedium.merge(MoneyStyle),
+                MoneyText(
+                    t.amount, t.currency, prefix = sign,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = when (t.type) { "income" -> ChartColors.IncomeLight; "expense" -> ChartColors.ExpenseLight; else -> MaterialTheme.colorScheme.onSurface },
                 )
             }

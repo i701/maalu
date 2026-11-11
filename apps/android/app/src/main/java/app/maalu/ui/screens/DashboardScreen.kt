@@ -202,10 +202,7 @@ private fun AvailableCard(a: AvailableToSpend, onOpenPlan: () -> Unit) {
     ) {
         Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(if (short) "Short by" else "Available to spend", style = MaterialTheme.typography.labelLarge)
-            Text(
-                formatMoney(a.available.removePrefix("-"), a.currency),
-                style = MaterialTheme.typography.headlineLarge.merge(MoneyStyle),
-            )
+            MoneyText(a.available.removePrefix("-"), a.currency, style = MaterialTheme.typography.headlineLarge)
             Text("until ${shortDate(a.periodEnd)}", style = MaterialTheme.typography.bodySmall)
             Text(working(a), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -229,7 +226,7 @@ private fun Working(a: AvailableToSpend) {
                 Text(label, style = MaterialTheme.typography.bodyMedium)
                 if (note != null) Text(note, style = MaterialTheme.typography.bodySmall, color = if (bad) MaterialTheme.colorScheme.error else LocalContentColor.current.copy(alpha = 0.75f))
             }
-            Text(formatMoney(amount, a.currency), style = MaterialTheme.typography.bodyMedium.merge(MoneyStyle))
+            MoneyText(amount, a.currency, style = MaterialTheme.typography.bodyMedium)
         }
     }
     @Composable
@@ -321,7 +318,7 @@ private fun SpendingCard(categories: List<CategoryTotal>, currency: String) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Row {
                         Text(row.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-                        Text(formatMoney(row.total.toPlainString(), currency), style = MaterialTheme.typography.bodyMedium.merge(MoneyStyle))
+                        MoneyText(row.total.toPlainString(), currency, style = MaterialTheme.typography.bodyMedium)
                     }
                     Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surfaceContainerHighest)) {
                         Box(Modifier.fillMaxWidth(row.share.toFloat().coerceIn(0.02f, 1f)).height(8.dp).clip(RoundedCornerShape(50)).background(color))

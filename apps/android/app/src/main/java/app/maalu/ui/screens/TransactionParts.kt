@@ -145,6 +145,9 @@ fun Mark(text: String) {
 }
 
 
+/** The sign in front of a transaction's amount: minus for an expense, plus for income, none for a transfer. */
+fun signPrefix(t: Transaction) = when (t.type) { "expense" -> "-"; "income" -> "+"; else -> "" }
+
 /** An expense is money out, income (and a refund) money in; a transfer has no sign. */
 fun signed(t: Transaction) = when (t.type) {
     "expense" -> "-" + formatMoney(t.amount, t.currency)
@@ -165,7 +168,7 @@ fun DetailSheet(t: Transaction, onEdit: (() -> Unit)?, onDelete: () -> Unit, onC
     ModalBottomSheet(onDismissRequest = onClose) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(t.title(), style = MaterialTheme.typography.titleMedium)
-            Text(signed(t), style = MaterialTheme.typography.titleLarge.merge(MoneyStyle), color = amountColor(t))
+            MoneyText(t.amount, t.currency, prefix = signPrefix(t), style = MaterialTheme.typography.titleLarge, color = amountColor(t))
             val rate = t.exchangeRate.toBigDecimalOrNull()
             if (rate != null && rate.compareTo(java.math.BigDecimal.ONE) != 0 && t.baseAmount != null) {
                 Text(

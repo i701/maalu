@@ -291,9 +291,9 @@ private fun Header(a: Account, month: Totals?) {
         Surface(shape = MaterialTheme.shapes.extraLarge, color = tint.copy(alpha = 0.14f)) {
             Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(if (a.isLiability) "Owed" else "Balance", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(
-                    formatMoney(if (a.isLiability) a.balance.removePrefix("-") else a.balance, a.currency),
-                    style = MaterialTheme.typography.headlineMedium.merge(MoneyStyle),
+                MoneyText(
+                    if (a.isLiability) a.balance.removePrefix("-") else a.balance, a.currency,
+                    style = MaterialTheme.typography.headlineMedium,
                     color = if (negative && !a.isLiability) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
                 )
                 if (a.currency != month?.currency && month != null && a.exchangeRate.toBigDecimalOrNull()?.compareTo(java.math.BigDecimal.ONE) != 0) {
@@ -407,9 +407,9 @@ private fun AccountTransactionRow(t: Transaction, account: Account, balanceAfter
             if (marks.isNotEmpty()) Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(top = 2.dp)) { marks.forEach { Mark(it) } }
         }
         Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(
-                (if (effect.positive) "+" else "−") + formatMoney(effect.amount, effect.currency),
-                style = MaterialTheme.typography.bodyMedium.merge(MoneyStyle),
+            MoneyText(
+                effect.amount, effect.currency, prefix = if (effect.positive) "+" else "−",
+                style = MaterialTheme.typography.bodyMedium,
                 color = if (effect.positive) ChartColors.IncomeLight else MaterialTheme.colorScheme.error,
             )
             // planned transactions are not in the balance yet, so they have none after them

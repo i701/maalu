@@ -198,9 +198,9 @@ private fun AccountRow(a: Account, trend: List<Double>?, baseCurrency: String) {
             }
         }
         Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(
-                formatMoney(a.balance, a.currency),
-                style = MaterialTheme.typography.bodyMedium.merge(MoneyStyle),
+            MoneyText(
+                a.balance, a.currency,
+                style = MaterialTheme.typography.bodyMedium,
                 color = if (a.balance.startsWith("-")) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
             )
             if (a.exchangeRate.toBigDecimalOrNull()?.compareTo(java.math.BigDecimal.ONE) != 0) {

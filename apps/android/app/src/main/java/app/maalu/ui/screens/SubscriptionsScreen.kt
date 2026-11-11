@@ -272,7 +272,7 @@ private fun SuggestionsCard(candidates: List<SubscriptionCandidate>, onAdd: (Sub
                             Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(c.vendorName, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                    Text(amountPrefix(c.amountVaries) + formatMoney(c.amount, c.currency), style = MaterialTheme.typography.bodyMedium.merge(MoneyStyle))
+                                    MoneyText(c.amount, c.currency, prefix = amountPrefix(c.amountVaries), style = MaterialTheme.typography.bodyMedium)
                                 }
                                 Text(
                                     listOfNotNull(everyText(c.intervalUnit, c.intervalCount), "seen ${c.occurrences} times", confidenceText(c), c.nextDue?.let { "next ${shortDate(it)}" }).joinToString(" · "),
@@ -303,7 +303,7 @@ private fun SubscriptionRow(s: Subscription) {
             Text(s.dueText(), style = MaterialTheme.typography.bodySmall, color = if (s.isOverdue && s.status == "active") MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
         Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(amountPrefix(s.amountVaries) + formatMoney(s.amount, s.currency), style = MaterialTheme.typography.bodyMedium.merge(MoneyStyle))
+            MoneyText(s.amount, s.currency, prefix = amountPrefix(s.amountVaries), style = MaterialTheme.typography.bodyMedium)
             if (s.status != "active") Surface(shape = RoundedCornerShape(8.dp), color = statusTint(s.status).copy(alpha = 0.25f)) {
                 Text(subscriptionStatusLabel(s.status), style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp))
             }
@@ -325,7 +325,7 @@ private fun SubscriptionSheet(s: Subscription, onEdit: () -> Unit, onToggle: () 
     ModalBottomSheet(onDismissRequest = onClose, containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(s.name, style = MaterialTheme.typography.titleMedium)
-            Text(amountPrefix(s.amountVaries) + formatMoney(s.amount, s.currency), style = MaterialTheme.typography.titleLarge.merge(MoneyStyle))
+            MoneyText(s.amount, s.currency, prefix = amountPrefix(s.amountVaries), style = MaterialTheme.typography.titleLarge)
             Fact("Repeats", everyText(s.intervalUnit, s.intervalCount))
             Fact("Status", subscriptionStatusLabel(s.status))
             Fact("Next due", s.nextDueDate?.let { shortDate(it) + if (s.isOverdue) " (overdue)" else "" })
