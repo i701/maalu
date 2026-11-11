@@ -54,6 +54,8 @@ import app.maalu.data.ApiResult
 import app.maalu.data.Budget
 import app.maalu.data.BudgetLine
 import app.maalu.data.FixedLine
+import app.maalu.data.movesFor
+import app.maalu.data.LineMove
 import androidx.compose.material3.OutlinedButton
 import app.maalu.data.runsText
 import app.maalu.data.repeatFormFrom
@@ -115,6 +117,8 @@ fun BudgetScreen(api: Api, on: String) {
     var money by remember { mutableStateOf<Goal?>(null) }
     var deleteLine by remember { mutableStateOf<BudgetLine?>(null) }
     var deleteFixed by remember { mutableStateOf<FixedLine?>(null) }
+    var moving by remember { mutableStateOf<BudgetLine?>(null) }
+    var history by remember { mutableStateOf<BudgetLine?>(null) }
     var deleteGoal by remember { mutableStateOf<Goal?>(null) }
     val snackbar = LocalSnackbar.current
     val scope = rememberCoroutineScope()
@@ -147,7 +151,7 @@ fun BudgetScreen(api: Api, on: String) {
                     if (b.lines.isEmpty()) item { Text("No limits yet. A limit is an amount you allow yourself to spend on some categories each month.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)) }
                     items(b.lines.size, key = { "l-" + b.lines[it].id }) { i ->
                         val l = b.lines[i]
-                        MorphTile({ line = l }, first = i == 0, last = i == b.lines.lastIndex, modifier = Modifier.padding(bottom = 2.dp)) { LineRow(l, b.currency) }
+                        MorphTile({ line = l }, first = i == 0, last = i == b.lines.lastIndex, modifier = Modifier.padding(bottom = 2.dp)) { LineRow(l, b.currency, movesFor(b.moves, l.id, b.currency)) }
                     }
                     // limits for set dates whose dates touch this period (a November limit is not listed under December)
                     val running = fixedInPeriod(b)
@@ -170,9 +174,14 @@ fun BudgetScreen(api: Api, on: String) {
     }
 
     val b = (state as? BudgetLoad.Loaded)?.data?.budget
+    val budgetNow = b
     val currency = b?.currency ?: ""
     line?.let { l ->
-        LineSheet(l, currency, onEdit = { limitForm = LimitFormRequest(lineFormFrom(l), l.id); line = null }, onDelete = { deleteLine = l; line = null }, onClose = { line = null })
+        LineSheet(
+            l, currency, movesFor(budgetNow?.moves.orEmpty(), l.id, currency),
+            onMove = { moving = l; line = null }, onHistory = { history = l; line = null },
+            onUndo = { id -> line = null; scope.launch { when (val r = api.post("budget/moves/$id/undo")) { is ApiResult.Ok -> { attempt++; snackbar?.showSnackbar("Move undone") }; is ApiResult.Failed -> snackbar?.showSnackbar(r.message.lines().first()) } } },
+            onEdit = { limitForm = LimitFormRequest(lineFormFrom(l), l.id); line = null }, onDelete = { deleteLine = l; line = null }, onClose = { line = null })
     }
     fixed?.let { f ->
         FixedSheet(
@@ -186,7 +195,10 @@ fun BudgetScreen(api: Api, on: String) {
     goal?.let { g ->
         GoalSheet(g, onMoney = { money = g; goal = null }, onEdit = { editingGoal = g; goal = null }, onDelete = { deleteGoal = g; goal = null }, onClose = { goal = null })
     }
-    val budgetNow = (state as? BudgetLoad.Loaded)?.data?.budget
+    moving?.let { l ->
+        if (budgetNow != null) MoveMoneyDialog(api, budgetNow, l, onClose = { moving = null }) { msg -> moving = null; attempt++; scope.launch { snackbar?.showSnackbar(msg) } }
+    }
+    history?.let { l -> MoveHistorySheet(api, l, currency, onClose = { history = null }) }
     limitForm?.let { lf ->
         if (budgetNow != null) LineFormScreen(api, currency, budgetNow, lf.start, lf.editingId, onClose = { limitForm = null }) {
             limitForm = null; attempt++
@@ -299,7 +311,7 @@ private fun SummaryCard(b: Budget) {
 }
 
 @Composable
-private fun LineRow(l: BudgetLine, currency: String) {
+private fun LineRow(l: BudgetLine, currency: String, moves: List<LineMove> = emptyList()) {
     val color = statusColor(l.status)
     Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -316,6 +328,8 @@ private fun LineRow(l: BudgetLine, currency: String) {
             }
             Text(leftText(l.available, currency), style = MaterialTheme.typography.bodySmall, color = if (l.status == "over") color else MaterialTheme.colorScheme.onSurfaceVariant)
         }
+        // money moved in or out this period
+        moves.forEach { m -> Text(m.text + " this period", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
     }
 }
 
@@ -390,7 +404,7 @@ private fun SheetActions(onEdit: (() -> Unit)?, onDelete: (() -> Unit)?, extra: 
 }
 
 @Composable
-private fun LineSheet(l: BudgetLine, currency: String, onEdit: () -> Unit, onDelete: () -> Unit, onClose: () -> Unit) {
+private fun LineSheet(l: BudgetLine, currency: String, moves: List<LineMove>, onMove: () -> Unit, onHistory: () -> Unit, onUndo: (String) -> Unit, onEdit: () -> Unit, onDelete: () -> Unit, onClose: () -> Unit) {
     ModalBottomSheet(onDismissRequest = onClose, containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(l.name, style = MaterialTheme.typography.titleMedium)
@@ -403,7 +417,22 @@ private fun LineSheet(l: BudgetLine, currency: String, onEdit: () -> Unit, onDel
             Fact("Runs", runsText(l)?.removePrefix("Runs "))
             Fact("Carries over", if (l.rollover) "Yes" else null)
             Fact("Kind", when (l.kind) { "need" -> "Need"; "want" -> "Want"; else -> null })
-            Text("Moving money between limits is on the web for now.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (moves.isNotEmpty()) {
+                Text("Moved this period", style = MaterialTheme.typography.titleSmall)
+                moves.forEach { m ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text(m.text, style = MaterialTheme.typography.bodyMedium)
+                            m.note?.takeIf { it.isNotBlank() }?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                        }
+                        TextButton(onClick = { onUndo(m.id) }) { Text("Undo") }
+                    }
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = onMove, modifier = Modifier.weight(1f)) { Text("Move money here") }
+                OutlinedButton(onClick = onHistory, modifier = Modifier.weight(1f)) { Text("History") }
+            }
             SheetActions(onEdit, onDelete)
         }
     }

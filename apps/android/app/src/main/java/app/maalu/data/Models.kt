@@ -218,6 +218,23 @@ data class Budget(
     val lines: List<BudgetLine> = emptyList(),
     @SerialName("fixed_lines") val fixedLines: List<FixedLine> = emptyList(),
     val attention: Int = 0,
+    /** Money moved between monthly limits in this period (undone moves are not here). */
+    val moves: List<BudgetMove> = emptyList(),
+)
+
+/** Money moved from one monthly limit to another for one period, or added to one (no [fromLine]: a top-up). */
+@Serializable
+data class BudgetMove(
+    val id: String,
+    @SerialName("from_line") val fromLine: IdName? = null,
+    @SerialName("to_line") val toLine: IdName,
+    val amount: String,
+    val note: String? = null,
+    @SerialName("created_at") val createdAt: String = "",
+    // only in a limit's history
+    @SerialName("period_start") val periodStart: String? = null,
+    @SerialName("period_end") val periodEnd: String? = null,
+    @SerialName("undone_at") val undoneAt: String? = null,
 )
 
 @Serializable

@@ -9,12 +9,12 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 67 | 54 | 0 |
+| ✅ done | 67 | 55 | 0 |
 | 🟡 partial | 0 | 3 | 0 |
-| ❌ missing | 0 | 6 | 63 |
+| ❌ missing | 0 | 5 | 63 |
 | ➖ n/a | 1 | 5 | 5 |
 
-## Still to build on Android (9)
+## Still to build on Android (8)
 
 - 🟡 **Refunds** (Transactions). Refund rows are tagged and shown; a refund cannot be made or linked from the app.
 - 🟡 **Budget limits** (Budget, goals and planning). Monthly limits can be made, edited and deleted. The budget settings (period start day, warning percent) are changed on the web.
@@ -22,7 +22,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Export to Excel** (Transactions).
 - ❌ **Sort every category into need or want** (Categories, tags and vendors). Each category's kind can be set one by one in its form.
 - ❌ **Make a subscription from a transaction** (Bills and subscriptions).
-- ❌ **Move money between limits** (Budget, goals and planning).
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
@@ -173,7 +172,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 |---|:---:|:---:|:---:|
 | **Budget limits**<br>Per-period limits for categories with a warning percent, rollover and the summary by kind. | ✅ done | 🟡 partial | ❌ missing |
 | **Limits for set dates**<br>One total for a stretch of dates, a monthly limit that runs between two dates, and repeating a finished one. | ✅ done | ✅ done | ❌ missing |
-| **Move money between limits**<br>Move what is left in one limit to another for one period, undo it, and see the history. | ✅ done | ❌ missing | ❌ missing |
+| **Move money between limits**<br>Move what is left in one limit to another for one period, undo it, and see the history. | ✅ done | ✅ done | ❌ missing |
 | **Savings goals**<br>A target that follows a savings account or a log of amounts set aside by hand. | ✅ done | ✅ done | ❌ missing |
 | **Month plan**<br>What you have, the bills still to pay by day and where the money runs out. | ✅ done | ✅ done | ❌ missing |
 | **Salary split rules**<br>Rules that divide a salary between accounts and goals, each one manual or automatic. | ✅ done | ✅ done | ❌ missing |

@@ -4,6 +4,7 @@ import java.math.BigDecimal
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -154,5 +155,43 @@ class BudgetLogicTest {
         assertEquals(listOf("nov", "span"), fixedInPeriod(b).map { it.id })
         assertEquals("Runs 1 Nov – 31 Jan", runsText(BudgetLine("l", "L", "0", "1", "1", 0, "ok", runsFrom = "2026-11-01", runsUntil = "2027-01-31")))
         assertNull(runsText(BudgetLine("l", "L", "0", "1", "1", 0, "ok")))
+    }
+}
+
+class BudgetMovesLogicTest {
+    private fun line(id: String, name: String, available: String) = BudgetLine(id, name, "0", "100", available, 0, "ok")
+    private fun move(id: String, from: String?, to: String, amount: String = "600") =
+        BudgetMove(id, from?.let { IdName(it, "L$it") }, IdName(to, "L$to"), amount)
+
+    @Test fun aMoveInWordsFromEachSide() {
+        assertEquals("+MVR 600.00 from Lb", moveText(move("m", "b", "a"), "a", "MVR"))
+        assertEquals("−MVR 600.00 to La", moveText(move("m", "b", "a"), "b", "MVR"))
+        assertEquals("+MVR 300.00 added", moveText(move("m", null, "a", "300"), "a", "MVR"))
+        assertNull(moveText(move("m", "b", "a"), "c", "MVR"))
+        assertEquals(listOf("m1"), movesFor(listOf(move("m1", "b", "a"), move("m2", "c", "d")), "a", "MVR").map { it.id })
+    }
+
+    @Test fun sourcesAreOtherLimitsMostLeftFirstAndEmptyOnesCannotBeChosen() {
+        val b = Budget("MVR", null, BudgetTotals("0", "0", "0", 0, "ok"), listOf(line("a", "A", "50"), line("b", "B", "500"), line("c", "C", "0"), line("d", "D", "-20")))
+        val s = moveSources(b, "a")
+        assertEquals(listOf("b", "c", "d"), s.map { it.line.id }); assertEquals(listOf(true, false, false), s.map { it.usable })
+    }
+
+    @Test fun anAmountMustBePositiveAndWithinWhatIsLeft() {
+        assertNull(moveProblem("500", "500")); assertNull(moveProblem("12.5", null)); assertNull(moveProblem("999999", null))      // a top-up has no cap
+        assertEquals("That is more than it has left.", moveProblem("500.01", "500"))
+        assertNotNull(moveProblem("0", null)); assertNotNull(moveProblem("-5", null)); assertNotNull(moveProblem("abc", null)); assertNotNull(moveProblem("1.23456", null)); assertNotNull(moveProblem("", null))
+    }
+
+    @Test fun theRequestBody() {
+        assertEquals("""{"to_line_id":"a","from_line_id":"b","amount":"500","on":"2026-11-01","note":"Guests"}""", moveJson("a", "b", " 500 ", "2026-11-01", " Guests ").toString())
+        assertEquals("""{"to_line_id":"a","amount":"5","on":"2026-11-01"}""", moveJson("a", null, "5", "2026-11-01", "").toString())
+    }
+
+    @Test fun historyIsGroupedByPeriodNewestFirst() {
+        fun e(id: String, start: String, end: String) = move(id, "b", "a").copy(periodStart = start, periodEnd = end)
+        val g = historyByPeriod(listOf(e("1", "2026-11-01", "2026-11-30"), e("2", "2026-11-01", "2026-11-30"), e("3", "2026-10-01", "2026-10-31")))
+        assertEquals(listOf("2026-11-01", "2026-10-01"), g.map { it.start }); assertEquals(listOf("1", "2"), g[0].entries.map { it.id })
+        assertEquals("6 Nov, 11:58", madeAt("2026-11-06T11:58:20Z", java.time.ZoneOffset.UTC)); assertEquals("not a date", madeAt("not a date"))
     }
 }

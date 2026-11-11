@@ -1194,7 +1194,12 @@
         ]
       },
       "android": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/BudgetMovesUi.kt",
+          "apps/android/app/src/main/java/app/maalu/data/BudgetMovesLogic.kt",
+          "apps/android/app/src/main/java/app/maalu/ui/screens/BudgetScreen.kt"
+        ]
       },
       "ios": {
         "status": "missing"
