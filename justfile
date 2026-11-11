@@ -59,6 +59,11 @@ api-types:
     uv run --directory apps/api python -m app.openapi ../web/openapi.json
     pnpm --filter @maalu/web gen:api
 
+# The guides as JSON for the Android app (apps/android/app/src/main/assets/docs.json), made from apps/web/src/lib/docs.
+# Run after changing a guide and commit the file (CI fails if it is stale).
+docs-json:
+    pnpm --filter @maalu/web gen:docs
+
 # CI-style checks for everything. Regenerates the API types first, so tsc checks the web against
 # the API as it is now; commit the regenerated files with the API change (CI fails if they are stale).
 check: api-types check-api check-web
@@ -76,6 +81,10 @@ check-openapi:
 check-generated-types:
     pnpm --filter @maalu/web gen:api
     git diff --exit-code apps/web/src/types/api.generated.ts
+
+# The Android app's bundled guides must match the web guides (CI, web job)
+check-docs-json:
+    pnpm --filter @maalu/web exec vitest run src/lib/docs/export.test.ts
 
 check-web:
     pnpm --filter @maalu/web fmt:check

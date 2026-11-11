@@ -62,6 +62,7 @@ jobs:
       - run: just check-web # oxfmt --check, oxlint, tsc --noEmit
       - run: just test-web # vitest: the pure helpers in src/lib
       - run: just check-generated-types # src/types/api.generated.ts matches the committed schema
+      - run: just check-docs-json # the Android app's docs.json matches the web guides (fix: just docs-json)
 
   e2e:
     name: End-to-end tests (Playwright)

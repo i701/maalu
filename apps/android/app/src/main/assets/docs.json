@@ -1,0 +1,2302 @@
+{
+	"version": 1,
+	"docs": [
+		{
+			"slug": "accounts",
+			"title": "Accounts, cards and groups",
+			"summary": "What an account is, what each group means, and where a debit card fits: it spends from its bank account, so it is not an account of its own.",
+			"accent": "green",
+			"where": [
+				{
+					"to": "/accounts",
+					"label": "Accounts: add and edit them"
+				},
+				{
+					"to": "/transactions",
+					"label": "Transactions: choose the account and how you paid"
+				},
+				{
+					"to": "/net-worth",
+					"label": "Net worth: what your accounts add up to"
+				}
+			],
+			"blocks": [
+				{
+					"type": "p",
+					"text": "An **account** is a place that holds a balance: your wallet, a bank account, a savings account, a loan you owe. Every transaction happens in an account, and each balance follows the transactions you link to it. Add yours on the [Accounts](/accounts) page."
+				},
+				{
+					"type": "h2",
+					"id": "cards",
+					"text": "Cards are not accounts"
+				},
+				{
+					"type": "p",
+					"text": "A bank gives you an account, and then a **debit card** for it. The card has no money of its own: when you pay with it, the money comes out of the account. So a debit card is not an account. It belongs to one, and you add it on that account's page."
+				},
+				{
+					"type": "steps",
+					"items": [
+						"Add the bank account once, in the **Bank accounts** group (for example MIB Current).",
+						"Open the account from [Accounts](/accounts) and press **Add debit card**. Give it a name and, if you like, its last four digits.",
+						"When you add a transaction in [Transactions](/transactions), pick the **Card**. Maalu fills in the account and sets the payment method to **Debit card** for you."
+					]
+				},
+				{
+					"type": "p",
+					"text": "Cards are how you tell your cards apart: each transaction shows which card paid, and the Transactions filter can show only one card's spending. Only the last four digits are ever stored, never the whole number."
+				},
+				{
+					"type": "h2",
+					"id": "credit-cards",
+					"text": "Credit cards"
+				},
+				{
+					"type": "p",
+					"text": "A **credit card** is different: you spend the bank's money and pay it back later. So it is an account of its own, in **Credit cards**, whose balance is what you owe (you can give it a credit limit). Your bank also links it to one of your bank accounts to repay it from."
+				},
+				{
+					"type": "steps",
+					"items": [
+						"Add the credit card as an account in the **Credit cards** group.",
+						"On its page press **Add credit card**, and choose the bank account it is **Repaid from**.",
+						"Spend with it by picking the card on a transaction: the spending goes on the card, not on your bank account yet.",
+						"When you pay it off, press **Repay** on the card. That opens a transfer from the bank account into the card, ready for the amount."
+					]
+				},
+				{
+					"type": "callout",
+					"tone": "note",
+					"text": "Repaying is a **transfer**, not an expense, so nothing is counted twice: the spending was counted when you made it, and the repayment only moves money from your bank account to clear the debt."
+				},
+				{
+					"type": "h2",
+					"id": "statements",
+					"text": "Statements and due dates"
+				},
+				{
+					"type": "p",
+					"text": "A credit card is billed once a month. Give the card the **day its statement closes** and the **day the payment is due** (in its **Edit** form, both or neither) and Maalu keeps track for you. Nothing is stored about a statement: it is worked out from your transactions."
+				},
+				{
+					"type": "list",
+					"items": [
+						"**On the statement** is what you owed on the day it closed. What you spent since then goes on the next statement.",
+						"**Paid since** is money put on the card after it closed: a repayment, a refund, any income. It comes off what is on the statement.",
+						"**Still to pay** is the rest, with its due date. The card's page shows it in a panel with a **Repay** button that opens the transfer already filled with that amount, and the [Accounts](/accounts) list shows one line under each card.",
+						"A day past the end of a short month counts as the last day of that month, so a statement on the 31st closes on the 28th in February."
+					]
+				},
+				{
+					"type": "p",
+					"text": "Maalu also tells you with a notification three days before a payment is due, again if it is late, and when a card is over 90% of its credit limit (once a month). The [Month plan](/plan) counts a statement that falls due before the period ends as a bill, so the money for it is not shown as available."
+				},
+				{
+					"type": "callout",
+					"tone": "tip",
+					"text": "Leave the days empty for a card you do not track this way. Everything else about the card works as before."
+				},
+				{
+					"type": "h2",
+					"id": "groups",
+					"text": "The groups"
+				},
+				{
+					"type": "list",
+					"items": [
+						"**Cash**: notes and coins you hold, such as a wallet.",
+						"**Bank accounts**: a current account you keep money in and pay from. Its debit card spends from it.",
+						"**Savings**: a savings account, or money you keep apart on purpose. A goal can follow its balance.",
+						"**Credit cards**: what you owe on a credit card, with an optional credit limit.",
+						"**Top-Up/Prepaid**: a balance you spend down, such as phone credit or a transport card.",
+						"**Investments**: money invested in shares, funds or a business.",
+						"**Overdrafts**: money you owe the bank on an overdraft, up to a limit.",
+						"**Loan**: money you owe and pay back in instalments.",
+						"**Insurance** and **Others**: anything with a balance that does not fit the rest."
+					]
+				},
+				{
+					"type": "p",
+					"text": "The group decides a few things: whether the balance is money you have or money you owe, whether it counts as everyday money in your [dashboard's](/dashboard) available-to-spend figure (cash, bank accounts and prepaid do, and you can change that for one account with **I spend from this account** on its form), and which payment method is suggested when you pick the account."
+				},
+				{
+					"type": "h2",
+					"id": "example",
+					"text": "A typical setup"
+				},
+				{
+					"type": "example",
+					"title": "Example: one person with two banks",
+					"rows": [
+						[
+							"Cash",
+							"Wallet (Cash)"
+						],
+						[
+							"BML Current",
+							"Bank accounts, with its debit card added on the account"
+						],
+						[
+							"BML Savings",
+							"Savings"
+						],
+						[
+							"MIB Current",
+							"Bank accounts"
+						],
+						[
+							"MIB Savings",
+							"Savings, which an Emergency fund goal follows"
+						]
+					],
+					"note": "An emergency fund is a goal, not an account. Point a goal at a savings account and its progress is that account's balance."
+				},
+				{
+					"type": "h2",
+					"id": "good-to-know",
+					"text": "Good to know"
+				},
+				{
+					"type": "list",
+					"items": [
+						"Give accounts a bank and a number on the [Accounts](/accounts) page if you have several at one bank, so they are easy to tell apart.",
+						"Each account has its own page with a balance chart and a running balance: see [An account's page](/docs/account-page).",
+						"Money moved between two of your own accounts is a **transfer**, not income or spending.",
+						"An account you stop using can be **archived**: it leaves your lists but its history stays.",
+						"Older **Debit Card** accounts were moved into **Bank accounts**, so nothing is lost."
+					]
+				}
+			],
+			"extras": [
+				"Live example: a credit card's Statement panel"
+			],
+			"webOnly": false
+		},
+		{
+			"slug": "account-page",
+			"title": "An account's page",
+			"summary": "Everything about one account in one place: its balance over time, its own transactions with the balance after each, and a way to make it match your bank.",
+			"accent": "blue",
+			"where": [
+				{
+					"to": "/accounts",
+					"label": "Accounts: open an account from its name"
+				}
+			],
+			"blocks": [
+				{
+					"type": "p",
+					"text": "Press an account's name on the [Accounts](/accounts) page to open its page. It shows only that account: its balance, how the balance moved, and every transaction that touched it. For what the groups mean and how cards fit in, see [Accounts, cards and groups](/docs/accounts)."
+				},
+				{
+					"type": "h2",
+					"id": "at-a-glance",
+					"text": "At a glance"
+				},
+				{
+					"type": "list",
+					"items": [
+						"**Balance**, or **Owed** for a credit card, with its credit use if it has a limit.",
+						"**In** and **Out** this month, in your base currency.",
+						"A **Planned** box with the upcoming bills and income that touch the account, linking to the [month plan](/plan).",
+						"The account's debit or credit cards, with **Repay** on a credit card."
+					]
+				},
+				{
+					"type": "p",
+					"text": "The buttons at the top are **Add transaction** (a new one starts in this account), **Edit account** and **Adjust balance**. An archived account has only **Edit account**."
+				},
+				{
+					"type": "h2",
+					"id": "chart",
+					"text": "Balance over time"
+				},
+				{
+					"type": "p",
+					"text": "The chart shows what the account held at the end of each day, in the account's own currency. Choose **30 days**, **90 days** or **1 year**. Under it you see where it started and ended and its lowest and highest points, and the table button lists the same figures by week."
+				},
+				{
+					"type": "list",
+					"items": [
+						"A day with nothing in it repeats the day before.",
+						"Planned transactions are not in it until you mark them paid, and a transaction dated in the future is left out until its day.",
+						"A transfer counts on both sides: out of one account and into the other."
+					]
+				},
+				{
+					"type": "h2",
+					"id": "transactions",
+					"text": "Its transactions"
+				},
+				{
+					"type": "p",
+					"text": "Below the chart are the account's own transactions, with a search box, a date range and type chips. Each row shows its **effect on this account**, which is not always what the transaction was:"
+				},
+				{
+					"type": "list",
+					"items": [
+						"A transfer out of the account is a minus, labelled **To** the other account. A transfer into it is a plus, labelled **From** the other account.",
+						"A refund is money in.",
+						"A balance **Adjustment** carries its own tag and can only be deleted, not edited."
+					]
+				},
+				{
+					"type": "p",
+					"text": "The **Balance** column is what the account held right after that transaction, so you can follow the balance down the list and check it against your bank. It is shown for the newest 500 transactions; older rows show a dash."
+				},
+				{
+					"type": "h2",
+					"id": "adjust",
+					"text": "Making the balance match your bank"
+				},
+				{
+					"type": "p",
+					"text": "If Maalu's balance and your bank's differ and you cannot find why, press **Adjust balance**. Either type **what the bank shows** and Maalu works out the difference, or add or take away a set amount. Pick a date, and add a note if you like."
+				},
+				{
+					"type": "list",
+					"items": [
+						"It records an **Adjustment** transaction: income if the balance was too low, an expense if too high.",
+						"It moves the balance and the chart, but is **left out of every report**, budget and total, because it is a correction and not real income or spending.",
+						"An earlier date changes the history from that day on.",
+						"To undo it, delete the adjustment."
+					]
+				},
+				{
+					"type": "callout",
+					"tone": "tip",
+					"text": "Know what the difference is? Add the real transaction instead (a forgotten coffee, a fee). Use an adjustment only for what you cannot explain, so your reports stay honest."
+				},
+				{
+					"type": "faq",
+					"faq": [
+						{
+							"q": "Why is the chart in a different currency from my dashboard?",
+							"a": "An account's page always uses the account's own currency. The dashboard and [net worth](/net-worth) show everything in your base currency."
+						},
+						{
+							"q": "Why do old rows have no balance?",
+							"a": "Only the newest 500 transactions show a running balance. The chart still covers the whole range you choose."
+						},
+						{
+							"q": "Why is a bill I planned not in the balance?",
+							"a": "A planned transaction counts toward nothing until you mark it paid. It is listed in the **Planned** box instead."
+						}
+					]
+				}
+			],
+			"extras": [],
+			"webOnly": false
+		},
+		{
+			"slug": "import",
+			"title": "Import a bank statement",
+			"summary": "Bring a month of transactions in from your bank's CSV statement instead of typing them. You review every row first, and an import can be undone.",
+			"accent": "orange",
+			"where": [
+				{
+					"to": "/import",
+					"label": "Import: upload, review and earlier imports"
+				},
+				{
+					"to": "/accounts",
+					"label": "Accounts: set the account number the file is matched to"
+				},
+				{
+					"to": "/vendors",
+					"label": "Vendors: the names Maalu learns to recognise"
+				},
+				{
+					"to": "/docs/fixing-records",
+					"label": "Guide: refunds, transfers and corrections"
+				}
+			],
+			"blocks": [
+				{
+					"type": "p",
+					"text": "Maalu reads the CSV statements that **BML** and **MIB** let you download. Nothing is saved until you have looked through the rows and pressed **Import**."
+				},
+				{
+					"type": "h2",
+					"id": "upload",
+					"text": "Upload the file"
+				},
+				{
+					"type": "steps",
+					"items": [
+						"Download the statement from your bank's internet banking as a CSV file.",
+						"Open [Import](/import) and choose the **Account** it belongs to. If the account has its number saved on [Accounts](/accounts), you can skip this: Maalu finds the account from the number in the file name.",
+						"Press **Choose statement (CSV)** and pick the file."
+					]
+				},
+				{
+					"type": "callout",
+					"tone": "note",
+					"text": "A statement can hold up to 2,000 rows. A file Maalu doesn't recognise is refused with a plain message, and nothing changes."
+				},
+				{
+					"type": "h2",
+					"id": "review",
+					"text": "Review the rows"
+				},
+				{
+					"type": "p",
+					"text": "Every row is listed with what the statement says and what it **Will be** in Maalu. Where Maalu recognises the name on the statement, it fills in the vendor and that vendor's usual category and tags."
+				},
+				{
+					"type": "list",
+					"items": [
+						"Press the pencil on a row to set its **Vendor** and **Category**. The box **Also the other rows named …** (on by default) gives the same answer to every row the bank named the same way.",
+						"To change many rows at once, tick them (or use **Select all** for everything that matches your search) and use the bar: **Set** a vendor and category, mark them as a transfer with **Transfer to or from my account**, or **Leave out** and **Include** them.",
+						"Use **Search the statement** and the amount filters to find rows quickly.",
+						"Rows without a category are imported as **Uncategorized**; you can sort them later."
+					]
+				},
+				{
+					"type": "p",
+					"text": "Maalu remembers your answers. The next time a statement has the same name, it already knows the vendor, or that it is a transfer to one of your accounts."
+				},
+				{
+					"type": "h2",
+					"id": "duplicates",
+					"text": "Duplicates and transfers"
+				},
+				{
+					"type": "p",
+					"text": "Importing the same statement twice, or two that overlap, is safe. Some rows come with a label:"
+				},
+				{
+					"type": "list",
+					"items": [
+						"**Already imported**: the bank's reference was imported into this account before. These are skipped.",
+						"**Already recorded as a transfer**: this is the other side of a transfer between your accounts that is already in Maalu. It is left out by default so the move isn't counted twice.",
+						"**Maybe already entered**: you typed a transaction with the same day, amount and direction. It is kept, so look at it and leave it out if it is the same one."
+					]
+				},
+				{
+					"type": "callout",
+					"tone": "tip",
+					"text": "Money moving between your own accounts is not spending or income. Mark those rows with **Transfer to or from my account** so they don't inflate your totals."
+				},
+				{
+					"type": "h2",
+					"id": "check",
+					"text": "Check the balance, then import"
+				},
+				{
+					"type": "p",
+					"text": "Above the rows, Maalu compares what the account would hold after importing with the closing balance on the statement. **The balance after importing matches your statement** means nothing is missing or doubled. If they differ, some rows may be missing, left out, or entered twice."
+				},
+				{
+					"type": "p",
+					"text": "Press **Import** when you are happy. A row that can't be saved never stops the others: the result lists how many were imported, skipped and failed, and **Download the report** gives a spreadsheet of every row and what happened to it."
+				},
+				{
+					"type": "h2",
+					"id": "undo",
+					"text": "Undo an import"
+				},
+				{
+					"type": "p",
+					"text": "**Earlier imports** on the [Import](/import) page lists each import. **Undo this import** moves its transactions to the [Trash](/trash), and the same statement can then be imported again."
+				}
+			],
+			"extras": [],
+			"webOnly": true
+		},
+		{
+			"slug": "fixing-records",
+			"title": "Refunds, transfers and corrections",
+			"summary": "Record money you got back for a purchase, turn a move you entered twice into one transfer, and bring an account in line with what your bank shows.",
+			"accent": "blue",
+			"where": [
+				{
+					"to": "/transactions",
+					"label": "Transactions: Refund, Link to a purchase, Possible transfers"
+				},
+				{
+					"to": "/accounts",
+					"label": "Accounts: Adjust balance"
+				},
+				{
+					"to": "/trash",
+					"label": "Trash: undo a change"
+				},
+				{
+					"to": "/docs/import",
+					"label": "Guide: import a bank statement"
+				}
+			],
+			"blocks": [
+				{
+					"type": "p",
+					"text": "Real records get messy: a shop refunds you, you enter both sides of a transfer by hand, or a balance drifts away from your bank's. Each of these has its own fix, so your totals stay true."
+				},
+				{
+					"type": "h2",
+					"id": "refunds",
+					"text": "Refunds"
+				},
+				{
+					"type": "p",
+					"text": "A refund is money back for something you bought. It is not income: it takes away from what you spent, in the same category, so your spending, budget and reports come out right."
+				},
+				{
+					"type": "steps",
+					"items": [
+						"On [Transactions](/transactions), find the purchase and press its **Refund** button.",
+						"Enter the **Amount refunded**: all of it or part of it. The dialog says how much is left to refund.",
+						"For a purchase split into items, tick the items you got back instead, with an amount for each.",
+						"Choose where it was **Paid back into**, check the date and press **Save**."
+					]
+				},
+				{
+					"type": "list",
+					"items": [
+						"A purchase can be refunded more than once, but never for more than it cost.",
+						"The refund has the purchase's currency and category, and is shown with a green Refund tag. The purchase then says how much was refunded.",
+						"While a purchase has refunds, its amount, currency, category and items can't change, and it can't be deleted until its refunds are."
+					]
+				},
+				{
+					"type": "p",
+					"text": "Already entered the money back as plain income? Press **Link to a purchase** on that income, search for the purchase and press **Link**. It keeps its own date, amount and account, and from then on counts as a refund. Only purchases in the same currency with enough left to refund are offered."
+				},
+				{
+					"type": "h2",
+					"id": "transfers",
+					"text": "One move entered twice"
+				},
+				{
+					"type": "p",
+					"text": "Moving money between your own accounts is a **transfer**: it is neither spending nor income. If you recorded it as an expense in one account and an income in the other, your totals count it twice."
+				},
+				{
+					"type": "list",
+					"items": [
+						"**Possible transfers**, above the list on [Transactions](/transactions), shows pairs that look like one move: the same amount and currency, in two different accounts, within two days. Press **Merge** to make a pair one transfer, or **Not a pair** to stop it being suggested.",
+						"To merge a pair yourself (for example between two currencies), tick the expense and the income on Transactions, press **Make a transfer** in the bar, and confirm with **Make one transfer**."
+					]
+				},
+				{
+					"type": "p",
+					"text": "The expense becomes the transfer and the income goes to the [Trash](/trash). Balances don't change, and your income and spending each drop by the amount. To undo it, restore the income from the Trash and edit the transfer back into an expense."
+				},
+				{
+					"type": "h2",
+					"id": "adjust",
+					"text": "When a balance doesn't match your bank"
+				},
+				{
+					"type": "p",
+					"text": "If an account in Maalu shows a different balance from your bank and you can't find the missing transaction, record a **balance adjustment**."
+				},
+				{
+					"type": "steps",
+					"items": [
+						"Open [Accounts](/accounts) and press **Adjust balance** on the account (or on its own page).",
+						"Choose **Set to balance** and type the **Balance at your bank**, or **Add or take away** and type the difference (positive adds money, negative takes it away).",
+						"Pick the **Date** it applies from (use an earlier date if the difference goes back) and add a note if you like.",
+						"Press **Adjust**."
+					]
+				},
+				{
+					"type": "callout",
+					"tone": "note",
+					"text": "An adjustment moves the balance but is never counted as income or spending in your totals, budget or reports. It can't be edited: delete it and make a new one. Deleting it undoes it."
+				},
+				{
+					"type": "callout",
+					"tone": "tip",
+					"text": "If the difference comes from a whole statement you haven't entered, [import the statement](/docs/import) instead: it brings in the real transactions and checks the balance for you."
+				}
+			],
+			"extras": [],
+			"webOnly": false
+		},
+		{
+			"slug": "categories",
+			"title": "Categories",
+			"summary": "What your money is for: how categories are made, how to tidy them with sub-categories and merging, and how they feed the budget and the reports.",
+			"accent": "pink",
+			"where": [
+				{
+					"to": "/categories",
+					"label": "Categories: rename, merge, sort into needs and wants"
+				},
+				{
+					"to": "/transactions",
+					"label": "Transactions: a category is chosen on each one"
+				},
+				{
+					"to": "/budget",
+					"label": "Budget: a limit covers one or more categories"
+				},
+				{
+					"to": "/docs/reports",
+					"label": "Guide: needs and wants in the reports"
+				}
+			],
+			"blocks": [
+				{
+					"type": "p",
+					"text": "A **category** says what a transaction was for: Groceries, Rent, Fuel. Every expense and every income has one, and the budget, the dashboard and the reports all add things up by category. You do not have to set them up first: type a new name on a [transaction](/transactions) and the category is made for you."
+				},
+				{
+					"type": "h2",
+					"id": "tidy",
+					"text": "Keeping them tidy"
+				},
+				{
+					"type": "list",
+					"items": [
+						"Names are unique ignoring case, so **groceries** and **Groceries** are the same category.",
+						"Press **Edit** on a row of the [Categories](/categories) page to rename it. Every transaction in it is renamed with it.",
+						"A category that is in use cannot be deleted, so nothing is left without one. Press **Merge into another category** instead: its transactions, split items and subscriptions move to the one you choose, and then it is removed.",
+						"A category that nothing uses can be deleted with **Delete**."
+					]
+				},
+				{
+					"type": "callout",
+					"tone": "tip",
+					"text": "Typed two spellings by accident, like Fuel and Petrol? Merge one into the other. Totals and the budget then count them together."
+				},
+				{
+					"type": "h2",
+					"id": "sub-categories",
+					"text": "Sub-categories"
+				},
+				{
+					"type": "p",
+					"text": "A category can sit under a **Parent category**, one level deep: Food can have Groceries and Eating out under it. A parent **includes its children**: filtering transactions by Food, the category totals and a budget limit on Food all count the whole family. A category that has sub-categories stays at the top. The parent can still be used on a transaction directly."
+				},
+				{
+					"type": "p",
+					"text": "Deleting a parent leaves its sub-categories in place as top-level ones, and merging a parent moves its sub-categories with it."
+				},
+				{
+					"type": "h2",
+					"id": "colours",
+					"text": "Colours"
+				},
+				{
+					"type": "p",
+					"text": "Each category has a colour, shown as a dot beside its name in lists and charts. A new category gets the colour used least so far. Choose one in the form to override it."
+				},
+				{
+					"type": "h2",
+					"id": "need-or-want",
+					"text": "Needs and wants"
+				},
+				{
+					"type": "p",
+					"text": "The **Need or want** field marks what the spending is: rent and groceries are needs, eating out and games are wants. Leave it on **Not sorted** if you would rather not decide. A sub-category with no kind of its own takes its parent's, so you can mark Food a need and Eating out under it a want."
+				},
+				{
+					"type": "steps",
+					"items": [
+						"Press **Needs and wants** at the top of the page (it says how many categories are not sorted yet).",
+						"Choose Need or Want for each category, or leave it as Not set.",
+						"Press **Save**. Only the ones you changed are saved."
+					]
+				},
+				{
+					"type": "p",
+					"text": "The kinds feed the dashboard's **Needs and wants** card and its 50/30/20 check, the Needs and wants part of [Compare](/compare) and [Trends](/trends), the **Need** and **Want** chips on budget limits, and the kind filter on [Transactions](/transactions). See [Reports](/docs/reports) for how they read."
+				},
+				{
+					"type": "callout",
+					"tone": "note",
+					"text": "A single purchase cannot differ from its category's kind. If one does, give it a sub-category (Food is a need, Food › Treats is a want). That keeps every figure reading from one place."
+				},
+				{
+					"type": "h2",
+					"id": "salary",
+					"text": "The Salary category"
+				},
+				{
+					"type": "p",
+					"text": "Every account has one built-in category, **Salary**, marked **Default · pay**. Only income goes in it, it cannot be renamed, merged away or deleted, and a salary in it is what Maalu offers to split between your accounts and goals (see [Split your salary](/docs/salary-split)). It never counts toward your needs and wants."
+				},
+				{
+					"type": "faq",
+					"faq": [
+						{
+							"q": "Why can't I delete a category?",
+							"a": "Something still uses it: a transaction, a split item or a subscription. Merge it into another category instead, and everything moves across."
+						},
+						{
+							"q": "Do categories change what a transaction cost?",
+							"a": "No. They only decide where it is counted. Changing a transaction's category moves its amount from one row of the reports to another."
+						},
+						{
+							"q": "What about a purchase made of several things?",
+							"a": "Turn on **Split by item and category** in the transaction form and give each item its own category. The reports share the amount between the items' categories exactly."
+						}
+					]
+				}
+			],
+			"extras": [],
+			"webOnly": false
+		},
+		{
+			"slug": "tags",
+			"title": "Tags",
+			"summary": "Labels that cut across categories, like Trip or Reimbursable: how to add them, filter by them and keep them tidy.",
+			"accent": "violet",
+			"where": [
+				{
+					"to": "/tags",
+					"label": "Tags: rename, merge and delete them"
+				},
+				{
+					"to": "/transactions",
+					"label": "Transactions: add tags and filter by them"
+				},
+				{
+					"to": "/templates",
+					"label": "Templates: a template can carry tags"
+				}
+			],
+			"blocks": [
+				{
+					"type": "p",
+					"text": "A **tag** is a label you put on a transaction, such as Trip, Gift or Reimbursable. A category answers what the money was for. A tag answers something else that can cut across categories: a trip has food, transport and a hotel, and one tag gathers them. A transaction can have up to 10 tags."
+				},
+				{
+					"type": "h2",
+					"id": "adding",
+					"text": "Adding tags"
+				},
+				{
+					"type": "steps",
+					"items": [
+						"On a [transaction](/transactions), type in the **Tags** field and press Enter. A tag that does not exist yet is made for you.",
+						"Add as many as you need, up to 10.",
+						"Save the transaction. Its tags show as coloured chips on the row."
+					]
+				},
+				{
+					"type": "p",
+					"text": "A tag belongs to the whole transaction, never to one item of a split purchase. You can also add a tag on the [Tags](/tags) page with **Add tag**. Each tag gets a colour automatically, the least used one first."
+				},
+				{
+					"type": "h2",
+					"id": "filtering",
+					"text": "Finding transactions by tag"
+				},
+				{
+					"type": "p",
+					"text": "Open the filters on [Transactions](/transactions) and choose one or more tags. By default a transaction needs **any** of them. Turn on **Must have all of them** to require every chosen tag. A transaction with several of the chosen tags still counts once in the totals, and the export has a Tags column."
+				},
+				{
+					"type": "example",
+					"title": "Example: a trip",
+					"rows": [
+						[
+							"Tag",
+							"Trip"
+						],
+						[
+							"Flights",
+							"Category Travel, tagged Trip"
+						],
+						[
+							"Hotel",
+							"Category Accommodation, tagged Trip"
+						],
+						[
+							"Dinner out",
+							"Category Eating out, tagged Trip"
+						],
+						[
+							"Filter by Trip",
+							"All three, whatever their categories, with their total"
+						]
+					],
+					"note": "For a fixed bundle you want to see added up on its own, a [group](/docs/groups) can be better: it is a named handful of transactions with a summary."
+				},
+				{
+					"type": "h2",
+					"id": "tidy",
+					"text": "Keeping them tidy"
+				},
+				{
+					"type": "list",
+					"items": [
+						"**Rename** a tag and everything with it is renamed.",
+						"**Merge** one tag into another: its transactions and templates get the other tag instead, without duplicates, and the first is removed.",
+						"**Delete** only takes the tag off the transactions that have it. It never blocks, and no transaction is changed otherwise."
+					]
+				},
+				{
+					"type": "p",
+					"text": "A [template](/templates) can carry tags, and a vendor can have usual tags that the transaction form fills in when you pick it (see the Vendors page). Tags you type are matched ignoring case, so **trip** and **Trip** are one tag."
+				},
+				{
+					"type": "faq",
+					"faq": [
+						{
+							"q": "Tag or category?",
+							"a": "Use a category for what the money was for, since the budget and reports add up by it. Use a tag for something that runs across categories, like one trip or one project."
+						},
+						{
+							"q": "Does a tag change my budget?",
+							"a": "No. Budgets work on categories. Tags only help you find and add up transactions."
+						}
+					]
+				}
+			],
+			"extras": [],
+			"webOnly": false
+		},
+		{
+			"slug": "groups",
+			"title": "Groups",
+			"summary": "Bundle a handful of related transactions, such as a trip or a purchase paid in instalments, and see what they add up to.",
+			"accent": "blue",
+			"where": [
+				{
+					"to": "/groups",
+					"label": "Groups: see, edit and delete them"
+				},
+				{
+					"to": "/transactions",
+					"label": "Transactions: select some and choose Group"
+				},
+				{
+					"to": "/docs/tags",
+					"label": "Guide: tags, for labels that run across categories"
+				}
+			],
+			"blocks": [
+				{
+					"type": "p",
+					"text": "A **group** bundles a few transactions under a name and shows what they come to together: a trip paid over several accounts, a treatment bought over weeks, an expense and what a friend paid back. **A group changes nothing else.** The transactions keep their categories, tags and amounts, and every other total ignores groups."
+				},
+				{
+					"type": "h2",
+					"id": "make",
+					"text": "Make a group"
+				},
+				{
+					"type": "steps",
+					"items": [
+						"On [Transactions](/transactions), tick two or more transactions.",
+						"Press **Group** in the bar that appears.",
+						"Choose **New group**, give it a **Name** (and a **Note** if you like), and press **Make group**. Or pick an existing group and press **Add to group**."
+					]
+				},
+				{
+					"type": "p",
+					"text": "A group holds from 2 to 50 transactions, and a transaction can be in only one group. A transfer, a transaction in the trash or one already in another group cannot be added. The dialog says which."
+				},
+				{
+					"type": "h2",
+					"id": "reading",
+					"text": "Reading a group"
+				},
+				{
+					"type": "p",
+					"text": "Open the [Groups](/groups) page, or press a group's chip on a transaction. Each group shows how many transactions it has, the dates they span, and three figures in your base currency:"
+				},
+				{
+					"type": "example",
+					"title": "What a group adds up",
+					"rows": [
+						[
+							"Money in",
+							"Income in the group (a refund is income, so it lowers the net)"
+						],
+						[
+							"Money out",
+							"Expenses in the group"
+						],
+						[
+							"Net",
+							"Money in less money out"
+						]
+					],
+					"note": "Only posted transactions are counted. A planned one is not, and a trashed one comes back counted if you restore it."
+				},
+				{
+					"type": "h2",
+					"id": "change",
+					"text": "Changing a group"
+				},
+				{
+					"type": "list",
+					"items": [
+						"**Edit** renames it or changes its note.",
+						"Press **Take out of the group** beside a transaction to remove it from the group. The transaction itself is untouched.",
+						"**Delete** removes the group and only unlinks its transactions.",
+						"A group left with fewer than two transactions is deleted for you, and the page tells you when that happens. The same happens when one of its transactions is deleted for good or turned into a transfer."
+					]
+				},
+				{
+					"type": "faq",
+					"faq": [
+						{
+							"q": "Group or tag?",
+							"a": "A group is a fixed handful with a summary and a name. A tag is a label you can put on as many transactions as you like and filter by (see [Tags](/docs/tags)). Use a group when you want the total shown for you."
+						},
+						{
+							"q": "Can I filter Transactions by group?",
+							"a": "Not yet. The group's own page lists its transactions instead."
+						}
+					]
+				}
+			],
+			"extras": [],
+			"webOnly": false
+		},
+		{
+			"slug": "subscriptions",
+			"title": "Subscriptions and recurring bills",
+			"summary": "Things you pay on a schedule: rent, internet, a server, a phone on instalments. Maalu plans the next payment for you, shows it coming, and you mark it paid when it is.",
+			"accent": "violet",
+			"where": [
+				{
+					"to": "/subscriptions",
+					"label": "Subscriptions: add and manage them"
+				},
+				{
+					"to": "/transactions",
+					"label": "Transactions: the upcoming list"
+				},
+				{
+					"to": "/plan",
+					"label": "Month plan: bills by day"
+				},
+				{
+					"to": "/docs/varying-bills",
+					"label": "Guide: bills that change each month"
+				}
+			],
+			"blocks": [
+				{
+					"type": "p",
+					"text": "A subscription is anything you pay again and again: a monthly bill, a yearly renewal, a server, a phone you pay off over twelve months. You tell Maalu once how much, how often and from which account. From then on it keeps the **next payment** planned, so you can see what is coming, and it counts the payment only when you say it was made."
+				},
+				{
+					"type": "h2",
+					"id": "suggested",
+					"text": "Suggested subscriptions"
+				},
+				{
+					"type": "p",
+					"text": "You do not have to type every subscription in. When a charge repeats in what you have already paid (the same vendor, the same rhythm and a similar amount, for example Netflix on the 5th for four months), Maalu shows it under **Suggested subscriptions** on the [Subscriptions](/subscriptions) page, closed until you open it, and puts a note in the bell for the clear ones."
+				},
+				{
+					"type": "steps",
+					"items": [
+						"Open **Suggested subscriptions** and look at what Maalu found: the amount, how often, and how many times it saw it.",
+						"Press **Add** to see what the subscription will hold. Change the name, amount or rhythm if it is not quite right.",
+						"Press **Add subscription**. The payments you already made are linked to it, and the next one is planned.",
+						"If it is not a subscription (shopping at the same shop, say), press **Not a subscription** and it is not suggested again."
+					]
+				},
+				{
+					"type": "callout",
+					"tone": "note",
+					"text": "Maalu only suggests a charge that is still going (paid recently), has at least three payments (two for a yearly one) and has the same vendor each time. A bill that changes each month, such as electricity, is suggested as one whose **amount varies**. Nothing is made until you press Add."
+				},
+				{
+					"type": "h2",
+					"id": "add-one",
+					"text": "Add a subscription"
+				},
+				{
+					"type": "steps",
+					"items": [
+						"Open [Subscriptions](/subscriptions) and press **Add subscription**.",
+						"Give it a **Name** and the **Cost per cycle**.",
+						"Choose how often it is billed with **Every** and **Billing period** (for example every 1 month, or every 3 months).",
+						"Set the **First billing date**. It anchors the schedule: a bill first due on the 28th stays on the 28th, shorter months aside.",
+						"Pick the **Payment method** and a **Category**, and add a **Vendor** if you like.",
+						"Optionally choose **Pay from**, the account it comes out of (see below), then press **Save**."
+					]
+				},
+				{
+					"type": "callout",
+					"tone": "tip",
+					"title": "Already paid it once?",
+					"text": "On any expense in your [transaction list](/transactions), the **Make subscription** button turns that payment into a subscription: you only say how often it repeats, and the rest is filled in from the transaction."
+				},
+				{
+					"type": "h2",
+					"id": "planning",
+					"text": "How the next payment is planned"
+				},
+				{
+					"type": "p",
+					"text": "An active subscription always has **one** planned payment: its next billing date, as long as that is within about five weeks. Planned payments count toward nothing yet, so your balances and reports stay true. You will find them in three places:"
+				},
+				{
+					"type": "list",
+					"items": [
+						"The **Upcoming** list at the top of [Transactions](/transactions), where each one has a **Mark as paid** button.",
+						"The [Month plan](/plan), which lays your bills out by day and shows what is left after each one.",
+						"The **Available to spend** card on your [dashboard](/dashboard), which takes them off what you can spend."
+					]
+				},
+				{
+					"type": "h2",
+					"id": "paying",
+					"text": "When you pay it"
+				},
+				{
+					"type": "steps",
+					"items": [
+						"Press **Mark as paid** on the planned payment (in the Upcoming list, or on the Month plan).",
+						"Check the **Amount**, and change it if the real bill differs. A bill is rarely exactly what was planned.",
+						"Check the date and press **Save**."
+					]
+				},
+				{
+					"type": "p",
+					"text": "The payment becomes a real expense, moves the account's balance, and the **next** cycle is planned straight away. If you paid it some other way, for example by adding the expense yourself and linking it to the subscription, Maalu notices and removes the planned one so it is not counted twice."
+				},
+				{
+					"type": "callout",
+					"tone": "note",
+					"title": "A late bill stays put",
+					"text": "Only one payment is planned at a time. A payment you haven't marked paid stays on the list as **overdue** in red, and the next one is planned only once you pay it or skip it."
+				},
+				{
+					"type": "h2",
+					"id": "skipping",
+					"text": "Skipping a payment"
+				},
+				{
+					"type": "p",
+					"text": "Some months you don't pay: a holiday, a waived fee. Press the delete button on the planned payment, which reads **Skip this payment** for a subscription. That cycle is skipped for good and will not come back, and the following cycle is planned instead. Nothing is lost from your history."
+				},
+				{
+					"type": "h2",
+					"id": "pay-from",
+					"text": "Paying from an account"
+				},
+				{
+					"type": "p",
+					"text": "If you choose **Pay from**, its planned payments go in that account, so paying one moves that account's balance. The subscription then takes the account's currency, and the **Currency** field is locked to it. Pick an [account](/accounts) that is in the currency the bill is in. Leave it empty if you pay from different places."
+				},
+				{
+					"type": "h2",
+					"id": "instalments",
+					"text": "Instalments: a fixed number of payments"
+				},
+				{
+					"type": "p",
+					"text": "For something you are paying off, such as a phone over 12 months, fill in **Number of payments**. The list then shows progress, for example “3 of 12 paid”. After the last payment the subscription becomes **Completed** by itself, nothing more is planned, and Maalu tells you the last payment was made. A payment you skip does not use up one of the payments: it still needs paying."
+				},
+				{
+					"type": "h2",
+					"id": "reminders",
+					"text": "Reminders"
+				},
+				{
+					"type": "p",
+					"text": "**Remind me** chooses how long before a payment's date you are told it is coming, from the day itself up to a month ahead, or never. The reminder shows in the bell at the top of the page. Overdue payments are always told, whatever you choose."
+				},
+				{
+					"type": "h2",
+					"id": "varying",
+					"text": "When the amount changes"
+				},
+				{
+					"type": "p",
+					"text": "A server or a utility bill rarely comes to the same amount twice. Switch on **The amount changes from month to month** and its planned payments are shown as estimates, and when you pay one you enter the real amount (and, for a bill in dollars, the real exchange rate). The full steps are in [Bills that change each month](/docs/varying-bills)."
+				},
+				{
+					"type": "h2",
+					"id": "managing",
+					"text": "Pausing, ending and changing"
+				},
+				{
+					"type": "list",
+					"items": [
+						"Set **Status** to **Paused** to stop the planned payments for a while, and back to **Active** to start again. **Cancelled** is for good. **Completed** happens by itself after an instalment plan's last payment.",
+						"Changing the first billing date, how often it repeats, or pausing it clears the planned payment and plans a new one from the new schedule when it is active again.",
+						"Other changes, such as the name or the account, carry over to the planned payment. An amount you already adjusted on a planned payment is kept.",
+						"Deleting a subscription keeps every payment you already made: they stay in your transactions, just no longer linked to it."
+					]
+				},
+				{
+					"type": "p",
+					"text": "At the top of the [Subscriptions](/subscriptions) page you see the **Monthly total** of your active subscriptions in your base currency, with yearly and weekly ones worked out per month."
+				},
+				{
+					"type": "h2",
+					"id": "troubleshooting",
+					"text": "Questions and problems"
+				},
+				{
+					"type": "faq",
+					"faq": [
+						{
+							"q": "I paid a bill but it still shows as planned.",
+							"a": "Paying it outside Maalu doesn't change anything here. Press **Mark as paid** on the planned payment, or add the expense yourself and link it to the subscription so the planned one is removed."
+						},
+						{
+							"q": "There is no planned payment for my subscription.",
+							"a": "It is planned only when it is **Active**, its next billing date is within about five weeks, and the one before it has been paid or skipped. A paused, cancelled or completed subscription plans nothing."
+						},
+						{
+							"q": "The amount was different this month. Does the next one change?",
+							"a": "Not for an ordinary bill: the next payment is planned at its amount again, so change the amount on the subscription if the bill has really gone up. A bill marked as changing from month to month is different: its next payment is estimated at what the last one really came to."
+						},
+						{
+							"q": "Can I pay a subscription in another currency?",
+							"a": "Yes. Choose the currency and the exchange rate you normally see, or pick an account in that currency under **Pay from**. When you pay, you can enter the rate it really cost."
+						}
+					]
+				}
+			],
+			"extras": [],
+			"webOnly": false
+		},
+		{
+			"slug": "varying-bills",
+			"title": "Bills that change each month",
+			"summary": "A server, a phone or a utility bill that comes every month but is never exactly the same. Mark it as varying, and enter the real amount (and exchange rate) when you pay it.",
+			"accent": "amber",
+			"where": [
+				{
+					"to": "/subscriptions",
+					"label": "Subscriptions: mark a bill as varying"
+				},
+				{
+					"to": "/plan",
+					"label": "Month plan: see your bills as estimates"
+				},
+				{
+					"to": "/transactions",
+					"label": "Transactions: the upcoming list"
+				},
+				{
+					"to": "/docs/subscriptions",
+					"label": "Guide: subscriptions and recurring bills"
+				}
+			],
+			"blocks": [
+				{
+					"type": "p",
+					"text": "Most recurring bills are the same every month, but some are not: a Digital Ocean or Linode server, an electricity bill, a data plan. You still want them planned, so your [Month plan](/plan) knows they are coming, but the amount is only a good guess until the bill arrives."
+				},
+				{
+					"type": "h2",
+					"id": "mark-it",
+					"text": "Mark the bill as varying"
+				},
+				{
+					"type": "steps",
+					"items": [
+						"Open [Subscriptions](/subscriptions) and add the bill (see [Subscriptions and recurring bills](/docs/subscriptions)), or edit the one you have.",
+						"Enter the **usual** amount. For a bill in dollars, choose the currency and the exchange rate you normally see.",
+						"Switch on **The amount changes from month to month** and press **Save**."
+					]
+				},
+				{
+					"type": "p",
+					"text": "Maalu keeps planning the next payment as usual. The only difference is that it is shown as an **estimate**: the [Month plan](/plan) marks it with an Estimate label and a leading ≈, and the **Available to spend** figure on your [dashboard](/dashboard) lists it as an estimate."
+				},
+				{
+					"type": "h2",
+					"id": "when-it-comes",
+					"text": "When the real bill comes"
+				},
+				{
+					"type": "steps",
+					"items": [
+						"On the [Month plan](/plan) press **Enter the real amount** next to the bill (or **Mark as paid** in the upcoming list on [Transactions](/transactions)).",
+						"Type the amount you were actually charged.",
+						"For a bill in another currency, also set what it really cost: either the **Exchange rate** it was paid at, or the exact amount taken from your account in the **Charged in** field (the rate is worked out from it).",
+						"Check the date and press **Save**."
+					]
+				},
+				{
+					"type": "example",
+					"title": "Example: a dollar server bill",
+					"rows": [
+						[
+							"Usual amount",
+							"USD 10.00 at a rate of 15.4 (MVR 154.00)"
+						],
+						[
+							"The invoice says",
+							"USD 12.00"
+						],
+						[
+							"Your bank took",
+							"MVR 186.00"
+						],
+						[
+							"You enter",
+							"Amount 12 and Charged in MVR 186"
+						],
+						[
+							"Maalu records",
+							"USD 12.00 at a rate of 15.5, so MVR 186.00"
+						]
+					],
+					"note": "If you only know the rate, enter that instead and leave **Charged in** empty. If you change neither, the planned rate is kept."
+				},
+				{
+					"type": "callout",
+					"tone": "note",
+					"text": "The next month's payment is estimated at what this one **really came to** (the amount and, for a bill in another currency, the rate), because that is the best guess there is. Before the first real payment it is estimated at the **usual** amount."
+				},
+				{
+					"type": "h2",
+					"id": "good-to-know",
+					"text": "Good to know"
+				},
+				{
+					"type": "list",
+					"items": [
+						"Marking a bill as varying changes nothing about how it is paid or counted. It only labels the plan as an estimate.",
+						"A bill in your base currency has no rate to set, so the rate fields only appear for bills in another currency.",
+						"You can give the exchange rate or what it cost, not both.",
+						"Any planned payment, not only a subscription's, can be paid for a different amount. The varying flag is just a reminder that it will be different."
+					]
+				}
+			],
+			"extras": [],
+			"webOnly": false
+		},
+		{
+			"slug": "budget",
+			"title": "Budget and spending limits",
+			"summary": "Set a limit on what you spend in some categories each month, or once for a trip or a season, and see how much is left before you go over.",
+			"accent": "amber",
+			"where": [
+				{
+					"to": "/budget",
+					"label": "Budget: your limits and savings goals"
+				},
+				{
+					"to": "/categories",
+					"label": "Categories: what a limit counts"
+				},
+				{
+					"to": "/transactions",
+					"label": "Transactions: warnings when you save an expense"
+				},
+				{
+					"to": "/docs/goals",
+					"label": "Guide: savings goals"
+				}
+			],
+			"blocks": [
+				{
+					"type": "p",
+					"text": "A budget in Maalu is a set of **limits**. Each one says how much you mean to spend on some categories, and the [Budget](/budget) page shows what you have spent against it and what is left. Nothing is moved between accounts: a limit only watches your spending."
+				},
+				{
+					"type": "h2",
+					"id": "add-a-limit",
+					"text": "Add a limit"
+				},
+				{
+					"type": "steps",
+					"items": [
+						"Open [Budget](/budget) and press **Add limit**.",
+						"Give it a **Name**, such as Food and drink.",
+						"Choose the **Categories** it covers. Spending in any of them counts against the limit. A category can be in only one monthly limit.",
+						"Enter the **Limit per period**, for example 4,000.",
+						"Optionally set **Warn at (%)** for this limit alone, and switch on **Carry unspent money into the next period** if you want leftovers to roll over.",
+						"Press **Save**."
+					]
+				},
+				{
+					"type": "p",
+					"text": "Choosing a parent category includes its sub-categories, so a limit on Food also counts Food › Dining. A purchase split into items counts each item under its own category."
+				},
+				{
+					"type": "h2",
+					"id": "periods",
+					"text": "Periods"
+				},
+				{
+					"type": "p",
+					"text": "A period is a month. By default it is a calendar month, but if you are paid on the 25th you can line periods up with your pay: press the **Budget settings** button at the top of the page and set **A period starts on day**. The arrows beside the period name show earlier and later periods."
+				},
+				{
+					"type": "h2",
+					"id": "reading-it",
+					"text": "Reading a limit"
+				},
+				{
+					"type": "list",
+					"items": [
+						"**Left** is the limit, plus anything carried over or moved in, less anything moved out and what you spent. When you have spent more, the card says **Over by** instead.",
+						"A limit turns to a warning once you have spent the **Warn at** share of it (80% unless you change it in **Budget settings** or on the limit), and to over once you pass it.",
+						"Only expenses count. Income and transfers between your accounts never do, and a refund gives back what it refunds.",
+						"Planned transactions count nothing until they are paid."
+					]
+				},
+				{
+					"type": "example",
+					"title": "Example: groceries with rollover",
+					"rows": [
+						[
+							"Limit per period",
+							"MVR 4,000"
+						],
+						[
+							"Spent last month",
+							"MVR 3,600, so 400 unspent"
+						],
+						[
+							"Carried into this month",
+							"MVR 400"
+						],
+						[
+							"Spent so far this month",
+							"MVR 2,900"
+						],
+						[
+							"Left",
+							"4,000 + 400 − 2,900 = MVR 1,500"
+						]
+					],
+					"note": "Rollover only carries unspent money forward. Overspending one month does not take anything away from the next."
+				},
+				{
+					"type": "h2",
+					"id": "move-money",
+					"text": "Move money between limits"
+				},
+				{
+					"type": "p",
+					"text": "Running tight on one limit while another has room? Move some across for this period instead of raising the limit for good. Your overall budget stays the same: you have only decided differently where the money goes."
+				},
+				{
+					"type": "steps",
+					"items": [
+						"On [Budget](/budget), press **Move money here** on the limit that needs more.",
+						"Choose where it comes **From**. Each limit shows what it has left, and the one with the most is picked for you.",
+						"Enter the amount and, if you like, a note, and press **Move**."
+					]
+				},
+				{
+					"type": "example",
+					"title": "Example: guests for the weekend",
+					"rows": [
+						[
+							"Groceries",
+							"MVR 4,000, with 3,600 spent"
+						],
+						[
+							"Eating out",
+							"MVR 2,000, with 200 spent"
+						],
+						[
+							"You move",
+							"MVR 600 from Eating out to Groceries"
+						],
+						[
+							"Groceries this period",
+							"4,600, so MVR 1,000 left"
+						],
+						[
+							"Eating out this period",
+							"1,400, so MVR 1,200 left"
+						]
+					],
+					"note": "Next period both are back to 4,000 and 2,000."
+				},
+				{
+					"type": "list",
+					"items": [
+						"A limit can give at most what it has left this period. Money already spent can't be moved.",
+						"With nothing to take from, choose **Nowhere: just add to this limit**. That raises this period's budget instead of shifting it.",
+						"Each card lists the moves into and out of it this period. Press **Undo** beside one to take it back.",
+						"**History** on a card lists every move into or out of that limit, in every period: what moved where, the note, when it was made, and whether it was undone. Undone moves stay in the history, marked, so you can always see what happened.",
+						"A move only applies to the period you were looking at, but rollover carries what was left after it.",
+						"Money moves only between monthly limits, not limits for set dates."
+					]
+				},
+				{
+					"type": "h2",
+					"id": "set-dates",
+					"text": "A limit for set dates"
+				},
+				{
+					"type": "p",
+					"text": "Some spending is not monthly: a trip, Ramadan, a wedding. For those, switch on **Only for certain dates** when adding a limit and choose **From** and **Until**. The amount becomes the **Limit for these dates**: one total for the whole stretch, not a monthly figure."
+				},
+				{
+					"type": "list",
+					"items": [
+						"These limits are listed under **For set dates**, below the monthly ones, with their dates and how many days are left. They are not in the totals at the top.",
+						"A limit for set dates may share categories with a monthly one, so a holiday limit can cover Food while your monthly Food limit keeps counting too. Two limits for set dates can't share a category on the same days.",
+						"Rollover does not apply to them.",
+						"The card of a running or finished one has **Repeat for the next stretch**: it opens the form filled in with the same name, categories and amount, starting the day after and lasting as long. Change anything you like and save.",
+						"A limit for set dates is only listed under the period whose dates it touches, so a November limit is not shown while you look at December. The dashboard's budget card lists the ones that are running."
+					]
+				},
+				{
+					"type": "h2",
+					"id": "between-dates",
+					"text": "A monthly limit between two dates"
+				},
+				{
+					"type": "p",
+					"text": "Sometimes a limit is monthly but only for a while: a food budget for November to January. After switching on **Only for certain dates**, set **How it counts** to **A limit for every period between these dates**. The amount is then **per period**, as usual (and rollover works inside the dates), but the limit only exists in the periods the dates touch. Periods are whole, so the dates snap to them: from 15 Nov to 10 Jan runs 1 Nov to 31 Jan."
+				},
+				{
+					"type": "list",
+					"items": [
+						"It sits with the other monthly limits, counts in their totals while it runs, and shows **Runs 01 Nov 2026 – 31 Jan 2027** on its card. Before and after those periods it is not there.",
+						"The same category can be in two such limits as long as they run at different times. It can't be in one that runs for ever, or in one that overlaps."
+					]
+				},
+				{
+					"type": "h2",
+					"id": "needs-wants",
+					"text": "Needs and wants in your limits"
+				},
+				{
+					"type": "p",
+					"text": "A limit is a **Need** or a **Want** when every category in it is that kind (set on the [Categories](/categories) page, sub-categories following their parent). The card says so, and when at least one limit has a kind, the summary at the top adds them up: what you spent on your need limits against what they allow, then the same for wants. A limit that mixes the two, or has unsorted categories, is counted under **Other limits**."
+				},
+				{
+					"type": "h2",
+					"id": "warnings",
+					"text": "Warnings"
+				},
+				{
+					"type": "p",
+					"text": "When you save an expense on [Transactions](/transactions) that brings a limit close to or past what you set, the confirmation tells you. The Transactions page also shows a strip while any limit needs attention, and the bell in the top bar notifies you once per limit and period (you can turn this off in [Settings](/settings))."
+				},
+				{
+					"type": "callout",
+					"tone": "tip",
+					"text": "Saving toward something, rather than limiting spending? That is a goal, not a limit. See [Savings goals](/docs/goals)."
+				}
+			],
+			"extras": [
+				"Live example: the Budget page's summary and limits"
+			],
+			"webOnly": false
+		},
+		{
+			"slug": "goals",
+			"title": "Savings goals",
+			"summary": "Save toward something, like a trip or an emergency fund, and see how far along you are and what each month needs.",
+			"accent": "green",
+			"where": [
+				{
+					"to": "/budget",
+					"label": "Budget: the Savings goals section"
+				},
+				{
+					"to": "/plan",
+					"label": "Month plan: money set aside is not counted as spendable"
+				},
+				{
+					"to": "/docs/salary-split",
+					"label": "Guide: send part of your salary to a goal"
+				}
+			],
+			"blocks": [
+				{
+					"type": "p",
+					"text": "A goal is an amount you want to have by a date. Goals are at the bottom of the [Budget](/budget) page under **Savings goals**. They are always in your base currency."
+				},
+				{
+					"type": "h2",
+					"id": "two-kinds",
+					"text": "Two kinds of goal"
+				},
+				{
+					"type": "p",
+					"text": "When you add a goal, **Where is the money?** decides how its progress is measured:"
+				},
+				{
+					"type": "list",
+					"items": [
+						"**An account**: the goal follows that account's balance. Use this when the money has a home of its own, like a savings account for your emergency fund. Each account can have one goal, and a card, overdraft or loan can't be chosen.",
+						"**Inside my accounts: I'll set it aside by hand**: the money stays in your everyday accounts, and you record what you put toward the goal. Use this when you save in the same account you spend from."
+					]
+				},
+				{
+					"type": "h2",
+					"id": "add-a-goal",
+					"text": "Add a goal"
+				},
+				{
+					"type": "steps",
+					"items": [
+						"On [Budget](/budget), press **Add goal** under Savings goals.",
+						"Give it a **Name** and a **Target**.",
+						"Optionally set a **Target date**: the goal then works out how much is needed each month.",
+						"Choose **Where is the money?**",
+						"Optionally fill in **Plan to set aside each period**: the goal then shows whether this period's amount is done.",
+						"Press **Save**."
+					]
+				},
+				{
+					"type": "p",
+					"text": "For a goal you set aside by hand, use **Add or take out** on its card to record money set aside (or taken back out). Each entry has a date and an optional note, and you can remove one if you made a mistake."
+				},
+				{
+					"type": "h2",
+					"id": "reading-it",
+					"text": "Reading a goal"
+				},
+				{
+					"type": "list",
+					"items": [
+						"The bar shows what is saved against the target. The remaining amount never goes below zero, and the goal says **Goal reached** once you get there (the bell tells you too).",
+						"With a target date, a line like **Needs MVR 2,250 a month for 4 more months** says what you have to put away from now on.",
+						"With a monthly plan, the card says **This period: funded** or **This period: still to set aside**."
+					]
+				},
+				{
+					"type": "example",
+					"title": "Example: a trip fund",
+					"rows": [
+						[
+							"Target",
+							"MVR 15,000 by the end of March"
+						],
+						[
+							"Saved so far",
+							"MVR 6,000"
+						],
+						[
+							"Months left",
+							"4"
+						],
+						[
+							"Needed",
+							"9,000 ÷ 4 = MVR 2,250 a month"
+						]
+					],
+					"note": "The monthly figure is rounded up, so following it always gets you there."
+				},
+				{
+					"type": "callout",
+					"tone": "note",
+					"title": "What counts as setting aside, for an account goal",
+					"text": "The month's progress is the money you **moved into** the account less what you moved out. Interest and other income landing in the account raise its balance, and so the goal, but are not counted as what you set aside that month."
+				},
+				{
+					"type": "h2",
+					"id": "spending",
+					"text": "Goals and what you can spend"
+				},
+				{
+					"type": "p",
+					"text": "The **Available to spend** figure on the [dashboard](/dashboard) and the [Month plan](/plan) treats goal money as already spoken for: an account a goal follows is left out of what you can spend, and money set aside by hand is taken off your everyday balance. See [Month plan](/docs/month-plan)."
+				},
+				{
+					"type": "callout",
+					"tone": "tip",
+					"text": "To fill a goal automatically each payday, add it to your salary split. See [Split your salary](/docs/salary-split)."
+				}
+			],
+			"extras": [],
+			"webOnly": false
+		},
+		{
+			"slug": "month-plan",
+			"title": "Month plan and available to spend",
+			"summary": "What you can still spend until the end of the budget period, once the bills still to come and the money set aside for goals are taken off, and the day the money would run out.",
+			"accent": "amber",
+			"where": [
+				{
+					"to": "/plan",
+					"label": "Month plan: bills by day"
+				},
+				{
+					"to": "/dashboard",
+					"label": "Dashboard: the Available to spend card"
+				},
+				{
+					"to": "/subscriptions",
+					"label": "Subscriptions: bills that plan themselves"
+				},
+				{
+					"to": "/docs/goals",
+					"label": "Guide: savings goals"
+				}
+			],
+			"blocks": [
+				{
+					"type": "p",
+					"text": "**Available to spend** answers one question: how much can I spend between now and the end of this budget period without missing a bill or touching money I have set aside? It is the card at the top of the [dashboard](/dashboard), and the [Month plan](/plan) lays the same figure out day by day."
+				},
+				{
+					"type": "h2",
+					"id": "the-sum",
+					"text": "How it is worked out"
+				},
+				{
+					"type": "example",
+					"title": "The sum",
+					"rows": [
+						[
+							"You have",
+							"What your everyday accounts hold now"
+						],
+						[
+							"less Bills to pay",
+							"Planned expenses due before the period ends, overdue ones included"
+						],
+						[
+							"less Card statements",
+							"Credit card statements that fall due before the period ends"
+						],
+						[
+							"less Set aside",
+							"Money put toward goals by hand"
+						],
+						[
+							"equals",
+							"Available to spend"
+						]
+					],
+					"note": "Press **Show the working** on the dashboard card to see each account, bill and goal behind the figure."
+				},
+				{
+					"type": "list",
+					"items": [
+						"**Everyday accounts** are cash, bank accounts and prepaid ones, unless you choose otherwise: the switch **I spend from this account** on an account's **Edit** form lets you count a savings account you spend from, or keep a cash account apart. Savings, investments and any account a goal follows are listed as **Kept apart**: their money is already meant for something. Credit cards, overdrafts and loans are not counted at all, because what you owe is not money to spend.",
+						"**Bills to pay** are planned expenses from an everyday account (or no account yet) dated up to the end of the period. A subscription's next payment is one of them. A bill planned on a credit card is not counted, since it will not come out of your everyday money now.",
+						"**Planned transfers** out of an everyday account, such as the 5th's move into savings, are bills too: see **Planned transfers** below.",
+						"**Card statements** are what is still to pay on a credit card's last statement, when its due date is before the period ends (see [Accounts, cards and groups](/docs/accounts)). Spending on the card since the statement closed is not due yet, so it is not counted. Pay the statement and it drops out of the plan. Press **Open the card** on its row to repay it.",
+						"**Expected income**, like next month's salary, is shown but never counted. The figure only uses money you already have.",
+						"An account left out of totals in its settings, and archived accounts, are not counted."
+					]
+				},
+				{
+					"type": "callout",
+					"tone": "note",
+					"text": "The figure can go below zero. The card then says **Short** and the plan says **Short by**: the bills and money set aside add up to more than you hold."
+				},
+				{
+					"type": "h2",
+					"id": "the-plan",
+					"text": "The Month plan page"
+				},
+				{
+					"type": "p",
+					"text": "Open it from the sidebar or with **Open the month plan** on the dashboard card. Four tiles at the top repeat the sum. Below them, **Bills by day** lists every bill and expected income in date order, overdue ones first, each with what would be left after paying it."
+				},
+				{
+					"type": "list",
+					"items": [
+						"If everything is covered, the page says so. If not, it says where the money runs out, for example **The money runs out at Wifi Bill (Thu 6 Nov)**, and the first bill that would not be covered is marked **Short from here**.",
+						"Planned income appears on its day as **Expected · not counted**. It does not change the running figure.",
+						"A bill whose amount varies is shown as an **Estimate** with a leading ≈. See [Bills that change each month](/docs/varying-bills).",
+						"The side column lists the accounts it counts, the money set aside for goals, and the accounts kept apart."
+					]
+				},
+				{
+					"type": "h2",
+					"id": "paying",
+					"text": "Paying a bill or receiving pay"
+				},
+				{
+					"type": "steps",
+					"items": [
+						"Press **Mark as paid** beside a bill (or **Enter the real amount** for a varying one).",
+						"Check the date and the amount, change them if the real bill was different, and press **Save**.",
+						"The bill becomes a real transaction, its money leaves the account, and the figures update."
+					]
+				},
+				{
+					"type": "p",
+					"text": "Planned income has **Received** instead. A salary is never exactly what was planned, so the dialog asks for the amount that really arrived. If you have a salary split, Maalu then offers to split it (see [Split your salary](/docs/salary-split))."
+				},
+				{
+					"type": "h2",
+					"id": "transfers",
+					"text": "Planned transfers"
+				},
+				{
+					"type": "p",
+					"text": "Saving is a bill you pay yourself. Plan a **transfer** on [Transactions](/transactions) (turn on **Planned**, choose the account it leaves and the account it goes to) and the plan treats it as money already spoken for, as long as it leaves your everyday accounts."
+				},
+				{
+					"type": "example",
+					"title": "Which planned transfers count",
+					"rows": [
+						[
+							"Main to Savings",
+							"Counts: the money leaves your everyday accounts"
+						],
+						[
+							"Main to a loan or a credit card",
+							"Counts, unless that card's statement is already in the plan"
+						],
+						[
+							"Main to Cash",
+							"Ignored: both are everyday accounts, so you can still spend it"
+						],
+						[
+							"Savings to Main",
+							"Ignored: money arriving is never counted until it is there"
+						]
+					],
+					"note": "A transfer shows a **Transfer** chip. Press **Mark as done** when it happens: only the day and time can change, the amount stays as planned."
+				},
+				{
+					"type": "h2",
+					"id": "good-to-know",
+					"text": "Good to know"
+				},
+				{
+					"type": "list",
+					"items": [
+						"It is always for the current budget period, which follows the start day set on the [Budget](/budget) page.",
+						"To skip a bill this time, delete the planned payment on [Transactions](/transactions). A subscription then plans the one after it.",
+						"Money set aside by hand is assumed to sit in your everyday accounts, so it is taken off them. A goal that follows an account needs no subtraction: that account is already left out."
+					]
+				}
+			],
+			"extras": [
+				"Live example: the Month plan's bills by day"
+			],
+			"webOnly": false
+		},
+		{
+			"slug": "salary-split",
+			"title": "Split your salary",
+			"summary": "When your salary arrives, Maalu can propose how to divide it: part moves to your savings, part is set aside for a goal. You confirm every line, and you can undo it.",
+			"accent": "green",
+			"where": [
+				{
+					"to": "/settings",
+					"label": "Settings: set up your rules"
+				},
+				{
+					"to": "/transactions",
+					"label": "Transactions: add or split a salary"
+				},
+				{
+					"to": "/pending",
+					"label": "Pending: approve waiting splits"
+				},
+				{
+					"to": "/plan",
+					"label": "Month plan: see what is left to spend"
+				}
+			],
+			"blocks": [
+				{
+					"type": "p",
+					"text": "Most people do the same thing every pay day: move some money to savings, put some toward a trip, and live on the rest. The salary split does the sum for you. You say once what each account or goal should get, and every time a salary arrives Maalu shows you the split, ready to confirm."
+				},
+				{
+					"type": "callout",
+					"tone": "note",
+					"title": "Nothing moves by itself, unless you say so",
+					"text": "By default Maalu only proposes the split, and money is moved only after you approve it. You can switch individual rules to move automatically (see \"Moving automatically\" below)."
+				},
+				{
+					"type": "h2",
+					"id": "what-you-need",
+					"text": "What you need"
+				},
+				{
+					"type": "list",
+					"items": [
+						"An [account](/accounts) the salary arrives in, for example your current account.",
+						"At least one place to send money: another [account](/accounts) (such as a savings account) or a savings goal (you make goals on the [Budget](/budget) page).",
+						"Your salary entered as an income in the **Salary** category (you can see it on the [Categories](/categories) page). Every account has this category already, so you only have to pick it."
+					]
+				},
+				{
+					"type": "h2",
+					"id": "set-up-rules",
+					"text": "Set up your rules"
+				},
+				{
+					"type": "p",
+					"text": "A rule says how much of each salary goes to one account or one goal. You set them once, and they stay until you change them."
+				},
+				{
+					"type": "steps",
+					"items": [
+						"Open [Settings](/settings) and find **When my salary arrives**.",
+						"Press **Add rule**.",
+						"Choose **An account** or **A goal**, then pick which one.",
+						"Choose **A share of the salary** (a percentage, such as 20) or **A fixed amount** (for example 1,500).",
+						"Enter the value and press **Save**. The card lists your rules and adds them up: for example “20% of the salary + MVR 1,500.00. The rest stays where the salary arrives.”"
+					]
+				},
+				{
+					"type": "list",
+					"items": [
+						"Each account or goal can have **one** rule. To change it, edit the rule instead of adding another.",
+						"A share is a percentage of the **whole** salary, up to 100. A fixed amount is in the salary's currency.",
+						"Deleting a rule stops it applying to future salaries. Splits you already made are not changed."
+					]
+				},
+				{
+					"type": "h2",
+					"id": "when-salary-arrives",
+					"text": "When your salary arrives"
+				},
+				{
+					"type": "steps",
+					"items": [
+						"Go to [Transactions](/transactions) and press **Add transaction**.",
+						"Choose **Income**, enter the amount you received, pick the account it arrived in, and choose the category **Salary**. Leave **Planned** off: the salary has to have arrived (see the tip below if you planned it ahead).",
+						"Press **Save**. The **Split this salary** window opens by itself, with every rule worked out.",
+						"Look over the lines. Untick any you don't want this time, or type a different amount. Under the lines Maalu shows how much is moving and how much stays in the account.",
+						"Press **Make the split**."
+					]
+				},
+				{
+					"type": "callout",
+					"tone": "tip",
+					"title": "Planned your salary ahead?",
+					"text": "You can enter the salary in advance with **Planned** switched on: it shows on the [Month plan](/plan) as expected income, and it is not counted until it arrives. When it does, press **Received** (on the [Month plan](/plan), or **Mark as paid** in the upcoming list on [Transactions](/transactions)), type the amount you **actually** got, then press **Split salary** on it. The split is worked out from that real amount."
+				},
+				{
+					"type": "callout",
+					"tone": "tip",
+					"title": "Missed it, or want to do it later?",
+					"text": "Closed the window? The split is waiting on the [Pending](/pending) screen. Every salary in your [transaction list](/transactions) also has a **Split salary** button (a small fork icon) that opens the same window whenever you like."
+				},
+				{
+					"type": "example",
+					"title": "Example: a 10,000 salary",
+					"rows": [
+						[
+							"Salary arrives in",
+							"Main account: MVR 10,000.00"
+						],
+						[
+							"Rule: Savings account",
+							"20% of the salary, so MVR 2,000.00"
+						],
+						[
+							"Rule: Thailand trip goal",
+							"A fixed MVR 1,500.00"
+						],
+						[
+							"Moving",
+							"MVR 3,500.00"
+						],
+						[
+							"Stays in Main",
+							"MVR 6,500.00"
+						]
+					],
+					"note": "Your real salary will differ from this, and that is fine: percentages are worked out from the amount you enter. You can also change any line before you confirm, for example to put 2,500 into savings this month."
+				},
+				{
+					"type": "h2",
+					"id": "pending",
+					"text": "Approving later: the Pending screen"
+				},
+				{
+					"type": "p",
+					"text": "You don't have to deal with the split the moment you save the salary. Every salary that arrives while you have rules is added to the [Pending](/pending) screen, and a number beside **Pending** in the sidebar tells you how many are waiting."
+				},
+				{
+					"type": "steps",
+					"items": [
+						"Open [Pending](/pending). Each waiting salary shows what arrived, what is proposed, and what stays in the account.",
+						"Press **Approve** to make the split exactly as proposed, or **Review and edit** to change amounts or untick lines first.",
+						"Press **Dismiss** if you don't want to split that salary. It leaves the list, and you can still split it later from the [Transactions](/transactions) page."
+					]
+				},
+				{
+					"type": "h2",
+					"id": "automatic",
+					"text": "Moving automatically"
+				},
+				{
+					"type": "p",
+					"text": "If you always want a line to happen, such as 20% to savings, switch that rule to **Move it automatically when a salary arrives** (in [Settings](/settings), when you add or change the rule). Rules left off keep waiting for your approval."
+				},
+				{
+					"type": "list",
+					"items": [
+						"An automatic line is made the moment a salary is posted. The rest of that salary's split waits on the Pending screen, with the automatic lines shown as **Already moved**.",
+						"If every rule is automatic, nothing waits: the whole split is made when the salary arrives.",
+						"If an automatic line can't be made (for example the account is in another currency), or the automatic lines would add up to more than the salary, none of them is made by itself. They wait on the Pending screen with the reason.",
+						"Undoing a split puts the salary back on the Pending screen, and it will not be made automatically a second time."
+					]
+				},
+				{
+					"type": "h2",
+					"id": "what-it-does",
+					"text": "What the split actually does"
+				},
+				{
+					"type": "list",
+					"items": [
+						"**An account** gets a transfer from the account the salary arrived in. It appears in your transactions as a transfer dated the same day as the salary, described “From salary: name”.",
+						"**A goal that follows a savings account** is treated the same way: the money is transferred into that account, so the goal's progress goes up.",
+						"**A goal you track by hand** gets an amount set aside. No money moves between accounts, because the goal is a note of what you are keeping back. It stays in your account, and the **Available to spend** figure on your [dashboard](/dashboard) and the [Month plan](/plan) treats it as not yours to spend."
+					]
+				},
+				{
+					"type": "callout",
+					"tone": "note",
+					"text": "Transfers between your own accounts are not income or spending, so splitting a salary never changes your income and expense totals."
+				},
+				{
+					"type": "h2",
+					"id": "undo",
+					"text": "Undoing a split"
+				},
+				{
+					"type": "steps",
+					"items": [
+						"Press **Split salary** on the salary again. The window now says **This salary was split** and lists what was made.",
+						"Press **Undo the split**."
+					]
+				},
+				{
+					"type": "p",
+					"text": "The transfers go to the [Trash](/trash) and the amounts set aside for goals are removed, so your balances go back to how they were. After an undo you can split the same salary again."
+				},
+				{
+					"type": "h2",
+					"id": "good-to-know",
+					"text": "Good to know"
+				},
+				{
+					"type": "list",
+					"items": [
+						"Each line is made **once**. To change a line that was already made, undo the split and make it again.",
+						"The lines can't add up to more than the salary. Maalu stops you and says so.",
+						"Only a salary that has **arrived** (not planned) and is **in an account** can be split.",
+						"Both sides must be in the same currency. A line for an account in another currency is greyed out with the reason, and a goal can only be set aside from a salary in your base currency.",
+						"The account the salary arrived in can't be a target, since the money is already there.",
+						"Changing or deleting the salary later does not change what the split made. Undo the split first if you want them to match.",
+						"Salary is the only income that can be split. Income in other categories, such as a bonus or a refund, cannot."
+					]
+				},
+				{
+					"type": "h2",
+					"id": "troubleshooting",
+					"text": "Questions and problems"
+				},
+				{
+					"type": "faq",
+					"faq": [
+						{
+							"q": "The split window didn't open when I saved my salary.",
+							"a": "It opens by itself only when you have at least one rule, and the salary is in the **Salary** category and not marked **Planned**. Set up a rule in [Settings](/settings), then use the **Split salary** button on the salary. A salary you saved with rules in place is also waiting on the [Pending](/pending) screen."
+						},
+						{
+							"q": "A line is greyed out and I can't tick it.",
+							"a": "Read the small red text under it: it says why. The usual reasons are that the target is the account the salary arrived in, is archived, or is in a different currency."
+						},
+						{
+							"q": "I made a mistake. Can I fix it?",
+							"a": "Yes. Press **Split salary** on the salary, then **Undo the split**, and make it again with the right amounts."
+						},
+						{
+							"q": "I want a category, not an account, to get part of my salary.",
+							"a": "Not yet. Budget limits are limits, not envelopes of money, so there is nothing to move into a category. Send the money to an account or a goal instead."
+						},
+						{
+							"q": "Will my salary be split automatically each month?",
+							"a": "Only the lines whose rule you switched to move automatically. Everything else is proposed and waits on the [Pending](/pending) screen for your approval, so you stay in control of where your money goes."
+						}
+					]
+				}
+			],
+			"extras": [
+				"Live example: the salary rules card in Settings"
+			],
+			"webOnly": false
+		},
+		{
+			"slug": "reports",
+			"title": "Reports: compare, trends and net worth",
+			"summary": "See how this month went against the last, how each category moves over a year, what changed your net worth, and how much of your spending was needs and how much wants.",
+			"accent": "violet",
+			"where": [
+				{
+					"to": "/compare",
+					"label": "Compare: one period against another"
+				},
+				{
+					"to": "/trends",
+					"label": "Trends: every category, month by month"
+				},
+				{
+					"to": "/net-worth",
+					"label": "Net worth: what moved it"
+				},
+				{
+					"to": "/categories",
+					"label": "Categories: sort them into needs and wants"
+				}
+			],
+			"blocks": [
+				{
+					"type": "p",
+					"text": "All the reports count money the same way, so their figures agree with each other and with the [dashboard](/dashboard):"
+				},
+				{
+					"type": "list",
+					"items": [
+						"Transfers between your accounts are neither income nor spending.",
+						"A refund takes away from spending in its category, in the month it arrived. A month with big refunds can even show spending below zero.",
+						"Planned transactions, the Trash, balance adjustments and accounts left out of totals are not counted.",
+						"Amounts are in your base currency, at the rate each transaction was saved with."
+					]
+				},
+				{
+					"type": "h2",
+					"id": "compare",
+					"text": "Compare"
+				},
+				{
+					"type": "p",
+					"text": "[Compare](/compare) holds one period against another: what you earned, spent and kept in each, then every category with how far it moved, the biggest change first. A sentence at the top sums it up."
+				},
+				{
+					"type": "list",
+					"items": [
+						"Pick a period: **Last month** against the month before (the default), **This month** against last month, **Last 30 days** against the 30 days before, **This year** so far against the same days last year, or **Custom** for any two date ranges.",
+						"Green means better: spending down or income up. Every change also has an arrow, so you don't need the colour to read it.",
+						"A category marked **new** had nothing in the earlier period, so it has no percentage.",
+						"**This month** is still running, so it is usually lower than a full month. The page reminds you."
+					]
+				},
+				{
+					"type": "h2",
+					"id": "trends",
+					"text": "Trends"
+				},
+				{
+					"type": "p",
+					"text": "[Trends](/trends) puts every category in a row and every month in a column, with a total and a monthly average for each. Choose **Spending** or **Income** and 6, 12 or 24 months. The darker a figure, the bigger it is compared with the rest of the table, and every cell shows its number."
+				},
+				{
+					"type": "p",
+					"text": "Switch to the chart to see the same months as stacked columns: the six biggest categories, with the rest grouped as Other. The chart can't draw a negative figure, so a month where refunds beat spending is drawn as zero; the table has the exact number."
+				},
+				{
+					"type": "h2",
+					"id": "net-worth",
+					"text": "Net worth"
+				},
+				{
+					"type": "p",
+					"text": "Net worth is what your accounts hold, less what you owe on cards and loans. [Net worth](/net-worth) shows where it stood at the start of a period, where it ended, and what moved it, as a chart of steps that add up exactly to the change:"
+				},
+				{
+					"type": "list",
+					"items": [
+						"**Income**: money that came in, not counting refunds.",
+						"**Spending**: money that went out, less what refunds gave back.",
+						"**Balance adjustments**: corrections that made an account match its bank.",
+						"**Transfers across net worth**: money moved to or from an account that is not part of net worth (archived, or left out of totals). A transfer between two accounts that both count changes nothing.",
+						"**Exchange rates**: accounts in another currency are worth a different amount in your base currency when their rate changes."
+					]
+				},
+				{
+					"type": "example",
+					"title": "Example: a month",
+					"rows": [
+						[
+							"At the start",
+							"MVR 52,000"
+						],
+						[
+							"Income",
+							"+ 20,000"
+						],
+						[
+							"Spending",
+							"− 14,500"
+						],
+						[
+							"Exchange rates",
+							"+ 120 (your dollar account is worth a little more)"
+						],
+						[
+							"At the end",
+							"MVR 57,620, a change of + 5,620"
+						]
+					]
+				},
+				{
+					"type": "callout",
+					"tone": "note",
+					"text": "Net worth leaves out archived accounts and accounts left out of totals, so its income and spending can differ a little from the dashboard's, which still count transactions in archived accounts."
+				},
+				{
+					"type": "h2",
+					"id": "needs-and-wants",
+					"text": "Needs and wants"
+				},
+				{
+					"type": "p",
+					"text": "Each category can be marked a **need** (rent, groceries, the electricity bill) or a **want** (eating out, games). Sub-categories follow their parent unless you set them, so Food can be a need while Food › Dining is a want."
+				},
+				{
+					"type": "steps",
+					"items": [
+						"Open [Categories](/categories) and press **Needs and wants** (it says how many are not sorted yet).",
+						"Choose Need or Want for each category. **Not set** leaves it unsorted.",
+						"Press **Save**."
+					]
+				},
+				{
+					"type": "p",
+					"text": "The **Needs and wants** card on the [dashboard](/dashboard) then splits the month's spending into the two, with anything unsorted shown on its own. [Compare](/compare) and [Trends](/trends) have a needs and wants section too."
+				},
+				{
+					"type": "p",
+					"text": "Under that, when the month has income, the card measures your spending against the **50/30/20 rule**: at most 50% of income on needs, at most 30% on wants, and at least 20% kept. Each line has a bar with a tick at its target and says **On target**, **Over target** or **Below target**."
+				},
+				{
+					"type": "example",
+					"title": "A month with MVR 10,000 of income",
+					"rows": [
+						[
+							"Needs MVR 4,500",
+							"45% of income, up to 50%: on target"
+						],
+						[
+							"Wants MVR 3,500",
+							"35% of income, up to 30%: over target"
+						],
+						[
+							"Kept MVR 2,000",
+							"20% of income, at least 20%: on target"
+						]
+					],
+					"note": "**Kept** is income less all spending, the money left over. It is not the same as what you transfer to a savings account, since a transfer is not spending. Spending in categories you have not sorted lowers what was kept but is not judged against either target, and the card says so."
+				}
+			],
+			"extras": [
+				"Screenshot: The Compare page: income, spending and what was kept for this month against last month, a sentence on what changed, and paired bars for each category."
+			],
+			"webOnly": false
+		},
+		{
+			"slug": "places",
+			"title": "Places and the map",
+			"summary": "Mark where you spent on a map, give a shop a usual place, and see where your spending went.",
+			"accent": "pink",
+			"where": [
+				{
+					"to": "/places",
+					"label": "Places: where your spending went, on a map"
+				},
+				{
+					"to": "/transactions",
+					"label": "Transactions: mark a location on one"
+				},
+				{
+					"to": "/vendors",
+					"label": "Vendors: give a shop a usual place"
+				}
+			],
+			"blocks": [
+				{
+					"type": "p",
+					"text": "A transaction can be **marked on a map**, and the [Places](/places) page then shows where your spending went: a circle for each spot, bigger where you spent more. Marking is always your own choice, so nothing is looked up or tracked unless you ask."
+				},
+				{
+					"type": "h2",
+					"id": "mark",
+					"text": "Mark a location"
+				},
+				{
+					"type": "steps",
+					"items": [
+						"In the transaction form press **Add location**.",
+						"Click the map to drop the pin, or drag it. You can also type or paste coordinates into **Coordinates**, or press **Where I am** to use your device's position (your browser asks first).",
+						"Give the spot a **Name (optional)**, such as Fish market, and save. Saving with no pin removes the location."
+					]
+				},
+				{
+					"type": "p",
+					"text": "To find a place by name, type in **Search for a place** and press **Search**. The pin then moves there and the spot takes the name unless you already typed one."
+				},
+				{
+					"type": "callout",
+					"tone": "note",
+					"title": "What is sent out",
+					"text": "Searching is the one thing that sends text to another service: only the words you typed and roughly where the map is, and only when you press Search, never as you type. Whoever runs your Maalu can switch it off, and then the picker says so. Marking a spot yourself sends nothing."
+				},
+				{
+					"type": "h2",
+					"id": "vendor",
+					"text": "A shop's usual place"
+				},
+				{
+					"type": "p",
+					"text": "A [vendor](/vendors) can have a usual place. When you pick that vendor on a new transaction that has no location yet, the form fills it in for you. You can change or remove it, and Maalu never applies it on its own."
+				},
+				{
+					"type": "h2",
+					"id": "page",
+					"text": "The Places page"
+				},
+				{
+					"type": "list",
+					"items": [
+						"Choose a period: **This month**, **3 months** (the default), **This year** or **All time**.",
+						"Spots about 100 metres apart are one spot, named after the name most of their transactions gave. The biggest spend comes first.",
+						"Press a spot in the list to find it on the map.",
+						"It counts spending only, in your base currency, with refunds taken off. Transfers, planned and trashed transactions, and accounts left out of your totals are not counted."
+					]
+				},
+				{
+					"type": "callout",
+					"tone": "tip",
+					"text": "Map pictures come from a map server chosen by whoever runs your Maalu, and your browser fetches them, so that server learns which area you look at. The default is OpenStreetMap's public server, which asks for light personal use."
+				},
+				{
+					"type": "faq",
+					"faq": [
+						{
+							"q": "Are locations in my export or templates?",
+							"a": "No. A duplicate of a transaction and **Add another** keep the location, but templates, imports and the export do not carry it. A backup does (see [Backups](/docs/backup))."
+						},
+						{
+							"q": "Why is a spot missing?",
+							"a": "Only expenses with a location, inside the period you chose, count. Check that the transaction has a pin and is not planned."
+						}
+					]
+				}
+			],
+			"extras": [],
+			"webOnly": false
+		},
+		{
+			"slug": "backup",
+			"title": "Backups and restoring",
+			"summary": "Download everything you own as one file and put it back into an empty account, and, for whoever runs the server, the nightly backup of the whole database.",
+			"accent": "slate",
+			"where": [
+				{
+					"to": "/settings",
+					"label": "Settings: the Backup card"
+				},
+				{
+					"to": "/docs/import",
+					"label": "Guide: bring in a bank statement instead"
+				}
+			],
+			"blocks": [
+				{
+					"type": "p",
+					"text": "The **Backup** card in [Settings](/settings) gives you one file with everything you own: accounts, transactions, categories, tags, budgets, goals, templates and the rest. It is the safest way to move to a new install, or to keep a copy before a big clean-up."
+				},
+				{
+					"type": "h2",
+					"id": "download",
+					"text": "Make a backup"
+				},
+				{
+					"type": "steps",
+					"items": [
+						"Open [Settings](/settings) and find **Backup**.",
+						"Press **Download backup**. Your browser saves a file such as `maalu-backup.json`.",
+						"Keep it somewhere safe."
+					]
+				},
+				{
+					"type": "callout",
+					"tone": "warning",
+					"title": "It is your data in plain text",
+					"text": "The file holds no password, session or two-factor secret, but it is your whole financial history, readable by anyone who has it. Store it like you would a bank statement."
+				},
+				{
+					"type": "h2",
+					"id": "restore",
+					"text": "Restore a backup"
+				},
+				{
+					"type": "steps",
+					"items": [
+						"Sign in to a **new, empty** account.",
+						"Open [Settings](/settings), press **Restore from a file** and choose the backup.",
+						"Wait for the message saying what was restored."
+					]
+				},
+				{
+					"type": "list",
+					"items": [
+						"**Only an empty account can be restored into.** If the account already has data, nothing is changed and Maalu tells you.",
+						"**It is all or nothing.** A damaged file, one from another program or one with a bad checksum is refused and nothing is restored.",
+						"Everything gets new ids inside, so the same file can go into two accounts, or back into the install it came from, without clashing.",
+						"Your base currency, default account and settings come from the file.",
+						"Balance history is rebuilt the first time you open the charts, so give them a moment."
+					]
+				},
+				{
+					"type": "h2",
+					"id": "nightly",
+					"text": "A nightly backup of everything (for whoever runs Maalu)"
+				},
+				{
+					"type": "p",
+					"text": "The file above is your own account's data. To protect the **whole database** against a lost disk or a broken server, whoever runs Maalu can use the backup script that comes with it. Every night it dumps the database, encrypts the dump so only you can read it, and uploads it to a bucket (for example Cloudflare R2) with `rclone`."
+				},
+				{
+					"type": "list",
+					"items": [
+						"**Encrypted before it leaves the server**, with a public key. The private key stays with you, not on the server, so someone who steals the server cannot read your backups.",
+						"**Named with the date and the version that made it**, for example `maalu-2026-11-09T023000Z-abc1234abcde.dump.age`, so you know which version of Maalu can restore it.",
+						"**Old ones are deleted** after 30 days (you can change that), and only files named like backups are ever touched.",
+						"**It tells you when it fails**, with a Telegram message if you set one up. A quiet night means a good night."
+					]
+				},
+				{
+					"type": "p",
+					"text": "It is set up once on the server with a few lines in the same `.env` file that Maalu uses, and a line in `cron`. The deployment guide has the steps. To restore, you decrypt the file with your private key and follow the restore steps for the whole database; the script `restore-drill.sh` proves a restore works without touching your live data."
+				},
+				{
+					"type": "callout",
+					"tone": "warning",
+					"title": "Keep the same SECRET_KEY",
+					"text": "A backup holds your two-factor secrets encrypted with the server's `SECRET_KEY`. Restore onto a server with a different key and everything works except two-factor, which has to be set up again. Keep the key with your backups."
+				},
+				{
+					"type": "h2",
+					"id": "not-included",
+					"text": "What is not in it"
+				},
+				{
+					"type": "list",
+					"items": [
+						"**Attached files** (receipts) are not in the backup. They stay in your storage, so back up that storage with its own tools. The web links you attached to transactions are included.",
+						"**Notifications**, sign-in sessions and exchange-rate history are not included: they are worked out again.",
+						"A backup is one account's data. It does not include other people's accounts on the same install."
+					]
+				},
+				{
+					"type": "faq",
+					"faq": [
+						{
+							"q": "How big can a backup be?",
+							"a": "A restore accepts a file of up to 200 MB, far more than a few years of personal finance needs."
+						},
+						{
+							"q": "Can I restore into the account I took it from?",
+							"a": "Only if that account is empty. Clear it first, or restore into a new account."
+						},
+						{
+							"q": "I only want to bring in my bank's transactions",
+							"a": "Use [Import a bank statement](/docs/import) instead. A backup is for the whole account."
+						}
+					]
+				}
+			],
+			"extras": [],
+			"webOnly": false
+		}
+	]
+}
