@@ -59,13 +59,10 @@ import app.maalu.data.daysApartText
 import app.maalu.data.linkSentence
 import app.maalu.data.pairJson
 import app.maalu.data.pairOf
-import app.maalu.data.counterpartGroups
 import app.maalu.data.title
-import app.maalu.ui.components.CompactField
 import app.maalu.ui.components.MoneyText
 import app.maalu.ui.components.MorphTile
 import app.maalu.ui.theme.Accents
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
@@ -171,72 +168,39 @@ fun MakeTransferDialog(api: Api, expense: Transaction, income: Transaction, onCl
 }
 
 /**
- * Pair an entry by hand: choose the other half of the same move (an income for an expense, an expense for an income, in another account),
- * then confirm. The likeliest come first (the same amount, the closest date).
+ * Pair an entry by hand: choose the other half of the same move from [matches] (what the server found: the opposite side, exactly the same
+ * amount, in another account), then confirm.
  */
 @Composable
-fun LinkTransferFlow(api: Api, base: Transaction, onClose: () -> Unit, onDone: (String) -> Unit) {
+fun LinkTransferFlow(api: Api, base: Transaction, matches: List<Transaction>, onClose: () -> Unit, onDone: (String) -> Unit) {
     var chosen by remember { mutableStateOf<Transaction?>(null) }
     val pair = chosen?.let { pairOf(base, it) }
     if (pair != null) MakeTransferDialog(api, pair.first, pair.second, onClose = { chosen = null }, onDone = onDone)
-    else CounterpartPicker(api, base, onClose = onClose, onPick = { chosen = it })
+    else CounterpartPicker(base, matches, onClose = onClose, onPick = { chosen = it })
 }
 
 @Composable
-private fun CounterpartPicker(api: Api, base: Transaction, onClose: () -> Unit, onPick: (Transaction) -> Unit) {
-    var query by remember { mutableStateOf("") }
-    var items by remember { mutableStateOf<List<Transaction>?>(null) }
-    var error by remember { mutableStateOf<String?>(null) }
-    var reload by remember { mutableIntStateOf(0) }
-    val wanted = if (base.type == "expense") "income" else "expense"
-    LaunchedEffect(query, reload) {
-        if (items != null) delay(300)
-        val params = buildMap<String, Any> { put("limit", 50); put("type", wanted); put("min_amount", base.amount); put("max_amount", base.amount); if (query.isNotBlank()) put("q", query.trim()) }
-        when (val r = api.get<List<Transaction>>("transactions", params)) {
-            is ApiResult.Ok -> { items = r.data; error = null }
-            is ApiResult.Failed -> error = r.message
-        }
-    }
+private fun CounterpartPicker(base: Transaction, matches: List<Transaction>, onClose: () -> Unit, onPick: (Transaction) -> Unit) {
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         Scaffold(topBar = { TopAppBar(title = { Text("Pick the matching entry") }, navigationIcon = { IconButton(onClick = onClose) { Icon(Icons.Outlined.Close, "Close") } }) }) { padding ->
             Column(Modifier.padding(padding).fillMaxSize()) {
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     SideRow(if (base.type == "expense") "Out" else "In", base)
                     Text(
-                        if (base.type == "expense") "Which income is this same money arriving in another account? Only entries for exactly the same amount are shown."
-                        else "Which expense is this same money leaving another account? Only entries for exactly the same amount are shown.",
+                        if (base.type == "expense") "Which income is this same money arriving in another account?"
+                        else "Which expense is this same money leaving another account?",
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    CompactField(query, { query = it }, "Search")
                 }
-                val groups = items?.let { counterpartGroups(base, it) }
-                val ranked = groups?.let { it.sameAmount }
-                when {
-                    ranked == null && error != null -> Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(error ?: "", color = MaterialTheme.colorScheme.error)
-                        OutlinedButton(onClick = { error = null; reload++ }, shapes = ButtonDefaults.shapes()) { Text("Try again") }
-                    }
-                    ranked == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-                    ranked.isEmpty() -> Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
-                        Text(
-                            "No $wanted for exactly this amount in another account.",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                        )
-                    }
-                    else -> LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        val sections = listOf("Same amount" to groups.sameAmount)
-                        sections.forEach { (heading, list) ->
-                            item(key = "h-$heading") { Text(heading, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp, top = 10.dp, bottom = 4.dp)) }
-                            itemsIndexed(list, key = { _, t -> t.id }) { i, t ->
-                                MorphTile(onClick = { onPick(t) }, first = i == 0, last = i == list.lastIndex, modifier = Modifier.fillMaxWidth()) {
-                                    Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                        Column(Modifier.weight(1f)) {
-                                            Text(t.title(), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                            Text("${t.account?.name.orEmpty()} · ${dayLabel(t.date)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                        }
-                                        MoneyText(t.amount, t.currency, prefix = signPrefix(t), style = MaterialTheme.typography.bodyMedium, color = amountColor(t))
-                                    }
+                LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    itemsIndexed(matches, key = { _, t -> t.id }) { i, t ->
+                        MorphTile(onClick = { onPick(t) }, first = i == 0, last = i == matches.lastIndex, modifier = Modifier.fillMaxWidth()) {
+                            Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Column(Modifier.weight(1f)) {
+                                    Text(t.title(), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    Text("${t.account?.name.orEmpty()} · ${dayLabel(t.date)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 }
+                                MoneyText(t.amount, t.currency, prefix = signPrefix(t), style = MaterialTheme.typography.bodyMedium, color = amountColor(t))
                             }
                         }
                     }

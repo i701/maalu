@@ -42,15 +42,8 @@ fun pairOf(a: Transaction, b: Transaction): Pair<Transaction, Transaction>? = wh
 
 private fun amountOf(t: Transaction): BigDecimal = t.amount.toBigDecimalOrNull() ?: BigDecimal.ZERO
 
-/** The choices for the other half of an entry: only entries for exactly the same amount in the same currency, closest date first. */
-data class Counterparts(val sameAmount: List<Transaction>) {
-    val isEmpty: Boolean get() = sameAmount.isEmpty()
-}
-
-fun counterpartGroups(base: Transaction, candidates: List<Transaction>): Counterparts = Counterparts(
-    candidates.filter { isCounterpart(base, it) && it.currency == base.currency && amountOf(it).compareTo(amountOf(base)) == 0 }
-        .sortedBy { dayGap(base.date, it.date) },
-)
+/** The merge button's words: "Merge with 1 matching entry", "Merge with 2 matching entries". */
+fun mergeLabel(count: Int): String = if (count == 1) "Merge with 1 matching entry" else "Merge with $count matching entries"
 
 private fun dayGap(a: String, b: String): Long = runCatching { Math.abs(java.time.temporal.ChronoUnit.DAYS.between(java.time.LocalDate.parse(a), java.time.LocalDate.parse(b))) }.getOrDefault(Long.MAX_VALUE)
 

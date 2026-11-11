@@ -31,19 +31,8 @@ class TransferLinkLogicTest {
         assertNull(pairOf(e, tx("e2", "expense", "mib")))
     }
 
-    @Test fun onlyTheExactSameAmountIsOffered() {
-        val base = tx("e", "expense", "bml", "50", "2026-11-11")
-        val near = tx("i1", "income", "mib", "50", "2026-11-12")
-        val old = tx("i2", "income", "mib", "50.00", "2026-09-01")
-        val g = counterpartGroups(base, listOf(
-            old, near, tx("i3", "income", "mib", "75"), tx("i4", "income", "mib", "10000", "2026-11-01"),
-            tx("i5", "income", "mib", "3.2", currency = "USD").copy(baseAmount = "49.40"), tx("i6", "income", "bml", "50"),
-        ))
-        assertEquals(listOf("i1", "i2"), g.sameAmount.map { it.id })
-        assertTrue(counterpartGroups(base, emptyList()).isEmpty)
-    }
-
     @Test fun wordsAndBodies() {
+        assertEquals("Merge with 1 matching entry", mergeLabel(1)); assertEquals("Merge with 3 matching entries", mergeLabel(3))
         assertEquals("same day", daysApartText(0)); assertEquals("1 day apart", daysApartText(1)); assertEquals("2 days apart", daysApartText(2))
         assertEquals("""{"expense_id":"e","income_id":"i"}""", pairJson("e", "i").toString())
         assertTrue(linkSentence(tx("e", "expense", "bml").copy(account = NameRef("BML", id = "bml")), tx("i", "income", "mib").copy(account = NameRef("MIB", id = "mib"))).startsWith("Move MVR 50.00 from BML to MIB? The expense becomes the transfer"))

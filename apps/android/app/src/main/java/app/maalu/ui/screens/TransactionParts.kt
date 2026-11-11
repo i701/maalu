@@ -169,7 +169,7 @@ fun amountColor(t: Transaction) = when (t.type) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailSheet(t: Transaction, onEdit: (() -> Unit)?, onDelete: () -> Unit, onClose: () -> Unit, onPay: (() -> Unit)? = null, onSplit: (() -> Unit)? = null, onLinkTransfer: (() -> Unit)? = null) {
+fun DetailSheet(t: Transaction, onEdit: (() -> Unit)?, onDelete: () -> Unit, onClose: () -> Unit, onPay: (() -> Unit)? = null, onSplit: (() -> Unit)? = null, onLinkTransfer: (() -> Unit)? = null, matchCount: Int = 0) {
     ModalBottomSheet(onDismissRequest = onClose) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(t.title(), style = MaterialTheme.typography.titleMedium)
@@ -204,7 +204,7 @@ fun DetailSheet(t: Transaction, onEdit: (() -> Unit)?, onDelete: () -> Unit, onC
                 Text(app.maalu.data.payTitle(t.type))
             }
             // the same money entered twice (an expense here and an income in another account): pair them into one transfer
-            if (onLinkTransfer != null) OutlinedButton(onClick = onLinkTransfer, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) { Text("Same money as another entry? Merge into one transfer") }
+            if (onLinkTransfer != null) OutlinedButton(onClick = onLinkTransfer, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) { Text(app.maalu.data.mergeLabel(matchCount)) }
             if (onSplit != null) Button(onClick = onSplit, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth().padding(top = 4.dp), colors = ButtonDefaults.filledTonalButtonColors()) { Text("Split salary") }
             if (onEdit == null) Text(
                 if (t.adjustment) "A balance adjustment can only be deleted." else "A refund is changed on the web.",
@@ -243,15 +243,20 @@ fun DetailFact(label: String, value: String?) {
 fun TransactionDetailHost(api: Api, t: Transaction, scope: kotlinx.coroutines.CoroutineScope, onClose: () -> Unit, onChanged: () -> Unit) {
     var phase by remember { mutableStateOf("sheet") }
     val snackbar = LocalSnackbar.current
+    // the server says which entries could be the other half of this one; the merge button is only there when some could
+    var matches by remember(t.id) { mutableStateOf<List<Transaction>>(emptyList()) }
+    LaunchedEffect(t.id) {
+        if (canLinkAsTransfer(t)) (api.get<List<Transaction>>("transactions/${t.id}/transfer-candidates") as? ApiResult.Ok)?.let { matches = it.data }
+    }
     when (phase) {
-        "sheet" -> DetailSheet(t, onEdit = if (t.canEdit()) ({ phase = "edit" }) else null, onDelete = { phase = "delete" }, onClose = onClose, onPay = if (t.planned) ({ phase = "pay" }) else null, onSplit = if (canSplitSalary(t)) ({ phase = "split" }) else null, onLinkTransfer = if (canLinkAsTransfer(t)) ({ phase = "link" }) else null)
+        "sheet" -> DetailSheet(t, onEdit = if (t.canEdit()) ({ phase = "edit" }) else null, onDelete = { phase = "delete" }, onClose = onClose, onPay = if (t.planned) ({ phase = "pay" }) else null, onSplit = if (canSplitSalary(t)) ({ phase = "split" }) else null, onLinkTransfer = if (matches.isNotEmpty()) ({ phase = "link" }) else null, matchCount = matches.size)
         "pay" -> MarkPaidDialog(api, t, null, onClose = onClose, onPaid = {
             onChanged()
             // pay that has just arrived: offer to split it, when there are rules to split it by
             scope.launch { snackbar?.showSnackbar(markedMessage(t)) }
             if (isSalaryToSplit(t)) scope.launch { if (api.hasSalaryRules()) phase = "split" else onClose() } else onClose()
         })
-        "link" -> LinkTransferFlow(api, t, onClose = onClose, onDone = { msg -> onChanged(); onClose(); scope.launch { snackbar?.showSnackbar(msg) } })
+        "link" -> LinkTransferFlow(api, t, matches, onClose = onClose, onDone = { msg -> onChanged(); onClose(); scope.launch { snackbar?.showSnackbar(msg) } })
         "split" -> SalarySplitDialog(api, t.id, onClose = { onChanged(); onClose() }, onDone = { msg -> onChanged(); onClose(); scope.launch { snackbar?.showSnackbar(msg) } })
         "edit" -> AddTransactionScreen(
             api, editing = t, onClose = onClose,
