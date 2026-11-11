@@ -30,6 +30,9 @@ class User(Base):
     notify_goals: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     # Also email new notifications to the sign-in address, as one digest (needs SMTP on the server).
     notify_email: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    # Email a "new sign-in" alert (device, address, time) to the sign-in address every time someone
+    # signs in. A security feature, so on by default; with no SMTP on the server nothing is sent.
+    notify_login: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     # Show big amounts in a short form (1.2K, 3.4M) everywhere, from a thousand up. Off, the short
     # form is only used in tight places (a strip of figures on a phone), from ten thousand up.
     compact_numbers: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")

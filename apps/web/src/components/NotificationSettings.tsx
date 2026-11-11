@@ -74,6 +74,22 @@ export default function NotificationSettings({ me, email }: { me: User; email: E
 							New notifications arrive together in one email, about ten minutes after they appear,
 							from {email.sender}. Ones you have already read are not sent.
 						</Typography>
+						<FormControlLabel
+							sx={{ mt: 1 }}
+							control={
+								<Switch
+									checked={me.notify_login}
+									disabled={pending}
+									onChange={(_, on) => void run(() => updateMeFn({ data: { notify_login: on } }))}
+								/>
+							}
+							label="Email me when someone signs in"
+						/>
+						<Typography variant="caption" component="p" sx={{ color: "text.secondary", ml: 6 }}>
+							Every sign-in sends a short alert with the device, address and time, so one that was
+							not you is noticed. If it was not you, change your password and sign out your other
+							devices.
+						</Typography>
 						<div>
 							<Button
 								size="small"

@@ -131,6 +131,7 @@ export const updateMeFn = createServerFn({ method: "POST" })
 			notify_budget: z.boolean().optional(),
 			notify_goals: z.boolean().optional(),
 			notify_email: z.boolean().optional(),
+			notify_login: z.boolean().optional(),
 			compact_numbers: z.boolean().optional(),
 		}),
 	)

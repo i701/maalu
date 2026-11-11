@@ -23,7 +23,9 @@ def outbox(monkeypatch):
     sent: list = []
 
     async def fake(message):
-        sent.append(message)
+        # the sign-in alerts (their own tests are in test_login_alert.py) are not what these count
+        if message["Subject"] != "New sign-in to your Maalu account":
+            sent.append(message)
 
     mailer.set_sender(fake)
     yield sent

@@ -6294,6 +6294,8 @@ export interface components {
             notify_email: boolean;
             /** Notify Goals */
             notify_goals: boolean;
+            /** Notify Login */
+            notify_login: boolean;
             /** Notify Payments */
             notify_payments: boolean;
             /** Start From Template */
@@ -6338,6 +6340,12 @@ export interface components {
              * @default true
              */
             notify_goals: boolean;
+            /**
+             * Notify Login
+             * @description Email a sign-in alert (device, address, time) to the sign-in address.
+             * @default true
+             */
+            notify_login: boolean;
             /**
              * Notify Payments
              * @description Notify when a planned payment is due soon or overdue.

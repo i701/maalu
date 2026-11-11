@@ -33,6 +33,10 @@ class UserUpdate(BaseModel):
     notify_email: bool = Field(
         default=False, description="Also email new notifications to the sign-in address."
     )
+    notify_login: bool = Field(
+        default=True,
+        description="Email a sign-in alert (device, address, time) to the sign-in address.",
+    )
     compact_numbers: bool = Field(
         default=False,
         description="Show amounts of a thousand and over in a short form (1.2K, 3.4M) everywhere.",
@@ -51,6 +55,7 @@ class UserResponse(BaseModel):
     notify_budget: bool
     notify_goals: bool
     notify_email: bool
+    notify_login: bool
     compact_numbers: bool
     two_factor_enabled: bool = Field(
         description="Whether signing in also needs a code from an authenticator app."

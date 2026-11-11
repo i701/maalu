@@ -121,6 +121,7 @@ class UserService:
             "notify_budget",
             "notify_goals",
             "notify_email",
+            "notify_login",
             "compact_numbers",
         ):
             if flag in changes:

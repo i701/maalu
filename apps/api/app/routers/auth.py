@@ -1,10 +1,10 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 
-from app import rate_limit, two_factor
+from app import mailer, rate_limit, two_factor
 from app.dependencies import CurrentSession, CurrentUser, SessionServiceDep, UserServiceDep
 from app.schemas import (
     EndedSessions,
@@ -33,6 +33,7 @@ from app.services import (
     TwoFactorCodeRequiredError,
     TwoFactorLockedError,
     TwoFactorStateError,
+    login_alert,
 )
 
 router = APIRouter(tags=["auth"])
@@ -44,9 +45,14 @@ def client_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
-async def _start_session(sessions, user_id, request: Request) -> str:
-    """A new sign-in for this device: the token the web app holds from now on."""
-    return await sessions.create(user_id, request.headers.get("user-agent"), client_ip(request))
+async def _start_session(sessions, user, request: Request, background: BackgroundTasks) -> str:
+    """A new sign-in for this device: the token the web app holds from now on. Also queues the
+    sign-in alert email (after the answer is sent) for a user who has them on."""
+    agent, ip = request.headers.get("user-agent"), client_ip(request)
+    token = await sessions.create(user.id, agent, ip)
+    if user.notify_login and mailer.configured():
+        background.add_task(login_alert.send, user.email, agent, ip)
+    return token
 
 
 WRONG_CODE = "That code is not right"
@@ -102,6 +108,7 @@ async def login(
     users: UserServiceDep,
     sessions: SessionServiceDep,
     request: Request,
+    background: BackgroundTasks,
 ):
     """OAuth2 password flow: send `username` (the email) and `password` as form fields. Ten wrong
     passwords for one email, or thirty from one address, in fifteen minutes answer 429."""
@@ -119,7 +126,7 @@ async def login(
     if user.two_factor_enabled:
         # The password was right: no token yet, only proof of that, to send with a code.
         return Token(two_factor_required=True, challenge_token=create_challenge_token(user.id))
-    return Token(access_token=await _start_session(sessions, user.id, request))
+    return Token(access_token=await _start_session(sessions, user, request, background))
 
 
 @router.post("/auth/login/2fa", response_model=Token)
@@ -128,6 +135,7 @@ async def login_two_factor(
     users: UserServiceDep,
     sessions: SessionServiceDep,
     request: Request,
+    background: BackgroundTasks,
 ):
     """The second step of signing in: the challenge from `/auth/login` and a code from the
     authenticator app (or an unused recovery code)."""
@@ -145,7 +153,7 @@ async def login_two_factor(
     except InvalidTwoFactorCodeError:
         rate_limit.two_factor_failed(ip)
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, WRONG_CODE) from None
-    return Token(access_token=await _start_session(sessions, user.id, request))
+    return Token(access_token=await _start_session(sessions, user, request, background))
 
 
 @router.post("/auth/2fa/setup", response_model=TwoFactorSetup)
