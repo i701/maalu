@@ -12,11 +12,28 @@ export function newEmail(): string {
 	return `e2e-${Date.now()}-${process.pid}-${counter}@example.com`;
 }
 
-/** Open a page and wait until its scripts have loaded, so a form is not submitted the plain-HTML
- * way (and reloaded empty) before React takes over. */
+/** Wait until React has taken over the page. The server renders real HTML first, so a click or a
+ * form submit before this goes the plain-HTML way (a sign-up form reloads as `/register?email=…`).
+ * "No network traffic" is not enough: the scripts can be in while hydration is still running, which
+ * a slow or busy machine stretches past it. React marks the elements it owns with `__reactProps$…`,
+ * so that is what is waited for. */
+export async function hydrated(page: Page) {
+	await page.waitForLoadState("networkidle");
+	await page.waitForFunction(
+		() =>
+			[...document.querySelectorAll("button, a, input, form")].some((el) =>
+				Object.keys(el).some((key) => key.startsWith("__reactProps$")),
+			),
+		undefined,
+		{ timeout: 30_000 },
+	);
+}
+
+/** Open a page and wait until it is interactive, so a form is not submitted the plain-HTML way
+ * (and reloaded empty) before React takes over. */
 export async function open(page: Page, path: string) {
 	await page.goto(path);
-	await page.waitForLoadState("networkidle");
+	await hydrated(page);
 }
 
 /** Sign up through the real sign-up page and land on the dashboard. */

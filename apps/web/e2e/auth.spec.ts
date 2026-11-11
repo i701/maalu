@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { newEmail, open, PASSWORD, signUp } from "./helpers";
+import { hydrated, newEmail, open, PASSWORD, signUp } from "./helpers";
 
 test("a new person can sign up, sign out and sign back in", async ({ page }) => {
 	const email = await signUp(page);
@@ -11,7 +11,7 @@ test("a new person can sign up, sign out and sign back in", async ({ page }) => 
 		.click();
 	await page.getByRole("menuitem", { name: /sign out|log out/i }).click();
 	await expect(page).toHaveURL(/\/login/);
-	await page.waitForLoadState("networkidle");
+	await hydrated(page);
 
 	await page.getByLabel("Email").fill(email);
 	await page.getByLabel("Password").fill(PASSWORD);
