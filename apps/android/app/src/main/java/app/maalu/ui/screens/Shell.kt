@@ -188,6 +188,7 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
                     "net-worth" -> NetWorthScreen(api)
                     "compare" -> CompareScreen(api)
                     "trends" -> TrendsScreen(api)
+                    "places" -> PlacesScreen(api)
                     "templates" -> TemplatesScreen(api)
                     "notifications" -> NotificationsScreen(
                         api, onChanged = { bellTick++ },

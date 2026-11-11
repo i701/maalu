@@ -62,6 +62,8 @@ fun CompactField(
     suffix: String? = null,
     /** For a password: its characters are dots. */
     hidden: Boolean = false,
+    /** What the keyboard's action key does (Search, Done). */
+    actions: androidx.compose.foundation.text.KeyboardActions = androidx.compose.foundation.text.KeyboardActions.Default,
 ) {
     var focused by remember { mutableStateOf(false) }
     Surface(
@@ -80,6 +82,7 @@ fun CompactField(
             enabled = enabled,
             singleLine = singleLine,
             keyboardOptions = keyboard,
+            keyboardActions = actions,
             visualTransformation = if (hidden) androidx.compose.ui.text.input.PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,
             textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),

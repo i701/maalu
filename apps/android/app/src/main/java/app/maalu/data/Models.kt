@@ -275,6 +275,10 @@ data class Transaction(
     val group: NameRef? = null,
     @SerialName("attachment_count") val attachmentCount: Int = 0,
     @SerialName("link_count") val linkCount: Int = 0,
+    /** Where it happened, when it was marked on the map (both coordinates or neither). */
+    val latitude: String? = null,
+    val longitude: String? = null,
+    val place: String? = null,
     val adjustment: Boolean = false,
     /** The items of a split purchase (only counted here; they are edited on the web). */
     val splits: List<kotlinx.serialization.json.JsonElement> = emptyList(),

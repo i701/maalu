@@ -83,7 +83,7 @@ val MoreDestinations: List<Destination> = listOf(
     Destination("net-worth", "Net worth", Icons.Outlined.ShowChart, "green", NavGroup.Money, "How your net worth moved over a period and what moved it: income, spending, adjustments, transfers and exchange rates."),
     Destination("compare", "Compare", Icons.Outlined.Insights, "violet", NavGroup.Money, "Put one period against another: income, spending, what you kept and every category's move."),
     Destination("trends", "Trends", Icons.Outlined.CalendarMonth, "lime", NavGroup.Money, "Every category by month, as a table or stacked columns."),
-    Destination("import", "Import", Icons.Outlined.UploadFile, "orange", NavGroup.Money, "Bring in a bank's CSV statement, review the rows and import them safely."),
+    Destination("import", "Import", Icons.Outlined.UploadFile, "orange", NavGroup.Money, "Importing a bank statement is done on the web, where the rows are easier to review."),
     Destination("places", "Places", Icons.Outlined.LocationOn, "pink", NavGroup.Money, "A map of where your spending went."),
     Destination("budget", "Budget", Icons.Outlined.Savings, "amber", NavGroup.Planning, "Limits and savings goals.", tabIndex = 3),
     Destination("plan", "Month plan", Icons.Outlined.Checklist, "amber", NavGroup.Planning, "Your bills by day, what is left after each, and where the money runs out."),

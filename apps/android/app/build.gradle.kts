@@ -50,5 +50,6 @@ dependencies {
     implementation(libs.datastore.preferences)
     debugImplementation(libs.compose.ui.tooling)
     implementation(libs.zxing.core)
+implementation(libs.osmdroid)
     testImplementation(libs.junit)
 }

@@ -96,6 +96,7 @@ import androidx.compose.material3.InputChip
 import androidx.compose.material3.InputChipDefaults
 import app.maalu.ui.components.TintChip
 import app.maalu.data.Transaction
+import app.maalu.data.hasPlace
 import app.maalu.data.canSplitSalary
 import app.maalu.data.isSalaryToSplit
 import app.maalu.data.dayLabel
@@ -194,6 +195,7 @@ fun DetailSheet(t: Transaction, onEdit: (() -> Unit)?, onDelete: () -> Unit, onC
             DetailFact("Group", t.group?.name)
             if (t.tags.isNotEmpty()) DetailFact("Tags", t.tags.joinToString(", ") { it.name })
             DetailFact("Note", t.description)
+            if (t.hasPlace()) DetailFact("Place", app.maalu.data.placeLabel(t.place, t.latitude, t.longitude))
             if (t.attachmentCount > 0 || t.linkCount > 0) DetailFact("Attached", "${t.attachmentCount} file(s), ${t.linkCount} link(s)")
             // something planned becomes real here, with the real day, amount and rate
             if (onPay != null) Button(onClick = onPay, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {

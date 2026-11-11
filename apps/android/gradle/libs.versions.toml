@@ -11,6 +11,7 @@ coroutines = "1.10.2"
 datastore = "1.1.7"
 junit = "4.13.2"
 zxing = "3.5.3"
+osmdroid = "6.1.20"
 
 [libraries]
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
@@ -30,6 +31,7 @@ datastore-preferences = { module = "androidx.datastore:datastore-preferences", v
 
 junit = { module = "junit:junit", version.ref = "junit" }
 zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
+osmdroid = { module = "org.osmdroid:osmdroid-android", version.ref = "osmdroid" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

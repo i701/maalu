@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material.icons.outlined.LocationOn
 import app.maalu.ui.components.PickerSheet
 import app.maalu.data.templateSummary
 import app.maalu.data.templateNameProblem
@@ -408,6 +410,23 @@ private fun Form(o: FormOptions, hasItems: Boolean, saveLabel: String, form: Add
             Section("Note", Icons.Outlined.Notes, Accents.getValue("lime")) {
                 // a text area: the width of the screen and several lines tall
                 CompactField(form.note, { onForm(form.copy(note = it.take(500))) }, "Add a note", Modifier.fillMaxWidth(), singleLine = false, enabled = !busy, minHeight = 112.dp)
+            }
+            Section("Location", Icons.Outlined.LocationOn, Accents.getValue("pink")) {
+                // where it happened, marked on a map; the Places screen shows where spending went
+                val api = LocalApi.current ?: return@Section
+                var marking by remember { mutableStateOf(false) }
+                val marked = form.latitude.isNotBlank() && form.longitude.isNotBlank()
+                if (!marked) OutlinedButton(onClick = { marking = true }, enabled = !busy, shapes = ButtonDefaults.shapes()) {
+                    Icon(Icons.Outlined.LocationOn, null, Modifier.padding(end = 6.dp)); Text("Add location")
+                } else Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TintChip(Accents.getValue("pink"), selected = true, onClick = { marking = true }, label = { Text(app.maalu.data.placeLabel(form.place, form.latitude, form.longitude), maxLines = 1) }, modifier = Modifier.weight(1f, fill = false))
+                    IconButton(onClick = { onForm(form.copy(latitude = "", longitude = "", place = "")) }, enabled = !busy) { Icon(Icons.Outlined.Close, "Remove the location") }
+                }
+                if (marking) LocationDialog(
+                    api, initial = if (marked) Spot(form.latitude, form.longitude, form.place) else null,
+                    onClose = { marking = false },
+                    onDone = { spot -> marking = false; onForm(if (spot == null) form.copy(latitude = "", longitude = "", place = "") else form.copy(latitude = spot.latitude, longitude = spot.longitude, place = spot.place)) },
+                )
             }
             Box(Modifier.padding(bottom = 8.dp))
         }

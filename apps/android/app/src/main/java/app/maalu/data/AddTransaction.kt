@@ -28,6 +28,10 @@ data class AddForm(
     val rate: String = "1",
     val tags: List<String> = emptyList(),
     val note: String = "",
+    /** Where it happened (both coordinates as typed to six decimals, or both blank) and an optional name for the spot. */
+    val latitude: String = "",
+    val longitude: String = "",
+    val place: String = "",
 )
 
 /** What each account group suggests as the payment method (port of SUGGESTED_PAYMENT_METHOD). */
@@ -119,6 +123,10 @@ fun AddForm.toJson(accounts: List<Account>, baseCurrency: String): JsonObject {
             if (tags.isNotEmpty()) put("tags", JsonArray(tags.map { JsonPrimitive(it) }))
         }
         note.trim().takeIf { it.isNotEmpty() }?.let { put("description", it) }
+        if (latitude.isNotBlank() && longitude.isNotBlank()) {
+            put("latitude", latitude.trim()); put("longitude", longitude.trim())
+            place.trim().takeIf { it.isNotEmpty() }?.let { put("place", it) }
+        }
     }
 }
 
@@ -170,6 +178,7 @@ fun formFrom(t: Transaction): AddForm = AddForm(
     rate = tidyRate(t.exchangeRate),
     tags = t.tags.map { it.name },
     note = t.description.orEmpty(),
+    latitude = t.latitude.orEmpty(), longitude = t.longitude.orEmpty(), place = t.place.orEmpty(),
 )
 
 private fun sameNumber(a: String, b: String): Boolean {
@@ -206,4 +215,9 @@ fun AddForm.patchJson(before: AddForm, accounts: List<Account>, baseCurrency: St
     }
     if (vendor.trim() != before.vendor.trim()) { if (vendor.isBlank()) put("vendor_name", JsonNull) else put("vendor_name", vendor.trim()) }
     if (note.trim() != before.note.trim()) { if (note.isBlank()) put("description", JsonNull) else put("description", note.trim()) }
+    // the spot goes as all three together: new values, or an explicit null each to remove it
+    if (latitude != before.latitude || longitude != before.longitude || place.trim() != before.place.trim()) {
+        if (latitude.isBlank() || longitude.isBlank()) { put("latitude", JsonNull); put("longitude", JsonNull); put("place", JsonNull) }
+        else { put("latitude", latitude.trim()); put("longitude", longitude.trim()); if (place.isBlank()) put("place", JsonNull) else put("place", place.trim()) }
+    }
 }
