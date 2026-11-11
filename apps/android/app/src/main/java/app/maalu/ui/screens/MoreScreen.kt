@@ -26,6 +26,7 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.ReceiptLong
 import androidx.compose.material.icons.outlined.Savings
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.EventRepeat
 import androidx.compose.material.icons.outlined.Insights
@@ -70,6 +71,8 @@ data class Destination(
     val blurb: String,
     /** The bottom bar tab this opens, or null for a screen reached only from the drawer. */
     val tabIndex: Int? = null,
+    /** False for a screen opened from somewhere else (the bell), so the drawer does not list it. */
+    val inDrawer: Boolean = true,
 )
 
 val MoreDestinations: List<Destination> = listOf(
@@ -92,6 +95,7 @@ val MoreDestinations: List<Destination> = listOf(
     Destination("templates", "Templates", Icons.Outlined.Bookmark, "lime", NavGroup.Organise, "Saved starting points for transactions you repeat."),
     Destination("trash", "Trash", Icons.Outlined.Delete, "slate", NavGroup.Organise, "Deleted transactions, until you restore them or delete them for good."),
     Destination("settings", "Settings", Icons.Outlined.Settings, "slate", NavGroup.App, "Security: two-factor sign-in, and more to come."),
+    Destination("notifications", "Notifications", Icons.Outlined.Notifications, "amber", NavGroup.App, "Late payments, budgets close to their limit and reached goals.", inDrawer = false),
     Destination("docs", "Docs", Icons.Outlined.Article, "blue", NavGroup.Help, "Guides to what each feature is and how to use it."),
 )
 

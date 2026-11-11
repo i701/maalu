@@ -60,7 +60,7 @@ fun AppDrawer(
                 }
             }
             NavGroup.entries.forEach { group ->
-                val items = MoreDestinations.filter { it.group == group }
+                val items = MoreDestinations.filter { it.group == group && it.inDrawer }
                 if (items.isEmpty()) return@forEach
                 Text(group.label, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp))
                 items.forEach { d ->

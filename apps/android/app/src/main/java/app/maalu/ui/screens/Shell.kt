@@ -17,6 +17,7 @@ import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Menu
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalNavigationDrawer
@@ -101,6 +102,12 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
     androidx.compose.runtime.LaunchedEffect(Unit) {
         (api.get<app.maalu.data.UserMe>("users/me") as? app.maalu.data.ApiResult.Ok)?.let { app.maalu.data.NumberPrefs.short = it.data.compactNumbers }
     }
+    // the bell's count: asked again whenever the screen changes and after the notifications page changes something
+    var unread by remember { mutableIntStateOf(0) }
+    var bellTick by remember { mutableIntStateOf(0) }
+    androidx.compose.runtime.LaunchedEffect(route, selected, bellTick) {
+        (api.get<app.maalu.data.UnreadCount>("notifications/unread-count") as? app.maalu.data.ApiResult.Ok)?.let { unread = it.data.count }
+    }
     val onTab = destination == null
     val onAccountPage = onTab && selected == ACCOUNTS && openAccountId != null
     val monthly = onTab && !onAccountPage && (selected == DASHBOARD || selected == BUDGET)
@@ -133,6 +140,11 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
                     },
                     subtitle = if (monthly) ({ Text(monthLabel(LocalDate.parse(month))) }) else null,
                     actions = {
+                        IconButton(onClick = { route = "notifications" }) {
+                            androidx.compose.material3.BadgedBox(badge = {
+                                if (unread > 0) androidx.compose.material3.Badge { Text(app.maalu.data.badgeText(unread)) }
+                            }) { Icon(Icons.Outlined.Notifications, if (unread > 0) "Notifications, $unread unread" else "Notifications") }
+                        }
                         if (monthly) {
                             IconButton(onClick = { month = LocalDate.parse(month).minusMonths(1).toString() }) {
                                 Icon(Icons.AutoMirrored.Outlined.KeyboardArrowLeft, "Previous month")
@@ -168,6 +180,19 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
                     "vendors" -> VendorsScreen(api)
                     "subscriptions" -> SubscriptionsScreen(api)
                     "settings" -> SettingsScreen(api)
+                    "notifications" -> NotificationsScreen(
+                        api, onChanged = { bellTick++ },
+                        onOpen = { target ->
+                            when (target) {
+                                is app.maalu.data.Target.Route -> route = target.id
+                                is app.maalu.data.Target.Tab -> { selected = target.index; route = null }
+                                is app.maalu.data.Target.Account -> scope.launch {
+                                    val name = (api.get<app.maalu.data.Account>("accounts/${target.id}") as? app.maalu.data.ApiResult.Ok)?.data?.name ?: "Account"
+                                    openAccountId = target.id; openAccountName = name; selected = ACCOUNTS; route = null
+                                }
+                            }
+                        },
+                    )
                     "plan" -> PlanScreen(api, onOpenAccount = { id, name -> openAccountId = id; openAccountName = name; selected = ACCOUNTS; route = null })
                     else -> ComingSoon(destination)
                 }
