@@ -86,6 +86,8 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
     // a destination reached only from the drawer, or null while one of the four tabs is showing
     var route by rememberSaveable { mutableStateOf<String?>(null) }
     val destination = destinationById(route)
+    // the guide open in Docs (its slug), so the top bar can offer a way back to the list
+    var docSlug by rememberSaveable { mutableStateOf<String?>(null) }
     // an account's own page (its id and name), opened from the Accounts tab
     var openAccountId by rememberSaveable { mutableStateOf<String?>(null) }
     var openAccountName by rememberSaveable { mutableStateOf("") }
@@ -110,8 +112,22 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
         (api.get<app.maalu.data.UnreadCount>("notifications/unread-count") as? app.maalu.data.ApiResult.Ok)?.let { unread = it.data.count }
         (api.get<app.maalu.data.SplitCount>("salary-split-tasks/count") as? app.maalu.data.ApiResult.Ok)?.let { pending = it.data.count }
     }
+    // opening a screen from inside another (a notification, a link in a guide)
+    val openTarget: (app.maalu.data.Target) -> Unit = { target ->
+        when (target) {
+            is app.maalu.data.Target.Route -> route = target.id
+            is app.maalu.data.Target.Tab -> { selected = target.index; route = null }
+            is app.maalu.data.Target.Account -> scope.launch {
+                val name = (api.get<app.maalu.data.Account>("accounts/${target.id}") as? app.maalu.data.ApiResult.Ok)?.data?.name ?: "Account"
+                openAccountId = target.id; openAccountName = name; selected = ACCOUNTS; route = null
+            }
+        }
+    }
     val onTab = destination == null
     val onAccountPage = onTab && selected == ACCOUNTS && openAccountId != null
+    val onGuide = destination?.id == "docs" && docSlug != null
+    // leaving Docs closes the guide, so coming back starts at the list
+    androidx.compose.runtime.LaunchedEffect(route) { if (route != "docs") docSlug = null }
     val monthly = onTab && !onAccountPage && (selected == DASHBOARD || selected == BUDGET)
     // the drawer's highlighted item: the open destination, else the tab
     val selectedId = destination?.id ?: MoreDestinations.firstOrNull { it.tabIndex == selected }?.id
@@ -137,7 +153,8 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
                     title = { Text(destination?.label ?: if (onAccountPage) openAccountName else Tabs[selected].label) },
                     navigationIcon = {
                         // on an account's page the button goes back to the list; elsewhere it opens the drawer
-                        if (onAccountPage) IconButton(onClick = { openAccountId = null }) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back to accounts") }
+                        if (onGuide) IconButton(onClick = { docSlug = null }) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back to the guides") }
+                        else if (onAccountPage) IconButton(onClick = { openAccountId = null }) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back to accounts") }
                         else IconButton(onClick = { scope.launch { drawer.open() } }) { Icon(Icons.Outlined.Menu, "Open the menu") }
                     },
                     subtitle = if (monthly) ({ Text(monthLabel(LocalDate.parse(month))) }) else null,
@@ -190,19 +207,8 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
                     "trends" -> TrendsScreen(api)
                     "places" -> PlacesScreen(api)
                     "templates" -> TemplatesScreen(api)
-                    "notifications" -> NotificationsScreen(
-                        api, onChanged = { bellTick++ },
-                        onOpen = { target ->
-                            when (target) {
-                                is app.maalu.data.Target.Route -> route = target.id
-                                is app.maalu.data.Target.Tab -> { selected = target.index; route = null }
-                                is app.maalu.data.Target.Account -> scope.launch {
-                                    val name = (api.get<app.maalu.data.Account>("accounts/${target.id}") as? app.maalu.data.ApiResult.Ok)?.data?.name ?: "Account"
-                                    openAccountId = target.id; openAccountName = name; selected = ACCOUNTS; route = null
-                                }
-                            }
-                        },
-                    )
+                    "notifications" -> NotificationsScreen(api, onChanged = { bellTick++ }, onOpen = openTarget)
+                    "docs" -> DocsScreen(slug = docSlug, onSlug = { docSlug = it }, onOpenApp = openTarget)
                     "plan" -> PlanScreen(api, onOpenAccount = { id, name -> openAccountId = id; openAccountName = name; selected = ACCOUNTS; route = null })
                     else -> ComingSoon(destination)
                 }
