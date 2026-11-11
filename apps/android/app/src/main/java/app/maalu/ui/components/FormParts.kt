@@ -60,6 +60,8 @@ fun CompactField(
     isError: Boolean = false,
     /** Something fixed at the end of the field, such as a currency code. */
     suffix: String? = null,
+    /** For a password: its characters are dots. */
+    hidden: Boolean = false,
 ) {
     var focused by remember { mutableStateOf(false) }
     Surface(
@@ -78,6 +80,7 @@ fun CompactField(
             enabled = enabled,
             singleLine = singleLine,
             keyboardOptions = keyboard,
+            visualTransformation = if (hidden) androidx.compose.ui.text.input.PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,
             textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
             modifier = Modifier.fillMaxWidth().onFocusChanged { focused = it.isFocused },

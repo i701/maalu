@@ -65,6 +65,12 @@ class Api(
     suspend inline fun <reified T> postForm(path: String, fields: Map<String, String>): ApiResult<T> =
         decode(safely { raw("POST", path, body = FormBody.Builder().apply { fields.forEach { (k, v) -> add(k, v) } }.build()) })
 
+    /** A POST with a JSON body whose answer has no body to read (a 204): any 2xx is success. */
+    suspend fun postJsonUnit(path: String, json: String): ApiResult<Unit> {
+        val r = safely { raw("POST", path, body = json.toRequestBody("application/json".toMediaType())) }
+        return if (r is Outcome.Got && r.raw.code in 200..299) ApiResult.Ok(Unit) else failure(r)
+    }
+
     suspend fun post(path: String): ApiResult<Unit> {
         val r = safely { raw("POST", path, body = ByteArray(0).toRequestBody()) }
         return if (r is Outcome.Got && r.raw.code in 200..299) ApiResult.Ok(Unit) else failure(r)

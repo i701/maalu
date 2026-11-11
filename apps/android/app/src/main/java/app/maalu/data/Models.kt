@@ -61,6 +61,7 @@ data class UserMe(
     @SerialName("base_currency") val baseCurrency: String,
     @SerialName("compact_numbers") val compactNumbers: Boolean = false,
     @SerialName("default_account_id") val defaultAccountId: String? = null,
+    @SerialName("two_factor_enabled") val twoFactorEnabled: Boolean = false,
 )
 
 @Serializable
@@ -378,3 +379,12 @@ data class SubscriptionCandidate(
     val confidence: String = "medium",
     val category: String = "",
 )
+
+@Serializable
+data class TwoFactorSetup(
+    val secret: String,
+    @SerialName("otpauth_uri") val otpauthUri: String,
+)
+
+@Serializable
+data class RecoveryCodes(@SerialName("recovery_codes") val recoveryCodes: List<String> = emptyList())

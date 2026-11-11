@@ -45,9 +45,11 @@ fun FormDialog(
     snackbar: SnackbarHostState,
     onClose: () -> Unit,
     onSave: () -> Unit,
+    secure: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Dialog(onDismissRequest = { if (!busy) onClose() }, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+        if (secure) SecureWindow()
         Scaffold(
             snackbarHost = { SnackbarHost(snackbar) },
             topBar = {

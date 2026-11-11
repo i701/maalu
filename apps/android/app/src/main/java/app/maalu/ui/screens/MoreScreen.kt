@@ -26,6 +26,7 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.ReceiptLong
 import androidx.compose.material.icons.outlined.Savings
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.EventRepeat
 import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.Inventory2
@@ -56,7 +57,7 @@ import app.maalu.ui.components.SegmentedPills
 import app.maalu.ui.theme.Accents
 
 /** The web's navigation groups, in order: where every destination sits in the sidebar and in More. */
-enum class NavGroup(val label: String) { Money("Money"), Planning("Planning"), Organise("Organise"), Help("Help") }
+enum class NavGroup(val label: String) { Money("Money"), Planning("Planning"), Organise("Organise"), Help("Help"), App("This app") }
 
 /** One place in the app that is not in the bottom bar. Icons and colours follow the web's `NAV_ITEMS`. */
 data class Destination(
@@ -90,6 +91,7 @@ val MoreDestinations: List<Destination> = listOf(
     Destination("groups", "Groups", Icons.Outlined.Inventory2, "blue", NavGroup.Organise, "Bundle related transactions, like a trip, and see what they add up to."),
     Destination("templates", "Templates", Icons.Outlined.Bookmark, "lime", NavGroup.Organise, "Saved starting points for transactions you repeat."),
     Destination("trash", "Trash", Icons.Outlined.Delete, "slate", NavGroup.Organise, "Deleted transactions, until you restore them or delete them for good."),
+    Destination("settings", "Settings", Icons.Outlined.Settings, "slate", NavGroup.App, "Security: two-factor sign-in, and more to come."),
     Destination("docs", "Docs", Icons.Outlined.Article, "blue", NavGroup.Help, "Guides to what each feature is and how to use it."),
 )
 
