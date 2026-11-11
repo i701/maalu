@@ -88,6 +88,7 @@ import app.maalu.data.shortDate
 import app.maalu.data.suggestedMethod
 import app.maalu.data.tidyRate
 import app.maalu.data.toJson
+import app.maalu.data.withAccount
 import app.maalu.data.withDate
 import app.maalu.data.withVendor
 import app.maalu.ui.components.CompactField
@@ -227,10 +228,6 @@ private fun Form(o: FormOptions, hasItems: Boolean, saveLabel: String, form: Add
     var pickingDate by remember { mutableStateOf(false) }
     var pickingTime by remember { mutableStateOf(false) }
 
-    fun pickAccount(a: Account) = onForm(
-        form.copy(accountId = a.id, rate = tidyRate(a.exchangeRate), method = if (form.methodTouched) form.method else suggestedMethod(a.group)),
-    )
-
     Column(modifier.fillMaxSize().imePadding()) {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
             // what it is: each type in its own colour, the chosen one stronger
@@ -257,7 +254,8 @@ private fun Form(o: FormOptions, hasItems: Boolean, saveLabel: String, form: Add
                     title = "Account", value = account?.let { Ref(it.id, it.name) }, placeholder = "No account", anyLabel = null,
                     entries = o.accounts.map { Ref(it.id, it.name) },
                     detail = { r -> o.accounts.firstOrNull { it.id == r.id }?.let(::accountDetail) },
-                    onPick = { r -> o.accounts.firstOrNull { it.id == r?.id }?.let(::pickAccount) },
+                    // built from the form as it is now: a function reference to a local helper kept an older copy of the form
+                    onPick = { r -> o.accounts.firstOrNull { it.id == r?.id }?.let { a -> onForm(form.withAccount(a)) } },
                 )
                 if (foreign) CompactField(
                     form.rate, { onForm(form.copy(rate = cleanAmount(it))) }, "Exchange rate: 1 $currency = ? $base",

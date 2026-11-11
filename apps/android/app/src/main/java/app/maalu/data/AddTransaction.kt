@@ -58,6 +58,13 @@ fun isPositive(text: String): Boolean = text.trim().toBigDecimalOrNull()?.let { 
 fun isFuture(date: String, today: LocalDate = LocalDate.now()): Boolean =
     runCatching { LocalDate.parse(date).isAfter(today) }.getOrDefault(false)
 
+/**
+ * The form after choosing [a] as the account (the source account of a transfer too): its exchange rate and its usual way of
+ * paying come with it, and everything else (the type, the amount, the other account, the note) stays exactly as it was.
+ */
+fun AddForm.withAccount(a: Account): AddForm =
+    copy(accountId = a.id, rate = tidyRate(a.exchangeRate), method = if (methodTouched) method else suggestedMethod(a.group))
+
 /** Moving the date also moves "planned", until the person has chosen it themselves (as on the web). */
 fun AddForm.withDate(date: String, today: LocalDate = LocalDate.now()): AddForm =
     copy(date = date, planned = if (plannedTouched) planned else isFuture(date, today))

@@ -170,4 +170,20 @@ class AddTransactionTest {
         assertFalse(saved.copy(adjustment = true).canEdit())
         assertFalse(saved.copy(refundOf = AppJson.parseToJsonElement("""{"id":"x"}""")).canEdit())
     }
+
+    @Test fun choosingTheAccountKeepsEverythingElseOnTheForm() {
+        // a transfer in progress: the type, the amount, the other account and the note must survive picking a source account
+        val form = AddForm(type = "transfer", amount = "250", accountId = "a1", toAccountId = "a2", toAmount = "16", note = "rent share", methodTouched = true, method = "cash")
+        val next = form.withAccount(usd)
+        assertEquals("transfer", next.type)
+        assertEquals("250", next.amount); assertEquals("a2", next.toAccountId); assertEquals("16", next.toAmount); assertEquals("rent share", next.note)
+        assertEquals("a2", next.accountId) // the account it was given (usd is a2 in this fixture)
+        assertEquals("15.42", next.rate)
+        assertEquals("cash", next.method) // a method the person chose is not replaced
+    }
+
+    @Test fun anUntouchedMethodFollowsTheNewAccount() {
+        assertEquals("bank_transfer", AddForm(type = "income", method = "other").withAccount(mvr).method)
+        assertEquals("credit_card", AddForm(method = "other").withAccount(Account("c", "Visa", "card", "MVR", "0", "0")).method)
+    }
 }
