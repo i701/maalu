@@ -101,7 +101,7 @@ private sealed interface State {
 /** Home: available to spend, the month's income, spending and what was kept, and where it went. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardScreen(api: Api, month: String) {
+fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
     var attempt by remember { mutableIntStateOf(0) }
     // a pull keeps what is on screen and shows only the pull indicator; a new month or a retry blanks it
     var refreshing by remember { mutableStateOf(false) }
@@ -168,7 +168,7 @@ fun DashboardScreen(api: Api, month: String) {
             ) {
                 // available to spend is for the current budget period only, so it is hidden for other months
                 val isThisMonth = on == LocalDate.now().withDayOfMonth(1)
-                s.data.available?.takeIf { isThisMonth }?.let { item { AvailableCard(it) } }
+                s.data.available?.takeIf { isThisMonth }?.let { item { AvailableCard(it, onOpenPlan) } }
                 item { MonthStrip(s.data.totals, s.data.before) }
                 item { SpendingCard(s.data.categories, s.data.totals.currency) }
                 item { NetWorthCard(s.data.trend, s.data.totals.currency) }
@@ -192,7 +192,7 @@ private fun working(a: AvailableToSpend): String {
 }
 
 @Composable
-private fun AvailableCard(a: AvailableToSpend) {
+private fun AvailableCard(a: AvailableToSpend, onOpenPlan: () -> Unit) {
     val short = a.available.startsWith("-")
     var open by rememberSaveable { mutableStateOf(false) }
     Surface(
@@ -208,8 +208,11 @@ private fun AvailableCard(a: AvailableToSpend) {
             )
             Text("until ${shortDate(a.periodEnd)}", style = MaterialTheme.typography.bodySmall)
             Text(working(a), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
-            TextButton(onClick = { open = !open }, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) {
-                Text(if (open) "Hide the working" else "Show the working")
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                TextButton(onClick = { open = !open }, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) {
+                    Text(if (open) "Hide the working" else "Show the working")
+                }
+                TextButton(onClick = onOpenPlan, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) { Text("Open the month plan") }
             }
             AnimatedVisibility(open) { Working(a) }
         }

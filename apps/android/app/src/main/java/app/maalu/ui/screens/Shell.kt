@@ -76,7 +76,7 @@ private const val BUDGET = 3
 /**
  * The signed-in frame: a sidebar drawer with every destination (a menu button opens it, or swipe from the left edge),
  * a top app bar that holds the screen's name and collapses as the content scrolls, and the bottom bar with the four
- * everyday places. Dashboard, Transactions, Accounts, Budget, Categories, Tags, Vendors, Subscriptions and Settings are real; the other destinations are placeholders.
+ * everyday places. Dashboard, Transactions, Accounts, Budget, Categories, Tags, Vendors, Subscriptions, Month plan and Settings are real; the other destinations are placeholders.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -164,10 +164,11 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
                     "vendors" -> VendorsScreen(api)
                     "subscriptions" -> SubscriptionsScreen(api)
                     "settings" -> SettingsScreen(api)
+                    "plan" -> PlanScreen(api, onOpenAccount = { id, name -> openAccountId = id; openAccountName = name; selected = ACCOUNTS; route = null })
                     else -> ComingSoon(destination)
                 }
                 else when (selected) {
-                    DASHBOARD -> DashboardScreen(api, month)
+                    DASHBOARD -> DashboardScreen(api, month, onOpenPlan = { route = "plan" })
                     TRANSACTIONS -> TransactionsScreen(api)
                     ACCOUNTS -> {
                         val id = openAccountId

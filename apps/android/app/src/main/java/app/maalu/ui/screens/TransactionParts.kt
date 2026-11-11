@@ -161,7 +161,7 @@ fun amountColor(t: Transaction) = when (t.type) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailSheet(t: Transaction, onEdit: (() -> Unit)?, onDelete: () -> Unit, onClose: () -> Unit) {
+fun DetailSheet(t: Transaction, onEdit: (() -> Unit)?, onDelete: () -> Unit, onClose: () -> Unit, onPay: (() -> Unit)? = null) {
     ModalBottomSheet(onDismissRequest = onClose) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(t.title(), style = MaterialTheme.typography.titleMedium)
@@ -190,6 +190,10 @@ fun DetailSheet(t: Transaction, onEdit: (() -> Unit)?, onDelete: () -> Unit, onC
             if (t.tags.isNotEmpty()) DetailFact("Tags", t.tags.joinToString(", ") { it.name })
             DetailFact("Note", t.description)
             if (t.attachmentCount > 0 || t.linkCount > 0) DetailFact("Attached", "${t.attachmentCount} file(s), ${t.linkCount} link(s)")
+            // something planned becomes real here, with the real day, amount and rate
+            if (onPay != null) Button(onClick = onPay, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
+                Text(app.maalu.data.payTitle(t.type))
+            }
             if (onEdit == null) Text(
                 if (t.adjustment) "A balance adjustment can only be deleted." else "A refund is changed on the web.",
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -228,7 +232,8 @@ fun TransactionDetailHost(api: Api, t: Transaction, scope: kotlinx.coroutines.Co
     var phase by remember { mutableStateOf("sheet") }
     val snackbar = LocalSnackbar.current
     when (phase) {
-        "sheet" -> DetailSheet(t, onEdit = if (t.canEdit()) ({ phase = "edit" }) else null, onDelete = { phase = "delete" }, onClose = onClose)
+        "sheet" -> DetailSheet(t, onEdit = if (t.canEdit()) ({ phase = "edit" }) else null, onDelete = { phase = "delete" }, onClose = onClose, onPay = if (t.planned) ({ phase = "pay" }) else null)
+        "pay" -> MarkPaidDialog(api, t, null, onClose = onClose, onPaid = { onChanged(); onClose(); scope.launch { snackbar?.showSnackbar(markedMessage(t)) } })
         "edit" -> AddTransactionScreen(
             api, editing = t, onClose = onClose,
             onSaved = { onChanged(); onClose(); scope.launch { snackbar?.showSnackbar("Changes saved") } },

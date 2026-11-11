@@ -76,6 +76,8 @@ data class AvailableBill(
     val overdue: Boolean = false,
     val estimate: Boolean = false,
     val transfer: Boolean = false,
+    val account: String? = null,
+    val subscription: String? = null,
 )
 
 @Serializable
@@ -95,6 +97,8 @@ data class AvailableToSpend(
     val available: String,
     val balance: String,
     val currency: String,
+    val today: String = "",
+    @SerialName("period_start") val periodStart: String = "",
     val accounts: List<AvailableAccount> = emptyList(),
     val bills: List<AvailableBill> = emptyList(),
     @SerialName("bills_total") val billsTotal: String,
@@ -102,10 +106,12 @@ data class AvailableToSpend(
     @SerialName("card_payments_total") val cardPaymentsTotal: String,
     val reserved: List<AvailableReserve> = emptyList(),
     @SerialName("reserved_total") val reservedTotal: String,
+    /** Planned income: listed on its day, never counted. */
+    val expected: List<AvailableBill> = emptyList(),
+    @SerialName("kept_apart") val keptApart: List<AvailableAccount> = emptyList(),
     @SerialName("period_end") val periodEnd: String,
 )
 
-/** Income and spending for a range, in the base currency (`/transactions/summary`). */
 @Serializable
 data class Totals(val currency: String, val income: String, val expense: String, val refunded: String = "0")
 
