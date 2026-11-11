@@ -1206,12 +1206,13 @@
         ]
       },
       "android": {
-        "status": "partial",
+        "status": "done",
         "evidence": [
           "apps/android/app/src/main/java/app/maalu/ui/screens/BudgetScreen.kt",
-          "apps/android/app/src/main/java/app/maalu/ui/screens/BudgetForms.kt"
-        ],
-        "note": "Monthly limits can be made, edited and deleted. The budget settings (period start day, warning percent) are changed on the web."
+          "apps/android/app/src/main/java/app/maalu/ui/screens/BudgetForms.kt",
+          "apps/android/app/src/main/java/app/maalu/ui/screens/BudgetSettingsUi.kt",
+          "apps/android/app/src/main/java/app/maalu/data/BudgetSettingsLogic.kt"
+        ]
       },
       "ios": {
         "status": "partial",

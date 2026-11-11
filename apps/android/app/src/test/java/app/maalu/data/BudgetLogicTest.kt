@@ -195,3 +195,29 @@ class BudgetMovesLogicTest {
         assertEquals("6 Nov, 11:58", madeAt("2026-11-06T11:58:20Z", java.time.ZoneOffset.UTC)); assertEquals("not a date", madeAt("not a date"))
     }
 }
+
+class BudgetSettingsLogicTest {
+    private val budget = Budget(currency = "MVR", totals = BudgetTotals("0", "0", "0", 0, "ok"))
+
+    @org.junit.Test fun checksTheDayAndPercent() {
+        org.junit.Assert.assertNull(startDayProblem("28"))
+        org.junit.Assert.assertNotNull(startDayProblem("29"))
+        org.junit.Assert.assertNotNull(startDayProblem("0"))
+        org.junit.Assert.assertNotNull(startDayProblem(""))
+        org.junit.Assert.assertNull(warnPercentProblem("100"))
+        org.junit.Assert.assertNotNull(warnPercentProblem("101"))
+        org.junit.Assert.assertNotNull(warnPercentProblem("0"))
+    }
+
+    @org.junit.Test fun sendsOnlyWhatChanged() {
+        org.junit.Assert.assertEquals("""{"period_start_day":25}""", settingsJson(budget, "25", "80").toString())
+        org.junit.Assert.assertEquals("""{"warn_percent":90}""", settingsJson(budget, "1", "90").toString())
+        org.junit.Assert.assertTrue(settingsJson(budget, "1", "80").isEmpty())
+    }
+
+    @org.junit.Test fun readsAsSentence() {
+        org.junit.Assert.assertEquals("Months start on the 1st · Warn at 80%", settingsText(budget))
+        org.junit.Assert.assertEquals("Months start on the 22nd · Warn at 80%", settingsText(budget.copy(periodStartDay = 22)))
+        org.junit.Assert.assertEquals("Months start on the 13th · Warn at 80%", settingsText(budget.copy(periodStartDay = 13)))
+    }
+}

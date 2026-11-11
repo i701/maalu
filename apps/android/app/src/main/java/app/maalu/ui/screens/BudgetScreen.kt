@@ -19,6 +19,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Settings
+import app.maalu.data.settingsText
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.AlertDialog
@@ -119,6 +121,7 @@ fun BudgetScreen(api: Api, on: String) {
     var deleteFixed by remember { mutableStateOf<FixedLine?>(null) }
     var moving by remember { mutableStateOf<BudgetLine?>(null) }
     var history by remember { mutableStateOf<BudgetLine?>(null) }
+    var settings by remember { mutableStateOf(false) }
     var deleteGoal by remember { mutableStateOf<Goal?>(null) }
     val snackbar = LocalSnackbar.current
     val scope = rememberCoroutineScope()
@@ -147,6 +150,7 @@ fun BudgetScreen(api: Api, on: String) {
             PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; attempt++ }, modifier = Modifier.fillMaxSize()) {
                 LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 32.dp)) {
                     if (b.lines.isNotEmpty()) item { SummaryCard(b) }
+                    item { TextButton(onClick = { settings = true }) { Icon(Icons.Outlined.Settings, null, Modifier.size(18.dp)); Text(settingsText(b), Modifier.padding(start = 6.dp)) } }
                     item { SectionHeader("Monthly limits", "Add limit") { limitForm = LimitFormRequest(null, null) } }
                     if (b.lines.isEmpty()) item { Text("No limits yet. A limit is an amount you allow yourself to spend on some categories each month.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)) }
                     items(b.lines.size, key = { "l-" + b.lines[it].id }) { i ->
@@ -198,6 +202,7 @@ fun BudgetScreen(api: Api, on: String) {
     moving?.let { l ->
         if (budgetNow != null) MoveMoneyDialog(api, budgetNow, l, onClose = { moving = null }) { msg -> moving = null; attempt++; scope.launch { snackbar?.showSnackbar(msg) } }
     }
+    if (settings && budgetNow != null) BudgetSettingsDialog(api, budgetNow, { settings = false }) { settings = false; attempt++; scope.launch { snackbar?.showSnackbar("Settings saved") } }
     history?.let { l -> MoveHistorySheet(api, l, currency, onClose = { history = null }) }
     limitForm?.let { lf ->
         if (budgetNow != null) LineFormScreen(api, currency, budgetNow, lf.start, lf.editingId, onClose = { limitForm = null }) {

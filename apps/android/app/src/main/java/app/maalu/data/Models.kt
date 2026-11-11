@@ -220,6 +220,8 @@ data class Budget(
     val attention: Int = 0,
     /** Money moved between monthly limits in this period (undone moves are not here). */
     val moves: List<BudgetMove> = emptyList(),
+    @SerialName("period_start_day") val periodStartDay: Int = 1,
+    @SerialName("warn_percent") val warnPercent: Int = 80,
 )
 
 /** Money moved from one monthly limit to another for one period, or added to one (no [fromLine]: a top-up). */

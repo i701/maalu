@@ -9,15 +9,14 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 67 | 55 | 20 |
-| 🟡 partial | 0 | 3 | 9 |
+| ✅ done | 67 | 56 | 20 |
+| 🟡 partial | 0 | 2 | 9 |
 | ❌ missing | 0 | 5 | 34 |
 | ➖ n/a | 1 | 5 | 5 |
 
-## Still to build on Android (8)
+## Still to build on Android (7)
 
 - 🟡 **Refunds** (Transactions). Refund rows are tagged and shown; a refund cannot be made or linked from the app.
-- 🟡 **Budget limits** (Budget, goals and planning). Monthly limits can be made, edited and deleted. The budget settings (period start day, warning percent) are changed on the web.
 - 🟡 **Email digest** (Notifications). The switch and the email status are in Settings; sending a test email is not.
 - ❌ **Export to Excel** (Transactions).
 - ❌ **Sort every category into need or want** (Categories, tags and vendors). Each category's kind can be set one by one in its form.
@@ -157,7 +156,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | Feature | Web | Android | iOS |
 |---|:---:|:---:|:---:|
-| **Budget limits**<br>Per-period limits for categories with a warning percent, rollover and the summary by kind. | ✅ done | 🟡 partial | 🟡 partial |
+| **Budget limits**<br>Per-period limits for categories with a warning percent, rollover and the summary by kind. | ✅ done | ✅ done | 🟡 partial |
 | **Limits for set dates**<br>One total for a stretch of dates, a monthly limit that runs between two dates, and repeating a finished one. | ✅ done | ✅ done | 🟡 partial |
 | **Move money between limits**<br>Move what is left in one limit to another for one period, undo it, and see the history. | ✅ done | ✅ done | ✅ done |
 | **Savings goals**<br>A target that follows a savings account or a log of amounts set aside by hand. | ✅ done | ✅ done | ✅ done |
@@ -165,7 +164,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Salary split rules**<br>Rules that divide a salary between accounts and goals, each one manual or automatic. | ✅ done | ✅ done | ❌ missing |
 | **Split a salary and the Pending screen**<br>Review, edit, approve or dismiss waiting salary splits; undo one. | ✅ done | ✅ done | ❌ missing |
 
-- **Budget limits** (Android): Monthly limits can be made, edited and deleted. The budget settings (period start day, warning percent) are changed on the web.
 - **Budget limits** (iOS): Monthly limits: see, make, change, delete, move money between them with undo and history. No budget settings (period start day, warning level), no rollover choice per period, and no limits for set dates.
 - **Limits for set dates** (iOS): Read only: limits for set dates are listed under the period their days touch, with days left. Not made, changed, repeated or deleted.
 
