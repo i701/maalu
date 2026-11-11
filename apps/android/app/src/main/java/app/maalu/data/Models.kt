@@ -67,6 +67,7 @@ data class UserMe(
     @SerialName("notify_budget") val notifyBudget: Boolean = true,
     @SerialName("notify_goals") val notifyGoals: Boolean = true,
     @SerialName("notify_email") val notifyEmail: Boolean = false,
+    @SerialName("notify_login") val notifyLogin: Boolean = true,
 )
 
 /** One sign-in of the person's, for "Where you are signed in". */

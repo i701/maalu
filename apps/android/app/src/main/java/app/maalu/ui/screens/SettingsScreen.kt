@@ -142,7 +142,10 @@ fun SettingsScreen(api: Api) {
                         SettingSwitch("Budget", "A spending limit that is close or over.", user.notifyBudget) { on -> save({ it.copy(notifyBudget = on) }, switchJson("notify_budget", on)) }
                         SettingSwitch("Goals", "A savings goal you have reached.", user.notifyGoals) { on -> save({ it.copy(notifyGoals = on) }, switchJson("notify_goals", on)) }
                         val mail = emailOn
-                        if (mail != null && mail.configured) SettingSwitch("Email me", "A digest to ${user.email} when there is something new.", user.notifyEmail) { on -> save({ it.copy(notifyEmail = on) }, switchJson("notify_email", on)) }
+                        if (mail != null && mail.configured) {
+                            SettingSwitch("Email me", "A digest to ${user.email} when there is something new.", user.notifyEmail) { on -> save({ it.copy(notifyEmail = on) }, switchJson("notify_email", on)) }
+                            SettingSwitch("Sign-in alerts", "An email with the device, address and time whenever someone signs in.", user.notifyLogin) { on -> save({ it.copy(notifyLogin = on) }, switchJson("notify_login", on)) }
+                        }
                         else if (mail != null) Text("Email is not set up on this server.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
