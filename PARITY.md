@@ -9,16 +9,15 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 67 | 53 | 0 |
-| 🟡 partial | 0 | 4 | 0 |
+| ✅ done | 67 | 54 | 0 |
+| 🟡 partial | 0 | 3 | 0 |
 | ❌ missing | 0 | 6 | 63 |
 | ➖ n/a | 1 | 5 | 5 |
 
-## Still to build on Android (10)
+## Still to build on Android (9)
 
 - 🟡 **Refunds** (Transactions). Refund rows are tagged and shown; a refund cannot be made or linked from the app.
 - 🟡 **Budget limits** (Budget, goals and planning). Monthly limits can be made, edited and deleted. The budget settings (period start day, warning percent) are changed on the web.
-- 🟡 **Limits for set dates** (Budget, goals and planning). Limits for set dates are listed on the Budget page (dates, days left, spent, what is left) and on the dashboard. They cannot be made, edited, or repeated for the next stretch, and monthly limits that run between two dates are not shown as such.
 - 🟡 **Email digest** (Notifications). The switch and the email status are in Settings; sending a test email is not.
 - ❌ **Export to Excel** (Transactions).
 - ❌ **Sort every category into need or want** (Categories, tags and vendors). Each category's kind can be set one by one in its form.
@@ -173,7 +172,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | Feature | Web | Android | iOS |
 |---|:---:|:---:|:---:|
 | **Budget limits**<br>Per-period limits for categories with a warning percent, rollover and the summary by kind. | ✅ done | 🟡 partial | ❌ missing |
-| **Limits for set dates**<br>One total for a stretch of dates, a monthly limit that runs between two dates, and repeating a finished one. | ✅ done | 🟡 partial | ❌ missing |
+| **Limits for set dates**<br>One total for a stretch of dates, a monthly limit that runs between two dates, and repeating a finished one. | ✅ done | ✅ done | ❌ missing |
 | **Move money between limits**<br>Move what is left in one limit to another for one period, undo it, and see the history. | ✅ done | ❌ missing | ❌ missing |
 | **Savings goals**<br>A target that follows a savings account or a log of amounts set aside by hand. | ✅ done | ✅ done | ❌ missing |
 | **Month plan**<br>What you have, the bills still to pay by day and where the money runs out. | ✅ done | ✅ done | ❌ missing |
@@ -181,7 +180,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Split a salary and the Pending screen**<br>Review, edit, approve or dismiss waiting salary splits; undo one. | ✅ done | ✅ done | ❌ missing |
 
 - **Budget limits** (Android): Monthly limits can be made, edited and deleted. The budget settings (period start day, warning percent) are changed on the web.
-- **Limits for set dates** (Android): Limits for set dates are listed on the Budget page (dates, days left, spent, what is left) and on the dashboard. They cannot be made, edited, or repeated for the next stretch, and monthly limits that run between two dates are not shown as such.
 
 ## Dashboard and reports
 

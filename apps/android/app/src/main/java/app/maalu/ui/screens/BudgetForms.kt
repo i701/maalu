@@ -68,6 +68,7 @@ import app.maalu.ui.components.PickerField
 import app.maalu.ui.components.Section
 import app.maalu.ui.components.SegmentedPills
 import app.maalu.ui.components.TintChip
+import app.maalu.data.takenCategories
 import app.maalu.ui.theme.Accents
 import app.maalu.ui.theme.idTint
 import kotlinx.coroutines.launch
@@ -75,21 +76,28 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 
-/** Add or edit a monthly limit: a name, an amount per period, the categories it covers and whether unspent money carries over. */
+/**
+ * Add or edit a limit: a name, an amount, the categories it covers, and whether unspent money carries over. It can be for set dates (one total for a
+ * stretch, or a monthly limit that only runs between two dates). [start] is the form it starts from (an edit, or a finished limit being repeated);
+ * [editingId] is set when an existing limit is being changed.
+ */
 @Composable
-fun LineFormScreen(api: Api, currency: String, editing: BudgetLine?, onClose: () -> Unit, onSaved: () -> Unit) {
-    val before = remember(editing) { editing?.let(::lineFormFrom) }
-    var form by remember { mutableStateOf(before ?: LineForm()) }
+fun LineFormScreen(api: Api, currency: String, budget: Budget, start: LineForm?, editingId: String?, onClose: () -> Unit, onSaved: () -> Unit) {
+    val before = remember(start, editingId) { if (editingId != null) start else null }
+    var form by remember { mutableStateOf(start ?: LineForm()) }
     var categories by remember { mutableStateOf<List<CategoryItem>?>(null) }
     var errorField by remember { mutableStateOf<LineField?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
+    var pickingDate by remember { mutableStateOf<Int?>(null) }   // 1 = first day, 2 = last day
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     LaunchedEffect(Unit) { categories = (api.get<List<CategoryItem>>("categories") as? ApiResult.Ok)?.data.orEmpty() }
+    val taken = takenCategories(budget, form, editingId)
+    val title = when { editingId != null -> "Edit limit"; start != null -> "Repeat limit"; else -> "New limit" }
 
     FormDialog(
-        title = if (editing == null) "New limit" else "Edit limit", saveLabel = if (editing == null) "Add limit" else "Save changes",
+        title = title, saveLabel = if (editingId != null) "Save changes" else "Add limit",
         busy = busy, error = error, snackbar = snackbar, onClose = onClose,
         onSave = {
             val problem = form.problem()
@@ -98,11 +106,11 @@ fun LineFormScreen(api: Api, currency: String, editing: BudgetLine?, onClose: ()
                 scope.launch { snackbar.currentSnackbarData?.dismiss(); snackbar.showSnackbar(problem.message) }
                 return@FormDialog
             }
-            val patch = if (editing != null && before != null) form.patchJson(before) else null
+            val patch = if (editingId != null && before != null) form.patchJson(before) else null
             if (patch != null && patch.isEmpty()) { onClose(); return@FormDialog }
             busy = true; error = null; errorField = null
             scope.launch {
-                val r = if (editing != null && patch != null) api.patchJson<Budget>("budget/lines/${editing.id}", patch.toString())
+                val r = if (editingId != null && patch != null) api.patchJson<Budget>("budget/lines/$editingId", patch.toString())
                 else api.postJson<Budget>("budget/lines", form.toJson().toString())
                 when (r) {
                     is ApiResult.Ok -> onSaved()
@@ -114,11 +122,36 @@ fun LineFormScreen(api: Api, currency: String, editing: BudgetLine?, onClose: ()
         Section("Name", Icons.Outlined.Savings, Accents.getValue("blue")) {
             CompactField(form.name, { errorField = null; form = form.copy(name = it.take(100)) }, "For example Food", enabled = !busy, isError = errorField == LineField.Name)
         }
-        Section("Amount each period", Icons.Outlined.Numbers, Accents.getValue("orange")) {
+        Section(if (form.dated && !form.repeat) "Limit for these dates" else "Amount each period", Icons.Outlined.Numbers, Accents.getValue("orange")) {
             CompactField(
                 form.amount, { errorField = null; form = form.copy(amount = cleanAmount(it)) }, "0.00",
                 keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !busy, isError = errorField == LineField.Amount, suffix = currency,
             )
+        }
+        Section("Dates", Icons.Outlined.CalendarMonth, Accents.getValue("violet")) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(32.dp)) {
+                Column(Modifier.weight(1f)) {
+                    Text("Only for certain dates", style = MaterialTheme.typography.bodyMedium)
+                    Text("For a trip, a project or a few months, instead of every month.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Switch(checked = form.dated, onCheckedChange = { form = form.copy(dated = it); errorField = null }, enabled = !busy)
+            }
+            if (form.dated) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TintChip(Accents.getValue("blue"), form.start.isNotBlank(), { pickingDate = 1 }, { Text(if (form.start.isBlank()) "First day" else "From ${shortDate(form.start)}") })
+                    TintChip(Accents.getValue("blue"), form.end.isNotBlank(), { pickingDate = 2 }, { Text(if (form.end.isBlank()) "Last day" else "Until ${shortDate(form.end)}") })
+                }
+                Text("How it counts", style = MaterialTheme.typography.labelLarge)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TintChip(Accents.getValue("green"), !form.repeat, { form = form.copy(repeat = false) }, { Text("One total for the whole stretch") })
+                    TintChip(Accents.getValue("green"), form.repeat, { form = form.copy(repeat = true) }, { Text("A limit for every month between") })
+                }
+                Text(
+                    if (form.repeat) "Whole periods count, so the dates snap to them. The amount is for each period." else "The last day is included. The amount is one total, counted once over the stretch.",
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                if (errorField == LineField.Dates) Text("Choose the first and last day.", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
         }
         Section("Categories it covers", Icons.Outlined.Category, Accents.getValue("amber")) {
             val list = categories
@@ -127,20 +160,48 @@ fun LineFormScreen(api: Api, currency: String, editing: BudgetLine?, onClose: ()
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     list.forEach { c ->
                         val on = c.id in form.categoryIds
-                        TintChip(Accents[c.color] ?: idTint(c.id), on, { errorField = null; form = form.copy(categoryIds = if (on) form.categoryIds - c.id else form.categoryIds + c.id) }, { Text(c.name) })
+                        val by = taken[c.id]
+                        TintChip(
+                            Accents[c.color] ?: idTint(c.id), on, { errorField = null; form = form.copy(categoryIds = if (on) form.categoryIds - c.id else form.categoryIds + c.id) },
+                            { Text(if (by != null && !on) "${c.name} · in $by" else c.name) }, enabled = by == null || on,
+                        )
                     }
                 }
                 if (errorField == LineField.Categories) Text("Choose at least one.", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
-                Text("A category can be in one limit at a time; a parent covers its sub-categories.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    if (form.dated && !form.repeat) "A category can be in one limit for any stretch of dates; a parent covers its sub-categories." else "A category can be in one limit at a time; a parent covers its sub-categories.",
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(32.dp)) {
+        // one total for a stretch has nothing to carry into
+        if (!(form.dated && !form.repeat)) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(32.dp)) {
             Column(Modifier.weight(1f)) {
                 Text("Carry over what is left", style = MaterialTheme.typography.bodyMedium)
                 Text("Unspent money adds to next period's limit.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Switch(checked = form.rollover, onCheckedChange = { form = form.copy(rollover = it) }, enabled = !busy)
         }
+    }
+
+    pickingDate?.let { which ->
+        val current = (if (which == 1) form.start else form.end).takeIf { it.isNotBlank() } ?: form.start.takeIf { it.isNotBlank() } ?: "${LocalDate.now()}"
+        val state = rememberDatePickerState(initialSelectedDateMillis = LocalDate.parse(current).atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli())
+        DatePickerDialog(
+            onDismissRequest = { pickingDate = null },
+            confirmButton = {
+                TextButton(onClick = {
+                    state.selectedDateMillis?.let {
+                        val d = Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate().toString()
+                        // choosing a first day after the last one moves the last day with it
+                        form = if (which == 1) form.copy(start = d, end = if (form.end.isNotBlank() && form.end < d) d else form.end) else form.copy(end = d)
+                        errorField = null
+                    }
+                    pickingDate = null
+                }) { Text("OK") }
+            },
+            dismissButton = { TextButton(onClick = { pickingDate = null }) { Text("Cancel") } },
+        ) { DatePicker(state) }
     }
 }
 

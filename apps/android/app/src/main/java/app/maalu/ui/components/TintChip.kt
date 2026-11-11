@@ -19,10 +19,11 @@ import androidx.compose.ui.graphics.Color
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TintChip(tint: Color, selected: Boolean, onClick: () -> Unit, label: @Composable () -> Unit, modifier: Modifier = Modifier) {
+fun TintChip(tint: Color, selected: Boolean, onClick: () -> Unit, label: @Composable () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
     FilterChip(
         selected = selected,
         onClick = onClick,
+        enabled = enabled,
         label = label,
         modifier = modifier,
         leadingIcon = if (selected) ({ Icon(Icons.Outlined.Check, null, Modifier.size(FilterChipDefaults.IconSize)) }) else null,

@@ -101,4 +101,58 @@ class BudgetLogicTest {
         assertEquals(listOf("a"), runningFixed(b).map { it.id })
         assertEquals("until 20 Nov", untilText(fixed("a", "active")))
     }
+
+    private fun fx(id: String, start: String, end: String, vararg cats: String) = FixedLine(id, "Limit $id", "0", "100", "100", 0, "ok", start, end, "active", categories = cats.map { IdName(it, "Cat $it") })
+    private fun budgetOf(lines: List<BudgetLine> = emptyList(), fixed: List<FixedLine> = emptyList()) =
+        Budget("MVR", BudgetPeriod("2026-11-01", "2026-11-30", true), BudgetTotals("0", "0", "0", 0, "ok"), lines, fixed)
+
+    @Test fun theNextStretchIsAsLongAndStartsTheDayAfter() {
+        assertEquals("2026-11-21" to "2026-11-30", nextStretch("2026-11-11", "2026-11-20"))
+        assertEquals("2027-01-01" to "2027-01-01", nextStretch("2026-12-31", "2026-12-31"))
+        val f = fx("a", "2026-11-09", "2026-11-20", "c1")
+        val r = repeatFormFrom(f)
+        assertEquals("2026-11-21", r.start); assertEquals("2026-12-02", r.end); assertEquals(listOf("c1"), r.categoryIds); assertEquals(false, r.repeat)
+    }
+
+    @Test fun datesProblemsAndTheRequestBody() {
+        val base = LineForm("Trip", "500", listOf("c1"), rollover = true, dated = true, start = "2026-11-09", end = "2026-11-20")
+        assertNull(base.problem())
+        assertEquals(LineField.Dates, base.copy(end = "").problem()!!.field); assertEquals(LineField.Dates, base.copy(end = "2026-11-01").problem()!!.field)
+        val total = base.toJson()
+        assertEquals("2026-11-09", total["start_date"]!!.jsonPrimitive.content); assertEquals("false", total["repeat"]!!.jsonPrimitive.content)
+        assertTrue(!total.containsKey("rollover"))                                   // one total has nothing to roll into
+        assertTrue(base.copy(repeat = true).toJson().containsKey("rollover"))        // a monthly one between dates does
+        assertTrue(!LineForm("A", "5", listOf("c")).toJson().containsKey("start_date"))
+    }
+
+    @Test fun editingDatesSendsThemTogetherOrClearsThem() {
+        val monthly = LineForm("Food", "500", listOf("c1"))
+        val dated = monthly.copy(dated = true, start = "2026-11-01", end = "2026-11-30")
+        assertTrue(dated.patchJson(monthly).containsKey("start_date"))               // monthly -> for set dates
+        assertEquals(0, dated.patchJson(dated).size)                                  // nothing changed, nothing sent
+        assertEquals("2026-12-31", dated.copy(end = "2026-12-31").patchJson(dated)["end_date"]!!.jsonPrimitive.content)
+        assertEquals(kotlinx.serialization.json.JsonNull, monthly.patchJson(dated)["end_date"])   // dates turned off: every period again
+    }
+
+    @Test fun categoriesTakenByOtherLimits() {
+        val b = budgetOf(
+            lines = listOf(BudgetLine("l1", "Eating out", "0", "600", "600", 0, "ok", categories = listOf(IdName("dining", "Dining")))),
+            fixed = listOf(fx("f1", "2026-11-09", "2026-11-20", "groceries")),
+        )
+        // a monthly limit conflicts with the monthly ones only
+        assertEquals(setOf("dining"), takenCategories(b, LineForm(), null).keys)
+        // a limit for set dates conflicts with the ones whose dates overlap, not with monthly ones
+        assertEquals(setOf("groceries"), takenCategories(b, LineForm(dated = true, start = "2026-11-15", end = "2026-11-25"), null).keys)
+        assertEquals(emptySet<String>(), takenCategories(b, LineForm(dated = true, start = "2026-12-01", end = "2026-12-05"), null).keys)
+        // editing a limit does not conflict with itself; a monthly one between dates is left to the server
+        assertEquals(emptySet<String>(), takenCategories(b, LineForm(dated = true, start = "2026-11-15", end = "2026-11-25"), "f1").keys)
+        assertEquals(emptySet<String>(), takenCategories(b, LineForm(dated = true, repeat = true, start = "2026-11-01", end = "2027-01-31"), null).keys)
+    }
+
+    @Test fun onlyLimitsTouchingThePeriodAreListed() {
+        val b = budgetOf(fixed = listOf(fx("nov", "2026-11-09", "2026-11-20"), fx("dec", "2026-12-05", "2026-12-10"), fx("span", "2026-10-25", "2026-11-02")))
+        assertEquals(listOf("nov", "span"), fixedInPeriod(b).map { it.id })
+        assertEquals("Runs 1 Nov – 31 Jan", runsText(BudgetLine("l", "L", "0", "1", "1", 0, "ok", runsFrom = "2026-11-01", runsUntil = "2027-01-31")))
+        assertNull(runsText(BudgetLine("l", "L", "0", "1", "1", 0, "ok")))
+    }
 }

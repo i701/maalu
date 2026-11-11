@@ -1170,11 +1170,12 @@
         ]
       },
       "android": {
-        "status": "partial",
+        "status": "done",
         "evidence": [
-          "apps/android/app/src/main/java/app/maalu/ui/screens/BudgetScreen.kt"
-        ],
-        "note": "Limits for set dates are listed on the Budget page (dates, days left, spent, what is left) and on the dashboard. They cannot be made, edited, or repeated for the next stretch, and monthly limits that run between two dates are not shown as such."
+          "apps/android/app/src/main/java/app/maalu/ui/screens/BudgetForms.kt",
+          "apps/android/app/src/main/java/app/maalu/ui/screens/BudgetScreen.kt",
+          "apps/android/app/src/main/java/app/maalu/data/BudgetLogic.kt"
+        ]
       },
       "ios": {
         "status": "missing"

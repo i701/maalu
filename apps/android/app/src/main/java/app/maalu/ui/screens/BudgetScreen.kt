@@ -54,6 +54,13 @@ import app.maalu.data.ApiResult
 import app.maalu.data.Budget
 import app.maalu.data.BudgetLine
 import app.maalu.data.FixedLine
+import androidx.compose.material3.OutlinedButton
+import app.maalu.data.runsText
+import app.maalu.data.repeatFormFrom
+import app.maalu.data.lineFormFrom
+import app.maalu.data.fixedInPeriod
+import app.maalu.data.fixedFormFrom
+import app.maalu.data.LineForm
 import app.maalu.data.Goal
 import app.maalu.data.allowed
 import app.maalu.data.budgetByKind
@@ -71,6 +78,9 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+
+/** What the limit form is opened with: nothing (a new limit), an existing limit to edit, or a finished one to repeat. */
+private class LimitFormRequest(val start: LineForm?, val editingId: String?)
 
 private class BudgetData(val budget: Budget, val goals: List<Goal>)
 
@@ -98,12 +108,13 @@ fun BudgetScreen(api: Api, on: String) {
     var line by remember { mutableStateOf<BudgetLine?>(null) }
     var fixed by remember { mutableStateOf<FixedLine?>(null) }
     var goal by remember { mutableStateOf<Goal?>(null) }
-    var editingLine by remember { mutableStateOf<BudgetLine?>(null) }
-    var addingLine by remember { mutableStateOf(false) }
+    // the limit form: new (nothing to start from), an edit, or a finished limit for set dates being repeated
+    var limitForm by remember { mutableStateOf<LimitFormRequest?>(null) }
     var editingGoal by remember { mutableStateOf<Goal?>(null) }
     var addingGoal by remember { mutableStateOf(false) }
     var money by remember { mutableStateOf<Goal?>(null) }
     var deleteLine by remember { mutableStateOf<BudgetLine?>(null) }
+    var deleteFixed by remember { mutableStateOf<FixedLine?>(null) }
     var deleteGoal by remember { mutableStateOf<Goal?>(null) }
     val snackbar = LocalSnackbar.current
     val scope = rememberCoroutineScope()
@@ -132,13 +143,14 @@ fun BudgetScreen(api: Api, on: String) {
             PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; attempt++ }, modifier = Modifier.fillMaxSize()) {
                 LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 32.dp)) {
                     if (b.lines.isNotEmpty()) item { SummaryCard(b) }
-                    item { SectionHeader("Monthly limits", "Add limit") { addingLine = true } }
+                    item { SectionHeader("Monthly limits", "Add limit") { limitForm = LimitFormRequest(null, null) } }
                     if (b.lines.isEmpty()) item { Text("No limits yet. A limit is an amount you allow yourself to spend on some categories each month.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)) }
                     items(b.lines.size, key = { "l-" + b.lines[it].id }) { i ->
                         val l = b.lines[i]
                         MorphTile({ line = l }, first = i == 0, last = i == b.lines.lastIndex, modifier = Modifier.padding(bottom = 2.dp)) { LineRow(l, b.currency) }
                     }
-                    val running = b.fixedLines.filter { it.state != "ended" }
+                    // limits for set dates whose dates touch this period (a November limit is not listed under December)
+                    val running = fixedInPeriod(b)
                     if (running.isNotEmpty()) {
                         item { SectionHeader("For set dates", null) {} }
                         items(running.size, key = { "f-" + running[it].id }) { i ->
@@ -160,14 +172,27 @@ fun BudgetScreen(api: Api, on: String) {
     val b = (state as? BudgetLoad.Loaded)?.data?.budget
     val currency = b?.currency ?: ""
     line?.let { l ->
-        LineSheet(l, currency, onEdit = { editingLine = l; line = null }, onDelete = { deleteLine = l; line = null }, onClose = { line = null })
+        LineSheet(l, currency, onEdit = { limitForm = LimitFormRequest(lineFormFrom(l), l.id); line = null }, onDelete = { deleteLine = l; line = null }, onClose = { line = null })
     }
-    fixed?.let { f -> FixedSheet(f, currency) { fixed = null } }
+    fixed?.let { f ->
+        FixedSheet(
+            f, currency,
+            onEdit = { limitForm = LimitFormRequest(fixedFormFrom(f), f.id); fixed = null },
+            onRepeat = { limitForm = LimitFormRequest(repeatFormFrom(f), null); fixed = null },
+            onDelete = { deleteFixed = f; fixed = null },
+            onClose = { fixed = null },
+        )
+    }
     goal?.let { g ->
         GoalSheet(g, onMoney = { money = g; goal = null }, onEdit = { editingGoal = g; goal = null }, onDelete = { deleteGoal = g; goal = null }, onClose = { goal = null })
     }
-    if (addingLine) LineFormScreen(api, currency, null, { addingLine = false }) { addingLine = false; attempt++; scope.launch { snackbar?.showSnackbar("Limit added") } }
-    editingLine?.let { l -> LineFormScreen(api, currency, l, { editingLine = null }) { editingLine = null; attempt++; scope.launch { snackbar?.showSnackbar("Changes saved") } } }
+    val budgetNow = (state as? BudgetLoad.Loaded)?.data?.budget
+    limitForm?.let { lf ->
+        if (budgetNow != null) LineFormScreen(api, currency, budgetNow, lf.start, lf.editingId, onClose = { limitForm = null }) {
+            limitForm = null; attempt++
+            scope.launch { snackbar?.showSnackbar(if (lf.editingId != null) "Changes saved" else "Limit added") }
+        }
+    }
     if (addingGoal) GoalFormScreen(api, currency, null, { addingGoal = false }) { addingGoal = false; attempt++; scope.launch { snackbar?.showSnackbar("Goal added") } }
     editingGoal?.let { g -> GoalFormScreen(api, currency, g, { editingGoal = null }) { editingGoal = null; attempt++; scope.launch { snackbar?.showSnackbar("Changes saved") } } }
     money?.let { g -> GoalMoneyDialog(api, g, { money = null }) { money = null; attempt++; scope.launch { snackbar?.showSnackbar("Saved") } } }
@@ -176,6 +201,17 @@ fun BudgetScreen(api: Api, on: String) {
             deleteLine = null
             scope.launch {
                 when (val r = api.delete("budget/lines/${l.id}")) {
+                    is ApiResult.Ok -> { attempt++; snackbar?.showSnackbar("Limit deleted") }
+                    is ApiResult.Failed -> snackbar?.showSnackbar(r.message.lines().first())
+                }
+            }
+        }
+    }
+    deleteFixed?.let { f ->
+        ConfirmDelete("Delete the ${f.name} limit?", "Your transactions are not affected.", { deleteFixed = null }) {
+            deleteFixed = null
+            scope.launch {
+                when (val r = api.delete("budget/lines/${f.id}")) {
                     is ApiResult.Ok -> { attempt++; snackbar?.showSnackbar("Limit deleted") }
                     is ApiResult.Failed -> snackbar?.showSnackbar(r.message.lines().first())
                 }
@@ -270,6 +306,7 @@ private fun LineRow(l: BudgetLine, currency: String) {
             Text(l.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(statusLabel(l.status), style = MaterialTheme.typography.labelSmall, color = color, fontWeight = FontWeight.SemiBold)
         }
+        runsText(l)?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         Bar(l.percent, color)
         Row(verticalAlignment = Alignment.CenterVertically) {
             Row(Modifier.weight(1f)) {
@@ -363,6 +400,7 @@ private fun LineSheet(l: BudgetLine, currency: String, onEdit: () -> Unit, onDel
             if (l.movedIn.toBigDecimalOrNull()?.signum() != 0) Fact("Moved in", formatMoney(l.movedIn, currency))
             if (l.movedOut.toBigDecimalOrNull()?.signum() != 0) Fact("Moved out", formatMoney(l.movedOut, currency))
             Fact("Categories", l.categories.joinToString(", ") { it.name })
+            Fact("Runs", runsText(l)?.removePrefix("Runs "))
             Fact("Carries over", if (l.rollover) "Yes" else null)
             Fact("Kind", when (l.kind) { "need" -> "Need"; "want" -> "Want"; else -> null })
             Text("Moving money between limits is on the web for now.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -372,14 +410,18 @@ private fun LineSheet(l: BudgetLine, currency: String, onEdit: () -> Unit, onDel
 }
 
 @Composable
-private fun FixedSheet(f: FixedLine, currency: String, onClose: () -> Unit) {
+private fun FixedSheet(f: FixedLine, currency: String, onEdit: () -> Unit, onRepeat: () -> Unit, onDelete: () -> Unit, onClose: () -> Unit) {
     ModalBottomSheet(onDismissRequest = onClose, containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(f.name, style = MaterialTheme.typography.titleMedium)
             FixedRow(f, currency)
             Fact("Left", leftText(f.available, currency))
             Fact("Categories", f.categories.joinToString(", ") { it.name })
-            Text("A limit for set dates is one total for the whole stretch. Change it on the web.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("A limit for set dates is one total for the whole stretch.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            SheetActions(onEdit, onDelete) {
+                // for the stretch that follows: same name, categories and amount, starting the day after and as long
+                OutlinedButton(onClick = onRepeat, modifier = Modifier.fillMaxWidth()) { Text("Repeat for the next stretch") }
+            }
         }
     }
 }
