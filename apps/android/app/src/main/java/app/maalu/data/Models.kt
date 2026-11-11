@@ -146,6 +146,7 @@ data class CategoryTotal(
     val type: String,
     val count: Int = 0,
     val kind: String? = null,
+    val parent: String? = null,
 )
 
 /** `/transactions/categories` answers an object, not a bare list. */

@@ -185,6 +185,9 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
                     "pending" -> PendingScreen(api, onChanged = { bellTick++ })
                     "trash" -> TrashScreen(api)
                     "groups" -> GroupsScreen(api)
+                    "net-worth" -> NetWorthScreen(api)
+                    "compare" -> CompareScreen(api)
+                    "trends" -> TrendsScreen(api)
                     "templates" -> TemplatesScreen(api)
                     "notifications" -> NotificationsScreen(
                         api, onChanged = { bellTick++ },
