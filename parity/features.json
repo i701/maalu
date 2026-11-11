@@ -1,0 +1,1805 @@
+{
+  "version": 1,
+  "platforms": [
+    "web",
+    "android",
+    "ios"
+  ],
+  "statuses": {
+    "done": "Built and in use",
+    "partial": "Built, with something missing (see the note)",
+    "missing": "Not built",
+    "na": "Deliberately not on this platform (see the note)",
+    "planned": "Decided and next up"
+  },
+  "areas": [
+    {
+      "id": "security",
+      "name": "Sign in and security"
+    },
+    {
+      "id": "accounts",
+      "name": "Accounts and cards"
+    },
+    {
+      "id": "transactions",
+      "name": "Transactions"
+    },
+    {
+      "id": "organise",
+      "name": "Categories, tags and vendors"
+    },
+    {
+      "id": "bills",
+      "name": "Bills and subscriptions"
+    },
+    {
+      "id": "planning",
+      "name": "Budget, goals and planning"
+    },
+    {
+      "id": "reports",
+      "name": "Dashboard and reports"
+    },
+    {
+      "id": "notifications",
+      "name": "Notifications"
+    },
+    {
+      "id": "settings",
+      "name": "Settings and the rest"
+    }
+  ],
+  "features": [
+    {
+      "id": "sign-in",
+      "area": "security",
+      "name": "Sign in and sign out",
+      "summary": "Email and password sign-in, signing out, the first-run server screen on the app.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/routes/login.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/LoginScreen.kt",
+          "apps/android/app/src/main/java/app/maalu/ui/screens/ServerScreen.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "routes": [
+        "/login",
+        "/"
+      ],
+      "api": [
+        "/api/v1/auth/login",
+        "/api/v1/auth/logout",
+        "/api/v1/whoami"
+      ]
+    },
+    {
+      "id": "register",
+      "area": "security",
+      "name": "Create the first account",
+      "summary": "Sign-up on a new install (open only while no account exists, unless REGISTRATION=open).",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/routes/register.tsx"
+        ]
+      },
+      "android": {
+        "status": "na",
+        "note": "The app has no Create account: an account is made on the web or with just seed."
+      },
+      "ios": {
+        "status": "na",
+        "note": "Same as Android: the app has no Create account."
+      },
+      "routes": [
+        "/register"
+      ],
+      "api": [
+        "/api/v1/auth/register",
+        "/api/v1/auth/registration"
+      ]
+    },
+    {
+      "id": "two-factor-sign-in",
+      "area": "security",
+      "name": "Two-factor sign-in",
+      "summary": "The second step at sign-in: an authenticator code or a recovery code.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/TwoFactorStep.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/LoginScreen.kt",
+          "apps/android/app/src/main/java/app/maalu/ui/screens/TwoFactorFlows.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "api": [
+        "/api/v1/auth/login/2fa"
+      ]
+    },
+    {
+      "id": "two-factor-settings",
+      "area": "security",
+      "name": "Set up and manage two-factor",
+      "summary": "Turn it on with a QR code, new recovery codes, turn it off.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/TwoFactorSettings.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/TwoFactorFlows.kt",
+          "apps/android/app/src/main/java/app/maalu/data/TwoFactorLogic.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "api": [
+        "/api/v1/auth/2fa/setup",
+        "/api/v1/auth/2fa/enable",
+        "/api/v1/auth/2fa/disable",
+        "/api/v1/auth/2fa/recovery-codes"
+      ]
+    },
+    {
+      "id": "sessions",
+      "area": "security",
+      "name": "Where you are signed in",
+      "summary": "List of devices, sign one out, sign out all the others.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/SessionsCard.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/SettingsScreen.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "api": [
+        "/api/v1/auth/sessions",
+        "/api/v1/auth/sessions/end-others",
+        "/api/v1/auth/sessions/{session_id}"
+      ]
+    },
+    {
+      "id": "change-password",
+      "area": "security",
+      "name": "Change password",
+      "summary": "Current password, a new one twice, and a code when two-factor is on.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/ChangePasswordDialog.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/SettingsScreen.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "api": [
+        "/api/v1/auth/password"
+      ]
+    },
+    {
+      "id": "sign-in-alerts",
+      "area": "security",
+      "name": "Sign-in alerts",
+      "summary": "The switch for the email sent at every sign-in.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/NotificationSettings.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/SettingsScreen.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "api": [
+        "/api/v1/users/me"
+      ]
+    },
+    {
+      "id": "api-keys",
+      "area": "security",
+      "name": "API keys",
+      "summary": "Keys for bots, scripts and agents with chosen permissions, an end date and rotation.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/api-keys/ApiKeysCard.tsx"
+        ]
+      },
+      "android": {
+        "status": "na",
+        "note": "Web only, by choice: API keys are managed on the web."
+      },
+      "ios": {
+        "status": "na",
+        "note": "Web only, by choice: API keys are managed on the web."
+      },
+      "api": [
+        "/api/v1/api-keys",
+        "/api/v1/api-keys/scopes",
+        "/api/v1/api-keys/{key_id}",
+        "/api/v1/api-keys/{key_id}/rotate"
+      ]
+    },
+    {
+      "id": "accounts-list",
+      "area": "accounts",
+      "name": "Accounts list",
+      "summary": "Accounts by group with balances, credit use, small balance lines and the net worth summary.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/routes/_protected/accounts.index.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/AccountsScreen.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "routes": [
+        "/accounts"
+      ],
+      "api": [
+        "/api/v1/accounts",
+        "/api/v1/accounts/summary",
+        "/api/v1/accounts/trends"
+      ]
+    },
+    {
+      "id": "account-form",
+      "area": "accounts",
+      "name": "Add and edit an account",
+      "summary": "Group, bank and number, currency and rate, credit limit, statement days, spendable switch, exclude from stats.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/AccountForm.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/AccountFormScreen.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "api": [
+        "/api/v1/accounts/{account_id}"
+      ]
+    },
+    {
+      "id": "account-archive",
+      "area": "accounts",
+      "name": "Archive and unarchive an account",
+      "summary": "Hide an account without losing its history.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/ArchivedAccounts.tsx"
+        ]
+      },
+      "android": {
+        "status": "partial",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/AccountDetailScreen.kt"
+        ],
+        "note": "Archive and unarchive from an account's page; there is no list of archived accounts to restore from."
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "api": [
+        "/api/v1/accounts/{account_id}/archive",
+        "/api/v1/accounts/{account_id}/unarchive"
+      ]
+    },
+    {
+      "id": "account-adjust",
+      "area": "accounts",
+      "name": "Adjust balance",
+      "summary": "Set the balance to what the bank shows, or add or take away, as a transaction that reports ignore.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/AdjustBalanceDialog.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/AccountDetailScreen.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "api": [
+        "/api/v1/accounts/{account_id}/adjust"
+      ]
+    },
+    {
+      "id": "account-page",
+      "area": "accounts",
+      "name": "An account's page",
+      "summary": "Balance, this month, its own transactions, balance over time and the balance after each row.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/routes/_protected/accounts.$id.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/AccountDetailScreen.kt",
+          "apps/android/app/src/main/java/app/maalu/data/AccountDetailLogic.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "routes": [
+        "/accounts/$id"
+      ],
+      "api": [
+        "/api/v1/accounts/{account_id}/balance-history",
+        "/api/v1/accounts/{account_id}/balances-after"
+      ]
+    },
+    {
+      "id": "exchange-rates",
+      "area": "accounts",
+      "name": "Market exchange rates",
+      "summary": "A suggested rate for a foreign amount on a date, and the currency list.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/RateField.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/AccountFormScreen.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "api": [
+        "/api/v1/currencies",
+        "/api/v1/currencies/rate"
+      ]
+    },
+    {
+      "id": "rate-history",
+      "area": "accounts",
+      "name": "Rate history",
+      "summary": "How the market rate of a foreign account's currency moved, 30 days to a year.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/RateHistoryDialog.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/RateHistoryUi.kt",
+          "apps/android/app/src/main/java/app/maalu/data/RateLogic.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "api": [
+        "/api/v1/currencies/rate-history"
+      ]
+    },
+    {
+      "id": "cards",
+      "area": "accounts",
+      "name": "Cards",
+      "summary": "Debit cards on a bank account and credit cards with a repayment account; a Card field on a purchase and a card filter.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/CardDialog.tsx",
+          "apps/web/src/components/account/AccountCards.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/AccountCardsUi.kt",
+          "apps/android/app/src/main/java/app/maalu/data/CardLogic.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "api": [
+        "/api/v1/cards",
+        "/api/v1/cards/{card_id}"
+      ]
+    },
+    {
+      "id": "card-statements",
+      "area": "accounts",
+      "name": "Credit card statements and due dates",
+      "summary": "The statement balance, what is left, the due date and a Repay button, worked out each time.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/account/CardStatementPanel.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/AccountDetailScreen.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "api": [
+        "/api/v1/accounts/statements",
+        "/api/v1/accounts/{account_id}/statement"
+      ]
+    },
+    {
+      "id": "tx-list",
+      "area": "transactions",
+      "name": "Transactions list",
+      "summary": "The list by day with search, the type chips, paging and the totals line.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/routes/_protected/transactions.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/TransactionsScreen.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "routes": [
+        "/transactions"
+      ],
+      "api": [
+        "/api/v1/transactions",
+        "/api/v1/transactions/{transaction_id}",
+        "/api/v1/transactions/summary"
+      ]
+    },
+    {
+      "id": "tx-filters",
+      "area": "transactions",
+      "name": "Filters",
+      "summary": "Dates, account, card, category, tags with any or all, payment method, need or want and an amount range.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/TransactionFilters.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/FiltersSheet.kt",
+          "apps/android/app/src/main/java/app/maalu/data/TxFilters.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      }
+    },
+    {
+      "id": "tx-form",
+      "area": "transactions",
+      "name": "Add and edit a transaction",
+      "summary": "Expense, income or transfer with account, rate, category, vendor, date and time, way of paying, tags, note and planned.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/TransactionForm.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/AddTransactionScreen.kt",
+          "apps/android/app/src/main/java/app/maalu/data/AddTransaction.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      }
+    },
+    {
+      "id": "tx-add-another",
+      "area": "transactions",
+      "name": "Save and add another, and duplicate",
+      "summary": "Keep the form open for the next entry, or copy a transaction.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/transaction-form/request.ts"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/AddTransactionScreen.kt",
+          "apps/android/app/src/main/java/app/maalu/data/AddTransaction.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      }
+    },
+    {
+      "id": "tx-templates",
+      "area": "transactions",
+      "name": "Templates",
+      "summary": "Start from a saved template and save a form as one; the Templates page to rename and delete them.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/routes/_protected/templates.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/TemplatesScreen.kt",
+          "apps/android/app/src/main/java/app/maalu/data/TemplateLogic.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "routes": [
+        "/templates"
+      ],
+      "api": [
+        "/api/v1/templates",
+        "/api/v1/templates/{template_id}"
+      ]
+    },
+    {
+      "id": "tx-bulk",
+      "area": "transactions",
+      "name": "Bulk actions on selected rows",
+      "summary": "Select rows, then change category, tags, vendor or payment method, or delete them; select all that match.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/BulkEditDialog.tsx",
+          "apps/web/src/components/SelectionBar.tsx"
+        ]
+      },
+      "android": {
+        "status": "partial",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/TransactionSelection.kt",
+          "apps/android/app/src/main/java/app/maalu/ui/screens/TransactionsScreen.kt"
+        ],
+        "note": "Long press to select, then Category, Add tag and Delete (with Undo). No vendor or payment method, no removing tags, no select all matching."
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "api": [
+        "/api/v1/transactions/bulk",
+        "/api/v1/transactions/bulk/trash",
+        "/api/v1/transactions/ids"
+      ]
+    },
+    {
+      "id": "tx-trash",
+      "area": "transactions",
+      "name": "Trash",
+      "summary": "Deleted transactions wait to be restored or deleted for good, singly or in bulk.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/routes/_protected/trash.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/TrashScreen.kt",
+          "apps/android/app/src/main/java/app/maalu/data/TrashLogic.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "routes": [
+        "/trash"
+      ],
+      "api": [
+        "/api/v1/transactions/trash",
+        "/api/v1/transactions/trash/ids",
+        "/api/v1/transactions/bulk/purge",
+        "/api/v1/transactions/bulk/restore",
+        "/api/v1/transactions/{transaction_id}/permanent",
+        "/api/v1/transactions/{transaction_id}/restore"
+      ]
+    },
+    {
+      "id": "tx-planned",
+      "area": "transactions",
+      "name": "Planned transactions and Mark as paid",
+      "summary": "Something coming up that counts toward nothing until it is paid with the real day and amount.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/MarkPaidDialog.tsx",
+          "apps/web/src/components/UpcomingCard.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/MarkPaidDialog.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "api": [
+        "/api/v1/transactions/{transaction_id}/post"
+      ]
+    },
+    {
+      "id": "tx-refunds",
+      "area": "transactions",
+      "name": "Refunds",
+      "summary": "Give money back for a purchase (whole or by item), or link existing income to a purchase.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/RefundDialog.tsx",
+          "apps/web/src/components/LinkRefundDialog.tsx"
+        ]
+      },
+      "android": {
+        "status": "partial",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/TransactionParts.kt"
+        ],
+        "note": "Refund rows are tagged and shown; a refund cannot be made or linked from the app."
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "api": [
+        "/api/v1/transactions/{transaction_id}/refund-candidates"
+      ]
+    },
+    {
+      "id": "tx-splits",
+      "area": "transactions",
+      "name": "Split a purchase into items",
+      "summary": "Items with quantity, category and tax that add up to the amount.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/transaction-form/SplitEditor.tsx"
+        ]
+      },
+      "android": {
+        "status": "partial",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/AddTransactionScreen.kt"
+        ],
+        "note": "A purchase with items keeps them when its other fields are edited; the items themselves are edited on the web."
+      },
+      "ios": {
+        "status": "missing"
+      }
+    },
+    {
+      "id": "tx-receipts",
+      "area": "transactions",
+      "name": "Receipts and web links",
+      "summary": "Photos and PDFs and web links on a transaction.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/AttachmentsField.tsx",
+          "apps/web/src/components/LinkAdder.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/AttachmentsUi.kt",
+          "apps/android/app/src/main/java/app/maalu/data/AttachmentLogic.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "api": [
+        "/api/v1/transactions/{transaction_id}/attachments",
+        "/api/v1/transactions/{transaction_id}/links",
+        "/api/v1/attachments/{attachment_id}",
+        "/api/v1/links/{link_id}"
+      ]
+    },
+    {
+      "id": "tx-locations",
+      "area": "transactions",
+      "name": "Mark a transaction on the map",
+      "summary": "A pin and an optional place name, with place search by name.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/map/LocationDialog.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/LocationDialog.kt",
+          "apps/android/app/src/main/java/app/maalu/ui/components/OsmMap.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "api": [
+        "/api/v1/places/search"
+      ]
+    },
+    {
+      "id": "tx-transfer-link",
+      "area": "transactions",
+      "name": "Merge two entries into one transfer",
+      "summary": "A suggestion card for pairs entered twice, and a manual merge when an entry has an exact match.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/TransferSuggestionsCard.tsx",
+          "apps/web/src/components/MakeTransferDialog.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/TransferLinkUi.kt",
+          "apps/android/app/src/main/java/app/maalu/data/TransferLinkLogic.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "api": [
+        "/api/v1/transactions/transfer-suggestions",
+        "/api/v1/transactions/transfer-suggestions/dismiss",
+        "/api/v1/transactions/link-transfer",
+        "/api/v1/transactions/{transaction_id}/transfer-candidates"
+      ]
+    },
+    {
+      "id": "tx-groups",
+      "area": "transactions",
+      "name": "Transaction groups",
+      "summary": "Bundle related transactions under a name and see what they add up to.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/routes/_protected/groups.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/GroupsScreen.kt",
+          "apps/android/app/src/main/java/app/maalu/data/GroupLogic.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "routes": [
+        "/groups"
+      ],
+      "api": [
+        "/api/v1/groups",
+        "/api/v1/groups/{group_id}",
+        "/api/v1/groups/{group_id}/transactions",
+        "/api/v1/groups/{group_id}/transactions/remove"
+      ]
+    },
+    {
+      "id": "tx-export",
+      "area": "transactions",
+      "name": "Export to Excel",
+      "summary": "Download what the filters show as a workbook with a summary and a sheet by category.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/ExportButton.tsx"
+        ]
+      },
+      "android": {
+        "status": "missing"
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "api": [
+        "/api/v1/transactions/export"
+      ]
+    },
+    {
+      "id": "import-statement",
+      "area": "transactions",
+      "name": "Import a bank statement",
+      "summary": "Read a bank's CSV, review the rows, assign vendors and categories, import as one undoable batch.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/routes/_protected/import.tsx"
+        ]
+      },
+      "android": {
+        "status": "na",
+        "note": "Web only, by choice: importing a statement is done on the web, where the rows are easier to review."
+      },
+      "ios": {
+        "status": "na",
+        "note": "Web only, by choice: importing a statement is done on the web, where the rows are easier to review."
+      },
+      "routes": [
+        "/import"
+      ],
+      "api": [
+        "/api/v1/imports",
+        "/api/v1/imports/preview",
+        "/api/v1/imports/{batch_id}",
+        "/api/v1/imports/{batch_id}/report"
+      ]
+    },
+    {
+      "id": "categories",
+      "area": "organise",
+      "name": "Categories",
+      "summary": "Colours, one level of sub-categories, need or want, merge, and the default Salary category.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/routes/_protected/categories.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/CategoriesScreen.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "routes": [
+        "/categories"
+      ],
+      "api": [
+        "/api/v1/categories",
+        "/api/v1/categories/{category_id}",
+        "/api/v1/categories/{category_id}/merge"
+      ]
+    },
+    {
+      "id": "categories-sort-kinds",
+      "area": "organise",
+      "name": "Sort every category into need or want",
+      "summary": "One dialog to sort all categories (or only the unsorted ones) at once.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/SortKindsDialog.tsx"
+        ]
+      },
+      "android": {
+        "status": "missing",
+        "note": "Each category's kind can be set one by one in its form."
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "api": [
+        "/api/v1/categories/kind"
+      ]
+    },
+    {
+      "id": "tags",
+      "area": "organise",
+      "name": "Tags",
+      "summary": "Coloured labels that cut across categories, with merge.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/routes/_protected/tags.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/TagsScreen.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "routes": [
+        "/tags"
+      ],
+      "api": [
+        "/api/v1/tags",
+        "/api/v1/tags/{tag_id}",
+        "/api/v1/tags/{tag_id}/merge"
+      ]
+    },
+    {
+      "id": "vendors",
+      "area": "organise",
+      "name": "Vendors",
+      "summary": "Address, contact, local or foreign, currency, usual category and tags, merge.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/routes/_protected/vendors.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/VendorsScreen.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "routes": [
+        "/vendors"
+      ],
+      "api": [
+        "/api/v1/vendors",
+        "/api/v1/vendors/{vendor_id}",
+        "/api/v1/vendors/{vendor_id}/merge"
+      ]
+    },
+    {
+      "id": "vendor-place",
+      "area": "organise",
+      "name": "A vendor's usual place",
+      "summary": "A usual pin that a new transaction picks up.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/VendorForm.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/VendorsScreen.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      }
+    },
+    {
+      "id": "subscriptions",
+      "area": "bills",
+      "name": "Subscriptions and recurring bills",
+      "summary": "Plans with a next payment, pay-from account, installments, reminders and varying amounts.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/routes/_protected/subscriptions.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/SubscriptionsScreen.kt",
+          "apps/android/app/src/main/java/app/maalu/ui/screens/SubscriptionForm.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "routes": [
+        "/subscriptions"
+      ],
+      "api": [
+        "/api/v1/subscriptions",
+        "/api/v1/subscriptions/{subscription_id}",
+        "/api/v1/subscriptions/summary"
+      ]
+    },
+    {
+      "id": "subscription-suggestions",
+      "area": "bills",
+      "name": "Suggested subscriptions",
+      "summary": "Recurring spending found in your transactions, accepted into a subscription in one tap.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/SubscriptionSuggestionsCard.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/SubscriptionsScreen.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "api": [
+        "/api/v1/subscriptions/candidates",
+        "/api/v1/subscriptions/candidates/accept",
+        "/api/v1/subscriptions/candidates/dismiss"
+      ]
+    },
+    {
+      "id": "subscription-from-transaction",
+      "area": "bills",
+      "name": "Make a subscription from a transaction",
+      "summary": "Turn a payment you already made into a recurring plan.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/MakeSubscriptionDialog.tsx"
+        ]
+      },
+      "android": {
+        "status": "missing"
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "api": [
+        "/api/v1/subscriptions/from-transaction/{transaction_id}"
+      ]
+    },
+    {
+      "id": "budget",
+      "area": "planning",
+      "name": "Budget limits",
+      "summary": "Per-period limits for categories with a warning percent, rollover and the summary by kind.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/routes/_protected/budget.tsx",
+          "apps/web/src/components/BudgetLineForm.tsx"
+        ]
+      },
+      "android": {
+        "status": "partial",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/BudgetScreen.kt",
+          "apps/android/app/src/main/java/app/maalu/ui/screens/BudgetForms.kt"
+        ],
+        "note": "Monthly limits can be made, edited and deleted. The budget settings (period start day, warning percent) are changed on the web."
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "routes": [
+        "/budget"
+      ],
+      "api": [
+        "/api/v1/budget",
+        "/api/v1/budget/lines",
+        "/api/v1/budget/lines/{line_id}"
+      ]
+    },
+    {
+      "id": "budget-fixed-limits",
+      "area": "planning",
+      "name": "Limits for set dates",
+      "summary": "One total for a stretch of dates, a monthly limit that runs between two dates, and repeating a finished one.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/BudgetLineForm.tsx"
+        ]
+      },
+      "android": {
+        "status": "missing",
+        "note": "The app's data model carries fixed limits but they are not shown or made."
+      },
+      "ios": {
+        "status": "missing"
+      }
+    },
+    {
+      "id": "budget-moves",
+      "area": "planning",
+      "name": "Move money between limits",
+      "summary": "Move what is left in one limit to another for one period, undo it, and see the history.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/MoveMoneyDialog.tsx",
+          "apps/web/src/components/MoveHistoryDialog.tsx"
+        ]
+      },
+      "android": {
+        "status": "missing"
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "api": [
+        "/api/v1/budget/lines/{line_id}/moves",
+        "/api/v1/budget/moves",
+        "/api/v1/budget/moves/{move_id}/undo"
+      ]
+    },
+    {
+      "id": "goals",
+      "area": "planning",
+      "name": "Savings goals",
+      "summary": "A target that follows a savings account or a log of amounts set aside by hand.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/GoalCard.tsx",
+          "apps/web/src/components/GoalForm.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/BudgetScreen.kt",
+          "apps/android/app/src/main/java/app/maalu/ui/screens/BudgetForms.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "api": [
+        "/api/v1/goals",
+        "/api/v1/goals/{goal_id}",
+        "/api/v1/goals/{goal_id}/entries",
+        "/api/v1/goals/{goal_id}/entries/{entry_id}"
+      ]
+    },
+    {
+      "id": "month-plan",
+      "area": "planning",
+      "name": "Month plan",
+      "summary": "What you have, the bills still to pay by day and where the money runs out.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/routes/_protected/plan.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/PlanScreen.kt",
+          "apps/android/app/src/main/java/app/maalu/data/PlanLogic.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "routes": [
+        "/plan"
+      ],
+      "api": [
+        "/api/v1/stats/available-to-spend"
+      ]
+    },
+    {
+      "id": "salary-rules",
+      "area": "planning",
+      "name": "Salary split rules",
+      "summary": "Rules that divide a salary between accounts and goals, each one manual or automatic.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/SalaryRulesCard.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/SalaryRulesCard.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "api": [
+        "/api/v1/salary-rules",
+        "/api/v1/salary-rules/{rule_id}"
+      ]
+    },
+    {
+      "id": "salary-split",
+      "area": "planning",
+      "name": "Split a salary and the Pending screen",
+      "summary": "Review, edit, approve or dismiss waiting salary splits; undo one.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/routes/_protected/pending.tsx",
+          "apps/web/src/components/SalarySplitDialog.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/PendingScreen.kt",
+          "apps/android/app/src/main/java/app/maalu/ui/screens/SalarySplitDialog.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "routes": [
+        "/pending"
+      ],
+      "api": [
+        "/api/v1/transactions/{transaction_id}/salary-split",
+        "/api/v1/salary-split-tasks",
+        "/api/v1/salary-split-tasks/count",
+        "/api/v1/salary-split-tasks/{task_id}/dismiss"
+      ]
+    },
+    {
+      "id": "dashboard",
+      "area": "reports",
+      "name": "Dashboard",
+      "summary": "Available to spend, the month strip, spending by category, net worth, cash flow, budget and goals, coming up and latest.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/routes/_protected/dashboard.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/DashboardScreen.kt",
+          "apps/android/app/src/main/java/app/maalu/ui/screens/DashboardCards.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "routes": [
+        "/dashboard"
+      ],
+      "api": [
+        "/api/v1/stats/balance-trend",
+        "/api/v1/stats/monthly",
+        "/api/v1/transactions/categories"
+      ]
+    },
+    {
+      "id": "dashboard-budget-goals",
+      "area": "reports",
+      "name": "Budget and goals card",
+      "summary": "Per-period limits and goals with a meter, and the running limits for set dates.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/dashboard/BudgetGoalsCard.tsx"
+        ]
+      },
+      "android": {
+        "status": "partial",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/DashboardCards.kt"
+        ],
+        "note": "Shows per-period limits and goals; limits for set dates are not shown."
+      },
+      "ios": {
+        "status": "missing"
+      }
+    },
+    {
+      "id": "dashboard-needs-wants",
+      "area": "reports",
+      "name": "Needs and wants, and 50/30/20",
+      "summary": "Spending split by kind, and the shares of income against the 50/30/20 rule.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/dashboard/NeedsWantsCard.tsx",
+          "apps/web/src/components/dashboard/IncomeRule.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/DashboardCards.kt",
+          "apps/android/app/src/main/java/app/maalu/data/IncomeRuleLogic.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      }
+    },
+    {
+      "id": "dashboard-money-flow",
+      "area": "reports",
+      "name": "Money flow",
+      "summary": "A Sankey of income into one total and out to spending and what was saved.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/dashboard/MoneyFlowCard.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/DashboardCards.kt",
+          "apps/android/app/src/main/java/app/maalu/data/MoneyFlowLogic.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      }
+    },
+    {
+      "id": "dashboard-credit-used",
+      "area": "reports",
+      "name": "Credit used",
+      "summary": "What is owed against each credit limit.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/dashboard/CreditUsageCard.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/DashboardCards.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      }
+    },
+    {
+      "id": "dashboard-cash-flow",
+      "area": "reports",
+      "name": "Cash flow",
+      "summary": "Income and expenses per month, what was kept each month and kept in total, over 6 or 12 months.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/dashboard/MonthlyCard.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/DashboardCards.kt",
+          "apps/android/app/src/main/java/app/maalu/data/CashFlowLogic.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      }
+    },
+    {
+      "id": "compare",
+      "area": "reports",
+      "name": "Compare",
+      "summary": "One period against another: income, spending, what was kept and every category.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/routes/_protected/compare.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/CompareScreen.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "routes": [
+        "/compare"
+      ]
+    },
+    {
+      "id": "trends",
+      "area": "reports",
+      "name": "Trends",
+      "summary": "Category by month, spending or income over 6, 12 or 24 months, as a table or stacked columns.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/routes/_protected/trends.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/TrendsScreen.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "routes": [
+        "/trends"
+      ],
+      "api": [
+        "/api/v1/transactions/categories/monthly"
+      ]
+    },
+    {
+      "id": "net-worth",
+      "area": "reports",
+      "name": "Net worth and what moved it",
+      "summary": "How net worth changed over a period and the drivers that explain it.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/routes/_protected/net-worth.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/NetWorthScreen.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "routes": [
+        "/net-worth"
+      ],
+      "api": [
+        "/api/v1/stats/net-worth-drivers"
+      ]
+    },
+    {
+      "id": "places",
+      "area": "reports",
+      "name": "Places map",
+      "summary": "Where spending went, as circles on a map sized by spend.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/routes/_protected/places.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/PlacesScreen.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "routes": [
+        "/places"
+      ],
+      "api": [
+        "/api/v1/transactions/places"
+      ]
+    },
+    {
+      "id": "notifications",
+      "area": "notifications",
+      "name": "Notifications",
+      "summary": "The bell, the list, read and dismiss, and the switches for payments, budget and goals.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/routes/_protected/notifications.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/NotificationsScreen.kt",
+          "apps/android/app/src/main/java/app/maalu/data/NotificationLogic.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "routes": [
+        "/notifications"
+      ],
+      "api": [
+        "/api/v1/notifications",
+        "/api/v1/notifications/read-all",
+        "/api/v1/notifications/unread-count",
+        "/api/v1/notifications/{notification_id}",
+        "/api/v1/notifications/{notification_id}/read"
+      ]
+    },
+    {
+      "id": "notification-email",
+      "area": "notifications",
+      "name": "Email digest",
+      "summary": "The switch to be emailed a digest of notifications, and a test email.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/NotificationSettings.tsx"
+        ]
+      },
+      "android": {
+        "status": "partial",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/SettingsScreen.kt"
+        ],
+        "note": "The switch and the email status are in Settings; sending a test email is not."
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "api": [
+        "/api/v1/email/status",
+        "/api/v1/email/test"
+      ]
+    },
+    {
+      "id": "push-notifications",
+      "area": "notifications",
+      "name": "Push notifications",
+      "summary": "Notifications delivered to the phone when something needs a look.",
+      "web": {
+        "status": "na",
+        "note": "Web has none; the API has no push channel yet."
+      },
+      "android": {
+        "status": "missing",
+        "note": "Needs a push channel in the API first."
+      },
+      "ios": {
+        "status": "missing",
+        "note": "Needs a push channel in the API first."
+      }
+    },
+    {
+      "id": "settings",
+      "area": "settings",
+      "name": "Settings",
+      "summary": "Account details, numbers display, templates switch, default account and the notification and security cards.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/routes/_protected/settings.tsx",
+          "apps/web/src/routes/_protected/profile.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/SettingsScreen.kt",
+          "apps/android/app/src/main/java/app/maalu/data/SettingsLogic.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "routes": [
+        "/settings",
+        "/profile"
+      ],
+      "api": [
+        "/api/v1/users/me"
+      ]
+    },
+    {
+      "id": "short-numbers",
+      "area": "settings",
+      "name": "Short numbers",
+      "summary": "Show large amounts as 1.23K with the exact amount a tap away.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/NumbersCard.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/SettingsScreen.kt",
+          "apps/android/app/src/main/java/app/maalu/data/Format.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      }
+    },
+    {
+      "id": "backup-restore",
+      "area": "settings",
+      "name": "Backup and restore",
+      "summary": "Download everything you own as one file and restore it into an empty account.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/BackupCard.tsx"
+        ]
+      },
+      "android": {
+        "status": "missing"
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "api": [
+        "/api/v1/backup",
+        "/api/v1/backup/restore"
+      ]
+    },
+    {
+      "id": "guides",
+      "area": "settings",
+      "name": "Guides",
+      "summary": "The in-app guides with search; on the app they are generated from the web's.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/routes/_protected/docs.index.tsx",
+          "apps/web/src/routes/_protected/docs.$slug.tsx"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/DocsScreen.kt",
+          "apps/android/app/src/main/java/app/maalu/data/DocsLogic.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "routes": [
+        "/docs",
+        "/docs/$slug"
+      ]
+    },
+    {
+      "id": "install-app",
+      "area": "settings",
+      "name": "Install the app",
+      "summary": "Add to home screen (web), or the app itself.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/pwa/InstallCard.tsx"
+        ]
+      },
+      "android": {
+        "status": "na",
+        "note": "This is the app."
+      },
+      "ios": {
+        "status": "na",
+        "note": "This is the app."
+      }
+    },
+    {
+      "id": "offline-shell",
+      "area": "settings",
+      "name": "Offline page and cached app files",
+      "summary": "A service worker keeps only static files; data is never cached.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/pwa/PwaRegister.tsx"
+        ]
+      },
+      "android": {
+        "status": "na",
+        "note": "Native app."
+      },
+      "ios": {
+        "status": "na",
+        "note": "Native app."
+      }
+    },
+    {
+      "id": "health",
+      "area": "settings",
+      "name": "Health check",
+      "summary": "An unauthenticated endpoint for monitoring.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/api/app/main.py"
+        ]
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/data/Health.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "api": [
+        "/health"
+      ]
+    }
+  ]
+}

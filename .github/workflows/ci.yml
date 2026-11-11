@@ -46,6 +46,18 @@ jobs:
       # Needs no Postgres: the tests run against in-memory SQLite and never reach the network.
       - run: just test-api
 
+  parity:
+    name: Feature parity (manifest, PARITY.md)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - uses: extractions/setup-just@v4
+      # parity/features.json is valid, every web page and API endpoint is claimed by a feature, PARITY.md is current (fix: just parity)
+      - run: just check-parity
+
   web:
     name: Web (oxfmt, oxlint, tsc, unit tests)
     runs-on: ubuntu-latest

@@ -64,9 +64,17 @@ api-types:
 docs-json:
     pnpm --filter @maalu/web gen:docs
 
+# PARITY.md (what each platform has) from parity/features.json. Edit the JSON, run this, commit both.
+parity:
+    node scripts/parity.mjs write
+
+# The feature manifest is valid, every web page and API endpoint is claimed by a feature, and PARITY.md is current.
+check-parity:
+    node scripts/parity.mjs check
+
 # CI-style checks for everything. Regenerates the API types first, so tsc checks the web against
 # the API as it is now; commit the regenerated files with the API change (CI fails if they are stale).
-check: api-types check-api check-web
+check: api-types check-api check-web check-parity
 
 check-api:
     uv run ruff check .

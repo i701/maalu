@@ -8,6 +8,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 When you are told to commit, split unrelated work into separate commits.
 
+## Feature parity: keep `parity/features.json` current
+
+What each platform (web, android, ios) has is tracked in one hand-edited file, `parity/features.json`, and its readable form `PARITY.md` (the "Still to build on Android / iOS" lists are the backlog). **A change that adds, finishes, narrows or removes a feature on any platform updates its entry in the same commit**: set the platform's `status` (`done`, `partial` with a `note` saying what is missing, `missing`, `na` with a note saying why it is deliberately left out, `planned`) and its `evidence` (repo-relative files that prove it; the check fails if one no longer exists), then run `just parity` and commit `PARITY.md` with it. A new web page (a route file) or API endpoint must be claimed by a feature's `routes` / `api` (exact OpenAPI paths), or `just check-parity` (part of `just check`, and the `parity` CI job) fails: that is the point, so a page or endpoint cannot ship without being classified. **Import and API keys are web only on every native app, by choice** (`na` with that note on android and ios): do not build them there. When iOS is started, its column is already there (everything `missing` unless `na`).
+
 Maalu is a personal finance tracker. It is a monorepo: `apps/api` (FastAPI, async SQLAlchemy 2.0, Alembic, Python 3.13, uv workspace) and `apps/web` (TanStack Start, React 19, MUI v9, Zod, pnpm workspace `@maalu/web`). Both are driven from the root `justfile`.
 
 ## Commands
