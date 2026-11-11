@@ -31,6 +31,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.maalu.data.BalancePoint
+import app.maalu.data.untilText
+import app.maalu.data.runningFixed
 import app.maalu.ui.components.TintChip
 import app.maalu.ui.components.NetColumns
 import app.maalu.data.netRows
@@ -190,7 +192,8 @@ private fun Legend(label: String, color: Color) {
 
 @Composable
 fun BudgetGoalsCard(budget: Budget?, goals: List<Goal>) {
-    if ((budget == null || budget.lines.isEmpty()) && goals.isEmpty()) return
+    val running = budget?.let(::runningFixed).orEmpty()
+    if ((budget == null || budget.lines.isEmpty()) && running.isEmpty() && goals.isEmpty()) return
     SectionCard("Budget and goals") {
         if (budget != null && budget.lines.isNotEmpty()) {
             val t = budget.totals
@@ -219,6 +222,23 @@ fun BudgetGoalsCard(budget: Budget?, goals: List<Goal>) {
                     }
                     Bar(line.percent / 100f, statusColor(line.status), 6)
                 }
+            }
+        }
+        // limits for set dates that are running now: one total for the whole stretch, shown beside the monthly ones
+        if (budget != null) running.forEach { f ->
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row {
+                    Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                        Text(f.name, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                        Text("  ${untilText(f)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        MoneyText(f.activity, budget.currency, style = MaterialTheme.typography.bodySmall)
+                        Text(" / ", style = MaterialTheme.typography.bodySmall)
+                        MoneyText(f.amount, budget.currency, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                Bar(f.percent / 100f, statusColor(f.status), 6)
             }
         }
         goals.take(3).forEach { goal ->

@@ -1170,8 +1170,11 @@
         ]
       },
       "android": {
-        "status": "missing",
-        "note": "The app's data model carries fixed limits but they are not shown or made."
+        "status": "partial",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/BudgetScreen.kt"
+        ],
+        "note": "Limits for set dates are listed on the Budget page (dates, days left, spent, what is left) and on the dashboard. They cannot be made, edited, or repeated for the next stretch, and monthly limits that run between two dates are not shown as such."
       },
       "ios": {
         "status": "missing"
@@ -1357,11 +1360,11 @@
         ]
       },
       "android": {
-        "status": "partial",
+        "status": "done",
         "evidence": [
-          "apps/android/app/src/main/java/app/maalu/ui/screens/DashboardCards.kt"
-        ],
-        "note": "Shows per-period limits and goals; limits for set dates are not shown."
+          "apps/android/app/src/main/java/app/maalu/ui/screens/DashboardCards.kt",
+          "apps/android/app/src/main/java/app/maalu/data/BudgetLogic.kt"
+        ]
       },
       "ios": {
         "status": "missing"

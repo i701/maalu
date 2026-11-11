@@ -144,3 +144,9 @@ fun goalNeedText(g: Goal): String? {
 fun goalEntryJson(amount: String, take: Boolean): JsonObject = buildJsonObject {
     put("amount", (if (take) "-" else "") + amount.trim())
 }
+
+/** The limits for set dates that are running now (the ones the dashboard shows beside the per-period limits). */
+fun runningFixed(budget: Budget): List<FixedLine> = budget.fixedLines.filter { it.state == "active" }
+
+/** "until 20 Nov" for a running limit for set dates. */
+fun untilText(f: FixedLine): String = "until ${shortDate(f.endDate)}"

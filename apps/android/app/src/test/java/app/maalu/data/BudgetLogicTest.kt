@@ -94,4 +94,11 @@ class BudgetLogicTest {
         assertEquals("Needs MVR 5,000.00 a month for 1 more month", goalNeedText(g.copy(monthsLeft = 1, neededPerMonth = "5000")))
         assertNull(goalNeedText(g.copy(targetDate = null)))
     }
+
+    @Test fun onlyRunningLimitsForSetDatesAreShownOnTheDashboard() {
+        fun fixed(id: String, state: String) = FixedLine(id, id, "10", "100", "90", 10, "ok", "2026-11-01", "2026-11-20", state)
+        val b = Budget("MVR", null, BudgetTotals("0", "0", "0", 0, "ok"), emptyList(), listOf(fixed("a", "active"), fixed("u", "upcoming"), fixed("e", "ended")))
+        assertEquals(listOf("a"), runningFixed(b).map { it.id })
+        assertEquals("until 20 Nov", untilText(fixed("a", "active")))
+    }
 }

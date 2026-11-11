@@ -9,23 +9,22 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 67 | 50 | 0 |
+| ✅ done | 67 | 51 | 0 |
 | 🟡 partial | 0 | 6 | 0 |
-| ❌ missing | 0 | 7 | 63 |
+| ❌ missing | 0 | 6 | 63 |
 | ➖ n/a | 1 | 5 | 5 |
 
-## Still to build on Android (13)
+## Still to build on Android (12)
 
 - 🟡 **Bulk actions on selected rows** (Transactions). Long press to select, then Category, Add tag and Delete (with Undo). No vendor or payment method, no removing tags, no select all matching.
 - 🟡 **Refunds** (Transactions). Refund rows are tagged and shown; a refund cannot be made or linked from the app.
 - 🟡 **Split a purchase into items** (Transactions). A purchase with items keeps them when its other fields are edited; the items themselves are edited on the web.
 - 🟡 **Budget limits** (Budget, goals and planning). Monthly limits can be made, edited and deleted. The budget settings (period start day, warning percent) are changed on the web.
-- 🟡 **Budget and goals card** (Dashboard and reports). Shows per-period limits and goals; limits for set dates are not shown.
+- 🟡 **Limits for set dates** (Budget, goals and planning). Limits for set dates are listed on the Budget page (dates, days left, spent, what is left) and on the dashboard. They cannot be made, edited, or repeated for the next stretch, and monthly limits that run between two dates are not shown as such.
 - 🟡 **Email digest** (Notifications). The switch and the email status are in Settings; sending a test email is not.
 - ❌ **Export to Excel** (Transactions).
 - ❌ **Sort every category into need or want** (Categories, tags and vendors). Each category's kind can be set one by one in its form.
 - ❌ **Make a subscription from a transaction** (Bills and subscriptions).
-- ❌ **Limits for set dates** (Budget, goals and planning). The app's data model carries fixed limits but they are not shown or made.
 - ❌ **Move money between limits** (Budget, goals and planning).
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
@@ -178,7 +177,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | Feature | Web | Android | iOS |
 |---|:---:|:---:|:---:|
 | **Budget limits**<br>Per-period limits for categories with a warning percent, rollover and the summary by kind. | ✅ done | 🟡 partial | ❌ missing |
-| **Limits for set dates**<br>One total for a stretch of dates, a monthly limit that runs between two dates, and repeating a finished one. | ✅ done | ❌ missing | ❌ missing |
+| **Limits for set dates**<br>One total for a stretch of dates, a monthly limit that runs between two dates, and repeating a finished one. | ✅ done | 🟡 partial | ❌ missing |
 | **Move money between limits**<br>Move what is left in one limit to another for one period, undo it, and see the history. | ✅ done | ❌ missing | ❌ missing |
 | **Savings goals**<br>A target that follows a savings account or a log of amounts set aside by hand. | ✅ done | ✅ done | ❌ missing |
 | **Month plan**<br>What you have, the bills still to pay by day and where the money runs out. | ✅ done | ✅ done | ❌ missing |
@@ -186,13 +185,14 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Split a salary and the Pending screen**<br>Review, edit, approve or dismiss waiting salary splits; undo one. | ✅ done | ✅ done | ❌ missing |
 
 - **Budget limits** (Android): Monthly limits can be made, edited and deleted. The budget settings (period start day, warning percent) are changed on the web.
+- **Limits for set dates** (Android): Limits for set dates are listed on the Budget page (dates, days left, spent, what is left) and on the dashboard. They cannot be made, edited, or repeated for the next stretch, and monthly limits that run between two dates are not shown as such.
 
 ## Dashboard and reports
 
 | Feature | Web | Android | iOS |
 |---|:---:|:---:|:---:|
 | **Dashboard**<br>Available to spend, the month strip, spending by category, net worth, cash flow, budget and goals, coming up and latest. | ✅ done | ✅ done | ❌ missing |
-| **Budget and goals card**<br>Per-period limits and goals with a meter, and the running limits for set dates. | ✅ done | 🟡 partial | ❌ missing |
+| **Budget and goals card**<br>Per-period limits and goals with a meter, and the running limits for set dates. | ✅ done | ✅ done | ❌ missing |
 | **Needs and wants, and 50/30/20**<br>Spending split by kind, and the shares of income against the 50/30/20 rule. | ✅ done | ✅ done | ❌ missing |
 | **Money flow**<br>A Sankey of income into one total and out to spending and what was saved. | ✅ done | ✅ done | ❌ missing |
 | **Credit used**<br>What is owed against each credit limit. | ✅ done | ✅ done | ❌ missing |
@@ -201,8 +201,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Trends**<br>Category by month, spending or income over 6, 12 or 24 months, as a table or stacked columns. | ✅ done | ✅ done | ❌ missing |
 | **Net worth and what moved it**<br>How net worth changed over a period and the drivers that explain it. | ✅ done | ✅ done | ❌ missing |
 | **Places map**<br>Where spending went, as circles on a map sized by spend. | ✅ done | ✅ done | ❌ missing |
-
-- **Budget and goals card** (Android): Shows per-period limits and goals; limits for set dates are not shown.
 
 ## Notifications
 
