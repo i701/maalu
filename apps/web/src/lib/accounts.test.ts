@@ -3,6 +3,7 @@ import {
 	accountIdentity,
 	accountTints,
 	tintBackground,
+	accentText,
 	adjustmentPreview,
 	BANKS,
 	bankChoices,
@@ -193,5 +194,6 @@ describe("accountTints", () => {
 	it("tints with a subtle wash that follows the theme surface", () => {
 		expect(tintBackground("green")).toContain("color-mix");
 		expect(tintBackground("green")).toContain("--md-sys-color-surface-container-low");
+		expect(accentText("green")).toContain("--md-sys-color-on-surface");
 	});
 });

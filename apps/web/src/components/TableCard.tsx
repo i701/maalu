@@ -15,7 +15,7 @@ export function useOnCard(): boolean {
 /**
  * The surface under a list. For a table it is a card; for the card grid it is flat (transparent),
  * so the toolbar and cards sit straight on the page like the site's lists. `flat` overrides the
- * automatic choice (the Accounts list is always flat).
+ * automatic choice (the Accounts list is always a card).
  */
 export default function TableCard({ flat, sx, ...props }: CardProps & { flat?: boolean }) {
 	const cards = useViewMode() === "cards";

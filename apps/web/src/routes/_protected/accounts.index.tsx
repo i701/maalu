@@ -1,6 +1,6 @@
 import AccountSpark from "#/components/account/AccountSpark";
 import Money from "#/components/Money";
-import { accountTints, tintBackground } from "#/lib/accounts";
+import { accentText, accountTints, tintBackground } from "#/lib/accounts";
 import { MORPH_TRANSITION, morphUp } from "#/lib/shape";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
@@ -19,6 +19,7 @@ import { useState } from "react";
 import { z } from "zod";
 import AccountForm from "#/components/AccountForm";
 import ArchivedAccounts from "#/components/ArchivedAccounts";
+import Figure from "#/components/Figure";
 import AccountIdentity from "#/components/AccountIdentity";
 import AdjustBalanceDialog from "#/components/AdjustBalanceDialog";
 import CreditUsage from "#/components/CreditUsage";
@@ -87,18 +88,18 @@ export const Route = createFileRoute("/_protected/accounts/")({
 	component: AccountsPage,
 });
 
-/** Icon, colour and blob shape for each account type's cards. */
-const GROUP_TILE: Record<AccountGroup, { symbol: string; accent: string; shape: number }> = {
-	cash: { symbol: "payments", accent: ACCENT.green, shape: 1 },
-	accounts: { symbol: "account_balance", accent: ACCENT.blue, shape: 0 },
-	card: { symbol: "credit_card", accent: ACCENT.orange, shape: 3 },
-	savings: { symbol: "savings", accent: ACCENT.lime, shape: 5 },
-	prepaid: { symbol: "sell", accent: ACCENT.pink, shape: 4 },
-	investments: { symbol: "savings", accent: ACCENT.amber, shape: 6 },
-	overdrafts: { symbol: "info", accent: ACCENT.pink, shape: 7 },
-	loan: { symbol: "receipt_long", accent: ACCENT.orange, shape: 3 },
-	insurance: { symbol: "verified", accent: ACCENT.slate, shape: 2 },
-	others: { symbol: "category", accent: ACCENT.slate, shape: 0 },
+/** Icon and blob shape for each account type's cards (the colour is the card's own tint). */
+const GROUP_TILE: Record<AccountGroup, { symbol: string; shape: number }> = {
+	cash: { symbol: "payments", shape: 1 },
+	accounts: { symbol: "account_balance", shape: 0 },
+	card: { symbol: "credit_card", shape: 3 },
+	savings: { symbol: "savings", shape: 5 },
+	prepaid: { symbol: "sell", shape: 4 },
+	investments: { symbol: "savings", shape: 6 },
+	overdrafts: { symbol: "info", shape: 7 },
+	loan: { symbol: "receipt_long", shape: 3 },
+	insurance: { symbol: "verified", shape: 2 },
+	others: { symbol: "category", shape: 0 },
 };
 
 const isNegative = (amount: string) => amount.startsWith("-");
@@ -266,7 +267,8 @@ function AccountsPage() {
 			</Grid>
 
 			<PendingOverlay>
-				<TableCard flat>
+				{/* always a white card, whatever the Cards / Table setting, with the groups inside it */}
+				<TableCard flat={false}>
 					<TableToolbar
 						viewToggle={false}
 						summary={`${accounts.length} ${accounts.length === 1 ? "account" : "accounts"}`}
@@ -291,21 +293,28 @@ function AccountsPage() {
 								: "No accounts yet. Add your wallet or bank account to start tracking balances."}
 						</EmptyState>
 					) : (
-						<Box sx={{ display: "grid", gap: 3 }}>
+						<Box sx={{ display: "grid", gap: 3, px: 2, pb: 2 }}>
 							{groups.map(({ group, items }) => (
 								<Box key={group}>
 									<Stack
 										direction="row"
 										sx={{ alignItems: "baseline", justifyContent: "space-between", mb: 1 }}
 									>
-										<Typography variant="subtitle1">{ACCOUNT_GROUP_LABELS[group]}</Typography>
-										<Typography variant="body2" sx={{ color: "text.secondary" }}>
-											{formatMoney(
-												sumDecimals(
-													items.filter((a) => !a.exclude_from_stats).map((a) => a.base_balance),
-												),
-												user.base_currency,
-											)}
+										<Typography variant="subtitle1" component="h2" sx={{ fontSize: { md: 18 } }}>
+											{ACCOUNT_GROUP_LABELS[group]}
+										</Typography>
+										<Typography
+											component="p"
+											sx={{ fontSize: { xs: 20, md: 24 }, lineHeight: 1.2 }}
+										>
+											<Figure>
+												{formatMoney(
+													sumDecimals(
+														items.filter((a) => !a.exclude_from_stats).map((a) => a.base_balance),
+													),
+													user.base_currency,
+												)}
+											</Figure>
 										</Typography>
 									</Stack>
 									<Box
@@ -321,6 +330,10 @@ function AccountsPage() {
 												key={a.id}
 												sx={{
 													bgcolor: tintBackground(tints.get(a.id) ?? "slate"),
+													// the action icons in the card's own hue
+													"& .MuiIconButton-root": {
+														color: accentText(tints.get(a.id) ?? "slate"),
+													},
 													...morphUp("xl"),
 													transition: `${MORPH_TRANSITION}, transform var(--spring-spatial-fast-dur) var(--spring-spatial-fast)`,
 													"&:active": { transform: "scale(.97)" },
@@ -331,7 +344,7 @@ function AccountsPage() {
 														<ShapeTile
 															shape={GROUP_TILE[group].shape}
 															size={52}
-															accent={GROUP_TILE[group].accent}
+															accent={ACCENT[tints.get(a.id) ?? "slate"]}
 														>
 															<Symbol name={GROUP_TILE[group].symbol} size={24} filled />
 														</ShapeTile>
@@ -370,7 +383,10 @@ function AccountsPage() {
 																variant="body2"
 																sx={{
 																	fontWeight: 600,
-																	color: isNegative(a.balance) ? "error.main" : "text.primary",
+																	// the card's own hue; a debt keeps the error colour
+																	color: isNegative(a.balance)
+																		? "error.main"
+																		: accentText(tints.get(a.id) ?? "slate"),
 																}}
 															>
 																<Money amount={a.balance} currency={a.currency} />

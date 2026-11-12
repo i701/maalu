@@ -7,7 +7,7 @@ const MASKS = (shapes as string[]).map(
 );
 
 /**
- * An icon on a tinted, polygon-shaped blob (one of eight shapes). The blob is masked, so it can
+ * An icon on a tinted, polygon-shaped blob (one of seven shapes; the rounded diamond was taken out, it looked odd). The blob is masked, so it can
  * rotate on its own: give a parent `"&:hover .shape-bg": { transform: ... }` (or use
  * `shapeHover` below) and the shape turns on the slow spatial spring while the icon stays upright.
  */
@@ -19,7 +19,7 @@ export default function ShapeTile({
 	fg,
 	children,
 }: {
-	/** 0-7, which polygon */
+	/** Which polygon; any number, taken modulo the seven shapes */
 	shape?: number;
 	/** CSS colour the tile is tinted with */
 	accent?: string;

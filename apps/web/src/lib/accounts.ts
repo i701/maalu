@@ -186,3 +186,7 @@ export function accountTints(ids: readonly string[]): Map<string, Accent> {
  * because it mixes with the theme's own surface colour. */
 export const tintBackground = (accent: Accent) =>
 	`color-mix(in srgb, ${ACCENT[accent]} 13%, var(--md-sys-color-surface-container-low))`;
+
+/** Text on that wash, in the same hue: deep in light mode, pale in dark, so it reads as text. */
+export const accentText = (accent: Accent) =>
+	`color-mix(in oklab, ${ACCENT[accent]} 50%, var(--md-sys-color-on-surface))`;
