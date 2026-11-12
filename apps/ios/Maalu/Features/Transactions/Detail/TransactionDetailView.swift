@@ -6,6 +6,7 @@ struct TransactionDetailView: View {
     let model: TransactionsModel
     let id: String
     @State private var sheet: TransactionSheet?
+    @State private var dialog = MarkPaidDialogModel()
     @State private var isConfirmingDelete = false
     @State private var errorMessage: String?
 
@@ -17,7 +18,7 @@ struct TransactionDetailView: View {
                 .toolbar {
                     if transaction.planned {
                         ToolbarItem(placement: .primaryAction) {
-                            Button(markTitle(for: transaction), systemImage: "checkmark.circle") { sheet = .pay(transaction) }
+                            Button(markTitle(for: transaction), systemImage: "checkmark.circle") { markPaid(transaction) }
                         }
                     }
                     if transaction.canEdit {
@@ -37,9 +38,9 @@ struct TransactionDetailView: View {
                 .sheet(item: $sheet) { sheet in
                     switch sheet {
                     case .edit(let transaction): TransactionFormView(editing: transaction, onSaved: reload)
-                    case .pay(let transaction): MarkPaidView(transactionID: transaction.id, onDone: paid)
                     }
                 }
+                .markPaidDialog(dialog, session: session)
                 .alert("Could not delete", item: $errorMessage) { _ in
                 } message: { message in
                     Text(message)
@@ -54,6 +55,13 @@ struct TransactionDetailView: View {
         case .transfer: "Mark as done"
         case .income: "Mark as received"
         case .expense: "Mark as paid"
+        }
+    }
+
+    private func markPaid(_ transaction: Transaction) {
+        Task {
+            guard let api = session.api else { return }
+            await dialog.present(transactionID: transaction.id, using: api, onDone: paid)
         }
     }
 

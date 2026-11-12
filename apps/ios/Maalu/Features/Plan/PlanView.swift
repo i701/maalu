@@ -3,7 +3,7 @@ import SwiftUI
 struct PlanView: View {
     @Environment(Session.self) private var session
     @State private var model = PlanModel()
-    @State private var paying: PlanRow?
+    @State private var dialog = MarkPaidDialogModel()
 
     var body: some View {
         List {
@@ -13,7 +13,7 @@ struct PlanView: View {
                     Section { Text("Nothing is planned for the rest of the period.").foregroundStyle(.secondary) }
                 }
                 ForEach(plan.days) { day in
-                    PlanDaySection(day: day, today: available.today, currency: available.currency) { paying = $0 }
+                    PlanDaySection(day: day, today: available.today, currency: available.currency, onMarkPaid: markPaid)
                 }
                 PlanSidebarSections(available: available)
             }
@@ -21,9 +21,7 @@ struct PlanView: View {
         .overlay { PlanPlaceholder(model: model, retry: reloadNow) }
         .navigationTitle("Month plan")
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(item: $paying) { row in
-            MarkPaidView(transactionID: row.id, onDone: reloadNow)
-        }
+        .markPaidDialog(dialog, session: session)
         .refreshable { await load() }
         .task { await load() }
     }
@@ -31,6 +29,13 @@ struct PlanView: View {
     private func load() async {
         guard let api = session.api else { return }
         await model.load(using: api)
+    }
+
+    private func markPaid(_ row: PlanRow) {
+        Task {
+            guard let api = session.api else { return }
+            await dialog.present(transactionID: row.id, named: row.title, using: api, onDone: reloadNow)
+        }
     }
 
     private func reloadNow() {

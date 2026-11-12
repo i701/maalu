@@ -743,7 +743,7 @@
         "evidence": [
           "apps/ios/Maalu/Features/Transactions/Form/TransactionDateSection.swift",
           "apps/ios/Maalu/Features/Transactions/Filters/TransactionTypeMenu.swift",
-          "apps/ios/Maalu/Features/Plan/MarkPaid/MarkPaidView.swift"
+          "apps/ios/Maalu/Features/Plan/MarkPaid/MarkPaidDialog.swift"
         ]
       },
       "api": [
@@ -1324,7 +1324,7 @@
         "evidence": [
           "apps/ios/Maalu/Features/Plan/PlanView.swift",
           "apps/ios/Maalu/Features/Plan/MonthPlan.swift",
-          "apps/ios/Maalu/Features/Plan/MarkPaid/MarkPaidView.swift"
+          "apps/ios/Maalu/Features/Plan/MarkPaid/MarkPaidDialog.swift"
         ]
       },
       "routes": [
