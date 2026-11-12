@@ -16,3 +16,4 @@ node_modules/
 
 # attachments kept on disk in development (see ATTACHMENTS_DIR)
 apps/api/data/
+settings.json
