@@ -6,8 +6,8 @@ import SideNavItem from "./SideNavItem";
 
 /**
  * The sidebar on wide screens: the app name, then every destination grouped by what it is for. It
- * sits on the page background, with no border. Narrow screens use the bottom bar instead, so the list
- * here can keep growing.
+ * has no border. Narrow screens use the bottom bar instead, so the list
+ * here can keep growing. It is a white panel beside the grey page, as the cards are.
  */
 export default function SideNav({ badges = {} }: { badges?: Record<string, number> }) {
 	return (
@@ -22,8 +22,7 @@ export default function SideNav({ badges = {} }: { badges?: Record<string, numbe
 				width: SIDEBAR_WIDTH,
 				px: 1.5,
 				overflowY: "auto",
-				// the page's own background: no dedicated colour, no border
-				bgcolor: "background.default",
+				bgcolor: "var(--md-sys-color-surface-container-low)",
 				zIndex: (t) => t.zIndex.appBar + 1,
 			}}
 		>

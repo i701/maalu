@@ -2,9 +2,8 @@ import Box from "@mui/material/Box";
 import type { ReactNode } from "react";
 import Symbol from "./Symbol";
 
-/** A frosted pill for stats on a coloured surface (the site's hero chips): 32px, fully round,
- * white at 16%. Use it on a dark gradient. */
-export default function GlassPill({ symbol, children }: { symbol?: string; children: ReactNode }) {
+/** A quiet stat pill under a page's title ("324 transactions"): 32px, white on the grey page. */
+export default function HeaderPill({ symbol, children }: { symbol?: string; children: ReactNode }) {
 	return (
 		<Box
 			sx={{
@@ -14,8 +13,8 @@ export default function GlassPill({ symbol, children }: { symbol?: string; child
 				height: 32,
 				px: 1.5,
 				borderRadius: "var(--shape-full)",
-				bgcolor: "rgb(255 255 255 / 0.16)",
-				color: "#fff",
+				bgcolor: "var(--md-sys-color-surface-container-low)",
+				color: "var(--md-sys-color-on-surface-variant)",
 				fontSize: 13,
 				fontWeight: 500,
 				letterSpacing: "0.01em",

@@ -191,7 +191,6 @@ function AccountsPage() {
 				symbol="account_balance"
 				accent="green"
 				shape={1}
-				morph="up"
 				dock={[
 					{
 						label: "Assets",
@@ -238,7 +237,7 @@ function AccountsPage() {
 					<StatCard
 						label="Assets"
 						value={formatMoney(summary.assets, summary.currency)}
-						gradient="emerald"
+						tint="emerald"
 						icon="account_balance"
 						shape={0}
 						reverse
@@ -248,7 +247,7 @@ function AccountsPage() {
 					<StatCard
 						label="Liabilities"
 						value={formatMoney(summary.liabilities, summary.currency)}
-						gradient="rose"
+						tint="rose"
 						icon="credit_card"
 						shape={3}
 						reverse
@@ -258,7 +257,7 @@ function AccountsPage() {
 					<StatCard
 						label="Total"
 						value={formatMoney(summary.total, summary.currency)}
-						gradient={isNegative(summary.total) ? "rose" : "navy"}
+						tint={isNegative(summary.total) ? "rose" : "navy"}
 						icon="savings"
 						shape={6}
 						reverse

@@ -7,8 +7,8 @@ import { morph } from "#/lib/shape";
 
 /**
  * Material 3 Expressive. Colour roles come from `lib/m3.ts`, shape and springs
- * come from `styles/m3.css`. Surfaces are tonal (a step lighter or darker than the
- * page) rather than shadowed, buttons are pills that spring toward a squarer corner while pressed,
+ * come from `styles/m3.css`. White cards sit on a soft grey page rather than casting a shadow (only
+ * floating menus get one), the main buttons are near-black pills, buttons are pills that spring toward a squarer corner while pressed,
  * and corners come from the M3 shape scale (`--shape-*`).
  */
 
@@ -120,6 +120,8 @@ const theme = createTheme({
 			styleOverrides: {
 				root: {
 					borderRadius: "var(--shape-xs)",
+					// white, so a field on the grey page (a search box) reads like the cards
+					backgroundColor: "var(--md-sys-color-surface-container-low)",
 					"& .MuiOutlinedInput-notchedOutline": {
 						borderColor:
 							"var(--md-sys-color-outline-variant, var(--md-sys-color-on-surface-variant))",
@@ -195,7 +197,7 @@ const theme = createTheme({
 		},
 		// No dark-mode elevation tint: tonal surfaces are set explicitly.
 		MuiPaper: { styleOverrides: { root: { backgroundImage: "none" } } },
-		// Cards sit a tonal step above the page instead of casting a shadow.
+		// White cards on the grey page, no shadow.
 		MuiCard: {
 			defaultProps: { elevation: 0 },
 			styleOverrides: { root: { ...morph("xl") } },
@@ -225,7 +227,7 @@ const theme = createTheme({
 					width: "calc(100% - 32px)",
 					maxHeight: "calc(100dvh - 32px)",
 					borderRadius: "var(--shape-xl)",
-					backgroundColor: "var(--md-sys-color-surface-container-high)",
+					backgroundColor: "var(--md-sys-color-surface-container-low)",
 				},
 			},
 		},
@@ -233,7 +235,9 @@ const theme = createTheme({
 			styleOverrides: {
 				paper: {
 					borderRadius: "var(--shape-md)",
-					backgroundColor: "var(--md-sys-color-surface-container)",
+					backgroundColor: "var(--md-sys-color-surface-container-low)",
+					// a white menu over a white card needs an edge
+					boxShadow: "var(--elev-2)",
 				},
 			},
 		},
@@ -289,6 +293,21 @@ const theme = createTheme({
 				root: {
 					borderRadius: "var(--shape-lg-inc)",
 					...pressable("var(--shape-md)", "var(--shape-sm)"),
+					variants: [
+						{
+							// The main action: a near-black pill (a light one in dark mode); the violet
+							// accent is kept for links, focus and selection.
+							props: { variant: "contained", color: "primary" },
+							style: {
+								backgroundColor: "var(--md-sys-color-on-surface)",
+								color: "var(--md-sys-color-surface-container-low)",
+								"&:hover": {
+									backgroundColor:
+										"color-mix(in srgb, var(--md-sys-color-on-surface) 86%, var(--md-sys-color-surface-container-low))",
+								},
+							},
+						},
+					],
 				},
 				sizeSmall: {
 					minHeight: 32,

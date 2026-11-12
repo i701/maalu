@@ -145,12 +145,20 @@ function DashboardPage() {
 				symbol="grid_view"
 				accent="blue"
 				shape={4}
-				plainIcon
-				morph="up"
 				description="Your money this month: what came in, what went out, and what is left to spend."
 				action={
-					// the month picker lives in the banner; its controls take the banner's white
-					<Box sx={{ display: "flex", alignItems: "center", gap: 0.5, color: "#fff" }}>
+					// the month picker: a white pill on the grey page
+					<Box
+						sx={{
+							display: "flex",
+							alignItems: "center",
+							gap: 0.5,
+							px: 0.5,
+							height: 40,
+							borderRadius: "var(--shape-full)",
+							bgcolor: "var(--md-sys-color-surface-container-low)",
+						}}
+					>
 						<IconButton
 							color="inherit"
 							size="small"

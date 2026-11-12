@@ -10,7 +10,7 @@ import { staggerChildren } from "#/lib/motion";
 import { useViewMode } from "#/lib/view-mode";
 
 /** The fill of a row bar. One step up from the card they sit in, so they show in light mode too. */
-export const ROW_FILL = "var(--md-sys-color-surface-container-high)";
+export const ROW_FILL = "var(--md-sys-color-surface-container)";
 
 /** The table mode's desktop table: a real table. One framed surface, a header row with small
  * capitals, no rules between rows and a tint under the pointer. (The cards mode is the one

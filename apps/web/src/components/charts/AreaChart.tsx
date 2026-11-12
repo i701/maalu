@@ -154,7 +154,7 @@ export default function AreaChart({
 						borderRadius: "50%",
 						transform: "translate(-50%, -50%)",
 						bgcolor: color,
-						boxShadow: "0 0 0 2px var(--md-sys-color-surface)",
+						boxShadow: "0 0 0 2px var(--md-sys-color-surface-container-low)",
 					}}
 				/>
 				{active !== null && (

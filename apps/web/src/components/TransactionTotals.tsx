@@ -5,7 +5,6 @@ import Typography from "@mui/material/Typography";
 import Reveal from "#/components/Reveal";
 import StatCard from "#/components/StatCard";
 import { formatMoney } from "#/lib/format";
-import { GRADIENT } from "#/lib/m3";
 import { staggerChildren, useLastDefined } from "#/lib/motion";
 import { useCardMorph } from "#/lib/card-morph";
 import type { TransactionTotals as Totals } from "#/types/api";
@@ -27,17 +26,14 @@ export default function TransactionTotals({
 		<Reveal in={Boolean(totals)}>
 			{shown && (
 				<Grid container spacing={2} sx={{ pb: 2, ...staggerChildren() }}>
-					{/* On a phone the two tiles are one slim strip, green for money in and red for money
-					    out; the tiles are for wider screens. */}
+					{/* On a phone the two tiles are one slim white strip; the tiles are for wider screens. */}
 					<Grid size={12} sx={{ display: { xs: "block", sm: "none" } }}>
 						<Box
 							sx={{
 								display: "grid",
 								gridTemplateColumns: "1fr 1fr",
 								overflow: "hidden",
-								color: "#fff",
-								// one blend from green (money in) through a deep middle to red (money out)
-								background: `linear-gradient(90deg, ${GRADIENT.emerald[0]} 0%, ${GRADIENT.emerald[1]} 40%, ${GRADIENT.rose[1]} 60%, ${GRADIENT.rose[0]} 100%)`,
+								bgcolor: "var(--md-sys-color-surface-container-low)",
 								// a little narrower than the page, so it sits in from both edges
 								mx: 2,
 								...cardMorph,
@@ -61,10 +57,7 @@ export default function TransactionTotals({
 										textAlign: part.align as "left" | "right",
 									}}
 								>
-									<Typography
-										variant="caption"
-										sx={{ display: "block", color: "rgb(255 255 255 / 0.78)" }}
-									>
+									<Typography variant="caption" sx={{ display: "block", color: "text.secondary" }}>
 										{part.label}
 									</Typography>
 									<Typography
@@ -86,7 +79,7 @@ export default function TransactionTotals({
 						<StatCard
 							label="Income in these results"
 							value={formatMoney(shown.income, shown.currency)}
-							gradient="emerald"
+							tint="emerald"
 							icon="arrow_downward"
 							shape={1}
 						/>
@@ -99,7 +92,7 @@ export default function TransactionTotals({
 									: "Expense in these results"
 							}
 							value={formatMoney(shown.expense, shown.currency)}
-							gradient="rose"
+							tint="rose"
 							icon="arrow_upward"
 							shape={4}
 						/>

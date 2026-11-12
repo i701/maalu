@@ -86,13 +86,9 @@ test("the screenshots for the guides", async ({ page, context }) => {
 		let top = box!.y;
 		// skip the page banner: every page has the same one and it costs a third of the height
 		if (!target) {
-			// the banner is the h1's nearest ancestor with the gradient background
-			const bottom = await page.locator("main h1").evaluate((h1) => {
-				let node: HTMLElement | null = h1 as HTMLElement;
-				while (node && !getComputedStyle(node).backgroundImage.includes("linear-gradient"))
-					node = node.parentElement;
-				return node ? node.getBoundingClientRect().bottom : 0;
-			});
+			const bottom = await page
+				.locator("main [data-page-header]")
+				.evaluate((header) => header.getBoundingClientRect().bottom);
 			top = Math.max(top, bottom + BANNER_GAP);
 		}
 		const clip = {

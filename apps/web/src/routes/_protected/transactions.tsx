@@ -962,7 +962,6 @@ function TransactionsPage() {
 				symbol="receipt_long"
 				accent="blue"
 				shape={0}
-				morph="up"
 				description={`Amounts are totalled in ${user.base_currency}.`}
 				stats={heroStats(total, activeCount, upcoming.length)}
 				action={

@@ -40,7 +40,7 @@ const NAV_ITEM_SX = {
 		inset: 0,
 		zIndex: -1,
 		borderRadius: "inherit",
-		bgcolor: "color-mix(in oklab, var(--accent) 26%, var(--md-sys-color-surface-container-high))",
+		bgcolor: "var(--md-sys-color-secondary-container)",
 		opacity: 0,
 		transform: "scaleX(.3)",
 		transition:

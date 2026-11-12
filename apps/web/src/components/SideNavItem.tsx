@@ -66,8 +66,7 @@ export default function SideNavItem({
 				"&[aria-current='page']": {
 					color: "var(--md-sys-color-on-surface)",
 					fontWeight: 700,
-					bgcolor:
-						"color-mix(in oklab, var(--accent) 26%, var(--md-sys-color-surface-container-high))",
+					bgcolor: "var(--md-sys-color-secondary-container)",
 					"& .sym": {
 						fontVariationSettings: SYMBOL_FILLED,
 						color: "color-mix(in oklab, var(--accent) 85%, var(--md-sys-color-on-surface))",

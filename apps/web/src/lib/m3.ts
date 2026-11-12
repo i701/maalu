@@ -1,6 +1,6 @@
 /**
- * Material 3 colour roles: neutral (grey) surfaces, so the page reads as clean white or black, with
- * MUI's default blue as the primary accent only (a theme picker can replace it later). One source for both the MUI palette
+ * Material 3 colour roles: a soft lavender-grey page with white cards and a white sidebar on it
+ * (near-black and a step lighter in dark mode), and a muted violet as the one accent. One source for both the MUI palette
  * (theme.ts) and the `--md-sys-color-*` CSS variables used for roles MUI has no slot for, such as
  * the surface containers and the secondary/tertiary containers.
  *
@@ -42,30 +42,30 @@ type Roles = {
 };
 
 export const M3_LIGHT: Roles = {
-	surface: "#ffffff",
-	onSurface: "#1a1b1e",
-	onSurfaceVariant: "#47484c",
-	surfaceDim: "#dcdce0",
+	surface: "#f4f3f8",
+	onSurface: "#1b1b1f",
+	onSurfaceVariant: "#5d5c66",
+	surfaceDim: "#e2e1e8",
 	surfaceBright: "#ffffff",
 	surfaceContainerLowest: "#ffffff",
-	surfaceContainerLow: "#f6f6f8",
-	surfaceContainer: "#f0f0f3",
-	surfaceContainerHigh: "#eaeaed",
-	surfaceContainerHighest: "#e4e4e8",
-	surfaceVariant: "#e1e1e5",
-	inverseSurface: "#2f3033",
-	inverseOnSurface: "#f1f0f4",
-	outline: "#77777b",
-	outlineVariant: "#c9c9cd",
-	primary: "#1976d2",
+	surfaceContainerLow: "#ffffff",
+	surfaceContainer: "#f1f0f6",
+	surfaceContainerHigh: "#eae9f0",
+	surfaceContainerHighest: "#e3e2ea",
+	surfaceVariant: "#e2e1e9",
+	inverseSurface: "#303034",
+	inverseOnSurface: "#f3f2f7",
+	outline: "#79787f",
+	outlineVariant: "#dddce4",
+	primary: "#5b4ec4",
 	onPrimary: "#ffffff",
-	primaryContainer: "#d3e4ff",
-	onPrimaryContainer: "#001c3b",
-	inversePrimary: "#a5c8ff",
-	secondary: "#5d5e62",
+	primaryContainer: "#e7e3ff",
+	onPrimaryContainer: "#1b1060",
+	inversePrimary: "#c6bfff",
+	secondary: "#5f5d70",
 	onSecondary: "#ffffff",
-	secondaryContainer: "#e4e4e8",
-	onSecondaryContainer: "#1a1b1e",
+	secondaryContainer: "#ebe8f8",
+	onSecondaryContainer: "#26224a",
 	tertiary: "#515e7d",
 	onTertiary: "#ffffff",
 	tertiaryContainer: "#d8e2ff",
@@ -77,30 +77,30 @@ export const M3_LIGHT: Roles = {
 };
 
 export const M3_DARK: Roles = {
-	surface: "#0a0a0b",
-	onSurface: "#e5e5e8",
-	onSurfaceVariant: "#c4c4c8",
-	surfaceDim: "#0a0a0b",
-	surfaceBright: "#2e2e32",
-	surfaceContainerLowest: "#050506",
-	surfaceContainerLow: "#121214",
-	surfaceContainer: "#17171a",
-	surfaceContainerHigh: "#1f1f23",
-	surfaceContainerHighest: "#28282c",
-	surfaceVariant: "#3b3b40",
-	inverseSurface: "#e5e5e8",
-	inverseOnSurface: "#2f3033",
-	outline: "#8e8e93",
-	outlineVariant: "#3b3b40",
-	primary: "#90caf9",
-	onPrimary: "#0b2e4f",
-	primaryContainer: "#0d4a8a",
-	onPrimaryContainer: "#d3e4ff",
-	inversePrimary: "#1976d2",
-	secondary: "#c4c4c8",
-	onSecondary: "#2e2e32",
-	secondaryContainer: "#38383d",
-	onSecondaryContainer: "#e5e5e8",
+	surface: "#0f0f12",
+	onSurface: "#e5e4ea",
+	onSurfaceVariant: "#c6c5ce",
+	surfaceDim: "#0f0f12",
+	surfaceBright: "#303036",
+	surfaceContainerLowest: "#0a0a0c",
+	surfaceContainerLow: "#18181c",
+	surfaceContainer: "#1e1e23",
+	surfaceContainerHigh: "#25252b",
+	surfaceContainerHighest: "#2d2d34",
+	surfaceVariant: "#3c3b44",
+	inverseSurface: "#e5e4ea",
+	inverseOnSurface: "#303034",
+	outline: "#8f8e97",
+	outlineVariant: "#34333b",
+	primary: "#c6bfff",
+	onPrimary: "#2b1f7a",
+	primaryContainer: "#42379e",
+	onPrimaryContainer: "#e7e3ff",
+	inversePrimary: "#5b4ec4",
+	secondary: "#c8c5da",
+	onSecondary: "#302d44",
+	secondaryContainer: "#2f2c45",
+	onSecondaryContainer: "#e7e3ff",
 	tertiary: "#b8c6ea",
 	onTertiary: "#22304c",
 	tertiaryContainer: "#394764",
@@ -133,16 +133,22 @@ export const ACCENT = {
 } as const;
 export type Accent = keyof typeof ACCENT;
 
-/** Deep two-stop gradients for stat cards: dark enough for white text in light and dark mode. */
-export const GRADIENT = {
-	blue: ["#1565c0", "#0d3c78"],
-	navy: ["#24406b", "#0e4a8f"],
-	emerald: ["#0f8a64", "#04483a"],
-	rose: ["#b3263f", "#5f0f26"],
-	violet: ["#6d4bd1", "#35207f"],
-	amber: ["#b45309", "#6b2d04"],
+/** Hues for the pastel stat tiles, each a soft wash over the card colour (`tintFill`) with its icon
+ * in a deeper step (`tintInk`), so dark text reads on it in both colour modes. */
+export const TINT = {
+	blue: "#3B82F6",
+	navy: "#6366F1",
+	emerald: "#10B981",
+	rose: "#F43F5E",
+	violet: "#8B5CF6",
+	amber: "#EAB308",
 } as const;
-export type Gradient = keyof typeof GRADIENT;
+export type Tint = keyof typeof TINT;
+
+export const tintFill = (tint: Tint) =>
+	`color-mix(in oklab, ${TINT[tint]} 14%, var(--md-sys-color-surface-container-low))`;
+export const tintInk = (tint: Tint) =>
+	`color-mix(in oklab, ${TINT[tint]} 75%, var(--md-sys-color-on-surface))`;
 
 /**
  * Chart colours, validated with the dataviz palette checker (lightness band, colour-blind

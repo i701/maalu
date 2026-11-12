@@ -326,7 +326,7 @@ function SubscriptionsPage() {
 					<StatCard
 						label="Monthly total"
 						value={formatMoney(summary.monthly_base_total, summary.currency)}
-						gradient="violet"
+						tint="violet"
 						icon="payments"
 						shape={2}
 					/>

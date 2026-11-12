@@ -2,7 +2,6 @@ import { useCardMorph } from "#/lib/card-morph";
 import { FullAmountTip } from "#/components/Money";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { GRADIENT } from "#/lib/m3";
 import Symbol from "../Symbol";
 
 export type StripItem = {
@@ -24,7 +23,7 @@ function Delta({ item, against }: { item: StripItem; against: string }) {
 		return (
 			<Typography
 				variant="caption"
-				sx={{ color: "rgb(255 255 255 / 0.8)" }}
+				sx={{ color: "text.secondary" }}
 				title={`No change vs ${against}`}
 			>
 				No change
@@ -41,8 +40,10 @@ function Delta({ item, against }: { item: StripItem; against: string }) {
 				alignItems: "center",
 				gap: 0.25,
 				fontWeight: 600,
-				// pale tints that read on the dark gradient; the arrow and the title carry the meaning too
-				color: good ? "#a7f3d0" : "#fecdd3",
+				// the arrow and the title carry the meaning too
+				color: good
+					? "color-mix(in oklab, var(--chart-income) 70%, var(--md-sys-color-on-surface))"
+					: "var(--md-sys-color-error)",
 			}}
 		>
 			<Symbol name={up ? "arrow_upward" : "arrow_downward"} size={12} />
@@ -65,10 +66,7 @@ export default function MetricStrip({ items, against }: { items: StripItem[]; ag
 				gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))`,
 				py: 1.25,
 				...cardMorph,
-				color: "#fff",
-				// one blend across the strip: green for income, red for spending, blue for what was kept,
-				// with deep stops between so the colours do not turn muddy where they meet
-				background: `linear-gradient(90deg, ${GRADIENT.emerald[0]} 0%, ${GRADIENT.emerald[1]} 22%, ${GRADIENT.rose[1]} 38%, ${GRADIENT.rose[0]} 50%, ${GRADIENT.rose[1]} 62%, ${GRADIENT.blue[1]} 78%, ${GRADIENT.blue[0]} 100%)`,
+				bgcolor: "var(--md-sys-color-surface-container-low)",
 			}}
 		>
 			{items.map((item, i) => (
@@ -78,10 +76,10 @@ export default function MetricStrip({ items, against }: { items: StripItem[]; ag
 						px: 1.25,
 						minWidth: 0,
 						textAlign: "center",
-						borderLeft: i === 0 ? 0 : "1px solid rgb(255 255 255 / 0.16)",
+						borderLeft: i === 0 ? 0 : "1px solid var(--md-sys-color-outline-variant)",
 					}}
 				>
-					<Typography variant="caption" sx={{ display: "block", color: "rgb(255 255 255 / 0.78)" }}>
+					<Typography variant="caption" sx={{ display: "block", color: "text.secondary" }}>
 						{item.label}
 					</Typography>
 					<Typography
