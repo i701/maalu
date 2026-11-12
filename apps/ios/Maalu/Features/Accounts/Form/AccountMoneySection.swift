@@ -17,11 +17,11 @@ struct AccountMoneySection: View {
                 if let note = model.rateNote {
                     HStack(spacing: 8) {
                         Text(note)
-                            .font(.caption)
+                            .font(.footnote)
                             .foregroundStyle(.secondary)
                         if model.rateLookupFailed {
                             Button("Try again") { retryLookup() }
-                                .font(.caption)
+                                .font(.footnote)
                                 .buttonStyle(.borderless)
                         }
                     }

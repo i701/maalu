@@ -14,7 +14,7 @@ struct AccountsView: View {
                 ForEach(model.groups) { section in
                     Section(String(localized: section.group.title)) {
                         ForEach(section.accounts) { account in
-                            NavigationLink(value: account.id) {
+                            NavigationLink(value: AccountRoute(id: account.id)) {
                                 AccountRow(account: account)
                             }
                         }
@@ -29,8 +29,8 @@ struct AccountsView: View {
                     Button("Add Account", systemImage: "plus") { isAdding = true }
                 }
             }
-            .navigationDestination(for: String.self) { id in
-                AccountDetailView(listModel: model, id: id)
+            .navigationDestination(for: AccountRoute.self) { route in
+                AccountDetailView(listModel: model, id: route.id)
             }
             .sheet(isPresented: $isAdding) {
                 AccountFormView(onSaved: reloadNow)

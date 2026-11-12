@@ -15,7 +15,7 @@ struct AccountDetailView: View {
             List {
                 Section {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(account.isArchived ? "Archived" : (account.group.isLiability ? "Owed" : "Balance"))
+                        Text(balanceTitle(for: account))
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                         MoneyText(account.balance, currency: account.currency)
@@ -63,6 +63,11 @@ struct AccountDetailView: View {
                 Button("Delete", systemImage: "trash", role: .destructive) { isConfirmingDelete = true }
             }
         }
+    }
+
+    private func balanceTitle(for account: Account) -> LocalizedStringKey {
+        if account.isArchived { return "Archived · balance" }
+        return account.group.isLiability ? "Owed" : "Balance"
     }
 
     private func loadDetail() async {
