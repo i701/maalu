@@ -4,11 +4,16 @@ import Testing
 
 struct TransactionDraftTests {
     private func accounts() throws -> [Account] {
-        try Api.decoder.decode([Account].self, from: Data(#"""
-        [{"id":"mvr","name":"BML","group":"accounts","currency":"MVR","balance":"0","exchange_rate":"1","bank":null},
-         {"id":"usd","name":"Dollar","group":"accounts","currency":"USD","balance":"0","exchange_rate":"15.42","bank":null},
-         {"id":"mvr2","name":"Savings","group":"savings","currency":"MVR","balance":"0","exchange_rate":"1","bank":null}]
-        """#.utf8))
+        func json(_ id: String, _ name: String, _ group: String, _ currency: String, _ rate: String) -> String {
+            #"""
+            {"id":"\#(id)","name":"\#(name)","group":"\#(group)","currency":"\#(currency)","balance":"0","base_balance":"0",
+             "opening_amount":"0","exchange_rate":"\#(rate)","auto_rate":false,"bank":null,"account_number":null,"description":null,
+             "credit_limit":null,"statement_day":null,"due_day":null,"exclude_from_stats":false,"spendable":null,
+             "archived_at":null,"transaction_count":0}
+            """#
+        }
+        let list = [json("mvr", "BML", "accounts", "MVR", "1"), json("usd", "Dollar", "accounts", "USD", "15.42"), json("mvr2", "Savings", "savings", "MVR", "1")]
+        return try Api.decoder.decode([Account].self, from: Data("[\(list.joined(separator: ","))]".utf8))
     }
 
     private func draft(_ configure: (inout TransactionDraft) -> Void) -> TransactionDraft {

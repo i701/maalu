@@ -20,11 +20,11 @@ enum PaymentMethod: String, Codable, CaseIterable, Identifiable {
     }
 
     /// What an account group suggests as the way of paying.
-    static func suggested(forGroup group: String) -> PaymentMethod {
+    static func suggested(for group: AccountGroup) -> PaymentMethod {
         switch group {
-        case "cash": .cash
-        case "accounts", "savings", "overdrafts": .bankTransfer
-        case "card": .creditCard
+        case .cash: .cash
+        case .accounts, .savings, .overdrafts: .bankTransfer
+        case .card: .creditCard
         default: .other
         }
     }

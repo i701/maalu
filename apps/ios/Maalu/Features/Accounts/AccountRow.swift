@@ -7,9 +7,11 @@ struct AccountRow: View {
         AmountRow {
             VStack(alignment: .leading) {
                 Text(account.name)
-                Text([account.bank, account.group.capitalized].compactMap { $0 }.joined(separator: " · "))
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                if let bank = account.bank {
+                    Text(bank)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
             }
         } amount: {
             Text(Money.decimal(account.balance) ?? 0, format: .currency(code: account.currency).presentation(.isoCode))

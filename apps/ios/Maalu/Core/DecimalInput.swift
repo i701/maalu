@@ -1,16 +1,21 @@
 import Foundation
 
 enum DecimalInput {
-    /// Digits and at most one decimal separator: what an amount can hold, however it got into the field (a paste, a keyboard).
-    static func sanitized(_ text: String, separator: Character = Locale.current.decimalSeparator?.first ?? ".") -> String {
+    /// Digits and at most one decimal separator (and, when allowed, a leading minus): what an amount can hold, however it
+    /// got into the field (a paste, a keyboard).
+    static func sanitized(_ text: String, separator: Character = Locale.current.decimalSeparator?.first ?? ".", allowsSign: Bool = false) -> String {
         var seenSeparator = false
-        return String(text.filter { character in
-            if character.isASCII, character.isNumber { return true }
-            if character == separator, !seenSeparator {
+        var result = ""
+        for character in text {
+            if character.isASCII, character.isNumber {
+                result.append(character)
+            } else if character == separator, !seenSeparator {
                 seenSeparator = true
-                return true
+                result.append(character)
+            } else if allowsSign, character == "-", result.isEmpty {
+                result.append(character)
             }
-            return false
-        })
+        }
+        return result
     }
 }

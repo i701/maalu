@@ -9,9 +9,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 67 | 55 | 8 |
-| 🟡 partial | 0 | 3 | 7 |
-| ❌ missing | 0 | 5 | 48 |
+| ✅ done | 67 | 55 | 11 |
+| 🟡 partial | 0 | 3 | 9 |
+| ❌ missing | 0 | 5 | 43 |
 | ➖ n/a | 1 | 5 | 5 |
 
 ## Still to build on Android (8)
@@ -25,8 +25,10 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (55)
+## Still to build on iOS (52)
 
+- 🟡 **Accounts list** (Accounts and cards). Accounts by group with their balances and bank: no credit-use bars, small balance lines or the net worth summary yet.
+- 🟡 **An account's page** (Accounts and cards). The balance, facts, a balance chart with three ranges and the 20 latest transactions with the balance after each row: no this-month figures, search or paging yet.
 - 🟡 **Transactions list** (Transactions). Search, a type filter, paging, a detail screen and delete (to the trash) only: no date, account, category, tag or amount filters, no selection, no planned list.
 - 🟡 **Filters** (Transactions). Type, date range (with quick ranges), account, category, tags (any or all) and amount. No payment method, card, needs or wants, or planned filter.
 - 🟡 **Add and edit a transaction** (Transactions). Income, expense and transfer with amount, account, category, vendor, payment method, date, note and an exchange rate for a foreign account. No time, tags, card, items, location, receipts or planned switch (a future date is planned by itself).
@@ -39,11 +41,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Where you are signed in** (Sign in and security).
 - ❌ **Change password** (Sign in and security).
 - ❌ **Sign-in alerts** (Sign in and security).
-- ❌ **Accounts list** (Accounts and cards).
-- ❌ **Add and edit an account** (Accounts and cards).
-- ❌ **Archive and unarchive an account** (Accounts and cards).
-- ❌ **Adjust balance** (Accounts and cards).
-- ❌ **An account's page** (Accounts and cards).
 - ❌ **Market exchange rates** (Accounts and cards).
 - ❌ **Rate history** (Accounts and cards).
 - ❌ **Cards** (Accounts and cards).
@@ -105,15 +102,18 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | Feature | Web | Android | iOS |
 |---|:---:|:---:|:---:|
-| **Accounts list**<br>Accounts by group with balances, credit use, small balance lines and the net worth summary. | ✅ done | ✅ done | ❌ missing |
-| **Add and edit an account**<br>Group, bank and number, currency and rate, credit limit, statement days, spendable switch, exclude from stats. | ✅ done | ✅ done | ❌ missing |
-| **Archive and unarchive an account**<br>Hide an account without losing its history. | ✅ done | ✅ done | ❌ missing |
-| **Adjust balance**<br>Set the balance to what the bank shows, or add or take away, as a transaction that reports ignore. | ✅ done | ✅ done | ❌ missing |
-| **An account's page**<br>Balance, this month, its own transactions, balance over time and the balance after each row. | ✅ done | ✅ done | ❌ missing |
+| **Accounts list**<br>Accounts by group with balances, credit use, small balance lines and the net worth summary. | ✅ done | ✅ done | 🟡 partial |
+| **Add and edit an account**<br>Group, bank and number, currency and rate, credit limit, statement days, spendable switch, exclude from stats. | ✅ done | ✅ done | ✅ done |
+| **Archive and unarchive an account**<br>Hide an account without losing its history. | ✅ done | ✅ done | ✅ done |
+| **Adjust balance**<br>Set the balance to what the bank shows, or add or take away, as a transaction that reports ignore. | ✅ done | ✅ done | ✅ done |
+| **An account's page**<br>Balance, this month, its own transactions, balance over time and the balance after each row. | ✅ done | ✅ done | 🟡 partial |
 | **Market exchange rates**<br>A suggested rate for a foreign amount on a date, and the currency list. | ✅ done | ✅ done | ❌ missing |
 | **Rate history**<br>How the market rate of a foreign account's currency moved, 30 days to a year. | ✅ done | ✅ done | ❌ missing |
 | **Cards**<br>Debit cards on a bank account and credit cards with a repayment account; a Card field on a purchase and a card filter. | ✅ done | ✅ done | ❌ missing |
 | **Credit card statements and due dates**<br>The statement balance, what is left, the due date and a Repay button, worked out each time. | ✅ done | ✅ done | ❌ missing |
+
+- **Accounts list** (iOS): Accounts by group with their balances and bank: no credit-use bars, small balance lines or the net worth summary yet.
+- **An account's page** (iOS): The balance, facts, a balance chart with three ranges and the 20 latest transactions with the balance after each row: no this-month figures, search or paging yet.
 
 ## Transactions
 

@@ -23,7 +23,7 @@ final class GoalFormModel {
     func load(using api: Api) async {
         let result: ApiResult<[Account]> = await api.get("accounts")
         if case .ok(let list, _) = result {
-            accounts = list.filter { ["savings", "accounts", "cash"].contains($0.group) }
+            accounts = list.filter { !$0.group.isLiability && !$0.isArchived }
         }
     }
 

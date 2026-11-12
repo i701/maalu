@@ -57,7 +57,7 @@ final class TransactionFormModel {
     func accountChanged() {
         guard let account else { return }
         if let rate = Money.decimal(account.exchangeRate), account.currency != baseCurrency { draft.rate = rate }
-        let suggestion = PaymentMethod.suggested(forGroup: account.group)
+        let suggestion = PaymentMethod.suggested(for: account.group)
         if draft.method == suggestedMethod { draft.method = suggestion }
         suggestedMethod = suggestion
     }

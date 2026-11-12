@@ -285,7 +285,11 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "partial",
+        "note": "Accounts by group with their balances and bank: no credit-use bars, small balance lines or the net worth summary yet.",
+        "evidence": [
+          "apps/ios/Maalu/Features/Accounts/AccountsView.swift"
+        ]
       },
       "routes": [
         "/accounts"
@@ -314,7 +318,11 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Accounts/Form/AccountFormView.swift",
+          "apps/ios/Maalu/Features/Accounts/Form/AccountDraft.swift"
+        ]
       },
       "api": [
         "/api/v1/accounts/{account_id}"
@@ -339,7 +347,10 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Accounts/Detail/AccountDetailView.swift"
+        ]
       },
       "api": [
         "/api/v1/accounts/{account_id}/archive",
@@ -364,7 +375,10 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Accounts/Detail/AdjustBalanceView.swift"
+        ]
       },
       "api": [
         "/api/v1/accounts/{account_id}/adjust"
@@ -389,7 +403,11 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "partial",
+        "note": "The balance, facts, a balance chart with three ranges and the 20 latest transactions with the balance after each row: no this-month figures, search or paging yet.",
+        "evidence": [
+          "apps/ios/Maalu/Features/Accounts/Detail/AccountDetailView.swift"
+        ]
       },
       "routes": [
         "/accounts/$id"
