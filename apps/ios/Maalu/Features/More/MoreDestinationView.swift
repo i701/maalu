@@ -10,6 +10,7 @@ struct MoreDestinationView: View {
         case "templates": TemplatesView()
         case "categories": CategoriesView()
         case "trash": TrashView()
+        case "compare": CompareView()
         default: ComingSoonView(title: item.title, systemImage: item.systemImage)
         }
     }

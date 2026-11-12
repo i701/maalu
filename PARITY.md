@@ -9,9 +9,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 67 | 55 | 19 |
+| ✅ done | 67 | 55 | 20 |
 | 🟡 partial | 0 | 3 | 9 |
-| ❌ missing | 0 | 5 | 35 |
+| ❌ missing | 0 | 5 | 34 |
 | ➖ n/a | 1 | 5 | 5 |
 
 ## Still to build on Android (8)
@@ -25,7 +25,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (44)
+## Still to build on iOS (43)
 
 - 🟡 **Accounts list** (Accounts and cards). Accounts by group with their balances and bank: no credit-use bars, small balance lines or the net worth summary yet.
 - 🟡 **An account's page** (Accounts and cards). The balance, facts, a balance chart with three ranges and the 20 latest transactions with the balance after each row: no this-month figures, search or paging yet.
@@ -60,7 +60,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Make a subscription from a transaction** (Bills and subscriptions).
 - ❌ **Salary split rules** (Budget, goals and planning).
 - ❌ **Split a salary and the Pending screen** (Budget, goals and planning).
-- ❌ **Compare** (Dashboard and reports).
 - ❌ **Trends** (Dashboard and reports).
 - ❌ **Places map** (Dashboard and reports).
 - ❌ **Notifications** (Notifications).
@@ -180,7 +179,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Money flow**<br>A Sankey of income into one total and out to spending and what was saved. | ✅ done | ✅ done | ✅ done |
 | **Credit used**<br>What is owed against each credit limit. | ✅ done | ✅ done | ✅ done |
 | **Cash flow**<br>Income and expenses per month, what was kept each month and kept in total, over 6 or 12 months. | ✅ done | ✅ done | 🟡 partial |
-| **Compare**<br>One period against another: income, spending, what was kept and every category. | ✅ done | ✅ done | ❌ missing |
+| **Compare**<br>One period against another: income, spending, what was kept and every category. | ✅ done | ✅ done | ✅ done |
 | **Trends**<br>Category by month, spending or income over 6, 12 or 24 months, as a table or stacked columns. | ✅ done | ✅ done | ❌ missing |
 | **Net worth and what moved it**<br>How net worth changed over a period and the drivers that explain it. | ✅ done | ✅ done | 🟡 partial |
 | **Places map**<br>Where spending went, as circles on a map sized by spend. | ✅ done | ✅ done | ❌ missing |

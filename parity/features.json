@@ -1597,7 +1597,11 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Compare/CompareView.swift",
+          "apps/ios/Maalu/Features/Compare/CompareRow.swift"
+        ]
       },
       "routes": [
         "/compare"
