@@ -7,6 +7,7 @@ struct MoreDestinationView: View {
         switch item.id {
         case "plan": PlanView()
         case "subscriptions": SubscriptionsView()
+        case "templates": TemplatesView()
         default: ComingSoonView(title: item.title, systemImage: item.systemImage)
         }
     }

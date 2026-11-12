@@ -17,6 +17,18 @@ struct TransactionDraft {
 
     init() {}
 
+    /// A template never carries a date, so the date is today and the rate comes from the account.
+    init(startingFrom template: TransactionTemplate) {
+        type = template.type
+        amount = template.amount.flatMap(Money.decimal)
+        accountID = template.account?.id
+        toAccountID = template.toAccount?.id
+        category = template.type == .transfer ? "" : template.category ?? ""
+        vendor = template.type == .transfer ? "" : template.vendor ?? ""
+        note = template.description ?? ""
+        method = template.paymentMethod
+    }
+
     init(editing transaction: Transaction) {
         type = transaction.type
         amount = Money.decimal(transaction.amount)

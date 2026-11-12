@@ -648,7 +648,11 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Templates/TemplatesView.swift",
+          "apps/ios/Maalu/Features/Transactions/Form/TransactionFormView.swift"
+        ]
       },
       "routes": [
         "/templates"
