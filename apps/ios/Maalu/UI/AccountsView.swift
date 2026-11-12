@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// A first signed-in screen: the accounts, to prove sign-in and the API end to end. The tabs come next.
-struct HomeView: View {
+/// The Accounts tab: every account with its balance.
+struct AccountsView: View {
     @Environment(Session.self) private var session
     @State private var accounts: [Account] = []
     @State private var error: String?
@@ -24,9 +24,6 @@ struct HomeView: View {
             }
             .overlay { if loading { ProgressView() } }
             .navigationTitle("Accounts")
-            .toolbar {
-                Button("Sign out") { Task { await session.signOut() } }
-            }
             .refreshable { await load() }
             .task { await load() }
         }

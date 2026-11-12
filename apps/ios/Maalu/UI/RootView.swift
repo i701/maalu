@@ -9,7 +9,7 @@ struct RootView: View {
         } else if session.token == nil {
             LoginView()
         } else {
-            HomeView()
+            MainTabs()
         }
     }
 }
