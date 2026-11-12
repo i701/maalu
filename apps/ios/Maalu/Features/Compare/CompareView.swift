@@ -48,7 +48,7 @@ struct CompareView: View {
                 }
                 if !model.chartRows.isEmpty {
                     Section {
-                        CompareChart(rows: model.chartRows)
+                        CompareBars(rows: model.chartRows, currency: model.currency)
                     } header: {
                         Text("Spending by category")
                     } footer: {
