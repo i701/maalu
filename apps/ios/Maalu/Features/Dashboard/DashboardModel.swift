@@ -27,6 +27,8 @@ final class DashboardModel {
     var isCurrentMonth: Bool { month.isCurrent() }
     var spendingRows: [SpendingRow] { SpendingRow.rows(from: categories) }
     var kindShares: [KindShare]? { KindShare.shares(from: categories) }
+    var incomeRule: IncomeRule? { IncomeRule.make(from: categories) }
+    var moneyFlow: MoneyFlow? { MoneyFlow.make(from: categories) }
     var creditCards: [CreditCardUsage] { CreditCardUsage.cards(from: accounts) }
 
     func move(by months: Int) {

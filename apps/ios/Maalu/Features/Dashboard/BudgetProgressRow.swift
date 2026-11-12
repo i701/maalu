@@ -11,10 +11,16 @@ struct BudgetProgressRow: View {
     var body: some View {
         VStack(alignment: .leading) {
             AmountRow {
-                Text(title)
+                VStack(alignment: .leading) {
+                    Text(title)
+                    Text("\(MoneyFormat.string(spent, currency: currency)) of \(MoneyFormat.string(limit, currency: currency))")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
             } amount: {
-                Text("\(MoneyFormat.string(spent, currency: currency)) / \(MoneyFormat.string(limit, currency: currency))")
+                Text("\(percent)%")
                     .monospacedDigit()
+                    .foregroundStyle(status == "ok" ? Color.secondary : Color(budgetStatus: status))
             }
             ProgressView(value: min(Double(percent) / 100, 1))
                 .tint(Color(budgetStatus: status))

@@ -28,6 +28,12 @@ struct DashboardView: View {
                 if let shares = model.kindShares {
                     NeedsWantsSection(shares: shares, currency: model.currency)
                 }
+                if let rule = model.incomeRule {
+                    IncomeRuleSection(rule: rule, currency: model.currency)
+                }
+                if let flow = model.moneyFlow {
+                    MoneyFlowSection(flow: flow, currency: model.currency)
+                }
                 if !model.creditCards.isEmpty {
                     CreditUsedSection(cards: model.creditCards)
                 }
