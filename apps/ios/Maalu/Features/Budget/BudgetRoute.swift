@@ -1,4 +1,4 @@
 enum BudgetRoute: Hashable {
-    case line(BudgetLine)
-    case goal(Goal)
+    case line(String)
+    case goal(String)
 }

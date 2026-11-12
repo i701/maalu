@@ -10,7 +10,7 @@ struct BudgetLinesSection: View {
                     .foregroundStyle(.secondary)
             }
             ForEach(budget.lines) { line in
-                NavigationLink(value: BudgetRoute.line(line)) {
+                NavigationLink(value: BudgetRoute.line(line.id)) {
                     BudgetLineRow(line: line, currency: budget.currency)
                 }
             }

@@ -5,6 +5,7 @@ struct Budget: Decodable {
     let lines: [BudgetLine]
     let fixedLines: [FixedBudgetLine]
     let attention: Int
+    let moves: [BudgetMove]
 
     var runningFixedLines: [FixedBudgetLine] { fixedLines.filter(\.isRunning) }
     var isEmpty: Bool { lines.isEmpty && runningFixedLines.isEmpty }

@@ -3,6 +3,7 @@ import SwiftUI
 struct BudgetView: View {
     @Environment(Session.self) private var session
     @State private var model = BudgetModel()
+    @State private var addition: BudgetAddition?
 
     var body: some View {
         NavigationStack {
@@ -17,14 +18,27 @@ struct BudgetView: View {
             .navigationTitle("Budget")
             .navigationSubtitle(Text(model.month.start, format: .dateTime.month(.wide).year()))
             .toolbar {
-                ToolbarItem(placement: .primaryAction) {
+                ToolbarItemGroup(placement: .primaryAction) {
                     MonthSwitcher(canGoForward: true, previous: previousMonth, next: nextMonth)
+                    Menu("Add", systemImage: "plus") {
+                        Button("New Limit", systemImage: "gauge.with.needle") { addition = .limit }
+                        Button("New Goal", systemImage: "target") { addition = .goal }
+                    }
+                    .disabled(model.budget == nil)
+                }
+            }
+            .sheet(item: $addition) { addition in
+                switch addition {
+                case .limit:
+                    BudgetLineFormView(otherLines: model.budget?.lines ?? [], currency: model.budget?.currency ?? "", onSaved: reloadNow)
+                case .goal:
+                    GoalFormView(currency: model.budget?.currency ?? "", onSaved: reloadNow)
                 }
             }
             .navigationDestination(for: BudgetRoute.self) { route in
                 switch route {
-                case .line(let line): BudgetLineDetailView(line: line, currency: model.budget?.currency ?? "")
-                case .goal(let goal): GoalDetailView(goal: goal)
+                case .line(let id): BudgetLineDetailView(model: model, id: id)
+                case .goal(let id): GoalDetailView(model: model, id: id)
                 }
             }
             .refreshable { await load() }

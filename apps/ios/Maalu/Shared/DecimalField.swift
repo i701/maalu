@@ -19,6 +19,11 @@ struct DecimalField: View {
         TextField(title, text: $text)
             .keyboardType(.decimalPad)
             .onChange(of: text) {
+                let clean = DecimalInput.sanitized(text)
+                if clean != text {
+                    text = clean
+                    return
+                }
                 lastTyped = Self.parse(text)
                 value = lastTyped
             }

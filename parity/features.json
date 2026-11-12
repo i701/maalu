@@ -1168,10 +1168,11 @@
       },
       "ios": {
         "status": "partial",
-        "note": "Read only: the month picker, the total with needs and wants, each monthly limit with its status and a detail screen. No making, changing or deleting a limit, and no budget settings.",
+        "note": "Monthly limits: see, make, change, delete, move money between them with undo and history. No budget settings (period start day, warning level), no rollover choice per period, and no limits for set dates.",
         "evidence": [
           "apps/ios/Maalu/Features/Budget/BudgetView.swift",
-          "apps/ios/Maalu/Features/Budget/BudgetLineRow.swift"
+          "apps/ios/Maalu/Features/Budget/Form/BudgetLineFormView.swift",
+          "apps/ios/Maalu/Features/Budget/BudgetLineDetailView.swift"
         ]
       },
       "routes": [
@@ -1231,7 +1232,11 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Budget/Moves/MoveMoneyView.swift",
+          "apps/ios/Maalu/Features/Budget/Moves/MoveHistoryView.swift"
+        ]
       },
       "api": [
         "/api/v1/budget/lines/{line_id}/moves",
@@ -1259,10 +1264,10 @@
         ]
       },
       "ios": {
-        "status": "partial",
-        "note": "Read only: goals with progress, what is left, what each month needs and a detail screen. No making, changing or deleting a goal, and no adding or taking out money.",
+        "status": "done",
         "evidence": [
-          "apps/ios/Maalu/Features/Budget/GoalRow.swift",
+          "apps/ios/Maalu/Features/Budget/Goals/GoalFormView.swift",
+          "apps/ios/Maalu/Features/Budget/Goals/GoalMoneyView.swift",
           "apps/ios/Maalu/Features/Budget/GoalDetailView.swift"
         ]
       },

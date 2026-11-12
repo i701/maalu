@@ -54,6 +54,10 @@ struct Api: Sendable {
         await empty(method: "POST", path: path)
     }
 
+    func post<T: Decodable>(_ path: String) async -> ApiResult<T> {
+        decode(await perform(method: "POST", path: path, body: Data()))
+    }
+
     private func sendJSON<T: Decodable>(_ method: String, _ path: String, body: some Encodable) async -> ApiResult<T> {
         guard let data = try? Api.encoder.encode(body) else {
             return .failed(status: 0, message: "The request could not be made.")

@@ -10,7 +10,7 @@ struct GoalsSection: View {
                     .foregroundStyle(.secondary)
             }
             ForEach(goals) { goal in
-                NavigationLink(value: BudgetRoute.goal(goal)) {
+                NavigationLink(value: BudgetRoute.goal(goal.id)) {
                     GoalRow(goal: goal)
                 }
             }
