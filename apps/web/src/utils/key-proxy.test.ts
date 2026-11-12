@@ -86,6 +86,9 @@ describe("isOpenRoute", () => {
 	it("lets a person sign in without a credential, and only that", () => {
 		expect(isOpenRoute("POST", "auth/login")).toBe(true);
 		expect(isOpenRoute("post", "auth/login/2fa")).toBe(true);
+		expect(isOpenRoute("GET", "server")).toBe(true);
+		expect(isOpenRoute("POST", "server")).toBe(false);
+		expect(isOpenRoute("GET", "server/extra")).toBe(false);
 		expect(isOpenRoute("GET", "auth/login")).toBe(false);
 		expect(isOpenRoute("POST", "auth/register")).toBe(false);
 		expect(isOpenRoute("POST", "auth/password")).toBe(false);

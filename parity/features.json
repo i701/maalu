@@ -79,6 +79,7 @@
       "api": [
         "/api/v1/auth/login",
         "/api/v1/auth/logout",
+        "/api/v1/server",
         "/api/v1/whoami"
       ]
     },

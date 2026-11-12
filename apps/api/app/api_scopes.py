@@ -120,6 +120,7 @@ ROUTES: list[tuple[str, str | None]] = [
     ("/notifications", "notifications"),
     ("/currencies", "public"),
     ("/whoami", "public"),
+    ("/server", "public"),
 ]
 
 _DELETING_SUFFIXES = ("/purge", "/permanent")

@@ -17,6 +17,7 @@ from app.routers import (
     goal,
     group,
     imports,
+    meta,
     notification,
     place,
     salary,
@@ -46,6 +47,7 @@ def create_app() -> FastAPI:
         return {"status": "ok"}
 
     app.include_router(auth.router, prefix="/api/v1")
+    app.include_router(meta.router, prefix="/api/v1")
     app.include_router(api_key.router, prefix="/api/v1")
     app.include_router(api_key.whoami_router, prefix="/api/v1")
     # before the transactions router: its fixed paths must not be read as a transaction id

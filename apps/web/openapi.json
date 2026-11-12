@@ -6253,6 +6253,33 @@
         "title": "ScopeCatalog",
         "type": "object"
       },
+      "ServerInfo": {
+        "properties": {
+          "app": {
+            "const": "maalu",
+            "description": "Always `maalu`, so a client can tell this is a Maalu server.",
+            "title": "App",
+            "type": "string"
+          },
+          "registration_open": {
+            "description": "Whether a new account can be created right now.",
+            "title": "Registration Open",
+            "type": "boolean"
+          },
+          "version": {
+            "description": "The API's version.",
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "app",
+          "version",
+          "registration_open"
+        ],
+        "title": "ServerInfo",
+        "type": "object"
+      },
       "SessionResponse": {
         "description": "One sign-in of yours, for the list of where you are signed in.",
         "properties": {
@@ -14083,6 +14110,28 @@
         "summary": "Dismiss Salary Split Task",
         "tags": [
           "salary"
+        ]
+      }
+    },
+    "/api/v1/server": {
+      "get": {
+        "description": "That this is a Maalu server, its version and whether sign-up is open. No login needed.",
+        "operationId": "server_info_api_v1_server_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerInfo"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Server Info",
+        "tags": [
+          "meta"
         ]
       }
     },

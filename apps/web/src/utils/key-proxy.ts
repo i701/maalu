@@ -46,7 +46,7 @@ export function credentialFromAuthorization(header: string | null): Credential |
 }
 
 /** The only two calls that need no credential: signing in, and the second step of it. */
-const OPEN_ROUTES = new Set(["POST auth/login", "POST auth/login/2fa"]);
+const OPEN_ROUTES = new Set(["POST auth/login", "POST auth/login/2fa", "GET server"]);
 
 /** Whether `method` on `path` (as returned by `upstreamPath`) may be made without being signed in. */
 export const isOpenRoute = (method: string, path: string): boolean =>
@@ -80,7 +80,7 @@ export async function forwardKeyRequest(request: Request, splat: string | undefi
 	const credential = credentialFromAuthorization(request.headers.get("authorization"));
 	const path = upstreamPath(splat);
 	if (!path) return json(404, "Not found");
-	// Signing in is the one thing that needs no credential; everything else needs a key or a session token.
+	// Signing in, and asking what server this is, are the only things that need no credential; everything else needs a key or a session token.
 	if (!credential && !isOpenRoute(request.method, path)) {
 		return json(401, "Sign in, or send an API key as: Authorization: Bearer mlk_...", {
 			"www-authenticate": "Bearer",

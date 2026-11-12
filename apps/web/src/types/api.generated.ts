@@ -1511,6 +1511,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/server": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Server Info
+         * @description That this is a Maalu server, its version and whether sign-up is open. No login needed.
+         */
+        get: operations["server_info_api_v1_server_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/stats/available-to-spend": {
         parameters: {
             query?: never;
@@ -5337,6 +5357,25 @@ export interface components {
             areas: components["schemas"]["AreaInfo"][];
             /** Roles */
             roles: components["schemas"]["RoleInfo"][];
+        };
+        /** ServerInfo */
+        ServerInfo: {
+            /**
+             * App
+             * @description Always `maalu`, so a client can tell this is a Maalu server.
+             * @constant
+             */
+            app: "maalu";
+            /**
+             * Registration Open
+             * @description Whether a new account can be created right now.
+             */
+            registration_open: boolean;
+            /**
+             * Version
+             * @description The API's version.
+             */
+            version: string;
         };
         /**
          * SessionResponse
@@ -9401,6 +9440,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    server_info_api_v1_server_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServerInfo"];
                 };
             };
         };
