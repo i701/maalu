@@ -10,8 +10,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | | Web | Android | iOS |
 |---|---:|---:|---:|
 | ✅ done | 67 | 55 | 1 |
-| 🟡 partial | 0 | 3 | 3 |
-| ❌ missing | 0 | 5 | 59 |
+| 🟡 partial | 0 | 3 | 6 |
+| ❌ missing | 0 | 5 | 56 |
 | ➖ n/a | 1 | 5 | 5 |
 
 ## Still to build on Android (8)
@@ -30,6 +30,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - 🟡 **Transactions list** (Transactions). Search, a type filter, paging, a detail screen and delete (to the trash) only: no date, account, category, tag or amount filters, no selection, no planned list.
 - 🟡 **Filters** (Transactions). Type, date range (with quick ranges), account, category, tags (any or all) and amount. No payment method, card, needs or wants, or planned filter.
 - 🟡 **Add and edit a transaction** (Transactions). Income, expense and transfer with amount, account, category, vendor, payment method, date, note and an exchange rate for a foreign account. No time, tags, card, items, location, receipts or planned switch (a future date is planned by itself).
+- 🟡 **Dashboard** (Dashboard and reports). Available to spend (with its working), net worth with a 30-day chart, and cash flow. No month picker, spending by category, latest transactions, upcoming or budget and goals cards yet.
+- 🟡 **Cash flow** (Dashboard and reports). Income and expenses by month (6 or 12 months) and this month's income, spending and what was kept. No kept-per-month chart or running total, and no table view of the chart.
+- 🟡 **Net worth and what moved it** (Dashboard and reports). Only the dashboard's net worth card (total, assets, liabilities, 30-day change and chart). Not the Net worth page with a chosen period and what moved it.
 - ❌ **Two-factor sign-in** (Sign in and security).
 - ❌ **Set up and manage two-factor** (Sign in and security).
 - ❌ **Where you are signed in** (Sign in and security).
@@ -71,15 +74,12 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Month plan** (Budget, goals and planning).
 - ❌ **Salary split rules** (Budget, goals and planning).
 - ❌ **Split a salary and the Pending screen** (Budget, goals and planning).
-- ❌ **Dashboard** (Dashboard and reports).
 - ❌ **Budget and goals card** (Dashboard and reports).
 - ❌ **Needs and wants, and 50/30/20** (Dashboard and reports).
 - ❌ **Money flow** (Dashboard and reports).
 - ❌ **Credit used** (Dashboard and reports).
-- ❌ **Cash flow** (Dashboard and reports).
 - ❌ **Compare** (Dashboard and reports).
 - ❌ **Trends** (Dashboard and reports).
-- ❌ **Net worth and what moved it** (Dashboard and reports).
 - ❌ **Places map** (Dashboard and reports).
 - ❌ **Notifications** (Notifications).
 - ❌ **Email digest** (Notifications).
@@ -186,16 +186,20 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | Feature | Web | Android | iOS |
 |---|:---:|:---:|:---:|
-| **Dashboard**<br>Available to spend, the month strip, spending by category, net worth, cash flow, budget and goals, coming up and latest. | ✅ done | ✅ done | ❌ missing |
+| **Dashboard**<br>Available to spend, the month strip, spending by category, net worth, cash flow, budget and goals, coming up and latest. | ✅ done | ✅ done | 🟡 partial |
 | **Budget and goals card**<br>Per-period limits and goals with a meter, and the running limits for set dates. | ✅ done | ✅ done | ❌ missing |
 | **Needs and wants, and 50/30/20**<br>Spending split by kind, and the shares of income against the 50/30/20 rule. | ✅ done | ✅ done | ❌ missing |
 | **Money flow**<br>A Sankey of income into one total and out to spending and what was saved. | ✅ done | ✅ done | ❌ missing |
 | **Credit used**<br>What is owed against each credit limit. | ✅ done | ✅ done | ❌ missing |
-| **Cash flow**<br>Income and expenses per month, what was kept each month and kept in total, over 6 or 12 months. | ✅ done | ✅ done | ❌ missing |
+| **Cash flow**<br>Income and expenses per month, what was kept each month and kept in total, over 6 or 12 months. | ✅ done | ✅ done | 🟡 partial |
 | **Compare**<br>One period against another: income, spending, what was kept and every category. | ✅ done | ✅ done | ❌ missing |
 | **Trends**<br>Category by month, spending or income over 6, 12 or 24 months, as a table or stacked columns. | ✅ done | ✅ done | ❌ missing |
-| **Net worth and what moved it**<br>How net worth changed over a period and the drivers that explain it. | ✅ done | ✅ done | ❌ missing |
+| **Net worth and what moved it**<br>How net worth changed over a period and the drivers that explain it. | ✅ done | ✅ done | 🟡 partial |
 | **Places map**<br>Where spending went, as circles on a map sized by spend. | ✅ done | ✅ done | ❌ missing |
+
+- **Dashboard** (iOS): Available to spend (with its working), net worth with a 30-day chart, and cash flow. No month picker, spending by category, latest transactions, upcoming or budget and goals cards yet.
+- **Cash flow** (iOS): Income and expenses by month (6 or 12 months) and this month's income, spending and what was kept. No kept-per-month chart or running total, and no table view of the chart.
+- **Net worth and what moved it** (iOS): Only the dashboard's net worth card (total, assets, liabilities, 30-day change and chart). Not the Net worth page with a chosen period and what moved it.
 
 ## Notifications
 

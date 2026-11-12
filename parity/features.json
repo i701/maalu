@@ -1363,7 +1363,12 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "partial",
+        "note": "Available to spend (with its working), net worth with a 30-day chart, and cash flow. No month picker, spending by category, latest transactions, upcoming or budget and goals cards yet.",
+        "evidence": [
+          "apps/ios/Maalu/Features/Dashboard/DashboardView.swift",
+          "apps/ios/Maalu/Features/Dashboard/AvailableToSpendSection.swift"
+        ]
       },
       "routes": [
         "/dashboard"
@@ -1481,7 +1486,11 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "partial",
+        "note": "Income and expenses by month (6 or 12 months) and this month's income, spending and what was kept. No kept-per-month chart or running total, and no table view of the chart.",
+        "evidence": [
+          "apps/ios/Maalu/Features/Dashboard/CashFlowSection.swift"
+        ]
       }
     },
     {
@@ -1553,7 +1562,11 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "partial",
+        "note": "Only the dashboard's net worth card (total, assets, liabilities, 30-day change and chart). Not the Net worth page with a chosen period and what moved it.",
+        "evidence": [
+          "apps/ios/Maalu/Features/Dashboard/NetWorthSection.swift"
+        ]
       },
       "routes": [
         "/net-worth"

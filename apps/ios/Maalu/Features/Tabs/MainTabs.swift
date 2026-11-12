@@ -4,7 +4,7 @@ struct MainTabs: View {
     var body: some View {
         TabView {
             Tab("Dashboard", systemImage: "square.grid.2x2") {
-                NavigationStack { ComingSoonView(title: "Dashboard", systemImage: "square.grid.2x2") }
+                DashboardView()
             }
             Tab("Transactions", systemImage: "list.bullet.rectangle") {
                 TransactionsView()
