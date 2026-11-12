@@ -9,9 +9,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 67 | 55 | 15 |
+| ✅ done | 67 | 55 | 19 |
 | 🟡 partial | 0 | 3 | 9 |
-| ❌ missing | 0 | 5 | 39 |
+| ❌ missing | 0 | 5 | 35 |
 | ➖ n/a | 1 | 5 | 5 |
 
 ## Still to build on Android (8)
@@ -25,7 +25,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (48)
+## Still to build on iOS (44)
 
 - 🟡 **Accounts list** (Accounts and cards). Accounts by group with their balances and bank: no credit-use bars, small balance lines or the net worth summary yet.
 - 🟡 **An account's page** (Accounts and cards). The balance, facts, a balance chart with three ranges and the 20 latest transactions with the balance after each row: no this-month figures, search or paging yet.
@@ -46,9 +46,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Cards** (Accounts and cards).
 - ❌ **Credit card statements and due dates** (Accounts and cards).
 - ❌ **Save and add another, and duplicate** (Transactions).
-- ❌ **Templates** (Transactions).
 - ❌ **Bulk actions on selected rows** (Transactions).
-- ❌ **Trash** (Transactions).
 - ❌ **Refunds** (Transactions).
 - ❌ **Split a purchase into items** (Transactions).
 - ❌ **Receipts and web links** (Transactions).
@@ -56,8 +54,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Merge two entries into one transfer** (Transactions).
 - ❌ **Transaction groups** (Transactions).
 - ❌ **Export to Excel** (Transactions).
-- ❌ **Categories** (Categories, tags and vendors).
-- ❌ **Sort every category into need or want** (Categories, tags and vendors).
 - ❌ **Tags** (Categories, tags and vendors).
 - ❌ **Vendors** (Categories, tags and vendors).
 - ❌ **A vendor's usual place** (Categories, tags and vendors).
@@ -119,9 +115,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Filters**<br>Dates, account, card, category, tags with any or all, payment method, need or want and an amount range. | ✅ done | ✅ done | 🟡 partial |
 | **Add and edit a transaction**<br>Expense, income or transfer with account, rate, category, vendor, date and time, way of paying, tags, note and planned. | ✅ done | ✅ done | 🟡 partial |
 | **Save and add another, and duplicate**<br>Keep the form open for the next entry, or copy a transaction. | ✅ done | ✅ done | ❌ missing |
-| **Templates**<br>Start from a saved template and save a form as one; the Templates page to rename and delete them. | ✅ done | ✅ done | ❌ missing |
+| **Templates**<br>Start from a saved template and save a form as one; the Templates page to rename and delete them. | ✅ done | ✅ done | ✅ done |
 | **Bulk actions on selected rows**<br>Select rows, then change category, tags, vendor or payment method, or delete them; select all that match. | ✅ done | ✅ done | ❌ missing |
-| **Trash**<br>Deleted transactions wait to be restored or deleted for good, singly or in bulk. | ✅ done | ✅ done | ❌ missing |
+| **Trash**<br>Deleted transactions wait to be restored or deleted for good, singly or in bulk. | ✅ done | ✅ done | ✅ done |
 | **Planned transactions and Mark as paid**<br>Something coming up that counts toward nothing until it is paid with the real day and amount. | ✅ done | ✅ done | ✅ done |
 | **Refunds**<br>Give money back for a purchase (whole or by item), or link existing income to a purchase. | ✅ done | 🟡 partial | ❌ missing |
 | **Split a purchase into items**<br>Items with quantity, category and tax (GST included or excluded) that add up to the amount. | ✅ done | ✅ done | ❌ missing |
@@ -135,6 +131,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - **Transactions list** (iOS): Search, a type filter, paging, a detail screen and delete (to the trash) only: no date, account, category, tag or amount filters, no selection, no planned list.
 - **Filters** (iOS): Type, date range (with quick ranges), account, category, tags (any or all) and amount. No payment method, card, needs or wants, or planned filter.
 - **Add and edit a transaction** (iOS): Income, expense and transfer with amount, account, category, vendor, payment method, date, note and an exchange rate for a foreign account. No time, tags, card, items, location, receipts or planned switch (a future date is planned by itself).
+- **Trash** (iOS): Restore and delete for good one by one; bulk actions wait for tx-bulk.
 - **Refunds** (Android): Refund rows are tagged and shown; a refund cannot be made or linked from the app.
 - **Import a bank statement** (Android): Web only, by choice: importing a statement is done on the web, where the rows are easier to review.
 - **Import a bank statement** (iOS): Web only, by choice: importing a statement is done on the web, where the rows are easier to review.
@@ -143,8 +140,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | Feature | Web | Android | iOS |
 |---|:---:|:---:|:---:|
-| **Categories**<br>Colours, one level of sub-categories, need or want, merge, and the default Salary category. | ✅ done | ✅ done | ❌ missing |
-| **Sort every category into need or want**<br>One dialog to sort all categories (or only the unsorted ones) at once. | ✅ done | ❌ missing | ❌ missing |
+| **Categories**<br>Colours, one level of sub-categories, need or want, merge, and the default Salary category. | ✅ done | ✅ done | ✅ done |
+| **Sort every category into need or want**<br>One dialog to sort all categories (or only the unsorted ones) at once. | ✅ done | ❌ missing | ✅ done |
 | **Tags**<br>Coloured labels that cut across categories, with merge. | ✅ done | ✅ done | ❌ missing |
 | **Vendors**<br>Address, contact, local or foreign, currency, usual category and tags, merge. | ✅ done | ✅ done | ❌ missing |
 | **A vendor's usual place**<br>A usual pin that a new transaction picks up. | ✅ done | ✅ done | ❌ missing |

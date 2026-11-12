@@ -24,8 +24,15 @@ struct Transaction: Decodable, Identifiable, Hashable {
     let refundedAmount: String
     let splits: [TransactionSplit]
     let adjustment: Bool?
+    let deletedAt: String?
 
     var isRefund: Bool { refundOf != nil }
+
+    /// The day the transaction was deleted, as a calendar date (the API sends a full timestamp).
+    var deletedDay: String? {
+        guard let deletedAt else { return nil }
+        return String(deletedAt.prefix(10))
+    }
 
     /// Refunds, balance adjustments and purchases with items have their own rules on the web.
     var canEdit: Bool { !isRefund && adjustment != true && splits.isEmpty }

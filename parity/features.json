@@ -710,7 +710,12 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Trash/TrashView.swift",
+          "apps/ios/Maalu/Features/Trash/TrashModel.swift"
+        ],
+        "note": "Restore and delete for good one by one; bulk actions wait for tx-bulk."
       },
       "routes": [
         "/trash"
@@ -984,7 +989,11 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Categories/CategoriesView.swift",
+          "apps/ios/Maalu/Features/Categories/Form/CategoryFormView.swift"
+        ]
       },
       "routes": [
         "/categories"
@@ -1011,7 +1020,10 @@
         "note": "Each category's kind can be set one by one in its form."
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Categories/SortKindsSheet.swift"
+        ]
       },
       "api": [
         "/api/v1/categories/kind"

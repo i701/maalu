@@ -8,6 +8,8 @@ struct MoreDestinationView: View {
         case "plan": PlanView()
         case "subscriptions": SubscriptionsView()
         case "templates": TemplatesView()
+        case "categories": CategoriesView()
+        case "trash": TrashView()
         default: ComingSoonView(title: item.title, systemImage: item.systemImage)
         }
     }

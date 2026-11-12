@@ -22,6 +22,7 @@ enum MoreDestinations {
         MoreItem(id: "vendors", title: "Vendors", systemImage: "storefront"),
         MoreItem(id: "groups", title: "Groups", systemImage: "square.stack"),
         MoreItem(id: "templates", title: "Templates", systemImage: "bookmark"),
+        MoreItem(id: "trash", title: "Trash", systemImage: "trash"),
     ])
 
     private static let help = MoreGroup(id: "help", title: "Help", items: [
