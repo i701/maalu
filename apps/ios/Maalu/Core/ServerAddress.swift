@@ -1,11 +1,18 @@
 import Foundation
 
 enum ServerAddress {
-    /// `maalu.example.com` becomes `https://maalu.example.com`; trailing slashes go.
+    /// `maalu.example.com` becomes `https://maalu.example.com`; trailing slashes go, and `localhost`
+    /// becomes `127.0.0.1` (uvicorn listens on IPv4 only, so a connection the simulator sends to
+    /// `::1` is refused).
     static func normalized(_ input: String) -> String {
         var address = input.trimmingCharacters(in: .whitespacesAndNewlines)
         while address.hasSuffix("/") { address.removeLast() }
-        return address.hasPrefix("http://") || address.hasPrefix("https://") ? address : "https://\(address)"
+        var url = address.hasPrefix("http://") || address.hasPrefix("https://") ? address : "https://\(address)"
+        if var components = URLComponents(string: url), components.host == "localhost" {
+            components.host = "127.0.0.1"
+            url = components.url?.absoluteString ?? url
+        }
+        return url
     }
 
     /// Nil when a Maalu server answers at this address, else a message for the person.

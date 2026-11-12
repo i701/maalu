@@ -3,7 +3,7 @@ import Observation
 
 @MainActor @Observable
 final class Session {
-    private(set) var server: String? = Keychain.read("server")
+    private(set) var server: String? = Keychain.read("server").map(ServerAddress.normalized)
     private(set) var token: String? = Keychain.read("token")
 
     var api: Api? {
@@ -14,8 +14,9 @@ final class Session {
     }
 
     func setServer(_ url: String) {
-        server = url
-        Keychain.write("server", url)
+        let normalized = ServerAddress.normalized(url)
+        server = normalized
+        Keychain.write("server", normalized)
     }
 
     func clearServer() {
