@@ -42,7 +42,8 @@ const TABLE = {
 const FRAME = {
 	mb: 1.5,
 	overflow: "hidden",
-	borderRadius: "var(--shape-md)",
+	// square at the top, so the header strip runs straight into the toolbar above it
+	borderRadius: "0 0 var(--shape-md) var(--shape-md)",
 	bgcolor: "var(--md-sys-color-surface-container-low)",
 } as const;
 

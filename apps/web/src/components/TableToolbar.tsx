@@ -2,8 +2,8 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
-import { useViewMode } from "#/lib/view-mode";
 import RefreshButton from "./RefreshButton";
+import { useOnCard } from "./TableCard";
 import ViewToggle from "./ViewToggle";
 
 /**
@@ -30,7 +30,7 @@ export default function TableToolbar({
 	/** Show the Cards / Table toggle (lists that have both views). */
 	viewToggle?: boolean;
 }) {
-	const cards = useViewMode() === "cards";
+	const pad = useOnCard() ? 2 : 0;
 	return (
 		<>
 			<Box
@@ -40,7 +40,7 @@ export default function TableToolbar({
 					alignItems: "center",
 					columnGap: 2,
 					rowGap: 1.5,
-					px: cards ? 0 : 2,
+					px: pad,
 					py: 2,
 				}}
 			>
@@ -86,7 +86,7 @@ export default function TableToolbar({
 				</Box>
 			</Box>
 			{chips && (
-				<Stack spacing={1} sx={{ px: cards ? 0 : 2, pb: 2 }}>
+				<Stack spacing={1} sx={{ px: pad, pb: 2 }}>
 					{chips}
 				</Stack>
 			)}
