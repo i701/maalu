@@ -37,9 +37,9 @@ const TABLE = {
 	},
 } as const;
 
-/** The frame round the table or the dense list: one surface with rounded corners. */
+/** The frame round the table or the dense list: one surface with rounded corners, flush with the
+ * page's left and right edges like every other block. */
 const FRAME = {
-	mx: 1.5,
 	mb: 1.5,
 	overflow: "hidden",
 	borderRadius: "var(--shape-md)",

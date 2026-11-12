@@ -1,6 +1,7 @@
 import Tooltip from "@mui/material/Tooltip";
 import type { ReactNode } from "react";
 import { formatMoney, formatMoneyCompact, formatMoneyFull } from "#/lib/format";
+import Figure from "./Figure";
 
 /** Hover on a mouse, a tap on a phone (no long-press wait): what a short figure stands for. */
 export function FullAmountTip({ full, children }: { full: string; children: ReactNode }) {
@@ -23,14 +24,18 @@ export default function Money({
 	amount,
 	currency,
 	compact = false,
+	figure = false,
 }: {
 	amount: string;
 	currency: string;
 	/** A tight place: shorten from ten thousand up even with the setting off. */
 	compact?: boolean;
+	/** A headline figure: light, with the currency small in front (`Figure`). */
+	figure?: boolean;
 }) {
 	const full = formatMoneyFull(amount, currency);
 	const text = compact ? formatMoneyCompact(amount, currency) : formatMoney(amount, currency);
-	if (text === full) return <>{text}</>;
-	return <FullAmountTip full={full}>{text}</FullAmountTip>;
+	const shown = figure ? <Figure>{text}</Figure> : text;
+	if (text === full) return <>{shown}</>;
+	return <FullAmountTip full={full}>{shown}</FullAmountTip>;
 }

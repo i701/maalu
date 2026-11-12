@@ -296,7 +296,7 @@ function AccountsPage() {
 								<Box key={group}>
 									<Stack
 										direction="row"
-										sx={{ alignItems: "baseline", justifyContent: "space-between", mb: 1, px: 0.5 }}
+										sx={{ alignItems: "baseline", justifyContent: "space-between", mb: 1 }}
 									>
 										<Typography variant="subtitle1">{ACCOUNT_GROUP_LABELS[group]}</Typography>
 										<Typography variant="body2" sx={{ color: "text.secondary" }}>

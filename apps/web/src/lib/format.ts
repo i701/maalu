@@ -153,3 +153,12 @@ export function formatAgo(iso: string, now: number = Date.now()): string {
 	if (seconds < 30 * DAY) return ago(Math.floor(seconds / DAY), "day");
 	return formatDate(iso);
 }
+
+/** A formatted amount taken apart so the number can stand out and the currency recede: "MVR 1,234.50"
+ * is `{ currency: "MVR", number: "1,234.50" }`, "-$36.72" is `{ currency: "$", number: "-36.72" }`.
+ * Text with no leading currency (a count, an unknown code written after) is all `number`. */
+export function splitCurrency(text: string): { currency: string | null; number: string } {
+	const match = /^(-?)([^\d\s.,-][^\d]*?)\s?(\d.*)$/u.exec(text);
+	if (!match) return { currency: null, number: text };
+	return { currency: match[2], number: `${match[1]}${match[3]}` };
+}

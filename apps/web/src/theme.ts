@@ -72,9 +72,10 @@ const theme = createTheme({
 	shape: { borderRadius: 12 },
 	// MUI transitions that use theme easing (menus, popovers...) get our curve too.
 	transitions: { easing: { easeOut: EASE_OUT } },
-	// The M3 type scale (display/headline/title/body/label), in Roboto for now.
+	// The M3 type scale (display/headline/title/body/label), in Inter (with its optical sizes, so
+	// large figures get the tighter display cut).
 	typography: {
-		fontFamily: '"Roboto Variable", system-ui, sans-serif',
+		fontFamily: '"Inter Variable", system-ui, sans-serif',
 		h1: { fontSize: "1.75rem", lineHeight: "34px", fontWeight: 400 }, // headline-md
 		h2: { fontSize: "1.375rem", lineHeight: "28px", fontWeight: 500 }, // title-lg
 		subtitle1: { fontSize: "1rem", lineHeight: "22px", fontWeight: 500, letterSpacing: "0.005em" }, // title-md

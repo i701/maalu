@@ -11,7 +11,7 @@ import GradientASCII from "./GradientASCII";
 /** The fonts of the sign-in and register pages only (the rest of the app keeps the theme's). To
  * change them, install a font (`pnpm --filter @maalu/web add @fontsource-variable/<name>`), import
  * it here (`import "@fontsource-variable/<name>";`) and put its family first in these stacks. */
-const PAGE_FONT = '"Roboto Variable", system-ui, sans-serif';
+const PAGE_FONT = '"Inter Variable", system-ui, sans-serif';
 /** The handwriting face of the name and the tagline on the coloured panel, and nothing else. */
 const SCRIPT_FONT = '"Homemade Apple", cursive';
 const SCRIPT = { "& .MuiTypography-root": { fontFamily: SCRIPT_FONT, fontWeight: 400 } };

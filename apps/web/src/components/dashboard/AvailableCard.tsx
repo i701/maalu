@@ -148,14 +148,13 @@ const AvailableCard = memo(function AvailableCard({ data }: { data: AvailableToS
 				<>
 					<Typography
 						sx={{
-							fontSize: { xs: 26, lg: 32 },
-							fontWeight: 600,
-							lineHeight: 1.25,
+							fontSize: { xs: 30, lg: 40 },
+							lineHeight: 1.2,
 							mt: 0.5,
 							color: short ? "var(--chart-expense)" : "text.primary",
 						}}
 					>
-						<Money amount={data.available} currency={data.currency} />
+						<Money amount={data.available} currency={data.currency} figure />
 					</Typography>
 					<Typography variant="body2" sx={{ color: "text.secondary", mt: 0.5 }}>
 						{workingLine(data)}

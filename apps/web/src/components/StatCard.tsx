@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { type Tint, tintFill, tintInk } from "#/lib/m3";
+import Figure from "#/components/Figure";
+import { type Tint, tintFill, tintInk, tintText } from "#/lib/m3";
 import { useCardMorph } from "#/lib/card-morph";
 import { MORPH_TRANSITION, morphUp } from "#/lib/shape";
 
@@ -67,22 +68,35 @@ export default function StatCard({
 				<Typography variant="body2" sx={{ color: "inherit", opacity: 0.82 }}>
 					{label}
 				</Typography>
-				<Typography variant="h2" component="p" sx={{ mt: 0.5, color: "inherit" }} noWrap>
-					{value}
+				<Typography
+					component="p"
+					sx={{
+						mt: 0.5,
+						// the figure takes the tile's own colour: green on a green tile, red on a red one
+						color: tone ? "inherit" : tintText(tint),
+						fontSize: { xs: 22, lg: 28, xl: 32 },
+						lineHeight: 1.2,
+					}}
+					noWrap
+				>
+					<Figure>{value}</Figure>
 				</Typography>
 			</Box>
-			<ShapeTile
-				shape={shape}
-				size={52}
-				bg={
-					tone
-						? `color-mix(in srgb, ${fg} 14%, transparent)`
-						: "var(--md-sys-color-surface-container-low)"
-				}
-				fg={tone ? fg : tintInk(tint)}
-			>
-				<Symbol name={icon} size={26} />
-			</ShapeTile>
+			{/* the icon gives way to the figure where three tiles share a narrow row */}
+			<Box sx={{ display: { xs: "none", lg: "block" } }}>
+				<ShapeTile
+					shape={shape}
+					size={52}
+					bg={
+						tone
+							? `color-mix(in srgb, ${fg} 14%, transparent)`
+							: "var(--md-sys-color-surface-container-low)"
+					}
+					fg={tone ? fg : tintInk(tint)}
+				>
+					<Symbol name={icon} size={26} />
+				</ShapeTile>
+			</Box>
 		</Box>
 	);
 }

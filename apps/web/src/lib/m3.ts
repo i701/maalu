@@ -1,5 +1,5 @@
 /**
- * Material 3 colour roles: a soft lavender-grey page with white cards and a white sidebar on it
+ * Material 3 colour roles: a soft cool-grey page (#f5f5f8) with white cards and a white sidebar on it
  * (near-black and a step lighter in dark mode), and a muted violet as the one accent. One source for both the MUI palette
  * (theme.ts) and the `--md-sys-color-*` CSS variables used for roles MUI has no slot for, such as
  * the surface containers and the secondary/tertiary containers.
@@ -42,7 +42,7 @@ type Roles = {
 };
 
 export const M3_LIGHT: Roles = {
-	surface: "#f4f3f8",
+	surface: "#f5f5f8",
 	onSurface: "#1b1b1f",
 	onSurfaceVariant: "#5d5c66",
 	surfaceDim: "#e2e1e8",
@@ -149,6 +149,9 @@ export const tintFill = (tint: Tint) =>
 	`color-mix(in oklab, ${TINT[tint]} 14%, var(--md-sys-color-surface-container-low))`;
 export const tintInk = (tint: Tint) =>
 	`color-mix(in oklab, ${TINT[tint]} 75%, var(--md-sys-color-on-surface))`;
+/** The tile's figure: the same hue, deep enough in light mode (pale enough in dark) to read as text. */
+export const tintText = (tint: Tint) =>
+	`color-mix(in oklab, ${TINT[tint]} 58%, var(--md-sys-color-on-surface))`;
 
 /**
  * Chart colours, validated with the dataviz palette checker (lightness band, colour-blind

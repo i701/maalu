@@ -1,4 +1,4 @@
-import robotoCss from "@fontsource-variable/roboto/index.css?url";
+import interCss from "@fontsource-variable/inter/opsz.css?url";
 import leafletCss from "leaflet/dist/leaflet.css?url";
 import m3Css from "#/styles/m3.css?url";
 import mapCss from "#/styles/map.css?url";
@@ -32,7 +32,7 @@ export const Route = createRootRoute({
 			{ rel: "icon", href: "/favicon.ico", sizes: "48x48" },
 			{ rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
 			{ rel: "manifest", href: "/site.webmanifest" },
-			{ rel: "stylesheet", href: robotoCss },
+			{ rel: "stylesheet", href: interCss },
 			{ rel: "stylesheet", href: m3Css },
 			{ rel: "stylesheet", href: leafletCss },
 			{ rel: "stylesheet", href: mapCss },

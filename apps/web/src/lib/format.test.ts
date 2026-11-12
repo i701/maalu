@@ -3,6 +3,7 @@ import {
 	formatAgo,
 	formatDate,
 	formatMoney,
+	splitCurrency,
 	formatMoneyCompact,
 	formatMoneyFull,
 	setShortNumbers,
@@ -148,5 +149,28 @@ describe("the short numbers setting", () => {
 	it("always has the exact amount for a hover title", () => {
 		setShortNumbers(true);
 		expect(plain(formatMoneyFull("1234.5", "MVR"))).toBe("MVR 1,234.50");
+	});
+});
+
+describe("splitCurrency", () => {
+	it("takes a code or a symbol off the front, keeping the sign on the number", () => {
+		expect(splitCurrency(formatMoney("1234.5", "MVR"))).toEqual({
+			currency: "MVR",
+			number: "1,234.50",
+		});
+		expect(splitCurrency(formatMoney("-36.72", "USD"))).toEqual({
+			currency: "$",
+			number: "-36.72",
+		});
+		expect(splitCurrency(formatMoney("-1200", "MVR"))).toEqual({
+			currency: "MVR",
+			number: "-1,200.00",
+		});
+		expect(splitCurrency("MVR\u00a01.23K")).toEqual({ currency: "MVR", number: "1.23K" });
+	});
+
+	it("leaves text without a leading currency whole", () => {
+		expect(splitCurrency("6")).toEqual({ currency: null, number: "6" });
+		expect(splitCurrency("12.00 XYZ")).toEqual({ currency: null, number: "12.00 XYZ" });
 	});
 });

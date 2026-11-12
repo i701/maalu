@@ -1,6 +1,7 @@
 import { useCardMorph } from "#/lib/card-morph";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import Figure from "#/components/Figure";
 import type { ReactNode } from "react";
 
 /** A single headline figure: a label, the value, and a change badge. A number, not a chart. */
@@ -33,10 +34,8 @@ export default function MetricCard({
 			<Typography variant="body2" sx={{ color: "text.secondary" }}>
 				{label}
 			</Typography>
-			<Typography
-				sx={{ fontSize: { xs: 20, lg: 28 }, fontWeight: 600, lineHeight: 1.25, mt: { lg: 0.5 } }}
-			>
-				{value}
+			<Typography sx={{ fontSize: { xs: 22, lg: 32 }, lineHeight: 1.2, mt: { lg: 0.5 } }}>
+				<Figure>{value}</Figure>
 			</Typography>
 			{badge && <Box sx={{ mt: 1, gridColumn: "1 / -1" }}>{badge}</Box>}
 		</Box>

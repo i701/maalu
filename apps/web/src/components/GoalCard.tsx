@@ -141,13 +141,11 @@ const GoalCard = memo(function GoalCard({
 			>
 				<Typography
 					sx={{
-						fontSize: { xs: 18, sm: 24 },
-						fontWeight: 600,
-						fontVariantNumeric: "tabular-nums",
+						fontSize: { xs: 20, sm: 28 },
 						lineHeight: 1.2,
 					}}
 				>
-					<Money amount={goal.saved} currency={goal.currency} />
+					<Money amount={goal.saved} currency={goal.currency} figure />
 				</Typography>
 				<Typography variant="body2" sx={{ color: "text.secondary" }}>
 					of <Money amount={goal.target_amount} currency={goal.currency} />

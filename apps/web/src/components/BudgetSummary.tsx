@@ -85,13 +85,11 @@ export default function BudgetSummary({ budget }: { budget: Budget }) {
 					<Box sx={{ display: "flex", alignItems: "baseline", gap: 1, flexWrap: "wrap" }}>
 						<Typography
 							sx={{
-								fontSize: { xs: 24, sm: 32 },
-								fontWeight: 600,
-								fontVariantNumeric: "tabular-nums",
+								fontSize: { xs: 28, sm: 36 },
 								lineHeight: 1.2,
 							}}
 						>
-							<Money amount={totals.activity} currency={currency} />
+							<Money amount={totals.activity} currency={currency} figure />
 						</Typography>
 						<Typography variant="body2" sx={{ color: "text.secondary" }}>
 							of <Money amount={totals.amount} currency={currency} />
@@ -104,15 +102,14 @@ export default function BudgetSummary({ budget }: { budget: Budget }) {
 					</Typography>
 					<Typography
 						sx={{
-							fontSize: { xs: 18, sm: 22 },
-							fontWeight: 600,
-							fontVariantNumeric: "tabular-nums",
+							fontSize: { xs: 20, sm: 28 },
 							color: over ? color : "text.primary",
 						}}
 					>
 						<Money
 							amount={over ? unsigned(totals.available) : totals.available}
 							currency={currency}
+							figure
 						/>
 					</Typography>
 				</Box>
