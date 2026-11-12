@@ -10,8 +10,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | | Web | Android | iOS |
 |---|---:|---:|---:|
 | ✅ done | 67 | 55 | 1 |
-| 🟡 partial | 0 | 3 | 0 |
-| ❌ missing | 0 | 5 | 62 |
+| 🟡 partial | 0 | 3 | 1 |
+| ❌ missing | 0 | 5 | 61 |
 | ➖ n/a | 1 | 5 | 5 |
 
 ## Still to build on Android (8)
@@ -27,6 +27,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 ## Still to build on iOS (62)
 
+- 🟡 **Transactions list** (Transactions). Search, a type filter and paging only: no date, account, category, tag or amount filters, no selection, no editing or adding.
 - ❌ **Two-factor sign-in** (Sign in and security).
 - ❌ **Set up and manage two-factor** (Sign in and security).
 - ❌ **Where you are signed in** (Sign in and security).
@@ -41,7 +42,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Rate history** (Accounts and cards).
 - ❌ **Cards** (Accounts and cards).
 - ❌ **Credit card statements and due dates** (Accounts and cards).
-- ❌ **Transactions list** (Transactions).
 - ❌ **Filters** (Transactions).
 - ❌ **Add and edit a transaction** (Transactions).
 - ❌ **Save and add another, and duplicate** (Transactions).
@@ -126,7 +126,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | Feature | Web | Android | iOS |
 |---|:---:|:---:|:---:|
-| **Transactions list**<br>The list by day with search, the type chips, paging and the totals line. | ✅ done | ✅ done | ❌ missing |
+| **Transactions list**<br>The list by day with search, the type chips, paging and the totals line. | ✅ done | ✅ done | 🟡 partial |
 | **Filters**<br>Dates, account, card, category, tags with any or all, payment method, need or want and an amount range. | ✅ done | ✅ done | ❌ missing |
 | **Add and edit a transaction**<br>Expense, income or transfer with account, rate, category, vendor, date and time, way of paying, tags, note and planned. | ✅ done | ✅ done | ❌ missing |
 | **Save and add another, and duplicate**<br>Keep the form open for the next entry, or copy a transaction. | ✅ done | ✅ done | ❌ missing |
@@ -143,6 +143,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Export to Excel**<br>Download what the filters show as a workbook with a summary and a sheet by category. | ✅ done | ❌ missing | ❌ missing |
 | **Import a bank statement**<br>Read a bank's CSV, review the rows, assign vendors and categories, import as one undoable batch. | ✅ done | ➖ n/a | ➖ n/a |
 
+- **Transactions list** (iOS): Search, a type filter and paging only: no date, account, category, tag or amount filters, no selection, no editing or adding.
 - **Refunds** (Android): Refund rows are tagged and shown; a refund cannot be made or linked from the app.
 - **Import a bank statement** (Android): Web only, by choice: importing a statement is done on the web, where the rows are easier to review.
 - **Import a bank statement** (iOS): Web only, by choice: importing a statement is done on the web, where the rows are easier to review.

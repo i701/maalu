@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// Everything that is not one of the four tabs, plus the server you are signed in to and Sign out.
 struct MoreView: View {
     @Environment(Session.self) private var session
 
@@ -8,22 +7,27 @@ struct MoreView: View {
         NavigationStack {
             List {
                 ForEach(MoreDestinations.groups) { group in
-                    Section(group.name) {
+                    Section(String(localized: group.title)) {
                         ForEach(group.items) { item in
-                            NavigationLink {
-                                ComingSoonView(title: item.title, systemImage: item.systemImage)
-                            } label: {
-                                Label(item.title, systemImage: item.systemImage)
+                            NavigationLink(value: item) {
+                                Label { Text(item.title) } icon: { Image(systemName: item.systemImage) }
                             }
                         }
                     }
                 }
                 Section {
                     LabeledContent("Server", value: session.server ?? "")
-                    Button("Sign out", role: .destructive) { Task { await session.signOut() } }
+                    Button("Sign out", role: .destructive, action: signOut)
                 }
             }
             .navigationTitle("More")
+            .navigationDestination(for: MoreItem.self) { item in
+                ComingSoonView(title: item.title, systemImage: item.systemImage)
+            }
         }
+    }
+
+    private func signOut() {
+        Task { await session.signOut() }
     }
 }

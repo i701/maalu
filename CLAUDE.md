@@ -16,7 +16,7 @@ Maalu is a personal finance tracker. It is a monorepo: `apps/api` (FastAPI, asyn
 
 ## iOS app (`apps/ios`)
 
-SwiftUI, iOS 26 and later, Swift 5.10 (raise when the code needs it). The Xcode project is **generated** by XcodeGen from `apps/ios/project.yml` and not committed: `just ios-project` makes it, `just test-ios` runs the unit tests on a simulator, and a new file under `Maalu/` is picked up by regenerating. `buildServer.json` and `.compile` (made by `xcode-build-server` so Zed's language server sees the project) are machine-specific and ignored.
+SwiftUI, iOS 26 and later, Swift 6 language mode. The Xcode project is **generated** by XcodeGen from `apps/ios/project.yml` and not committed: `just ios-project` makes it, `just test-ios` runs the unit tests on a simulator, and a new file under `Maalu/` is picked up by regenerating. `buildServer.json` and `.compile` (made by `xcode-build-server` so Zed's language server sees the project) are machine-specific and ignored.
 
 **Always use the `swiftui-pro` skill (`~/.claude/skills/swiftui-pro`, from twostraws/swiftui-agent-skill) when writing or changing iOS code, and follow its SKILL.md and the reference files that apply** (api, views, data, navigation, swift, design, accessibility, localization). The rules that bite most here:
 - **One type per file** (struct, class, enum), in a folder by feature. No `some View` computed properties or methods to split a body: extract a `View` struct in its own file. Button actions and anything beyond layout go in methods, never inline in `body` or `task`.

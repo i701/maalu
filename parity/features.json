@@ -72,8 +72,8 @@
       "ios": {
         "status": "done",
         "evidence": [
-          "apps/ios/Maalu/UI/LoginView.swift",
-          "apps/ios/Maalu/UI/ServerView.swift"
+          "apps/ios/Maalu/Features/Login/LoginView.swift",
+          "apps/ios/Maalu/Features/Server/ServerView.swift"
         ]
       },
       "routes": [
@@ -519,7 +519,11 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "partial",
+        "note": "Search, a type filter and paging only: no date, account, category, tag or amount filters, no selection, no editing or adding.",
+        "evidence": [
+          "apps/ios/Maalu/Features/Transactions/TransactionsView.swift"
+        ]
       },
       "routes": [
         "/transactions"
