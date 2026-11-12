@@ -36,6 +36,17 @@ struct Api: Sendable {
         await sendJSON("PATCH", path, body: body)
     }
 
+    /// For a POST the server answers with no content (204).
+    func postJSONNoContent(_ path: String, body: some Encodable) async -> ApiResult<Void> {
+        guard let data = try? Api.encoder.encode(body) else {
+            return .failed(status: 0, message: "The request could not be made.")
+        }
+        switch await perform(method: "POST", path: path, body: data, contentType: "application/json") {
+        case .ok(_, let total): return .ok((), total: total)
+        case .failed(let status, let message): return .failed(status: status, message: message)
+        }
+    }
+
     func delete(_ path: String) async -> ApiResult<Void> {
         await empty(method: "DELETE", path: path)
     }

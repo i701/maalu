@@ -9,9 +9,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 67 | 55 | 13 |
+| ✅ done | 67 | 55 | 15 |
 | 🟡 partial | 0 | 3 | 9 |
-| ❌ missing | 0 | 5 | 41 |
+| ❌ missing | 0 | 5 | 39 |
 | ➖ n/a | 1 | 5 | 5 |
 
 ## Still to build on Android (8)
@@ -25,7 +25,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (50)
+## Still to build on iOS (48)
 
 - 🟡 **Accounts list** (Accounts and cards). Accounts by group with their balances and bank: no credit-use bars, small balance lines or the net worth summary yet.
 - 🟡 **An account's page** (Accounts and cards). The balance, facts, a balance chart with three ranges and the 20 latest transactions with the balance after each row: no this-month figures, search or paging yet.
@@ -61,8 +61,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Tags** (Categories, tags and vendors).
 - ❌ **Vendors** (Categories, tags and vendors).
 - ❌ **A vendor's usual place** (Categories, tags and vendors).
-- ❌ **Subscriptions and recurring bills** (Bills and subscriptions).
-- ❌ **Suggested subscriptions** (Bills and subscriptions).
 - ❌ **Make a subscription from a transaction** (Bills and subscriptions).
 - ❌ **Salary split rules** (Budget, goals and planning).
 - ❌ **Split a salary and the Pending screen** (Budget, goals and planning).
@@ -155,8 +153,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | Feature | Web | Android | iOS |
 |---|:---:|:---:|:---:|
-| **Subscriptions and recurring bills**<br>Plans with a next payment, pay-from account, installments, reminders and varying amounts. | ✅ done | ✅ done | ❌ missing |
-| **Suggested subscriptions**<br>Recurring spending found in your transactions, accepted into a subscription in one tap. | ✅ done | ✅ done | ❌ missing |
+| **Subscriptions and recurring bills**<br>Plans with a next payment, pay-from account, installments, reminders and varying amounts. | ✅ done | ✅ done | ✅ done |
+| **Suggested subscriptions**<br>Recurring spending found in your transactions, accepted into a subscription in one tap. | ✅ done | ✅ done | ✅ done |
 | **Make a subscription from a transaction**<br>Turn a payment you already made into a recurring plan. | ✅ done | ❌ missing | ❌ missing |
 
 ## Budget, goals and planning

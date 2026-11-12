@@ -1111,7 +1111,11 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Subscriptions/SubscriptionsView.swift",
+          "apps/ios/Maalu/Features/Subscriptions/Form/SubscriptionFormView.swift"
+        ]
       },
       "routes": [
         "/subscriptions"
@@ -1140,7 +1144,11 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Subscriptions/Suggestions/SuggestionsSection.swift",
+          "apps/ios/Maalu/Features/Subscriptions/Suggestions/AcceptSuggestionView.swift"
+        ]
       },
       "api": [
         "/api/v1/subscriptions/candidates",
