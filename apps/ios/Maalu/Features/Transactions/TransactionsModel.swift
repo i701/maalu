@@ -63,13 +63,9 @@ final class TransactionsModel {
     }
 
     private func query(offset: Int) -> [URLQueryItem] {
-        var items = [
+        [
             URLQueryItem(name: "limit", value: String(Self.pageSize)),
             URLQueryItem(name: "offset", value: String(offset)),
-        ]
-        let text = filter.text.trimmingCharacters(in: .whitespaces)
-        if !text.isEmpty { items.append(URLQueryItem(name: "q", value: text)) }
-        if let type = filter.type { items.append(URLQueryItem(name: "type", value: type.rawValue)) }
-        return items
+        ] + filter.queryItems
     }
 }

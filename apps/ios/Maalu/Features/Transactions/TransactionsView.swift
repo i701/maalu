@@ -4,6 +4,7 @@ struct TransactionsView: View {
     @Environment(Session.self) private var session
     @State private var model = TransactionsModel()
     @State private var isAdding = false
+    @State private var isFiltering = false
 
     var body: some View {
         NavigationStack {
@@ -21,17 +22,24 @@ struct TransactionsView: View {
                     }
                 }
             }
-            .overlay { TransactionsPlaceholder(model: model, retry: reloadNow) }
+            .overlay { TransactionsPlaceholder(model: model, retry: reloadNow, clearFilters: clearFilters) }
             .navigationTitle("Transactions")
             .searchable(text: $model.filter.text, prompt: "Search transactions")
             .toolbar {
-                ToolbarItem { TransactionTypeMenu(selection: $model.filter.type) }
+                ToolbarItemGroup {
+                    TransactionTypeMenu(selection: $model.filter.type)
+                    Button("Filters", systemImage: "slider.horizontal.3") { isFiltering = true }
+                        .foregroundStyle(model.filter.detailCount == 0 ? Color.primary : Color.accentColor)
+                }
                 ToolbarItem(placement: .primaryAction) {
                     Button("Add Transaction", systemImage: "plus") { isAdding = true }
                 }
             }
             .navigationDestination(for: Transaction.self) { transaction in
                 TransactionDetailView(model: model, id: transaction.id)
+            }
+            .sheet(isPresented: $isFiltering) {
+                TransactionFiltersView(filter: model.filter) { model.filter = $0 }
             }
             .sheet(isPresented: $isAdding) {
                 TransactionFormView(onSaved: reloadNow)
@@ -53,6 +61,10 @@ struct TransactionsView: View {
 
     private func reloadNow() {
         Task { await reload() }
+    }
+
+    private func clearFilters() {
+        model.filter = TransactionFilter()
     }
 
     private func retryMore() {

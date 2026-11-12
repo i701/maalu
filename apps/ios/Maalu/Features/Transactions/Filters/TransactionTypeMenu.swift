@@ -13,6 +13,6 @@ struct TransactionTypeMenu: View {
             }
             .pickerStyle(.inline)
         }
-        .symbolVariant(selection == nil ? .none : .fill)
+        .foregroundStyle(selection == nil ? Color.primary : Color.accentColor)
     }
 }

@@ -11,8 +11,7 @@ struct TransactionTypeSection: View {
                 }
             }
             .pickerStyle(.segmented)
-            TextField("Amount", value: $model.draft.amount, format: .number.grouping(.never))
-                .keyboardType(.decimalPad)
+            DecimalField("Amount", value: $model.draft.amount)
         }
     }
 }

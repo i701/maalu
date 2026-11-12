@@ -21,13 +21,11 @@ struct TransactionAccountSection: View {
                     }
                 }
                 if model.needsToAmount, let toAccount = model.toAccount {
-                    TextField("Amount in \(toAccount.currency)", value: $model.draft.toAmount, format: .number.grouping(.never))
-                        .keyboardType(.decimalPad)
+                    DecimalField("Amount in \(toAccount.currency)", value: $model.draft.toAmount)
                 }
             }
             if model.needsRate {
-                TextField("Exchange rate to \(model.baseCurrency)", value: $model.draft.rate, format: .number.grouping(.never))
-                    .keyboardType(.decimalPad)
+                DecimalField("Exchange rate to \(model.baseCurrency)", value: $model.draft.rate)
             }
         }
     }
