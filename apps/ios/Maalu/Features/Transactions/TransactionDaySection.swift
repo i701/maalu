@@ -6,7 +6,9 @@ struct TransactionDaySection: View {
     var body: some View {
         Section {
             ForEach(day.transactions) { transaction in
-                TransactionRow(transaction: transaction)
+                NavigationLink(value: transaction) {
+                    TransactionRow(transaction: transaction)
+                }
             }
         } header: {
             if let date = day.parsedDate {

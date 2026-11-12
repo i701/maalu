@@ -1,6 +1,6 @@
 import Foundation
 
-enum TransactionType: String, Decodable, CaseIterable, Identifiable {
+enum TransactionType: String, Codable, CaseIterable, Identifiable {
     case income, expense, transfer
 
     var id: String { rawValue }

@@ -31,6 +31,18 @@ final class TransactionsModel {
         finish(result)
     }
 
+    func transaction(id: String) -> Transaction? {
+        transactions.first { $0.id == id }
+    }
+
+    /// Returns a message when the server refused, nil when the transaction went to the trash.
+    func delete(id: String, using api: Api) async -> String? {
+        let result = await api.delete("transactions/\(id)")
+        if case .failed(_, let message) = result { return message }
+        await reload(using: api)
+        return nil
+    }
+
     func loadMore(using api: Api) async {
         guard hasMore else { return }
         errorMessage = nil

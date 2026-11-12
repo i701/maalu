@@ -19,6 +19,6 @@ struct TransactionDay: Identifiable {
     }
 
     var parsedDate: Date? {
-        try? Date(date, strategy: Date.ISO8601FormatStyle(timeZone: .current).year().month().day())
+        ISODate.date(date)
     }
 }

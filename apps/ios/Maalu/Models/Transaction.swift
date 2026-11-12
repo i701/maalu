@@ -6,16 +6,29 @@ struct Transaction: Decodable, Identifiable, Hashable {
     let amount: String
     let toAmount: String?
     let currency: String
+    let exchangeRate: String
+    let baseAmount: String
     let category: String
     let description: String?
     let transactionDate: String
+    let transactionTime: String?
     let planned: Bool
-    let account: NamedRef?
-    let toAccount: NamedRef?
+    let paymentMethod: PaymentMethod
+    let account: AccountRef?
+    let toAccount: AccountRef?
     let vendor: NamedRef?
+    let card: NamedRef?
+    let subscription: NamedRef?
+    let tags: [NamedRef]
     let refundOf: RefundOf?
+    let refundedAmount: String
+    let splits: [TransactionSplit]
+    let adjustment: Bool?
 
     var isRefund: Bool { refundOf != nil }
+
+    /// Refunds, balance adjustments and purchases with items have their own rules on the web.
+    var canEdit: Bool { !isRefund && adjustment != true && splits.isEmpty }
 
     var title: String {
         if let vendor { return vendor.name }
@@ -27,7 +40,8 @@ struct Transaction: Decodable, Identifiable, Hashable {
         if type == .transfer {
             return [account?.name, toAccount?.name].compactMap { $0 }.joined(separator: " → ")
         }
-        return [category, account?.name].compactMap { $0 }.joined(separator: " · ")
+        let prefix = isRefund ? [String(localized: "Refund")] : []
+        return (prefix + [category, account?.name].compactMap { $0 }).joined(separator: " · ")
     }
 
     /// Spending is negative, money in is positive, and a transfer has no direction.

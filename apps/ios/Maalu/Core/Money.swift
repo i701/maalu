@@ -5,4 +5,8 @@ enum Money {
     static func decimal(_ text: String) -> Decimal? {
         Decimal(string: text, locale: Locale(identifier: "en_US_POSIX"))
     }
+
+    static func string(_ value: Decimal) -> String {
+        "\(value)"
+    }
 }

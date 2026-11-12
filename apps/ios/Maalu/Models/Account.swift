@@ -4,5 +4,6 @@ struct Account: Decodable, Identifiable {
     let group: String
     let currency: String
     let balance: String
+    let exchangeRate: String
     let bank: String?
 }

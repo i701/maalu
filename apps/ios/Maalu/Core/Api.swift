@@ -29,10 +29,15 @@ struct Api: Sendable {
     }
 
     func postJSON<T: Decodable>(_ path: String, body: some Encodable) async -> ApiResult<T> {
-        guard let data = try? Api.encoder.encode(body) else {
-            return .failed(status: 0, message: "The request could not be made.")
-        }
-        return decode(await perform(method: "POST", path: path, body: data, contentType: "application/json"))
+        await sendJSON("POST", path, body: body)
+    }
+
+    func patchJSON<T: Decodable>(_ path: String, body: some Encodable) async -> ApiResult<T> {
+        await sendJSON("PATCH", path, body: body)
+    }
+
+    func delete(_ path: String) async -> ApiResult<Void> {
+        await empty(method: "DELETE", path: path)
     }
 
     func postForm<T: Decodable>(_ path: String, fields: [String: String]) async -> ApiResult<T> {
@@ -46,7 +51,18 @@ struct Api: Sendable {
     }
 
     func post(_ path: String) async -> ApiResult<Void> {
-        switch await perform(method: "POST", path: path, body: Data()) {
+        await empty(method: "POST", path: path)
+    }
+
+    private func sendJSON<T: Decodable>(_ method: String, _ path: String, body: some Encodable) async -> ApiResult<T> {
+        guard let data = try? Api.encoder.encode(body) else {
+            return .failed(status: 0, message: "The request could not be made.")
+        }
+        return decode(await perform(method: method, path: path, body: data, contentType: "application/json"))
+    }
+
+    private func empty(method: String, path: String) async -> ApiResult<Void> {
+        switch await perform(method: method, path: path, body: method == "POST" ? Data() : nil) {
         case .ok(_, let total): .ok((), total: total)
         case .failed(let status, let message): .failed(status: status, message: message)
         }

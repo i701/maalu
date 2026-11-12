@@ -520,9 +520,10 @@
       },
       "ios": {
         "status": "partial",
-        "note": "Search, a type filter and paging only: no date, account, category, tag or amount filters, no selection, no editing or adding.",
+        "note": "Search, a type filter, paging, a detail screen and delete (to the trash) only: no date, account, category, tag or amount filters, no selection, no planned list.",
         "evidence": [
-          "apps/ios/Maalu/Features/Transactions/TransactionsView.swift"
+          "apps/ios/Maalu/Features/Transactions/TransactionsView.swift",
+          "apps/ios/Maalu/Features/Transactions/TransactionDetailView.swift"
         ]
       },
       "routes": [
@@ -575,7 +576,12 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "partial",
+        "note": "Income, expense and transfer with amount, account, category, vendor, payment method, date, note and an exchange rate for a foreign account. No time, tags, card, items, location, receipts or planned switch (a future date is planned by itself).",
+        "evidence": [
+          "apps/ios/Maalu/Features/Transactions/TransactionFormView.swift",
+          "apps/ios/Maalu/Features/Transactions/TransactionFormModel.swift"
+        ]
       }
     },
     {

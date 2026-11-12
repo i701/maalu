@@ -3,6 +3,7 @@ import SwiftUI
 struct TransactionsView: View {
     @Environment(Session.self) private var session
     @State private var model = TransactionsModel()
+    @State private var isAdding = false
 
     var body: some View {
         NavigationStack {
@@ -25,6 +26,15 @@ struct TransactionsView: View {
             .searchable(text: $model.filter.text, prompt: "Search transactions")
             .toolbar {
                 ToolbarItem { TransactionTypeMenu(selection: $model.filter.type) }
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Add Transaction", systemImage: "plus") { isAdding = true }
+                }
+            }
+            .navigationDestination(for: Transaction.self) { transaction in
+                TransactionDetailView(model: model, id: transaction.id)
+            }
+            .sheet(isPresented: $isAdding) {
+                TransactionFormView(onSaved: reloadNow)
             }
             .refreshable { await reload() }
             .task(id: model.filter) { await reload(debounced: !model.filter.text.isEmpty) }
