@@ -7,11 +7,13 @@ struct WorkingRow: View {
     var note: String?
 
     var body: some View {
-        LabeledContent {
+        AmountRow {
+            VStack(alignment: .leading) {
+                Text(title)
+                if let note { Text(note).font(.subheadline).foregroundStyle(.secondary) }
+            }
+        } amount: {
             MoneyText(amount, currency: currency)
-        } label: {
-            Text(title)
-            if let note { Text(note).foregroundStyle(.secondary) }
         }
     }
 }
