@@ -39,11 +39,7 @@ struct MoneyFlowDiagram: View {
                             startPoint: CGPoint(x: startX, y: 0),
                             endPoint: CGPoint(x: endX, y: 0)
                         )
-                        var path = Path()
-                        let middle = (startX + endX) / 2
-                        path.move(to: CGPoint(x: startX, y: link.y0))
-                        path.addCurve(to: CGPoint(x: endX, y: link.y1), control1: CGPoint(x: middle, y: link.y0), control2: CGPoint(x: middle, y: link.y1))
-                        context.stroke(path, with: shading, style: StrokeStyle(lineWidth: link.thickness))
+                        context.fill(layout.ribbon(for: link), with: shading)
                     }
                     for placed in layout.nodes where placed.node.kind != .total {
                         let rect = CGRect(x: placed.x, y: placed.y, width: placed.width, height: placed.height)

@@ -5,13 +5,21 @@ struct MoneyFlowExpandedView: View {
     let flow: MoneyFlow
     let currency: String
     @Environment(\.dismiss) private var dismiss
-    @State private var scale = 1.0
-    @State private var scaleAtGestureStart = 1.0
+    /// How far in from the size that fits the screen: 1 shows the whole diagram.
+    @State private var zoomFactor = 1.0
+    @State private var zoomAtGestureStart = 1.0
     @State private var viewport = CGSize.zero
 
     private static let baseSize = CGSize(width: 640, height: 600)
-    private static let scaleRange = 0.55...3.0
-    private static let zoomStep = 0.25
+    private static let zoomRange = 1.0...4.0
+    private static let zoomStep = 0.5
+
+    /// The scale at which the whole diagram fits the width of the screen.
+    private var fitScale: Double {
+        viewport.width > 0 ? min(1, (viewport.width - 8) / Self.baseSize.width) : 1
+    }
+
+    private var scale: Double { fitScale * zoomFactor }
 
     var body: some View {
         NavigationStack {
@@ -29,8 +37,8 @@ struct MoneyFlowExpandedView: View {
             .defaultScrollAnchor(.center)
             .simultaneousGesture(
                 MagnifyGesture()
-                    .onChanged { zoom(to: scaleAtGestureStart * $0.magnification) }
-                    .onEnded { _ in scaleAtGestureStart = scale }
+                    .onChanged { zoom(to: zoomAtGestureStart * $0.magnification) }
+                    .onEnded { _ in zoomAtGestureStart = zoomFactor }
             )
             .navigationTitle("Money flow")
             .navigationBarTitleDisplayMode(.inline)
@@ -40,20 +48,20 @@ struct MoneyFlowExpandedView: View {
                 }
                 ToolbarItemGroup(placement: .primaryAction) {
                     Button("Zoom out", systemImage: "minus.magnifyingglass") { step(-Self.zoomStep) }
-                        .disabled(scale <= Self.scaleRange.lowerBound)
+                        .disabled(zoomFactor <= Self.zoomRange.lowerBound)
                     Button("Zoom in", systemImage: "plus.magnifyingglass") { step(Self.zoomStep) }
-                        .disabled(scale >= Self.scaleRange.upperBound)
+                        .disabled(zoomFactor >= Self.zoomRange.upperBound)
                 }
             }
         }
     }
 
     private func zoom(to value: Double) {
-        scale = min(max(value, Self.scaleRange.lowerBound), Self.scaleRange.upperBound)
+        zoomFactor = min(max(value, Self.zoomRange.lowerBound), Self.zoomRange.upperBound)
     }
 
     private func step(_ amount: Double) {
-        zoom(to: scale + amount)
-        scaleAtGestureStart = scale
+        zoom(to: zoomFactor + amount)
+        zoomAtGestureStart = zoomFactor
     }
 }
