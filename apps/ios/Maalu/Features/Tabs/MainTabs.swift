@@ -13,7 +13,7 @@ struct MainTabs: View {
                 AccountsView()
             }
             Tab("Budget", systemImage: "tray.full") {
-                NavigationStack { ComingSoonView(title: "Budget", systemImage: "tray.full") }
+                BudgetView()
             }
             Tab("More", systemImage: "ellipsis.circle") {
                 MoreView()

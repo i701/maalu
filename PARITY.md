@@ -10,8 +10,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | | Web | Android | iOS |
 |---|---:|---:|---:|
 | ✅ done | 67 | 55 | 6 |
-| 🟡 partial | 0 | 3 | 5 |
-| ❌ missing | 0 | 5 | 52 |
+| 🟡 partial | 0 | 3 | 8 |
+| ❌ missing | 0 | 5 | 49 |
 | ➖ n/a | 1 | 5 | 5 |
 
 ## Still to build on Android (8)
@@ -30,6 +30,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - 🟡 **Transactions list** (Transactions). Search, a type filter, paging, a detail screen and delete (to the trash) only: no date, account, category, tag or amount filters, no selection, no planned list.
 - 🟡 **Filters** (Transactions). Type, date range (with quick ranges), account, category, tags (any or all) and amount. No payment method, card, needs or wants, or planned filter.
 - 🟡 **Add and edit a transaction** (Transactions). Income, expense and transfer with amount, account, category, vendor, payment method, date, note and an exchange rate for a foreign account. No time, tags, card, items, location, receipts or planned switch (a future date is planned by itself).
+- 🟡 **Budget limits** (Budget, goals and planning). Read only: the month picker, the total with needs and wants, each monthly limit with its status and a detail screen. No making, changing or deleting a limit, and no budget settings.
+- 🟡 **Limits for set dates** (Budget, goals and planning). Read only: limits for set dates are listed under the period their days touch, with days left. Not made, changed, repeated or deleted.
+- 🟡 **Savings goals** (Budget, goals and planning). Read only: goals with progress, what is left, what each month needs and a detail screen. No making, changing or deleting a goal, and no adding or taking out money.
 - 🟡 **Cash flow** (Dashboard and reports). Income and expenses by month (6 or 12 months) and this month's income, spending and what was kept. No kept-per-month chart or running total, and no table view of the chart.
 - 🟡 **Net worth and what moved it** (Dashboard and reports). Only the dashboard's net worth card (total, assets, liabilities, 30-day change and chart). Not the Net worth page with a chosen period and what moved it.
 - ❌ **Two-factor sign-in** (Sign in and security).
@@ -66,10 +69,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Subscriptions and recurring bills** (Bills and subscriptions).
 - ❌ **Suggested subscriptions** (Bills and subscriptions).
 - ❌ **Make a subscription from a transaction** (Bills and subscriptions).
-- ❌ **Budget limits** (Budget, goals and planning).
-- ❌ **Limits for set dates** (Budget, goals and planning).
 - ❌ **Move money between limits** (Budget, goals and planning).
-- ❌ **Savings goals** (Budget, goals and planning).
 - ❌ **Month plan** (Budget, goals and planning).
 - ❌ **Salary split rules** (Budget, goals and planning).
 - ❌ **Split a salary and the Pending screen** (Budget, goals and planning).
@@ -167,15 +167,18 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | Feature | Web | Android | iOS |
 |---|:---:|:---:|:---:|
-| **Budget limits**<br>Per-period limits for categories with a warning percent, rollover and the summary by kind. | ✅ done | 🟡 partial | ❌ missing |
-| **Limits for set dates**<br>One total for a stretch of dates, a monthly limit that runs between two dates, and repeating a finished one. | ✅ done | ✅ done | ❌ missing |
+| **Budget limits**<br>Per-period limits for categories with a warning percent, rollover and the summary by kind. | ✅ done | 🟡 partial | 🟡 partial |
+| **Limits for set dates**<br>One total for a stretch of dates, a monthly limit that runs between two dates, and repeating a finished one. | ✅ done | ✅ done | 🟡 partial |
 | **Move money between limits**<br>Move what is left in one limit to another for one period, undo it, and see the history. | ✅ done | ✅ done | ❌ missing |
-| **Savings goals**<br>A target that follows a savings account or a log of amounts set aside by hand. | ✅ done | ✅ done | ❌ missing |
+| **Savings goals**<br>A target that follows a savings account or a log of amounts set aside by hand. | ✅ done | ✅ done | 🟡 partial |
 | **Month plan**<br>What you have, the bills still to pay by day and where the money runs out. | ✅ done | ✅ done | ❌ missing |
 | **Salary split rules**<br>Rules that divide a salary between accounts and goals, each one manual or automatic. | ✅ done | ✅ done | ❌ missing |
 | **Split a salary and the Pending screen**<br>Review, edit, approve or dismiss waiting salary splits; undo one. | ✅ done | ✅ done | ❌ missing |
 
 - **Budget limits** (Android): Monthly limits can be made, edited and deleted. The budget settings (period start day, warning percent) are changed on the web.
+- **Budget limits** (iOS): Read only: the month picker, the total with needs and wants, each monthly limit with its status and a detail screen. No making, changing or deleting a limit, and no budget settings.
+- **Limits for set dates** (iOS): Read only: limits for set dates are listed under the period their days touch, with days left. Not made, changed, repeated or deleted.
+- **Savings goals** (iOS): Read only: goals with progress, what is left, what each month needs and a detail screen. No making, changing or deleting a goal, and no adding or taking out money.
 
 ## Dashboard and reports
 

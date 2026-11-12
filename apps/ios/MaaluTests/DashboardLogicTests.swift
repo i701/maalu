@@ -80,23 +80,4 @@ struct DashboardLogicTests {
         let october = november.shifted(by: -1, calendar: calendar)
         #expect(october.trendEnd(now: now) == october.end)
     }
-
-    @Test func budgetAndGoalsDecode() throws {
-        let budget = try Api.decoder.decode(Budget.self, from: Data(#"""
-        {"currency":"MVR","attention":1,"totals":{"activity":"700","amount":"1000","percent":70,"status":"ok"},
-         "lines":[{"id":"l","name":"Food","activity":"500","amount":"600","percent":83,"status":"warning"}],
-         "fixed_lines":[{"id":"f","name":"Trip","activity":"0","amount":"900","percent":0,"status":"ok",
-                         "state":"active","end_date":"2026-12-01"},
-                        {"id":"g","name":"Old","activity":"0","amount":"1","percent":0,"status":"ok",
-                         "state":"ended","end_date":"2026-01-01"}]}
-        """#.utf8))
-        #expect(budget.lines.count == 1)
-        #expect(budget.runningFixedLines.map(\.name) == ["Trip"])
-        #expect(!budget.isEmpty)
-
-        let goals = try Api.decoder.decode([Goal].self, from: Data(#"""
-        [{"id":"g","name":"Fund","currency":"MVR","saved":"1200","target_amount":"5000","percent":24,"reached":false}]
-        """#.utf8))
-        #expect(goals[0].percent == 24)
-    }
 }

@@ -1167,7 +1167,12 @@
         "note": "Monthly limits can be made, edited and deleted. The budget settings (period start day, warning percent) are changed on the web."
       },
       "ios": {
-        "status": "missing"
+        "status": "partial",
+        "note": "Read only: the month picker, the total with needs and wants, each monthly limit with its status and a detail screen. No making, changing or deleting a limit, and no budget settings.",
+        "evidence": [
+          "apps/ios/Maalu/Features/Budget/BudgetView.swift",
+          "apps/ios/Maalu/Features/Budget/BudgetLineRow.swift"
+        ]
       },
       "routes": [
         "/budget"
@@ -1198,7 +1203,11 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "partial",
+        "note": "Read only: limits for set dates are listed under the period their days touch, with days left. Not made, changed, repeated or deleted.",
+        "evidence": [
+          "apps/ios/Maalu/Features/Budget/FixedBudgetLineRow.swift"
+        ]
       }
     },
     {
@@ -1250,7 +1259,12 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "partial",
+        "note": "Read only: goals with progress, what is left, what each month needs and a detail screen. No making, changing or deleting a goal, and no adding or taking out money.",
+        "evidence": [
+          "apps/ios/Maalu/Features/Budget/GoalRow.swift",
+          "apps/ios/Maalu/Features/Budget/GoalDetailView.swift"
+        ]
       },
       "api": [
         "/api/v1/goals",
