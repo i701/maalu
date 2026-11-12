@@ -9,9 +9,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 67 | 55 | 0 |
+| ✅ done | 67 | 55 | 1 |
 | 🟡 partial | 0 | 3 | 0 |
-| ❌ missing | 0 | 5 | 63 |
+| ❌ missing | 0 | 5 | 62 |
 | ➖ n/a | 1 | 5 | 5 |
 
 ## Still to build on Android (8)
@@ -25,9 +25,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (63)
+## Still to build on iOS (62)
 
-- ❌ **Sign in and sign out** (Sign in and security).
 - ❌ **Two-factor sign-in** (Sign in and security).
 - ❌ **Set up and manage two-factor** (Sign in and security).
 - ❌ **Where you are signed in** (Sign in and security).
@@ -95,7 +94,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | Feature | Web | Android | iOS |
 |---|:---:|:---:|:---:|
-| **Sign in and sign out**<br>Email and password sign-in, signing out, the first-run server screen on the app. | ✅ done | ✅ done | ❌ missing |
+| **Sign in and sign out**<br>Email and password sign-in, signing out, the first-run server screen on the app. | ✅ done | ✅ done | ✅ done |
 | **Create the first account**<br>Sign-up on a new install (open only while no account exists, unless REGISTRATION=open). | ✅ done | ➖ n/a | ➖ n/a |
 | **Two-factor sign-in**<br>The second step at sign-in: an authenticator code or a recovery code. | ✅ done | ✅ done | ❌ missing |
 | **Set up and manage two-factor**<br>Turn it on with a QR code, new recovery codes, turn it off. | ✅ done | ✅ done | ❌ missing |

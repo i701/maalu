@@ -70,7 +70,11 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/UI/LoginView.swift",
+          "apps/ios/Maalu/UI/ServerView.swift"
+        ]
       },
       "routes": [
         "/login",

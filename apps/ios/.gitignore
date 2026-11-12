@@ -1,0 +1,7 @@
+# Made by `just ios-project` from project.yml
+Maalu.xcodeproj/
+build/
+DerivedData/
+xcuserdata/
+buildServer.json
+.compile

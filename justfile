@@ -59,6 +59,14 @@ api-types:
     uv run --directory apps/api python -m app.openapi ../web/openapi.json
     pnpm --filter @maalu/web gen:api
 
+# iOS: make apps/ios/Maalu.xcodeproj from project.yml (needs `brew install xcodegen`; the project file is not committed)
+ios-project:
+    cd apps/ios && xcodegen generate
+
+# iOS: build and run the unit tests on a simulator
+test-ios: ios-project
+    cd apps/ios && xcodebuild test -project Maalu.xcodeproj -scheme Maalu -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath build -quiet
+
 # The guides as JSON for the Android app (apps/android/app/src/main/assets/docs.json), made from apps/web/src/lib/docs.
 # Run after changing a guide and commit the file (CI fails if it is stale).
 docs-json:
