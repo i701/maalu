@@ -3,19 +3,19 @@ import SwiftUI
 struct MainTabs: View {
     var body: some View {
         TabView {
-            Tab("Dashboard", systemImage: "square.grid.2x2") {
+            Tab("Dashboard", systemImage: "chart.bar") {
                 DashboardView()
             }
-            Tab("Transactions", systemImage: "list.bullet.rectangle") {
+            Tab("Transactions", systemImage: "receipt") {
                 TransactionsView()
             }
-            Tab("Accounts", systemImage: "building.columns") {
+            Tab("Accounts", systemImage: "wallet.bifold") {
                 AccountsView()
             }
-            Tab("Budget", systemImage: "chart.pie") {
-                NavigationStack { ComingSoonView(title: "Budget", systemImage: "chart.pie") }
+            Tab("Budget", systemImage: "tray.full") {
+                NavigationStack { ComingSoonView(title: "Budget", systemImage: "tray.full") }
             }
-            Tab("More", systemImage: "ellipsis") {
+            Tab("More", systemImage: "ellipsis.circle") {
                 MoreView()
             }
         }

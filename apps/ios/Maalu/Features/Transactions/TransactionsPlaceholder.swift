@@ -26,7 +26,7 @@ struct TransactionsPlaceholder: View {
                     Button("Clear filters", action: clearFilters)
                 }
             } else {
-                ContentUnavailableView("No transactions yet", systemImage: "list.bullet.rectangle")
+                ContentUnavailableView("No transactions yet", systemImage: "receipt")
             }
         }
     }
