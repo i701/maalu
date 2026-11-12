@@ -3,6 +3,8 @@ import Foundation
 struct TransactionFilter: Hashable {
     var text = ""
     var type: TransactionType?
+    /// Show what is coming up instead of what happened.
+    var planned = false
     var dateFrom: Date?
     var dateTo: Date?
     var accountID: String?
@@ -30,10 +32,10 @@ struct TransactionFilter: Hashable {
         return dates + amounts + [accountID, categoryID].compactMap { $0 }.count + (tagIDs.isEmpty ? 0 : 1)
     }
 
-    var isActive: Bool { !text.trimmingCharacters(in: .whitespaces).isEmpty || type != nil || detailCount > 0 }
+    var isActive: Bool { !text.trimmingCharacters(in: .whitespaces).isEmpty || type != nil || planned || detailCount > 0 }
 
     func clearingDetails() -> TransactionFilter {
-        TransactionFilter(text: text, type: type)
+        TransactionFilter(text: text, type: type, planned: planned)
     }
 
     var queryItems: [URLQueryItem] {
@@ -41,6 +43,7 @@ struct TransactionFilter: Hashable {
         let text = text.trimmingCharacters(in: .whitespaces)
         if !text.isEmpty { items.append(URLQueryItem(name: "q", value: text)) }
         if let type { items.append(URLQueryItem(name: "type", value: type.rawValue)) }
+        if planned { items.append(URLQueryItem(name: "planned", value: "true")) }
         if let dateFrom { items.append(URLQueryItem(name: "date_from", value: ISODate.string(dateFrom))) }
         if let dateTo { items.append(URLQueryItem(name: "date_to", value: ISODate.string(dateTo))) }
         if let accountID { items.append(URLQueryItem(name: "account_id", value: accountID)) }

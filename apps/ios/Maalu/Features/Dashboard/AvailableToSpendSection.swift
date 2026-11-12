@@ -23,6 +23,7 @@ struct AvailableToSpendSection: View {
                     .padding(.top, 4)
             }
             NavigationLink("Show the working", value: DashboardRoute.working)
+            NavigationLink("Open the month plan", value: DashboardRoute.plan)
         }
     }
 }

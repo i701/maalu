@@ -27,7 +27,7 @@ struct TransactionsView: View {
             .searchable(text: $model.filter.text, prompt: "Search transactions")
             .toolbar {
                 ToolbarItemGroup {
-                    TransactionTypeMenu(selection: $model.filter.type)
+                    TransactionTypeMenu(selection: $model.filter.type, planned: $model.filter.planned)
                     Button("Filters", systemImage: "slider.horizontal.3") { isFiltering = true }
                         .foregroundStyle(model.filter.detailCount == 0 ? Color.primary : Color.accentColor)
                 }

@@ -40,7 +40,8 @@ struct Transaction: Decodable, Identifiable, Hashable {
         if type == .transfer {
             return [account?.name, toAccount?.name].compactMap { $0 }.joined(separator: " → ")
         }
-        let prefix = isRefund ? [String(localized: "Refund")] : []
+        var prefix = isRefund ? [String(localized: "Refund")] : []
+        if planned { prefix.append(String(localized: "Planned")) }
         return (prefix + [category, account?.name].compactMap { $0 }).joined(separator: " · ")
     }
 

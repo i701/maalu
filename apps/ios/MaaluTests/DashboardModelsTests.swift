@@ -11,7 +11,7 @@ struct DashboardModelsTests {
             #"{"goal_id":"g\#($0)","name":"Fund","amount":"100"}"#
         }.joined(separator: ",")
         let json = #"""
-        {"currency":"MVR","period_end":"2026-11-30","available":"\#(amount)","balance":"5300.1140",
+        {"currency":"MVR","period_start":"2026-11-01","period_end":"2026-11-30","today":"2026-11-12","expected":[],"available":"\#(amount)","balance":"5300.1140",
          "bills_total":"238.8558","card_payments_total":"0","reserved_total":"100",
          "accounts":[{"id":"a","name":"BML Current","group":"accounts","balance":"1742.5300"}],
          "bills":[\#(billsJSON)],"card_payments":[],"reserved":[\#(reservedJSON)]}

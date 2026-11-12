@@ -5,7 +5,7 @@ struct TransactionDetailView: View {
     @Environment(\.dismiss) private var dismiss
     let model: TransactionsModel
     let id: String
-    @State private var editing: Transaction?
+    @State private var sheet: TransactionSheet?
     @State private var isConfirmingDelete = false
     @State private var errorMessage: String?
 
@@ -15,9 +15,14 @@ struct TransactionDetailView: View {
                 .navigationTitle(transaction.title)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
+                    if transaction.planned {
+                        ToolbarItem(placement: .primaryAction) {
+                            Button(markTitle(for: transaction), systemImage: "checkmark.circle") { sheet = .pay(transaction) }
+                        }
+                    }
                     if transaction.canEdit {
                         ToolbarItem(placement: .primaryAction) {
-                            Button("Edit", systemImage: "pencil") { editing = transaction }
+                            Button("Edit", systemImage: "pencil") { sheet = .edit(transaction) }
                         }
                     }
                     ToolbarItem {
@@ -29,8 +34,11 @@ struct TransactionDetailView: View {
                             }
                     }
                 }
-                .sheet(item: $editing) { transaction in
-                    TransactionFormView(editing: transaction, onSaved: reload)
+                .sheet(item: $sheet) { sheet in
+                    switch sheet {
+                    case .edit(let transaction): TransactionFormView(editing: transaction, onSaved: reload)
+                    case .pay(let transaction): MarkPaidView(transactionID: transaction.id, onDone: paid)
+                    }
                 }
                 .alert("Could not delete", item: $errorMessage) { _ in
                 } message: { message in
@@ -38,6 +46,22 @@ struct TransactionDetailView: View {
                 }
         } else {
             ContentUnavailableView("Transaction not found", systemImage: "questionmark.circle")
+        }
+    }
+
+    private func markTitle(for transaction: Transaction) -> LocalizedStringResource {
+        switch transaction.type {
+        case .transfer: "Mark as done"
+        case .income: "Mark as received"
+        case .expense: "Mark as paid"
+        }
+    }
+
+    /// A planned transaction that was paid is a different row now, so the screen about it closes.
+    private func paid() {
+        Task {
+            if let api = session.api { await model.reload(using: api) }
+            dismiss()
         }
     }
 

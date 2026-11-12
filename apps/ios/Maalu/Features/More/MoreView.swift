@@ -22,7 +22,7 @@ struct MoreView: View {
             }
             .navigationTitle("More")
             .navigationDestination(for: MoreItem.self) { item in
-                ComingSoonView(title: item.title, systemImage: item.systemImage)
+                MoreDestinationView(item: item)
             }
         }
     }

@@ -48,9 +48,12 @@ struct DashboardView: View {
                     MonthSwitcher(canGoForward: !model.isCurrentMonth, previous: previousMonth, next: nextMonth)
                 }
             }
-            .navigationDestination(for: DashboardRoute.self) { _ in
-                if let available = model.available {
-                    AvailableWorkingView(available: available)
+            .navigationDestination(for: DashboardRoute.self) { route in
+                switch route {
+                case .working:
+                    if let available = model.available { AvailableWorkingView(available: available) }
+                case .plan:
+                    PlanView()
                 }
             }
             .refreshable { await load() }

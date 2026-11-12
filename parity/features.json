@@ -739,7 +739,12 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Transactions/Form/TransactionDateSection.swift",
+          "apps/ios/Maalu/Features/Transactions/Filters/TransactionTypeMenu.swift",
+          "apps/ios/Maalu/Features/Plan/MarkPaid/MarkPaidView.swift"
+        ]
       },
       "api": [
         "/api/v1/transactions/{transaction_id}/post"
@@ -1315,7 +1320,12 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Plan/PlanView.swift",
+          "apps/ios/Maalu/Features/Plan/MonthPlan.swift",
+          "apps/ios/Maalu/Features/Plan/MarkPaid/MarkPaidView.swift"
+        ]
       },
       "routes": [
         "/plan"

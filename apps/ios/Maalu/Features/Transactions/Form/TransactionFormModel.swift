@@ -12,14 +12,33 @@ final class TransactionFormModel {
     private(set) var isSaving = false
     private(set) var errorMessage: String?
     private let original: Transaction?
+    /// Whether the person has set "Planned" themselves, which a change of date then never overrides.
+    private var plannedTouched: Bool
     private var suggestedMethod = PaymentMethod.other
 
     init(editing transaction: Transaction? = nil) {
         original = transaction
+        plannedTouched = transaction != nil
         draft = transaction.map(TransactionDraft.init(editing:)) ?? TransactionDraft()
     }
 
     var isEditing: Bool { original != nil }
+
+    /// The Planned switch: setting it marks it as the person's own choice, so a later change of date leaves it alone.
+    var isPlanned: Bool {
+        get { draft.planned }
+        set {
+            guard newValue != draft.planned else { return }
+            draft.planned = newValue
+            plannedTouched = true
+        }
+    }
+
+    /// A future date plans the transaction and a past or present one posts it, until the person has chosen.
+    func dateChanged() {
+        guard !plannedTouched else { return }
+        draft.planned = draft.isFuture
+    }
     var account: Account? { accounts.first { $0.id == draft.accountID } }
     var toAccount: Account? { accounts.first { $0.id == draft.toAccountID } }
     var problem: LocalizedStringResource? { draft.problem(accounts: accounts, baseCurrency: baseCurrency) }

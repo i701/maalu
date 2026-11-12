@@ -4,7 +4,9 @@ struct AvailableToSpend: Decodable {
     let available: String
     let balance: String
     let currency: String
+    let periodStart: String
     let periodEnd: String
+    let today: String
     let billsTotal: String
     let cardPaymentsTotal: String
     let reservedTotal: String
@@ -12,6 +14,7 @@ struct AvailableToSpend: Decodable {
     let bills: [AvailableBill]
     let cardPayments: [AvailableCardPayment]
     let reserved: [AvailableReserve]
+    let expected: [AvailableBill]
 
     var isShort: Bool { (Money.decimal(available) ?? 0) < 0 }
 

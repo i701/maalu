@@ -12,6 +12,8 @@ struct TransactionDraft {
     var note = ""
     var method: PaymentMethod = .other
     var rate: Decimal?
+    /// A planned transaction counts toward nothing until it is marked as paid.
+    var planned = false
 
     init() {}
 
@@ -27,6 +29,7 @@ struct TransactionDraft {
         note = transaction.description ?? ""
         method = transaction.paymentMethod
         rate = Money.decimal(transaction.exchangeRate)
+        planned = transaction.planned
     }
 
     /// The first thing wrong with the draft, or nil when it can be sent. The server checks everything again.
@@ -54,7 +57,7 @@ struct TransactionDraft {
             amount: Money.string(amount ?? 0),
             transactionDate: ISODate.string(date),
             accountId: from?.id,
-            planned: isFuture ? true : nil
+            planned: planned ? true : (original?.planned == true ? false : nil)
         )
         let note = note.trimmingCharacters(in: .whitespacesAndNewlines)
         request.description = note.isEmpty ? nil : note
@@ -77,7 +80,7 @@ struct TransactionDraft {
         return request
     }
 
-    private var isFuture: Bool {
+    var isFuture: Bool {
         Calendar.current.startOfDay(for: date) > Calendar.current.startOfDay(for: .now)
     }
 }

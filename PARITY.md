@@ -9,9 +9,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 67 | 55 | 11 |
+| ✅ done | 67 | 55 | 13 |
 | 🟡 partial | 0 | 3 | 9 |
-| ❌ missing | 0 | 5 | 43 |
+| ❌ missing | 0 | 5 | 41 |
 | ➖ n/a | 1 | 5 | 5 |
 
 ## Still to build on Android (8)
@@ -25,7 +25,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (52)
+## Still to build on iOS (50)
 
 - 🟡 **Accounts list** (Accounts and cards). Accounts by group with their balances and bank: no credit-use bars, small balance lines or the net worth summary yet.
 - 🟡 **An account's page** (Accounts and cards). The balance, facts, a balance chart with three ranges and the 20 latest transactions with the balance after each row: no this-month figures, search or paging yet.
@@ -49,7 +49,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Templates** (Transactions).
 - ❌ **Bulk actions on selected rows** (Transactions).
 - ❌ **Trash** (Transactions).
-- ❌ **Planned transactions and Mark as paid** (Transactions).
 - ❌ **Refunds** (Transactions).
 - ❌ **Split a purchase into items** (Transactions).
 - ❌ **Receipts and web links** (Transactions).
@@ -65,7 +64,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Subscriptions and recurring bills** (Bills and subscriptions).
 - ❌ **Suggested subscriptions** (Bills and subscriptions).
 - ❌ **Make a subscription from a transaction** (Bills and subscriptions).
-- ❌ **Month plan** (Budget, goals and planning).
 - ❌ **Salary split rules** (Budget, goals and planning).
 - ❌ **Split a salary and the Pending screen** (Budget, goals and planning).
 - ❌ **Compare** (Dashboard and reports).
@@ -126,7 +124,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Templates**<br>Start from a saved template and save a form as one; the Templates page to rename and delete them. | ✅ done | ✅ done | ❌ missing |
 | **Bulk actions on selected rows**<br>Select rows, then change category, tags, vendor or payment method, or delete them; select all that match. | ✅ done | ✅ done | ❌ missing |
 | **Trash**<br>Deleted transactions wait to be restored or deleted for good, singly or in bulk. | ✅ done | ✅ done | ❌ missing |
-| **Planned transactions and Mark as paid**<br>Something coming up that counts toward nothing until it is paid with the real day and amount. | ✅ done | ✅ done | ❌ missing |
+| **Planned transactions and Mark as paid**<br>Something coming up that counts toward nothing until it is paid with the real day and amount. | ✅ done | ✅ done | ✅ done |
 | **Refunds**<br>Give money back for a purchase (whole or by item), or link existing income to a purchase. | ✅ done | 🟡 partial | ❌ missing |
 | **Split a purchase into items**<br>Items with quantity, category and tax (GST included or excluded) that add up to the amount. | ✅ done | ✅ done | ❌ missing |
 | **Receipts and web links**<br>Photos and PDFs and web links on a transaction. | ✅ done | ✅ done | ❌ missing |
@@ -169,7 +167,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Limits for set dates**<br>One total for a stretch of dates, a monthly limit that runs between two dates, and repeating a finished one. | ✅ done | ✅ done | 🟡 partial |
 | **Move money between limits**<br>Move what is left in one limit to another for one period, undo it, and see the history. | ✅ done | ✅ done | ✅ done |
 | **Savings goals**<br>A target that follows a savings account or a log of amounts set aside by hand. | ✅ done | ✅ done | ✅ done |
-| **Month plan**<br>What you have, the bills still to pay by day and where the money runs out. | ✅ done | ✅ done | ❌ missing |
+| **Month plan**<br>What you have, the bills still to pay by day and where the money runs out. | ✅ done | ✅ done | ✅ done |
 | **Salary split rules**<br>Rules that divide a salary between accounts and goals, each one manual or automatic. | ✅ done | ✅ done | ❌ missing |
 | **Split a salary and the Pending screen**<br>Review, edit, approve or dismiss waiting salary splits; undo one. | ✅ done | ✅ done | ❌ missing |
 

@@ -80,9 +80,8 @@ struct TransactionDraftTests {
         #expect(body["exchange_rate"] as? String == "15.42")
     }
 
-    @Test func aFutureDateIsPlanned() throws {
-        let tomorrow = try #require(Calendar.current.date(byAdding: .day, value: 1, to: .now))
-        let body = try json(draft { $0.date = tomorrow }.request(accounts: try accounts(), baseCurrency: "MVR", editing: nil))
+    @Test func aPlannedDraftIsSentAsPlanned() throws {
+        let body = try json(draft { $0.planned = true }.request(accounts: try accounts(), baseCurrency: "MVR", editing: nil))
         #expect(body["planned"] as? Bool == true)
     }
 
