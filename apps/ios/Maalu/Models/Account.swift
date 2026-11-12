@@ -6,4 +6,5 @@ struct Account: Decodable, Identifiable {
     let balance: String
     let exchangeRate: String
     let bank: String?
+    let creditLimit: String?
 }

@@ -12,7 +12,7 @@ struct NetWorthSection: View {
             LabeledContent("Assets") { MoneyText(summary.assets, currency: summary.currency) }
             LabeledContent("Liabilities") { MoneyText(summary.liabilities, currency: summary.currency) }
             if let change {
-                LabeledContent("Last \(DashboardModel.trendDays) days") {
+                LabeledContent("Change over the month") {
                     Text(change, format: .currency(code: summary.currency).presentation(.isoCode).sign(strategy: .always()))
                         .monospacedDigit()
                 }

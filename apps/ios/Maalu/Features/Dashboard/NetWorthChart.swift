@@ -16,6 +16,7 @@ struct NetWorthChart: View {
         }
         .chartYScale(domain: .automatic(includesZero: false))
         .frame(height: 160)
-        .accessibilityLabel("Net worth over the last \(DashboardModel.trendDays) days")
+        .chartXAxis { AxisMarks(values: .automatic(desiredCount: 4)) }
+        .accessibilityLabel("Net worth over the month")
     }
 }

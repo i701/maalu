@@ -1,6 +1,10 @@
 import Foundation
 
 enum MoneyFormat {
+    static func string(_ value: Decimal, currency: String) -> String {
+        value.formatted(.currency(code: currency).presentation(.isoCode))
+    }
+
     /// "MVR 1,234.50", from the API's decimal string. The raw text is shown if it is not a number.
     static func string(_ amount: String, currency: String) -> String {
         guard let value = Money.decimal(amount) else { return amount }

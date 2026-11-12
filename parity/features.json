@@ -1364,10 +1364,10 @@
       },
       "ios": {
         "status": "partial",
-        "note": "Available to spend (with its working), net worth with a 30-day chart, and cash flow. No month picker, spending by category, latest transactions, upcoming or budget and goals cards yet.",
+        "note": "Month picker, available to spend, income and spending with the change on last month, where it went, net worth, cash flow, budget and goals, needs and wants, credit used, coming up and latest. No money flow diagram or 50/30/20 yet.",
         "evidence": [
           "apps/ios/Maalu/Features/Dashboard/DashboardView.swift",
-          "apps/ios/Maalu/Features/Dashboard/AvailableToSpendSection.swift"
+          "apps/ios/Maalu/Features/Dashboard/DashboardModel.swift"
         ]
       },
       "routes": [
@@ -1398,7 +1398,10 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Dashboard/BudgetGoalsSection.swift"
+        ]
       }
     },
     {
@@ -1421,7 +1424,11 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "partial",
+        "note": "The needs, wants and not sorted split only; the 50/30/20 comparison is not built.",
+        "evidence": [
+          "apps/ios/Maalu/Features/Dashboard/NeedsWantsSection.swift"
+        ]
       }
     },
     {
@@ -1464,7 +1471,10 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Dashboard/CreditUsedSection.swift"
+        ]
       }
     },
     {
