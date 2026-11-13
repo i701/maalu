@@ -137,6 +137,11 @@ const makeTransaction = (
 - Resolve unsafe type assertion diagnostics rather than suppressing them.
 - Do not consider a test implementation complete merely because it passes at runtime; it must also satisfy TypeScript's type system.
 
+## Forms & Validation
+- **Standard Stack**: Always use `react-hook-form` paired with `zod` (`@hookform/resolvers/zod`) for all form implementations.
+- **No Raw FormData**: Avoid manual `new FormData(e.currentTarget)` parsing, repetitive `form.get()` type narrowing, and manual input state management.
+- **Schema-First**: Define a strict `z.object(...)` schema for every form to handle validation, whitespace trimming (`.trim()`), and type coercion (`z.coerce.number()`), inferring TypeScript payload types via `z.infer<typeof schema>`.
+
 ## Commands
 
 ```bash
