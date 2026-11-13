@@ -5,7 +5,7 @@ import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
-import type { FormEvent, ReactNode } from "react";
+import type { ReactNode, SubmitEvent } from "react";
 import { useLastDefined } from "#/lib/motion";
 import type { Sheet } from "#/lib/sheet";
 import Reveal from "./Reveal";
@@ -26,7 +26,7 @@ export default function FormDialog({
 	title: string;
 	error: string | null;
 	pending: boolean;
-	onSubmit: (e: FormEvent<HTMLFormElement>) => void;
+	onSubmit: (e: SubmitEvent<HTMLFormElement>) => void;
 	/** From useSheet(onClose): drives the fade in and out. */
 	sheet: Sheet;
 	children: ReactNode;
@@ -49,8 +49,8 @@ export default function FormDialog({
 				transition: { onExited: sheet.onExited },
 				paper: {
 					component: "form",
-					onSubmit: (e: FormEvent<HTMLDivElement>) =>
-						onSubmit(e as unknown as FormEvent<HTMLFormElement>),
+					onSubmit: (e: SubmitEvent<HTMLDivElement>) =>
+						onSubmit(e as unknown as SubmitEvent<HTMLFormElement>),
 				},
 			}}
 		>
@@ -75,7 +75,12 @@ export default function FormDialog({
 				<Button onClick={sheet.close} color="inherit" disabled={pending}>
 					Cancel
 				</Button>
-				<Button type="submit" variant="contained" loading={pending} disabled={submitDisabled}>
+				<Button
+					type="submit"
+					variant="contained"
+					loading={pending}
+					disabled={submitDisabled}
+				>
 					{submitLabel}
 				</Button>
 			</DialogActions>

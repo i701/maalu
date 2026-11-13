@@ -2,43 +2,35 @@ import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
-import { type FormEvent, useState } from "react";
+import { type SubmitEvent, useState } from "react";
+import { formatTime } from "#/lib/format";
+import { placeOf } from "#/lib/places";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
 import {
-	TRANSACTION_TYPES,
-	TRANSACTION_TYPE_LABELS,
 	type Account,
 	type Card,
 	type Category,
 	type Subscription,
 	type Tag,
+	TRANSACTION_TYPE_LABELS,
+	TRANSACTION_TYPES,
 	type Transaction,
 	type TransactionTemplate,
 	type TransactionType,
 	type Vendor,
 } from "#/types/api";
-import { placeOf } from "#/lib/places";
 import AttachmentsField from "./AttachmentsField";
 import FormDialog from "./FormDialog";
+import LocationField from "./LocationField";
 import { useNotify } from "./Notify";
 import SaveTemplateDialog from "./SaveTemplateDialog";
 import TagsField from "./TagsField";
-import LocationField from "./LocationField";
-import VendorField from "./VendorField";
-import { formatTime } from "#/lib/format";
+import { messageAfterSave } from "./transaction-form/budget-warning";
 import { Cell, RevealCell } from "./transaction-form/Cells";
 import FormFooter from "./transaction-form/FormFooter";
 import OrdinaryFields from "./transaction-form/OrdinaryFields";
-import TemplatePicker from "./transaction-form/TemplatePicker";
-import TransferFields from "./transaction-form/TransferFields";
-import { messageAfterSave } from "./transaction-form/budget-warning";
 import PlannedAndSubscription from "./transaction-form/PlannedAndSubscription";
-import { useAttachments } from "./transaction-form/useAttachments";
-import { useLinks } from "./transaction-form/useLinks";
-import { useFormFields } from "./transaction-form/useFormFields";
-import { useSplits } from "./transaction-form/useSplits";
-import { useVendorDefaults } from "./transaction-form/useVendorDefaults";
 import {
 	accountChoices,
 	buildTemplateRequest,
@@ -49,8 +41,20 @@ import {
 	subscriptionChoices,
 	type TransactionSeed,
 } from "./transaction-form/request";
+import TemplatePicker from "./transaction-form/TemplatePicker";
+import TransferFields from "./transaction-form/TransferFields";
+import { useAttachments } from "./transaction-form/useAttachments";
+import { useFormFields } from "./transaction-form/useFormFields";
+import { useLinks } from "./transaction-form/useLinks";
+import { useSplits } from "./transaction-form/useSplits";
+import { useVendorDefaults } from "./transaction-form/useVendorDefaults";
+import VendorField from "./VendorField";
 
-const TYPE_COLOR = { income: "success", expense: "error", transfer: "info" } as const;
+const TYPE_COLOR = {
+	income: "success",
+	expense: "error",
+	transfer: "info",
+} as const;
 
 export default function TransactionForm({
 	transaction,
@@ -136,7 +140,9 @@ export default function TransactionForm({
 		vendorDefaults.onVendorChange(value, fromUser);
 		if (!fromUser || location) return;
 		const typed = value.trim().toLowerCase();
-		const spot = placeOf(vendors.find((v) => v.name.toLowerCase() === typed) ?? {});
+		const spot = placeOf(
+			vendors.find((v) => v.name.toLowerCase() === typed) ?? {},
+		);
 		if (spot) fields.setLocation(spot);
 	}
 
@@ -154,7 +160,7 @@ export default function TransactionForm({
 
 	const formState = () => stateFrom(fields, transaction, splits);
 
-	async function submit(e: FormEvent<HTMLFormElement>) {
+	async function submit(e: SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		const form = new FormData(e.currentTarget); // read now: the event is gone after an await
 		const request = buildTransactionRequest(form, formState());
@@ -174,12 +180,16 @@ export default function TransactionForm({
 					success: request.success,
 					type,
 					form,
-					itemCategories: splits.enabled ? splits.rows.map((r) => r.category) : null,
+					itemCategories: splits.enabled
+						? splits.rows.map((r) => r.category)
+						: null,
 					planned,
 				});
 				notify(message.text, message.severity);
 				// files picked on a new transaction go up now that it has an id
-				for (const text of created ? await uploadPending(created.id, attachments, links) : [])
+				for (const text of created
+					? await uploadPending(created.id, attachments, links)
+					: [])
 					if (text) notify(text, "warning");
 				if (another && !transaction) {
 					fillFrom(seedAfterSave(form, formState()));
@@ -205,7 +215,10 @@ export default function TransactionForm({
 				<Grid container columnSpacing={2} key={fields.round}>
 					{!transaction && templates.length > 0 && (
 						<Cell size={12}>
-							<TemplatePicker templates={templates} onPick={(t) => fillFrom(seedFromTemplate(t))} />
+							<TemplatePicker
+								templates={templates}
+								onPick={(t) => fillFrom(seedFromTemplate(t))}
+							/>
 						</Cell>
 					)}
 					<Cell size={12}>
@@ -214,11 +227,18 @@ export default function TransactionForm({
 							fullWidth
 							size="small"
 							value={type}
-							onChange={(_, next: TransactionType | null) => next && changeType(next)}
+							onChange={(_, next: TransactionType | null) =>
+								next && changeType(next)
+							}
 							aria-label="Transaction type"
 						>
 							{TRANSACTION_TYPES.map((t) => (
-								<ToggleButton key={t} value={t} color={TYPE_COLOR[t]} sx={{ py: 1 }}>
+								<ToggleButton
+									key={t}
+									value={t}
+									color={TYPE_COLOR[t]}
+									sx={{ py: 1 }}
+								>
 									{TRANSACTION_TYPE_LABELS[t]}
 								</ToggleButton>
 							))}
@@ -285,7 +305,9 @@ export default function TransactionForm({
 							label="Time"
 							name="transaction_time"
 							type="time"
-							defaultValue={formatTime(transaction?.transaction_time ?? null) ?? ""}
+							defaultValue={
+								formatTime(transaction?.transaction_time ?? null) ?? ""
+							}
 							slotProps={{ inputLabel: { shrink: true } }}
 						/>
 					</Cell>
@@ -345,7 +367,9 @@ export default function TransactionForm({
 			</FormDialog>
 			{savingTemplate && (
 				<SaveTemplateDialog
-					build={(name) => buildTemplateRequest(savingTemplate, formState(), name)}
+					build={(name) =>
+						buildTemplateRequest(savingTemplate, formState(), name)
+					}
 					onClose={() => setSavingTemplate(null)}
 				/>
 			)}
