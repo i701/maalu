@@ -271,7 +271,7 @@
       "id": "accounts-list",
       "area": "accounts",
       "name": "Accounts list",
-      "summary": "Accounts by group with balances, credit use, small balance lines and the net worth summary.",
+      "summary": "Accounts by group with balances, credit use, small balance lines, the net worth summary, a bank filter and grouping by bank.",
       "web": {
         "status": "done",
         "evidence": [

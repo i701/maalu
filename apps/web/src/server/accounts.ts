@@ -47,15 +47,25 @@ const updateSchema = z.object({
 	changes: createSchema.partial(),
 });
 
-/** Every account in use, or only those whose name or description contains `q`. `archived` lists
- * the archived ones instead. */
+/** Every account in use, or only those whose name or description contains `q`, or at one bank.
+ * `archived` lists the archived ones instead. */
 export const listAccountsFn = createServerFn({ method: "GET" })
 	.validator(
-		z.object({ q: z.string().max(100).optional(), archived: z.boolean().optional() }).optional(),
+		z
+			.object({
+				q: z.string().max(100).optional(),
+				bank: z.string().max(100).optional(),
+				archived: z.boolean().optional(),
+			})
+			.optional(),
 	)
 	.handler(async ({ data }) =>
 		apiRequest<Account[]>("/accounts", {
-			query: { q: data?.q || undefined, archived: data?.archived ? "true" : undefined },
+			query: {
+				q: data?.q || undefined,
+				bank: data?.bank || undefined,
+				archived: data?.archived ? "true" : undefined,
+			},
 		}),
 	);
 

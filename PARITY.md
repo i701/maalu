@@ -91,7 +91,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | Feature | Web | Android | iOS |
 |---|:---:|:---:|:---:|
-| **Accounts list**<br>Accounts by group with balances, credit use, small balance lines and the net worth summary. | ✅ done | ✅ done | 🟡 partial |
+| **Accounts list**<br>Accounts by group with balances, credit use, small balance lines, the net worth summary, a bank filter and grouping by bank. | ✅ done | ✅ done | 🟡 partial |
 | **Add and edit an account**<br>Group, bank and number, currency and rate, credit limit, statement days, spendable switch, exclude from stats. | ✅ done | ✅ done | ✅ done |
 | **Archive and unarchive an account**<br>Hide an account without losing its history. | ✅ done | ✅ done | ✅ done |
 | **Adjust balance**<br>Set the balance to what the bank shows, or add or take away, as a transaction that reports ignore. | ✅ done | ✅ done | ✅ done |

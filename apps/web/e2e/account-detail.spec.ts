@@ -95,6 +95,45 @@ test("an account that does not exist says so", async ({ page }) => {
 	await expect(page).toHaveURL(/\/accounts$/);
 });
 
+test("the accounts list filters by bank and can group by bank", async ({ page, request }) => {
+	test.setTimeout(60_000);
+	const email = await signUp(page);
+	const api = await apiAs(request, email);
+	await api.account("BML Current", "1000", "accounts", { bank: "BML" });
+	await api.account("MIB Current", "2000", "accounts", { bank: "MIB" });
+	await api.account("Drawer", "0", "accounts"); // no bank
+	await api.account("Wallet", "50", "cash");
+
+	await open(page, "/accounts");
+
+	// picking a bank chip narrows the list to that bank's accounts
+	await page.getByRole("button", { name: "MIB" }).click();
+	await expect(page).toHaveURL(/bank=MIB/);
+	await expect(page.getByText("MIB Current")).toBeVisible();
+	await expect(page.getByText("BML Current")).toBeHidden();
+	await expect(page.getByText("Drawer")).toBeHidden();
+	await expect(page.getByText("Wallet")).toBeHidden();
+
+	// "All banks" brings everything back
+	await page.getByRole("button", { name: "All banks" }).click();
+	await expect(page.getByText("BML Current")).toBeVisible();
+	await expect(page.getByText("Wallet")).toBeVisible();
+
+	// By bank groups the cards under each bank, with the rest under "No bank"
+	await page.getByRole("button", { name: "Group by bank" }).click();
+	await expect(page).toHaveURL(/group=bank/);
+	await expect(page.getByRole("heading", { name: "BML" })).toBeVisible();
+	await expect(page.getByRole("heading", { name: "MIB" })).toBeVisible();
+	await expect(page.getByRole("heading", { name: "No bank" })).toBeVisible();
+
+	// in the default view, the Bank accounts section lists each bank's accounts under its name
+	await page.getByRole("button", { name: "Group by type" }).click();
+	await expect(page.getByRole("heading", { name: "Bank accounts" })).toBeVisible();
+	await expect(page.getByRole("heading", { name: "BML", level: 3 })).toBeVisible();
+	await expect(page.getByRole("heading", { name: "MIB", level: 3 })).toBeVisible();
+	await expect(page.getByRole("heading", { name: "No bank", level: 3 })).toBeVisible();
+});
+
 test("an account's page draws its balance over time and a running balance on each row", async ({
 	page,
 	request,

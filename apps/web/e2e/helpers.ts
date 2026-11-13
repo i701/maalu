@@ -70,8 +70,8 @@ export async function apiAs(request: APIRequestContext, email: string) {
 	return {
 		get,
 		post,
-		account: (name: string, opening_amount = "0", group = "accounts") =>
-			post<{ id: string }>("/accounts", { name, group, currency: "MVR", opening_amount }),
+		account: (name: string, opening_amount = "0", group = "accounts", extra: object = {}) =>
+			post<{ id: string }>("/accounts", { name, group, currency: "MVR", opening_amount, ...extra }),
 		subscription: (data: object) =>
 			post<{ id: string }>("/subscriptions", {
 				currency: "MVR",

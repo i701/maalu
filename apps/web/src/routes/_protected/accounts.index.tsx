@@ -1,51 +1,33 @@
-import AccountSpark from "#/components/account/AccountSpark";
-import Money from "#/components/Money";
-import { accentText, accountTints, tintBackground } from "#/lib/accounts";
-import { MORPH_TRANSITION, morphUp } from "#/lib/shape";
+import { accountTints, bankSubsections, banksInUse } from "#/lib/accounts";
 import AddIcon from "@mui/icons-material/Add";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import ShowChartIcon from "@mui/icons-material/ShowChart";
-import TuneIcon from "@mui/icons-material/Tune";
-import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Grid from "@mui/material/Grid";
-import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
+import ToggleButton from "@mui/material/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
+import AccountCard from "#/components/AccountCard";
 import AccountForm from "#/components/AccountForm";
 import ArchivedAccounts from "#/components/ArchivedAccounts";
 import Figure from "#/components/Figure";
-import AccountIdentity from "#/components/AccountIdentity";
-import AdjustBalanceDialog from "#/components/AdjustBalanceDialog";
-import CreditUsage from "#/components/CreditUsage";
-import StatementLine from "#/components/StatementLine";
-import RateHistoryDialog from "#/components/RateHistoryDialog";
+import ChipFilter from "#/components/ChipFilter";
 import ConfirmDelete from "#/components/ConfirmDelete";
 import EmptyState from "#/components/EmptyState";
 import PageHeader from "#/components/PageHeader";
-import { RouterLink } from "#/components/RouterLinks";
-import MobileCard from "#/components/MobileCard";
-import { useNotify } from "#/components/Notify";
 import PendingOverlay from "#/components/PendingOverlay";
-import ShapeTile from "#/components/ShapeTile";
-import Symbol from "#/components/Symbol";
 import StatCard from "#/components/StatCard";
 import SearchField from "#/components/SearchField";
 import TableCard from "#/components/TableCard";
 import TableToolbar from "#/components/TableToolbar";
 import { formatMoney, formatMoneyCompact, sumDecimals, formatMoneyFull } from "#/lib/format";
 import { useLiveSearch } from "#/lib/live-search";
-import { ACCENT } from "#/lib/m3";
 import { staggerChildren } from "#/lib/motion";
 import { unwrap } from "#/lib/unwrap";
-import { useAction } from "#/lib/use-action";
 import {
-	archiveAccountFn,
 	deleteAccountFn,
 	getAccountSummaryFn,
 	listAccountsFn,
@@ -53,19 +35,22 @@ import {
 	listCardStatementsFn,
 } from "#/server/accounts";
 import { listCurrenciesFn } from "#/server/currencies";
-import { ACCOUNT_GROUP_LABELS, ACCOUNT_GROUPS, type Account, type AccountGroup } from "#/types/api";
+import { ACCOUNT_GROUP_LABELS, ACCOUNT_GROUPS, type Account } from "#/types/api";
 
 const searchSchema = z.object({
 	// coerce: the router parses a typed ?q=2026 as a number, which should still be a search
 	q: z.coerce.string().max(100).optional().catch(undefined),
+	bank: z.coerce.string().max(100).optional().catch(undefined),
+	group: z.enum(["type", "bank"]).optional().catch(undefined),
 });
 
 export const Route = createFileRoute("/_protected/accounts/")({
 	validateSearch: searchSchema,
-	loaderDeps: ({ search }) => search,
+	// `group` is a rendering choice made in the browser, so it does not refetch the list.
+	loaderDeps: ({ search }) => ({ q: search.q, bank: search.bank }),
 	loader: async ({ deps }) => {
 		const [accounts, summary, currencies, archived, statements, trends] = await Promise.all([
-			listAccountsFn({ data: { q: deps.q } }),
+			listAccountsFn({ data: { q: deps.q, bank: deps.bank } }),
 			getAccountSummaryFn(),
 			listCurrenciesFn(),
 			listAccountsFn({ data: { archived: true } }),
@@ -73,8 +58,9 @@ export const Route = createFileRoute("/_protected/accounts/")({
 			listAccountTrendsFn(), // the small balance lines on each row
 		]);
 		const found = unwrap(accounts);
-		// The form offers the currencies of *all* your accounts, so a search must not narrow them.
-		const everyAccount = deps.q ? unwrap(await listAccountsFn()) : found;
+		// The form offers the currencies of *all* your accounts, so a search or filter must not
+		// narrow them.
+		const everyAccount = deps.q || deps.bank ? unwrap(await listAccountsFn()) : found;
 		return {
 			accounts: found,
 			archived: unwrap(archived),
@@ -88,81 +74,32 @@ export const Route = createFileRoute("/_protected/accounts/")({
 	component: AccountsPage,
 });
 
-/** Icon and blob shape for each account type's cards (the colour is the card's own tint). */
-const GROUP_TILE: Record<AccountGroup, { symbol: string; shape: number }> = {
-	cash: { symbol: "payments", shape: 1 },
-	accounts: { symbol: "account_balance", shape: 0 },
-	card: { symbol: "credit_card", shape: 3 },
-	savings: { symbol: "savings", shape: 5 },
-	prepaid: { symbol: "sell", shape: 4 },
-	investments: { symbol: "savings", shape: 6 },
-	overdrafts: { symbol: "info", shape: 7 },
-	loan: { symbol: "receipt_long", shape: 3 },
-	insurance: { symbol: "verified", shape: 2 },
-	others: { symbol: "category", shape: 0 },
-};
-
 const isNegative = (amount: string) => amount.startsWith("-");
 
-/** Closes the account straight away: nothing is lost and "Archived" below brings it back. */
-function ArchiveButton({ account }: { account: Account }) {
-	const { run, pending } = useAction();
-	const notify = useNotify();
+/** The account cards grouped by their type (the default), or under the bank that holds them. */
+function GroupByToggle({
+	value,
+	onChange,
+}: {
+	value: "type" | "bank";
+	onChange: (value: "type" | "bank") => void;
+}) {
 	return (
-		<IconButton
-			aria-label="Archive"
-			title="Archive"
+		<ToggleButtonGroup
+			exclusive
 			size="small"
-			disabled={pending}
-			onClick={async () => {
-				if (await run(() => archiveAccountFn({ data: { id: account.id } })))
-					notify(`"${account.name}" archived. You'll find it under Archived`);
-			}}
+			value={value}
+			onChange={(_, next: "type" | "bank" | null) => next && onChange(next)}
+			aria-label="Group accounts by"
+			sx={{ "& .MuiToggleButtonGroup-grouped": { height: 36, px: 1.5 } }}
 		>
-			<Inventory2OutlinedIcon fontSize="small" />
-		</IconButton>
-	);
-}
-
-/** Opens the dialog that makes an account match its bank. */
-function AdjustButton({ account }: { account: Account }) {
-	const [open, setOpen] = useState(false);
-	return (
-		<>
-			<IconButton
-				aria-label="Adjust balance"
-				title="Adjust balance"
-				size="small"
-				onClick={() => setOpen(true)}
-			>
-				<TuneIcon fontSize="small" />
-			</IconButton>
-			{open && <AdjustBalanceDialog account={account} onClose={() => setOpen(false)} />}
-		</>
-	);
-}
-
-/** Opens the history of the market rate for a foreign-currency account. */
-function RateHistoryButton({ account, baseCurrency }: { account: Account; baseCurrency: string }) {
-	const [open, setOpen] = useState(false);
-	return (
-		<>
-			<IconButton
-				aria-label="Rate history"
-				title="Rate history"
-				size="small"
-				onClick={() => setOpen(true)}
-			>
-				<ShowChartIcon fontSize="small" />
-			</IconButton>
-			{open && (
-				<RateHistoryDialog
-					account={account}
-					baseCurrency={baseCurrency}
-					onClose={() => setOpen(false)}
-				/>
-			)}
-		</>
+			<ToggleButton value="type" aria-label="Group by type">
+				By type
+			</ToggleButton>
+			<ToggleButton value="bank" aria-label="Group by bank">
+				By bank
+			</ToggleButton>
+		</ToggleButtonGroup>
 	);
 }
 
@@ -180,10 +117,29 @@ function AccountsPage() {
 	const tints = accountTints(everyAccount.map((a) => a.id));
 	const trendOf = new Map(trends.map((t) => [t.account_id, t]));
 
-	const groups = ACCOUNT_GROUPS.map((group) => ({
-		group,
-		items: accounts.filter((a) => a.group === group),
-	})).filter((g) => g.items.length > 0);
+	// the filter chips offer every bank in use, even while one is picked, so they never vanish
+	const banks = banksInUse(everyAccount);
+	const byBank = (search.group ?? "type") === "bank";
+	const sections = byBank
+		? [
+				...banks.map((bank) => ({
+					heading: bank,
+					items: accounts.filter((a) => a.bank === bank),
+					subsections: null,
+				})),
+				{
+					heading: "No bank",
+					items: accounts.filter((a) => !a.bank),
+					subsections: null,
+				},
+			]
+		: ACCOUNT_GROUPS.map((group) => {
+				const items = accounts.filter((a) => a.group === group);
+				// The Bank accounts section lists each bank's accounts under the bank's name.
+				const subsections = group === "accounts" ? bankSubsections(items) : null;
+				return { heading: ACCOUNT_GROUP_LABELS[group], items, subsections };
+			});
+	const shown = sections.filter((s) => s.items.length > 0);
 
 	return (
 		<>
@@ -272,10 +228,26 @@ function AccountsPage() {
 					<TableToolbar
 						viewToggle={false}
 						summary={`${accounts.length} ${accounts.length === 1 ? "account" : "accounts"}`}
+						actions={
+							<GroupByToggle
+								value={search.group ?? "type"}
+								onChange={(group) => navigate({ search: (p) => ({ ...p, group }) })}
+							/>
+						}
+						chips={
+							banks.length > 0 ? (
+								<ChipFilter
+									allLabel="All banks"
+									value={search.bank}
+									options={banks.map((b) => ({ value: b, label: b }))}
+									onChange={(bank) => navigate({ search: (p) => ({ ...p, bank }) })}
+								/>
+							) : undefined
+						}
 						filters={
 							<SearchField
 								value={search.q ?? ""}
-								placeholder="Search name or description"
+								placeholder="Search name, bank, number…"
 								onChange={(q) => navigate({ search: { q: q || undefined } })}
 							/>
 						}
@@ -283,25 +255,25 @@ function AccountsPage() {
 
 					{accounts.length === 0 ? (
 						<EmptyState
-							firstRun={!search.q}
-							symbol={search.q ? "search" : "account_balance"}
-							accent={search.q ? "slate" : "green"}
+							firstRun={!search.q && !search.bank}
+							symbol={search.q || search.bank ? "search" : "account_balance"}
+							accent={search.q || search.bank ? "slate" : "green"}
 							shape={1}
 						>
-							{search.q
-								? "No accounts match this search."
+							{search.q || search.bank
+								? "No accounts match."
 								: "No accounts yet. Add your wallet or bank account to start tracking balances."}
 						</EmptyState>
 					) : (
 						<Box sx={{ display: "grid", gap: 3, px: 2, pb: 2 }}>
-							{groups.map(({ group, items }) => (
-								<Box key={group}>
+							{shown.map(({ heading, items, subsections }) => (
+								<Box key={heading}>
 									<Stack
 										direction="row"
 										sx={{ alignItems: "baseline", justifyContent: "space-between", mb: 1 }}
 									>
 										<Typography variant="subtitle1" component="h2" sx={{ fontSize: { md: 18 } }}>
-											{ACCOUNT_GROUP_LABELS[group]}
+											{heading}
 										</Typography>
 										<Typography
 											component="p"
@@ -317,125 +289,40 @@ function AccountsPage() {
 											</Figure>
 										</Typography>
 									</Stack>
-									<Box
-										sx={{
-											display: "grid",
-											gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 340px), 1fr))",
-											gap: 1,
-											...staggerChildren(),
-										}}
-									>
-										{items.map((a) => (
+									{(subsections ?? [{ label: null, items }]).map(({ label, items: subItems }) => (
+										<Box key={label ?? heading} sx={label ? { mb: 1.5 } : undefined}>
+											{label && (
+												<Typography
+													variant="body2"
+													component="h3"
+													sx={{ color: "text.secondary", mb: 0.5 }}
+												>
+													{label}
+												</Typography>
+											)}
 											<Box
-												key={a.id}
 												sx={{
-													bgcolor: tintBackground(tints.get(a.id) ?? "slate"),
-													// the action icons in the card's own hue
-													"& .MuiIconButton-root": {
-														color: accentText(tints.get(a.id) ?? "slate"),
-													},
-													...morphUp("xl"),
-													transition: `${MORPH_TRANSITION}, transform var(--spring-spatial-fast-dur) var(--spring-spatial-fast)`,
-													"&:active": { transform: "scale(.97)" },
+													display: "grid",
+													gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 340px), 1fr))",
+													gap: 1,
+													...staggerChildren(),
 												}}
 											>
-												<MobileCard
-													leading={
-														<ShapeTile
-															shape={GROUP_TILE[group].shape}
-															size={52}
-															accent={ACCENT[tints.get(a.id) ?? "slate"]}
-														>
-															<Symbol name={GROUP_TILE[group].symbol} size={24} filled />
-														</ShapeTile>
-													}
-													primary={
-														<RouterLink
-															to="/accounts/$id"
-															params={{ id: a.id }}
-															underline="hover"
-															color="inherit"
-															sx={{ fontWeight: 500, fontSize: 14 }}
-														>
-															{a.name}
-														</RouterLink>
-													}
-													secondary={
-														<>
-															<AccountIdentity account={a} />
-															<CreditUsage account={a} />
-															<StatementLine
-																statement={statements.find((s) => s.account_id === a.id)}
-															/>
-															{a.description && (
-																<Typography variant="caption" sx={{ color: "text.secondary" }}>
-																	{a.description}
-																</Typography>
-															)}
-															<AccountSpark trend={trendOf.get(a.id)} />
-														</>
-													}
-													// a compact row keeps just the name and the trend line under it
-													brief={<AccountSpark trend={trendOf.get(a.id)} />}
-													end={
-														<>
-															<Typography
-																variant="body2"
-																sx={{
-																	fontWeight: 600,
-																	// the card's own hue; a debt keeps the error colour
-																	color: isNegative(a.balance)
-																		? "error.main"
-																		: accentText(tints.get(a.id) ?? "slate"),
-																}}
-															>
-																<Money amount={a.balance} currency={a.currency} />
-															</Typography>
-														</>
-													}
-													endSecondary={
-														<>
-															{a.currency !== user.base_currency && (
-																<Typography
-																	variant="caption"
-																	sx={{ display: "block", color: "text.secondary" }}
-																>
-																	≈ <Money amount={a.base_balance} currency={user.base_currency} />{" "}
-																	@ {Number(a.exchange_rate)}
-																	{a.auto_rate ? " · auto" : ""}
-																</Typography>
-															)}
-														</>
-													}
-													actions={
-														<>
-															<IconButton
-																aria-label="Edit"
-																title="Edit"
-																size="small"
-																onClick={() => setEditing(a)}
-															>
-																<EditOutlinedIcon fontSize="small" />
-															</IconButton>
-															{a.currency !== user.base_currency && (
-																<RateHistoryButton account={a} baseCurrency={user.base_currency} />
-															)}
-															<AdjustButton account={a} />
-															<ArchiveButton account={a} />
-															<IconButton
-																aria-label="Delete"
-																title="Delete"
-																size="small"
-																onClick={() => setDeleting(a)}
-															>
-																<DeleteOutlineIcon fontSize="small" />
-															</IconButton>
-														</>
-													}
-												/>
+												{subItems.map((a) => (
+													<AccountCard
+														key={a.id}
+														account={a}
+														tint={tints.get(a.id) ?? "slate"}
+														baseCurrency={user.base_currency}
+														statement={statements.find((s) => s.account_id === a.id)}
+														trend={trendOf.get(a.id)}
+														onEdit={() => setEditing(a)}
+														onDelete={() => setDeleting(a)}
+													/>
+												))}
 											</Box>
-										))}
-									</Box>
+										</Box>
+									))}
 								</Box>
 							))}
 						</Box>

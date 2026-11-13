@@ -1,19 +1,21 @@
 import { describe, expect, it } from "vitest";
 import {
+	accentText,
 	accountIdentity,
 	accountTints,
-	tintBackground,
-	accentText,
 	adjustmentPreview,
 	BANKS,
 	bankChoices,
+	bankSubsections,
+	banksInUse,
 	creditUsage,
 	excludedNote,
-	hasCreditLimit,
 	groupSpendsByDefault,
+	hasCreditLimit,
 	isOwedGroup,
 	spendableValue,
 	statementDays,
+	tintBackground,
 } from "./accounts";
 
 describe("accountIdentity", () => {
@@ -46,6 +48,43 @@ describe("bankChoices", () => {
 	});
 	it("offers the usual banks when none is in use", () => {
 		expect(bankChoices([])).toEqual(BANKS);
+	});
+});
+
+describe("banksInUse", () => {
+	it("lists each bank once, alphabetically, leaving out empties", () => {
+		expect(
+			banksInUse([{ bank: "MIB" }, { bank: "BML" }, { bank: null }, { bank: "MIB" }, {}]),
+		).toEqual(["BML", "MIB"]);
+	});
+	it("is empty when no account has a bank", () => {
+		expect(banksInUse([{ bank: null }, {}])).toEqual([]);
+	});
+});
+
+describe("bankSubsections", () => {
+	it("puts each bank's accounts under the bank's name, and the rest last", () => {
+		const items = [
+			{ name: "MIB Current", bank: "MIB" },
+			{ name: "BML Current", bank: "BML" },
+			{ name: "Wallet", bank: null },
+			{ name: "MIB Savings", bank: "MIB" },
+		];
+		expect(bankSubsections(items)).toEqual([
+			{ label: "BML", items: [{ name: "BML Current", bank: "BML" }] },
+			{
+				label: "MIB",
+				items: [
+					{ name: "MIB Current", bank: "MIB" },
+					{ name: "MIB Savings", bank: "MIB" },
+				],
+			},
+			{ label: "No bank", items: [{ name: "Wallet", bank: null }] },
+		]);
+	});
+	it("does not split a section with one bank or none", () => {
+		expect(bankSubsections([{ bank: "BML" }, { bank: "BML" }])).toBeNull();
+		expect(bankSubsections([{ bank: null }, {}])).toBeNull();
 	});
 });
 
@@ -148,11 +187,19 @@ describe("the spend-from-this-account switch", () => {
 
 describe("statementDays", () => {
 	it("is empty when both are empty", () => {
-		expect(statementDays("", " ")).toEqual({ ok: true, statement_day: null, due_day: null });
+		expect(statementDays("", " ")).toEqual({
+			ok: true,
+			statement_day: null,
+			due_day: null,
+		});
 	});
 
 	it("reads two whole days", () => {
-		expect(statementDays("5", " 25 ")).toEqual({ ok: true, statement_day: 5, due_day: 25 });
+		expect(statementDays("5", " 25 ")).toEqual({
+			ok: true,
+			statement_day: 5,
+			due_day: 25,
+		});
 	});
 
 	it("needs both or neither", () => {

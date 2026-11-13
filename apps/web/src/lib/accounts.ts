@@ -57,6 +57,29 @@ export function bankChoices(accounts: { bank?: string | null }[]): string[] {
 	return [...used, ...BANKS.filter((b) => !known.has(b.toLowerCase()))];
 }
 
+/** The banks already on some account, each once, alphabetically: the filter chips and the "By
+ * bank" grouping. */
+export function banksInUse(accounts: { bank?: string | null }[]): string[] {
+	return [...new Set(accounts.map((a) => a.bank).filter((b): b is string => Boolean(b)))].toSorted(
+		(a, b) => a.localeCompare(b),
+	);
+}
+
+/** Within the Bank accounts section, each bank's accounts under the bank's name, and the accounts
+ * with no bank last under "No bank"; null when that would not split the section (all one bank, or
+ * none has a bank). */
+export function bankSubsections<T extends { bank?: string | null }>(
+	accounts: T[],
+): { label: string; items: T[] }[] | null {
+	const banks = banksInUse(accounts);
+	const noBank = accounts.filter((a) => !a.bank);
+	if (banks.length === 0 || (banks.length === 1 && noBank.length === 0)) return null;
+	return [
+		...banks.map((bank) => ({ label: bank, items: accounts.filter((a) => a.bank === bank) })),
+		...(noBank.length > 0 ? [{ label: "No bank", items: noBank }] : []),
+	];
+}
+
 /** The groups that can have a credit limit: the most you can owe on them. */
 export const CREDIT_LIMIT_GROUPS: readonly AccountGroup[] = ["card", "overdrafts"];
 
