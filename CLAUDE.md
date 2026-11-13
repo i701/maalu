@@ -33,6 +33,110 @@ The wire format is the API's: types are hand-written `Decodable` structs with `c
 
 Whenever types from react is used for example in onSubmit handlers don't blindly use commonly known React types, for example FormEvent. Always look up the types from the react library itself or from [the React TypeScript docs](https://react.dev/reference/react).
 
+
+### Avoid Naming Conflicts with Global APIs
+
+- Before naming a function, check whether its name conflicts with commonly available global APIs, framework APIs, or built-in identifiers.
+- Pay particular attention to globally exposed testing APIs such as `describe`, `it`, `test`, `expect`, and `vi` from Vitest/Jest.
+- Avoid using generic names that overlap with framework or testing APIs, even when a local declaration technically shadows the global.
+- Prefer descriptive, domain-specific names that communicate intent.
+
+For example, avoid:
+
+```ts
+function describe(transaction: Transaction): string {
+  // ...
+}
+```
+
+Prefer:
+
+```ts
+function formatTransactionSummary(transaction: Transaction): string {
+  // ...
+}
+```
+
+- When introducing a new identifier, consider the project's installed dependencies, TypeScript ambient declarations, and configured global types.
+- If a naming conflict is detected, rename the local identifier rather than relying on shadowing or suppressing the warning.
+ 
+
+## TypeScript Type Safety & Test Fixtures
+
+Follow these rules when writing or modifying TypeScript code, especially tests:
+
+### 1. Never silence type errors with unsafe assertions
+- Do not use `as unknown as SomeType` to force a value into a type.
+- Do not use `as SomeType` to bypass missing required properties.
+- Do not assert incomplete objects as complete API types, even when the test only needs a subset of their properties.
+- Treat Oxlint's `no-unsafe-type-assertion` warnings as issues to fix, not warnings to suppress.
+
+### 2. Build valid test fixtures
+- When testing with API types (e.g. `Transaction`, `Account`, or nested objects), fixtures must satisfy the actual type definitions.
+- Inspect the source type before constructing test data. Do not guess the required properties.
+- Create reusable fixture factories for frequently used objects and nested types.
+- Use `NonNullable<T>` when a fixture factory should return the non-null variant of an optional or nullable property.
+
+Example:
+
+```ts
+const account = (id: string): NonNullable<Transaction["account"]> => ({
+    id,
+    name: id,
+    currency: "MVR",
+    bank: null,
+    account_number: null,
+    exclude_from_stats: false,
+    group: "accounts",
+});
+```
+
+Prefer:
+
+```ts
+account: account("bml")
+```
+
+Instead of:
+
+```ts
+account: { id: "bml" } as Transaction["account"]
+```
+
+### 3. Avoid double assertions in test factories
+- Do not use `as unknown as Transaction` to make incomplete fixtures compile.
+- Build fixtures that satisfy the complete `Transaction` type.
+- If constructing a complete object is too verbose, use a shared, strongly typed fixture factory with sensible defaults.
+- Use `Partial<T>` for factory overrides, but ensure the final factory output is a valid `T`.
+
+Example:
+
+```ts
+const makeTransaction = (
+    overrides: Partial<Transaction> = {},
+): Transaction => ({
+    // All required Transaction properties with valid defaults.
+    ...overrides,
+});
+```
+
+### 4. Handle unknown data properly
+- Never directly assert `unknown` as a domain type.
+- For external data (API responses, JSON, user input), validate at the boundary using the project's existing validation approach or a runtime schema validator.
+- Use type guards when narrowing values based on runtime checks.
+- Do not introduce redundant validation when the data has already been validated by an established boundary.
+
+### 5. Preserve type correctness in nested objects
+- Do not construct partial nested objects and assert them as complete types.
+- Create dedicated fixture factories for nested types such as accounts, splits, refunds, and vendors.
+- Reuse these factories across tests rather than repeating unsafe assertions.
+
+### 6. Verify before finishing
+- Run the relevant tests.
+- Run the project's typecheck and lint commands.
+- Resolve unsafe type assertion diagnostics rather than suppressing them.
+- Do not consider a test implementation complete merely because it passes at runtime; it must also satisfy TypeScript's type system.
+
 ## Commands
 
 ```bash
