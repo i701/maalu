@@ -5,11 +5,11 @@ import { forwardRef } from "react";
 import { ACCENT, type Accent } from "#/lib/m3";
 import { MORPH_TRANSITION, morph } from "#/lib/shape";
 import { SYMBOL_FILLED } from "#/lib/symbols";
-import Symbol from "./Symbol";
+import IconSymbol from "./Symbol";
 
-const Anchor = forwardRef<HTMLAnchorElement, ButtonBaseProps<"a">>((props, ref) => (
-	<ButtonBase ref={ref} component="a" focusRipple {...props} />
-));
+const Anchor = forwardRef<HTMLAnchorElement, ButtonBaseProps<"a">>(
+	(props, ref) => <ButtonBase ref={ref} component="a" focusRipple {...props} />,
+);
 const SideAnchor = createLink(Anchor);
 
 /**
@@ -51,7 +51,9 @@ export default function SideNavItem({
 				letterSpacing: "0.01em",
 				transition: `${MORPH_TRANSITION}, background-color var(--spring-effects-default-dur) var(--spring-effects-default), transform var(--spring-spatial-fast-dur) var(--spring-spatial-fast)`,
 				"&:active": { transform: "scale(.98)" },
-				"& .MuiTouchRipple-root .MuiTouchRipple-child": { bgcolor: "var(--accent)" },
+				"& .MuiTouchRipple-root .MuiTouchRipple-child": {
+					bgcolor: "var(--accent)",
+				},
 				// Keyboard focus reads like hover (MUI's ripple pulses on top of it).
 				"&:focus-visible": {
 					bgcolor: "color-mix(in oklab, var(--accent) 12%, transparent)",
@@ -64,18 +66,21 @@ export default function SideNavItem({
 					},
 				},
 				"&[aria-current='page']": {
-					color: "var(--md-sys-color-on-surface)",
+					color: "var(--accent)",
 					fontWeight: 700,
-					bgcolor: "var(--md-sys-color-secondary-container)",
+					bgcolor: "color-mix(in oklab, var(--accent) 12%, transparent)",
 					"& .sym": {
 						fontVariationSettings: SYMBOL_FILLED,
-						color: "color-mix(in oklab, var(--accent) 85%, var(--md-sys-color-on-surface))",
+						color:
+							"color-mix(in oklab, var(--accent) 85%, var(--md-sys-color-on-surface))",
 					},
 				},
-				"@media (prefers-reduced-motion: reduce)": { "&:active": { transform: "none" } },
+				"@media (prefers-reduced-motion: reduce)": {
+					"&:active": { transform: "none" },
+				},
 			}}
 		>
-			<Symbol name={symbol} />
+			<IconSymbol name={symbol} />
 			<span>{label}</span>
 			{badge ? (
 				<Box

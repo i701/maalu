@@ -12,7 +12,7 @@ import { SYMBOL_FILLED, SYMBOL_OUTLINED } from "#/lib/symbols";
  * look at it in the app. To use any icon, swap in the full font (@fontsource-variable/
  * material-symbols-rounded, about 1.4MB) or generate a subset for the names we use.
  */
-export default function Symbol({
+export default function IconSymbol({
 	name,
 	size = 24,
 	filled = false,
