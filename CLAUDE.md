@@ -137,6 +137,30 @@ const makeTransaction = (
 - Resolve unsafe type assertion diagnostics rather than suppressing them.
 - Do not consider a test implementation complete merely because it passes at runtime; it must also satisfy TypeScript's type system.
 
+### 7. Type Assertions (`as`) — Use Sparingly
+
+Treat TypeScript type assertions (`as TypeName`) as an escape hatch, not a normal way to satisfy the compiler.
+
+- Do not use `as TypeName` simply to make code compile or silence type errors.
+- Before using an assertion, determine why TypeScript cannot infer or establish the required type.
+- Prefer type inference, explicit variable annotations, discriminated unions, type guards, and runtime validation.
+- Never use assertions to make incomplete test fixtures appear to satisfy complete production types.
+- Never use `as unknown as TypeName` to bypass type checking.
+- Do not repeatedly cast the same value to different types to work around typing problems.
+- In tests, construct valid objects using strongly typed fixture factories instead of asserting partial objects.
+- When an assertion is genuinely necessary (e.g. DOM APIs, third-party library typing limitations, or a value whose type is guaranteed by an external invariant), keep it narrow and local.
+
+Before introducing a type assertion, ask:
+
+1. Why can't TypeScript determine this type naturally?
+2. Have I actually verified that the value satisfies the asserted type?
+3. Could a type guard, proper annotation, or better data structure eliminate the assertion?
+4. Am I hiding a real type error?
+
+If an assertion is necessary, add a brief explanation of the invariant that makes it safe.
+
+Do not treat every assertion as automatically wrong, but require a concrete justification for each one.
+
 ## Forms & Validation
 - **Standard Stack**: Always use `react-hook-form` paired with `zod` (`@hookform/resolvers/zod`) for all form implementations.
 - **No Raw FormData**: Avoid manual `new FormData(e.currentTarget)` parsing, repetitive `form.get()` type narrowing, and manual input state management.
