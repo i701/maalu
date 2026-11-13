@@ -296,15 +296,15 @@ const theme = createTheme({
 					...pressable("var(--shape-md)", "var(--shape-sm)"),
 					variants: [
 						{
-							// The main action: a near-black pill (a light one in dark mode); the violet
-							// accent is kept for links, focus and selection.
+							// The main action: a pill in the logo's colour (navy, pale blue in dark mode); the
+							// sky blue accent is kept for links, focus and selection.
 							props: { variant: "contained", color: "primary" },
 							style: {
-								backgroundColor: "var(--md-sys-color-on-surface)",
-								color: "var(--md-sys-color-surface-container-low)",
+								backgroundColor: "var(--md-sys-color-brand)",
+								color: "var(--md-sys-color-on-brand)",
 								"&:hover": {
 									backgroundColor:
-										"color-mix(in srgb, var(--md-sys-color-on-surface) 86%, var(--md-sys-color-surface-container-low))",
+										"color-mix(in srgb, var(--md-sys-color-brand) 86%, var(--md-sys-color-on-brand))",
 								},
 							},
 						},

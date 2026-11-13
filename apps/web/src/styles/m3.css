@@ -13,8 +13,8 @@
 	src: url(../assets/material-symbols-rounded.woff2) format("woff2");
 }
 
-/* Homemade Apple (Apache-2.0), a handwriting face used for the app name (Brand) and the tagline on
- * the sign-in and register pages. */
+/* Homemade Apple (Apache-2.0), a handwriting face used for the app name (Brand) in the sidebar and
+ * the phone's top bar. */
 @font-face {
 	font-family: "Homemade Apple";
 	font-weight: 400;

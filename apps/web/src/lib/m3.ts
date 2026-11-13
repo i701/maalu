@@ -1,8 +1,10 @@
 /**
- * Material 3 colour roles: a soft cool-grey page (#f5f5f8) with white cards and a white sidebar on it
- * (near-black and a step lighter in dark mode), and a muted violet as the one accent. One source for both the MUI palette
- * (theme.ts) and the `--md-sys-color-*` CSS variables used for roles MUI has no slot for, such as
- * the surface containers and the secondary/tertiary containers.
+ * Material 3 colour roles: a soft cool-grey page (#f5f5f8) with white cards and a white sidebar on
+ * it (near-black and a step lighter in dark mode), and the app icon's sky blue as the one accent: a
+ * deeper step of it (#0a6e9e) wherever it is text or an outline, so it keeps its contrast, and the
+ * icon's own pale blues as fills. One source for both the MUI palette (theme.ts) and the
+ * `--md-sys-color-*` CSS variables used for roles MUI has no slot for, such as the surface
+ * containers and the secondary/tertiary containers.
  *
  * Regenerate with Material Theme Builder for a different seed colour.
  */
@@ -39,6 +41,9 @@ type Roles = {
 	onError: string;
 	errorContainer: string;
 	onErrorContainer: string;
+	/** The logo's colour (navy in light mode, pale blue in dark): the main buttons. */
+	brand: string;
+	onBrand: string;
 };
 
 export const M3_LIGHT: Roles = {
@@ -57,15 +62,15 @@ export const M3_LIGHT: Roles = {
 	inverseOnSurface: "#f3f2f7",
 	outline: "#79787f",
 	outlineVariant: "#dddce4",
-	primary: "#5b4ec4",
+	primary: "#0a6e9e",
 	onPrimary: "#ffffff",
-	primaryContainer: "#e7e3ff",
-	onPrimaryContainer: "#1b1060",
-	inversePrimary: "#c6bfff",
+	primaryContainer: "#dff3fb",
+	onPrimaryContainer: "#06283b",
+	inversePrimary: "#8fd6f2",
 	secondary: "#5f5d70",
 	onSecondary: "#ffffff",
-	secondaryContainer: "#ebe8f8",
-	onSecondaryContainer: "#26224a",
+	secondaryContainer: "#e2f3fa",
+	onSecondaryContainer: "#0b2f45",
 	tertiary: "#515e7d",
 	onTertiary: "#ffffff",
 	tertiaryContainer: "#d8e2ff",
@@ -74,6 +79,8 @@ export const M3_LIGHT: Roles = {
 	onError: "#ffffff",
 	errorContainer: "#ffdad6",
 	onErrorContainer: "#93000a",
+	brand: "#081d48",
+	onBrand: "#ffffff",
 };
 
 export const M3_DARK: Roles = {
@@ -92,15 +99,15 @@ export const M3_DARK: Roles = {
 	inverseOnSurface: "#303034",
 	outline: "#8f8e97",
 	outlineVariant: "#34333b",
-	primary: "#c6bfff",
-	onPrimary: "#2b1f7a",
-	primaryContainer: "#42379e",
-	onPrimaryContainer: "#e7e3ff",
-	inversePrimary: "#5b4ec4",
+	primary: "#8fd6f2",
+	onPrimary: "#00344b",
+	primaryContainer: "#0d4d6b",
+	onPrimaryContainer: "#dff3fb",
+	inversePrimary: "#0a6e9e",
 	secondary: "#c8c5da",
 	onSecondary: "#302d44",
-	secondaryContainer: "#2f2c45",
-	onSecondaryContainer: "#e7e3ff",
+	secondaryContainer: "#173444",
+	onSecondaryContainer: "#dff3fb",
 	tertiary: "#b8c6ea",
 	onTertiary: "#22304c",
 	tertiaryContainer: "#394764",
@@ -109,6 +116,8 @@ export const M3_DARK: Roles = {
 	onError: "#690005",
 	errorContainer: "#93000a",
 	onErrorContainer: "#ffdad6",
+	brand: "#dff3fb",
+	onBrand: "#081d48",
 };
 
 const kebab = (s: string) => s.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
