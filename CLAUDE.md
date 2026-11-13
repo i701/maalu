@@ -29,6 +29,10 @@ SwiftUI, iOS 26 and later, Swift 6 language mode. The Xcode project is **generat
 
 The wire format is the API's: types are hand-written `Decodable` structs with `convertFromSnakeCase` for now (generating them from `apps/web/openapi.json` is the next step), money stays a string on the wire, the session token is in the Keychain, and the server address is asked for (`GET /api/v1/server` says whether it is a Maalu server). iOS is the web's and Android's third client: a screen is built to the same rules as theirs, and `parity/features.json` is updated with it.
 
+## Web app (`apps/web`)
+
+Whenever types from react is used for example in onSubmit handlers don't blindly use commonly known React types, for example FormEvent. Always look up the types from the react library itself or from [the React TypeScript docs](https://react.dev/reference/react).
+
 ## Commands
 
 ```bash
