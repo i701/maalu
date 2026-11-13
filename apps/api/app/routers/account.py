@@ -91,14 +91,18 @@ async def list_accounts(
     q: Annotated[
         str | None, Query(max_length=100, description="Search name, bank, number, description")
     ] = None,
+    bank: Annotated[
+        str | None,
+        Query(max_length=100, description="Only the accounts whose bank is exactly this"),
+    ] = None,
     archived: Annotated[bool, Query(description="List the archived accounts instead")] = False,
 ):
-    """All accounts in use, or one page with `limit`/`offset`, optionally searched by name. The
-    total number of matches, ignoring paging, is in `X-Total-Count`. Built for autocomplete
-    pickers. Archived accounts are left out unless `archived=true`."""
-    set_total(response, await service.count_for_user(user_id, q=q, archived=archived))
+    """All accounts in use, or one page with `limit`/`offset`, optionally searched by name or
+    filtered to one bank. The total number of matches, ignoring paging, is in `X-Total-Count`.
+    Built for autocomplete pickers. Archived accounts are left out unless `archived=true`."""
+    set_total(response, await service.count_for_user(user_id, q=q, bank=bank, archived=archived))
     accounts = await service.list_for_user(
-        user_id, q=q, archived=archived, limit=page.limit, offset=page.offset
+        user_id, q=q, bank=bank, archived=archived, limit=page.limit, offset=page.offset
     )
     return await service.present(accounts)
 

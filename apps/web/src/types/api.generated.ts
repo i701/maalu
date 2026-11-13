@@ -13,9 +13,9 @@ export interface paths {
         };
         /**
          * List Accounts
-         * @description All accounts in use, or one page with `limit`/`offset`, optionally searched by name. The
-         *     total number of matches, ignoring paging, is in `X-Total-Count`. Built for autocomplete
-         *     pickers. Archived accounts are left out unless `archived=true`.
+         * @description All accounts in use, or one page with `limit`/`offset`, optionally searched by name or
+         *     filtered to one bank. The total number of matches, ignoring paging, is in `X-Total-Count`.
+         *     Built for autocomplete pickers. Archived accounts are left out unless `archived=true`.
          */
         get: operations["list_accounts_api_v1_accounts_get"];
         put?: never;
@@ -6595,6 +6595,8 @@ export interface operations {
             query?: {
                 /** @description Search name, bank, number, description */
                 q?: string | null;
+                /** @description Only the accounts whose bank is exactly this */
+                bank?: string | null;
                 /** @description List the archived accounts instead */
                 archived?: boolean;
                 /** @description Omit for all rows */

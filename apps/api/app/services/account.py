@@ -79,10 +79,13 @@ class AccountService:
         return user.base_currency
 
     @staticmethod
-    def _conditions(user_id: uuid.UUID, q: str | None, archived: bool = False) -> list:
+    def _conditions(
+        user_id: uuid.UUID, q: str | None, archived: bool = False, bank: str | None = None
+    ) -> list:
         """Filters shared by the list and the count. `q` is a case-insensitive "contains" over
-        name and description; %, _ and backslash in it are matched literally. Archived accounts are
-        left out unless `archived` asks for exactly those."""
+        name and description; %, _ and backslash in it are matched literally. `bank` matches the
+        stored bank exactly (blank is ignored). Archived accounts are left out unless `archived`
+        asks for exactly those."""
         conditions = [
             Account.user_id == user_id,
             Account.archived_at.is_not(None) if archived else Account.archived_at.is_(None),
@@ -98,6 +101,8 @@ class AccountService:
                     Account.account_number.icontains(term.replace(" ", ""), autoescape=True),
                 )
             )
+        if bank and bank.strip():
+            conditions.append(Account.bank == bank.strip())
         return conditions
 
     async def list_for_user(
@@ -105,19 +110,29 @@ class AccountService:
         user_id: uuid.UUID,
         *,
         q: str | None = None,
+        bank: str | None = None,
         archived: bool = False,
         limit: int | None = None,
         offset: int = 0,
     ) -> list[Account]:
-        stmt = select(Account).where(*self._conditions(user_id, q, archived)).order_by(Account.name)
+        stmt = (
+            select(Account)
+            .where(*self._conditions(user_id, q, archived, bank))
+            .order_by(Account.name)
+        )
         if limit is not None:
             stmt = stmt.limit(limit).offset(offset)
         return list((await self.db.scalars(stmt)).all())
 
     async def count_for_user(
-        self, user_id: uuid.UUID, *, q: str | None = None, archived: bool = False
+        self,
+        user_id: uuid.UUID,
+        *,
+        q: str | None = None,
+        bank: str | None = None,
+        archived: bool = False,
     ) -> int:
-        stmt = select(func.count(Account.id)).where(*self._conditions(user_id, q, archived))
+        stmt = select(func.count(Account.id)).where(*self._conditions(user_id, q, archived, bank))
         return (await self.db.scalar(stmt)) or 0
 
     async def get(self, user_id: uuid.UUID, account_id: uuid.UUID) -> Account | None:

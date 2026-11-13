@@ -188,6 +188,33 @@ async def test_filter_transactions_by_account(client: AsyncClient, auth):
     assert len(resp.json()) == 1
 
 
+async def test_filter_accounts_by_bank(client: AsyncClient, auth):
+    await make_account(client, auth, name="Wallet", bank="Bank of Maldives")
+    await make_account(client, auth, name="Savings", group="savings", bank="MIB")
+    await make_account(client, auth, name="Cash")
+
+    bml = await client.get(URL, params={"bank": "Bank of Maldives"}, headers=auth)
+    assert [a["name"] for a in bml.json()] == ["Wallet"]
+    assert bml.headers["X-Total-Count"] == "1"
+
+    mib = await client.get(URL, params={"bank": "MIB"}, headers=auth)
+    assert [a["name"] for a in mib.json()] == ["Savings"]
+
+    # exact, not "contains": only the account with that bank, and `q` stays the fuzzy path
+    assert (await client.get(URL, params={"bank": "Maldives"}, headers=auth)).json() == []
+    fuzzy = await client.get(URL, params={"q": "maldives"}, headers=auth)
+    assert len(fuzzy.json()) == 1
+
+    # blank is ignored, like `q`
+    assert len((await client.get(URL, params={"bank": "  "}, headers=auth)).json()) == 3
+
+    # the filter applies to the archived list too
+    old = await make_account(client, auth, name="Old", bank="MIB")
+    await client.post(f"{URL}/{old['id']}/archive", headers=auth)
+    archived = await client.get(URL, params={"bank": "MIB", "archived": "true"}, headers=auth)
+    assert [a["name"] for a in archived.json()] == ["Old"]
+
+
 async def test_isolation_between_users(client: AsyncClient, auth, signup: Signup):
     acct = await make_account(client, auth)
     bob = await signup("bob@example.com")

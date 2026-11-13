@@ -9527,7 +9527,7 @@
   "paths": {
     "/api/v1/accounts": {
       "get": {
-        "description": "All accounts in use, or one page with `limit`/`offset`, optionally searched by name. The\ntotal number of matches, ignoring paging, is in `X-Total-Count`. Built for autocomplete\npickers. Archived accounts are left out unless `archived=true`.",
+        "description": "All accounts in use, or one page with `limit`/`offset`, optionally searched by name or\nfiltered to one bank. The total number of matches, ignoring paging, is in `X-Total-Count`.\nBuilt for autocomplete pickers. Archived accounts are left out unless `archived=true`.",
         "operationId": "list_accounts_api_v1_accounts_get",
         "parameters": [
           {
@@ -9547,6 +9547,25 @@
               ],
               "description": "Search name, bank, number, description",
               "title": "Q"
+            }
+          },
+          {
+            "description": "Only the accounts whose bank is exactly this",
+            "in": "query",
+            "name": "bank",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only the accounts whose bank is exactly this",
+              "title": "Bank"
             }
           },
           {
