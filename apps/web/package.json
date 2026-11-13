@@ -8,7 +8,6 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"start": "srvx serve --prod --entry dist/server/server.js --static ../client",
-		"typecheck": "tsc --noEmit",
 		"test": "vitest run",
 		"test:watch": "vitest",
 		"gen:docs": "WRITE_DOCS_JSON=1 vitest run src/lib/docs/export.test.ts",
@@ -16,6 +15,7 @@
 		"gen:api": "pnpm dlx --package typescript@5.9.3 --package openapi-typescript@7.13.0 openapi-typescript openapi.json --enum-values -o src/types/api.generated.ts",
 		"lint": "oxlint",
 		"lint:fix": "oxlint --fix",
+		"typecheck": "oxlint --type-aware --type-check",
 		"fmt": "oxfmt",
 		"fmt:check": "oxfmt --check",
 		"react-doctor": "react-doctor . --no-supply-chain --no-score -y"
