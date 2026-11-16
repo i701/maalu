@@ -61,6 +61,9 @@ function formatTransactionSummary(transaction: Transaction): string {
 - If a naming conflict is detected, rename the local identifier rather than relying on shadowing or suppressing the warning.
  
 
+
+
+
 ## TypeScript Type Safety & Test Fixtures
 
 Follow these rules when writing or modifying TypeScript code, especially tests:
@@ -69,6 +72,7 @@ Follow these rules when writing or modifying TypeScript code, especially tests:
 - Do not use `as unknown as SomeType` to force a value into a type.
 - Do not use `as SomeType` to bypass missing required properties.
 - Do not assert incomplete objects as complete API types, even when the test only needs a subset of their properties.
+- Prefer `satisfies SomeType` for validating fixture objects while preserving their precise inferred types.
 - Treat Oxlint's `no-unsafe-type-assertion` warnings as issues to fix, not warnings to suppress.
 
 ### 2. Build valid test fixtures
@@ -76,6 +80,7 @@ Follow these rules when writing or modifying TypeScript code, especially tests:
 - Inspect the source type before constructing test data. Do not guess the required properties.
 - Create reusable fixture factories for frequently used objects and nested types.
 - Use `NonNullable<T>` when a fixture factory should return the non-null variant of an optional or nullable property.
+- Use TypeScript utility types (`Pick`, `Omit`) when a test or function only needs a subset of a larger object.
 
 Example:
 
@@ -89,25 +94,30 @@ const account = (id: string): NonNullable<Transaction["account"]> => ({
     exclude_from_stats: false,
     group: "accounts",
 });
+
 ```
 
 Prefer:
 
 ```ts
 account: account("bml")
+
 ```
 
 Instead of:
 
 ```ts
 account: { id: "bml" } as Transaction["account"]
+
 ```
 
 ### 3. Avoid double assertions in test factories
-- Do not use `as unknown as Transaction` to make incomplete fixtures compile.
-- Build fixtures that satisfy the complete `Transaction` type.
-- If constructing a complete object is too verbose, use a shared, strongly typed fixture factory with sensible defaults.
-- Use `Partial<T>` for factory overrides, but ensure the final factory output is a valid `T`.
+
+* Do not use `as unknown as Transaction` to make incomplete fixtures compile.
+* Build fixtures that satisfy the complete `Transaction` type.
+* If constructing a complete object is too verbose, use a shared, strongly typed fixture factory with sensible defaults.
+* Use `Partial<T>` for factory overrides, but ensure the final factory output is a valid `T`.
+* A factory accepting `Partial<T>` must not blindly spread optional properties over required defaults if doing so can introduce `undefined` into required fields.
 
 Example:
 
@@ -118,37 +128,39 @@ const makeTransaction = (
     // All required Transaction properties with valid defaults.
     ...overrides,
 });
+
 ```
 
 ### 4. Handle unknown data properly
-- Never directly assert `unknown` as a domain type.
-- For external data (API responses, JSON, user input), validate at the boundary using the project's existing validation approach or a runtime schema validator.
-- Use type guards when narrowing values based on runtime checks.
-- Do not introduce redundant validation when the data has already been validated by an established boundary.
+
+* Never directly assert `unknown` as a domain type.
+* For external data (API responses, JSON, user input), validate at the boundary using the project's existing validation approach or a runtime schema validator.
+* Use type guards when narrowing values based on runtime checks.
+* Do not introduce redundant validation when the data has already been validated by an established boundary.
 
 ### 5. Preserve type correctness in nested objects
-- Do not construct partial nested objects and assert them as complete types.
-- Create dedicated fixture factories for nested types such as accounts, splits, refunds, and vendors.
-- Reuse these factories across tests rather than repeating unsafe assertions.
 
-### 6. Verify before finishing
-- Run the relevant tests.
-- Run the project's typecheck and lint commands.
-- Resolve unsafe type assertion diagnostics rather than suppressing them.
-- Do not consider a test implementation complete merely because it passes at runtime; it must also satisfy TypeScript's type system.
+* Do not construct partial nested objects and assert them as complete types.
+* Create dedicated fixture factories for nested types such as accounts, splits, refunds, and vendors.
+* Reuse these factories across tests rather than repeating unsafe assertions.
+
+### 6. Respect generated API types & contracts
+
+* Treat generated API types and production contracts as the source of truth.
+* Do not invent, omit, or incorrectly cast fields to make fixtures compile.
+* When a generated type changes, update the fixtures to reflect the actual contract rather than working around the new errors.
 
 ### 7. Type Assertions (`as`) — Use Sparingly
 
 Treat TypeScript type assertions (`as TypeName`) as an escape hatch, not a normal way to satisfy the compiler.
 
-- Do not use `as TypeName` simply to make code compile or silence type errors.
-- Before using an assertion, determine why TypeScript cannot infer or establish the required type.
-- Prefer type inference, explicit variable annotations, discriminated unions, type guards, and runtime validation.
-- Never use assertions to make incomplete test fixtures appear to satisfy complete production types.
-- Never use `as unknown as TypeName` to bypass type checking.
-- Do not repeatedly cast the same value to different types to work around typing problems.
-- In tests, construct valid objects using strongly typed fixture factories instead of asserting partial objects.
-- When an assertion is genuinely necessary (e.g. DOM APIs, third-party library typing limitations, or a value whose type is guaranteed by an external invariant), keep it narrow and local.
+* Do not use `as TypeName` simply to make code compile or silence type errors.
+* Before using an assertion, determine why TypeScript cannot infer or establish the required type.
+* Prefer type inference, explicit variable annotations, discriminated unions, type guards, and runtime validation.
+* Never use assertions to make incomplete test fixtures appear to satisfy complete production types.
+* Never use `as unknown as TypeName` to bypass type checking.
+* Do not repeatedly cast the same value to different types to work around typing problems.
+* When an assertion is genuinely necessary (e.g. DOM APIs, third-party library typing limitations, or a value whose type is guaranteed by an external invariant), keep it narrow and local.
 
 Before introducing a type assertion, ask:
 
@@ -157,9 +169,20 @@ Before introducing a type assertion, ask:
 3. Could a type guard, proper annotation, or better data structure eliminate the assertion?
 4. Am I hiding a real type error?
 
-If an assertion is necessary, add a brief explanation of the invariant that makes it safe.
+If an assertion is necessary, add a brief explanation of the invariant that makes it safe. Do not treat every assertion as automatically wrong, but require a concrete justification for each one.
 
-Do not treat every assertion as automatically wrong, but require a concrete justification for each one.
+### 8. Systematic Troubleshooting & Verification
+
+When TypeScript reports an error in a test:
+
+1. Read the error and identify the actual type incompatibility.
+2. Inspect the production function signature and the relevant source types.
+3. Decide whether the fixture is incorrect, the function accepts an unnecessarily broad type, or the test is modeling an invalid scenario.
+4. Fix the underlying issue using proper types, narrower inputs, or valid fixtures instead of workaround assertions.
+5. Run the relevant tests and TypeScript typecheck/lint commands to verify the fix.
+
+*Never consider a test implementation complete merely because it passes at runtime; it must also satisfy TypeScript's type system cleanly without relying on unsafe assertions.*
+
 
 ## Forms & Validation
 - **Standard Stack**: Always use `react-hook-form` paired with `zod` (`@hookform/resolvers/zod`) for all form implementations.
