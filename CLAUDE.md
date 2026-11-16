@@ -189,6 +189,21 @@ When TypeScript reports an error in a test:
 - **No Raw FormData**: Avoid manual `new FormData(e.currentTarget)` parsing, repetitive `form.get()` type narrowing, and manual input state management.
 - **Schema-First**: Define a strict `z.object(...)` schema for every form to handle validation, whitespace trimming (`.trim()`), and type coercion (`z.coerce.number()`), inferring TypeScript payload types via `z.infer<typeof schema>`.
 
+## Material 3 Expressive UI Guidelines
+
+When designing, implementing, or auditing UI components, combine both installed M3 Expressive skills using this division of responsibility:
+
+1. **Architecture, Platform APIs & Audits (`material-expressive-skill`):**
+   - Use this skill as the primary workflow for UI planning, state coverage (loading, empty, error, disabled), accessibility, and code reviews.
+   - Follow its platform guardrails strictly so you never invent unsupported APIs for the target framework.
+
+2. **Exact Tokens, Geometry & Motion Physics (`m3-expressive`):**
+   - Consult this skill's references whenever exact numeric specifications are needed—including color roles, dynamic color schemes, `dp` measurements, corner radius scales, 35-shape morphing rules, emphasized typography, and spring damping/stiffness values.
+
+3. **Conflict Resolution:**
+   - If an exact M3 Expressive spec from `m3-expressive` is not natively supported by the current SDK version in `material-expressive-skill`, prioritize valid, compiling platform APIs and adapt the expressive tokens honestly.
+
+
 ## Commands
 
 ```bash
