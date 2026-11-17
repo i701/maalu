@@ -14,36 +14,11 @@ import { formatDate } from "#/lib/format";
 import { ACCENT } from "#/lib/m3";
 import type { Budget, Goal } from "#/types/api";
 import { RouterButton } from "../RouterLinks";
+import ProgressBar from "../ProgressBar";
 import TonalChip from "../TonalChip";
 
 function Meter({ percent, color, label }: { percent: number; color: string; label: string }) {
-	const width = Math.min(percent, 100);
-	return (
-		<Box
-			role="progressbar"
-			aria-label={label}
-			aria-valuemin={0}
-			aria-valuemax={100}
-			aria-valuenow={width}
-			sx={{
-				mt: 0.75,
-				height: 8,
-				borderRadius: "var(--shape-full)",
-				bgcolor: "var(--md-sys-color-surface-container-highest)",
-				overflow: "hidden",
-			}}
-		>
-			<Box
-				sx={{
-					height: "100%",
-					width: `${width}%`,
-					minWidth: width > 0 ? 8 : 0,
-					borderRadius: "var(--shape-full)",
-					bgcolor: color,
-				}}
-			/>
-		</Box>
-	);
+	return <ProgressBar percent={percent} color={color} height={8} label={label} sx={{ mt: 0.75 }} />;
 }
 
 /** The budget at a glance (everything spent against the limits, and which limits need attention)

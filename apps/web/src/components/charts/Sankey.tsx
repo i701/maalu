@@ -6,7 +6,7 @@ import ChartTooltip from "./ChartTooltip";
 
 const LABEL_WIDTH = 170; // room for a name beside each outer column
 const MIN_WIDTH = 620; // narrower than this the diagram scrolls rather than squeezes
-const NODE_WIDTH = 12;
+const NODE_WIDTH = 6; // the thin bar at each node
 const LABEL_HEIGHT = 18;
 const TOP = 30; // room above the diagram for the total's label
 const BOTTOM = 8;
@@ -27,29 +27,21 @@ const linkColor = (flow: MoneyFlow, source: string, target: string) => {
 	return COLOR[flow.nodes.find((n) => n.id === outer)?.kind ?? "total"];
 };
 
-/**
- * A Sankey diagram of a period's money: where it came from, the total, where it went. Bars and
- * bands are SVG; every label is HTML on top (kept apart so none overlap). Hovering or focusing a
- * node lights up its links and shows its amount and share; every value is also in the card's table.
- */
-export default function Sankey({
-	flow,
-	formatValue,
-	formatLabel = formatValue,
-	ariaLabel,
-	height = 320,
-}: {
+type SankeyProps = {
 	flow: MoneyFlow;
 	/** The exact amount, for the readout and the screen reader */
 	formatValue: (value: number) => string;
 	/** A shorter amount for the labels beside the bars, where room is tight */
 	formatLabel?: (value: number) => string;
 	ariaLabel: string;
-	height?: number;
-}) {
-	const [width, setWidth] = useState(0);
-	const [active, setActive] = useState<string | null>(null);
+};
 
+/**
+ * A Sankey diagram of a period's money: where it came from, the total, where it went, fitted to its
+ * card (and scrolling sideways when the card is narrower than it can be drawn).
+ */
+export default function Sankey({ height = 320, ...props }: SankeyProps & { height?: number }) {
+	const [width, setWidth] = useState(0);
 	const measure = useCallback((el: HTMLDivElement | null) => {
 		if (!el) return undefined;
 		const observer = new ResizeObserver(([entry]) => {
@@ -60,7 +52,32 @@ export default function Sankey({
 		return () => observer.disconnect();
 	}, []);
 
-	const inner = Math.max(MIN_WIDTH, width) - 2 * LABEL_WIDTH;
+	return (
+		<Box sx={{ overflowX: "auto" }} ref={measure}>
+			<SankeyDiagram {...props} width={Math.max(MIN_WIDTH, width)} height={height} />
+		</Box>
+	);
+}
+
+/** The height a diagram needs for `nodes` nodes so that no label crowds its neighbour. */
+export const roomyHeight = (nodes: number) => Math.max(320, nodes * 34 + TOP + BOTTOM);
+
+/**
+ * The diagram at an exact size. Bars and bands are SVG; every label is HTML on top (kept apart so
+ * none overlap). Hovering or focusing a node lights up its links and shows its amount and share;
+ * every value is also in the card's table.
+ */
+export function SankeyDiagram({
+	flow,
+	formatValue,
+	formatLabel = formatValue,
+	ariaLabel,
+	width,
+	height,
+}: SankeyProps & { width: number; height: number }) {
+	const [active, setActive] = useState<string | null>(null);
+
+	const inner = width - 2 * LABEL_WIDTH;
 	const layout = useMemo(
 		() =>
 			layoutFlow(flow, {
@@ -93,81 +110,75 @@ export default function Sankey({
 	const activeNode = layout.nodes.find((n) => n.id === active) ?? null;
 
 	return (
-		<Box sx={{ overflowX: "auto" }} ref={measure}>
-			<Box
-				role="group"
-				aria-label={ariaLabel}
-				sx={{ position: "relative", width: Math.max(MIN_WIDTH, width), height }}
+		<Box role="group" aria-label={ariaLabel} sx={{ position: "relative", width, height }}>
+			<svg
+				width="100%"
+				height={height}
+				aria-hidden
+				style={{ position: "absolute", inset: 0, overflow: "visible" }}
 			>
-				<svg
-					width="100%"
-					height={height}
-					aria-hidden
-					style={{ position: "absolute", inset: 0, overflow: "visible" }}
-				>
-					<g transform={`translate(${LABEL_WIDTH} ${TOP})`}>
-						{layout.links.map((l) => (
-							<path
-								key={`${l.source}>${l.target}`}
-								d={l.path}
-								fill="none"
-								stroke={linkColor(flow, l.source, l.target)}
-								strokeWidth={Math.max(1, l.thickness)}
-								strokeOpacity={linked(l.source, l.target) ? (active ? 0.5 : 0.32) : 0.08}
-								style={{ transition: "stroke-opacity 150ms ease-out" }}
-							/>
-						))}
-						{layout.nodes.map((n) => (
-							<rect
-								key={n.id}
-								x={n.x}
-								y={n.y}
-								width={n.width}
-								height={n.height}
-								rx={3}
-								fill={COLOR[n.kind]}
-							/>
-						))}
-					</g>
-				</svg>
-				{layout.nodes.map((n) => (
-					<NodeLabel
-						key={n.id}
-						node={n}
-						total={total}
-						y={(labelY.get(n.id) ?? n.y + n.height / 2) + TOP}
-						formatValue={formatValue}
-						formatLabel={formatLabel}
-						onActive={setActive}
-					/>
-				))}
-				{activeNode && (
-					<Box
-						sx={{
-							position: "absolute",
-							left: LABEL_WIDTH + activeNode.x + (activeNode.column === 2 ? -150 : 24),
-							top: TOP + activeNode.y + activeNode.height / 2 - 28,
-							zIndex: 2,
-						}}
-					>
-						<ChartTooltip
-							title={activeNode.label}
-							rows={[
-								{
-									label: "amount",
-									value: formatValue(activeNode.value),
-									color: COLOR[activeNode.kind],
-								},
-								{
-									label: "of the total",
-									value: `${Math.round((activeNode.value / total) * 100)}%`,
-									color: COLOR[activeNode.kind],
-								},
-							]}
+				<g transform={`translate(${LABEL_WIDTH} ${TOP})`}>
+					{layout.links.map((l) => (
+						<path
+							key={`${l.source}>${l.target}`}
+							d={l.path}
+							fill="none"
+							stroke={linkColor(flow, l.source, l.target)}
+							strokeWidth={Math.max(1, l.thickness)}
+							strokeOpacity={linked(l.source, l.target) ? (active ? 0.5 : 0.32) : 0.08}
+							style={{ transition: "stroke-opacity 150ms ease-out" }}
 						/>
-					</Box>
-				)}
-			</Box>
+					))}
+					{layout.nodes.map((n) => (
+						<rect
+							key={n.id}
+							x={n.x}
+							y={n.y}
+							width={n.width}
+							height={n.height}
+							rx={NODE_WIDTH / 2}
+							fill={COLOR[n.kind]}
+						/>
+					))}
+				</g>
+			</svg>
+			{layout.nodes.map((n) => (
+				<NodeLabel
+					key={n.id}
+					node={n}
+					total={total}
+					y={(labelY.get(n.id) ?? n.y + n.height / 2) + TOP}
+					formatValue={formatValue}
+					formatLabel={formatLabel}
+					onActive={setActive}
+				/>
+			))}
+			{activeNode && (
+				<Box
+					sx={{
+						position: "absolute",
+						left: LABEL_WIDTH + activeNode.x + (activeNode.column === 2 ? -150 : 24),
+						top: TOP + activeNode.y + activeNode.height / 2 - 28,
+						zIndex: 2,
+					}}
+				>
+					<ChartTooltip
+						title={activeNode.label}
+						rows={[
+							{
+								label: "amount",
+								value: formatValue(activeNode.value),
+								color: COLOR[activeNode.kind],
+							},
+							{
+								label: "of the total",
+								value: `${Math.round((activeNode.value / total) * 100)}%`,
+								color: COLOR[activeNode.kind],
+							},
+						]}
+					/>
+				</Box>
+			)}
 		</Box>
 	);
 }

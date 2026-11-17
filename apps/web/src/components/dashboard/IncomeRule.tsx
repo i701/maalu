@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 import Money from "#/components/Money";
+import ProgressBar from "#/components/ProgressBar";
 import Typography from "@mui/material/Typography";
 import { memo } from "react";
 import {
@@ -29,7 +30,6 @@ const BAR_COLOR = {
 /** One line of the rule: a bar of the share of income with a tick at the target, the figures, and
  * the status in words (never colour alone). */
 function RuleLine({ row, currency }: { row: RuleRow; currency: string }) {
-	const width = Math.max(0, Math.min(row.percent, 100));
 	return (
 		<Box sx={{ display: "grid", gap: 0.5 }}>
 			<Box sx={{ display: "flex", justifyContent: "space-between", gap: 1, flexWrap: "wrap" }}>
@@ -49,39 +49,14 @@ function RuleLine({ row, currency }: { row: RuleRow; currency: string }) {
 					<TonalChip accent={STATUS_ACCENT[row.status]} label={STATUS_TEXT[row.status]} />
 				</Box>
 			</Box>
-			<Box
+			<ProgressBar
 				role="img"
-				aria-label={`${row.label}: ${formatPercent(row.percent)} of income, target ${targetText(row.key).toLowerCase()}`}
-				sx={{
-					position: "relative",
-					height: 10,
-					borderRadius: "var(--shape-full)",
-					bgcolor: "var(--md-sys-color-surface-container-highest)",
-				}}
-			>
-				<Box
-					sx={{
-						height: "100%",
-						width: `${width}%`,
-						minWidth: width > 0 ? 6 : 0,
-						borderRadius: "var(--shape-full)",
-						bgcolor: BAR_COLOR[row.key],
-					}}
-				/>
-				{/* the target, as a thin tick across the track */}
-				<Box
-					aria-hidden
-					sx={{
-						position: "absolute",
-						top: -3,
-						bottom: -3,
-						left: `${row.target}%`,
-						width: 2,
-						bgcolor: "text.primary",
-						opacity: 0.6,
-					}}
-				/>
-			</Box>
+				percent={row.percent}
+				color={BAR_COLOR[row.key]}
+				height={10}
+				tick={row.target}
+				label={`${row.label}: ${formatPercent(row.percent)} of income, target ${targetText(row.key).toLowerCase()}`}
+			/>
 		</Box>
 	);
 }

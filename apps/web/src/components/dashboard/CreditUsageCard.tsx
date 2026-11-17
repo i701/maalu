@@ -1,5 +1,6 @@
 import { useCardMorph } from "#/lib/card-morph";
 import Money from "#/components/Money";
+import ProgressBar from "#/components/ProgressBar";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { memo } from "react";
@@ -29,7 +30,6 @@ const CreditUsageCard = memo(function CreditUsageCard({ accounts }: { accounts: 
 				{accounts.map((a) => {
 					const usage = creditUsage(a);
 					if (!usage) return null;
-					const width = Math.min(usage.percent, 100);
 					const high = usage.percent >= 80;
 					return (
 						<Box key={a.id}>
@@ -55,30 +55,13 @@ const CreditUsageCard = memo(function CreditUsageCard({ accounts }: { accounts: 
 									<Money amount={usage.limit} currency={a.currency} /> · {usage.percent}%
 								</Typography>
 							</Box>
-							<Box
-								role="progressbar"
-								aria-label={`Credit used on ${a.name}`}
-								aria-valuemin={0}
-								aria-valuemax={100}
-								aria-valuenow={width}
-								sx={{
-									mt: 0.75,
-									height: 8,
-									borderRadius: "var(--shape-full)",
-									bgcolor: "var(--md-sys-color-surface-container-highest)",
-									overflow: "hidden",
-								}}
-							>
-								<Box
-									sx={{
-										height: "100%",
-										width: `${width}%`,
-										minWidth: width > 0 ? 8 : 0,
-										borderRadius: "var(--shape-full)",
-										bgcolor: high ? "error.main" : "primary.main",
-									}}
-								/>
-							</Box>
+							<ProgressBar
+								percent={usage.percent}
+								color={high ? "error.main" : "primary.main"}
+								height={8}
+								label={`Credit used on ${a.name}`}
+								sx={{ mt: 0.75 }}
+							/>
 						</Box>
 					);
 				})}

@@ -1,5 +1,6 @@
 import { useCompactCard } from "#/lib/compact-card";
 import Money from "#/components/Money";
+import ProgressBar from "#/components/ProgressBar";
 import { morph } from "#/lib/shape";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
@@ -16,32 +17,13 @@ import TonalChip from "./TonalChip";
 
 /** The progress track for a goal, in the goal's colour (green once reached). */
 function Bar({ percent, color }: { percent: number; color: string }) {
-	const width = Math.min(percent, 100);
 	return (
-		<Box
-			role="progressbar"
-			aria-valuemin={0}
-			aria-valuemax={100}
-			aria-valuenow={width}
-			sx={{
-				mt: { xs: 0.75, sm: 1.5 },
-				height: { xs: 6, sm: 10 },
-				borderRadius: "var(--shape-full)",
-				bgcolor: "var(--md-sys-color-surface-container-highest)",
-				overflow: "hidden",
-			}}
-		>
-			<Box
-				sx={{
-					height: "100%",
-					width: `${width}%`,
-					minWidth: width > 0 ? 10 : 0,
-					borderRadius: "var(--shape-full)",
-					bgcolor: color,
-					transition: "width var(--spring-spatial-default-dur) var(--spring-spatial-default)",
-				}}
-			/>
-		</Box>
+		<ProgressBar
+			percent={percent}
+			color={color}
+			height={{ xs: 6, sm: 10 }}
+			sx={{ mt: { xs: 0.75, sm: 1.5 } }}
+		/>
 	);
 }
 

@@ -1,5 +1,6 @@
 import { morph } from "#/lib/shape";
 import Money from "#/components/Money";
+import ProgressBar from "#/components/ProgressBar";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { budgetByKind, STATUS_COLOR, STATUS_LABEL, unsigned } from "#/lib/budget";
@@ -58,7 +59,6 @@ export default function BudgetSummary({ budget }: { budget: Budget }) {
 	const { totals, currency, attention } = budget;
 	const color = STATUS_COLOR[totals.status];
 	const over = totals.status === "over";
-	const width = Math.min(totals.percent, 100);
 
 	return (
 		<Box
@@ -114,30 +114,12 @@ export default function BudgetSummary({ budget }: { budget: Budget }) {
 					</Typography>
 				</Box>
 			</Box>
-			<Box
-				role="progressbar"
-				aria-valuemin={0}
-				aria-valuemax={100}
-				aria-valuenow={width}
-				sx={{
-					mt: { xs: 1, sm: 2 },
-					height: { xs: 8, sm: 12 },
-					borderRadius: "var(--shape-full)",
-					bgcolor: "var(--md-sys-color-surface-container-highest)",
-					overflow: "hidden",
-				}}
-			>
-				<Box
-					sx={{
-						height: "100%",
-						width: `${width}%`,
-						minWidth: width > 0 ? 12 : 0,
-						borderRadius: "var(--shape-full)",
-						bgcolor: color,
-						transition: "width var(--spring-spatial-default-dur) var(--spring-spatial-default)",
-					}}
-				/>
-			</Box>
+			<ProgressBar
+				percent={totals.percent}
+				color={color}
+				height={{ xs: 8, sm: 12 }}
+				sx={{ mt: { xs: 1, sm: 2 } }}
+			/>
 			<KindSplit budget={budget} />
 			<Box
 				sx={{

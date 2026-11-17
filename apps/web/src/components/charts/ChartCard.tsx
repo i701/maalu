@@ -21,12 +21,15 @@ export default function ChartCard({
 	subtitle,
 	legend,
 	table,
+	actions,
 	children,
 }: {
 	title: string;
 	subtitle?: string;
 	legend?: ReactNode;
 	table?: ChartTable;
+	/** Buttons beside the table toggle, such as "open full screen" */
+	actions?: ReactNode;
 	children: ReactNode;
 }) {
 	const cardMorph = useCardMorph();
@@ -58,6 +61,7 @@ export default function ChartCard({
 						</Typography>
 					)}
 				</Box>
+				{actions}
 				{table && (
 					<IconButton
 						size="small"

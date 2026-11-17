@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 import Money from "#/components/Money";
+import ProgressBar from "#/components/ProgressBar";
 import Typography from "@mui/material/Typography";
 import { creditUsage } from "#/lib/accounts";
 import type { Account } from "#/types/api";
@@ -19,27 +20,12 @@ export default function CreditUsage({ account }: { account: Account }) {
 						<Money amount={usage.owed} currency={account.currency} /> of{" "}
 						<Money amount={usage.limit} currency={account.currency} /> used ({usage.percent}%)
 					</Typography>
-					<Box
-						role="progressbar"
-						aria-valuenow={Math.min(usage.percent, 100)}
-						aria-valuemin={0}
-						aria-valuemax={100}
-						aria-label="Credit limit used"
-						sx={{
-							height: 6,
-							borderRadius: "var(--shape-full)",
-							bgcolor: "var(--md-sys-color-surface-container-highest)",
-							overflow: "hidden",
-						}}
-					>
-						<Box
-							sx={{
-								height: "100%",
-								width: `${Math.min(usage.percent, 100)}%`,
-								bgcolor: over || usage.percent >= 80 ? "error.main" : "primary.main",
-							}}
-						/>
-					</Box>
+					<ProgressBar
+						percent={usage.percent}
+						color={over || usage.percent >= 80 ? "error.main" : "primary.main"}
+						height={6}
+						label="Credit limit used"
+					/>
 				</>
 			)}
 			{account.exclude_from_stats && (
