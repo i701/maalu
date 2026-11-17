@@ -9,7 +9,6 @@ const filterOptions = createFilterOptions<string>({
 });
 
 export default function CurrencyField({
-	name,
 	label,
 	currencies,
 	defaultValue = "",
@@ -18,8 +17,6 @@ export default function CurrencyField({
 	onInputChange,
 	error,
 }: {
-	/** Only for forms still read with FormData. */
-	name?: string;
 	label: string;
 	currencies: string[];
 	defaultValue?: string;
@@ -51,7 +48,6 @@ export default function CurrencyField({
 				<TextField
 					{...params}
 					label={label}
-					name={name}
 					required={required}
 					error={Boolean(error)}
 					helperText={error ?? helperText}

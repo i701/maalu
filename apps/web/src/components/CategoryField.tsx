@@ -1,12 +1,10 @@
 import type { Category } from "#/types/api";
 import NamePickerField from "./NamePickerField";
 
-/** Category picker (autocomplete of your categories) that can also create one inline. Renders an
- * input named `name` (default "category"). */
+/** Category picker (autocomplete of your categories) that can also create one inline. */
 export default function CategoryField({
 	categories,
 	defaultValue = "",
-	name,
 	label = "Category",
 	required = true,
 	helper = true,
@@ -15,7 +13,6 @@ export default function CategoryField({
 }: {
 	categories: Category[];
 	defaultValue?: string;
-	name?: string;
 	label?: string;
 	required?: boolean;
 	helper?: boolean;
@@ -31,7 +28,6 @@ export default function CategoryField({
 			)}
 			noun="category"
 			label={label}
-			name={name}
 			defaultValue={defaultValue}
 			required={required}
 			helper={helper}

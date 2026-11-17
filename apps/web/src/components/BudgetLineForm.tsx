@@ -243,7 +243,6 @@ export default function BudgetLineForm({
 			error={error}
 			pending={pending}
 			onSubmit={handleSubmit(submit)}
-			noValidate
 			sheet={sheet}
 		>
 			<Grid container spacing={2}>

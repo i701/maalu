@@ -2,8 +2,8 @@ import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
-import { type SubmitEvent, useState } from "react";
-import { formatTime } from "#/lib/format";
+import { useState } from "react";
+import { Controller, useWatch } from "react-hook-form";
 import { placeOf } from "#/lib/places";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
@@ -22,6 +22,7 @@ import {
 } from "#/types/api";
 import AttachmentsField from "./AttachmentsField";
 import FormDialog from "./FormDialog";
+import FormTextField from "./FormTextField";
 import LocationField from "./LocationField";
 import { useNotify } from "./Notify";
 import SaveTemplateDialog from "./SaveTemplateDialog";
@@ -37,10 +38,11 @@ import {
 	buildTransactionRequest,
 	seedAfterSave,
 	seedFromTemplate,
-	stateFrom,
+	seedFromTransaction,
 	subscriptionChoices,
 	type TransactionSeed,
 } from "./transaction-form/request";
+import type { TxValues } from "./transaction-form/schema";
 import TemplatePicker from "./transaction-form/TemplatePicker";
 import TransferFields from "./transaction-form/TransferFields";
 import { useAttachments } from "./transaction-form/useAttachments";
@@ -102,46 +104,35 @@ export default function TransactionForm({
 	// follow-up (budget warning, receipt uploads) happens after it, and the form stays locked then.
 	const [busy, setBusy] = useState(false);
 	const [another, setAnother] = useState(false);
-	const [savingTemplate, setSavingTemplate] = useState<FormData | null>(null);
+	const [savingTemplate, setSavingTemplate] = useState(false);
 	const accounts = accountChoices(activeAccounts, transaction);
+	const firstSeed = transaction ? seedFromTransaction(transaction) : startSeed;
+	const splits = useSplits(firstSeed);
 	const fields = useFormFields({
 		transaction,
-		startSeed,
+		startSeed: firstSeed,
 		accounts,
 		cards,
 		baseCurrency,
 		defaultAccount: activeAccounts.find((a) => a.id === defaultAccountId),
+		splits,
 	});
-	const {
-		seed,
-		type,
-		isTransfer,
-		accountId,
-		toAccountId,
-		currency,
-		effectiveCurrency,
-		foreign,
-		crossCurrency,
-		paymentMethod,
-		subscription,
-		date,
-		planned,
-		switched,
-		location,
-	} = fields;
+	const { form, type, isTransfer, account, effectiveCurrency, foreign, crossCurrency, switched } =
+		fields;
+	const { control, handleSubmit, getValues, setValue } = form;
+	const date = useWatch({ control, name: "transaction_date" });
 	const attachments = useAttachments(transaction?.id);
 	const links = useLinks(transaction?.id);
-	const splits = useSplits(seed);
-	const vendorDefaults = useVendorDefaults(vendors, seed, !splits.enabled);
+	const vendorDefaults = useVendorDefaults(vendors, form, !splits.enabled);
 	const subscriptionOptions = subscriptionChoices(subscriptions, transaction);
 
 	/** Picking a known vendor also marks its usual place, unless a place is already marked. */
 	function onVendorChange(value: string, fromUser: boolean) {
 		vendorDefaults.onVendorChange(value, fromUser);
-		if (!fromUser || location) return;
+		if (!fromUser || getValues("location")) return;
 		const typed = value.trim().toLowerCase();
 		const spot = placeOf(vendors.find((v) => v.name.toLowerCase() === typed) ?? {});
-		if (spot) fields.setLocation(spot);
+		if (spot) setValue("location", spot);
 	}
 
 	function changeType(next: TransactionType) {
@@ -151,17 +142,13 @@ export default function TransactionForm({
 
 	function fillFrom(next: TransactionSeed) {
 		fields.fillFrom(next);
-		vendorDefaults.reset(next);
 		splits.reset();
 		setLocalError(null);
 	}
 
-	const formState = () => stateFrom(fields, transaction, splits);
-
-	async function submit(e: SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
-		const form = new FormData(e.currentTarget); // read now: the event is gone after an await
-		const request = buildTransactionRequest(form, formState());
+	async function submit(values: TxValues) {
+		const state = fields.lookups();
+		const request = buildTransactionRequest(values, state);
 		if ("error" in request) return setLocalError(request.error);
 		setLocalError(null);
 		let refocus = false;
@@ -176,17 +163,17 @@ export default function TransactionForm({
 			if (await run(send)) {
 				const message = await messageAfterSave({
 					success: request.success,
-					type,
-					form,
-					itemCategories: splits.enabled ? splits.rows.map((r) => r.category) : null,
-					planned,
+					type: values.type,
+					date: values.transaction_date,
+					categories: state.splits ? state.splits.rows.map((r) => r.category) : [values.category],
+					planned: values.planned,
 				});
 				notify(message.text, message.severity);
 				// files picked on a new transaction go up now that it has an id
 				for (const text of created ? await uploadPending(created.id, attachments, links) : [])
 					if (text) notify(text, "warning");
 				if (another && !transaction) {
-					fillFrom(seedAfterSave(form, formState()));
+					fillFrom(seedAfterSave(values, state));
 					refocus = true; // the form was cleared: ready for the next one (once it is enabled again)
 				} else sheet.close();
 				if (created) onCreated?.(created);
@@ -203,7 +190,7 @@ export default function TransactionForm({
 				title={transaction ? "Edit transaction" : "Add transaction"}
 				error={localError ?? error}
 				pending={pending || busy}
-				onSubmit={submit}
+				onSubmit={handleSubmit(submit)}
 				sheet={sheet}
 			>
 				<Grid container columnSpacing={2} key={fields.round}>
@@ -232,103 +219,120 @@ export default function TransactionForm({
 					{isTransfer ? (
 						<TransferFields
 							key="transfer"
+							control={control}
 							accounts={accounts}
-							accountId={accountId}
-							toAccountId={toAccountId}
 							onPickAccount={fields.pickAccount}
-							onPickToAccount={fields.setToAccountId}
 							crossCurrency={crossCurrency}
-							seed={seed}
 							switched={switched}
 						/>
 					) : (
 						<OrdinaryFields
 							key="ordinary"
+							control={control}
 							type={type}
 							accounts={accounts}
-							accountId={accountId}
+							account={account}
 							onPickAccount={fields.pickAccount}
 							cards={cards}
-							cardId={fields.cardId}
 							onPickCard={fields.pickCard}
 							currencies={currencies}
-							currency={currency}
-							onCurrencyChange={fields.setCurrency}
+							onCurrencyChange={fields.changeCurrency}
 							effectiveCurrency={effectiveCurrency}
 							foreign={foreign}
 							baseCurrency={baseCurrency}
-							paymentMethod={paymentMethod}
-							onPaymentMethodChange={fields.setPaymentMethod}
-							seed={seed}
 							switched={switched}
 							splits={splits}
 							date={date}
 							categories={categories}
-							category={{
-								defaultValue: vendorDefaults.categoryDefault,
-								remountKey: vendorDefaults.categoryKey,
-								onChange: vendorDefaults.onCategoryChange,
-							}}
+							categoryKey={vendorDefaults.categoryKey}
 						/>
 					)}
 
 					<Cell size={6}>
-						<TextField
-							label="Date"
+						<Controller
 							name="transaction_date"
-							type="date"
-							value={date}
-							onChange={(e) => fields.changeDate(e.target.value)}
-							required
-							slotProps={{ inputLabel: { shrink: true } }}
+							control={control}
+							render={({ field, fieldState }) => (
+								<TextField
+									label="Date"
+									type="date"
+									value={field.value}
+									onChange={(e) => fields.changeDate(e.target.value)}
+									error={Boolean(fieldState.error)}
+									helperText={fieldState.error?.message}
+									required
+									slotProps={{ inputLabel: { shrink: true } }}
+								/>
+							)}
 						/>
 					</Cell>
 
 					<Cell size={6}>
-						<TextField
-							label="Time"
+						<FormTextField
+							control={control}
 							name="transaction_time"
+							label="Time"
 							type="time"
-							defaultValue={formatTime(transaction?.transaction_time ?? null) ?? ""}
 							slotProps={{ inputLabel: { shrink: true } }}
 						/>
 					</Cell>
 
 					<RevealCell size={12} show={!isTransfer}>
-						<VendorField
-							vendors={vendors}
-							defaultValue={seed?.vendorName ?? ""}
-							onValueChange={onVendorChange}
+						<Controller
+							name="vendor"
+							control={control}
+							render={({ field, fieldState }) => (
+								<VendorField
+									vendors={vendors}
+									defaultValue={field.value}
+									onValueChange={(value, fromUser) => {
+										field.onChange(value);
+										onVendorChange(value, fromUser);
+									}}
+									error={fieldState.error?.message}
+								/>
+							)}
 						/>
 					</RevealCell>
 
 					<RevealCell size={12} show={!isTransfer}>
-						<LocationField value={location} onChange={fields.setLocation} />
+						<Controller
+							name="location"
+							control={control}
+							render={({ field }) => (
+								<LocationField value={field.value} onChange={field.onChange} />
+							)}
+						/>
 					</RevealCell>
 
 					<PlannedAndSubscription
-						planned={planned}
+						control={control}
 						onPlannedChange={fields.setPlanned}
 						isExpense={type === "expense"}
 						options={subscriptionOptions}
-						subscription={subscription}
-						onSubscriptionChange={fields.setSubscription}
 					/>
 
 					<Cell size={12}>
-						<TagsField
-							key={vendorDefaults.tagsKey}
-							tags={tags}
-							defaultValue={vendorDefaults.tagsDefault}
-							onChange={vendorDefaults.onTagsChange}
+						<Controller
+							name="tags"
+							control={control}
+							render={({ field, fieldState }) => (
+								<TagsField
+									key={vendorDefaults.tagsKey}
+									tags={tags}
+									defaultValue={field.value}
+									onChange={field.onChange}
+									error={fieldState.error?.message}
+								/>
+							)}
 						/>
 					</Cell>
 
 					<Cell size={12}>
-						<TextField
-							label="Description"
+						<FormTextField
+							control={control}
 							name="description"
-							defaultValue={seed?.description ?? ""}
+							label="Description"
 							multiline
 							minRows={2}
 						/>
@@ -342,15 +346,15 @@ export default function TransactionForm({
 						<FormFooter
 							another={transaction ? undefined : another}
 							onAnotherChange={setAnother}
-							onSaveTemplate={setSavingTemplate}
+							onSaveTemplate={() => setSavingTemplate(true)}
 						/>
 					</Cell>
 				</Grid>
 			</FormDialog>
 			{savingTemplate && (
 				<SaveTemplateDialog
-					build={(name) => buildTemplateRequest(savingTemplate, formState(), name)}
-					onClose={() => setSavingTemplate(null)}
+					build={(name) => buildTemplateRequest(getValues(), fields.lookups(), name)}
+					onClose={() => setSavingTemplate(false)}
 				/>
 			)}
 		</>

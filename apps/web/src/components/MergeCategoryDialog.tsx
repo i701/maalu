@@ -1,12 +1,16 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import MenuItem from "@mui/material/MenuItem";
-import TextField from "@mui/material/TextField";
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
 import { mergeCategoryFn } from "#/server/categories";
 import type { Category } from "#/types/api";
 import FormDialog from "./FormDialog";
+import FormTextField from "./FormTextField";
 import { useNotify } from "./Notify";
+
+const schema = z.object({ into_id: z.string().min(1, "Choose where to merge it") });
 
 /** Moves everything in a category into another one, then removes it: the way to fix duplicates
  * and to retire a category that is still in use. */
@@ -24,11 +28,12 @@ export default function MergeCategoryDialog({
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
 	const others = categories.filter((c) => c.id !== category.id);
-	const [target, setTarget] = useState("");
+	const { control, handleSubmit } = useForm({
+		resolver: zodResolver(schema),
+		defaultValues: { into_id: "" },
+	});
 
-	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
-		if (!target) return;
+	async function submit({ into_id: target }: z.output<typeof schema>) {
 		const ok = await run(() => mergeCategoryFn({ data: { id: category.id, into_id: target } }));
 		if (ok) {
 			notify(`Merged "${category.name}"`);
@@ -41,15 +46,15 @@ export default function MergeCategoryDialog({
 			title={`Merge "${category.name}"`}
 			error={error}
 			pending={pending}
-			onSubmit={submit}
+			onSubmit={handleSubmit(submit)}
 			sheet={sheet}
 			maxWidth="xs"
 		>
-			<TextField
+			<FormTextField
+				control={control}
+				name="into_id"
 				select
 				label="Merge into"
-				value={target}
-				onChange={(e) => setTarget(e.target.value)}
 				required
 				autoFocus
 				helperText={`Its transactions, items and subscriptions move there, then "${category.name}" is removed`}
@@ -59,7 +64,7 @@ export default function MergeCategoryDialog({
 						{c.name}
 					</MenuItem>
 				))}
-			</TextField>
+			</FormTextField>
 		</FormDialog>
 	);
 }

@@ -82,7 +82,6 @@ export default function MoveMoneyDialog({
 			error={error}
 			pending={pending}
 			onSubmit={handleSubmit(submit)}
-			noValidate
 			sheet={sheet}
 			submitLabel={source ? "Move" : "Add"}
 		>

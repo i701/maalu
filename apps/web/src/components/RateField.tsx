@@ -21,7 +21,6 @@ export default function RateField({
 	value,
 	onChange,
 	error,
-	name,
 	hint,
 }: {
 	/** The foreign currency */
@@ -35,8 +34,6 @@ export default function RateField({
 	onChange: (rate: string) => void;
 	/** A message from the form's schema, shown under the field. */
 	error?: string;
-	/** Only for forms still read with FormData. */
-	name?: string;
 	/** Shown when there is nothing to say about the market rate */
 	hint?: string;
 }) {
@@ -83,7 +80,6 @@ export default function RateField({
 	return (
 		<TextField
 			label={label}
-			name={name}
 			value={value}
 			onChange={(e) => {
 				setOwn(true);

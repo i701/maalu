@@ -1,14 +1,19 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
 import { SUGGESTED_PAYMENT_METHOD } from "#/lib/accounts";
 import { cardMethod } from "#/lib/cards";
+import { trimRate } from "#/lib/format";
 import { isFuture, localToday } from "#/lib/planned";
-import type { PlaceValue } from "#/lib/places";
-import type { AccountRef, Card, PaymentMethod, Transaction, TransactionType } from "#/types/api";
-import { initialValues, seedFromTransaction, type SubRef, type TransactionSeed } from "./request";
+import type { AccountRef, Card, Transaction, TransactionType } from "#/types/api";
+import type { State, TransactionSeed } from "./request";
+import { initialValues, transactionSchema, type TxValues } from "./schema";
+import type { SplitsState } from "./useSplits";
 
-/** The controlled fields of the transaction form (type, accounts, currency, method, subscription,
- * date) and what follows from them. The other fields are uncontrolled and start from `seed`;
- * `round` changes whenever the form is cleared and refilled, so they remount with new defaults. */
+/** The transaction form's values (react-hook-form) and the rules that tie them together: a card
+ * sets its account and method, an account suggests a method, a future date turns on "Planned"
+ * until you set it yourself. `round` changes whenever the form is cleared and refilled, so the
+ * pickers that only read their starting value remount with the new one. */
 export function useFormFields({
 	transaction,
 	startSeed,
@@ -16,8 +21,10 @@ export function useFormFields({
 	cards,
 	baseCurrency,
 	defaultAccount,
+	splits,
 }: {
 	transaction: Transaction | undefined;
+	/** What the form starts from: the edited transaction as a seed, or the one passed in. */
 	startSeed: TransactionSeed | undefined;
 	accounts: AccountRef[];
 	/** Every card, to pick one on an expense. */
@@ -25,124 +32,133 @@ export function useFormFields({
 	baseCurrency: string;
 	/** Where a new transaction starts, when there is one and it is still in use. */
 	defaultAccount?: AccountRef;
+	splits: SplitsState;
 }) {
-	const [filled, setFilled] = useState({
-		seed: transaction ? seedFromTransaction(transaction) : startSeed,
-		round: 0,
+	const [filled, setFilled] = useState({ seed: startSeed, round: 0 });
+	const form = useForm<TxValues>({
+		resolver: zodResolver(transactionSchema({ baseCurrency, accounts, items: splits.enabled })),
+		defaultValues: initialValues({
+			seed: filled.seed,
+			transaction,
+			baseCurrency,
+			defaultAccount,
+		}),
 	});
-	const initial = initialValues(filled.seed, baseCurrency, defaultAccount);
-	const [type, setType] = useState<TransactionType>(initial.type);
-	// Income / expense: an optional account locks the currency to the account's and suggests a
-	// payment method. Transfer: a from-account and a to-account.
-	const [accountId, setAccountId] = useState(initial.accountId);
-	const [toAccountId, setToAccountId] = useState(initial.toAccountId);
-	// The card it was paid with (optional): it fixes the account and suggests the method.
-	const [cardId, setCardId] = useState(initial.cardId);
-	const [currency, setCurrency] = useState(initial.currency);
-	const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(initial.paymentMethod);
-	// Only expenses can belong to a subscription.
-	const [subscription, setSubscription] = useState<SubRef | null>(initial.subscription);
-	// The day the form is for: the exchange-rate suggestion follows it.
-	const [date, setDate] = useState(transaction?.transaction_date ?? localToday());
+	const { control, setValue, getValues, reset } = form;
 	const [switched, setSwitched] = useState(false); // true once the user has changed the type
-	// Where it happened, if marked on the map.
-	const [location, setLocation] = useState<PlaceValue | null>(filled.seed?.location ?? null);
-	// Planned: coming up, not happened yet. It turns on by itself when the date is in the future,
-	// until you set it yourself (an existing transaction keeps what it has).
-	const [planned, setPlannedState] = useState(transaction?.planned ?? false);
+	// "Planned" follows the date until you set it yourself (an existing transaction keeps its own).
 	const [plannedChosen, setPlannedChosen] = useState(Boolean(transaction));
 
+	const [type, accountId, toAccountId, cardId, currency] = useWatch({
+		control,
+		name: ["type", "account_id", "to_account_id", "card_id", "currency"],
+	});
 	const isTransfer = type === "transfer";
 	const account = accounts.find((a) => a.id === accountId) ?? null;
 	const toAccount = accounts.find((a) => a.id === toAccountId) ?? null;
 	// Cards are for spending: an income or transfer never carries one, so editing an older income
 	// that has a card unlinks it on save.
 	const card = type === "expense" ? (cards.find((c) => c.id === cardId) ?? null) : null;
-	const effectiveCurrency = account ? account.currency : currency;
-	const foreign =
-		effectiveCurrency.length === 3 && effectiveCurrency.toUpperCase() !== baseCurrency;
+	const effectiveCurrency = account ? account.currency : currency.toUpperCase();
+	const foreign = effectiveCurrency.length === 3 && effectiveCurrency !== baseCurrency;
 	const crossCurrency = Boolean(
 		isTransfer && account && toAccount && account.currency !== toAccount.currency,
 	);
 
+	/** A new currency starts its rate fresh: the seed's only when it is in that currency. */
+	function rateFor(code: string) {
+		const seed = filled.seed;
+		if (transaction?.currency === code) return trimRate(transaction.exchange_rate);
+		return seed?.currency === code ? seed.exchange_rate : "";
+	}
+
+	function currencyChanged(before: string, after: string) {
+		if (before !== after) setValue("exchange_rate", rateFor(after));
+	}
+
+	function changeCurrency(typed: string) {
+		const code = typed.toUpperCase();
+		const before = effectiveCurrency;
+		setValue("currency", code);
+		if (!account) currencyChanged(before, code);
+	}
+
 	function changeDate(next: string) {
-		setDate(next);
-		if (!plannedChosen) setPlannedState(isFuture(next, localToday()));
+		setValue("transaction_date", next);
+		if (!plannedChosen) setValue("planned", isFuture(next, localToday()));
 	}
 
 	function setPlanned(on: boolean) {
-		setPlannedState(on);
+		setValue("planned", on);
 		setPlannedChosen(true);
 	}
 
 	function pickAccount(id: string) {
-		setAccountId(id);
+		const before = effectiveCurrency;
+		setValue("account_id", id);
 		const picked = accounts.find((a) => a.id === id);
-		if (card && card.account.id !== id) setCardId(""); // a card belongs to its own account
-		if (picked && !isTransfer) setPaymentMethod(SUGGESTED_PAYMENT_METHOD[picked.group]);
+		if (card && card.account.id !== id) setValue("card_id", ""); // a card belongs to its own account
+		if (picked && !isTransfer) setValue("payment_method", SUGGESTED_PAYMENT_METHOD[picked.group]);
+		currencyChanged(before, picked ? picked.currency : currency.toUpperCase());
 	}
 
 	/** A card spends from its account, so picking one sets the account and the method. */
 	function pickCard(id: string) {
-		setCardId(id);
+		setValue("card_id", id);
 		const picked = cards.find((c) => c.id === id);
 		if (!picked) return;
-		setAccountId(picked.account.id);
-		setPaymentMethod(cardMethod(picked.kind));
+		pickAccount(picked.account.id);
+		setValue("payment_method", cardMethod(picked.kind));
 	}
 
 	function changeType(next: TransactionType) {
-		setType(next);
-		if (next !== "expense") setCardId("");
+		setValue("type", next);
 		setSwitched(true);
-		if (next !== "expense") setSubscription(null);
+		if (next !== "expense") {
+			setValue("card_id", "");
+			setValue("subscription", null);
+		}
 	}
 
-	/** Clears the typed fields and refills the form from `next`. */
+	/** Clears the typed fields and refills the form from `next`; the date and "Planned" stay. */
 	function fillFrom(next: TransactionSeed) {
-		const v = initialValues(next, baseCurrency);
+		reset({
+			...initialValues({ seed: next, baseCurrency }),
+			transaction_date: getValues("transaction_date"),
+			planned: getValues("planned"),
+		});
 		setFilled((f) => ({ seed: next, round: f.round + 1 }));
-		setType(v.type);
-		setAccountId(v.accountId);
-		setToAccountId(v.toAccountId);
-		setCardId(v.cardId);
-		setCurrency(v.currency);
-		setPaymentMethod(v.paymentMethod);
-		setSubscription(v.subscription);
-		setLocation(next.location);
 		setSwitched(false);
 	}
 
+	/** What the values point at, for the request builders. */
+	const lookups = (): State => ({
+		transaction,
+		account,
+		card,
+		toAccount,
+		crossCurrency,
+		foreign,
+		splits: !isTransfer && splits.enabled ? splits : null,
+	});
+
 	return {
+		form,
 		seed: filled.seed,
 		round: filled.round,
 		type,
 		isTransfer,
-		accountId,
-		toAccountId,
-		setToAccountId,
 		account,
-		toAccount,
-		cardId,
-		card,
-		pickCard,
-		currency,
-		setCurrency,
 		effectiveCurrency,
 		foreign,
 		crossCurrency,
-		paymentMethod,
-		setPaymentMethod,
-		subscription,
-		setSubscription,
-		date,
-		changeDate,
-		planned,
-		setPlanned,
 		switched,
-		location,
-		setLocation,
+		lookups,
+		changeCurrency,
+		changeDate,
+		setPlanned,
 		pickAccount,
+		pickCard,
 		changeType,
 		fillFrom,
 	};

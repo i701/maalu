@@ -77,7 +77,6 @@ export default function CategoryForm({
 			error={error}
 			pending={pending}
 			onSubmit={handleSubmit(submit)}
-			noValidate
 			sheet={sheet}
 			maxWidth="xs"
 		>

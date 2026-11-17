@@ -35,7 +35,6 @@ export default function TagForm({ tag, onClose }: { tag?: Tag; onClose: () => vo
 			error={error}
 			pending={pending}
 			onSubmit={handleSubmit(submit)}
-			noValidate
 			sheet={sheet}
 			maxWidth="xs"
 		>

@@ -47,7 +47,6 @@ export default function BudgetSettingsDialog({
 			error={error}
 			pending={pending}
 			onSubmit={handleSubmit(submit)}
-			noValidate
 			sheet={sheet}
 			maxWidth="xs"
 		>

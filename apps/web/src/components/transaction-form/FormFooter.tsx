@@ -4,7 +4,7 @@ import Stack from "@mui/material/Stack";
 import Switch from "@mui/material/Switch";
 
 /** Under the fields: "Add another" (keep the form open after saving a new transaction) and
- * "Save as template" (reads the form it sits in). */
+ * "Save as template". */
 export default function FormFooter({
 	another,
 	onAnotherChange,
@@ -13,7 +13,7 @@ export default function FormFooter({
 	/** undefined when editing: there is no "add another" then. */
 	another: boolean | undefined;
 	onAnotherChange: (on: boolean) => void;
-	onSaveTemplate: (form: FormData) => void;
+	onSaveTemplate: () => void;
 }) {
 	return (
 		<Stack
@@ -28,14 +28,7 @@ export default function FormFooter({
 					label="Add another"
 				/>
 			)}
-			<Button
-				color="inherit"
-				size="small"
-				onClick={(e) => {
-					const form = e.currentTarget.closest("form");
-					if (form) onSaveTemplate(new FormData(form));
-				}}
-			>
+			<Button color="inherit" size="small" onClick={onSaveTemplate}>
 				Save as template
 			</Button>
 		</Stack>

@@ -109,7 +109,6 @@ export default function RefundDialog({
 			error={errors.items?.message ?? error}
 			pending={pending}
 			onSubmit={handleSubmit(submit)}
-			noValidate
 			sheet={sheet}
 			maxWidth="xs"
 		>

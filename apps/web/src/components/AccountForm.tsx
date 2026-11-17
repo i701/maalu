@@ -152,7 +152,6 @@ export default function AccountForm({
 			error={error}
 			pending={pending}
 			onSubmit={handleSubmit(submit)}
-			noValidate
 			sheet={sheet}
 		>
 			<Grid container spacing={2}>

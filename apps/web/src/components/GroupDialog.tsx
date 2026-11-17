@@ -80,7 +80,6 @@ export default function GroupDialog({
 			error={localError ?? error}
 			pending={pending}
 			onSubmit={handleSubmit(submit)}
-			noValidate
 			sheet={sheet}
 			maxWidth="xs"
 			submitLabel={mode === "new" ? "Make group" : "Add to group"}

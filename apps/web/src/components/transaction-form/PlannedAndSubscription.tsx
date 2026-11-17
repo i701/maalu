@@ -3,30 +3,37 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import { type Control, Controller } from "react-hook-form";
 import { Cell, RevealCell } from "./Cells";
 import type { SubRef } from "./request";
+import type { TxValues } from "./schema";
 
 /** The "Planned" switch, and (for an expense) the subscription it pays for. */
 export default function PlannedAndSubscription({
-	planned,
+	control,
 	onPlannedChange,
 	isExpense,
 	options,
-	subscription,
-	onSubscriptionChange,
 }: {
-	planned: boolean;
+	control: Control<TxValues>;
+	/** Setting it yourself stops it following the date. */
 	onPlannedChange: (on: boolean) => void;
 	isExpense: boolean;
 	options: SubRef[];
-	subscription: SubRef | null;
-	onSubscriptionChange: (value: SubRef | null) => void;
 }) {
 	return (
 		<>
 			<Cell size={12}>
 				<FormControlLabel
-					control={<Switch checked={planned} onChange={(_, on) => onPlannedChange(on)} />}
+					control={
+						<Controller
+							name="planned"
+							control={control}
+							render={({ field }) => (
+								<Switch checked={field.value} onChange={(_, on) => onPlannedChange(on)} />
+							)}
+						/>
+					}
 					label="Planned"
 				/>
 				<Typography
@@ -39,18 +46,24 @@ export default function PlannedAndSubscription({
 			</Cell>
 
 			<RevealCell size={12} show={isExpense}>
-				<Autocomplete
-					options={options}
-					value={subscription}
-					onChange={(_, v) => onSubscriptionChange(v)}
-					getOptionLabel={(o) => o.name}
-					isOptionEqualToValue={(a, b) => a.id === b.id}
-					noOptionsText="No subscriptions yet"
-					renderInput={(params) => (
-						<TextField
-							{...params}
-							label="Subscription"
-							helperText="Optional. Marks this as a payment for a recurring charge"
+				<Controller
+					name="subscription"
+					control={control}
+					render={({ field }) => (
+						<Autocomplete
+							options={options}
+							value={field.value}
+							onChange={(_, v) => field.onChange(v)}
+							getOptionLabel={(o) => o.name}
+							isOptionEqualToValue={(a, b) => a.id === b.id}
+							noOptionsText="No subscriptions yet"
+							renderInput={(params) => (
+								<TextField
+									{...params}
+									label="Subscription"
+									helperText="Optional. Marks this as a payment for a recurring charge"
+								/>
+							)}
 						/>
 					)}
 				/>

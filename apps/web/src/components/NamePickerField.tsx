@@ -18,15 +18,12 @@ const norm = (s: string) => s.trim().replace(/\s+/g, " ").toLowerCase();
  * a name and an `Add "Name"` option appears. The record itself is created when the parent form is
  * saved (the API finds-or-creates by name, ignoring case), so cancelling the form leaves nothing
  * behind. Used for vendors and categories.
- *
- * Renders an input named `name` whose value is the typed or picked name ("" when none).
  */
 export default function NamePickerField({
 	names,
 	meta,
 	noun,
 	label,
-	name,
 	defaultValue = "",
 	required = false,
 	maxLength,
@@ -41,7 +38,6 @@ export default function NamePickerField({
 	/** What the names are, for the helper text: "vendor", "category" */
 	noun: string;
 	label: string;
-	name?: string;
 	defaultValue?: string;
 	required?: boolean;
 	maxLength: number;
@@ -94,7 +90,6 @@ export default function NamePickerField({
 				<TextField
 					{...params}
 					label={label}
-					name={name}
 					required={required}
 					error={Boolean(error)}
 					helperText={

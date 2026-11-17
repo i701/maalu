@@ -105,7 +105,6 @@ export default function BulkEditDialog({
 			error={localError ?? error}
 			pending={pending}
 			onSubmit={handleSubmit(submit)}
-			noValidate
 			sheet={sheet}
 		>
 			<Grid container spacing={2}>

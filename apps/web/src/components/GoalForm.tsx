@@ -95,7 +95,6 @@ export default function GoalForm({
 			error={error}
 			pending={pending}
 			onSubmit={handleSubmit(submit)}
-			noValidate
 			sheet={sheet}
 		>
 			<Grid container spacing={2}>

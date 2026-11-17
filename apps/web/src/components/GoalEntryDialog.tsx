@@ -77,7 +77,6 @@ export default function GoalEntryDialog({ goal, onClose }: { goal: Goal; onClose
 			error={error}
 			pending={pending}
 			onSubmit={handleSubmit(submit)}
-			noValidate
 			sheet={sheet}
 			maxWidth="xs"
 		>

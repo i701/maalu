@@ -43,7 +43,6 @@ export default function SaveTemplateDialog({
 			error={localError ?? error}
 			pending={pending}
 			onSubmit={handleSubmit(submit)}
-			noValidate
 			sheet={sheet}
 			maxWidth="xs"
 		>

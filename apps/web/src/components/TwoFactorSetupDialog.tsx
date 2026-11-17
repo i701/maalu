@@ -63,7 +63,6 @@ export default function TwoFactorSetupDialog({
 			error={setupError ?? error}
 			pending={pending}
 			onSubmit={handleSubmit(submit)}
-			noValidate
 			sheet={sheet}
 			maxWidth="xs"
 		>

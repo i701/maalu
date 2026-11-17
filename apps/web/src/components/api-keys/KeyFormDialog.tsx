@@ -1,18 +1,27 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
 import Checkbox from "@mui/material/Checkbox";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { type SubmitEvent, useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
+import { z } from "zod";
 import { daysFromChoice, EXPIRY_OPTIONS, KEEP_EXPIRY, roleOf, toggleScope } from "#/lib/api-keys";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
 import { createApiKeyFn, updateApiKeyFn } from "#/server/api-keys";
 import type { ApiKey, ApiKeySecret, ScopeCatalog } from "#/types/api";
 import FormDialog from "../FormDialog";
+import FormTextField from "../FormTextField";
 
 const CUSTOM = "custom";
+
+const schema = z.object({
+	name: z.string().trim().min(1, "Give the key a name").max(100),
+	scopes: z.array(z.string()).min(1, "Give the key at least one permission"),
+	expiry: z.string(),
+});
 
 /** Make a key or change one: its name, a role to start from, the exact permissions (a grid of
  * areas and actions) and how long it works. A key stores the permissions it is given, not the
@@ -31,30 +40,39 @@ export default function KeyFormDialog({
 }) {
 	const { run, pending, error } = useAction();
 	const sheet = useSheet(onClose);
-	const [name, setName] = useState(apiKey?.name ?? "");
-	const [scopes, setScopes] = useState<string[]>(
-		apiKey?.scopes ?? catalog.roles.find((r) => r.key === "viewer")?.scopes ?? [],
-	);
-	const [expiry, setExpiry] = useState(apiKey ? KEEP_EXPIRY : "90");
-	const [localError, setLocalError] = useState<string | null>(null);
+	const {
+		control,
+		handleSubmit,
+		setValue,
+		formState: { errors },
+	} = useForm({
+		resolver: zodResolver(schema),
+		defaultValues: {
+			name: apiKey?.name ?? "",
+			scopes: apiKey?.scopes ?? catalog.roles.find((r) => r.key === "viewer")?.scopes ?? [],
+			expiry: apiKey ? KEEP_EXPIRY : "90",
+		},
+	});
+	const scopes = useWatch({ control, name: "scopes" });
 	const role = roleOf(scopes, catalog.roles);
 
 	function pickRole(value: string) {
 		const picked = catalog.roles.find((r) => r.key === value);
-		if (picked) setScopes([...picked.scopes]);
+		if (picked) setValue("scopes", [...picked.scopes]);
 	}
 
-	async function submit(e: SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
-		if (scopes.length === 0) return setLocalError("Give the key at least one permission");
-		setLocalError(null);
+	function toggle(scope: string, on: boolean) {
+		setValue("scopes", toggleScope(scopes, scope, on));
+	}
+
+	async function submit({ name, expiry }: z.output<typeof schema>) {
 		if (apiKey) {
 			const changes: {
 				name: string;
 				scopes: string[];
 				expires_in_days?: number | null;
 			} = {
-				name: name.trim(),
+				name,
 				scopes,
 			};
 			if (expiry !== KEEP_EXPIRY) changes.expires_in_days = daysFromChoice(expiry);
@@ -65,7 +83,7 @@ export default function KeyFormDialog({
 		const done = await run(async () => {
 			const res = await createApiKeyFn({
 				data: {
-					name: name.trim(),
+					name,
 					scopes,
 					expires_in_days: daysFromChoice(expiry),
 				},
@@ -82,18 +100,18 @@ export default function KeyFormDialog({
 	return (
 		<FormDialog
 			title={apiKey ? `Change "${apiKey.name}"` : "New API key"}
-			error={localError ?? error}
+			error={errors.scopes?.message ?? error}
 			pending={pending}
-			onSubmit={submit}
+			onSubmit={handleSubmit(submit)}
 			sheet={sheet}
 			maxWidth="sm"
 			submitLabel={apiKey ? "Save" : "Make key"}
 		>
 			<Stack sx={{ gap: 2 }}>
-				<TextField
+				<FormTextField
+					control={control}
+					name="name"
 					label="Name"
-					value={name}
-					onChange={(e) => setName(e.target.value)}
 					required
 					autoFocus
 					helperText="What it is for, for example Telegram bot"
@@ -157,7 +175,7 @@ export default function KeyFormDialog({
 											<Checkbox
 												size="small"
 												checked={scopes.includes(scope)}
-												onChange={(_, on) => setScopes((s) => toggleScope(s, scope, on))}
+												onChange={(_, on) => toggle(scope, on)}
 												slotProps={{
 													input: {
 														"aria-label": `${area.label}: ${action.label}`,
@@ -175,11 +193,11 @@ export default function KeyFormDialog({
 					</Typography>
 				</Box>
 
-				<TextField
+				<FormTextField
+					control={control}
+					name="expiry"
 					select
 					label="How long it works"
-					value={expiry}
-					onChange={(e) => setExpiry(e.target.value)}
 					helperText={
 						apiKey
 							? "Counted from today. Keep leaves the end date as it is."
@@ -192,7 +210,7 @@ export default function KeyFormDialog({
 							{o.label}
 						</MenuItem>
 					))}
-				</TextField>
+				</FormTextField>
 			</Stack>
 		</FormDialog>
 	);
