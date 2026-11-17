@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { exchangeRate } from "#/server/transactions";
 import { repeatFields, subscriptionFormFields } from "#/server/subscriptions";
-import { PAYMENT_METHODS, SUBSCRIPTION_STATUSES } from "#/types/api";
+import { remindToField } from "#/lib/subscription";
+import { PAYMENT_METHODS, SUBSCRIPTION_STATUSES, type Subscription } from "#/types/api";
 
 /** The subscription form's fields. Without an account a payment in another currency than yours
  * needs a currency code and its rate; with one, the account's currency and rate are used. */
@@ -46,3 +47,32 @@ export const subscriptionSchema = (baseCurrency: string) =>
 type Schema = ReturnType<typeof subscriptionSchema>;
 export type SubscriptionFormInput = z.input<Schema>;
 export type SubscriptionFormOutput = z.output<Schema>;
+
+const today = () => {
+	const d = new Date();
+	return new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
+};
+
+/** Where the form starts: the subscription's own values, or a monthly one starting today. */
+export function subscriptionDefaults(
+	subscription: Subscription | undefined,
+	baseCurrency: string,
+): SubscriptionFormInput {
+	return {
+		name: subscription?.name ?? "",
+		amount: subscription?.amount ?? "",
+		account_id: subscription?.account?.id ?? "",
+		currency: subscription?.currency ?? baseCurrency,
+		exchange_rate: subscription?.exchange_rate ?? "",
+		payment_method: subscription?.payment_method ?? "debit_card",
+		category: subscription?.category ?? "",
+		vendor: subscription?.vendor?.name ?? "",
+		interval_count: String(subscription?.interval_count ?? 1),
+		interval_unit: subscription?.interval_unit ?? "month",
+		start_date: subscription?.start_date ?? today(),
+		status: subscription?.status ?? "active",
+		installments_total: subscription?.installments_total?.toString() ?? "",
+		remind_days_before: remindToField(subscription ? subscription.remind_days_before : 3),
+		amount_varies: subscription?.amount_varies ?? false,
+	};
+}

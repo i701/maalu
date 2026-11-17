@@ -1,18 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import Grid from "@mui/material/Grid";
 import MenuItem from "@mui/material/MenuItem";
-import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { type Control, Controller, type UseFormSetValue, useForm, useWatch } from "react-hook-form";
 import { useSheet } from "#/lib/sheet";
-import {
-	installmentsFromField,
-	REMIND_OPTIONS,
-	remindFromField,
-	remindToField,
-} from "#/lib/subscription";
+import { installmentsFromField, REMIND_OPTIONS, remindFromField } from "#/lib/subscription";
 import { useAction } from "#/lib/use-action";
 import { createSubscriptionFn, updateSubscriptionFn } from "#/server/subscriptions";
 import {
@@ -29,23 +22,20 @@ import {
 import CategoryField from "./CategoryField";
 import CurrencyField from "./CurrencyField";
 import FormDialog from "./FormDialog";
+import FormSwitch from "./FormSwitch";
 import FormTextField from "./FormTextField";
 import { useNotify } from "./Notify";
 import RateField from "./RateField";
 import {
 	type SubscriptionFormInput,
 	type SubscriptionFormOutput,
+	subscriptionDefaults,
 	subscriptionSchema,
 } from "./subscription-form";
 import { accountMenuItems } from "./transaction-form/accountMenuItems";
 import VendorField from "./VendorField";
 
 type FormControl = Control<SubscriptionFormInput, unknown, SubscriptionFormOutput>;
-
-const today = () => {
-	const d = new Date();
-	return new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
-};
 
 /** Only what changed: omitted when the same, `null` to unlink. */
 function accountChange(subscription: Subscription, accountId: string) {
@@ -233,16 +223,9 @@ function PlanFields({
 			</Grid>
 
 			<Grid size={12}>
-				<FormControlLabel
-					control={
-						<Controller
-							name="amount_varies"
-							control={control}
-							render={({ field }) => (
-								<Switch checked={field.value} onChange={(_, on) => field.onChange(on)} />
-							)}
-						/>
-					}
+				<FormSwitch
+					control={control}
+					name="amount_varies"
 					label="The amount changes from month to month"
 				/>
 				<Typography variant="caption" component="p" sx={{ color: "text.secondary" }}>
@@ -308,23 +291,7 @@ export default function SubscriptionForm({
 		SubscriptionFormOutput
 	>({
 		resolver: zodResolver(subscriptionSchema(baseCurrency)),
-		defaultValues: {
-			name: subscription?.name ?? "",
-			amount: subscription?.amount ?? "",
-			account_id: subscription?.account?.id ?? "",
-			currency: subscription?.currency ?? baseCurrency,
-			exchange_rate: subscription?.exchange_rate ?? "",
-			payment_method: subscription?.payment_method ?? "debit_card",
-			category: subscription?.category ?? "",
-			vendor: subscription?.vendor?.name ?? "",
-			interval_count: String(subscription?.interval_count ?? 1),
-			interval_unit: subscription?.interval_unit ?? "month",
-			start_date: subscription?.start_date ?? today(),
-			status: subscription?.status ?? "active",
-			installments_total: subscription?.installments_total?.toString() ?? "",
-			remind_days_before: remindToField(subscription ? subscription.remind_days_before : 3),
-			amount_varies: subscription?.amount_varies ?? false,
-		},
+		defaultValues: subscriptionDefaults(subscription, baseCurrency),
 	});
 	// The exchange-rate suggestion follows the first billing date.
 	const [accountId, currency, startDate] = useWatch({

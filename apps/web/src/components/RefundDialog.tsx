@@ -1,9 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import Typography from "@mui/material/Typography";
 import { useForm, useWatch } from "react-hook-form";
-import { formatTime, sumDecimals, trimRate } from "#/lib/format";
-import { localToday } from "#/lib/planned";
-import { amountLeft, itemsOfRefund, itemsToPick, refundContext, refundLines } from "#/lib/refund";
+import { sumDecimals } from "#/lib/format";
+import { amountLeft, refundContext } from "#/lib/refund";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
 import { createTransactionFn, updateTransactionFn } from "#/server/transactions";
@@ -12,7 +11,13 @@ import FormDialog from "./FormDialog";
 import { useNotify } from "./Notify";
 import RefundAmount from "./RefundAmount";
 import RefundDetails from "./RefundDetails";
-import { type RefundFormInput, type RefundFormOutput, refundSchema } from "./refund-form";
+import {
+	refundDefaults,
+	refundFields,
+	type RefundFormInput,
+	type RefundFormOutput,
+	refundSchema,
+} from "./refund-form";
 
 /**
  * Giving money back for a purchase: pass the `purchase` for a new refund, or the `refund` to change
@@ -50,17 +55,7 @@ export default function RefundDialog({
 		formState: { errors },
 	} = useForm<RefundFormInput, unknown, RefundFormOutput>({
 		resolver: zodResolver(refundSchema(hasItems, foreign)),
-		defaultValues: {
-			amount: refund?.amount ?? left ?? "",
-			items: refund ? itemsOfRefund(refund) : purchase && hasItems ? itemsToPick(purchase) : [],
-			transaction_date: refund?.transaction_date ?? localToday(),
-			transaction_time: formatTime(refund?.transaction_time ?? null) ?? "",
-			account_id: usable.some((a) => a.id === source?.account?.id)
-				? (source?.account?.id ?? "")
-				: "",
-			exchange_rate: trimRate(source?.exchange_rate ?? ""),
-			description: refund?.description ?? "",
-		},
+		defaultValues: refundDefaults({ purchase, refund, accounts: usable, left, hasItems }),
 	});
 	const items = useWatch({ control, name: "items" });
 	const total = hasItems
@@ -68,13 +63,7 @@ export default function RefundDialog({
 		: null;
 
 	async function submit(v: RefundFormOutput) {
-		const fields = {
-			amount: total ?? v.amount,
-			transaction_date: v.transaction_date,
-			transaction_time: v.transaction_time || null,
-			...(foreign ? { exchange_rate: v.exchange_rate } : {}),
-			...(hasItems ? { splits: refundLines(v.items) } : {}),
-		};
+		const fields = refundFields(v, { total, foreign, hasItems });
 		const send = () =>
 			refund
 				? updateTransactionFn({

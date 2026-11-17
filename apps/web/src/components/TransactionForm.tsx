@@ -1,9 +1,6 @@
 import Grid from "@mui/material/Grid";
-import TextField from "@mui/material/TextField";
-import ToggleButton from "@mui/material/ToggleButton";
-import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import { useState } from "react";
-import { Controller, useWatch } from "react-hook-form";
+import { useWatch } from "react-hook-form";
 import { placeOf } from "#/lib/places";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
@@ -13,8 +10,6 @@ import {
 	type Category,
 	type Subscription,
 	type Tag,
-	TRANSACTION_TYPE_LABELS,
-	TRANSACTION_TYPES,
 	type Transaction,
 	type TransactionTemplate,
 	type TransactionType,
@@ -22,13 +17,10 @@ import {
 } from "#/types/api";
 import AttachmentsField from "./AttachmentsField";
 import FormDialog from "./FormDialog";
-import FormTextField from "./FormTextField";
-import LocationField from "./LocationField";
 import { useNotify } from "./Notify";
 import SaveTemplateDialog from "./SaveTemplateDialog";
-import TagsField from "./TagsField";
 import { messageAfterSave } from "./transaction-form/budget-warning";
-import { Cell, RevealCell } from "./transaction-form/Cells";
+import { Cell } from "./transaction-form/Cells";
 import FormFooter from "./transaction-form/FormFooter";
 import OrdinaryFields from "./transaction-form/OrdinaryFields";
 import PlannedAndSubscription from "./transaction-form/PlannedAndSubscription";
@@ -44,19 +36,15 @@ import {
 } from "./transaction-form/request";
 import type { TxValues } from "./transaction-form/schema";
 import TemplatePicker from "./transaction-form/TemplatePicker";
+import TagsAndNote from "./transaction-form/TagsAndNote";
 import TransferFields from "./transaction-form/TransferFields";
+import TypeToggle from "./transaction-form/TypeToggle";
 import { useAttachments } from "./transaction-form/useAttachments";
 import { useFormFields } from "./transaction-form/useFormFields";
 import { useLinks } from "./transaction-form/useLinks";
 import { useSplits } from "./transaction-form/useSplits";
 import { useVendorDefaults } from "./transaction-form/useVendorDefaults";
-import VendorField from "./VendorField";
-
-const TYPE_COLOR = {
-	income: "success",
-	expense: "error",
-	transfer: "info",
-} as const;
+import WhenAndWhere from "./transaction-form/WhenAndWhere";
 
 export default function TransactionForm({
 	transaction,
@@ -200,20 +188,7 @@ export default function TransactionForm({
 						</Cell>
 					)}
 					<Cell size={12}>
-						<ToggleButtonGroup
-							exclusive
-							fullWidth
-							size="small"
-							value={type}
-							onChange={(_, next: TransactionType | null) => next && changeType(next)}
-							aria-label="Transaction type"
-						>
-							{TRANSACTION_TYPES.map((t) => (
-								<ToggleButton key={t} value={t} color={TYPE_COLOR[t]} sx={{ py: 1 }}>
-									{TRANSACTION_TYPE_LABELS[t]}
-								</ToggleButton>
-							))}
-						</ToggleButtonGroup>
+						<TypeToggle type={type} onChange={changeType} />
 					</Cell>
 
 					{isTransfer ? (
@@ -248,62 +223,13 @@ export default function TransactionForm({
 						/>
 					)}
 
-					<Cell size={6}>
-						<Controller
-							name="transaction_date"
-							control={control}
-							render={({ field, fieldState }) => (
-								<TextField
-									label="Date"
-									type="date"
-									value={field.value}
-									onChange={(e) => fields.changeDate(e.target.value)}
-									error={Boolean(fieldState.error)}
-									helperText={fieldState.error?.message}
-									required
-									slotProps={{ inputLabel: { shrink: true } }}
-								/>
-							)}
-						/>
-					</Cell>
-
-					<Cell size={6}>
-						<FormTextField
-							control={control}
-							name="transaction_time"
-							label="Time"
-							type="time"
-							slotProps={{ inputLabel: { shrink: true } }}
-						/>
-					</Cell>
-
-					<RevealCell size={12} show={!isTransfer}>
-						<Controller
-							name="vendor"
-							control={control}
-							render={({ field, fieldState }) => (
-								<VendorField
-									vendors={vendors}
-									defaultValue={field.value}
-									onValueChange={(value, fromUser) => {
-										field.onChange(value);
-										onVendorChange(value, fromUser);
-									}}
-									error={fieldState.error?.message}
-								/>
-							)}
-						/>
-					</RevealCell>
-
-					<RevealCell size={12} show={!isTransfer}>
-						<Controller
-							name="location"
-							control={control}
-							render={({ field }) => (
-								<LocationField value={field.value} onChange={field.onChange} />
-							)}
-						/>
-					</RevealCell>
+					<WhenAndWhere
+						control={control}
+						isTransfer={isTransfer}
+						vendors={vendors}
+						onDateChange={fields.changeDate}
+						onVendorChange={onVendorChange}
+					/>
 
 					<PlannedAndSubscription
 						control={control}
@@ -312,31 +238,7 @@ export default function TransactionForm({
 						options={subscriptionOptions}
 					/>
 
-					<Cell size={12}>
-						<Controller
-							name="tags"
-							control={control}
-							render={({ field, fieldState }) => (
-								<TagsField
-									key={vendorDefaults.tagsKey}
-									tags={tags}
-									defaultValue={field.value}
-									onChange={field.onChange}
-									error={fieldState.error?.message}
-								/>
-							)}
-						/>
-					</Cell>
-
-					<Cell size={12}>
-						<FormTextField
-							control={control}
-							name="description"
-							label="Description"
-							multiline
-							minRows={2}
-						/>
-					</Cell>
+					<TagsAndNote control={control} tags={tags} tagsKey={vendorDefaults.tagsKey} />
 
 					<Cell size={12}>
 						<AttachmentsField state={attachments} links={links} />
