@@ -6,6 +6,7 @@ import { ACCENT_NAMES, accentVars } from "#/lib/accent-roles";
 import { CHART_DARK, CHART_LIGHT, chartVars, colorVars, M3_DARK, M3_LIGHT, SCRIM } from "#/lib/m3";
 import { EASE_OUT } from "#/lib/motion";
 import { morph } from "#/lib/shape";
+import { CHECK_MASK } from "#/lib/symbols";
 
 /**
  * Material 3 Expressive. Colour roles come from `lib/m3.ts`, shape and springs
@@ -214,8 +215,24 @@ const theme = createTheme({
 						backgroundColor: "var(--md-sys-color-surface-container)",
 						color: "var(--md-sys-color-on-surface-variant)",
 						fontWeight: 500,
-						transition:
-							"border-radius var(--spring-spatial-fast-dur) var(--spring-spatial-fast), background-color var(--spring-effects-default-dur) var(--spring-effects-default)",
+						transition: `border-radius ${SPATIAL_FAST}, transform ${SPATIAL_FAST}, background-color var(--spring-effects-default-dur) var(--spring-effects-default)`,
+						// The selected segment opens a check and so widens on a spring, overshooting a little,
+						// while its neighbours slide over (M3: a selected button changes shape and width).
+						// Segments that hold an icon already say what they are, so they get no check.
+						"&::before": {
+							...CHECK_MASK,
+							width: 0,
+							opacity: 0,
+							transition: `width ${SPATIAL_FAST}, margin ${SPATIAL_FAST}, opacity ${EFFECTS_FAST}`,
+						},
+						"&.Mui-selected::before": { width: 18, marginRight: "6px", opacity: 1 },
+						"&:has(> svg)::before, &:has(> .sym)::before": { display: "none" },
+						"&:active": { transform: "scale(.96)" },
+						"@media (prefers-reduced-motion: reduce)": {
+							transition: "background-color 100ms linear",
+							"&::before": { transition: "none" },
+							"&:active": { transform: "none" },
+						},
 						// Outer ends rest at half the 36px height (not fully round), so the morph below
 						// starts moving at once.
 						"&:first-of-type": { borderRadius: "18px 6px 6px 18px" },
@@ -267,7 +284,7 @@ const theme = createTheme({
 					"& .MuiDrawer-paper": {
 						borderTopLeftRadius: "var(--shape-xl)",
 						borderTopRightRadius: "var(--shape-xl)",
-						backgroundColor: "var(--md-sys-color-surface-container)",
+						backgroundColor: "var(--md-sys-color-surface-container-low)",
 					},
 				},
 			},
@@ -286,9 +303,8 @@ const theme = createTheme({
 					width: "calc(100% - 32px)",
 					maxHeight: "calc(100dvh - 32px)",
 					borderRadius: "var(--shape-xl)",
-					// a step off white (M3's dialog is a container, not the card colour), so the white
-					// fields inside it stand out
-					backgroundColor: "var(--md-sys-color-surface-container)",
+					// white like the cards; the fields inside stand out by their `outline` border
+					backgroundColor: "var(--md-sys-color-surface-container-low)",
 				},
 				// `fullScreen` (FormDialog's big forms on a phone): the rules above would keep the margin,
 				// the rounded corners and a capped height, so undo them.

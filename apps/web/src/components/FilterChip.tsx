@@ -1,7 +1,9 @@
 import Chip from "@mui/material/Chip";
+import { CHECK_MASK } from "#/lib/symbols";
 import Symbol from "./Symbol";
 
 const SPRING_SHAPE = "border-radius var(--spring-spatial-fast-dur) var(--spring-spatial-fast)";
+const SPRING_WIDTH = "var(--spring-spatial-fast-dur) var(--spring-spatial-fast)";
 const SPRING_COLOUR = "var(--spring-effects-default-dur) var(--spring-effects-default)";
 
 /** The chip's colours for its state: the selected tint (the accent's, or the secondary container),
@@ -36,7 +38,24 @@ function chipSx(selected: boolean, accent: string | undefined, hasIcon: boolean)
 		bgcolor: bg,
 		color: fg,
 		boxShadow: selected ? "none" : "inset 0 0 0 1px var(--md-sys-color-outline-variant)",
-		transition: `background-color ${SPRING_COLOUR}, ${SPRING_SHAPE}, box-shadow ${SPRING_COLOUR}`,
+		transition: `background-color ${SPRING_COLOUR}, ${SPRING_SHAPE}, box-shadow ${SPRING_COLOUR}, transform ${SPRING_WIDTH}`,
+		// Selecting opens a check, so the chip widens on a spring with a little overshoot; one that
+		// already has an icon fills that instead. A press squashes it.
+		...(!hasIcon && {
+			"&::before": {
+				...CHECK_MASK,
+				width: selected ? 18 : 0,
+				marginLeft: selected ? "8px" : 0,
+				opacity: selected ? 1 : 0,
+				transition: `width ${SPRING_WIDTH}, margin ${SPRING_WIDTH}, opacity ${SPRING_COLOUR}`,
+			},
+		}),
+		"&:active": { transform: "scale(.96)" },
+		"@media (prefers-reduced-motion: reduce)": {
+			transition: `background-color 100ms linear`,
+			"&::before": { transition: "none" },
+			"&:active": { transform: "none" },
+		},
 		// M3 state layers: hover 8%, keyboard focus 10% (the focus ring is added globally)
 		"&:hover": {
 			borderRadius: active,
@@ -51,7 +70,11 @@ function chipSx(selected: boolean, accent: string | undefined, hasIcon: boolean)
 				: "color-mix(in srgb, var(--md-sys-color-on-surface) 10%, transparent)",
 		},
 		// 10px before the icon, 6px between icon and text, 12px after: the same on every chip
-		"& .MuiChip-label": { pl: hasIcon ? 0.75 : 1.5, pr: 1.5 },
+		"& .MuiChip-label": {
+			pl: hasIcon || selected ? 0.75 : 1.5,
+			pr: 1.5,
+			transition: `padding ${SPRING_WIDTH}`,
+		},
 	} as const;
 }
 

@@ -76,7 +76,7 @@ export default function FiltersDrawer({
 							mx: "auto",
 							borderTopLeftRadius: "var(--shape-xl)",
 							borderTopRightRadius: "var(--shape-xl)",
-							backgroundColor: "var(--md-sys-color-surface-container)",
+							backgroundColor: "var(--md-sys-color-surface-container-low)",
 						},
 					},
 				}}
