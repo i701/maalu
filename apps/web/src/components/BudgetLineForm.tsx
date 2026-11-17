@@ -1,70 +1,105 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import Autocomplete from "@mui/material/Autocomplete";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Grid from "@mui/material/Grid";
 import MenuItem from "@mui/material/MenuItem";
 import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { type Control, Controller, useForm, useWatch } from "react-hook-form";
+import { z } from "zod";
 import { datesOverlap, nextStretch } from "#/lib/budget";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
-import { createBudgetLineFn, updateBudgetLineFn } from "#/server/budget";
+import { createBudgetLineFn, limit, updateBudgetLineFn } from "#/server/budget";
 import type { Budget, BudgetFixedLine, BudgetLine, Category } from "#/types/api";
 import FormDialog from "./FormDialog";
+import FormTextField from "./FormTextField";
 import { useNotify } from "./Notify";
-import { getString } from "#/lib/utils";
 
 const isDated = (l?: BudgetLine): l is BudgetFixedLine => Boolean(l && "end_date" in l);
 /** A per-period limit that only runs between two dates. */
 const isWindowed = (l?: BudgetLine) => Boolean(l?.runs_from);
 
+const schema = z
+	.object({
+		name: z.string().trim().min(1, "Give the limit a name").max(200),
+		category_ids: z.array(z.string()).min(1, "Choose at least one category"),
+		amount: limit,
+		warn_percent: z
+			.string()
+			.trim()
+			.regex(/^\d*$/, "A whole number")
+			.refine((v) => v === "" || (Number(v) >= 1 && Number(v) <= 100), "Between 1 and 100"),
+		rollover: z.boolean(),
+		// "Only for certain dates": both days, the last not before the first
+		dated: z.boolean(),
+		repeat: z.boolean(),
+		start: z.string(),
+		end: z.string(),
+	})
+	.superRefine((v, ctx) => {
+		if (!v.dated) return;
+		if (!v.start)
+			ctx.addIssue({ code: "custom", path: ["start"], message: "Choose the first day" });
+		if (!v.end) ctx.addIssue({ code: "custom", path: ["end"], message: "Choose the last day" });
+		if (v.start && v.end && v.end < v.start)
+			ctx.addIssue({
+				code: "custom",
+				path: ["end"],
+				message: "The last day can't be before the first",
+			});
+	});
+
+type FormControl = Control<z.input<typeof schema>, unknown, z.output<typeof schema>>;
+
 /** The "only for certain dates" switch and, when it is on, the two dates. */
 function DatesFields({
+	control,
 	dated,
 	repeat,
 	start,
-	end,
-	onDated,
-	onRepeat,
-	onStart,
-	onEnd,
 }: {
+	control: FormControl;
 	dated: boolean;
 	repeat: boolean;
 	start: string;
-	end: string;
-	onDated: (on: boolean) => void;
-	onRepeat: (on: boolean) => void;
-	onStart: (v: string) => void;
-	onEnd: (v: string) => void;
 }) {
 	return (
 		<>
 			<Grid size={12}>
 				<FormControlLabel
-					control={<Switch checked={dated} onChange={(_, v) => onDated(v)} />}
+					control={
+						<Controller
+							name="dated"
+							control={control}
+							render={({ field }) => (
+								<Switch checked={field.value} onChange={(_, on) => field.onChange(on)} />
+							)}
+						/>
+					}
 					label="Only for certain dates"
 				/>
 			</Grid>
 			{dated && (
 				<>
 					<Grid size={{ xs: 12, sm: 6 }}>
-						<TextField
+						<FormTextField
+							control={control}
+							name="start"
 							label="From"
 							type="date"
 							required
-							value={start}
-							onChange={(e) => onStart(e.target.value)}
 							slotProps={{ inputLabel: { shrink: true } }}
 						/>
 					</Grid>
 					<Grid size={{ xs: 12, sm: 6 }}>
-						<TextField
+						<FormTextField
+							control={control}
+							name="end"
 							label="Until"
 							type="date"
 							required
-							value={end}
-							onChange={(e) => onEnd(e.target.value)}
 							helperText={
 								repeat
 									? "Inclusive. Whole periods count, so the dates snap to them"
@@ -77,15 +112,21 @@ function DatesFields({
 						/>
 					</Grid>
 					<Grid size={12}>
-						<TextField
-							select
-							label="How it counts"
-							value={repeat ? "monthly" : "total"}
-							onChange={(e) => onRepeat(e.target.value === "monthly")}
-						>
-							<MenuItem value="total">One total for the whole stretch</MenuItem>
-							<MenuItem value="monthly">A limit for every period between these dates</MenuItem>
-						</TextField>
+						<Controller
+							name="repeat"
+							control={control}
+							render={({ field }) => (
+								<TextField
+									select
+									label="How it counts"
+									value={field.value ? "monthly" : "total"}
+									onChange={(e) => field.onChange(e.target.value === "monthly")}
+								>
+									<MenuItem value="total">One total for the whole stretch</MenuItem>
+									<MenuItem value="monthly">A limit for every period between these dates</MenuItem>
+								</TextField>
+							)}
+						/>
 					</Grid>
 				</>
 			)}
@@ -115,19 +156,30 @@ export default function BudgetLineForm({
 	const notify = useNotify();
 	const base = line ?? repeatOf;
 	const next = repeatOf ? nextStretch(repeatOf) : null;
-	const [chosen, setChosen] = useState<Category[]>(() =>
-		base ? categories.filter((c) => base.categories.some((x) => x.id === c.id)) : [],
-	);
-	const [rollover, setRollover] = useState(line?.rollover ?? false);
-	const [dated, setDated] = useState(() => isDated(line) || isWindowed(line) || Boolean(repeatOf));
-	const [repeat, setRepeat] = useState(() => isWindowed(line));
-	const [start, setStart] = useState(
-		() => next?.start ?? (isDated(line) ? line.start_date : (line?.runs_from ?? "")),
-	);
-	const [end, setEnd] = useState(
-		() => next?.end ?? (isDated(line) ? line.end_date : (line?.runs_until ?? "")),
-	);
-	const [localError, setLocalError] = useState<string | null>(null);
+	const { control, handleSubmit } = useForm<
+		z.input<typeof schema>,
+		unknown,
+		z.output<typeof schema>
+	>({
+		resolver: zodResolver(schema),
+		defaultValues: {
+			name: base?.name ?? "",
+			category_ids: base
+				? categories.filter((c) => base.categories.some((x) => x.id === c.id)).map((c) => c.id)
+				: [],
+			amount: base?.amount ?? "",
+			warn_percent: line?.warn_percent?.toString() ?? "",
+			rollover: line?.rollover ?? false,
+			dated: isDated(line) || isWindowed(line) || Boolean(repeatOf),
+			repeat: isWindowed(line),
+			start: next?.start ?? (isDated(line) ? line.start_date : (line?.runs_from ?? "")),
+			end: next?.end ?? (isDated(line) ? line.end_date : (line?.runs_until ?? "")),
+		},
+	});
+	const [dated, repeat, start, end] = useWatch({
+		control,
+		name: ["dated", "repeat", "start", "end"],
+	});
 
 	// A category can be in one per-period line only, and in one limit per stretch of dates, so those
 	// taken by other lines are shown but disabled.
@@ -149,22 +201,14 @@ export default function BudgetLineForm({
 		return map;
 	}, [budget.lines, budget.fixed_lines, line?.id, dated, repeat, start, end]);
 
-	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
-		if (chosen.length === 0) return setLocalError("Choose at least one category");
-		if (dated && (!start || !end)) return setLocalError("Choose the first and last day");
-		if (dated && end < start) return setLocalError("The last day can't be before the first");
-		setLocalError(null);
-		const f = new FormData(e.currentTarget);
-		const text = (k: string) => getString(f, k).trim();
-		const warn = text("warn_percent");
+	async function submit(v: z.output<typeof schema>) {
 		const fields = {
-			name: text("name"),
-			category_ids: chosen.map((c) => c.id),
-			amount: text("amount"),
-			rollover: dated && !repeat ? false : rollover,
+			name: v.name,
+			category_ids: v.category_ids,
+			amount: v.amount,
+			rollover: v.dated && !v.repeat ? false : v.rollover,
 		};
-		const dates = dated ? { start_date: start, end_date: end, repeat } : {};
+		const dates = v.dated ? { start_date: v.start, end_date: v.end, repeat: v.repeat } : {};
 		const ok = await run(() =>
 			line
 				? updateBudgetLineFn({
@@ -174,8 +218,8 @@ export default function BudgetLineForm({
 								...fields,
 								...dates,
 								// turning the dates off makes it a limit for every period again
-								...((isDated(line) || isWindowed(line)) && !dated ? { end_date: null } : {}),
-								warn_percent: warn ? Number(warn) : null,
+								...((isDated(line) || isWindowed(line)) && !v.dated ? { end_date: null } : {}),
+								warn_percent: v.warn_percent ? Number(v.warn_percent) : null,
 							},
 						},
 					})
@@ -183,7 +227,7 @@ export default function BudgetLineForm({
 						data: {
 							...fields,
 							...dates,
-							warn_percent: warn ? Number(warn) : undefined,
+							warn_percent: v.warn_percent ? Number(v.warn_percent) : undefined,
 						},
 					}),
 		);
@@ -196,17 +240,18 @@ export default function BudgetLineForm({
 	return (
 		<FormDialog
 			title={line ? "Edit limit" : repeatOf ? "Repeat limit" : "Add limit"}
-			error={localError ?? error}
+			error={error}
 			pending={pending}
-			onSubmit={submit}
+			onSubmit={handleSubmit(submit)}
+			noValidate
 			sheet={sheet}
 		>
 			<Grid container spacing={2}>
 				<Grid size={12}>
-					<TextField
-						label="Name"
+					<FormTextField
+						control={control}
 						name="name"
-						defaultValue={base?.name}
+						label="Name"
 						placeholder="Food and drink"
 						required
 						autoFocus
@@ -214,70 +259,78 @@ export default function BudgetLineForm({
 					/>
 				</Grid>
 				<Grid size={12}>
-					<Autocomplete
-						multiple
-						options={categories}
-						value={chosen}
-						onChange={(_, value) => setChosen(value)}
-						getOptionLabel={(c) => c.name}
-						getOptionDisabled={(c) => takenBy.has(c.id)}
-						isOptionEqualToValue={(a, b) => a.id === b.id}
-						noOptionsText="No categories yet. Add one on the Categories page"
-						renderOption={({ key, ...props }, c) => (
-							<li key={key} {...props}>
-								{c.name}
-								{takenBy.has(c.id) && (
-									<span style={{ marginLeft: 8, opacity: 0.6 }}>in "{takenBy.get(c.id)}"</span>
+					<Controller
+						name="category_ids"
+						control={control}
+						render={({ field, fieldState }) => (
+							<Autocomplete
+								multiple
+								options={categories}
+								value={categories.filter((c) => field.value.includes(c.id))}
+								onChange={(_, value) => field.onChange(value.map((c) => c.id))}
+								getOptionLabel={(c) => c.name}
+								getOptionDisabled={(c) => takenBy.has(c.id)}
+								isOptionEqualToValue={(a, b) => a.id === b.id}
+								noOptionsText="No categories yet. Add one on the Categories page"
+								renderOption={({ key, ...props }, c) => (
+									<li key={key} {...props}>
+										{c.name}
+										{takenBy.has(c.id) && (
+											<span style={{ marginLeft: 8, opacity: 0.6 }}>in "{takenBy.get(c.id)}"</span>
+										)}
+									</li>
 								)}
-							</li>
-						)}
-						renderInput={(params) => (
-							<TextField
-								{...params}
-								label="Categories"
-								helperText="Spending in these categories counts against the limit"
+								renderInput={(params) => (
+									<TextField
+										{...params}
+										label="Categories"
+										error={Boolean(fieldState.error)}
+										helperText={
+											fieldState.error?.message ??
+											"Spending in these categories counts against the limit"
+										}
+									/>
+								)}
 							/>
 						)}
 					/>
 				</Grid>
 				<Grid size={{ xs: 12, sm: 6 }}>
-					<TextField
+					<FormTextField
+						control={control}
+						name="amount"
 						label={
 							dated && !repeat
 								? `Limit for these dates (${budget.currency})`
 								: `Limit per period (${budget.currency})`
 						}
-						name="amount"
-						defaultValue={base?.amount}
 						placeholder="4000"
 						required
 						slotProps={{ htmlInput: { inputMode: "decimal" } }}
 					/>
 				</Grid>
 				<Grid size={{ xs: 12, sm: 6 }}>
-					<TextField
-						label="Warn at (%)"
+					<FormTextField
+						control={control}
 						name="warn_percent"
+						label="Warn at (%)"
 						type="number"
-						defaultValue={line?.warn_percent ?? ""}
 						helperText={`Blank uses the budget's ${budget.warn_percent}%`}
-						slotProps={{ htmlInput: { min: 1, max: 100, step: 1 } }}
 					/>
 				</Grid>
-				<DatesFields
-					dated={dated}
-					repeat={repeat}
-					start={start}
-					end={end}
-					onDated={setDated}
-					onRepeat={setRepeat}
-					onStart={setStart}
-					onEnd={setEnd}
-				/>
+				<DatesFields control={control} dated={dated} repeat={repeat} start={start} />
 				{(!dated || repeat) && (
 					<Grid size={12}>
 						<FormControlLabel
-							control={<Switch checked={rollover} onChange={(_, v) => setRollover(v)} />}
+							control={
+								<Controller
+									name="rollover"
+									control={control}
+									render={({ field }) => (
+										<Switch checked={field.value} onChange={(_, on) => field.onChange(on)} />
+									)}
+								/>
+							}
 							label="Carry unspent money into the next period"
 						/>
 					</Grid>

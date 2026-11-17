@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import { getMarketRateFn } from "#/server/rates";
 import type { MarketRate } from "#/types/api";
 
@@ -26,16 +26,20 @@ export function useMarketRate({
 	to,
 	on,
 	enabled,
+	onFound,
 }: {
 	from: string;
 	to: string;
 	on: string;
 	enabled: boolean;
+	/** Called when a lookup finds a rate (not when one is dropped as stale). */
+	onFound?: (market: MarketRate) => void;
 }): MarketRateState {
 	const f = from.toUpperCase();
 	const valid = enabled && CODE.test(f) && CODE.test(to) && f !== to && DAY.test(on);
 	const key = `${f}>${to}@${on}`;
 	const [done, setDone] = useState<Done | null>(null);
+	const found = useEffectEvent((market: MarketRate) => onFound?.(market));
 
 	useEffect(() => {
 		if (!valid) return undefined;
@@ -43,6 +47,7 @@ export function useMarketRate({
 		const timer = setTimeout(async () => {
 			const res = await getMarketRateFn({ data: { from: f, to, on } });
 			if (stale) return;
+			if (res.ok) found(res.data);
 			setDone(
 				res.ok
 					? { key, market: res.data, status: "ok" }

@@ -1,10 +1,11 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Grid from "@mui/material/Grid";
 import MenuItem from "@mui/material/MenuItem";
 import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { useState } from "react";
+import { type Control, Controller, type UseFormSetValue, useForm, useWatch } from "react-hook-form";
 import { useSheet } from "#/lib/sheet";
 import {
 	installmentsFromField,
@@ -13,41 +14,33 @@ import {
 	remindToField,
 } from "#/lib/subscription";
 import { useAction } from "#/lib/use-action";
-import { getString } from "#/lib/utils";
 import { createSubscriptionFn, updateSubscriptionFn } from "#/server/subscriptions";
 import {
 	type Account,
 	type Category,
 	INTERVAL_UNITS,
-	type IntervalUnit,
 	PAYMENT_METHOD_LABELS,
 	PAYMENT_METHODS,
-	type PaymentMethod,
 	SUBSCRIPTION_STATUS_LABELS,
 	SUBSCRIPTION_STATUSES,
 	type Subscription,
-	type SubscriptionStatus,
 	type Vendor,
 } from "#/types/api";
 import CategoryField from "./CategoryField";
 import CurrencyField from "./CurrencyField";
 import FormDialog from "./FormDialog";
+import FormTextField from "./FormTextField";
 import { useNotify } from "./Notify";
 import RateField from "./RateField";
+import {
+	type SubscriptionFormInput,
+	type SubscriptionFormOutput,
+	subscriptionSchema,
+} from "./subscription-form";
 import { accountMenuItems } from "./transaction-form/accountMenuItems";
 import VendorField from "./VendorField";
 
-function isPaymentMethod(value: string): value is PaymentMethod {
-	return (PAYMENT_METHODS as readonly string[]).includes(value);
-}
-
-function isIntervalUnit(value: string): value is IntervalUnit {
-	return (INTERVAL_UNITS as readonly string[]).includes(value);
-}
-
-function isValidStatus(value: string): value is SubscriptionStatus {
-	return (SUBSCRIPTION_STATUSES as readonly string[]).includes(value);
-}
+type FormControl = Control<SubscriptionFormInput, unknown, SubscriptionFormOutput>;
 
 const today = () => {
 	const d = new Date();
@@ -65,50 +58,29 @@ function vendorChange(subscription: Subscription, vendorName: string) {
 	return vendorName ? { vendor_name: vendorName } : { vendor_id: null };
 }
 
-function readFields(f: FormData, account: Account | null, foreign: boolean) {
-	const text = (k: string) => getString(f, k).trim();
-
-	const paymentMethod = text("payment_method");
-	if (!isPaymentMethod(paymentMethod)) {
-		throw new Error(`Invalid payment method: ${paymentMethod}`);
-	}
-
-	const intervalUnit = text("interval_unit");
-	if (!isIntervalUnit(intervalUnit)) {
-		throw new Error(`Invalid interval unit: ${intervalUnit}`);
-	}
-
-	const status = text("status");
-	if (!isValidStatus(status)) {
-		throw new Error(`Invalid status: ${status}`);
-	}
-
-	return {
-		name: text("name"),
-		amount: text("amount"),
-		currency: account ? account.currency : text("currency").toUpperCase(),
-		exchange_rate: foreign ? text("exchange_rate") : undefined,
-		payment_method: paymentMethod,
-		category: text("category"),
-		interval_unit: intervalUnit,
-		interval_count: Number(text("interval_count")),
-		start_date: text("start_date"),
-		status: status,
-		installments_total: installmentsFromField(text("installments_total")),
-		remind_days_before: remindFromField(text("remind_days_before")),
-		amount_varies: f.get("amount_varies") === "on",
-	};
-}
-
 /** Creates the subscription, or sends only what changed on an existing one. */
 function save(
 	subscription: Subscription | undefined,
-	f: FormData,
+	v: SubscriptionFormOutput,
 	account: Account | null,
-	foreign: boolean,
+	baseCurrency: string,
 ) {
-	const base = readFields(f, account, foreign);
-	const vendorName = getString(f, "vendor").trim();
+	const currency = account ? account.currency : v.currency.toUpperCase();
+	const base = {
+		name: v.name,
+		amount: v.amount,
+		currency,
+		exchange_rate: !account && currency !== baseCurrency ? v.exchange_rate : undefined,
+		payment_method: v.payment_method,
+		category: v.category,
+		interval_unit: v.interval_unit,
+		interval_count: v.interval_count,
+		start_date: v.start_date,
+		status: v.status,
+		installments_total: installmentsFromField(v.installments_total),
+		remind_days_before: remindFromField(v.remind_days_before),
+		amount_varies: v.amount_varies,
+	};
 	if (subscription) {
 		return updateSubscriptionFn({
 			data: {
@@ -116,7 +88,7 @@ function save(
 				changes: {
 					...base,
 					...accountChange(subscription, account?.id ?? ""),
-					...vendorChange(subscription, vendorName),
+					...vendorChange(subscription, v.vendor),
 				},
 			},
 		});
@@ -125,42 +97,49 @@ function save(
 		data: {
 			...base,
 			...(account ? { account_id: account.id } : {}),
-			vendor_name: vendorName || undefined,
+			vendor_name: v.vendor || undefined,
 		},
 	});
 }
 
 function MoneyFields({
+	control,
+	setValue,
 	subscription,
 	accounts,
 	account,
-	onAccountChange,
 	currencies,
 	currency,
-	onCurrencyChange,
 	baseCurrency,
 	startDate,
 	foreign,
 }: {
+	control: FormControl;
+	setValue: UseFormSetValue<SubscriptionFormInput>;
 	subscription?: Subscription;
 	accounts: Account[];
 	account: Account | null;
-	onAccountChange: (id: string) => void;
 	currencies: string[];
 	currency: string;
-	onCurrencyChange: (currency: string) => void;
 	baseCurrency: string;
 	startDate: string;
 	foreign: boolean;
 }) {
+	/** A new currency starts its rate fresh (the saved one only for the subscription's own). */
+	function pickCurrency(typed: string) {
+		const code = typed.toUpperCase();
+		setValue("currency", code);
+		setValue("exchange_rate", subscription?.currency === code ? subscription.exchange_rate : "");
+	}
+
 	return (
 		<>
 			<Grid size={12}>
-				<TextField
+				<FormTextField
+					control={control}
+					name="account_id"
 					select
 					label="Pay from"
-					value={account?.id ?? ""}
-					onChange={(e) => onAccountChange(e.target.value)}
 					helperText={
 						account
 							? `Planned payments go in this account, in ${account.currency}`
@@ -169,14 +148,14 @@ function MoneyFields({
 				>
 					<MenuItem value="">None</MenuItem>
 					{accountMenuItems(accounts)}
-				</TextField>
+				</FormTextField>
 			</Grid>
 
 			<Grid size={{ xs: 12, sm: 6 }}>
-				<TextField
-					label="Cost per cycle"
+				<FormTextField
+					control={control}
 					name="amount"
-					defaultValue={subscription?.amount}
+					label="Cost per cycle"
 					placeholder="99.00"
 					helperText="Always a positive amount"
 					required
@@ -188,27 +167,41 @@ function MoneyFields({
 				{account ? (
 					<TextField key="currency-locked" label="Currency" value={account.currency} disabled />
 				) : (
-					<CurrencyField
-						key="currency-free"
+					<Controller
 						name="currency"
-						label="Currency"
-						currencies={currencies}
-						defaultValue={currency}
-						onInputChange={(v) => onCurrencyChange(v.toUpperCase())}
-						required
+						control={control}
+						render={({ field, fieldState }) => (
+							<CurrencyField
+								key="currency-free"
+								label="Currency"
+								currencies={currencies}
+								defaultValue={field.value}
+								onInputChange={pickCurrency}
+								error={fieldState.error?.message}
+								required
+							/>
+						)}
 					/>
 				)}
 			</Grid>
 
 			{foreign && (
 				<Grid size={12}>
-					<RateField
-						key={`rate-${currency}`}
-						from={currency}
-						to={baseCurrency}
-						on={startDate}
-						label={`Rate: 1 ${currency} = ? ${baseCurrency}`}
-						initial={subscription?.currency === currency ? subscription.exchange_rate : ""}
+					<Controller
+						name="exchange_rate"
+						control={control}
+						render={({ field, fieldState }) => (
+							<RateField
+								key={`rate-${currency}`}
+								from={currency}
+								to={baseCurrency}
+								on={startDate}
+								label={`Rate: 1 ${currency} = ? ${baseCurrency}`}
+								value={field.value}
+								onChange={field.onChange}
+								error={fieldState.error?.message}
+							/>
+						)}
 					/>
 				</Grid>
 			)}
@@ -217,17 +210,17 @@ function MoneyFields({
 }
 
 /** Status, the number of payments (for instalments) and the reminder. */
-function PlanFields({ subscription }: { subscription?: Subscription }) {
+function PlanFields({
+	control,
+	subscription,
+}: {
+	control: FormControl;
+	subscription?: Subscription;
+}) {
 	return (
 		<>
 			<Grid size={{ xs: 12, sm: 6 }}>
-				<TextField
-					select
-					label="Status"
-					name="status"
-					defaultValue={subscription?.status ?? "active"}
-					required
-				>
+				<FormTextField control={control} name="status" select label="Status" required>
 					{SUBSCRIPTION_STATUSES.filter(
 						// "Completed" happens by itself, when the last payment is made
 						(s) => s !== "completed" || subscription?.status === "completed",
@@ -236,13 +229,19 @@ function PlanFields({ subscription }: { subscription?: Subscription }) {
 							{SUBSCRIPTION_STATUS_LABELS[s]}
 						</MenuItem>
 					))}
-				</TextField>
+				</FormTextField>
 			</Grid>
 
 			<Grid size={12}>
 				<FormControlLabel
 					control={
-						<Switch name="amount_varies" defaultChecked={subscription?.amount_varies ?? false} />
+						<Controller
+							name="amount_varies"
+							control={control}
+							render={({ field }) => (
+								<Switch checked={field.value} onChange={(_, on) => field.onChange(on)} />
+							)}
+						/>
 					}
 					label="The amount changes from month to month"
 				/>
@@ -252,25 +251,22 @@ function PlanFields({ subscription }: { subscription?: Subscription }) {
 				</Typography>
 			</Grid>
 			<Grid size={{ xs: 12, sm: 6 }}>
-				<TextField
-					label="Number of payments"
+				<FormTextField
+					control={control}
 					name="installments_total"
+					label="Number of payments"
 					type="number"
-					defaultValue={subscription?.installments_total ?? ""}
 					placeholder="Goes on until you stop it"
 					helperText="For instalments: it completes after this many payments"
-					slotProps={{
-						htmlInput: { min: 1, max: 600 },
-						inputLabel: { shrink: true },
-					}}
+					slotProps={{ inputLabel: { shrink: true } }}
 				/>
 			</Grid>
 			<Grid size={{ xs: 12, sm: 6 }}>
-				<TextField
+				<FormTextField
+					control={control}
+					name="remind_days_before"
 					select
 					label="Remind me"
-					name="remind_days_before"
-					defaultValue={remindToField(subscription ? subscription.remind_days_before : 3)}
 					helperText="Overdue payments are always told"
 				>
 					{REMIND_OPTIONS.map((o) => (
@@ -278,7 +274,7 @@ function PlanFields({ subscription }: { subscription?: Subscription }) {
 							{o.label}
 						</MenuItem>
 					))}
-				</TextField>
+				</FormTextField>
 			</Grid>
 		</>
 	);
@@ -306,18 +302,41 @@ export default function SubscriptionForm({
 	const { run, pending, error } = useAction();
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
-	const [currency, setCurrency] = useState(subscription?.currency ?? baseCurrency);
-	// The first billing date: the exchange-rate suggestion follows it.
-	const [startDate, setStartDate] = useState(subscription?.start_date ?? today());
-	const [accountId, setAccountId] = useState(subscription?.account?.id ?? "");
+	const { control, handleSubmit, setValue } = useForm<
+		SubscriptionFormInput,
+		unknown,
+		SubscriptionFormOutput
+	>({
+		resolver: zodResolver(subscriptionSchema(baseCurrency)),
+		defaultValues: {
+			name: subscription?.name ?? "",
+			amount: subscription?.amount ?? "",
+			account_id: subscription?.account?.id ?? "",
+			currency: subscription?.currency ?? baseCurrency,
+			exchange_rate: subscription?.exchange_rate ?? "",
+			payment_method: subscription?.payment_method ?? "debit_card",
+			category: subscription?.category ?? "",
+			vendor: subscription?.vendor?.name ?? "",
+			interval_count: String(subscription?.interval_count ?? 1),
+			interval_unit: subscription?.interval_unit ?? "month",
+			start_date: subscription?.start_date ?? today(),
+			status: subscription?.status ?? "active",
+			installments_total: subscription?.installments_total?.toString() ?? "",
+			remind_days_before: remindToField(subscription ? subscription.remind_days_before : 3),
+			amount_varies: subscription?.amount_varies ?? false,
+		},
+	});
+	// The exchange-rate suggestion follows the first billing date.
+	const [accountId, currency, startDate] = useWatch({
+		control,
+		name: ["account_id", "currency", "start_date"],
+	});
 	const account = accounts.find((a) => a.id === accountId) ?? null;
 	// An account brings its own currency and rate, so nothing is typed for them.
 	const foreign = !account && currency.length === 3 && currency.toUpperCase() !== baseCurrency;
 
-	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
-		const f = new FormData(e.currentTarget);
-		const ok = await run(() => save(subscription, f, account, foreign));
+	async function submit(v: SubscriptionFormOutput) {
+		const ok = await run(() => save(subscription, v, account, baseCurrency));
 		if (ok) {
 			notify(subscription ? "Subscription updated" : "Subscription added");
 			sheet.close();
@@ -329,15 +348,16 @@ export default function SubscriptionForm({
 			title={subscription ? "Edit subscription" : "Add subscription"}
 			error={error}
 			pending={pending}
-			onSubmit={submit}
+			onSubmit={handleSubmit(submit)}
+			noValidate
 			sheet={sheet}
 		>
 			<Grid container spacing={2}>
 				<Grid size={12}>
-					<TextField
-						label="Name"
+					<FormTextField
+						control={control}
 						name="name"
-						defaultValue={subscription?.name}
+						label="Name"
 						placeholder="Netflix"
 						required
 						autoFocus
@@ -346,34 +366,33 @@ export default function SubscriptionForm({
 				</Grid>
 
 				<MoneyFields
+					control={control}
+					setValue={setValue}
 					subscription={subscription}
 					accounts={accounts}
 					account={account}
-					onAccountChange={setAccountId}
 					currencies={currencies}
 					currency={currency}
-					onCurrencyChange={setCurrency}
 					baseCurrency={baseCurrency}
 					startDate={startDate}
 					foreign={foreign}
 				/>
 
 				<Grid size={{ xs: 5, sm: 4 }}>
-					<TextField
-						label="Every"
+					<FormTextField
+						control={control}
 						name="interval_count"
+						label="Every"
 						type="number"
-						defaultValue={subscription?.interval_count ?? 1}
 						required
-						slotProps={{ htmlInput: { min: 1, max: 120 } }}
 					/>
 				</Grid>
 				<Grid size={{ xs: 7, sm: 8 }}>
-					<TextField
+					<FormTextField
+						control={control}
+						name="interval_unit"
 						select
 						label="Billing period"
-						name="interval_unit"
-						defaultValue={subscription?.interval_unit ?? "month"}
 						required
 					>
 						{INTERVAL_UNITS.map((u) => (
@@ -381,30 +400,29 @@ export default function SubscriptionForm({
 								{u[0].toUpperCase() + u.slice(1)}(s)
 							</MenuItem>
 						))}
-					</TextField>
+					</FormTextField>
 				</Grid>
 
 				<Grid size={{ xs: 12, sm: 6 }}>
-					<TextField
-						label="First billing date"
+					<FormTextField
+						control={control}
 						name="start_date"
+						label="First billing date"
 						type="date"
-						value={startDate}
-						onChange={(e) => setStartDate(e.target.value)}
 						helperText="Anchors the schedule, e.g. the 1st of each month"
 						required
 						slotProps={{ inputLabel: { shrink: true } }}
 					/>
 				</Grid>
 
-				<PlanFields subscription={subscription} />
+				<PlanFields control={control} subscription={subscription} />
 
 				<Grid size={{ xs: 12, sm: 6 }}>
-					<TextField
+					<FormTextField
+						control={control}
+						name="payment_method"
 						select
 						label="Payment method"
-						name="payment_method"
-						defaultValue={subscription?.payment_method ?? "debit_card"}
 						required
 					>
 						{PAYMENT_METHODS.map((m) => (
@@ -412,19 +430,37 @@ export default function SubscriptionForm({
 								{PAYMENT_METHOD_LABELS[m]}
 							</MenuItem>
 						))}
-					</TextField>
+					</FormTextField>
 				</Grid>
 
 				<Grid size={{ xs: 12, sm: 6 }}>
-					<CategoryField
-						categories={categories}
+					<Controller
 						name="category"
-						defaultValue={subscription?.category ?? ""}
+						control={control}
+						render={({ field, fieldState }) => (
+							<CategoryField
+								categories={categories}
+								defaultValue={field.value}
+								onValueChange={field.onChange}
+								error={fieldState.error?.message}
+							/>
+						)}
 					/>
 				</Grid>
 
 				<Grid size={12}>
-					<VendorField vendors={vendors} defaultValue={subscription?.vendor?.name ?? ""} />
+					<Controller
+						name="vendor"
+						control={control}
+						render={({ field, fieldState }) => (
+							<VendorField
+								vendors={vendors}
+								defaultValue={field.value}
+								onValueChange={field.onChange}
+								error={fieldState.error?.message}
+							/>
+						)}
+					/>
 				</Grid>
 			</Grid>
 		</FormDialog>

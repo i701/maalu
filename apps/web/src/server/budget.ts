@@ -3,8 +3,10 @@ import { z } from "zod";
 import type { Budget, BudgetMoveLogEntry } from "#/types/api";
 import { apiRequest } from "./api";
 
-const limit = z
+/** A positive limit, as the limit form sends it. */
+export const limit = z
 	.string()
+	.trim()
 	.regex(/^\d+(\.\d{1,4})?$/, "Enter a valid positive amount (max 4 decimals)")
 	.refine((v) => Number(v) > 0, "The limit must be greater than 0");
 const warnPercent = z.number().int().min(1).max(100);

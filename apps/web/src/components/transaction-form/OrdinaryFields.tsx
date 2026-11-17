@@ -16,7 +16,7 @@ import { isOneOf } from "#/lib/utils";
 import { cardText } from "#/lib/cards";
 import CategoryField from "../CategoryField";
 import CurrencyField from "../CurrencyField";
-import RateField from "../RateField";
+import NamedRateField from "./NamedRateField";
 import { Cell, RevealCell } from "./Cells";
 import SplitEditor from "./SplitEditor";
 import type { TransactionSeed } from "./request";
@@ -157,7 +157,7 @@ export default function OrdinaryFields({
 
 			<Cell size={{ xs: 12, sm: 6 }} fadeIn={switched}>
 				{foreign ? (
-					<RateField
+					<NamedRateField
 						key={`rate-${effectiveCurrency}`}
 						from={effectiveCurrency}
 						to={baseCurrency}
