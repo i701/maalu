@@ -31,7 +31,7 @@ export default function LoadingIndicator({
 	const groupRef = useRef<SVGGElement>(null);
 
 	useEffect(() => {
-		if (reduced) return;
+		if (reduced) return undefined;
 		let id = 0;
 		const tick = () => {
 			const f = frameAt(performance.now());

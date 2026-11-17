@@ -54,7 +54,7 @@ export function historyByPeriod(
 /** The limits money can come from for `lineId`: every other monthly limit, with what it has left
  * this period. One with nothing left is listed but can't be chosen. Most left first. */
 export function moveSources(
-	budget: Budget,
+	budget: Pick<Budget, "lines">,
 	lineId: string,
 ): { line: BudgetLine; left: string; usable: boolean }[] {
 	return budget.lines

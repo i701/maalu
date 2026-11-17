@@ -35,6 +35,8 @@ const searchSchema = z.object({
 // A rolling month is always a full month of days, unlike "this month" early on.
 const DEFAULT_PRESET = "last_30" as const;
 
+const DRIVER_HELP_BY_KEY = new Map<string, string>(Object.entries(DRIVER_HELP));
+
 export const Route = createFileRoute("/_protected/net-worth")({
 	validateSearch: searchSchema,
 	loaderDeps: ({ search }) => ({
@@ -105,10 +107,7 @@ function NetWorthPage() {
 		[data, signed],
 	);
 	const describe = useCallback(
-		(bar: { key: string }) =>
-			bar.key in DRIVER_HELP
-				? DRIVER_HELP[bar.key as keyof typeof DRIVER_HELP]
-				: "All of the above added up",
+		(bar: { key: string }) => DRIVER_HELP_BY_KEY.get(bar.key) ?? "All of the above added up",
 		[],
 	);
 

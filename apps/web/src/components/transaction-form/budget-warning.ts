@@ -1,6 +1,7 @@
 import { budgetWarning } from "#/lib/budget";
 import { getBudgetFn } from "#/server/budget";
 import type { TransactionType } from "#/types/api";
+import { getString } from "#/lib/utils";
 
 /** After an expense is saved: a sentence if it left a budget limit close or over, else null. Never
  * throws, because a failed lookup must not get in the way of a saved transaction. */
@@ -39,8 +40,8 @@ export async function messageAfterSave({
 	const warning =
 		type === "expense" && !planned
 			? await warningAfterExpense({
-					date: String(form.get("transaction_date") ?? ""),
-					categories: itemCategories ?? [String(form.get("category") ?? "")],
+					date: getString(form, "transaction_date"),
+					categories: itemCategories ?? [getString(form, "category")],
 				})
 			: null;
 	return warning

@@ -1,17 +1,9 @@
 import Box from "@mui/material/Box";
 import Slide, { type SlideProps } from "@mui/material/Slide";
-import type { TransitionProps } from "@mui/material/transitions";
 import Snackbar from "@mui/material/Snackbar";
 import SnackbarContent from "@mui/material/SnackbarContent";
-import Symbol from "./Symbol";
-import {
-	type ComponentType,
-	createContext,
-	type ReactNode,
-	useCallback,
-	useContext,
-	useState,
-} from "react";
+import { createContext, type ReactNode, useCallback, useContext, useState } from "react";
+import IconSymbol from "./Symbol";
 
 type Severity = "success" | "error" | "warning";
 type Notify = (message: string, severity?: Severity) => void;
@@ -22,7 +14,10 @@ function SlideUp(props: SlideProps) {
 		<Slide
 			{...props}
 			direction="up"
-			easing={{ enter: "var(--spring-spatial-default)", exit: "var(--ease-emph-accel)" }}
+			easing={{
+				enter: "var(--spring-spatial-default)",
+				exit: "var(--ease-emph-accel)",
+			}}
 		/>
 	);
 }
@@ -67,7 +62,7 @@ export function NotifyProvider({ children }: { children: ReactNode }) {
 					},
 				}}
 				// Enter and leave through the same bottom edge it is anchored to.
-				slots={{ transition: SlideUp as ComponentType<TransitionProps> }}
+				slots={{ transition: SlideUp }}
 				transitionDuration={{ enter: 484, exit: 200 }}
 			>
 				<SnackbarContent
@@ -75,7 +70,7 @@ export function NotifyProvider({ children }: { children: ReactNode }) {
 					// status icon.
 					message={
 						<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-							<Symbol
+							<IconSymbol
 								name={ICON[state.severity].name}
 								size={20}
 								filled

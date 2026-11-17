@@ -125,6 +125,10 @@ export default function SplitEditor({
 			setRows((all) => all.map((r) => (r.key === key ? { ...r, ...changes } : r))),
 		[setRows],
 	);
+	const pickMode = (value: string) => {
+		const picked = TAX_MODES.find((m) => m.value === value);
+		if (picked) setMode(picked.value);
+	};
 	const remove = useCallback(
 		(key: string) => setRows((all) => all.filter((r) => r.key !== key)),
 		[setRows],
@@ -135,12 +139,7 @@ export default function SplitEditor({
 		<Box sx={{ display: "grid", gap: 1.5, pb: 2 }}>
 			<Grid container spacing={1.5}>
 				<Grid size={{ xs: 12, sm: mode === "none" ? 12 : 8 }}>
-					<TextField
-						select
-						label="GST"
-						value={mode}
-						onChange={(e) => setMode(e.target.value as TaxMode)}
-					>
+					<TextField select label="GST" value={mode} onChange={(e) => pickMode(e.target.value)}>
 						{TAX_MODES.map((m) => (
 							<MenuItem key={m.value} value={m.value}>
 								{m.label}

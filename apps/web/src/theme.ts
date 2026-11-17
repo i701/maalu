@@ -1,7 +1,8 @@
+import type { Shadows } from "@mui/material";
 import { createTheme } from "@mui/material/styles";
 import { createElement } from "react";
 import LoadingIndicator from "#/components/LoadingIndicator";
-import { CHART_DARK, CHART_LIGHT, M3_DARK, M3_LIGHT, chartVars, colorVars } from "#/lib/m3";
+import { CHART_DARK, CHART_LIGHT, chartVars, colorVars, M3_DARK, M3_LIGHT } from "#/lib/m3";
 import { EASE_OUT } from "#/lib/motion";
 import { morph } from "#/lib/shape";
 
@@ -12,13 +13,26 @@ import { morph } from "#/lib/shape";
  * and corners come from the M3 shape scale (`--shape-*`).
  */
 
+const e3 = [
+	"var(--elev-3)",
+	"var(--elev-3)",
+	"var(--elev-3)",
+	"var(--elev-3)",
+	"var(--elev-3)",
+] as const;
+
 // MUI expects exactly 25 entries: index 0 is "no shadow". M3 keeps elevation light.
-const shadows = [
+const shadows: Shadows = [
 	"none",
 	"var(--elev-1)",
 	"var(--elev-2)",
-	...Array<string>(22).fill("var(--elev-3)"),
-] as unknown as NonNullable<Parameters<typeof createTheme>[0]>["shadows"];
+	...e3,
+	...e3,
+	...e3,
+	...e3,
+	"var(--elev-3)",
+	"var(--elev-3)",
+];
 
 const palette = (c: typeof M3_LIGHT) => ({
 	primary: { main: c.primary, contrastText: c.onPrimary },
@@ -49,13 +63,23 @@ const pressable = (hoverRadius: string, pressedRadius: string) =>
 		transition: `border-radius ${SPATIAL_FAST}, transform ${SPATIAL_FAST}, background-color ${EFFECTS_FAST}, box-shadow ${EFFECTS_FAST}, border-color ${EFFECTS_FAST}`,
 		// the shape morph (lib/shape.ts): less rounded under the pointer or keyboard focus, and
 		// squarer still while held
-		"@media (hover: hover) and (pointer: fine)": { "&:hover": { borderRadius: hoverRadius } },
+		"@media (hover: hover) and (pointer: fine)": {
+			"&:hover": { borderRadius: hoverRadius },
+		},
 		"&:focus-visible": { borderRadius: hoverRadius },
-		"&:active": { borderRadius: pressedRadius, transform: "scale(.97)", transitionDelay: ".11s" },
+		"&:active": {
+			borderRadius: pressedRadius,
+			transform: "scale(.97)",
+			transitionDelay: ".11s",
+		},
 		// No springing shapes or scaling for people who ask for less motion; colour still eases.
 		"@media (prefers-reduced-motion: reduce)": {
 			transition: "background-color 100ms linear, box-shadow 100ms linear",
-			"&:active": { borderRadius: "inherit", transform: "none", transitionDelay: "0s" },
+			"&:active": {
+				borderRadius: "inherit",
+				transform: "none",
+				transitionDelay: "0s",
+			},
 		},
 	}) as const;
 
@@ -78,7 +102,12 @@ const theme = createTheme({
 		fontFamily: '"Inter Variable", system-ui, sans-serif',
 		h1: { fontSize: "1.75rem", lineHeight: "34px", fontWeight: 400 }, // headline-md
 		h2: { fontSize: "1.375rem", lineHeight: "28px", fontWeight: 500 }, // title-lg
-		subtitle1: { fontSize: "1rem", lineHeight: "22px", fontWeight: 500, letterSpacing: "0.005em" }, // title-md
+		subtitle1: {
+			fontSize: "1rem",
+			lineHeight: "22px",
+			fontWeight: 500,
+			letterSpacing: "0.005em",
+		}, // title-md
 		subtitle2: {
 			fontSize: "0.875rem",
 			lineHeight: "20px",
@@ -86,8 +115,18 @@ const theme = createTheme({
 			letterSpacing: "0.005em",
 		}, // title-sm
 		body1: { fontSize: "1rem", lineHeight: "23px", fontWeight: 400 }, // body-lg
-		body2: { fontSize: "0.875rem", lineHeight: "20px", fontWeight: 400, letterSpacing: "0.01em" }, // body-md
-		caption: { fontSize: "0.75rem", lineHeight: "16px", fontWeight: 400, letterSpacing: "0.02em" }, // body-sm
+		body2: {
+			fontSize: "0.875rem",
+			lineHeight: "20px",
+			fontWeight: 400,
+			letterSpacing: "0.01em",
+		}, // body-md
+		caption: {
+			fontSize: "0.75rem",
+			lineHeight: "16px",
+			fontWeight: 400,
+			letterSpacing: "0.02em",
+		}, // body-sm
 		button: {
 			fontSize: "0.875rem",
 			lineHeight: "20px",
@@ -142,7 +181,9 @@ const theme = createTheme({
 		},
 		// No fade on the placeholder: with the label inside the field it must be gone at once, not
 		// linger over the label for a moment after load.
-		MuiInputBase: { styleOverrides: { input: { "&::placeholder": { transition: "none" } } } },
+		MuiInputBase: {
+			styleOverrides: { input: { "&::placeholder": { transition: "none" } } },
+		},
 		// Segmented toggle: tiny gaps, soft 6px inner corners and fully round outer ones; the selected
 		// segment springs to a full pill in the secondary container (or its colour, if it has one).
 		MuiToggleButtonGroup: {
@@ -222,7 +263,9 @@ const theme = createTheme({
 		// 16px gutter on narrow screens, and scroll inside themselves.
 		MuiDialog: {
 			styleOverrides: {
-				root: { "& .MuiBackdrop-root": { backgroundColor: "rgb(0 0 0 / 0.32)" } },
+				root: {
+					"& .MuiBackdrop-root": { backgroundColor: "rgb(0 0 0 / 0.32)" },
+				},
 				paper: {
 					margin: 16,
 					width: "calc(100% - 32px)",
@@ -286,7 +329,10 @@ const theme = createTheme({
 		MuiButton: {
 			defaultProps: {
 				disableElevation: true,
-				loadingIndicator: createElement(LoadingIndicator, { size: 24, color: "inherit" }),
+				loadingIndicator: createElement(LoadingIndicator, {
+					size: 24,
+					color: "inherit",
+				}),
 			},
 			styleOverrides: {
 				// A pill rests at half its height, not at "fully round" (999px), so the corners start

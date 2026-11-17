@@ -1,7 +1,8 @@
 import TextField from "@mui/material/TextField";
-import { type FormEvent, useState } from "react";
+import { type SubmitEvent, useState } from "react";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
+import { getString } from "#/lib/utils";
 import { changePasswordFn } from "#/server/auth";
 import FormDialog from "./FormDialog";
 import { useNotify } from "./Notify";
@@ -21,18 +22,18 @@ export default function ChangePasswordDialog({
 	const notify = useNotify();
 	const [localError, setLocalError] = useState<string | null>(null);
 
-	async function submit(e: FormEvent<HTMLFormElement>) {
+	async function submit(e: SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		const f = new FormData(e.currentTarget);
-		const next = String(f.get("new_password"));
-		if (next !== String(f.get("confirm_password")))
+		const next = getString(f, "new_password");
+		if (next !== getString(f, "confirm_password"))
 			return setLocalError("The new passwords are not the same");
 		setLocalError(null);
-		const code = String(f.get("code") ?? "").trim();
+		const code = getString(f, "code").trim();
 		const done = await run(() =>
 			changePasswordFn({
 				data: {
-					current_password: String(f.get("current_password")),
+					current_password: getString(f, "current_password"),
 					new_password: next,
 					...(twoFactor ? { code } : {}),
 				},

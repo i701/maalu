@@ -1,22 +1,34 @@
 import { describe, expect, it } from "vitest";
 import type { Transaction } from "#/types/api";
+import { accountRef as account, makeTransaction } from "#/test/fixtures";
 import { daysApartText, linkablePair } from "./transfer-link";
 
-const tx = (over: Partial<Transaction>) =>
-	({
-		id: "x",
-		type: "expense",
-		account: { id: "bml" },
-		planned: false,
-		adjustment: false,
-		splits: [],
-		refunded_amount: "0.0000",
-		refund_of: null,
-		...over,
-	}) as unknown as Transaction;
+const split = (id: string): Transaction["splits"][number] => ({
+	id,
+	amount: "10.0000",
+	category: "",
+	category_color: "",
+	category_id: "",
+	name: "",
+	quantity: "1",
+	refund_of_split_id: null,
+	refunded_amount: "0.0000",
+	tax_amount: null,
+});
 
-const out = tx({ id: "out", type: "expense", account: { id: "bml" } as Transaction["account"] });
-const inn = tx({ id: "in", type: "income", account: { id: "mib" } as Transaction["account"] });
+const refundOf = (id: string): NonNullable<Transaction["refund_of"]> => ({
+	id,
+	amount: "10.0000",
+	category: "",
+	currency: "MVR",
+	transaction_date: "2026-11-13",
+	vendor_name: null,
+});
+
+const tx = (over: Partial<Transaction>): Transaction => makeTransaction({ id: "x", ...over });
+
+const out = tx({ id: "out", type: "expense", account: account("bml") });
+const inn = tx({ id: "in", type: "income", account: account("mib") });
 
 describe("linkablePair", () => {
 	it("is the expense and the income in different accounts, whichever order they were picked", () => {
@@ -37,20 +49,18 @@ describe("linkablePair", () => {
 	});
 
 	it("needs different accounts, both set", () => {
-		const same = tx({ id: "i3", type: "income", account: { id: "bml" } as Transaction["account"] });
+		const same = tx({ id: "i3", type: "income", account: account("bml") });
 		expect(linkablePair([out, same])).toBeNull();
-		expect(linkablePair([out, tx({ id: "i4", type: "income", account: null })])).toBeNull();
+		expect(linkablePair([out, { ...inn, id: "i4", account: null }])).toBeNull();
 	});
 
 	it("leaves out what cannot become a transfer", () => {
-		const items = tx({ ...out, id: "o3", splits: [{ id: "s" }] as Transaction["splits"] });
+		const items = tx({ ...out, id: "o3", splits: [split("s")] });
 		expect(linkablePair([items, inn])).toBeNull();
 		expect(linkablePair([tx({ ...out, refunded_amount: "5.0000" }), inn])).toBeNull();
 		expect(linkablePair([tx({ ...out, planned: true }), inn])).toBeNull();
 		expect(linkablePair([out, tx({ ...inn, adjustment: true })])).toBeNull();
-		expect(
-			linkablePair([out, tx({ ...inn, refund_of: { id: "p" } as Transaction["refund_of"] })]),
-		).toBeNull();
+		expect(linkablePair([out, tx({ ...inn, refund_of: refundOf("p") })])).toBeNull();
 	});
 });
 

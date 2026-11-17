@@ -2,9 +2,10 @@ import Grid from "@mui/material/Grid";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import { useState } from "react";
-import { placeOf, placePayload, type PlaceValue } from "#/lib/places";
+import { type PlaceValue, placeOf, placePayload } from "#/lib/places";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
+import { getString } from "#/lib/utils";
 import { createVendorFn, updateVendorFn } from "#/server/vendors";
 import type { Category, Tag, Vendor } from "#/types/api";
 import CategoryField from "./CategoryField";
@@ -34,10 +35,10 @@ export default function VendorForm({
 	const notify = useNotify();
 	const [location, setLocation] = useState<PlaceValue | null>(vendor ? placeOf(vendor) : null);
 
-	async function submit(e: React.FormEvent<HTMLFormElement>) {
+	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		const f = new FormData(e.currentTarget);
-		const text = (k: string) => String(f.get(k) ?? "").trim();
+		const text = (k: string) => getString(f, k).trim();
 		const local = text("is_local");
 
 		const fields = {

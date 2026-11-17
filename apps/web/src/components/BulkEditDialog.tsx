@@ -1,17 +1,17 @@
 import Grid from "@mui/material/Grid";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
-import { type FormEvent, useState } from "react";
+import { type SubmitEvent, useState } from "react";
 import { bulkMessage, transactionCount } from "#/lib/bulk-message";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
+import { getString, isOneOf } from "#/lib/utils";
 import { bulkUpdateFn } from "#/server/transactions";
 import {
-	PAYMENT_METHODS,
-	PAYMENT_METHOD_LABELS,
 	type BulkResult,
 	type Category,
-	type PaymentMethod,
+	PAYMENT_METHOD_LABELS,
+	PAYMENT_METHODS,
 	type Tag,
 	type Vendor,
 } from "#/types/api";
@@ -44,15 +44,16 @@ export default function BulkEditDialog({
 	const notify = useNotify();
 	const [localError, setLocalError] = useState<string | null>(null);
 
-	async function submit(e: FormEvent<HTMLFormElement>) {
+	async function submit(e: SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		const f = new FormData(e.currentTarget);
-		const text = (k: string) => String(f.get(k) ?? "").trim();
+		const text = (k: string) => getString(f, k).trim();
 		const names = (k: string) => f.getAll(k).map(String);
+		const method = text("payment_method");
 		const change = {
 			category: text("category") || undefined,
 			vendor_name: text("vendor") || undefined,
-			payment_method: (text("payment_method") || undefined) as PaymentMethod | undefined,
+			payment_method: isOneOf(method, PAYMENT_METHODS) ? method : undefined,
 			add_tags: names("add_tags").length > 0 ? names("add_tags") : undefined,
 			remove_tags: names("remove_tags").length > 0 ? names("remove_tags") : undefined,
 		};

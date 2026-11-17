@@ -51,6 +51,8 @@ export function spreadLabels(centers: number[], gap: number, min: number, max: n
 			placed[k] = Math.min(placed[k], placed[k + 1] - gap);
 	}
 	const out = Array.from({ length: centers.length }, () => 0);
-	order.forEach(({ i }, k) => (out[i] = placed[k]));
+	order.forEach(({ i }, k) => {
+		out[i] = placed[k];
+	});
 	return out;
 }

@@ -5,6 +5,7 @@ import { createTagFn, renameTagFn } from "#/server/tags";
 import type { Tag } from "#/types/api";
 import FormDialog from "./FormDialog";
 import { useNotify } from "./Notify";
+import { getString } from "#/lib/utils";
 
 /** Add a tag, or rename one (every transaction and template with it follows). */
 export default function TagForm({ tag, onClose }: { tag?: Tag; onClose: () => void }) {
@@ -12,9 +13,9 @@ export default function TagForm({ tag, onClose }: { tag?: Tag; onClose: () => vo
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
 
-	async function submit(e: React.FormEvent<HTMLFormElement>) {
+	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
-		const name = String(new FormData(e.currentTarget).get("name") ?? "").trim();
+		const name = getString(new FormData(e.currentTarget), "name").trim();
 		const ok = await run(() =>
 			tag ? renameTagFn({ data: { id: tag.id, name } }) : createTagFn({ data: { name } }),
 		);

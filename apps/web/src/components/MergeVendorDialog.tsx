@@ -29,13 +29,17 @@ export default function MergeVendorDialog({
 			return res.ok
 				? res.data
 						.filter((v) => v.id !== vendor.id)
-						.map((v) => ({ id: v.id, label: v.name, hint: v.currency ?? undefined }))
+						.map((v) => ({
+							id: v.id,
+							label: v.name,
+							hint: v.currency ?? undefined,
+						}))
 				: [];
 		},
 		[vendor.id],
 	);
 
-	async function submit(e: React.FormEvent<HTMLFormElement>) {
+	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		if (!target) return;
 		if (await run(() => mergeVendorFn({ data: { id: vendor.id, into_id: target.id } }))) {

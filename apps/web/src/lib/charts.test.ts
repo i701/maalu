@@ -39,7 +39,9 @@ describe("niceTicks", () => {
 	it("gives clean values for a small range", () => {
 		expect(niceTicks(0, 1, 4)).toEqual([0, 0.5, 1]);
 		const fifths = niceTicks(0, 1, 5);
-		[0, 0.2, 0.4, 0.6, 0.8, 1].forEach((want, i) => expect(fifths[i]).toBeCloseTo(want));
+		[0, 0.2, 0.4, 0.6, 0.8, 1].forEach((want, i) => {
+			expect(fifths[i]).toBeCloseTo(want);
+		});
 		expect(fifths).toHaveLength(6);
 	});
 });

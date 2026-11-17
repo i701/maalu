@@ -44,10 +44,10 @@ export function sparkline(
 	});
 	const points = clean.map(point);
 	const line = points.map((p, i) => `${i === 0 ? "M" : "L"}${fmt(p.x)} ${fmt(p.y)}`).join(" ");
-	const last = points.at(-1) as { x: number; y: number };
-	const first = points[0] as { x: number; y: number };
+	const last = points[points.length - 1];
+	const first = points[0];
 	const area = `${line} L${fmt(last.x)} ${height} L${fmt(first.x)} ${height} Z`;
-	const change = (clean.at(-1) as number) - (clean[0] as number);
+	const change = clean[clean.length - 1] - clean[0];
 	return {
 		line,
 		area,

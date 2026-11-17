@@ -2,20 +2,38 @@ import { useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import type { ApiResult } from "#/types/api";
 
+type ZodIssueLike = {
+	path?: (string | number)[];
+	message?: string;
+};
+
+function isZodIssueLike(value: Record<string, unknown>): value is ZodIssueLike {
+	if (typeof value !== "object" || value === null) return false;
+	const { path, message } = value;
+
+	const hasValidMessage = message === undefined || typeof message === "string";
+	const hasValidPath =
+		path === undefined ||
+		(Array.isArray(path) &&
+			path.every((item) => typeof item === "string" || typeof item === "number"));
+
+	return hasValidMessage && hasValidPath;
+}
+
 /** Server functions reject bad input with a ZodError whose message is a JSON list of issues.
  * Turn that into "amount: Amount must be greater than 0" instead of showing raw JSON. */
 export function friendlyError(error: unknown): string {
 	if (!(error instanceof Error)) return "Something went wrong";
 	if (error.message.trimStart().startsWith("[")) {
 		try {
-			const issues = JSON.parse(error.message) as {
-				path?: (string | number)[];
-				message?: string;
-			}[];
-			const lines = issues
-				.filter((i) => i.message)
-				.map((i) => (i.path?.length ? `${i.path.join(".")}: ${i.message}` : i.message));
-			if (lines.length) return lines.join("; ");
+			const parsed: unknown = JSON.parse(error.message);
+			if (Array.isArray(parsed)) {
+				const lines = parsed
+					.filter(isZodIssueLike)
+					.filter((i): i is ZodIssueLike & { message: string } => typeof i.message === "string")
+					.map((i) => (i.path?.length ? `${i.path.join(".")}: ${i.message}` : i.message));
+				if (lines.length) return lines.join("; ");
+			}
 		} catch {
 			// not JSON after all: fall through to the plain message
 		}

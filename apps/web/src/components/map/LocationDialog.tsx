@@ -61,7 +61,7 @@ export default function LocationDialog({
 	}, []);
 
 	useEffect(() => {
-		if (!map) return;
+		if (!map) return undefined;
 		const onClick = (e: { latlng: { lat: number; lng: number } }) =>
 			drop(e.latlng.lat, e.latlng.lng);
 		map.on("click", onClick);
@@ -71,7 +71,7 @@ export default function LocationDialog({
 	}, [map, drop]);
 
 	useEffect(() => {
-		if (!map || !L || !point) return;
+		if (!map || !L || !point) return undefined;
 		const marker = L.marker([point.lat, point.lng], {
 			draggable: true,
 			icon: L.divIcon({ className: "", html: '<div class="maalu-pin"></div>', iconSize: [0, 0] }),

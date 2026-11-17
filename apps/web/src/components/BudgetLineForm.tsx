@@ -1,17 +1,18 @@
 import Autocomplete from "@mui/material/Autocomplete";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Grid from "@mui/material/Grid";
+import MenuItem from "@mui/material/MenuItem";
 import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import { useMemo, useState } from "react";
+import { datesOverlap, nextStretch } from "#/lib/budget";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
 import { createBudgetLineFn, updateBudgetLineFn } from "#/server/budget";
-import { datesOverlap, nextStretch } from "#/lib/budget";
-import MenuItem from "@mui/material/MenuItem";
 import type { Budget, BudgetFixedLine, BudgetLine, Category } from "#/types/api";
 import FormDialog from "./FormDialog";
 import { useNotify } from "./Notify";
+import { getString } from "#/lib/utils";
 
 const isDated = (l?: BudgetLine): l is BudgetFixedLine => Boolean(l && "end_date" in l);
 /** A per-period limit that only runs between two dates. */
@@ -69,7 +70,10 @@ function DatesFields({
 									? "Inclusive. Whole periods count, so the dates snap to them"
 									: "Inclusive. The limit is one total for the whole stretch"
 							}
-							slotProps={{ inputLabel: { shrink: true }, htmlInput: { min: start || undefined } }}
+							slotProps={{
+								inputLabel: { shrink: true },
+								htmlInput: { min: start || undefined },
+							}}
 						/>
 					</Grid>
 					<Grid size={12}>
@@ -145,14 +149,14 @@ export default function BudgetLineForm({
 		return map;
 	}, [budget.lines, budget.fixed_lines, line?.id, dated, repeat, start, end]);
 
-	async function submit(e: React.FormEvent<HTMLFormElement>) {
+	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		if (chosen.length === 0) return setLocalError("Choose at least one category");
 		if (dated && (!start || !end)) return setLocalError("Choose the first and last day");
 		if (dated && end < start) return setLocalError("The last day can't be before the first");
 		setLocalError(null);
 		const f = new FormData(e.currentTarget);
-		const text = (k: string) => String(f.get(k) ?? "").trim();
+		const text = (k: string) => getString(f, k).trim();
 		const warn = text("warn_percent");
 		const fields = {
 			name: text("name"),
@@ -176,7 +180,11 @@ export default function BudgetLineForm({
 						},
 					})
 				: createBudgetLineFn({
-						data: { ...fields, ...dates, warn_percent: warn ? Number(warn) : undefined },
+						data: {
+							...fields,
+							...dates,
+							warn_percent: warn ? Number(warn) : undefined,
+						},
 					}),
 		);
 		if (ok) {

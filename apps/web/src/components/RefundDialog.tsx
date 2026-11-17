@@ -1,16 +1,17 @@
 import Typography from "@mui/material/Typography";
-import { type FormEvent, useState } from "react";
+import { type SubmitEvent, useState } from "react";
 import { sumDecimals } from "#/lib/format";
 import {
 	amountLeft,
 	itemsOfRefund,
 	itemsToPick,
+	type RefundItem,
 	refundContext,
 	refundLines,
-	type RefundItem,
 } from "#/lib/refund";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
+import { getString } from "#/lib/utils";
 import { createTransactionFn, updateTransactionFn } from "#/server/transactions";
 import type { Account, Transaction } from "#/types/api";
 import FormDialog from "./FormDialog";
@@ -18,7 +19,7 @@ import { useNotify } from "./Notify";
 import RefundAmount from "./RefundAmount";
 import RefundDetails from "./RefundDetails";
 
-const text = (f: FormData, key: string) => String(f.get(key) ?? "").trim();
+const text = (f: FormData, key: string) => getString(f, key).trim();
 
 /**
  * Giving money back for a purchase: pass the `purchase` for a new refund, or the `refund` to change
@@ -59,7 +60,7 @@ export default function RefundDialog({
 	const total = hasItems ? sumDecimals(ticked.map((i) => i.amount || "0")) : null;
 	const left = purchase ? amountLeft(purchase.amount, purchase.refunded_amount) : undefined;
 
-	async function submit(e: FormEvent<HTMLFormElement>) {
+	async function submit(e: SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		const f = new FormData(e.currentTarget);
 		if (hasItems && ticked.length === 0) return setLocalError("Choose at least one item");

@@ -74,7 +74,7 @@ export function commitRows(rows: ReviewRow[]): CommitRow[] {
 		date: r.date,
 		time: r.time ?? null,
 		type: r.type,
-		amount: String(r.amount),
+		amount: r.amount,
 		description: r.description || null,
 		reference: r.reference ?? null,
 		counterparty: r.counterparty,
@@ -89,13 +89,20 @@ export function commitRows(rows: ReviewRow[]): CommitRow[] {
 }
 
 /** The account whose number appears in a statement's file name (BML names the file after it). */
-export function accountForFilename(accounts: Account[], filename: string): Account | null {
+export function accountForFilename<A extends Pick<Account, "account_number">>(
+	accounts: A[],
+	filename: string,
+): A | null {
 	const name = filename.replace(/[\s-]/g, "").toUpperCase();
 	const found = accounts
-		.filter((a) => a.account_number)
-		.filter((a) => name.includes(a.account_number!.replace(/[\s-]/g, "").toUpperCase()))
-		.toSorted((a, b) => b.account_number!.length - a.account_number!.length);
-	return found[0] ?? null;
+		.flatMap((account) => {
+			if (!account.account_number) return [];
+			const normalized = account.account_number.replace(/[\s-]/g, "").toUpperCase();
+			return name.includes(normalized) ? [{ account, length: normalized.length }] : [];
+		})
+		.toSorted((a, b) => b.length - a.length);
+
+	return found[0]?.account ?? null;
 }
 
 export type Counts = {

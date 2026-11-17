@@ -6,9 +6,16 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
 /** Below zero: the bills and set-asides come to more than the accounts hold. */
 export const isShort = (a: Pick<AvailableToSpend, "available">): boolean => Number(a.available) < 0;
 
+/** What the sentence reads: the totals, and only how many of each list there are. */
+type Working = Pick<
+	AvailableToSpend,
+	"currency" | "balance" | "bills_total" | "card_payments_total" | "reserved_total"
+> &
+	Record<"accounts" | "bills" | "card_payments" | "reserved", readonly unknown[]>;
+
 /** The sum in words, so the number can be checked at a glance:
  * "MVR 5,200.00 in 2 accounts, less MVR 420.00 for 2 bills and MVR 1,000.00 set aside for 1 goal". */
-export function workingLine(a: AvailableToSpend): string {
+export function workingLine(a: Working): string {
 	const money = (v: string) => formatMoney(v, a.currency);
 	const parts = [`${money(a.balance)} in ${plural(a.accounts.length, "account", "accounts")}`];
 	const less: string[] = [];
@@ -26,5 +33,4 @@ export function workingLine(a: AvailableToSpend): string {
 }
 
 /** Whether there is anything to say beyond the number (an empty account shows a short prompt). */
-export const hasAccounts = (a: Pick<AvailableToSpend, "accounts">): boolean =>
-	a.accounts.length > 0;
+export const hasAccounts = (a: { accounts: readonly unknown[] }): boolean => a.accounts.length > 0;

@@ -2,10 +2,10 @@ import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import { useState } from "react";
-import { parentChoices } from "#/lib/categories";
-import type { Accent } from "#/lib/m3";
+import { ACCENT_NAMES, parentChoices } from "#/lib/categories";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
+import { getString, isOneOf } from "#/lib/utils";
 import { createCategoryFn, updateCategoryFn } from "#/server/categories";
 import {
 	CATEGORY_KIND_LABELS,
@@ -39,12 +39,13 @@ export default function CategoryForm({
 	const [kind, setKind] = useState<CategoryKind | "">(category?.kind ?? "");
 	const parents = parentChoices(categories, category);
 
-	async function submit(e: React.FormEvent<HTMLFormElement>) {
+	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
-		const name = String(new FormData(e.currentTarget).get("name") ?? "").trim();
+		const f = new FormData(e.currentTarget);
+		const name = getString(f, "name").trim();
 		const fields = {
 			name: category?.is_salary ? category.name : name,
-			...(color ? { color: color as Accent } : {}),
+			...(isOneOf(color, ACCENT_NAMES) ? { color } : {}),
 			parent_id: parentId || null,
 			kind: kind || null,
 		};
@@ -112,7 +113,7 @@ export default function CategoryForm({
 					fullWidth
 					label="Need or want"
 					value={kind}
-					onChange={(e) => setKind(e.target.value as CategoryKind | "")}
+					onChange={(e) => setKind(isOneOf(e.target.value, CATEGORY_KINDS) ? e.target.value : "")}
 					helperText="Spending here counts as a need or a want in your reports. A sub-category with none takes its parent's"
 				>
 					<MenuItem value="">Not sorted</MenuItem>

@@ -1,8 +1,10 @@
+const isDecimal = (s: string): s is Intl.StringNumericLiteral => /^-?\d+(\.\d+)?$/.test(s);
+
 /** Display only. Amounts stay decimal strings everywhere else. */
 function fullMoney(amount: string, currency: string): string {
 	try {
 		return new Intl.NumberFormat("en", { style: "currency", currency }).format(
-			amount as unknown as number, // Intl accepts decimal strings and keeps them exact
+			isDecimal(amount) ? amount : Number(amount), // Intl keeps a decimal string exact
 		);
 	} catch {
 		return `${amount} ${currency}`;

@@ -1,13 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { AvailableToSpend } from "#/types/api";
+import type { PlanInput } from "./plan";
 import { dayLabel, firstShortRow, planDays, startingPoint } from "./plan";
 
-const bill = (
-	id: string,
-	date: string,
-	amount: string,
-	over: Partial<AvailableToSpend["bills"][number]> = {},
-) => ({
+type Bill = AvailableToSpend["bills"][number];
+type CardPayment = NonNullable<PlanInput["card_payments"]>[number];
+
+const bill = (id: string, date: string, amount: string, over: Partial<Bill> = {}): Bill => ({
 	id,
 	title: id,
 	date,
@@ -20,16 +19,13 @@ const bill = (
 	...over,
 });
 
-const plan = (over: Partial<AvailableToSpend> = {}): AvailableToSpend =>
-	({
-		currency: "MVR",
-		today: "2026-11-05",
-		balance: "1000.0000",
-		reserved_total: "200.0000",
-		bills: [],
-		expected: [],
-		...over,
-	}) as AvailableToSpend;
+const plan = (over: Partial<PlanInput> = {}): PlanInput => ({
+	balance: "1000.0000",
+	reserved_total: "200.0000",
+	bills: [],
+	expected: [],
+	...over,
+});
 
 describe("startingPoint", () => {
 	it("is what the accounts hold less what is set aside, exactly", () => {
@@ -56,7 +52,7 @@ describe("planDays with planned transfers", () => {
 	});
 });
 
-const statement = (over = {}) => ({
+const statement = (over: Partial<CardPayment> = {}): CardPayment => ({
 	account_id: "visa",
 	title: "Visa",
 	date: "2026-11-09",
@@ -173,7 +169,12 @@ describe("planDays", () => {
 	});
 });
 
-const day = (date: string | null) => ({ key: date ?? "overdue", overdue: !date, date, rows: [] });
+const day = (date: string | null) => ({
+	key: date ?? "overdue",
+	overdue: !date,
+	date,
+	rows: [],
+});
 
 describe("dayLabel", () => {
 	it("says overdue, today and tomorrow in words", () => {

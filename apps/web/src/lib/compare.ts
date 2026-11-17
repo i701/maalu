@@ -1,6 +1,7 @@
 import type { CategoryTotal } from "#/types/api";
 import { monthBounds, monthLabel, percentChange, shiftMonth } from "./dashboard";
 import { formatDate, sumDecimals } from "./format";
+import { exhaustiveAssertion } from "./utils";
 
 export const PRESETS = ["this_month", "last_month", "last_30", "this_year", "custom"] as const;
 export type Preset = (typeof PRESETS)[number];
@@ -92,6 +93,8 @@ export function periodsFor(
 				before: { from: beforeFrom, to: beforeTo, label: describeRange(beforeFrom, beforeTo) },
 			};
 		}
+		default:
+			return exhaustiveAssertion(preset);
 	}
 }
 

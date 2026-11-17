@@ -2,10 +2,11 @@ import Grid from "@mui/material/Grid";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { useState, type FormEvent } from "react";
+import { type SubmitEvent, useState } from "react";
 import { canRepayFrom } from "#/lib/cards";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
+import { getString } from "#/lib/utils";
 import { createCardFn, updateCardFn } from "#/server/cards";
 import type { Account, Card } from "#/types/api";
 import FormDialog from "./FormDialog";
@@ -38,11 +39,11 @@ export default function CardDialog({
 		(a) => a.id !== account.id && a.archived_at === null && canRepayFrom(a.group),
 	);
 
-	async function submit(e: FormEvent<HTMLFormElement>) {
+	async function submit(e: SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		const f = new FormData(e.currentTarget);
-		const name = String(f.get("name") ?? "").trim();
-		const digits = String(f.get("last_digits") ?? "").trim();
+		const name = getString(f, "name").trim();
+		const digits = getString(f, "last_digits").trim();
 		const ok = await run(() =>
 			card
 				? updateCardFn({
@@ -105,7 +106,13 @@ export default function CardDialog({
 						name="last_digits"
 						defaultValue={card?.last_digits ?? ""}
 						placeholder="2815"
-						slotProps={{ htmlInput: { inputMode: "numeric", maxLength: 4, pattern: "\\d{4}|" } }}
+						slotProps={{
+							htmlInput: {
+								inputMode: "numeric",
+								maxLength: 4,
+								pattern: "\\d{4}|",
+							},
+						}}
 					/>
 				</Grid>
 				{credit && (

@@ -2,19 +2,15 @@ import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { type FormEvent } from "react";
+import type { SubmitEvent } from "react";
 import { formatDate, formatMoney } from "#/lib/format";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
 import { acceptSubscriptionCandidateFn } from "#/server/subscriptions";
-import {
-	INTERVAL_UNIT_LABELS,
-	INTERVAL_UNITS,
-	type IntervalUnit,
-	type SubscriptionCandidate,
-} from "#/types/api";
+import { INTERVAL_UNIT_LABELS, INTERVAL_UNITS, type SubscriptionCandidate } from "#/types/api";
 import FormDialog from "./FormDialog";
 import { useNotify } from "./Notify";
+import { getString, isOneOf } from "#/lib/utils";
 
 /** The confirm step for a suggested subscription: what it will hold, ready to change before it is
  * made. Making it links the payments already made, so the next one is planned in their place. */
@@ -29,18 +25,20 @@ export default function AcceptSuggestionDialog({
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
 
-	async function submit(e: FormEvent<HTMLFormElement>) {
+	async function submit(e: SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		const form = new FormData(e.currentTarget);
-		const name = String(form.get("name") ?? "").trim();
+		const name = getString(form, "name").trim();
+		const unit = getString(form, "interval_unit");
+		if (!isOneOf(unit, INTERVAL_UNITS)) return;
 		const sent = await run(() =>
 			acceptSubscriptionCandidateFn({
 				data: {
 					vendor_id: candidate.vendor_id,
 					currency: candidate.currency,
 					name: name || undefined,
-					amount: String(form.get("amount") ?? "") || undefined,
-					interval_unit: String(form.get("interval_unit")) as IntervalUnit,
+					amount: getString(form, "amount") || undefined,
+					interval_unit: unit,
 					interval_count: Number(form.get("interval_count")) || 1,
 				},
 			}),

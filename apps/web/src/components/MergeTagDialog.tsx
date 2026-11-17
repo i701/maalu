@@ -25,7 +25,7 @@ export default function MergeTagDialog({
 	const others = tags.filter((t) => t.id !== tag.id);
 	const [target, setTarget] = useState("");
 
-	async function submit(e: React.FormEvent<HTMLFormElement>) {
+	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		if (!target) return;
 		if (await run(() => mergeTagFn({ data: { id: tag.id, into_id: target } }))) {

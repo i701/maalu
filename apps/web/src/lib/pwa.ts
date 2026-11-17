@@ -12,6 +12,10 @@ type InstallPromptEvent = Event & {
 	userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
+function isInstallPromptEvent(event: Event): event is InstallPromptEvent {
+	return "prompt" in event && typeof event.prompt === "function";
+}
+
 export type InstallState = {
 	/** Running as an installed app right now (a window of its own, no browser bar). */
 	standalone: boolean;
@@ -33,10 +37,17 @@ const isStandalone = () =>
 	window.matchMedia("(display-mode: standalone)").matches ||
 	(navigator as Navigator & { standalone?: boolean }).standalone === true;
 
-const isIos = () =>
-	/iphone|ipad|ipod/i.test(navigator.userAgent) ||
-	// iPadOS reports itself as a Mac, but has a touch screen
-	(navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const isIos = () => {
+	const userAgent = navigator.userAgent;
+
+	// Standard iPhone, iPad, and iPod detection
+	if (/iPhone|iPad|iPod/i.test(userAgent)) {
+		return true;
+	}
+
+	// iPadOS 13+ reports itself as a Mac, but has a multi-touch screen
+	return /Macintosh/i.test(userAgent) && navigator.maxTouchPoints > 1;
+};
 
 function publish() {
 	state = {
@@ -52,8 +63,9 @@ export function startPwa() {
 	if (started || typeof window === "undefined") return;
 	started = true;
 	window.addEventListener("beforeinstallprompt", (e) => {
+		if (!isInstallPromptEvent(e)) return;
 		e.preventDefault(); // keep it, so Settings can offer it at a calm moment
-		deferred = e as InstallPromptEvent;
+		deferred = e;
 		publish();
 	});
 	window.addEventListener("appinstalled", () => {

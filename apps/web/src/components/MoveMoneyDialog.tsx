@@ -6,6 +6,7 @@ import { moveProblem, moveSources } from "#/lib/budget-moves";
 import { formatMoney } from "#/lib/format";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
+import { getString } from "#/lib/utils";
 import { createBudgetMoveFn } from "#/server/budget";
 import type { Budget, BudgetLine } from "#/types/api";
 import FormDialog from "./FormDialog";
@@ -34,11 +35,11 @@ export default function MoveMoneyDialog({
 	const source = sources.find((s) => s.line.id === from) ?? null;
 	const money = (v: string) => formatMoney(v, budget.currency);
 
-	async function submit(e: React.FormEvent<HTMLFormElement>) {
+	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		const f = new FormData(e.currentTarget);
-		const amount = String(f.get("amount") ?? "").trim();
-		const note = String(f.get("note") ?? "").trim();
+		const amount = getString(f, "amount").trim();
+		const note = getString(f, "note").trim();
 		const problem = moveProblem(amount, source ? source.left : null);
 		setLocalError(problem);
 		if (problem) return;

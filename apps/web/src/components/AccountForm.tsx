@@ -4,7 +4,7 @@ import MenuItem from "@mui/material/MenuItem";
 import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { useState } from "react";
+import { type SubmitEvent, useState } from "react";
 import {
 	bankChoices,
 	GROUP_HELP,
@@ -13,17 +13,18 @@ import {
 	spendableValue,
 	statementDays,
 } from "#/lib/accounts";
-import SpendableField from "./SpendableField";
 import { todayIso } from "#/lib/format";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
 import { createAccountFn, updateAccountFn } from "#/server/accounts";
-import { ACCOUNT_GROUPS, ACCOUNT_GROUP_LABELS, type Account, type AccountGroup } from "#/types/api";
+import { ACCOUNT_GROUP_LABELS, ACCOUNT_GROUPS, type Account, type AccountGroup } from "#/types/api";
 import CurrencyChips from "./CurrencyChips";
 import FormDialog from "./FormDialog";
 import NamePickerField from "./NamePickerField";
-import RateField from "./RateField";
 import { useNotify } from "./Notify";
+import RateField from "./RateField";
+import SpendableField from "./SpendableField";
+import { getString, isOneOf } from "#/lib/utils";
 
 export default function AccountForm({
 	account,
@@ -51,10 +52,10 @@ export default function AccountForm({
 	const locked = (account?.transaction_count ?? 0) > 0;
 	const quick = [...new Set([baseCurrency, ...accounts.map((a) => a.currency)])].slice(0, 5);
 
-	async function submit(e: React.FormEvent<HTMLFormElement>) {
+	async function submit(e: SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		const f = new FormData(e.currentTarget);
-		const text = (k: string) => String(f.get(k) ?? "").trim();
+		const text = (k: string) => getString(f, k).trim();
 
 		const days = group === "card" ? statementDays(text("statement_day"), text("due_day")) : null;
 		if (days && !days.ok) {
@@ -109,7 +110,9 @@ export default function AccountForm({
 						label="Group"
 						name="group"
 						value={group}
-						onChange={(e) => setGroup(e.target.value as AccountGroup)}
+						onChange={(e) => {
+							if (isOneOf(e.target.value, ACCOUNT_GROUPS)) setGroup(e.target.value);
+						}}
 						required
 					>
 						{ACCOUNT_GROUPS.map((g) => (
@@ -153,7 +156,13 @@ export default function AccountForm({
 						name="account_number"
 						defaultValue={account?.account_number ?? ""}
 						helperText="Optional. Tells accounts with the same name apart."
-						slotProps={{ htmlInput: { maxLength: 80, inputMode: "text", autoComplete: "off" } }}
+						slotProps={{
+							htmlInput: {
+								maxLength: 80,
+								inputMode: "text",
+								autoComplete: "off",
+							},
+						}}
 					/>
 				</Grid>
 
@@ -227,7 +236,9 @@ export default function AccountForm({
 								name="statement_day"
 								defaultValue={account?.statement_day ?? ""}
 								placeholder="5"
-								slotProps={{ htmlInput: { inputMode: "numeric", maxLength: 2 } }}
+								slotProps={{
+									htmlInput: { inputMode: "numeric", maxLength: 2 },
+								}}
 							/>
 						</Grid>
 						<Grid size={{ xs: 12, sm: 6 }}>
@@ -236,7 +247,9 @@ export default function AccountForm({
 								name="due_day"
 								defaultValue={account?.due_day ?? ""}
 								placeholder="25"
-								slotProps={{ htmlInput: { inputMode: "numeric", maxLength: 2 } }}
+								slotProps={{
+									htmlInput: { inputMode: "numeric", maxLength: 2 },
+								}}
 							/>
 						</Grid>
 						<Grid size={12}>

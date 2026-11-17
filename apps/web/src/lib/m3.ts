@@ -141,6 +141,8 @@ export const ACCENT = {
 	slate: "#64748B",
 } as const;
 export type Accent = keyof typeof ACCENT;
+export const isAccent = (name: unknown): name is Accent =>
+	typeof name === "string" && Object.hasOwn(ACCENT, name);
 
 /** Hues for the pastel stat tiles, each a soft wash over the card colour (`tintFill`) with its icon
  * in a deeper step (`tintInk`), so dark text reads on it in both colour modes. */

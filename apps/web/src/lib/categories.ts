@@ -1,12 +1,12 @@
-import { ACCENT, type Accent } from "#/lib/m3";
+import { ACCENT, isAccent } from "#/lib/m3";
 import type { Category } from "#/types/api";
 
 /** The colour names a category can have, in the palette's order (the API's `ACCENT_COLORS`). */
-export const ACCENT_NAMES = Object.keys(ACCENT) as [Accent, ...Accent[]];
+export const ACCENT_NAMES = Object.keys(ACCENT).filter(isAccent);
 
 /** A category's colour is one of the accent names, picked by the API; anything else reads as grey. */
 export const categoryAccent = (color: string | null | undefined): string =>
-	ACCENT[color as Accent] ?? ACCENT.slate;
+	isAccent(color) ? ACCENT[color] : ACCENT.slate;
 
 /** "Food › Groceries" for a sub-category, just the name for any other. */
 export const categoryPath = (c: Pick<Category, "name" | "parent">): string =>

@@ -2,17 +2,10 @@ import { describe, expect, it } from "vitest";
 import type { Category } from "#/types/api";
 import { categoryAccent, categoryPath, parentChoices } from "./categories";
 import { ACCENT } from "./m3";
+import { makeCategory } from "#/test/fixtures";
 
 const cat = (id: string, extra: Partial<Category> = {}): Category =>
-	({
-		id,
-		name: id,
-		color: "blue",
-		child_count: 0,
-		parent_id: null,
-		parent: null,
-		...extra,
-	}) as Category;
+	makeCategory({ id, name: id, color: "blue", ...extra });
 
 describe("categoryAccent", () => {
 	it("maps a name to its hex and anything else to grey", () => {

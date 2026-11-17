@@ -1,5 +1,4 @@
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
-import Money from "#/components/Money";
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import IconButton from "@mui/material/IconButton";
@@ -8,6 +7,7 @@ import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
+import Money from "#/components/Money";
 import { formatDate } from "#/lib/format";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
@@ -15,6 +15,7 @@ import { addGoalEntryFn, deleteGoalEntryFn } from "#/server/goals";
 import type { Goal } from "#/types/api";
 import FormDialog from "./FormDialog";
 import { useNotify } from "./Notify";
+import { getString } from "#/lib/utils";
 
 const SHOWN = 5;
 
@@ -30,10 +31,10 @@ export default function GoalEntryDialog({ goal, onClose }: { goal: Goal; onClose
 	const notify = useNotify();
 	const [direction, setDirection] = useState<"add" | "take">("add");
 
-	async function submit(e: React.FormEvent<HTMLFormElement>) {
+	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		const f = new FormData(e.currentTarget);
-		const text = (k: string) => String(f.get(k) ?? "").trim();
+		const text = (k: string) => getString(f, k).trim();
 		const amount = text("amount");
 		const ok = await run(() =>
 			addGoalEntryFn({
@@ -125,7 +126,10 @@ function EntryRow({ goal, entry }: { goal: Goal; entry: Goal["entries"][number] 
 			</Typography>
 			<Typography
 				variant="body2"
-				sx={{ fontVariantNumeric: "tabular-nums", color: negative ? "error.main" : "success.main" }}
+				sx={{
+					fontVariantNumeric: "tabular-nums",
+					color: negative ? "error.main" : "success.main",
+				}}
 			>
 				{negative ? "" : "+"}
 				<Money amount={entry.amount} currency={goal.currency} />

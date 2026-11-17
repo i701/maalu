@@ -24,7 +24,8 @@ export function useCompactCard() {
 		rootProps: {
 			onClick: (e: MouseEvent<HTMLElement>) => {
 				if (!phone) return;
-				if ((e.target as HTMLElement).closest("button, a, input, textarea, select")) return;
+				if (e.target instanceof Element && e.target.closest("button, a, input, textarea, select"))
+					return;
 				toggle();
 			},
 		},

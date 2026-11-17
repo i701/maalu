@@ -1,5 +1,5 @@
-import FormControlLabel from "@mui/material/FormControlLabel";
 import Box from "@mui/material/Box";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import Switch from "@mui/material/Switch";
@@ -48,7 +48,7 @@ export default function SalaryRuleDialog({
 	const taken = new Set(rules.map((r) => r.account_id ?? r.goal_id));
 	const choices = (target === "account" ? accounts : goals).filter((t) => !taken.has(t.id));
 
-	async function submit(e: React.FormEvent<HTMLFormElement>) {
+	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		const ok = await run(() =>
 			rule

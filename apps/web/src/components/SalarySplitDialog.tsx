@@ -1,5 +1,4 @@
 import Alert from "@mui/material/Alert";
-import Money from "#/components/Money";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
@@ -8,13 +7,14 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import Money from "#/components/Money";
 import {
 	madeTotal,
+	type SplitLine,
+	type SplitTotals,
 	splitLines,
 	splitRequest,
 	splitTotals,
-	type SplitLine,
-	type SplitTotals,
 } from "#/lib/salary";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
@@ -70,7 +70,14 @@ function LineRow({
 	onChange: (c: Partial<SplitLine>) => void;
 }) {
 	return (
-		<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1.5 }}>
+		<Box
+			sx={{
+				display: "flex",
+				alignItems: "center",
+				justifyContent: "space-between",
+				gap: 1.5,
+			}}
+		>
 			<FormControlLabel
 				sx={{ minWidth: 0, flex: 1, m: 0 }}
 				control={
@@ -87,7 +94,9 @@ function LineRow({
 						</Typography>
 						<Typography
 							variant="caption"
-							sx={{ color: line.reason && !line.done ? "error.main" : "text.secondary" }}
+							sx={{
+								color: line.reason && !line.done ? "error.main" : "text.secondary",
+							}}
 						>
 							{line.reason ?? line.rule}
 							{line.auto && !line.done && " · moves automatically"}
@@ -102,7 +111,10 @@ function LineRow({
 				disabled={!line.on}
 				onChange={(e) => onChange({ amount: e.target.value })}
 				slotProps={{
-					htmlInput: { inputMode: "decimal", "aria-label": `Amount for ${line.name}` },
+					htmlInput: {
+						inputMode: "decimal",
+						"aria-label": `Amount for ${line.name}`,
+					},
 				}}
 				sx={{ width: 140 }}
 			/>
@@ -166,8 +178,8 @@ function SplitBody({
 	edit: (key: string, change: Partial<SplitLine>) => void;
 	onUndo: () => void;
 }) {
-	const complete = Boolean(plan.complete);
-	const someMade = Boolean(plan.applied);
+	const complete = plan.complete;
+	const someMade = plan.applied;
 	return (
 		<Box sx={{ display: "grid", gap: 1.5 }}>
 			<Typography variant="body2" sx={{ color: "text.secondary" }}>
@@ -222,12 +234,14 @@ export default function SalarySplitDialog({
 		}
 	}
 
-	async function submit(e: React.FormEvent<HTMLFormElement>) {
+	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		if (!plan) return;
 		if (complete) return undo();
 		const ok = await run(() =>
-			applySalarySplitFn({ data: { id: transactionId, items: splitRequest(lines) } }),
+			applySalarySplitFn({
+				data: { id: transactionId, items: splitRequest(lines) },
+			}),
 		);
 		if (ok) {
 			notify("Salary split");

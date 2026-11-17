@@ -22,7 +22,7 @@ export default function BudgetSettingsDialog({
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
 
-	async function submit(e: React.FormEvent<HTMLFormElement>) {
+	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		const f = new FormData(e.currentTarget);
 		const ok = await run(() =>

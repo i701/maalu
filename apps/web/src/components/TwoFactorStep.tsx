@@ -5,6 +5,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import { friendlyError } from "#/lib/use-action";
+import { getString } from "#/lib/utils";
 import { verifyTwoFactorFn } from "#/server/auth";
 
 /** The second step of signing in: a code from the authenticator app, or a recovery code. The proof
@@ -21,9 +22,10 @@ export default function TwoFactorStep({
 	const [error, setError] = useState<string | null>(null);
 	const [pending, setPending] = useState(false);
 
-	async function submit(e: React.FormEvent<HTMLFormElement>) {
+	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
-		const code = String(new FormData(e.currentTarget).get("code") ?? "");
+		const f = new FormData(e.currentTarget);
+		const code = getString(f, "code");
 		setPending(true);
 		setError(null);
 		try {

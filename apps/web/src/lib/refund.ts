@@ -2,6 +2,17 @@ import type { Transaction } from "#/types/api";
 import { formatDate, formatMoney, sumDecimals } from "./format";
 import { txTitle } from "./tx-display";
 
+export type RefundTransaction = Pick<
+	Transaction,
+	| "type"
+	| "planned"
+	| "amount"
+	| "refunded_amount"
+	| "refund_of"
+	| "adjustment"
+	| "category_is_salary"
+>;
+
 /** What is left to refund of a purchase, or of one of its items: its amount less what the refunds
  * so far gave back ("30.00"). Exact decimal maths, never floats. */
 export function amountLeft(amount: string, refunded: string): string {
@@ -9,12 +20,12 @@ export function amountLeft(amount: string, refunded: string): string {
 }
 
 /** A refund: income that gives back part of an earlier purchase. */
-export function isRefund(t: Transaction): boolean {
+export function isRefund(t: RefundTransaction): boolean {
 	return t.refund_of !== null;
 }
 
 /** Whether a purchase has anything left to refund. Planned ones have not happened yet. */
-export function canRefund(t: Transaction): boolean {
+export function canRefund(t: RefundTransaction): boolean {
 	return (
 		t.type === "expense" &&
 		!t.planned &&
@@ -25,12 +36,12 @@ export function canRefund(t: Transaction): boolean {
 
 /** Whether this is plain income that could be linked to the purchase it gave money back for. Pay
  * (the Salary category) never is. */
-export function canLinkRefund(t: Transaction): boolean {
+export function canLinkRefund(t: RefundTransaction): boolean {
 	return t.type === "income" && !t.adjustment && t.refund_of === null && !t.category_is_salary;
 }
 
 /** Whether refunds have given part of this purchase back. */
-export function wasRefunded(t: Transaction): boolean {
+export function wasRefunded(t: RefundTransaction): boolean {
 	return Number(t.refunded_amount) > 0;
 }
 

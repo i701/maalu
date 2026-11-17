@@ -1,13 +1,13 @@
 import Alert from "@mui/material/Alert";
-import Money from "#/components/Money";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Radio from "@mui/material/Radio";
 import RadioGroup from "@mui/material/RadioGroup";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import Money from "#/components/Money";
 import { formatDate, formatMoney, sumDecimals } from "#/lib/format";
-import { amountLeft, itemsToPick, refundLines, type RefundItem } from "#/lib/refund";
+import { amountLeft, itemsToPick, type RefundItem, refundLines } from "#/lib/refund";
 import { useSheet } from "#/lib/sheet";
 import { txTitle } from "#/lib/tx-display";
 import { useAction } from "#/lib/use-action";
@@ -19,7 +19,7 @@ import RefundItems from "./RefundItems";
 import SearchField from "./SearchField";
 
 /** The facts of a purchase to pick: when, what it cost and how much is left to refund. */
-function describe(p: Transaction): string {
+function describeTransaction(p: Transaction): string {
 	const left = amountLeft(p.amount, p.refunded_amount);
 	return `${formatDate(p.transaction_date)} · ${formatMoney(p.amount, p.currency)} · ${formatMoney(left, p.currency)} left`;
 }
@@ -45,16 +45,20 @@ export default function LinkRefundDialog({
 	const [items, setItems] = useState<RefundItem[]>([]);
 	const [failed, setFailed] = useState<string | null>(null);
 
-	async function search(q: string) {
-		const res = await listRefundCandidatesFn({ data: { id: income.id, q } });
-		setFailed(res.ok ? null : res.error);
-		setFound(res.ok ? res.data : []);
-	}
+	const search = useCallback(
+		async (q: string) => {
+			const res = await listRefundCandidatesFn({ data: { id: income.id, q } });
+			setFailed(res.ok ? null : res.error);
+			setFound(res.ok ? res.data : []);
+		},
+		[income.id],
+	);
+
 	useEffect(() => {
 		void search("");
 		// the first look, when the dialog opens; later ones come from the search box
 		// oxlint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+	}, [search]);
 
 	function choose(id: string) {
 		const purchase = found?.find((p) => p.id === id) ?? null;
@@ -67,7 +71,7 @@ export default function LinkRefundDialog({
 	const itemsAdd = items.length === 0 || itemsTotal === sumDecimals([income.amount]);
 	const ready = chosen !== null && itemsAdd && (items.length === 0 || ticked.length > 0);
 
-	async function submit(e: React.FormEvent<HTMLFormElement>) {
+	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		if (!chosen) return;
 		const changes = {
@@ -122,7 +126,7 @@ export default function LinkRefundDialog({
 										</Typography>
 									)}
 									<Typography variant="caption" sx={{ color: "text.secondary", display: "block" }}>
-										{describe(p)}
+										{describeTransaction(p)}
 									</Typography>
 								</div>
 							}

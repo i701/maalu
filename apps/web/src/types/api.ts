@@ -7,12 +7,12 @@
 import {
 	accountGroupValues,
 	categoryKindValues,
+	type components,
 	intervalUnitValues,
 	paymentMethodValues,
 	subscriptionStatusValues,
 	transactionTypeValues,
 	vendorLocalityValues,
-	type components,
 } from "./api.generated";
 
 type Schemas = components["schemas"];

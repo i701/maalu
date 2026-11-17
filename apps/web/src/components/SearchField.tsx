@@ -37,7 +37,7 @@ export default function SearchField({
 
 	useEffect(() => {
 		const next = text.trim();
-		if (next === value) return;
+		if (next === value) return undefined;
 		const timer = setTimeout(() => report(next), DEBOUNCE_MS);
 		return () => clearTimeout(timer);
 	}, [text, value]);

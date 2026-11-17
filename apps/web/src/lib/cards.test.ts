@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { Card } from "#/types/api";
+import { withDefaults } from "#/lib/utils";
+import { accountRef } from "#/test/fixtures";
+import type { AccountGroup, Card } from "#/types/api";
 import {
 	accountFitsCard,
 	canRepayFrom,
@@ -9,18 +11,21 @@ import {
 	repaymentSeed,
 } from "./cards";
 
-const account = (id: string, name: string, group = "accounts") =>
-	({ id, name, group, currency: "MVR" }) as Card["account"];
+const account = (id: string, name: string, group: AccountGroup = "accounts") =>
+	accountRef(id, { name, group });
 const card = (over: Partial<Card>): Card =>
-	({
-		id: "c1",
-		name: "MIB Visa debit",
-		last_digits: "2815",
-		kind: "debit",
-		account: account("a1", "MIB Current"),
-		repay_account: null,
-		...over,
-	}) as Card;
+	withDefaults<Card>(
+		{
+			id: "c1",
+			name: "MIB Visa debit",
+			last_digits: "2815",
+			kind: "debit",
+			account: account("a1", "MIB Current"),
+			repay_account: null,
+			created_at: "2026-11-13T00:00:00Z",
+		},
+		over,
+	);
 
 describe("cardText", () => {
 	it("shows the last digits when there are some", () => {

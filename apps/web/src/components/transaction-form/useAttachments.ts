@@ -26,7 +26,7 @@ export function useAttachments(transactionId: string | undefined) {
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
-		if (!transactionId) return;
+		if (!transactionId) return undefined;
 		let current = true;
 		void listAttachmentsFn({ data: { transaction_id: transactionId } }).then((res) => {
 			if (current && res.ok) setSaved(res.data);

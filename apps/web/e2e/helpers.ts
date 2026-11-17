@@ -1,5 +1,5 @@
 import { createHmac } from "node:crypto";
-import { expect, type APIRequestContext, type Page } from "@playwright/test";
+import { type APIRequestContext, expect, type Page } from "@playwright/test";
 
 const API = "http://localhost:8101/api/v1";
 export const PASSWORD = "e2e-password-1234";
@@ -58,20 +58,26 @@ export async function apiAs(request: APIRequestContext, email: string) {
 	async function post<T>(path: string, data: object): Promise<T> {
 		const res = await request.post(`${API}${path}`, { headers, data });
 		expect(res.ok(), `${path}: ${await res.text()}`).toBeTruthy();
-		return res.json() as Promise<T>;
+		return res.json();
 	}
 
 	async function get<T>(path: string): Promise<T> {
 		const res = await request.get(`${API}${path}`, { headers });
 		expect(res.ok(), `${path}: ${await res.text()}`).toBeTruthy();
-		return res.json() as Promise<T>;
+		return res.json();
 	}
 
 	return {
 		get,
 		post,
 		account: (name: string, opening_amount = "0", group = "accounts", extra: object = {}) =>
-			post<{ id: string }>("/accounts", { name, group, currency: "MVR", opening_amount, ...extra }),
+			post<{ id: string }>("/accounts", {
+				name,
+				group,
+				currency: "MVR",
+				opening_amount,
+				...extra,
+			}),
 		subscription: (data: object) =>
 			post<{ id: string }>("/subscriptions", {
 				currency: "MVR",

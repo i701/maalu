@@ -3,14 +3,24 @@ import type { SalaryRule, SalarySplitPlan } from "#/types/api";
 import {
 	madeTotal,
 	pendingLines,
-	ruleText,
 	rulesSummary,
+	ruleText,
 	splitLines,
 	splitRequest,
 	splitTotals,
 } from "./salary";
 
-const rule = (mode: "percent" | "fixed", value: string) => ({ mode, value }) as SalaryRule;
+const rule = (mode: "percent" | "fixed", value: string): SalaryRule => ({
+	id: "r1",
+	account_id: null,
+	goal_id: null,
+	target_name: "Target",
+	target_type: "account",
+	mode,
+	value,
+	auto: false,
+	created_at: "2026-01-01T00:00:00Z",
+});
 
 describe("ruleText", () => {
 	it("says a share or an amount", () => {
@@ -32,23 +42,35 @@ describe("rulesSummary", () => {
 	});
 });
 
-const plan = (items: Partial<SalarySplitPlan["items"][number]>[]): SalarySplitPlan =>
-	({
-		amount: "10000.0000",
-		currency: "MVR",
-		items: items.map((i, n) => ({
-			rule_id: `r${n}`,
-			target_type: "account",
-			target_id: `t${n}`,
-			target_name: `T${n}`,
-			amount: "1000.0000",
-			mode: "fixed",
-			value: "1000",
-			ok: true,
-			reason: null,
-			...i,
-		})),
-	}) as SalarySplitPlan;
+const plan = (items: Partial<SalarySplitPlan["items"][number]>[]): SalarySplitPlan => ({
+	left: "10000.0000",
+	over: true,
+	salary_id: "",
+	title: "",
+	salary_date: "",
+	account_id: "acc-1",
+	account_name: "Main",
+	amount: "10000.0000",
+	currency: "MVR",
+	total: "10000.0000",
+	applied: false,
+	complete: false,
+	made: [],
+	items: items.map((i, n) => ({
+		rule_id: `r${n}`,
+		target_type: "account",
+		target_id: `t${n}`,
+		target_name: `T${n}`,
+		amount: "1000.0000",
+		mode: "fixed",
+		value: "1000",
+		ok: true,
+		reason: null,
+		auto: false,
+		done: false,
+		...i,
+	})),
+});
 
 describe("splitLines", () => {
 	it("ticks what can be made and leaves the rest off with their reason", () => {
@@ -64,7 +86,12 @@ describe("splitTotals", () => {
 
 	it("adds the ticked lines up exactly and says what stays", () => {
 		const t = splitTotals(lines, "10000.0000");
-		expect(t).toMatchObject({ total: "2550.50", left: "7449.50", over: false, count: 2 });
+		expect(t).toMatchObject({
+			total: "2550.50",
+			left: "7449.50",
+			over: false,
+			count: 2,
+		});
 	});
 
 	it("ignores unticked lines", () => {
@@ -133,7 +160,12 @@ describe("lines already made", () => {
 		const p = {
 			...mixed(),
 			made: [
-				{ kind: "transfer", id: "m1", target_name: "Savings", amount: "2000.0000" },
+				{
+					kind: "transfer",
+					id: "m1",
+					target_name: "Savings",
+					amount: "2000.0000",
+				},
 				{ kind: "entry", id: "m2", target_name: "Trip", amount: "500.5000" },
 			],
 		} as SalarySplitPlan;

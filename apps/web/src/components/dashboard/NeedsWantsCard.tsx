@@ -1,10 +1,10 @@
 import Box from "@mui/material/Box";
-import Money from "#/components/Money";
 import Typography from "@mui/material/Typography";
 import { Link } from "@tanstack/react-router";
 import { memo, useMemo } from "react";
-import { formatMoney } from "#/lib/format";
+import Money from "#/components/Money";
 import { formatPercent, incomeRule, targetText } from "#/lib/budget-rule";
+import { formatMoney } from "#/lib/format";
 import { KIND_COLOR, KIND_NAMES, kindShares } from "#/lib/needs-wants";
 import type { CategoryTotals } from "#/types/api";
 import ChartCard from "../charts/ChartCard";
@@ -81,7 +81,12 @@ const NeedsWantsCard = memo(function NeedsWantsCard({
 								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 									<Box
 										aria-hidden
-										sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: KIND_COLOR[r.kind] }}
+										sx={{
+											width: 10,
+											height: 10,
+											borderRadius: "50%",
+											bgcolor: KIND_COLOR[r.kind],
+										}}
 									/>
 									<Typography sx={{ fontSize: 14, fontWeight: 500 }}>
 										{KIND_NAMES[r.kind]}

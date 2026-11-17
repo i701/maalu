@@ -16,13 +16,13 @@ export function useLeafletMap(view: { center: [number, number]; zoom: number }) 
 
 	const ref = useCallback(
 		(el: HTMLDivElement | null) => {
-			if (!el) return;
+			if (!el) return undefined;
 			let cancelled = false;
 			let map: LeafletMap | null = null;
 			let observer: ResizeObserver | null = null;
 			void import("leaflet").then((mod) => {
 				if (cancelled) return;
-				const L = ((mod as unknown as { default?: Leaflet }).default ?? mod) as Leaflet;
+				const L = mod.default ?? mod;
 				map = L.map(el).setView(start.current.center, start.current.zoom);
 				L.tileLayer(tileUrl, { attribution, maxZoom: 19 }).addTo(map);
 				// a map made inside a dialog that is still opening has no size yet

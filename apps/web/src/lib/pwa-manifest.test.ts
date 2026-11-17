@@ -1,18 +1,17 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { isWebManifest } from "./utils";
 
 const publicDir = resolve(__dirname, "../../public");
 const read = (name: string) => readFileSync(resolve(publicDir, name), "utf8");
-const manifest = JSON.parse(read("site.webmanifest")) as {
-	id: string;
-	name: string;
-	start_url: string;
-	scope: string;
-	display: string;
-	icons: { src: string; sizes: string; purpose?: string }[];
-	shortcuts: { name: string; url: string }[];
-};
+const parsed: unknown = JSON.parse(read("site.webmanifest"));
+
+if (!isWebManifest(parsed)) {
+	throw new Error("Invalid site.webmanifest structure");
+}
+
+const manifest = parsed;
 
 const has = (size: string, purpose: string) =>
 	manifest.icons.some((i) => i.sizes === size && i.purpose === purpose);

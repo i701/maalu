@@ -1,6 +1,6 @@
-import { formatMoney, sumDecimals } from "./format";
-import { fromScaled, toScaled } from "./decimal";
 import type { SalaryRule, SalarySplitItem, SalarySplitPlan } from "#/types/api";
+import { fromScaled, toScaled } from "./decimal";
+import { formatMoney, sumDecimals } from "./format";
 
 const SCALE = 4;
 
@@ -54,8 +54,8 @@ export function splitLines(plan: SalarySplitPlan): SplitLine[] {
 		amount: fromScaled(toScaled(i.amount, SCALE) ?? 0n, SCALE),
 		on: i.ok && !i.done,
 		reason: i.done ? "Already made" : i.ok ? null : (i.reason ?? "Can't be made"),
-		done: Boolean(i.done),
-		auto: Boolean(i.auto),
+		done: i.done,
+		auto: i.auto,
 	}));
 }
 

@@ -1,13 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { Category, CategoryMonthRow, CategoryTotal } from "#/types/api";
 import { compareKinds, kindMonths, kindShares, unsortedCategories } from "./needs-wants";
+import { categoryTotal, makeCategory } from "#/test/fixtures";
 
 const cat = (
 	category: string,
 	total: string,
 	kind: CategoryTotal["kind"] = null,
 	type: CategoryTotal["type"] = "expense",
-) => ({ type, category, total, kind }) as CategoryTotal;
+): CategoryTotal => categoryTotal({ type, category, total, kind });
 
 describe("kindShares", () => {
 	it("splits spending into needs, wants and not sorted", () => {
@@ -16,24 +17,24 @@ describe("kindShares", () => {
 			cat("Rent", "100", "need"),
 			cat("Games", "100", "want"),
 			cat("Misc", "100", null),
-		])!;
-		expect(rows.map((r) => r.kind)).toEqual(["need", "want", "unsorted"]);
-		expect(rows.map((r) => r.total)).toEqual(["400.10", "100.00", "100.00"]);
-		expect(rows.map((r) => r.categories)).toEqual([2, 1, 1]);
-		expect(rows[0].share).toBeCloseTo(400.1 / 600.1);
-		expect(rows.reduce((a, r) => a + r.share, 0)).toBeCloseTo(1);
+		]);
+		expect(rows?.map((r) => r.kind)).toEqual(["need", "want", "unsorted"]);
+		expect(rows?.map((r) => r.total)).toEqual(["400.10", "100.00", "100.00"]);
+		expect(rows?.map((r) => r.categories)).toEqual([2, 1, 1]);
+		expect(rows?.[0]?.share).toBeCloseTo(400.1 / 600.1);
+		expect(rows?.reduce((a, r) => a + r.share, 0)).toBeCloseTo(1);
 	});
 
 	it("leaves income out", () => {
-		const rows = kindShares([cat("Salary", "5000", "need", "income"), cat("Food", "50", "need")])!;
-		expect(rows[0].total).toBe("50.00");
+		const rows = kindShares([cat("Salary", "5000", "need", "income"), cat("Food", "50", "need")]);
+		expect(rows?.[0]?.total).toBe("50.00");
 	});
 
 	it("gives a kind that came to nothing or less no share", () => {
-		const rows = kindShares([cat("Food", "100", "need"), cat("Refunded", "-20", "want")])!;
-		expect(rows[1].total).toBe("-20.00");
-		expect(rows[1].share).toBe(0);
-		expect(rows[0].share).toBe(1);
+		const rows = kindShares([cat("Food", "100", "need"), cat("Refunded", "-20", "want")]);
+		expect(rows?.[1]?.total).toBe("-20.00");
+		expect(rows?.[1]?.share).toBe(0);
+		expect(rows?.[0]?.share).toBe(1);
 	});
 
 	it("is null when nothing was spent", () => {
@@ -43,8 +44,11 @@ describe("kindShares", () => {
 	});
 });
 
-const named = (name: string, effective_kind: Category["effective_kind"], is_salary = false) =>
-	({ name, effective_kind, is_salary }) as Category;
+const named = (
+	name: string,
+	effective_kind: Category["effective_kind"],
+	is_salary = false,
+): Category => ({ ...makeCategory({ name, is_salary }), effective_kind });
 
 describe("unsortedCategories", () => {
 	it("keeps the ones with no kind of their own or a parent's", () => {
@@ -78,8 +82,22 @@ describe("compareKinds", () => {
 	});
 });
 
-const row = (kind: CategoryMonthRow["kind"], amounts: string[], type = "expense") =>
-	({ type, kind, amounts }) as CategoryMonthRow;
+const row = (
+	kind: CategoryMonthRow["kind"],
+	amounts: string[],
+	type: CategoryMonthRow["type"] = "expense",
+): CategoryMonthRow => ({
+	type,
+	kind,
+	amounts,
+	category: "Test",
+	category_id: "test-id",
+	color: "#000000",
+	parent: null,
+	parent_color: null,
+	parent_id: null,
+	total: amounts.reduce((sum, val) => sum + parseFloat(val || "0"), 0).toFixed(2),
+});
 
 describe("kindMonths", () => {
 	it("adds each kind's categories up month by month", () => {

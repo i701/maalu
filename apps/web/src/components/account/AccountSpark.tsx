@@ -11,8 +11,8 @@ export const TREND_DAYS = 30;
  * Nothing when the account has no history to draw (a brand-new one, or a flat zero). */
 const AccountSpark = memo(function AccountSpark({ trend }: { trend: AccountTrend | undefined }) {
 	if (!trend || trend.balances.length < 2) return null;
-	const first = trend.balances[0] as string;
-	const last = trend.balances.at(-1) as string;
+	const first = trend.balances[0];
+	const last = trend.balances[trend.balances.length - 1];
 	return (
 		<Box sx={{ display: "flex", justifyContent: "flex-start", mt: 0.5 }}>
 			<Sparkline

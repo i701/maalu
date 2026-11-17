@@ -8,12 +8,15 @@ import { useState } from "react";
 import { z } from "zod";
 import AuthLayout from "#/components/AuthLayout";
 import { RouterLink } from "#/components/RouterLinks";
-import { safeRedirect } from "#/lib/safe-redirect";
 import TwoFactorStep from "#/components/TwoFactorStep";
+import { safeRedirect } from "#/lib/safe-redirect";
 import { cancelTwoFactorFn, getRegistrationFn, getSessionFn, loginFn } from "#/server/auth";
+import { getString } from "#/lib/utils";
 
 export const Route = createFileRoute("/login")({
-	validateSearch: z.object({ redirect: z.string().optional().catch(undefined) }),
+	validateSearch: z.object({
+		redirect: z.string().optional().catch(undefined),
+	}),
 	beforeLoad: async () => {
 		if (await getSessionFn()) throw redirect({ to: "/dashboard" });
 	},
@@ -41,14 +44,17 @@ function LoginPage() {
 		setStep("password");
 	}
 
-	async function submit(e: React.FormEvent<HTMLFormElement>) {
+	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		const f = new FormData(e.currentTarget);
 		setPending(true);
 		setError(null);
 		try {
 			const res = await loginFn({
-				data: { email: String(f.get("email")), password: String(f.get("password")) },
+				data: {
+					email: getString(f, "email"),
+					password: getString(f, "password"),
+				},
 			});
 			if (!res.ok) return setError(res.error);
 			if (res.data.twoFactor) return setStep("code");

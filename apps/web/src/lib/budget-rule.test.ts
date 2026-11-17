@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { CategoryTotal } from "#/types/api";
+import { categoryTotal } from "#/test/fixtures";
 import { formatPercent, incomeRule, targetText } from "./budget-rule";
 
 const cat = (type: "income" | "expense", total: string, kind: "need" | "want" | null = null) =>
-	({ type, total, kind }) as CategoryTotal;
+	categoryTotal({ type, total, kind });
 
 describe("incomeRule", () => {
 	it("measures needs, wants and what was kept against the income", () => {

@@ -1,8 +1,9 @@
-import TextField from "@mui/material/TextField";
-import type { FormEvent } from "react";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
+import { getString } from "#/lib/utils";
 import type { ApiResult } from "#/types/api";
+import TextField from "@mui/material/TextField";
+import type { SubmitEvent } from "react";
 import FormDialog from "./FormDialog";
 import SecondFactorField from "./SecondFactorField";
 
@@ -26,18 +27,21 @@ export default function TwoFactorConfirmDialog<T>({
 	const { run, pending, error } = useAction();
 	const sheet = useSheet(onClose);
 
-	async function submit(e: FormEvent<HTMLFormElement>) {
+	async function submit(e: SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		const f = new FormData(e.currentTarget);
-		const values = { password: String(f.get("password")), code: String(f.get("code")).trim() };
-		let data: T | undefined;
+		const values = {
+			password: getString(f, "password"),
+			code: getString(f, "code").trim(),
+		};
+		let sent: { data: T } | undefined;
 		const done = await run(async () => {
 			const res = await send(values);
-			if (res.ok) data = res.data;
+			if (res.ok) sent = { data: res.data };
 			return res;
 		});
-		if (done) {
-			onDone(data as T);
+		if (done && sent) {
+			onDone(sent.data);
 			sheet.close();
 		}
 	}

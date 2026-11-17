@@ -55,7 +55,8 @@ describe("fromScaled", () => {
 
 	it("round-trips with toScaled", () => {
 		for (const v of ["0.01", "1234.5678", "99999999.9999", "3.10"]) {
-			const n = toScaled(v, 4) as bigint;
+			const n = toScaled(v, 4);
+			if (n === null) throw new Error(`${v} did not parse`);
 			expect(toScaled(fromScaled(n, 4), 4)).toBe(n);
 		}
 	});

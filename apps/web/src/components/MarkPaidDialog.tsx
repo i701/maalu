@@ -1,6 +1,6 @@
 import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
-import { useState, type FormEvent } from "react";
+import { type SubmitEvent, useState } from "react";
 import { formatMoney, formatTime } from "#/lib/format";
 import { baseOf, payBody } from "#/lib/mark-paid";
 import { localToday } from "#/lib/planned";
@@ -11,6 +11,7 @@ import { postTransactionFn } from "#/server/transactions";
 import type { Transaction } from "#/types/api";
 import FormDialog from "./FormDialog";
 import { useNotify } from "./Notify";
+import { getString } from "#/lib/utils";
 
 /** "45.0000" as "45": the API sends four decimals, a person types fewer. */
 const tidy = (amount: string) => (amount.includes(".") ? amount.replace(/\.?0+$/, "") : amount);
@@ -92,10 +93,10 @@ export default function MarkPaidDialog({
 	const [rate, setRate] = useState(plannedRate);
 	const [charged, setCharged] = useState("");
 
-	async function submit(e: FormEvent<HTMLFormElement>) {
+	async function submit(e: SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		const f = new FormData(e.currentTarget);
-		const text = (k: string) => String(f.get(k) ?? "").trim();
+		const text = (k: string) => getString(f, k).trim();
 		const ok = await run(() =>
 			postTransactionFn({
 				data: {
@@ -104,7 +105,13 @@ export default function MarkPaidDialog({
 					transaction_time: text("time") || null,
 					...(transfer
 						? {}
-						: payBody({ amount: amount.trim(), foreign, rate, plannedRate, charged })),
+						: payBody({
+								amount: amount.trim(),
+								foreign,
+								rate,
+								plannedRate,
+								charged,
+							})),
 				},
 			}),
 		);

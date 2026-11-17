@@ -1,3 +1,4 @@
+import { exhaustiveAssertion } from "../utils";
 import type { Doc, DocBlock } from "./types";
 
 /**
@@ -63,6 +64,8 @@ function convert(block: DocBlock): AndroidBlock | string {
 			return `Live example: ${block.title}`;
 		case "image":
 			return `Screenshot: ${block.alt}`;
+		default:
+			return exhaustiveAssertion(block);
 	}
 }
 

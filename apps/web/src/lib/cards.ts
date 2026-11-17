@@ -1,5 +1,5 @@
 import type { TransactionSeed } from "#/components/transaction-form/request";
-import type { AccountGroup, AccountRef, Card, CardKind, CardRef, PaymentMethod } from "#/types/api";
+import type { AccountGroup, Card, CardKind, CardRef, PaymentMethod } from "#/types/api";
 
 /** Groups that hold a debt: a debit card cannot spend from them. */
 const DEBT_GROUPS: readonly AccountGroup[] = ["card", "overdrafts", "loan"];
@@ -43,8 +43,8 @@ export function repaymentSeed(card: Card, amount = ""): TransactionSeed | null {
 		currency: card.repay_account.currency,
 		exchange_rate: "",
 		subscription: null,
-		account: card.repay_account as AccountRef,
-		to_account: card.account as AccountRef,
+		account: card.repay_account,
+		to_account: card.account,
 		card: null,
 		vendorName: "",
 		tags: [],

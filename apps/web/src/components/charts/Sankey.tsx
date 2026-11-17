@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { spreadLabels } from "#/lib/charts";
-import { layoutFlow, type FlowKind, type MoneyFlow, type PlacedNode } from "#/lib/money-flow";
+import { type FlowKind, layoutFlow, type MoneyFlow, type PlacedNode } from "#/lib/money-flow";
 import ChartTooltip from "./ChartTooltip";
 
 const LABEL_WIDTH = 170; // room for a name beside each outer column
@@ -50,19 +50,31 @@ export default function Sankey({
 	const [width, setWidth] = useState(0);
 	const [active, setActive] = useState<string | null>(null);
 
+	const observerRef = useRef<ResizeObserver | null>(null);
+
 	const measure = useCallback((el: HTMLDivElement | null) => {
+		if (observerRef.current) {
+			observerRef.current.disconnect();
+			observerRef.current = null;
+		}
 		if (!el) return;
+
 		const observer = new ResizeObserver(([entry]) => {
 			if (entry) setWidth(entry.contentRect.width);
 		});
 		observer.observe(el);
 		setWidth(el.clientWidth);
-		return () => observer.disconnect();
+		observerRef.current = observer;
 	}, []);
 
 	const inner = Math.max(MIN_WIDTH, width) - 2 * LABEL_WIDTH;
 	const layout = useMemo(
-		() => layoutFlow(flow, { width: inner, height: height - TOP - BOTTOM, nodeWidth: NODE_WIDTH }),
+		() =>
+			layoutFlow(flow, {
+				width: inner,
+				height: height - TOP - BOTTOM,
+				nodeWidth: NODE_WIDTH,
+			}),
 		[flow, inner, height],
 	);
 	const total = flow.nodes.find((n) => n.kind === "total")?.value ?? 1;
@@ -76,7 +88,9 @@ export default function Sankey({
 				LABEL_HEIGHT / 2,
 				height - TOP - BOTTOM - LABEL_HEIGHT / 2,
 			);
-			nodes.forEach((n, i) => out.set(n.id, spread[i]));
+			nodes.forEach((n, i) => {
+				out.set(n.id, spread[i]);
+			});
 		}
 		return out;
 	}, [layout, height]);
@@ -203,7 +217,9 @@ function NodeLabel({
 				fontSize: 12.5,
 				borderRadius: "var(--shape-xs)",
 				outline: "none",
-				"&:focus-visible": { boxShadow: "0 0 0 2px var(--md-sys-color-primary)" },
+				"&:focus-visible": {
+					boxShadow: "0 0 0 2px var(--md-sys-color-primary)",
+				},
 				...(side === 0 && {
 					right: `calc(100% - ${LABEL_WIDTH - 8}px)`,
 					justifyContent: "flex-end",
@@ -233,7 +249,10 @@ function NodeLabel({
 			</Box>
 			<Box
 				component="span"
-				sx={{ color: "var(--md-sys-color-on-surface-variant)", fontVariantNumeric: "tabular-nums" }}
+				sx={{
+					color: "var(--md-sys-color-on-surface-variant)",
+					fontVariantNumeric: "tabular-nums",
+				}}
 			>
 				{formatLabel(node.value)}
 			</Box>

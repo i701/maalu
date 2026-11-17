@@ -40,11 +40,11 @@ export default function TransactionTotals({
 							}}
 						>
 							{[
-								{ label: "Income", value: shown.income, align: "left" },
+								{ label: "Income", value: shown.income, align: "left" as const },
 								{
 									label: Number(shown.refunded) > 0 ? "Expense, after refunds" : "Expense",
 									value: shown.expense,
-									align: "right",
+									align: "right" as const,
 								},
 							].map((part) => (
 								<Box
@@ -54,7 +54,7 @@ export default function TransactionTotals({
 										py: 1.25,
 										minWidth: 0,
 										// money in on the left, money out on the right
-										textAlign: part.align as "left" | "right",
+										textAlign: part.align,
 									}}
 								>
 									<Typography variant="caption" sx={{ display: "block", color: "text.secondary" }}>

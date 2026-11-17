@@ -2,15 +2,35 @@ import { describe, expect, it } from "vitest";
 import type { Transaction } from "#/types/api";
 import { amountLeft, canLinkRefund, canRefund, isRefund, wasRefunded } from "./refund";
 
-const purchase = (over: Partial<Transaction> = {}) =>
-	({
-		type: "expense",
-		planned: false,
-		amount: "100.0000",
-		refunded_amount: "0.0000",
-		refund_of: null,
-		...over,
-	}) as Transaction;
+type RefundTransaction = Pick<
+	Transaction,
+	| "type"
+	| "planned"
+	| "amount"
+	| "refunded_amount"
+	| "refund_of"
+	| "adjustment"
+	| "category_is_salary"
+>;
+
+const purchase = (over: Partial<RefundTransaction> = {}): RefundTransaction => ({
+	type: "expense",
+	planned: false,
+	adjustment: false,
+	amount: "100.0000",
+	refunded_amount: "0.0000",
+	refund_of: null,
+	category_is_salary: false,
+	...over,
+});
+
+const refundReference = {
+	id: "x",
+	amount: "100.0000",
+	category: "Food",
+	currency: "MVR",
+	transaction_date: "2026-11-16",
+} satisfies NonNullable<RefundTransaction["refund_of"]>;
 
 describe("amountLeft", () => {
 	it("is the amount less what was refunded, exactly", () => {
@@ -44,7 +64,7 @@ describe("canRefund", () => {
 describe("isRefund / wasRefunded", () => {
 	it("tells a refund from a purchase", () => {
 		expect(isRefund(purchase())).toBe(false);
-		expect(isRefund(purchase({ type: "income", refund_of: { id: "x" } as never }))).toBe(true);
+		expect(isRefund(purchase({ type: "income", refund_of: refundReference }))).toBe(true);
 	});
 
 	it("says whether any refunds were made", () => {
@@ -53,20 +73,19 @@ describe("isRefund / wasRefunded", () => {
 	});
 });
 
-const income = (over: Partial<Transaction> = {}) =>
+const income = (over: Partial<RefundTransaction> = {}) =>
 	purchase({ type: "income", adjustment: false, ...over });
 
 describe("canLinkRefund", () => {
 	it("is plain income only", () => {
 		expect(canLinkRefund(income())).toBe(true);
-		expect(canLinkRefund(purchase())).toBe(false); // an expense
+		expect(canLinkRefund(purchase())).toBe(false);
 		expect(canLinkRefund(income({ type: "transfer" }))).toBe(false);
 	});
 
 	it("is not for a refund already, or a balance adjustment", () => {
-		expect(canLinkRefund(income({ refund_of: { id: "x" } as Transaction["refund_of"] }))).toBe(
-			false,
-		);
+		expect(canLinkRefund(income({ refund_of: refundReference }))).toBe(false);
+
 		expect(canLinkRefund(income({ adjustment: true }))).toBe(false);
 	});
 

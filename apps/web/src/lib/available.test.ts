@@ -1,21 +1,22 @@
 import { describe, expect, it } from "vitest";
-import type { AvailableToSpend } from "#/types/api";
+import { withDefaults } from "#/lib/utils";
 import { hasAccounts, isShort, workingLine } from "./available";
 
-const base = (over: Partial<AvailableToSpend> = {}) =>
-	({
-		currency: "MVR",
-		balance: "5200.0000",
-		accounts: [{}, {}],
-		bills: [],
-		bills_total: "0",
-		card_payments: [],
-		card_payments_total: "0",
-		reserved: [],
-		reserved_total: "0",
-		available: "5200.0000",
-		...over,
-	}) as unknown as AvailableToSpend;
+const base = (over: Partial<Parameters<typeof workingLine>[0]> = {}) =>
+	withDefaults<Parameters<typeof workingLine>[0]>(
+		{
+			currency: "MVR",
+			balance: "5200.0000",
+			accounts: [{}, {}],
+			bills: [],
+			bills_total: "0",
+			card_payments: [],
+			card_payments_total: "0",
+			reserved: [],
+			reserved_total: "0",
+		},
+		over,
+	);
 
 describe("isShort", () => {
 	it("is true only below zero", () => {
@@ -33,9 +34,9 @@ describe("workingLine", () => {
 	it("takes the bills and the set-asides off, with their counts", () => {
 		const line = workingLine(
 			base({
-				bills: [{}, {}] as AvailableToSpend["bills"],
+				bills: [{}, {}],
 				bills_total: "420",
-				reserved: [{}] as AvailableToSpend["reserved"],
+				reserved: [{}],
 				reserved_total: "1000",
 			}),
 		);
@@ -45,7 +46,7 @@ describe("workingLine", () => {
 	it("counts credit card statements apart from bills", () => {
 		const line = workingLine(
 			base({
-				card_payments: [{}] as AvailableToSpend["card_payments"],
+				card_payments: [{}],
 				card_payments_total: "300",
 			}),
 		);
@@ -53,7 +54,7 @@ describe("workingLine", () => {
 	});
 
 	it("mentions only what applies", () => {
-		const line = workingLine(base({ bills: [{}] as AvailableToSpend["bills"], bills_total: "50" }));
+		const line = workingLine(base({ bills: [{}], bills_total: "50" }));
 		expect(line).toMatch(/less MVR\s50\.00 for 1 bill$/);
 		expect(line).not.toMatch(/goal/);
 	});

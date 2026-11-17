@@ -38,7 +38,7 @@ export function useMarketRate({
 	const [done, setDone] = useState<Done | null>(null);
 
 	useEffect(() => {
-		if (!valid) return;
+		if (!valid) return undefined;
 		let stale = false;
 		const timer = setTimeout(async () => {
 			const res = await getMarketRateFn({ data: { from: f, to, on } });

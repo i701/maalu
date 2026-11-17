@@ -15,7 +15,7 @@ const when = (iso: string) =>
 
 const counts = (b: ImportBatch) =>
 	[
-		`${plural(b.imported_count, "imported", "imported")}`,
+		plural(b.imported_count, "imported", "imported"),
 		b.skipped_count ? `${b.skipped_count} not imported` : null,
 		b.transaction_count < b.imported_count ? `${b.transaction_count} still there` : null,
 	]

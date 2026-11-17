@@ -20,7 +20,7 @@ export default function Reveal({ in: show, children }: { in: boolean; children: 
 	if (show && !present) setPresent(true); // opening: mount it (still closed)
 
 	useEffect(() => {
-		if (!show) return;
+		if (!show) return undefined;
 		let inner = 0;
 		const outer = requestAnimationFrame(() => {
 			inner = requestAnimationFrame(() => setArmed(true));

@@ -1,40 +1,53 @@
-import Grid from "@mui/material/Grid";
 import FormControlLabel from "@mui/material/FormControlLabel";
+import Grid from "@mui/material/Grid";
 import MenuItem from "@mui/material/MenuItem";
 import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
 import { useSheet } from "#/lib/sheet";
+import {
+	installmentsFromField,
+	REMIND_OPTIONS,
+	remindFromField,
+	remindToField,
+} from "#/lib/subscription";
 import { useAction } from "#/lib/use-action";
+import { getString } from "#/lib/utils";
 import { createSubscriptionFn, updateSubscriptionFn } from "#/server/subscriptions";
 import {
-	INTERVAL_UNITS,
-	PAYMENT_METHODS,
-	PAYMENT_METHOD_LABELS,
-	SUBSCRIPTION_STATUSES,
-	SUBSCRIPTION_STATUS_LABELS,
 	type Account,
 	type Category,
+	INTERVAL_UNITS,
 	type IntervalUnit,
+	PAYMENT_METHOD_LABELS,
+	PAYMENT_METHODS,
 	type PaymentMethod,
+	SUBSCRIPTION_STATUS_LABELS,
+	SUBSCRIPTION_STATUSES,
 	type Subscription,
 	type SubscriptionStatus,
 	type Vendor,
 } from "#/types/api";
-import {
-	installmentsFromField,
-	remindFromField,
-	remindToField,
-	REMIND_OPTIONS,
-} from "#/lib/subscription";
 import CategoryField from "./CategoryField";
 import CurrencyField from "./CurrencyField";
 import FormDialog from "./FormDialog";
-import { accountMenuItems } from "./transaction-form/accountMenuItems";
 import { useNotify } from "./Notify";
 import RateField from "./RateField";
+import { accountMenuItems } from "./transaction-form/accountMenuItems";
 import VendorField from "./VendorField";
+
+function isPaymentMethod(value: string): value is PaymentMethod {
+	return (PAYMENT_METHODS as readonly string[]).includes(value);
+}
+
+function isIntervalUnit(value: string): value is IntervalUnit {
+	return (INTERVAL_UNITS as readonly string[]).includes(value);
+}
+
+function isValidStatus(value: string): value is SubscriptionStatus {
+	return (SUBSCRIPTION_STATUSES as readonly string[]).includes(value);
+}
 
 const today = () => {
 	const d = new Date();
@@ -53,18 +66,34 @@ function vendorChange(subscription: Subscription, vendorName: string) {
 }
 
 function readFields(f: FormData, account: Account | null, foreign: boolean) {
-	const text = (k: string) => String(f.get(k) ?? "").trim();
+	const text = (k: string) => getString(f, k).trim();
+
+	const paymentMethod = text("payment_method");
+	if (!isPaymentMethod(paymentMethod)) {
+		throw new Error(`Invalid payment method: ${paymentMethod}`);
+	}
+
+	const intervalUnit = text("interval_unit");
+	if (!isIntervalUnit(intervalUnit)) {
+		throw new Error(`Invalid interval unit: ${intervalUnit}`);
+	}
+
+	const status = text("status");
+	if (!isValidStatus(status)) {
+		throw new Error(`Invalid status: ${status}`);
+	}
+
 	return {
 		name: text("name"),
 		amount: text("amount"),
 		currency: account ? account.currency : text("currency").toUpperCase(),
 		exchange_rate: foreign ? text("exchange_rate") : undefined,
-		payment_method: text("payment_method") as PaymentMethod,
+		payment_method: paymentMethod,
 		category: text("category"),
-		interval_unit: text("interval_unit") as IntervalUnit,
+		interval_unit: intervalUnit,
 		interval_count: Number(text("interval_count")),
 		start_date: text("start_date"),
-		status: text("status") as SubscriptionStatus,
+		status: status,
 		installments_total: installmentsFromField(text("installments_total")),
 		remind_days_before: remindFromField(text("remind_days_before")),
 		amount_varies: f.get("amount_varies") === "on",
@@ -79,7 +108,7 @@ function save(
 	foreign: boolean,
 ) {
 	const base = readFields(f, account, foreign);
-	const vendorName = String(f.get("vendor") ?? "").trim();
+	const vendorName = getString(f, "vendor").trim();
 	if (subscription) {
 		return updateSubscriptionFn({
 			data: {
@@ -230,7 +259,10 @@ function PlanFields({ subscription }: { subscription?: Subscription }) {
 					defaultValue={subscription?.installments_total ?? ""}
 					placeholder="Goes on until you stop it"
 					helperText="For instalments: it completes after this many payments"
-					slotProps={{ htmlInput: { min: 1, max: 600 }, inputLabel: { shrink: true } }}
+					slotProps={{
+						htmlInput: { min: 1, max: 600 },
+						inputLabel: { shrink: true },
+					}}
 				/>
 			</Grid>
 			<Grid size={{ xs: 12, sm: 6 }}>
@@ -282,7 +314,7 @@ export default function SubscriptionForm({
 	// An account brings its own currency and rate, so nothing is typed for them.
 	const foreign = !account && currency.length === 3 && currency.toUpperCase() !== baseCurrency;
 
-	async function submit(e: React.FormEvent<HTMLFormElement>) {
+	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		const f = new FormData(e.currentTarget);
 		const ok = await run(() => save(subscription, f, account, foreign));

@@ -8,8 +8,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { memo, useCallback, useMemo, useState } from "react";
 import { z } from "zod";
 import EmptyState from "#/components/EmptyState";
-import PlacesMap from "#/components/map/PlacesMap";
 import MobileCard from "#/components/MobileCard";
+import PlacesMap from "#/components/map/PlacesMap";
 import PageHeader from "#/components/PageHeader";
 import PendingOverlay from "#/components/PendingOverlay";
 import ResponsiveTable from "#/components/ResponsiveTable";
@@ -17,16 +17,18 @@ import { formatDate, formatMoney } from "#/lib/format";
 import {
 	PLACE_RANGE_LABELS,
 	PLACE_RANGES,
+	type PlaceRange,
 	placeLabel,
 	placeRangeBounds,
-	type PlaceRange,
 } from "#/lib/places";
 import { localToday } from "#/lib/planned";
 import { unwrap } from "#/lib/unwrap";
 import { getPlacesFn } from "#/server/transactions";
 import type { PlaceTotal } from "#/types/api";
 
-const searchSchema = z.object({ range: z.enum(PLACE_RANGES).optional().catch(undefined) });
+const searchSchema = z.object({
+	range: z.enum(PLACE_RANGES).optional().catch(undefined),
+});
 
 export const Route = createFileRoute("/_protected/places")({
 	validateSearch: searchSchema,
@@ -116,7 +118,7 @@ function PlacesPage() {
 
 	const names = useMemo(() => places.map((p) => placeLabel(p)), [places]);
 	const money = useMemo(
-		() => places.map((p) => formatMoney(String(p.spent), currency)),
+		() => places.map((p) => formatMoney(p.spent, currency)),
 		[places, currency],
 	);
 	const onFocus = useCallback((i: number) => setFocused(i), []);
@@ -135,7 +137,12 @@ function PlacesPage() {
 						label: `${places.length} ${places.length === 1 ? "place" : "places"}`,
 					},
 					...(places.length > 0
-						? [{ symbol: "payments", label: formatMoney(String(total), currency) }]
+						? [
+								{
+									symbol: "payments",
+									label: formatMoney(String(total), currency),
+								},
+							]
 						: []),
 				]}
 				description="Where your spending went, from the transactions you marked with a location. Add one with the location button in the transaction form."

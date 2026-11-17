@@ -7,9 +7,9 @@ import { MORPH_TRANSITION, morph } from "#/lib/shape";
 import { SYMBOL_FILLED } from "#/lib/symbols";
 import IconSymbol from "./Symbol";
 
-const Anchor = forwardRef<HTMLAnchorElement, ButtonBaseProps<"a">>(
-	(props, ref) => <ButtonBase ref={ref} component="a" focusRipple {...props} />,
-);
+const Anchor = forwardRef<HTMLAnchorElement, ButtonBaseProps<"a">>((props, ref) => (
+	<ButtonBase ref={ref} component="a" focusRipple {...props} />
+));
 const SideAnchor = createLink(Anchor);
 
 /**
@@ -71,8 +71,7 @@ export default function SideNavItem({
 					bgcolor: "color-mix(in oklab, var(--accent) 12%, transparent)",
 					"& .sym": {
 						fontVariationSettings: SYMBOL_FILLED,
-						color:
-							"color-mix(in oklab, var(--accent) 85%, var(--md-sys-color-on-surface))",
+						color: "color-mix(in oklab, var(--accent) 85%, var(--md-sys-color-on-surface))",
 					},
 				},
 				"@media (prefers-reduced-motion: reduce)": {

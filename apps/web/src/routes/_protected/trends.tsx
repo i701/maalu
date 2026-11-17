@@ -28,18 +28,11 @@ import {
 import { unwrap } from "#/lib/unwrap";
 import { getCategoryMonthsFn } from "#/server/transactions";
 
+const KIND_KEYS = ["expense", "income"] as const;
+
 const searchSchema = z.object({
-	months: z
-		.union(
-			TREND_RANGES.map((n) => z.literal(n)) as [
-				z.ZodLiteral<6>,
-				z.ZodLiteral<12>,
-				z.ZodLiteral<24>,
-			],
-		)
-		.optional()
-		.catch(undefined),
-	kind: z.enum(["expense", "income"]).optional().catch(undefined),
+	months: z.literal(TREND_RANGES).optional().catch(undefined),
+	kind: z.enum(KIND_KEYS).optional().catch(undefined),
 	view: z.enum(["table", "chart"]).optional().catch(undefined),
 });
 
@@ -100,7 +93,7 @@ function TrendsPage() {
 					}
 					aria-label="What to show"
 				>
-					{(Object.keys(KINDS) as (keyof typeof KINDS)[]).map((k) => (
+					{KIND_KEYS.map((k) => (
 						<ToggleButton key={k} value={k} sx={{ px: 1.5, py: 0.5 }}>
 							{KINDS[k].label}
 						</ToggleButton>

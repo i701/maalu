@@ -1,13 +1,14 @@
 import Grid from "@mui/material/Grid";
-import Money from "#/components/Money";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import Money from "#/components/Money";
 import { formatDate } from "#/lib/format";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
+import { getString, isOneOf } from "#/lib/utils";
 import { createSubscriptionFromTransactionFn } from "#/server/subscriptions";
-import { INTERVAL_UNITS, type IntervalUnit, type Transaction } from "#/types/api";
+import { INTERVAL_UNITS, type Transaction } from "#/types/api";
 import FormDialog from "./FormDialog";
 import { useNotify } from "./Notify";
 
@@ -24,15 +25,17 @@ export default function MakeSubscriptionDialog({
 	const notify = useNotify();
 	const defaultName = transaction.vendor?.name ?? transaction.category;
 
-	async function submit(e: React.FormEvent<HTMLFormElement>) {
+	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		const f = new FormData(e.currentTarget);
+		const unit = getString(f, "interval_unit");
+		if (!isOneOf(unit, INTERVAL_UNITS)) return;
 		const ok = await run(() =>
 			createSubscriptionFromTransactionFn({
 				data: {
 					transaction_id: transaction.id,
-					name: String(f.get("name")).trim() || undefined,
-					interval_unit: String(f.get("interval_unit")) as IntervalUnit,
+					name: getString(f, "name").trim() || undefined,
+					interval_unit: unit,
 					interval_count: Number(f.get("interval_count")),
 				},
 			}),

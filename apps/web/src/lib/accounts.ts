@@ -189,10 +189,10 @@ export function accountTints(ids: readonly string[]): Map<string, Accent> {
 	const out = new Map<string, Accent>();
 	for (const id of [...ids].toSorted()) {
 		const start = hash(id) % TINTS.length;
-		let pick = TINTS[start] as Accent;
+		let pick = TINTS[start];
 		if (taken.size < TINTS.length) {
 			for (let step = 0; step < TINTS.length; step++) {
-				const candidate = TINTS[(start + step) % TINTS.length] as Accent;
+				const candidate = TINTS[(start + step) % TINTS.length];
 				if (!taken.has(candidate)) {
 					pick = candidate;
 					break;

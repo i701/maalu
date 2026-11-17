@@ -1,10 +1,11 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { memo } from "react";
-import { blockKey, inlineSegments, type DocBlock } from "#/lib/docs";
+import { blockKey, type DocBlock, inlineSegments } from "#/lib/docs";
+import { exhaustiveAssertion } from "#/lib/utils";
 import { RouterLink } from "../RouterLinks";
+import IconSymbol from "../Symbol";
 import DEMOS from "./Demos";
-import Symbol from "../Symbol";
 
 /** Text with `**bold**` shown bold (the names of buttons and settings) and `[label](/page)` shown as
  * a link that stays inside the app. */
@@ -14,7 +15,7 @@ function Inline({ text }: { text: string }) {
 			{inlineSegments(text).map((s) =>
 				s.href ? (
 					// the address was checked against the real pages when the guide was tested
-					<RouterLink key={s.at} to={s.href as never} sx={{ fontWeight: 500 }}>
+					<RouterLink key={s.at} to={s.href} sx={{ fontWeight: 500 }}>
 						{s.text}
 					</RouterLink>
 				) : s.bold ? (
@@ -30,9 +31,21 @@ function Inline({ text }: { text: string }) {
 }
 
 const TONES = {
-	tip: { symbol: "lightbulb", accent: "var(--md-sys-color-tertiary)", label: "Tip" },
-	note: { symbol: "info", accent: "var(--md-sys-color-primary)", label: "Note" },
-	warning: { symbol: "warning", accent: "var(--md-sys-color-error)", label: "Careful" },
+	tip: {
+		symbol: "lightbulb",
+		accent: "var(--md-sys-color-tertiary)",
+		label: "Tip",
+	},
+	note: {
+		symbol: "info",
+		accent: "var(--md-sys-color-primary)",
+		label: "Note",
+	},
+	warning: {
+		symbol: "warning",
+		accent: "var(--md-sys-color-error)",
+		label: "Careful",
+	},
 } as const;
 
 function Callout({ block }: { block: Extract<DocBlock, { type: "callout" }> }) {
@@ -48,7 +61,7 @@ function Callout({ block }: { block: Extract<DocBlock, { type: "callout" }> }) {
 				bgcolor: `color-mix(in oklab, ${tone.accent} 12%, var(--md-sys-color-surface-container-low))`,
 			}}
 		>
-			<Symbol
+			<IconSymbol
 				name={tone.symbol}
 				size={22}
 				filled
@@ -80,7 +93,10 @@ function Example({ block }: { block: Extract<DocBlock, { type: "example" }> }) {
 						key={label}
 						sx={{
 							display: "grid",
-							gridTemplateColumns: { xs: "1fr", sm: "minmax(0, 1fr) minmax(0, 1.4fr)" },
+							gridTemplateColumns: {
+								xs: "1fr",
+								sm: "minmax(0, 1fr) minmax(0, 1.4fr)",
+							},
 							columnGap: 2,
 						}}
 					>
@@ -124,7 +140,12 @@ function Demo({ block }: { block: Extract<DocBlock, { type: "demo" }> }) {
 			>
 				<Typography
 					variant="overline"
-					sx={{ display: "block", color: "text.secondary", letterSpacing: 0.6, mb: 0.5 }}
+					sx={{
+						display: "block",
+						color: "text.secondary",
+						letterSpacing: 0.6,
+						mb: 0.5,
+					}}
 				>
 					Example with made-up data
 				</Typography>
@@ -175,7 +196,14 @@ function Steps({ items }: { items: string[] }) {
 	return (
 		<Box
 			component="ol"
-			sx={{ m: 0, p: 0, listStyle: "none", display: "grid", gap: 1.25, counterReset: "step" }}
+			sx={{
+				m: 0,
+				p: 0,
+				listStyle: "none",
+				display: "grid",
+				gap: 1.25,
+				counterReset: "step",
+			}}
 		>
 			{items.map((item, i) => (
 				<Box key={item} component="li" sx={{ display: "flex", gap: 1.5, alignItems: "flex-start" }}>
@@ -218,7 +246,12 @@ const DocBlocks = memo(function DocBlocks({ blocks }: { blocks: readonly DocBloc
 								key={block.id}
 								id={block.id}
 								variant="h2"
-								sx={{ fontSize: 22, fontWeight: 600, mt: i === 0 ? 0 : 2, scrollMarginTop: 88 }}
+								sx={{
+									fontSize: 22,
+									fontWeight: 600,
+									mt: i === 0 ? 0 : 2,
+									scrollMarginTop: 88,
+								}}
 							>
 								{block.text}
 							</Typography>
@@ -262,6 +295,8 @@ const DocBlocks = memo(function DocBlocks({ blocks }: { blocks: readonly DocBloc
 								))}
 							</Box>
 						);
+					default:
+						return exhaustiveAssertion(block);
 				}
 			})}
 		</Box>

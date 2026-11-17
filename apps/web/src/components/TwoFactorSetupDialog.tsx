@@ -3,12 +3,13 @@ import Box from "@mui/material/Box";
 import Skeleton from "@mui/material/Skeleton";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { type FormEvent, useEffect, useRef, useState } from "react";
+import { type SubmitEvent, useEffect, useRef, useState } from "react";
 import { useSheet } from "#/lib/sheet";
 import { friendlyError, useAction } from "#/lib/use-action";
 import { enableTwoFactorFn, startTwoFactorFn } from "#/server/auth";
 import type { TwoFactorSetup } from "#/types/api";
 import FormDialog from "./FormDialog";
+import { getString } from "#/lib/utils";
 
 /** Turn two-factor on: scan the QR code (or type the key) into an authenticator app, then confirm
  * with a code from it. The secret only counts once a code from it has been accepted. */
@@ -36,9 +37,9 @@ export default function TwoFactorSetupDialog({
 		);
 	}, []);
 
-	async function submit(e: FormEvent<HTMLFormElement>) {
+	async function submit(e: SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
-		const code = String(new FormData(e.currentTarget).get("code")).trim();
+		const code = getString(new FormData(e.currentTarget), "code").trim();
 		let codes: string[] = [];
 		const done = await run(async () => {
 			const res = await enableTwoFactorFn({ data: { code } });
@@ -71,7 +72,12 @@ export default function TwoFactorSetupDialog({
 						component="img"
 						src={setup.qr_data_uri}
 						alt="QR code for the authenticator app"
-						sx={{ width: 200, height: 200, borderRadius: "var(--shape-md)", bgcolor: "#fff" }}
+						sx={{
+							width: 200,
+							height: 200,
+							borderRadius: "var(--shape-md)",
+							bgcolor: "#fff",
+						}}
 					/>
 				) : setupError ? null : (
 					<Skeleton variant="rounded" width={200} height={200} />
@@ -91,7 +97,9 @@ export default function TwoFactorSetupDialog({
 				autoComplete="one-time-code"
 				required
 				disabled={!setup}
-				slotProps={{ htmlInput: { inputMode: "numeric", pattern: "[0-9 ]*", maxLength: 7 } }}
+				slotProps={{
+					htmlInput: { inputMode: "numeric", pattern: "[0-9 ]*", maxLength: 7 },
+				}}
 			/>
 		</FormDialog>
 	);

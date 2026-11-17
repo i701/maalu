@@ -90,7 +90,7 @@ export default function ResponsiveTable<T>({
 
 	const measure = useCallback(
 		(el: HTMLDivElement | null) => {
-			if (!el) return;
+			if (!el) return undefined;
 			const observer = new ResizeObserver(([entry]) => {
 				if (entry) setIsWide(entry.contentRect.width >= minWidth);
 			});

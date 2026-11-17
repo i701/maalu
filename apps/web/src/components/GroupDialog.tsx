@@ -10,6 +10,7 @@ import { addToGroupFn, createGroupFn } from "#/server/groups";
 import type { TransactionGroup } from "#/types/api";
 import FormDialog from "./FormDialog";
 import { useNotify } from "./Notify";
+import { getString } from "#/lib/utils";
 
 type Mode = "new" | "existing";
 
@@ -36,14 +37,14 @@ export default function GroupDialog({
 	const [target, setTarget] = useState("");
 	const [localError, setLocalError] = useState<string | null>(null);
 
-	async function submit(e: React.FormEvent<HTMLFormElement>) {
+	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		const form = new FormData(e.currentTarget);
 		if (mode === "new") {
 			const problem = groupSizeProblem(ids.length);
 			if (problem) return setLocalError(problem);
-			const name = String(form.get("name") ?? "").trim();
-			const note = String(form.get("note") ?? "").trim() || null;
+			const name = getString(form, "name").trim();
+			const note = getString(form, "note").trim() || null;
 			setLocalError(null);
 			if (await run(() => createGroupFn({ data: { name, note, transaction_ids: ids } }))) {
 				notify(groupedMessage(ids.length, name, true));

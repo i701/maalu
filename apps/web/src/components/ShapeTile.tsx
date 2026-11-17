@@ -2,9 +2,7 @@ import Box from "@mui/material/Box";
 import type { ReactNode } from "react";
 import shapes from "#/assets/shapes.json";
 
-const MASKS = (shapes as string[]).map(
-	(svg) => `url("data:image/svg+xml,${encodeURIComponent(svg)}")`,
-);
+const MASKS = shapes.map((svg) => `url("data:image/svg+xml,${encodeURIComponent(svg)}")`);
 
 /**
  * An icon on a tinted, polygon-shaped blob (one of seven shapes; the rounded diamond was taken out, it looked odd). The blob is masked, so it can

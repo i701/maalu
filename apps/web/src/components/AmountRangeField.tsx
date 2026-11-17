@@ -48,7 +48,7 @@ export default function AmountRangeField({
 	});
 
 	useEffect(() => {
-		if (invalid) return;
+		if (invalid) return undefined;
 		const timer = setTimeout(
 			() => report({ min: min || undefined, max: max || undefined }),
 			DEBOUNCE_MS,

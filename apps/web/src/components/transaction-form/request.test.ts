@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { Transaction, TransactionTemplate } from "#/types/api";
+import { withDefaults } from "#/lib/utils";
+import { makeTransaction, makeVendor } from "#/test/fixtures";
+import type { TransactionTemplate } from "#/types/api";
 import {
 	buildTemplateRequest,
 	initialValues,
@@ -52,22 +54,17 @@ describe("seedFromTemplate", () => {
 
 describe("seedFromTransaction", () => {
 	it("copies the details but not the old exchange rate", () => {
-		const t = {
-			type: "expense",
+		const t = makeTransaction({
 			amount: "30.5000",
-			to_amount: null,
 			payment_method: "credit_card",
 			category: "Fuel",
 			description: "Top up",
-			splits: [],
 			currency: "USD",
 			exchange_rate: "15.4",
-			subscription: null,
 			account: null,
-			to_account: null,
 			tags: [{ id: "g1", name: "Trip", color: "blue" }],
-			vendor: { name: "Shell" },
-		} as unknown as Transaction;
+			vendor: makeVendor("Shell"),
+		});
 		const seed = seedFromTransaction(t);
 		expect(seed.exchange_rate).toBe("");
 		expect(seed.amount).toBe("30.5");
@@ -82,20 +79,22 @@ const form = (values: Record<string, string>) => {
 	for (const [k, v] of Object.entries(values)) f.set(k, v);
 	return f;
 };
-const state = (over: object) =>
-	({
-		type: "expense",
-		accountId: "",
-		toAccountId: "",
-		account: null,
-		card: null,
-		toAccount: null,
-		crossCurrency: false,
-		foreign: false,
-		subscription: null,
-		splits: null,
-		...over,
-	}) as Parameters<typeof buildTemplateRequest>[1];
+type State = Parameters<typeof buildTemplateRequest>[1];
+const expenseState: State = {
+	type: "expense",
+	accountId: "",
+	toAccountId: "",
+	account: null,
+	card: null,
+	toAccount: null,
+	crossCurrency: false,
+	foreign: false,
+	subscription: null,
+	planned: false,
+	splits: null,
+	location: null,
+};
+const state = (over: Partial<State> = {}): State => withDefaults(expenseState, over);
 
 describe("buildTemplateRequest", () => {
 	it("saves what was typed and leaves out what was not", () => {
@@ -159,19 +158,6 @@ const withTags = (...tags: string[]) => {
 };
 
 describe("tags", () => {
-	const expenseState = {
-		type: "expense",
-		accountId: "",
-		toAccountId: "",
-		account: null,
-		card: null,
-		toAccount: null,
-		crossCurrency: false,
-		foreign: false,
-		subscription: null,
-		splits: null,
-	} as Parameters<typeof buildTemplateRequest>[1];
-
 	it("saves every typed tag on a template, and none when there are none", () => {
 		expect(buildTemplateRequest(withTags("Trip", "Need"), expenseState, "t")).toMatchObject({
 			draft: { tags: ["Trip", "Need"] },

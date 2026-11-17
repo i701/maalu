@@ -1,9 +1,9 @@
 import Alert from "@mui/material/Alert";
-import Money from "#/components/Money";
 import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import { useState } from "react";
+import Money from "#/components/Money";
 import { type AdjustMode, adjustmentPreview } from "#/lib/accounts";
 import { formatMoney, todayIso } from "#/lib/format";
 import { useSheet } from "#/lib/sheet";
@@ -12,6 +12,7 @@ import { adjustAccountFn } from "#/server/accounts";
 import type { Account } from "#/types/api";
 import FormDialog from "./FormDialog";
 import { useNotify } from "./Notify";
+import { getString } from "#/lib/utils";
 
 const KIND = { income: "an income", expense: "an expense" } as const;
 
@@ -32,13 +33,13 @@ export default function AdjustBalanceDialog({
 	const [typed, setTyped] = useState("");
 	const preview = adjustmentPreview(account.balance, mode, typed);
 
-	async function submit(e: React.FormEvent<HTMLFormElement>) {
+	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		if (!preview || preview.kind === null) return;
 		const f = new FormData(e.currentTarget);
 		const value = typed.trim();
-		const date = String(f.get("date") ?? "") || undefined;
-		const note = String(f.get("note") ?? "").trim() || null;
+		const date = getString(f, "date") || undefined;
+		const note = getString(f, "note").trim() || null;
 		const ok = await run(() =>
 			adjustAccountFn({
 				data: {

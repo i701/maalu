@@ -48,7 +48,7 @@ export default function SortKindsDialog({
 	// "Unsorted" is judged on what was opened, so a row doesn't vanish the moment it is set.
 	const shown = onlyUnsorted ? spending.filter((c) => c.effective_kind == null) : spending;
 
-	async function submit(e: React.FormEvent<HTMLFormElement>) {
+	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		const groups = [...CATEGORY_KINDS, "none" as const].map((choice) => ({
 			kind: choice === "none" ? null : choice,
@@ -103,7 +103,14 @@ export default function SortKindsDialog({
 							py: 0.5,
 						}}
 					>
-						<Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
+						<Box
+							sx={{
+								display: "flex",
+								alignItems: "center",
+								gap: 1,
+								minWidth: 0,
+							}}
+						>
 							<CategoryDot color={c.color} />
 							<Typography noWrap variant="body2" sx={{ fontWeight: 500 }}>
 								{c.name}

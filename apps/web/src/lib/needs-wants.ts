@@ -34,7 +34,11 @@ export function kindShares(categories: CategoryTotal[]): KindShare[] | null {
 	const spending = categories.filter((c) => c.type === "expense");
 	const rows = KIND_ORDER.map((kind) => {
 		const mine = spending.filter((c) => (c.kind ?? "unsorted") === kind);
-		return { kind, total: sumDecimals(mine.map((c) => c.total)), categories: mine.length };
+		return {
+			kind,
+			total: sumDecimals(mine.map((c) => c.total)),
+			categories: mine.length,
+		};
 	});
 	const positive = rows.map((r) => Math.max(0, Number(r.total)));
 	const sum = positive.reduce((a, b) => a + b, 0);

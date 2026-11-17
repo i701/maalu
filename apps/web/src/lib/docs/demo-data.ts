@@ -198,4 +198,4 @@ export const budgetDemo: Budget = {
 		status: "ok",
 	},
 	attention: 2,
-} as Budget;
+};

@@ -12,6 +12,7 @@ import {
 	type PaymentMethod,
 	type TransactionType,
 } from "#/types/api";
+import { isOneOf } from "#/lib/utils";
 import { cardText } from "#/lib/cards";
 import CategoryField from "../CategoryField";
 import CurrencyField from "../CurrencyField";
@@ -180,7 +181,9 @@ export default function OrdinaryFields({
 					label="Payment method"
 					name="payment_method"
 					value={paymentMethod}
-					onChange={(e) => onPaymentMethodChange(e.target.value as PaymentMethod)}
+					onChange={(e) => {
+						if (isOneOf(e.target.value, PAYMENT_METHODS)) onPaymentMethodChange(e.target.value);
+					}}
 					required
 				>
 					{PAYMENT_METHODS.map((m) => (

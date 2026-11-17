@@ -2,7 +2,7 @@ import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { type FormEvent, useState } from "react";
+import { type SubmitEvent, useState } from "react";
 import { GRACE_OPTIONS } from "#/lib/api-keys";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
@@ -25,12 +25,14 @@ export default function RotateDialog({
 	const sheet = useSheet(onClose);
 	const [grace, setGrace] = useState("24");
 
-	async function submit(e: FormEvent<HTMLFormElement>) {
+	async function submit(e: SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		let result: ApiKeySecret | undefined;
 		const hours = Number(grace);
 		const done = await run(async () => {
-			const res = await rotateApiKeyFn({ data: { id: apiKey.id, grace_hours: hours } });
+			const res = await rotateApiKeyFn({
+				data: { id: apiKey.id, grace_hours: hours },
+			});
 			if (res.ok) result = res.data;
 			return res;
 		});

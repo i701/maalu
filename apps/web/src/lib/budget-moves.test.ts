@@ -61,7 +61,7 @@ describe("moveSources", () => {
 				line("t", "Taxi", { available: "-20.0000" }),
 				line("f", "Fun", { available: "2500.0000" }),
 			],
-		} as Budget;
+		} satisfies Pick<Budget, "lines">;
 		expect(moveSources(budget, "g").map((s) => [s.line.name, s.usable])).toEqual([
 			["Fun", true],
 			["Dining", true],

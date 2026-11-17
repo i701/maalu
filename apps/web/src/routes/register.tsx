@@ -8,6 +8,7 @@ import { useState } from "react";
 import AuthLayout from "#/components/AuthLayout";
 import CurrencyField from "#/components/CurrencyField";
 import { RouterButton, RouterLink } from "#/components/RouterLinks";
+import { getString } from "#/lib/utils";
 import { getRegistrationFn, getSessionFn, registerFn } from "#/server/auth";
 import { listCurrenciesFn } from "#/server/currencies";
 
@@ -31,7 +32,7 @@ function RegisterPage() {
 	const [error, setError] = useState<string | null>(null);
 	const [pending, setPending] = useState(false);
 
-	async function submit(e: React.FormEvent<HTMLFormElement>) {
+	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		const f = new FormData(e.currentTarget);
 		setPending(true);
@@ -39,9 +40,9 @@ function RegisterPage() {
 		try {
 			const res = await registerFn({
 				data: {
-					email: String(f.get("email")),
-					password: String(f.get("password")),
-					base_currency: String(f.get("base_currency")).toUpperCase(),
+					email: getString(f, "email"),
+					password: getString(f, "password"),
+					base_currency: getString(f, "base_currency").toUpperCase(),
 				},
 			});
 			if (!res.ok) return setError(res.error);

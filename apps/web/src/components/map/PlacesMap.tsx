@@ -42,7 +42,7 @@ export default function PlacesMap({
 	const focus = useEffectEvent((index: number) => onFocus(index));
 
 	useEffect(() => {
-		if (!map || !L) return;
+		if (!map || !L) return undefined;
 		const group = L.featureGroup();
 		const biggest = Math.max(...places.map((p) => Number(p.spent)), 1);
 		const created = places.map((p, i) => {
@@ -60,7 +60,7 @@ export default function PlacesMap({
 		markers.current = created;
 		// a click on any circle reaches the group, which says which one it was
 		const onClick = (e: { layer?: unknown }) => {
-			const index = created.indexOf(e.layer as CircleMarker);
+			const index = created.findIndex((m) => m === e.layer);
 			if (index >= 0) focus(index);
 		};
 		group.on("click", onClick);
@@ -75,9 +75,9 @@ export default function PlacesMap({
 
 	useEffect(() => {
 		if (!map) return;
-		markers.current.forEach((m, i) =>
-			m.getElement()?.classList.toggle("is-focused", i === focused),
-		);
+		markers.current.forEach((m, i) => {
+			m.getElement()?.classList.toggle("is-focused", i === focused);
+		});
 		const marker = focused === null ? undefined : markers.current[focused];
 		if (!marker) return;
 		map.flyTo(marker.getLatLng(), Math.max(map.getZoom(), 14), { duration: 0.6 });

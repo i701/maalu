@@ -140,9 +140,7 @@ export default function TransactionForm({
 		vendorDefaults.onVendorChange(value, fromUser);
 		if (!fromUser || location) return;
 		const typed = value.trim().toLowerCase();
-		const spot = placeOf(
-			vendors.find((v) => v.name.toLowerCase() === typed) ?? {},
-		);
+		const spot = placeOf(vendors.find((v) => v.name.toLowerCase() === typed) ?? {});
 		if (spot) fields.setLocation(spot);
 	}
 
@@ -180,16 +178,12 @@ export default function TransactionForm({
 					success: request.success,
 					type,
 					form,
-					itemCategories: splits.enabled
-						? splits.rows.map((r) => r.category)
-						: null,
+					itemCategories: splits.enabled ? splits.rows.map((r) => r.category) : null,
 					planned,
 				});
 				notify(message.text, message.severity);
 				// files picked on a new transaction go up now that it has an id
-				for (const text of created
-					? await uploadPending(created.id, attachments, links)
-					: [])
+				for (const text of created ? await uploadPending(created.id, attachments, links) : [])
 					if (text) notify(text, "warning");
 				if (another && !transaction) {
 					fillFrom(seedAfterSave(form, formState()));
@@ -215,10 +209,7 @@ export default function TransactionForm({
 				<Grid container columnSpacing={2} key={fields.round}>
 					{!transaction && templates.length > 0 && (
 						<Cell size={12}>
-							<TemplatePicker
-								templates={templates}
-								onPick={(t) => fillFrom(seedFromTemplate(t))}
-							/>
+							<TemplatePicker templates={templates} onPick={(t) => fillFrom(seedFromTemplate(t))} />
 						</Cell>
 					)}
 					<Cell size={12}>
@@ -227,18 +218,11 @@ export default function TransactionForm({
 							fullWidth
 							size="small"
 							value={type}
-							onChange={(_, next: TransactionType | null) =>
-								next && changeType(next)
-							}
+							onChange={(_, next: TransactionType | null) => next && changeType(next)}
 							aria-label="Transaction type"
 						>
 							{TRANSACTION_TYPES.map((t) => (
-								<ToggleButton
-									key={t}
-									value={t}
-									color={TYPE_COLOR[t]}
-									sx={{ py: 1 }}
-								>
+								<ToggleButton key={t} value={t} color={TYPE_COLOR[t]} sx={{ py: 1 }}>
 									{TRANSACTION_TYPE_LABELS[t]}
 								</ToggleButton>
 							))}
@@ -305,9 +289,7 @@ export default function TransactionForm({
 							label="Time"
 							name="transaction_time"
 							type="time"
-							defaultValue={
-								formatTime(transaction?.transaction_time ?? null) ?? ""
-							}
+							defaultValue={formatTime(transaction?.transaction_time ?? null) ?? ""}
 							slotProps={{ inputLabel: { shrink: true } }}
 						/>
 					</Cell>
@@ -367,9 +349,7 @@ export default function TransactionForm({
 			</FormDialog>
 			{savingTemplate && (
 				<SaveTemplateDialog
-					build={(name) =>
-						buildTemplateRequest(savingTemplate, formState(), name)
-					}
+					build={(name) => buildTemplateRequest(savingTemplate, formState(), name)}
 					onClose={() => setSavingTemplate(null)}
 				/>
 			)}

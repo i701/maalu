@@ -42,17 +42,19 @@ export const MORPH_TRANSITION =
  * rounded token and can be given to choose a bigger step. A pill taller than its corner token
  * should rest at half its height (or `xl`) rather than `full`, so the spring starts moving at once.
  */
+function isStep(val: string): val is Step {
+	return val in LESS;
+}
+
 export function morph(rest: Step | (string & {}), active?: Step | (string & {})) {
-	const to = css(active ?? (rest in LESS ? LESS[rest as Step] : "var(--shape-md)"));
+	const fallback = isStep(rest) ? LESS[rest] : "var(--shape-md)";
+	const to = css(active ?? fallback);
+
 	return {
 		borderRadius: css(rest),
 		transition: MORPH_TRANSITION,
-		// The conditions are written in the opposite order to the usual "(hover: hover) and
-		// (pointer: fine)": an element that spreads this and then writes its own hover block would
-		// otherwise replace this key by having the same name.
 		"@media (pointer: fine) and (hover: hover)": { "&:hover": { borderRadius: to } },
 		"&:focus-visible, &:focus-within": { borderRadius: to },
-		// No springing shapes for people who ask for less motion.
 		"@media (prefers-reduced-motion: reduce)": { transition: "none" },
 	} as const;
 }

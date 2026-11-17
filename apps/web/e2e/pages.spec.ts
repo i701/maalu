@@ -31,7 +31,7 @@ test("every page opens without an error", async ({ page }) => {
 	await signUp(page);
 	for (const path of PAGES) {
 		await open(page, path);
-		await expect(page, path).toHaveURL(new RegExp(`${path}`));
+		await expect(page, path).toHaveURL(new RegExp(path));
 		await expect(page.getByText("Something went wrong"), path).toBeHidden();
 		await expect(page.getByRole("main"), path).toBeVisible();
 	}

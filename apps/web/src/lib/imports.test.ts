@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { Account, ImportPreview, PreviewRow } from "#/types/api";
+import { withDefaults } from "#/lib/utils";
+import { accountRef } from "#/test/fixtures";
+import type { ImportPreview, PreviewRow } from "#/types/api";
 import {
 	accountForFilename,
 	balanceNote,
@@ -32,8 +34,22 @@ const row = (over: Partial<PreviewRow> = {}): PreviewRow => ({
 	duplicate: null,
 	...over,
 });
-const preview = (rows: PreviewRow[], over: Partial<ImportPreview> = {}) =>
-	({ rows, balance_matches: null, ...over }) as ImportPreview;
+const preview = (rows: PreviewRow[], over: Partial<ImportPreview> = {}): ImportPreview =>
+	withDefaults<ImportPreview>(
+		{
+			rows,
+			account: accountRef("acc"),
+			profile: "bml",
+			balance_matches: null,
+			balance_now: "0",
+			balance_after: "0",
+			opening_balance: null,
+			closing_balance: null,
+			duplicate_count: 0,
+			new_count: rows.length,
+		},
+		over,
+	);
 
 describe("toReviewRows", () => {
 	it("leaves out rows already recorded and keeps the rest", () => {
@@ -124,7 +140,7 @@ describe("commitRows", () => {
 	});
 });
 
-const account = (id: string, number: string | null) => ({ id, account_number: number }) as Account;
+const account = (id: string, number: string | null) => ({ id, account_number: number });
 
 describe("accountForFilename", () => {
 	it("finds the account whose number is in the file name", () => {

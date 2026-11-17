@@ -9,17 +9,19 @@ import {
 	accountEffect,
 	signOf,
 } from "./account-detail";
+import { accountRef, makeTransaction } from "#/test/fixtures";
 
-const tx = (over: Partial<Transaction>) =>
-	({
-		type: "expense",
-		amount: "100.0000",
-		currency: "MVR",
-		to_amount: null,
-		account: { id: "a", name: "Main", currency: "MVR" },
-		to_account: null,
-		...over,
-	}) as Transaction;
+const refundOf: NonNullable<Transaction["refund_of"]> = {
+	id: "x",
+	amount: "100.0000",
+	category: "Food",
+	currency: "MVR",
+	transaction_date: "2026-11-13",
+	vendor_name: null,
+};
+
+const tx = (over: Partial<Transaction>): Transaction =>
+	makeTransaction({ amount: "100.0000", account: accountRef("a", { name: "Main" }), ...over });
 
 describe("accountEffect", () => {
 	it("takes an expense out and brings income in, in the account's currency", () => {
@@ -28,15 +30,13 @@ describe("accountEffect", () => {
 	});
 
 	it("brings a refund in, since a refund is income to the account", () => {
-		expect(
-			accountEffect(tx({ type: "income", refund_of: { id: "x" } as never }), "a").positive,
-		).toBe(true);
+		expect(accountEffect(tx({ type: "income", refund_of: refundOf }), "a").positive).toBe(true);
 	});
 
 	it("takes a transfer out of its source and names where it went", () => {
 		const t = tx({
 			type: "transfer",
-			to_account: { id: "b", name: "Savings", currency: "MVR" } as Transaction["to_account"],
+			to_account: accountRef("b", { name: "Savings" }),
 		});
 		expect(accountEffect(t, "a")).toEqual({
 			positive: false,
@@ -52,8 +52,8 @@ describe("accountEffect", () => {
 			currency: "USD",
 			amount: "10.0000",
 			to_amount: "154.0000",
-			account: { id: "a", name: "Dollars", currency: "USD" } as Transaction["account"],
-			to_account: { id: "b", name: "Main", currency: "MVR" } as Transaction["to_account"],
+			account: accountRef("a", { name: "Dollars", currency: "USD" }),
+			to_account: accountRef("b", { name: "Main" }),
 		});
 		expect(accountEffect(t, "b")).toEqual({
 			positive: true,

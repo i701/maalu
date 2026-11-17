@@ -22,6 +22,7 @@ import {
 	type Tag,
 	type TransactionType,
 } from "#/types/api";
+import { isOneOf } from "#/lib/utils";
 import AmountRangeField from "./AmountRangeField";
 import DateRangeField from "./DateRangeField";
 import FilterChip from "./FilterChip";
@@ -241,7 +242,9 @@ export default function TransactionFilters({
 					size="small"
 					value={filters.payment_method ?? ""}
 					onChange={(e) =>
-						onChange({ payment_method: (e.target.value || undefined) as PaymentMethod | undefined })
+						onChange({
+							payment_method: isOneOf(e.target.value, PAYMENT_METHODS) ? e.target.value : undefined,
+						})
 					}
 					slotProps={{ htmlInput: { "aria-label": "Payment method" } }}
 				>

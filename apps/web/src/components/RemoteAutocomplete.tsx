@@ -52,7 +52,7 @@ export default function RemoteAutocomplete({
 	const query = value && input === value.label ? "" : input;
 
 	useEffect(() => {
-		if (!open) return;
+		if (!open) return undefined;
 		let cancelled = false;
 		const timer = setTimeout(
 			async () => {

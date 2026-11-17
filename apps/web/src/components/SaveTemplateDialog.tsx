@@ -1,10 +1,11 @@
 import TextField from "@mui/material/TextField";
-import { type FormEvent, useState } from "react";
+import { type SubmitEvent, useState } from "react";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
 import { createTemplateFn, type TemplateDraft } from "#/server/templates";
 import FormDialog from "./FormDialog";
 import { useNotify } from "./Notify";
+import { getString } from "#/lib/utils";
 
 /** Asks for a name and saves what is in the transaction form as a template. `build` turns the name
  * into the request, or a message when the form lacks something a template needs. */
@@ -20,9 +21,9 @@ export default function SaveTemplateDialog({
 	const notify = useNotify();
 	const [localError, setLocalError] = useState<string | null>(null);
 
-	async function submit(e: FormEvent<HTMLFormElement>) {
+	async function submit(e: SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
-		const name = String(new FormData(e.currentTarget).get("name") ?? "").trim();
+		const name = getString(new FormData(e.currentTarget), "name").trim();
 		const built = build(name);
 		if ("error" in built) return setLocalError(built.error);
 		setLocalError(null);

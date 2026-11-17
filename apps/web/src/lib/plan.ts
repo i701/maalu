@@ -1,6 +1,13 @@
-import { daysBetween } from "./planned";
-import { sumDecimals } from "./format";
 import type { AvailableToSpend } from "#/types/api";
+import { sumDecimals } from "./format";
+import { daysBetween } from "./planned";
+
+export type PlanInput = Pick<
+	AvailableToSpend,
+	"balance" | "reserved_total" | "bills" | "expected"
+> & {
+	card_payments?: AvailableToSpend["card_payments"];
+};
 
 /** One planned payment or planned income on the plan, with what is left after it. */
 export type PlanRow = {
@@ -27,7 +34,12 @@ export type PlanRow = {
 };
 
 /** The rows of one day, or all the overdue ones together. */
-export type PlanDay = { key: string; overdue: boolean; date: string | null; rows: PlanRow[] };
+export type PlanDay = {
+	key: string;
+	overdue: boolean;
+	date: string | null;
+	rows: PlanRow[];
+};
 
 /** What is available before any bill: the everyday accounts less what is set aside for goals. */
 export const startingPoint = (data: Pick<AvailableToSpend, "balance" | "reserved_total">): string =>
@@ -38,9 +50,13 @@ export const startingPoint = (data: Pick<AvailableToSpend, "balance" | "reserved
  * takes its amount off what is available, so you can see which one makes the month run short.
  * Income is listed on its day but never added, like the card on the dashboard.
  */
-export function planDays(data: AvailableToSpend): PlanDay[] {
+export function planDays(data: PlanInput): PlanDay[] {
 	const rows = [
-		...data.bills.map((b) => ({ ...b, kind: "bill" as const, cardId: null as string | null })),
+		...data.bills.map((b) => ({
+			...b,
+			kind: "bill" as const,
+			cardId: null as string | null,
+		})),
 		...(data.card_payments ?? []).map((c) => ({
 			id: c.account_id,
 			title: `${c.title} card payment`,
@@ -48,7 +64,7 @@ export function planDays(data: AvailableToSpend): PlanDay[] {
 			amount: c.amount,
 			overdue: c.overdue,
 			kind: "card" as const,
-			cardId: c.account_id as string | null,
+			cardId: c.account_id,
 		})),
 		...(data.expected ?? []).map((b) => ({
 			...b,
@@ -84,8 +100,8 @@ export function planDays(data: AvailableToSpend): PlanDay[] {
 			amount: r.amount,
 			account: "account" in r ? (r.account ?? null) : null,
 			subscription: "subscription" in r ? (r.subscription ?? null) : null,
-			estimate: "estimate" in r && Boolean(r.estimate),
-			transfer: "transfer" in r && Boolean(r.transfer),
+			estimate: "estimate" in r && r.estimate,
+			transfer: "transfer" in r && r.transfer,
 			left,
 			short,
 			firstShort,
@@ -94,12 +110,22 @@ export function planDays(data: AvailableToSpend): PlanDay[] {
 		const key = r.overdue ? "overdue" : r.date;
 		const last = days[days.length - 1];
 		if (last && last.key === key) last.rows.push(row);
-		else days.push({ key, overdue: r.overdue, date: r.overdue ? null : r.date, rows: [row] });
+		else
+			days.push({
+				key,
+				overdue: r.overdue,
+				date: r.overdue ? null : r.date,
+				rows: [row],
+			});
 	}
 	return days;
 }
 
-const DAY = new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short" });
+const DAY = new Intl.DateTimeFormat("en-GB", {
+	weekday: "short",
+	day: "numeric",
+	month: "short",
+});
 
 /** "Overdue", "Today", "Tomorrow", or "Thu 6 Nov" for a day group. */
 export function dayLabel(day: PlanDay, today: string): string {

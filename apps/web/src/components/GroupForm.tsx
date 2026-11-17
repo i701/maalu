@@ -1,6 +1,7 @@
 import TextField from "@mui/material/TextField";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
+import { getString } from "#/lib/utils";
 import { updateGroupFn } from "#/server/groups";
 import type { TransactionGroup } from "#/types/api";
 import FormDialog from "./FormDialog";
@@ -18,11 +19,11 @@ export default function GroupForm({
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
 
-	async function submit(e: React.FormEvent<HTMLFormElement>) {
+	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		const f = new FormData(e.currentTarget);
-		const name = String(f.get("name") ?? "").trim();
-		const note = String(f.get("note") ?? "").trim() || null;
+		const name = getString(f, "name").trim();
+		const note = getString(f, "note").trim() || null;
 		if (await run(() => updateGroupFn({ data: { id: group.id, changes: { name, note } } }))) {
 			notify("Group saved");
 			sheet.close();

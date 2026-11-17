@@ -1,9 +1,9 @@
 import { SUGGESTED_PAYMENT_METHOD } from "#/lib/accounts";
 import { toScaled } from "#/lib/decimal";
 import { newPlacePayload, placeOf, placePayload, type PlaceValue } from "#/lib/places";
+import { getString, isOneOf } from "#/lib/utils";
 import type { TemplateDraft } from "#/server/templates";
 import { createTransactionFn, updateTransactionFn } from "#/server/transactions";
-import type { SplitsState } from "./useSplits";
 import type {
 	Account,
 	AccountRef,
@@ -14,6 +14,8 @@ import type {
 	TransactionTemplate,
 	TransactionType,
 } from "#/types/api";
+import { PAYMENT_METHODS } from "#/types/api";
+import type { SplitsState } from "./useSplits";
 
 /** What the form starts from when it is not editing a transaction: a duplicate of one, a template,
  * or what was just saved ("Add another"). Only the fields the form pre-fills. */
@@ -90,7 +92,7 @@ export function seedAfterSave(f: FormData, s: State): TransactionSeed {
 		type: s.type,
 		amount: "",
 		to_amount: null,
-		payment_method: (text(f, "payment_method") || "cash") as PaymentMethod,
+		payment_method: paymentMethod(f),
 		category: keepItems ? text(f, "category") : "",
 		description: null,
 		splits: [],
@@ -114,7 +116,9 @@ export function buildTemplateRequest(
 ): { error: string } | { draft: TemplateDraft } {
 	const transfer = s.type === "transfer";
 	if (transfer && (!s.accountId || !s.toAccountId))
-		return { error: "Choose both accounts first: a transfer template needs them" };
+		return {
+			error: "Choose both accounts first: a transfer template needs them",
+		};
 	const amount = text(f, "amount");
 	const category = text(f, "category");
 	const vendor = text(f, "vendor");
@@ -125,7 +129,7 @@ export function buildTemplateRequest(
 			name,
 			type: s.type,
 			amount: s.splits || !amount || Number(amount) <= 0 ? undefined : amount,
-			...(transfer ? {} : { payment_method: text(f, "payment_method") as PaymentMethod }),
+			...(transfer ? {} : { payment_method: paymentMethod(f) }),
 			...(!transfer && !s.splits && category ? { category } : {}),
 			...(!transfer && vendor ? { vendor_name: vendor } : {}),
 			...(description ? { description } : {}),
@@ -191,8 +195,14 @@ export function stateFrom(
 	};
 }
 
-const text = (f: FormData, k: string) => String(f.get(k) ?? "").trim();
-const tagNames = (f: FormData) => f.getAll("tags").map((v) => String(v));
+const text = (f: FormData, k: string) => getString(f, k).trim();
+/** The payment method select always holds one; "cash" only if the field is missing. */
+const paymentMethod = (f: FormData): PaymentMethod => {
+	const method = text(f, "payment_method");
+	return isOneOf(method, PAYMENT_METHODS) ? method : "cash";
+};
+const tagNames = (f: FormData) =>
+	f.getAll("tags").filter((v): v is string => typeof v === "string");
 
 function transferRequest(f: FormData, s: State): TransactionRequest {
 	const { transaction, accountId, toAccountId } = s;
@@ -221,11 +231,19 @@ function transferRequest(f: FormData, s: State): TransactionRequest {
 				? updateTransactionFn({
 						data: {
 							id: transaction.id,
-							changes: { ...fields, description: description || null, tags: tagNames(f) },
+							changes: {
+								...fields,
+								description: description || null,
+								tags: tagNames(f),
+							},
 						},
 					})
 				: createTransactionFn({
-						data: { ...fields, description: description || undefined, tags: tagNames(f) },
+						data: {
+							...fields,
+							description: description || undefined,
+							tags: tagNames(f),
+						},
 					}),
 	};
 }
@@ -267,7 +285,7 @@ function ordinaryRequest(f: FormData, s: State): TransactionRequest {
 		transaction_time: text(f, "transaction_time") || null,
 		currency: account ? account.currency : text(f, "currency").toUpperCase(),
 		exchange_rate: s.foreign ? text(f, "exchange_rate") : undefined,
-		payment_method: text(f, "payment_method") as PaymentMethod,
+		payment_method: paymentMethod(f),
 		planned: s.planned,
 		...(split ? { splits: split } : { category: text(f, "category") }),
 	};
@@ -350,11 +368,11 @@ export function initialValues(
 		};
 	const ordinary = seed && seed.type !== "transfer" ? seed : undefined;
 	return {
-		type: seed?.type ?? ("expense" as TransactionType),
+		type: seed?.type ?? "expense",
 		accountId: seed?.account?.id ?? "",
 		toAccountId: seed?.to_account?.id ?? "",
 		currency: ordinary?.currency ?? baseCurrency,
-		paymentMethod: ordinary?.payment_method ?? ("cash" as PaymentMethod),
+		paymentMethod: ordinary?.payment_method ?? "cash",
 		subscription: seed?.subscription ?? null,
 		cardId: seed?.card?.id ?? "",
 	};

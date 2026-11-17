@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { CategoryTotal } from "#/types/api";
+import { categoryTotal } from "#/test/fixtures";
 import { layoutFlow, moneyFlow } from "./money-flow";
 
 const cat = (type: "income" | "expense", category: string, total: number) =>
-	({ type, category, total: String(total) }) as CategoryTotal;
+	categoryTotal({ type, category, total: String(total) });
 
 describe("moneyFlow", () => {
 	it("is nothing when there is no money in or out", () => {

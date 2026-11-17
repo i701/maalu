@@ -26,7 +26,7 @@ export default function MergeCategoryDialog({
 	const others = categories.filter((c) => c.id !== category.id);
 	const [target, setTarget] = useState("");
 
-	async function submit(e: React.FormEvent<HTMLFormElement>) {
+	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		if (!target) return;
 		const ok = await run(() => mergeCategoryFn({ data: { id: category.id, into_id: target } }));

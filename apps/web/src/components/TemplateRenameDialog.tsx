@@ -5,6 +5,7 @@ import { renameTemplateFn } from "#/server/templates";
 import type { TransactionTemplate } from "#/types/api";
 import FormDialog from "./FormDialog";
 import { useNotify } from "./Notify";
+import { getString } from "#/lib/utils";
 
 export default function TemplateRenameDialog({
 	template,
@@ -17,9 +18,9 @@ export default function TemplateRenameDialog({
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
 
-	async function submit(e: React.FormEvent<HTMLFormElement>) {
+	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
-		const name = String(new FormData(e.currentTarget).get("name") ?? "").trim();
+		const name = getString(new FormData(e.currentTarget), "name").trim();
 		if (await run(() => renameTemplateFn({ data: { id: template.id, name } }))) {
 			notify("Template renamed");
 			sheet.close();

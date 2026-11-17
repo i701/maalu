@@ -14,8 +14,8 @@ import { reports } from "./reports";
 import { salarySplit } from "./salary-split";
 import { subscriptions } from "./subscriptions";
 import { tags } from "./tags";
-import { varyingBills } from "./varying-bills";
 import type { Doc } from "./types";
+import { varyingBills } from "./varying-bills";
 
 /** Every guide, in the order the index shows them: setting up, bills, planning, then reports. To add
  * one: write it in its own file here, import it below, and it appears on the Docs page. */
@@ -41,11 +41,18 @@ export const DOCS: readonly Doc[] = [
 export const findDoc = (slug: string): Doc | undefined => DOCS.find((d) => d.slug === slug);
 
 import type { DocBlock } from "./types";
+import { exhaustiveAssertion } from "../utils";
+
 export type { Doc, DocBlock } from "./types";
 
 /** A piece of a guide's text: plain, **bold**, or a link to a page of the app. `at` is where it
  * starts in the text, so it can be its key. */
-export type InlineSegment = { text: string; bold: boolean; href: string | null; at: number };
+export type InlineSegment = {
+	text: string;
+	bold: boolean;
+	href: string | null;
+	at: number;
+};
 
 const INLINE = /(\*\*[^*]+\*\*|\[[^\]]+\]\([^)\s]+\))/;
 const LINK = /^\[([^\]]+)\]\(([^)\s]+)\)$/;
@@ -96,5 +103,7 @@ export function blockKey(block: DocBlock): string {
 			return `image:${block.src}`;
 		case "demo":
 			return `demo:${block.id}`;
+		default:
+			return exhaustiveAssertion(block);
 	}
 }

@@ -4,7 +4,7 @@ import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { type FormEvent, useState } from "react";
+import { type SubmitEvent, useState } from "react";
 import { daysFromChoice, EXPIRY_OPTIONS, KEEP_EXPIRY, roleOf, toggleScope } from "#/lib/api-keys";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
@@ -44,12 +44,16 @@ export default function KeyFormDialog({
 		if (picked) setScopes([...picked.scopes]);
 	}
 
-	async function submit(e: FormEvent<HTMLFormElement>) {
+	async function submit(e: SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		if (scopes.length === 0) return setLocalError("Give the key at least one permission");
 		setLocalError(null);
 		if (apiKey) {
-			const changes: { name: string; scopes: string[]; expires_in_days?: number | null } = {
+			const changes: {
+				name: string;
+				scopes: string[];
+				expires_in_days?: number | null;
+			} = {
 				name: name.trim(),
 				scopes,
 			};
@@ -60,7 +64,11 @@ export default function KeyFormDialog({
 		let result: ApiKeySecret | undefined;
 		const done = await run(async () => {
 			const res = await createApiKeyFn({
-				data: { name: name.trim(), scopes, expires_in_days: daysFromChoice(expiry) },
+				data: {
+					name: name.trim(),
+					scopes,
+					expires_in_days: daysFromChoice(expiry),
+				},
 			});
 			if (res.ok) result = res.data;
 			return res;
@@ -151,7 +159,9 @@ export default function KeyFormDialog({
 												checked={scopes.includes(scope)}
 												onChange={(_, on) => setScopes((s) => toggleScope(s, scope, on))}
 												slotProps={{
-													input: { "aria-label": `${area.label}: ${action.label}` },
+													input: {
+														"aria-label": `${area.label}: ${action.label}`,
+													},
 												}}
 											/>
 										</Box>

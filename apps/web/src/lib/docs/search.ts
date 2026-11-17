@@ -1,3 +1,4 @@
+import { exhaustiveAssertion } from "../utils";
 import type { Doc, DocBlock } from "./types";
 
 /** A guide that matched a search, and where in it: the section and a passage from the body when
@@ -35,6 +36,8 @@ function blockTexts(block: DocBlock): string[] {
 			return block.caption ? [block.title, block.caption] : [block.title];
 		case "image":
 			return block.caption ? [block.alt, block.caption] : [block.alt];
+		default:
+			return exhaustiveAssertion(block);
 	}
 }
 

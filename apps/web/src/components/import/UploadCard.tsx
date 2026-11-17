@@ -48,7 +48,8 @@ export default function UploadCard({
 				);
 				return;
 			}
-			onPreview((await res.json()) as ImportPreview, file.name);
+			const preview: ImportPreview = await res.json();
+			onPreview(preview, file.name);
 		} catch {
 			setError("That file could not be read.");
 		} finally {

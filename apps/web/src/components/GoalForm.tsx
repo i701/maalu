@@ -4,6 +4,7 @@ import TextField from "@mui/material/TextField";
 import { useState } from "react";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
+import { getString } from "#/lib/utils";
 import { createGoalFn, updateGoalFn } from "#/server/goals";
 import type { Account, Goal } from "#/types/api";
 import FormDialog from "./FormDialog";
@@ -34,14 +35,14 @@ export default function GoalForm({
 
 	// A cards/loans balance is debt, and an account can follow only one goal.
 	const taken = new Set(
-		goals.filter((g) => g.id !== goal?.id && g.account).map((g) => g.account!.id),
+		goals.filter((g) => g.id !== goal?.id && g.account).map((g) => g.account?.id),
 	);
 	const choices = accounts.filter((a) => !a.is_liability);
 
-	async function submit(e: React.FormEvent<HTMLFormElement>) {
+	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
 		e.preventDefault();
 		const f = new FormData(e.currentTarget);
-		const text = (k: string) => String(f.get(k) ?? "").trim();
+		const text = (k: string) => getString(f, k).trim();
 		const fields = { name: text("name"), target_amount: text("target_amount") };
 		const ok = await run(() =>
 			goal

@@ -28,6 +28,13 @@ import { localToday } from "#/lib/planned";
 import { unwrap } from "#/lib/unwrap";
 import { getCategoryTotalsFn } from "#/server/transactions";
 
+const CUSTOM_FIELDS = {
+	nowFrom: "nf",
+	nowTo: "nt",
+	beforeFrom: "bf",
+	beforeTo: "bt",
+} as const satisfies Record<keyof CustomRanges, string>;
+
 const searchSchema = z.object({
 	preset: z.enum(PRESETS).optional().catch(undefined),
 	// the four dates of a custom comparison
@@ -83,11 +90,7 @@ function ComparePage() {
 	);
 	const setCustom = useCallback(
 		(key: keyof CustomRanges, value: string) => {
-			const field = { nowFrom: "nf", nowTo: "nt", beforeFrom: "bf", beforeTo: "bt" }[key] as
-				| "nf"
-				| "nt"
-				| "bf"
-				| "bt";
+			const field = CUSTOM_FIELDS[key];
 			void navigate({
 				search: (prev) => ({ ...prev, preset: "custom", [field]: value || undefined }),
 				replace: true,

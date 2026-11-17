@@ -18,7 +18,7 @@ export default function PwaRegister() {
 
 	useEffect(() => {
 		startPwa();
-		if (!import.meta.env.PROD || !("serviceWorker" in navigator)) return;
+		if (!import.meta.env.PROD || !("serviceWorker" in navigator)) return undefined;
 
 		let timer: ReturnType<typeof setInterval> | undefined;
 		let reloading = false;
