@@ -6,6 +6,7 @@ import Typography from "@mui/material/Typography";
 import { useAction } from "#/lib/use-action";
 import { updateMeFn } from "#/server/auth";
 import type { User } from "#/types/api";
+import SwitchHint from "./SwitchHint";
 
 /** How amounts are written. Off (the default), a figure is shown in full ("MVR 1,234.50") and only
  * a tight place, such as a strip of three figures on a phone, shortens it, from 10,000 up. On, every
@@ -28,11 +29,11 @@ export default function NumbersCard({ me }: { me: User }) {
 					}
 					label="Short numbers"
 				/>
-				<Typography variant="caption" component="p" sx={{ color: "text.secondary", ml: 6 }}>
+				<SwitchHint>
 					Show amounts of a thousand and over in a short form, like 1.2K or 3.4M, everywhere. Off,
 					amounts are shown in full, and only tight places (a row of figures on a phone) shorten
 					them, from 10,000 up. The exact amount is always on hover.
-				</Typography>
+				</SwitchHint>
 				{error && (
 					<Typography variant="caption" sx={{ color: "error.main" }}>
 						{error}

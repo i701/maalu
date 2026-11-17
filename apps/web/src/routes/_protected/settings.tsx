@@ -3,7 +3,6 @@ import CardContent from "@mui/material/CardContent";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Switch from "@mui/material/Switch";
 import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
 import { createFileRoute } from "@tanstack/react-router";
 import { useNotify } from "#/components/Notify";
 import PageHeader from "#/components/PageHeader";
@@ -25,6 +24,7 @@ import { getScopeCatalogFn, listApiKeysFn } from "#/server/api-keys";
 import { emailStatusFn } from "#/server/notifications";
 import { listSessionsFn } from "#/server/sessions";
 import SalaryRulesCard from "#/components/SalaryRulesCard";
+import SwitchHint from "#/components/SwitchHint";
 
 export const Route = createFileRoute("/_protected/settings")({
 	loader: async () => {
@@ -78,14 +78,10 @@ function SettingsPage() {
 							}
 							label="Start from a template"
 						/>
-						<Typography
-							variant="caption"
-							component="p"
-							sx={{ color: error ? "error.main" : "text.secondary" }}
-						>
+						<SwitchHint error={Boolean(error)}>
 							{error ??
 								"Offer your saved templates at the top of the new transaction form. Your templates are kept either way, and you can still save a transaction as a template."}
-						</Typography>
+						</SwitchHint>
 					</CardContent>
 				</Card>
 				<SalaryRulesCard

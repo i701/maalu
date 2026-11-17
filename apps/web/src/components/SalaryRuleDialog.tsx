@@ -6,7 +6,6 @@ import Stack from "@mui/material/Stack";
 import Switch from "@mui/material/Switch";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
-import Typography from "@mui/material/Typography";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { useSheet } from "#/lib/sheet";
@@ -16,6 +15,7 @@ import type { Account, Goal, SalaryRule } from "#/types/api";
 import FormDialog from "./FormDialog";
 import FormTextField from "./FormTextField";
 import { useNotify } from "./Notify";
+import SwitchHint from "./SwitchHint";
 
 /** A new rule needs its account or goal; a percent is at most the whole salary. */
 const ruleSchema = (isNew: boolean) =>
@@ -178,11 +178,11 @@ export default function SalaryRuleDialog({
 						}
 						label="Move it automatically when a salary arrives"
 					/>
-					<Typography variant="caption" component="p" sx={{ color: "text.secondary" }}>
+					<SwitchHint>
 						{auto
 							? "Made as soon as a salary is posted, without asking."
 							: "Off: it waits for your approval on the Pending screen."}
-					</Typography>
+					</SwitchHint>
 				</Box>
 			</Stack>
 		</FormDialog>

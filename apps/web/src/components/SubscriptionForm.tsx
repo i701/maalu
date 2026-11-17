@@ -2,7 +2,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Grid from "@mui/material/Grid";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
 import { type Control, Controller, type UseFormSetValue, useForm, useWatch } from "react-hook-form";
 import { useSheet } from "#/lib/sheet";
 import { installmentsFromField, REMIND_OPTIONS, remindFromField } from "#/lib/subscription";
@@ -34,6 +33,7 @@ import {
 } from "./subscription-form";
 import AccountPicker from "./transaction-form/AccountPicker";
 import VendorField from "./VendorField";
+import SwitchHint from "./SwitchHint";
 
 type FormControl = Control<SubscriptionFormInput, unknown, SubscriptionFormOutput>;
 
@@ -232,10 +232,10 @@ function PlanFields({
 					name="amount_varies"
 					label="The amount changes from month to month"
 				/>
-				<Typography variant="caption" component="p" sx={{ color: "text.secondary" }}>
+				<SwitchHint>
 					The amount above is the usual one. Payments are shown as estimates, and you enter the real
 					amount (and exchange rate) when you pay.
-				</Typography>
+				</SwitchHint>
 			</Grid>
 			<Grid size={{ xs: 12, sm: 6 }}>
 				<FormTextField

@@ -2,11 +2,11 @@ import Autocomplete from "@mui/material/Autocomplete";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
 import { type Control, Controller } from "react-hook-form";
 import { Cell, RevealCell } from "./Cells";
 import type { SubRef } from "./request";
 import type { TxValues } from "./schema";
+import SwitchHint from "../SwitchHint";
 
 /** The "Planned" switch, and (for an expense) the subscription it pays for. */
 export default function PlannedAndSubscription({
@@ -36,13 +36,9 @@ export default function PlannedAndSubscription({
 					}
 					label="Planned"
 				/>
-				<Typography
-					variant="caption"
-					component="p"
-					sx={{ color: "text.secondary", mt: 0.5, mb: 1, ml: "64px" }}
-				>
+				<SwitchHint>
 					Coming up, not happened yet. It counts toward nothing until you mark it as paid.
-				</Typography>
+				</SwitchHint>
 			</Cell>
 
 			<RevealCell size={12} show={isExpense}>
