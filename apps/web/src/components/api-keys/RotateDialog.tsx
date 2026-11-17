@@ -1,14 +1,18 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { type SubmitEvent, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { GRACE_OPTIONS } from "#/lib/api-keys";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
 import { rotateApiKeyFn } from "#/server/api-keys";
 import type { ApiKey, ApiKeySecret } from "#/types/api";
 import FormDialog from "../FormDialog";
+import FormTextField from "../FormTextField";
+
+const schema = z.object({ grace: z.coerce.number().int().min(0).max(168) });
 
 /** Replace a key's secret. A grace period keeps the old one working for a while, so whatever uses
  * it can be switched over without a gap; the permissions and end date do not change. */
@@ -23,12 +27,13 @@ export default function RotateDialog({
 }) {
 	const { run, pending, error } = useAction();
 	const sheet = useSheet(onClose);
-	const [grace, setGrace] = useState("24");
+	const { control, handleSubmit } = useForm({
+		resolver: zodResolver(schema),
+		defaultValues: { grace: "24" },
+	});
 
-	async function submit(e: SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
+	async function submit({ grace: hours }: z.output<typeof schema>) {
 		let result: ApiKeySecret | undefined;
-		const hours = Number(grace);
 		const done = await run(async () => {
 			const res = await rotateApiKeyFn({
 				data: { id: apiKey.id, grace_hours: hours },
@@ -47,7 +52,7 @@ export default function RotateDialog({
 			title={`Rotate "${apiKey.name}"`}
 			error={error}
 			pending={pending}
-			onSubmit={submit}
+			onSubmit={handleSubmit(submit)}
 			sheet={sheet}
 			maxWidth="xs"
 			submitLabel="Rotate key"
@@ -57,11 +62,11 @@ export default function RotateDialog({
 					This makes a new secret for the same key: the same name, permissions and end date. You
 					will see the new one once. Whatever uses the key has to be given it.
 				</Typography>
-				<TextField
+				<FormTextField
+					control={control}
+					name="grace"
 					select
 					label="Keep the old secret working"
-					value={grace}
-					onChange={(e) => setGrace(e.target.value)}
 					helperText="A grace period lets you switch over without a gap."
 				>
 					{GRACE_OPTIONS.map((o) => (
@@ -69,7 +74,7 @@ export default function RotateDialog({
 							{o.label}
 						</MenuItem>
 					))}
-				</TextField>
+				</FormTextField>
 			</Stack>
 		</FormDialog>
 	);

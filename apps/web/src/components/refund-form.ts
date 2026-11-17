@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { exchangeRate, positiveAmount, timeOfDay } from "#/server/transactions";
 
-const refundItem = z.object({
+/** One item of a purchase to refund, as `RefundItems` edits it. */
+export const refundItem = z.object({
 	id: z.string(),
 	name: z.string(),
 	category: z.string(),

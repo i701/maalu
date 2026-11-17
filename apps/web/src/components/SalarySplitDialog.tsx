@@ -1,3 +1,4 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -7,6 +8,8 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
+import { z } from "zod";
 import Money from "#/components/Money";
 import {
 	madeTotal,
@@ -18,15 +21,47 @@ import {
 } from "#/lib/salary";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
-import { applySalarySplitFn, getSalarySplitFn, undoSalarySplitFn } from "#/server/salary";
+import {
+	applySalarySplitFn,
+	getSalarySplitFn,
+	ruleValue,
+	undoSalarySplitFn,
+} from "#/server/salary";
 import type { SalarySplitPlan } from "#/types/api";
 import FormDialog from "./FormDialog";
 import { useNotify } from "./Notify";
 
-/** The plan for a salary, fetched when the dialog opens, and the lines being edited. */
+const splitLine = z.object({
+	key: z.string(),
+	target_type: z.enum(["account", "goal"]),
+	target_id: z.string(),
+	name: z.string(),
+	rule: z.string(),
+	amount: z.string().trim(),
+	on: z.boolean(),
+	reason: z.string().nullable(),
+	done: z.boolean(),
+	auto: z.boolean(),
+});
+
+/** Every ticked line needs an amount, and together they can't be more than what is left. */
+const splitSchema = (plan: SalarySplitPlan | null) =>
+	z.object({ lines: z.array(splitLine) }).superRefine(({ lines }, ctx) => {
+		lines.forEach((l, i) => {
+			if (l.on && !ruleValue.safeParse(l.amount).success)
+				ctx.addIssue({ code: "custom", path: ["lines", i, "amount"], message: "Enter an amount" });
+		});
+		if (plan && splitTotals(lines, plan.amount, madeTotal(plan)).over)
+			ctx.addIssue({
+				code: "custom",
+				path: ["lines"],
+				message: "These add up to more than the salary",
+			});
+	});
+
+/** The plan for a salary, fetched when the dialog opens. */
 function useSalaryPlan(transactionId: string) {
 	const [plan, setPlan] = useState<SalarySplitPlan | null>(null);
-	const [lines, setLines] = useState<SplitLine[]>([]);
 	const [failed, setFailed] = useState<string | null>(null);
 
 	useEffect(() => {
@@ -35,16 +70,13 @@ function useSalaryPlan(transactionId: string) {
 			if (!current) return;
 			if (!res.ok) return setFailed(res.error);
 			setPlan(res.data);
-			setLines(splitLines(res.data));
 		});
 		return () => {
 			current = false;
 		};
 	}, [transactionId]);
 
-	const edit = (key: string, change: Partial<SplitLine>) =>
-		setLines((prev) => prev.map((l) => (l.key === key ? { ...l, ...change } : l)));
-	return { plan, lines, failed, edit };
+	return { plan, failed };
 }
 
 function MadeList({ plan }: { plan: SalarySplitPlan }) {
@@ -64,9 +96,12 @@ function MadeList({ plan }: { plan: SalarySplitPlan }) {
 
 function LineRow({
 	line,
+	error,
 	onChange,
 }: {
 	line: SplitLine;
+	/** What is wrong with its amount, from the form's schema. */
+	error?: string;
 	onChange: (c: Partial<SplitLine>) => void;
 }) {
 	return (
@@ -110,6 +145,8 @@ function LineRow({
 				value={line.amount}
 				disabled={!line.on}
 				onChange={(e) => onChange({ amount: e.target.value })}
+				error={Boolean(error)}
+				helperText={error}
 				slotProps={{
 					htmlInput: {
 						inputMode: "decimal",
@@ -125,11 +162,14 @@ function LineRow({
 function ProposedLines({
 	plan,
 	lines,
+	errors,
 	totals,
 	edit,
 }: {
 	plan: SalarySplitPlan;
 	lines: SplitLine[];
+	/** Each line's amount problem, by its key. */
+	errors: Record<string, string>;
 	totals: SplitTotals;
 	edit: (key: string, change: Partial<SplitLine>) => void;
 }) {
@@ -143,7 +183,12 @@ function ProposedLines({
 	return (
 		<>
 			{lines.map((line) => (
-				<LineRow key={line.key} line={line} onChange={(c) => edit(line.key, c)} />
+				<LineRow
+					key={line.key}
+					line={line}
+					error={errors[line.key]}
+					onChange={(c) => edit(line.key, c)}
+				/>
 			))}
 			{!totals.over && (
 				<Typography variant="body2" sx={{ color: "text.secondary" }}>
@@ -168,12 +213,14 @@ const titleFor = (complete: boolean, someMade: boolean) =>
 function SplitBody({
 	plan,
 	lines,
+	errors,
 	totals,
 	edit,
 	onUndo,
 }: {
 	plan: SalarySplitPlan;
 	lines: SplitLine[];
+	errors: Record<string, string>;
 	totals: SplitTotals;
 	edit: (key: string, change: Partial<SplitLine>) => void;
 	onUndo: () => void;
@@ -193,7 +240,9 @@ function SplitBody({
 					<MadeList plan={plan} />
 				</>
 			)}
-			{!complete && <ProposedLines plan={plan} lines={lines} totals={totals} edit={edit} />}
+			{!complete && (
+				<ProposedLines plan={plan} lines={lines} errors={errors} totals={totals} edit={edit} />
+			)}
 			{someMade && !complete && (
 				<Button color="inherit" size="small" onClick={onUndo} sx={{ justifySelf: "start" }}>
 					Undo what was made
@@ -220,7 +269,31 @@ export default function SalarySplitDialog({
 	const { run, pending, error } = useAction();
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
-	const { plan, lines, failed, edit } = useSalaryPlan(transactionId);
+	const { plan, failed } = useSalaryPlan(transactionId);
+	// The lines to edit come with the plan; until it arrives there are none.
+	const fromPlan = useMemo(() => (plan ? { lines: splitLines(plan) } : undefined), [plan]);
+	const {
+		control,
+		handleSubmit,
+		setValue,
+		formState: { errors },
+	} = useForm({
+		resolver: zodResolver(splitSchema(plan)),
+		defaultValues: { lines: [] },
+		values: fromPlan,
+	});
+	const lines = useWatch({ control, name: "lines" });
+	const edit = (key: string, change: Partial<SplitLine>) =>
+		setValue(
+			"lines",
+			lines.map((l) => (l.key === key ? { ...l, ...change } : l)),
+		);
+	const lineErrors = Object.fromEntries(
+		lines.flatMap((l, i) => {
+			const message = errors.lines?.[i]?.amount?.message;
+			return message ? [[l.key, message]] : [];
+		}),
+	);
 	const totals = useMemo(
 		() => (plan ? splitTotals(lines, plan.amount, madeTotal(plan)) : null),
 		[plan, lines],
@@ -234,13 +307,12 @@ export default function SalarySplitDialog({
 		}
 	}
 
-	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
+	async function submit(v: z.output<ReturnType<typeof splitSchema>>) {
 		if (!plan) return;
 		if (complete) return undo();
 		const ok = await run(() =>
 			applySalarySplitFn({
-				data: { id: transactionId, items: splitRequest(lines) },
+				data: { id: transactionId, items: splitRequest(v.lines) },
 			}),
 		);
 		if (ok) {
@@ -257,13 +329,20 @@ export default function SalarySplitDialog({
 			title={titleFor(complete, Boolean(plan?.applied))}
 			error={failed ?? error}
 			pending={pending}
-			onSubmit={submit}
+			onSubmit={handleSubmit(submit)}
 			sheet={sheet}
 			submitLabel={complete ? "Undo the split" : "Make the split"}
 			submitDisabled={!canSubmit}
 		>
 			{plan && totals ? (
-				<SplitBody plan={plan} lines={lines} totals={totals} edit={edit} onUndo={undo} />
+				<SplitBody
+					plan={plan}
+					lines={lines}
+					errors={lineErrors}
+					totals={totals}
+					edit={edit}
+					onUndo={undo}
+				/>
 			) : (
 				<Typography variant="body2" sx={{ color: "text.secondary" }}>
 					{failed ? "" : "Working out the split…"}
