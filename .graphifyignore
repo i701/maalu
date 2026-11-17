@@ -1,0 +1,20 @@
+# graphify scope: apps/web, apps/api, docs/claude (the native apps can get their own graphs)
+/apps/ios/
+/apps/android/
+/.claude/
+/.github/
+/scripts/
+/parity/
+# generated or huge, not worth graphing
+apps/web/src/routeTree.gen.ts
+apps/web/src/types/api.generated.ts
+apps/web/openapi.json
+pnpm-lock.yaml
+uv.lock
+# plain text only
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.svg
+*.ico

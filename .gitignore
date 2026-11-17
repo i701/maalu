@@ -17,3 +17,9 @@ node_modules/
 # attachments kept on disk in development (see ATTACHMENTS_DIR)
 apps/api/data/
 settings.json
+
+# graphify: the cache only speeds up --update, and these two hold paths for this machine
+graphify-out/cache
+graphify-out/cost.json
+graphify-out/.graphify_python
+graphify-out/.graphify_root
