@@ -1,3 +1,4 @@
+import type { AccountChoice } from "./AccountPicker";
 import { toScaled } from "#/lib/decimal";
 import { newPlacePayload, placeOf, placePayload, type PlaceValue } from "#/lib/places";
 import type { TemplateDraft } from "#/server/templates";
@@ -293,8 +294,8 @@ export function buildTransactionRequest(v: TxValues, s: State): TransactionReque
 export function accountChoices(
 	accounts: Account[],
 	transaction: Transaction | undefined,
-): AccountRef[] {
-	const choices: AccountRef[] = accounts;
+): AccountChoice[] {
+	const choices: AccountChoice[] = accounts;
 	const own = [transaction?.account, transaction?.to_account].filter(
 		(a): a is AccountRef => a != null && !accounts.some((x) => x.id === a.id),
 	);

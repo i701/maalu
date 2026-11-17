@@ -180,6 +180,7 @@ export default function TransactionForm({
 				pending={pending || busy}
 				onSubmit={handleSubmit(submit)}
 				sheet={sheet}
+				fullWidth
 			>
 				<Grid container columnSpacing={2} key={fields.round}>
 					{!transaction && templates.length > 0 && (

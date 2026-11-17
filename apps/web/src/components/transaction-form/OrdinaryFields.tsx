@@ -17,7 +17,7 @@ import CategoryField from "../CategoryField";
 import CurrencyField from "../CurrencyField";
 import FormTextField from "../FormTextField";
 import RateField from "../RateField";
-import { accountMenuItems } from "./accountMenuItems";
+import AccountPicker, { type AccountChoice } from "./AccountPicker";
 import { Cell, RevealCell } from "./Cells";
 import type { TxValues } from "./schema";
 import SplitEditor from "./SplitEditor";
@@ -45,7 +45,7 @@ export default function OrdinaryFields({
 }: {
 	control: Control<TxValues>;
 	type: TransactionType;
-	accounts: AccountRef[];
+	accounts: AccountChoice[];
 	/** The chosen account, which fixes the currency. */
 	account: AccountRef | null;
 	onPickAccount: (id: string) => void;
@@ -97,20 +97,17 @@ export default function OrdinaryFields({
 					name="account_id"
 					control={control}
 					render={({ field }) => (
-						<TextField
-							select
+						<AccountPicker
+							accounts={accounts}
 							label="Account"
 							value={field.value}
-							onChange={(e) => onPickAccount(e.target.value)}
+							onChange={onPickAccount}
 							helperText={
 								account
 									? `Uses the account's currency (${account.currency}) and updates its balance`
 									: "Optional. Choose where the money moved"
 							}
-						>
-							<MenuItem value="">None</MenuItem>
-							{accountMenuItems(accounts)}
-						</TextField>
+						/>
 					)}
 				/>
 			</Cell>

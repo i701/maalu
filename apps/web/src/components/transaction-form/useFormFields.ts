@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
+import type { AccountChoice } from "./AccountPicker";
 import { SUGGESTED_PAYMENT_METHOD } from "#/lib/accounts";
 import { cardMethod } from "#/lib/cards";
 import { trimRate } from "#/lib/format";
@@ -26,7 +27,7 @@ export function useFormFields({
 	transaction: Transaction | undefined;
 	/** What the form starts from: the edited transaction as a seed, or the one passed in. */
 	startSeed: TransactionSeed | undefined;
-	accounts: AccountRef[];
+	accounts: AccountChoice[];
 	/** Every card, to pick one on an expense. */
 	cards: Card[];
 	baseCurrency: string;

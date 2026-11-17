@@ -20,6 +20,7 @@ export default function FormDialog({
 	sheet,
 	children,
 	maxWidth = "sm",
+	fullWidth = false,
 	submitLabel = "Save",
 	submitDisabled = false,
 }: {
@@ -31,6 +32,8 @@ export default function FormDialog({
 	sheet: Sheet;
 	children: ReactNode;
 	maxWidth?: "xs" | "sm" | "md";
+	/** Always as wide as maxWidth, instead of as wide as the content. */
+	fullWidth?: boolean;
 	/** The text of the submit button. */
 	submitLabel?: string;
 	/** Keeps the submit button off until the form can be sent. */
@@ -44,6 +47,7 @@ export default function FormDialog({
 			// not while it is saving: Escape or a click outside must not close a form mid-save
 			onClose={pending ? undefined : sheet.close}
 			maxWidth={maxWidth}
+			fullWidth={fullWidth}
 			aria-labelledby="form-dialog-title"
 			slotProps={{
 				transition: { onExited: sheet.onExited },

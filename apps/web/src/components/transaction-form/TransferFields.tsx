@@ -1,11 +1,9 @@
 import Alert from "@mui/material/Alert";
-import TextField from "@mui/material/TextField";
 import { Fragment } from "react";
 import { type Control, Controller, useWatch } from "react-hook-form";
 import { useLastDefined } from "#/lib/motion";
-import type { AccountRef } from "#/types/api";
 import FormTextField from "../FormTextField";
-import { accountMenuItems } from "./accountMenuItems";
+import AccountPicker, { type AccountChoice } from "./AccountPicker";
 import { Cell, RevealCell } from "./Cells";
 import type { TxValues } from "./schema";
 
@@ -18,7 +16,7 @@ export default function TransferFields({
 	switched,
 }: {
 	control: Control<TxValues>;
-	accounts: AccountRef[];
+	accounts: AccountChoice[];
 	onPickAccount: (id: string) => void;
 	crossCurrency: boolean;
 	switched: boolean;
@@ -35,24 +33,36 @@ export default function TransferFields({
 					name="account_id"
 					control={control}
 					render={({ field, fieldState }) => (
-						<TextField
-							select
+						<AccountPicker
+							accounts={accounts}
+							exclude={toAccountId}
 							label="From"
 							value={field.value}
-							onChange={(e) => onPickAccount(e.target.value)}
+							onChange={onPickAccount}
 							error={Boolean(fieldState.error)}
 							helperText={fieldState.error?.message}
 							required
-						>
-							{accountMenuItems(accounts, toAccountId)}
-						</TextField>
+						/>
 					)}
 				/>
 			</Cell>
 			<Cell size={{ xs: 12, sm: 6 }} fadeIn={switched}>
-				<FormTextField control={control} name="to_account_id" select label="To" required>
-					{accountMenuItems(accounts, accountId)}
-				</FormTextField>
+				<Controller
+					name="to_account_id"
+					control={control}
+					render={({ field, fieldState }) => (
+						<AccountPicker
+							accounts={accounts}
+							exclude={accountId}
+							label="To"
+							value={field.value}
+							onChange={field.onChange}
+							error={Boolean(fieldState.error)}
+							helperText={fieldState.error?.message}
+							required
+						/>
+					)}
+				/>
 			</Cell>
 			<RevealCell size={12} show={accounts.length < 2}>
 				<Alert severity="info">
