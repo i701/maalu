@@ -69,6 +69,14 @@ export default function PwaRegister() {
 			if (document.visibilityState === "visible") void registration.update();
 		};
 		registration.addEventListener("updatefound", onUpdateFound);
+		// An update that began between registering and this effect fired no event we heard: watch
+		// one still installing, and offer one already waiting (set after this effect, not during it).
+		if (registration.installing) onUpdateFound();
+		const late = registration.waiting;
+		if (late && navigator.serviceWorker.controller)
+			void Promise.resolve().then(() => {
+				if (!stop.signal.aborted) setWaiting(late);
+			});
 		document.addEventListener("visibilitychange", onVisible);
 		const timer = setInterval(() => void registration.update(), CHECK_EVERY_MS);
 		return () => {

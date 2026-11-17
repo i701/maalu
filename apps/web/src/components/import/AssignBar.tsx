@@ -46,7 +46,7 @@ export default function AssignBar({
 	/** Beside the count, for example an offer to select more. */
 	extra?: ReactNode;
 }) {
-	const { control, handleSubmit } = useForm({
+	const { control, handleSubmit, getValues } = useForm({
 		resolver: zodResolver(schema),
 		defaultValues: { vendor: "", category: "", transfer: "", sameName: true },
 	});
@@ -57,8 +57,11 @@ export default function AssignBar({
 
 	const setLabels = ({ vendor: v, category: c, sameName }: Values) =>
 		onApply({ ...(v ? { vendor_name: v } : {}), ...(c ? { category_name: c } : {}) }, sameName);
-	const markTransfer = ({ transfer: to, sameName }: Values) =>
+	// a transfer uses only the account and the switch, so a vendor typed above can't block it
+	const markTransfer = () => {
+		const { transfer: to, sameName } = getValues();
 		onApply({ transfer_account_id: to }, sameName);
+	};
 
 	return (
 		<Stack
@@ -103,7 +106,7 @@ export default function AssignBar({
 				<Controller
 					name="vendor"
 					control={control}
-					render={({ field }) => (
+					render={({ field, fieldState }) => (
 						<Autocomplete
 							freeSolo
 							fullWidth
@@ -111,14 +114,21 @@ export default function AssignBar({
 							options={vendors}
 							inputValue={field.value}
 							onInputChange={(_, v) => field.onChange(v)}
-							renderInput={(params) => <TextField {...params} label="Vendor" />}
+							renderInput={(params) => (
+								<TextField
+									{...params}
+									label="Vendor"
+									error={Boolean(fieldState.error)}
+									helperText={fieldState.error?.message}
+								/>
+							)}
 						/>
 					)}
 				/>
 				<Controller
 					name="category"
 					control={control}
-					render={({ field }) => (
+					render={({ field, fieldState }) => (
 						<Autocomplete
 							freeSolo
 							fullWidth
@@ -126,7 +136,14 @@ export default function AssignBar({
 							options={categories}
 							inputValue={field.value}
 							onInputChange={(_, v) => field.onChange(v)}
-							renderInput={(params) => <TextField {...params} label="Category" />}
+							renderInput={(params) => (
+								<TextField
+									{...params}
+									label="Category"
+									error={Boolean(fieldState.error)}
+									helperText={fieldState.error?.message}
+								/>
+							)}
 						/>
 					)}
 				/>
@@ -155,7 +172,7 @@ export default function AssignBar({
 				<Button
 					variant="contained"
 					disabled={!transfer}
-					onClick={() => void handleSubmit(markTransfer)()}
+					onClick={markTransfer}
 					sx={{ flexShrink: 0 }}
 				>
 					Mark as transfer

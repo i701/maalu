@@ -57,7 +57,7 @@ function Editor({
 				<Controller
 					name="vendor_name"
 					control={control}
-					render={({ field }) => (
+					render={({ field, fieldState }) => (
 						<Autocomplete
 							freeSolo
 							fullWidth
@@ -65,14 +65,22 @@ function Editor({
 							options={vendors}
 							inputValue={field.value}
 							onInputChange={(_, v) => field.onChange(v)}
-							renderInput={(params) => <TextField {...params} label="Vendor" autoFocus />}
+							renderInput={(params) => (
+								<TextField
+									{...params}
+									label="Vendor"
+									autoFocus
+									error={Boolean(fieldState.error)}
+									helperText={fieldState.error?.message}
+								/>
+							)}
 						/>
 					)}
 				/>
 				<Controller
 					name="category_name"
 					control={control}
-					render={({ field }) => (
+					render={({ field, fieldState }) => (
 						<Autocomplete
 							freeSolo
 							fullWidth
@@ -80,7 +88,14 @@ function Editor({
 							options={categories}
 							inputValue={field.value}
 							onInputChange={(_, v) => field.onChange(v)}
-							renderInput={(params) => <TextField {...params} label="Category" />}
+							renderInput={(params) => (
+								<TextField
+									{...params}
+									label="Category"
+									error={Boolean(fieldState.error)}
+									helperText={fieldState.error?.message}
+								/>
+							)}
 						/>
 					)}
 				/>

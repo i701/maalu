@@ -21,10 +21,8 @@ export const accountSchema = (baseCurrency: string) =>
 			currency: z.string().regex(/^[A-Z]{3}$/, "Choose a currency"),
 			exchange_rate: z.string().trim(),
 			auto_rate: z.boolean(),
-			credit_limit: z
-				.string()
-				.trim()
-				.regex(/^(\d+(\.\d{1,4})?)?$/, "Enter a limit, like 10000"),
+			// checked below, only for the groups that show it
+			credit_limit: z.string().trim(),
 			statement_day: z.string(),
 			due_day: z.string(),
 			description: blank(1000),
@@ -34,6 +32,12 @@ export const accountSchema = (baseCurrency: string) =>
 		.superRefine((v, ctx) => {
 			if (v.currency !== baseCurrency && !exchangeRate.safeParse(v.exchange_rate).success)
 				ctx.addIssue({ code: "custom", path: ["exchange_rate"], message: "Enter the rate" });
+			if (hasCreditLimit(v.group) && !/^(\d+(\.\d{1,4})?)?$/.test(v.credit_limit))
+				ctx.addIssue({
+					code: "custom",
+					path: ["credit_limit"],
+					message: "Enter a limit, like 10000",
+				});
 			if (v.group !== "card") return;
 			const days = statementDays(v.statement_day, v.due_day);
 			if (!days.ok) ctx.addIssue({ code: "custom", path: ["due_day"], message: days.error });
