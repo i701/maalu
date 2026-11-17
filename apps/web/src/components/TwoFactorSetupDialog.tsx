@@ -1,15 +1,17 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Skeleton from "@mui/material/Skeleton";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { type SubmitEvent, useEffect, useRef, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { useSheet } from "#/lib/sheet";
 import { friendlyError, useAction } from "#/lib/use-action";
-import { enableTwoFactorFn, startTwoFactorFn } from "#/server/auth";
+import { enableTwoFactorFn, startTwoFactorFn, twoFactorCodeSchema } from "#/server/auth";
 import type { TwoFactorSetup } from "#/types/api";
 import FormDialog from "./FormDialog";
-import { getString } from "#/lib/utils";
+import FormTextField from "./FormTextField";
 
 /** Turn two-factor on: scan the QR code (or type the key) into an authenticator app, then confirm
  * with a code from it. The secret only counts once a code from it has been accepted. */
@@ -24,6 +26,10 @@ export default function TwoFactorSetupDialog({
 	const sheet = useSheet(onClose);
 	const [setup, setSetup] = useState<TwoFactorSetup | null>(null);
 	const [setupError, setSetupError] = useState<string | null>(null);
+	const { control, handleSubmit } = useForm({
+		resolver: zodResolver(twoFactorCodeSchema),
+		defaultValues: { code: "" },
+	});
 
 	// Ask once. In dev React runs effects twice on purpose; the API hands back the same secret for a
 	// repeated request, but there is no reason to send one.
@@ -37,9 +43,7 @@ export default function TwoFactorSetupDialog({
 		);
 	}, []);
 
-	async function submit(e: SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
-		const code = getString(new FormData(e.currentTarget), "code").trim();
+	async function submit({ code }: z.output<typeof twoFactorCodeSchema>) {
 		let codes: string[] = [];
 		const done = await run(async () => {
 			const res = await enableTwoFactorFn({ data: { code } });
@@ -58,7 +62,8 @@ export default function TwoFactorSetupDialog({
 			submitLabel="Turn on"
 			error={setupError ?? error}
 			pending={pending}
-			onSubmit={submit}
+			onSubmit={handleSubmit(submit)}
+			noValidate
 			sheet={sheet}
 			maxWidth="xs"
 		>
@@ -91,9 +96,10 @@ export default function TwoFactorSetupDialog({
 					</Box>
 				</Alert>
 			)}
-			<TextField
-				label="Authentication code"
+			<FormTextField
+				control={control}
 				name="code"
+				label="Authentication code"
 				autoComplete="one-time-code"
 				required
 				disabled={!setup}

@@ -1,16 +1,28 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import Grid from "@mui/material/Grid";
 import MenuItem from "@mui/material/MenuItem";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import Money from "#/components/Money";
 import { formatDate } from "#/lib/format";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
-import { getString, isOneOf } from "#/lib/utils";
-import { createSubscriptionFromTransactionFn } from "#/server/subscriptions";
+import { createSubscriptionFromTransactionFn, repeatFields } from "#/server/subscriptions";
 import { INTERVAL_UNITS, type Transaction } from "#/types/api";
 import FormDialog from "./FormDialog";
+import FormTextField from "./FormTextField";
 import { useNotify } from "./Notify";
+
+const schema = z.object({
+	// blank keeps the vendor's or category's name
+	name: z
+		.string()
+		.trim()
+		.max(200)
+		.transform((v) => v || undefined),
+	...repeatFields,
+});
 
 /** Mark an existing transaction as the first payment of a new subscription. */
 export default function MakeSubscriptionDialog({
@@ -23,22 +35,18 @@ export default function MakeSubscriptionDialog({
 	const { run, pending, error } = useAction();
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
-	const defaultName = transaction.vendor?.name ?? transaction.category;
+	const { control, handleSubmit } = useForm({
+		resolver: zodResolver(schema),
+		defaultValues: {
+			name: transaction.vendor?.name ?? transaction.category,
+			interval_count: "1",
+			interval_unit: "month",
+		},
+	});
 
-	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
-		const f = new FormData(e.currentTarget);
-		const unit = getString(f, "interval_unit");
-		if (!isOneOf(unit, INTERVAL_UNITS)) return;
+	async function submit(values: z.output<typeof schema>) {
 		const ok = await run(() =>
-			createSubscriptionFromTransactionFn({
-				data: {
-					transaction_id: transaction.id,
-					name: getString(f, "name").trim() || undefined,
-					interval_unit: unit,
-					interval_count: Number(f.get("interval_count")),
-				},
-			}),
+			createSubscriptionFromTransactionFn({ data: { transaction_id: transaction.id, ...values } }),
 		);
 		if (ok) {
 			notify("Subscription created from transaction");
@@ -51,7 +59,8 @@ export default function MakeSubscriptionDialog({
 			title="Make this a subscription"
 			error={error}
 			pending={pending}
-			onSubmit={submit}
+			onSubmit={handleSubmit(submit)}
+			noValidate
 			sheet={sheet}
 			maxWidth="xs"
 		>
@@ -62,30 +71,30 @@ export default function MakeSubscriptionDialog({
 			</Typography>
 			<Grid container spacing={2}>
 				<Grid size={12}>
-					<TextField
-						label="Name"
+					<FormTextField
+						control={control}
 						name="name"
-						defaultValue={defaultName}
+						label="Name"
 						slotProps={{ htmlInput: { maxLength: 200 } }}
 						autoFocus
 					/>
 				</Grid>
 				<Grid size={{ xs: 5 }}>
-					<TextField
-						label="Every"
+					<FormTextField
+						control={control}
 						name="interval_count"
+						label="Every"
 						type="number"
-						defaultValue={1}
 						required
 						slotProps={{ htmlInput: { min: 1, max: 120 } }}
 					/>
 				</Grid>
 				<Grid size={{ xs: 7 }}>
-					<TextField
+					<FormTextField
+						control={control}
+						name="interval_unit"
 						select
 						label="Billing period"
-						name="interval_unit"
-						defaultValue="month"
 						required
 					>
 						{INTERVAL_UNITS.map((u) => (
@@ -93,7 +102,7 @@ export default function MakeSubscriptionDialog({
 								{u[0].toUpperCase() + u.slice(1)}(s)
 							</MenuItem>
 						))}
-					</TextField>
+					</FormTextField>
 				</Grid>
 			</Grid>
 		</FormDialog>

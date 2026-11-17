@@ -4,7 +4,10 @@ import { DEFAULT_PAGE_SIZE, PAGE_SIZES, type PageResult } from "#/lib/pagination
 import type { Tag } from "#/types/api";
 import { apiRequest } from "./api";
 
-const name = z.string().trim().min(1, "Give the tag a name").max(50);
+/** What the tag form sends; the form validates with it too. */
+export const tagSchema = z.object({
+	name: z.string().trim().min(1, "Give the tag a name").max(50),
+});
 
 /** Every tag, for pickers. */
 export const listTagsFn = createServerFn({ method: "GET" }).handler(async () =>
@@ -36,11 +39,11 @@ export const listTagsPageFn = createServerFn({ method: "GET" })
 	});
 
 export const createTagFn = createServerFn({ method: "POST" })
-	.validator(z.object({ name }))
+	.validator(tagSchema)
 	.handler(async ({ data }) => apiRequest<Tag>("/tags", { method: "POST", body: data }));
 
 export const renameTagFn = createServerFn({ method: "POST" })
-	.validator(z.object({ id: z.uuid(), name }))
+	.validator(tagSchema.extend({ id: z.uuid() }))
 	.handler(async ({ data }) =>
 		apiRequest<Tag>(`/tags/${data.id}`, { method: "PATCH", body: { name: data.name } }),
 	);

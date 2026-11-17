@@ -1,11 +1,14 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import Grid from "@mui/material/Grid";
 import MenuItem from "@mui/material/MenuItem";
-import TextField from "@mui/material/TextField";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
-import { updateBudgetFn } from "#/server/budget";
+import { budgetSettingsSchema, updateBudgetFn } from "#/server/budget";
 import type { Budget } from "#/types/api";
 import FormDialog from "./FormDialog";
+import FormTextField from "./FormTextField";
 import { useNotify } from "./Notify";
 
 const DAYS = Array.from({ length: 28 }, (_, i) => i + 1);
@@ -22,17 +25,16 @@ export default function BudgetSettingsDialog({
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
 
-	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
-		const f = new FormData(e.currentTarget);
-		const ok = await run(() =>
-			updateBudgetFn({
-				data: {
-					period_start_day: Number(f.get("period_start_day")),
-					warn_percent: Number(f.get("warn_percent")),
-				},
-			}),
-		);
+	const { control, handleSubmit } = useForm({
+		resolver: zodResolver(budgetSettingsSchema),
+		defaultValues: {
+			period_start_day: budget.period_start_day,
+			warn_percent: String(budget.warn_percent),
+		},
+	});
+
+	async function submit(data: z.output<typeof budgetSettingsSchema>) {
+		const ok = await run(() => updateBudgetFn({ data }));
 		if (ok) {
 			notify("Budget settings saved");
 			sheet.close();
@@ -44,17 +46,18 @@ export default function BudgetSettingsDialog({
 			title="Budget settings"
 			error={error}
 			pending={pending}
-			onSubmit={submit}
+			onSubmit={handleSubmit(submit)}
+			noValidate
 			sheet={sheet}
 			maxWidth="xs"
 		>
 			<Grid container spacing={2}>
 				<Grid size={12}>
-					<TextField
+					<FormTextField
+						control={control}
+						name="period_start_day"
 						select
 						label="A period starts on day"
-						name="period_start_day"
-						defaultValue={budget.period_start_day}
 						helperText="Day 1 means calendar months. Pick another day to line periods up with your pay."
 					>
 						{DAYS.map((d) => (
@@ -62,14 +65,14 @@ export default function BudgetSettingsDialog({
 								{d === 1 ? "1 (calendar months)" : d}
 							</MenuItem>
 						))}
-					</TextField>
+					</FormTextField>
 				</Grid>
 				<Grid size={12}>
-					<TextField
-						label="Warn at (%)"
+					<FormTextField
+						control={control}
 						name="warn_percent"
+						label="Warn at (%)"
 						type="number"
-						defaultValue={budget.warn_percent}
 						required
 						helperText="A line is flagged as close once this share of its limit is spent. A line can set its own."
 						slotProps={{ htmlInput: { min: 1, max: 100, step: 1 } }}

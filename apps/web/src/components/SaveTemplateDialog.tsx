@@ -1,11 +1,13 @@
-import TextField from "@mui/material/TextField";
-import { type SubmitEvent, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
-import { createTemplateFn, type TemplateDraft } from "#/server/templates";
+import { createTemplateFn, type TemplateDraft, templateNameSchema } from "#/server/templates";
 import FormDialog from "./FormDialog";
+import FormTextField from "./FormTextField";
 import { useNotify } from "./Notify";
-import { getString } from "#/lib/utils";
 
 /** Asks for a name and saves what is in the transaction form as a template. `build` turns the name
  * into the request, or a message when the form lacks something a template needs. */
@@ -20,10 +22,12 @@ export default function SaveTemplateDialog({
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
 	const [localError, setLocalError] = useState<string | null>(null);
+	const { control, handleSubmit } = useForm({
+		resolver: zodResolver(templateNameSchema),
+		defaultValues: { name: "" },
+	});
 
-	async function submit(e: SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
-		const name = getString(new FormData(e.currentTarget), "name").trim();
+	async function submit({ name }: z.output<typeof templateNameSchema>) {
 		const built = build(name);
 		if ("error" in built) return setLocalError(built.error);
 		setLocalError(null);
@@ -38,13 +42,15 @@ export default function SaveTemplateDialog({
 			title="Save as template"
 			error={localError ?? error}
 			pending={pending}
-			onSubmit={submit}
+			onSubmit={handleSubmit(submit)}
+			noValidate
 			sheet={sheet}
 			maxWidth="xs"
 		>
-			<TextField
-				label="Template name"
+			<FormTextField
+				control={control}
 				name="name"
+				label="Template name"
 				required
 				autoFocus
 				slotProps={{ htmlInput: { maxLength: 200 } }}

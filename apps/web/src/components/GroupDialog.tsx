@@ -1,18 +1,23 @@
 import MenuItem from "@mui/material/MenuItem";
-import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
+import { z } from "zod";
 import { groupedMessage, groupSizeProblem } from "#/lib/groups";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
-import { addToGroupFn, createGroupFn } from "#/server/groups";
+import { addToGroupFn, createGroupFn, groupSchema } from "#/server/groups";
 import type { TransactionGroup } from "#/types/api";
 import FormDialog from "./FormDialog";
+import FormTextField from "./FormTextField";
 import { useNotify } from "./Notify";
-import { getString } from "#/lib/utils";
 
-type Mode = "new" | "existing";
+const schema = z.discriminatedUnion("mode", [
+	groupSchema.extend({ mode: z.literal("new") }),
+	z.object({ mode: z.literal("existing"), target: z.string().min(1, "Choose a group") }),
+]);
 
 /** Puts the selected transactions in a new group, or adds them to one you already have. A group
  * only adds its transactions up: nothing about them changes. */
@@ -33,18 +38,24 @@ export default function GroupDialog({
 	const { run, pending, error } = useAction();
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
-	const [mode, setMode] = useState<Mode>("new");
-	const [target, setTarget] = useState("");
 	const [localError, setLocalError] = useState<string | null>(null);
+	const { control, handleSubmit, reset } = useForm({
+		resolver: zodResolver(schema),
+		defaultValues: { mode: "new", name: "", note: "" },
+	});
+	const mode = useWatch({ control, name: "mode" });
 
-	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
-		const form = new FormData(e.currentTarget);
-		if (mode === "new") {
+	function switchMode(next: z.input<typeof schema>["mode"] | null) {
+		if (!next) return;
+		reset(next === "new" ? { mode: next, name: "", note: "" } : { mode: next, target: "" });
+		setLocalError(null);
+	}
+
+	async function submit(values: z.output<typeof schema>) {
+		if (values.mode === "new") {
 			const problem = groupSizeProblem(ids.length);
 			if (problem) return setLocalError(problem);
-			const name = getString(form, "name").trim();
-			const note = getString(form, "note").trim() || null;
+			const { name, note } = values;
 			setLocalError(null);
 			if (await run(() => createGroupFn({ data: { name, note, transaction_ids: ids } }))) {
 				notify(groupedMessage(ids.length, name, true));
@@ -53,7 +64,7 @@ export default function GroupDialog({
 			}
 			return;
 		}
-		const group = groups.find((g) => g.id === target);
+		const group = groups.find((g) => g.id === values.target);
 		if (!group) return setLocalError("Choose a group");
 		setLocalError(null);
 		if (await run(() => addToGroupFn({ data: { id: group.id, transaction_ids: ids } }))) {
@@ -68,7 +79,8 @@ export default function GroupDialog({
 			title="Group transactions"
 			error={localError ?? error}
 			pending={pending}
-			onSubmit={submit}
+			onSubmit={handleSubmit(submit)}
+			noValidate
 			sheet={sheet}
 			maxWidth="xs"
 			submitLabel={mode === "new" ? "Make group" : "Add to group"}
@@ -78,12 +90,7 @@ export default function GroupDialog({
 				fullWidth
 				size="small"
 				value={mode}
-				onChange={(_, next: Mode | null) => {
-					if (next) {
-						setMode(next);
-						setLocalError(null);
-					}
-				}}
+				onChange={(_, next: z.input<typeof schema>["mode"] | null) => switchMode(next)}
 				aria-label="New group or existing"
 				sx={{ mb: 2 }}
 			>
@@ -94,9 +101,10 @@ export default function GroupDialog({
 			</ToggleButtonGroup>
 			{mode === "new" ? (
 				<>
-					<TextField
-						label="Name"
+					<FormTextField
+						control={control}
 						name="name"
+						label="Name"
 						required
 						autoFocus
 						placeholder="Trip to Colombo, Treatment plan…"
@@ -104,20 +112,21 @@ export default function GroupDialog({
 						slotProps={{ htmlInput: { maxLength: 100 } }}
 						sx={{ mb: 2 }}
 					/>
-					<TextField
-						label="Note (optional)"
+					<FormTextField
+						control={control}
 						name="note"
+						label="Note (optional)"
 						multiline
 						minRows={2}
 						slotProps={{ htmlInput: { maxLength: 500 } }}
 					/>
 				</>
 			) : (
-				<TextField
+				<FormTextField
+					control={control}
+					name="target"
 					select
 					label="Group"
-					value={target}
-					onChange={(e) => setTarget(e.target.value)}
 					required
 					autoFocus
 					helperText={`Adds the ${ids.length} selected. A group holds at most 50.`}
@@ -127,7 +136,7 @@ export default function GroupDialog({
 							{g.name} ({g.transaction_count})
 						</MenuItem>
 					))}
-				</TextField>
+				</FormTextField>
 			)}
 		</FormDialog>
 	);

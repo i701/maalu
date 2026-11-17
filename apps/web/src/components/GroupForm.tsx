@@ -1,10 +1,12 @@
-import TextField from "@mui/material/TextField";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
-import { getString } from "#/lib/utils";
-import { updateGroupFn } from "#/server/groups";
+import { groupSchema, updateGroupFn } from "#/server/groups";
 import type { TransactionGroup } from "#/types/api";
 import FormDialog from "./FormDialog";
+import FormTextField from "./FormTextField";
 import { useNotify } from "./Notify";
 
 /** Rename a group or change its note. */
@@ -18,13 +20,13 @@ export default function GroupForm({
 	const { run, pending, error } = useAction();
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
+	const { control, handleSubmit } = useForm({
+		resolver: zodResolver(groupSchema),
+		defaultValues: { name: group.name, note: group.note ?? "" },
+	});
 
-	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
-		const f = new FormData(e.currentTarget);
-		const name = getString(f, "name").trim();
-		const note = getString(f, "note").trim() || null;
-		if (await run(() => updateGroupFn({ data: { id: group.id, changes: { name, note } } }))) {
+	async function submit(changes: z.output<typeof groupSchema>) {
+		if (await run(() => updateGroupFn({ data: { id: group.id, changes } }))) {
 			notify("Group saved");
 			sheet.close();
 		}
@@ -35,23 +37,24 @@ export default function GroupForm({
 			title="Edit group"
 			error={error}
 			pending={pending}
-			onSubmit={submit}
+			onSubmit={handleSubmit(submit)}
+			noValidate
 			sheet={sheet}
 			maxWidth="xs"
 		>
-			<TextField
-				label="Name"
+			<FormTextField
+				control={control}
 				name="name"
-				defaultValue={group.name}
+				label="Name"
 				required
 				autoFocus
 				slotProps={{ htmlInput: { maxLength: 100 } }}
 				sx={{ mb: 2 }}
 			/>
-			<TextField
-				label="Note (optional)"
+			<FormTextField
+				control={control}
 				name="note"
-				defaultValue={group.note ?? ""}
+				label="Note (optional)"
 				multiline
 				minRows={2}
 				slotProps={{ htmlInput: { maxLength: 500 } }}

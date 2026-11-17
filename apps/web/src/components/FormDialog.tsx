@@ -22,6 +22,7 @@ export default function FormDialog({
 	maxWidth = "sm",
 	submitLabel = "Save",
 	submitDisabled = false,
+	noValidate = false,
 }: {
 	title: string;
 	error: string | null;
@@ -35,6 +36,9 @@ export default function FormDialog({
 	submitLabel?: string;
 	/** Keeps the submit button off until the form can be sent. */
 	submitDisabled?: boolean;
+	/** shortcut: set by forms moved to react-hook-form + zod, which show their own messages; make it
+	 * the default and remove the prop once no form relies on the browser's own checks. */
+	noValidate?: boolean;
 }) {
 	const shownError = useLastDefined(error); // keeps the text while the alert closes
 
@@ -49,7 +53,7 @@ export default function FormDialog({
 				transition: { onExited: sheet.onExited },
 			}}
 		>
-			<form onSubmit={onSubmit} style={{ display: "contents" }}>
+			<form onSubmit={onSubmit} noValidate={noValidate} style={{ display: "contents" }}>
 				<DialogTitle id="form-dialog-title">{title}</DialogTitle>
 				<DialogContent>
 					{/* A disabled fieldset turns every field, switch and button inside it off while the form

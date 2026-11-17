@@ -1,16 +1,23 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import type { SubmitEvent } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { formatDate, formatMoney } from "#/lib/format";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
-import { acceptSubscriptionCandidateFn } from "#/server/subscriptions";
+import {
+	acceptSubscriptionCandidateFn,
+	repeatFields,
+	subscriptionFormFields,
+} from "#/server/subscriptions";
 import { INTERVAL_UNIT_LABELS, INTERVAL_UNITS, type SubscriptionCandidate } from "#/types/api";
 import FormDialog from "./FormDialog";
+import FormTextField from "./FormTextField";
 import { useNotify } from "./Notify";
-import { getString, isOneOf } from "#/lib/utils";
+
+const schema = z.object({ ...subscriptionFormFields, ...repeatFields });
 
 /** The confirm step for a suggested subscription: what it will hold, ready to change before it is
  * made. Making it links the payments already made, so the next one is planned in their place. */
@@ -25,26 +32,24 @@ export default function AcceptSuggestionDialog({
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
 
-	async function submit(e: SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
-		const form = new FormData(e.currentTarget);
-		const name = getString(form, "name").trim();
-		const unit = getString(form, "interval_unit");
-		if (!isOneOf(unit, INTERVAL_UNITS)) return;
+	const { control, handleSubmit } = useForm({
+		resolver: zodResolver(schema),
+		defaultValues: {
+			name: candidate.vendor_name,
+			amount: candidate.amount,
+			interval_count: String(candidate.interval_count),
+			interval_unit: candidate.interval_unit,
+		},
+	});
+
+	async function submit(values: z.output<typeof schema>) {
 		const sent = await run(() =>
 			acceptSubscriptionCandidateFn({
-				data: {
-					vendor_id: candidate.vendor_id,
-					currency: candidate.currency,
-					name: name || undefined,
-					amount: getString(form, "amount") || undefined,
-					interval_unit: unit,
-					interval_count: Number(form.get("interval_count")) || 1,
-				},
+				data: { vendor_id: candidate.vendor_id, currency: candidate.currency, ...values },
 			}),
 		);
 		if (sent) {
-			notify(`Added ${name || candidate.vendor_name}. Its next payment is planned.`);
+			notify(`Added ${values.name}. Its next payment is planned.`);
 			sheet.close();
 		}
 	}
@@ -54,7 +59,8 @@ export default function AcceptSuggestionDialog({
 			title="Add as a subscription"
 			error={error}
 			pending={pending}
-			onSubmit={submit}
+			onSubmit={handleSubmit(submit)}
+			noValidate
 			sheet={sheet}
 			maxWidth="xs"
 			submitLabel="Add subscription"
@@ -65,17 +71,17 @@ export default function AcceptSuggestionDialog({
 					{formatDate(candidate.last_date)}. Those payments will be linked to it, and the next one
 					planned for {formatDate(candidate.next_due)}.
 				</Typography>
-				<TextField
-					label="Name"
+				<FormTextField
+					control={control}
 					name="name"
-					defaultValue={candidate.vendor_name}
+					label="Name"
 					required
 					slotProps={{ htmlInput: { maxLength: 200 } }}
 				/>
-				<TextField
-					label={`Amount (${candidate.currency})`}
+				<FormTextField
+					control={control}
 					name="amount"
-					defaultValue={candidate.amount}
+					label={`Amount (${candidate.currency})`}
 					required
 					helperText={
 						candidate.amount_varies
@@ -85,19 +91,19 @@ export default function AcceptSuggestionDialog({
 					slotProps={{ htmlInput: { inputMode: "decimal" } }}
 				/>
 				<Stack direction="row" sx={{ gap: 2 }}>
-					<TextField
-						label="Every"
+					<FormTextField
+						control={control}
 						name="interval_count"
+						label="Every"
 						type="number"
-						defaultValue={candidate.interval_count}
 						slotProps={{ htmlInput: { min: 1, max: 120 } }}
 						sx={{ width: 110 }}
 					/>
-					<TextField
+					<FormTextField
+						control={control}
+						name="interval_unit"
 						select
 						label="Unit"
-						name="interval_unit"
-						defaultValue={candidate.interval_unit}
 						sx={{ flex: 1 }}
 					>
 						{INTERVAL_UNITS.map((u) => (
@@ -105,7 +111,7 @@ export default function AcceptSuggestionDialog({
 								{INTERVAL_UNIT_LABELS[u]}
 							</MenuItem>
 						))}
-					</TextField>
+					</FormTextField>
 				</Stack>
 			</Stack>
 		</FormDialog>

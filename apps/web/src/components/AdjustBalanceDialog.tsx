@@ -1,20 +1,38 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import Alert from "@mui/material/Alert";
-import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
-import { useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
+import { z } from "zod";
 import Money from "#/components/Money";
-import { type AdjustMode, adjustmentPreview } from "#/lib/accounts";
+import { adjustmentPreview } from "#/lib/accounts";
 import { formatMoney, todayIso } from "#/lib/format";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
 import { adjustAccountFn } from "#/server/accounts";
 import type { Account } from "#/types/api";
 import FormDialog from "./FormDialog";
+import FormTextField from "./FormTextField";
 import { useNotify } from "./Notify";
-import { getString } from "#/lib/utils";
 
 const KIND = { income: "an income", expense: "an expense" } as const;
+
+const schema = z.object({
+	mode: z.enum(["balance", "amount"]),
+	value: z
+		.string()
+		.trim()
+		.regex(/^-?\d+(\.\d{1,4})?$/, "Enter an amount, like 1250.50"),
+	date: z.iso
+		.date()
+		.or(z.literal(""))
+		.transform((v) => v || undefined),
+	note: z
+		.string()
+		.trim()
+		.max(1000)
+		.transform((v) => v || null),
+});
 
 /** Make an account match its bank. You say what the bank shows (or how much to add or take away),
  * and the difference is recorded as an adjustment: it fixes the balance, and is not counted as
@@ -29,29 +47,32 @@ export default function AdjustBalanceDialog({
 	const { run, pending, error } = useAction();
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
-	const [mode, setMode] = useState<AdjustMode>("balance");
-	const [typed, setTyped] = useState("");
+	const { control, handleSubmit, setValue } = useForm<
+		z.input<typeof schema>,
+		unknown,
+		z.output<typeof schema>
+	>({
+		resolver: zodResolver(schema),
+		defaultValues: { mode: "balance", value: "", date: todayIso(), note: "" },
+	});
+	const [mode, typed] = useWatch({ control, name: ["mode", "value"] });
 	const preview = adjustmentPreview(account.balance, mode, typed);
 
-	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
-		if (!preview || preview.kind === null) return;
-		const f = new FormData(e.currentTarget);
-		const value = typed.trim();
-		const date = getString(f, "date") || undefined;
-		const note = getString(f, "note").trim() || null;
+	async function submit({ mode: how, value, date, note }: z.output<typeof schema>) {
+		const result = adjustmentPreview(account.balance, how, value);
+		if (!result || result.kind === null) return; // nothing to adjust: the alert says so
 		const ok = await run(() =>
 			adjustAccountFn({
 				data: {
 					id: account.id,
-					...(mode === "balance" ? { new_balance: value } : { amount: value }),
+					...(how === "balance" ? { new_balance: value } : { amount: value }),
 					date,
 					note,
 				},
 			}),
 		);
 		if (ok) {
-			notify(`"${account.name}" now matches: ${formatMoney(preview.after, account.currency)}`);
+			notify(`"${account.name}" now matches: ${formatMoney(result.after, account.currency)}`);
 			sheet.close();
 		}
 	}
@@ -61,7 +82,8 @@ export default function AdjustBalanceDialog({
 			title={`Adjust "${account.name}"`}
 			error={error}
 			pending={pending}
-			onSubmit={submit}
+			onSubmit={handleSubmit(submit)}
+			noValidate
 			sheet={sheet}
 			maxWidth="xs"
 			submitLabel="Adjust"
@@ -71,7 +93,7 @@ export default function AdjustBalanceDialog({
 				fullWidth
 				size="small"
 				value={mode}
-				onChange={(_, next: AdjustMode | null) => next && setMode(next)}
+				onChange={(_, next: typeof mode | null) => next && setValue("mode", next)}
 				aria-label="How to adjust"
 				sx={{ mb: 2 }}
 			>
@@ -79,10 +101,10 @@ export default function AdjustBalanceDialog({
 				<ToggleButton value="amount">Add or take away</ToggleButton>
 			</ToggleButtonGroup>
 
-			<TextField
+			<FormTextField
+				control={control}
+				name="value"
 				label={mode === "balance" ? "Balance at your bank" : "Amount"}
-				value={typed}
-				onChange={(e) => setTyped(e.target.value)}
 				required
 				autoFocus
 				placeholder="0.00"
@@ -111,18 +133,19 @@ export default function AdjustBalanceDialog({
 				</Alert>
 			)}
 
-			<TextField
-				label="Date"
+			<FormTextField
+				control={control}
 				name="date"
+				label="Date"
 				type="date"
-				defaultValue={todayIso()}
 				helperText="From this day on. Use an earlier date if the difference goes back."
 				slotProps={{ inputLabel: { shrink: true } }}
 				sx={{ mb: 2 }}
 			/>
-			<TextField
-				label="Note (optional)"
+			<FormTextField
+				control={control}
 				name="note"
+				label="Note (optional)"
 				placeholder="Balance adjustment"
 				slotProps={{ htmlInput: { maxLength: 1000 } }}
 			/>

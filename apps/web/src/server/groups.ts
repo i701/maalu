@@ -4,8 +4,16 @@ import { DEFAULT_PAGE_SIZE, PAGE_SIZES, type PageResult } from "#/lib/pagination
 import type { GroupDetail, GroupRemoved, TransactionGroup } from "#/types/api";
 import { apiRequest } from "./api";
 
-const name = z.string().trim().min(1).max(100);
-const note = z.string().trim().max(500).nullish();
+/** A group's name and note, as the group dialogs send them; a blank note is none. */
+export const groupSchema = z.object({
+	name: z.string().trim().min(1, "Give the group a name").max(100),
+	note: z
+		.string()
+		.trim()
+		.max(500)
+		.nullish()
+		.transform((v) => v || null),
+});
 const ids = z.array(z.uuid()).min(1).max(50);
 
 /** Every group, for the picker that adds transactions to an existing one. */
@@ -46,13 +54,13 @@ export const getGroupFn = createServerFn({ method: "GET" })
 	.handler(async ({ data }) => apiRequest<GroupDetail>(`/groups/${data.id}`));
 
 export const createGroupFn = createServerFn({ method: "POST" })
-	.validator(z.object({ name, note, transaction_ids: z.array(z.uuid()).min(2).max(50) }))
+	.validator(groupSchema.extend({ transaction_ids: z.array(z.uuid()).min(2).max(50) }))
 	.handler(async ({ data }) =>
 		apiRequest<TransactionGroup>("/groups", { method: "POST", body: data }),
 	);
 
 export const updateGroupFn = createServerFn({ method: "POST" })
-	.validator(z.object({ id: z.uuid(), changes: z.object({ name: name.optional(), note }) }))
+	.validator(z.object({ id: z.uuid(), changes: groupSchema.partial({ name: true }) }))
 	.handler(async ({ data }) =>
 		apiRequest<TransactionGroup>(`/groups/${data.id}`, { method: "PATCH", body: data.changes }),
 	);

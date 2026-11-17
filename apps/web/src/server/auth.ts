@@ -152,7 +152,9 @@ export const getMeFn = createServerFn({ method: "GET" }).handler(async () =>
 	apiRequest<User>("/users/me"),
 );
 
-const codeField = z.string().trim().min(6).max(32);
+const codeField = z.string().trim().min(6, "Enter the code from your app").max(32);
+/** A code from the authenticator app, as the setup dialog sends it. */
+export const twoFactorCodeSchema = z.object({ code: codeField });
 
 /** Start setting up an authenticator app: the secret and the QR code to scan. */
 export const startTwoFactorFn = createServerFn({ method: "POST" }).handler(async () =>
@@ -161,7 +163,7 @@ export const startTwoFactorFn = createServerFn({ method: "POST" }).handler(async
 
 /** Turn two-factor on with a code from the app. Answers with the recovery codes, shown once. */
 export const enableTwoFactorFn = createServerFn({ method: "POST" })
-	.validator(z.object({ code: codeField }))
+	.validator(twoFactorCodeSchema)
 	.handler(async ({ data }) =>
 		apiRequest<RecoveryCodes>("/auth/2fa/enable", { method: "POST", body: data }),
 	);
