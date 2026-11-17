@@ -11,6 +11,7 @@ import MetricCard from "#/components/dashboard/MetricCard";
 import EmptyState from "#/components/EmptyState";
 import AccountsTable from "#/components/net-worth/AccountsTable";
 import PageHeader from "#/components/PageHeader";
+import PageSkeleton from "#/components/PageSkeleton";
 import PendingOverlay from "#/components/PendingOverlay";
 import { describeRange, periodsFor, PRESETS, type CustomRanges, type Preset } from "#/lib/compare";
 import { formatMoney } from "#/lib/format";
@@ -38,6 +39,10 @@ const DEFAULT_PRESET = "last_30" as const;
 const DRIVER_HELP_BY_KEY = new Map<string, string>(Object.entries(DRIVER_HELP));
 
 export const Route = createFileRoute("/_protected/net-worth")({
+	// Slow loads show the page's shape; quick ones never flash it.
+	pendingComponent: PageSkeleton,
+	pendingMs: 500,
+	pendingMinMs: 300,
 	validateSearch: searchSchema,
 	loaderDeps: ({ search }) => ({
 		preset: search.preset ?? DEFAULT_PRESET,
@@ -186,7 +191,7 @@ function NetWorthPage() {
 
 						{data.accounts.length > 0 && (
 							<Box>
-								<Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+								<Typography variant="subtitle1" sx={{ mb: 1 }}>
 									Account by account
 								</Typography>
 								<AccountsTable accounts={data.accounts} currency={currency} />

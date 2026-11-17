@@ -70,9 +70,7 @@ const BudgetGoalsCard = memo(function BudgetGoalsCard({
 			}}
 		>
 			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-				<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-					Budget and goals
-				</Typography>
+				<Typography variant="subtitle1">Budget and goals</Typography>
 				<RouterButton to="/budget" search={{ on: undefined }} color="inherit" size="small">
 					Open
 				</RouterButton>

@@ -10,6 +10,7 @@ import Legend from "#/components/charts/Legend";
 import StackedColumns from "#/components/charts/StackedColumns";
 import EmptyState from "#/components/EmptyState";
 import PageHeader from "#/components/PageHeader";
+import PageSkeleton from "#/components/PageSkeleton";
 import PendingOverlay from "#/components/PendingOverlay";
 import KindMonthsTable from "#/components/trends/KindMonthsTable";
 import TrendsTable from "#/components/trends/TrendsTable";
@@ -37,6 +38,10 @@ const searchSchema = z.object({
 });
 
 export const Route = createFileRoute("/_protected/trends")({
+	// Slow loads show the page's shape; quick ones never flash it.
+	pendingComponent: PageSkeleton,
+	pendingMs: 500,
+	pendingMinMs: 300,
 	validateSearch: searchSchema,
 	loaderDeps: ({ search }) => ({ months: search.months ?? 12 }),
 	loader: async ({ deps }) =>
@@ -169,7 +174,7 @@ function TrendsPage() {
 						)}
 						{view === "table" && kinds.length > 0 && (
 							<Box sx={{ mt: 2 }}>
-								<Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+								<Typography variant="subtitle1" sx={{ mb: 1 }}>
 									Needs and wants
 								</Typography>
 								<KindMonthsTable rows={kinds} months={data.months} />

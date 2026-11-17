@@ -53,7 +53,14 @@ export default function NotificationBell({ unread }: { unread: number }) {
 				onClick={(e) => void open(e.currentTarget)}
 			>
 				<Badge
-					color="error"
+					slotProps={{
+						badge: {
+							sx: {
+								bgcolor: "var(--md-sys-color-tertiary)",
+								color: "var(--md-sys-color-on-tertiary)",
+							},
+						},
+					}}
 					badgeContent={unread > 0 ? badgeText(unread) : 0}
 					invisible={unread === 0}
 				>
@@ -72,9 +79,7 @@ export default function NotificationBell({ unread }: { unread: number }) {
 					direction="row"
 					sx={{ alignItems: "center", justifyContent: "space-between", px: 2, py: 1.5 }}
 				>
-					<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-						Notifications
-					</Typography>
+					<Typography variant="subtitle1">Notifications</Typography>
 					<Button
 						size="small"
 						startIcon={<DoneAllIcon />}

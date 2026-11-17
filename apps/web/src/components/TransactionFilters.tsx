@@ -127,9 +127,7 @@ export default function TransactionFilters({
 	return (
 		<Stack spacing={3}>
 			<Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between" }}>
-				<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-					Filters
-				</Typography>
+				<Typography variant="subtitle1">Filters</Typography>
 				{activeCount > 0 && (
 					<Button size="small" color="inherit" onClick={onClear}>
 						Clear all

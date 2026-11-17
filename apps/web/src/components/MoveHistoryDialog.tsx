@@ -66,7 +66,7 @@ export default function MoveHistoryDialog({
 				<Stack sx={{ gap: 2.5 }}>
 					{periods.map((p) => (
 						<Box key={p.start}>
-							<Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.75 }}>
+							<Typography variant="subtitle2" sx={{ mb: 0.75 }}>
 								{formatDate(p.start)} – {formatDate(p.end)}
 							</Typography>
 							<Stack sx={{ gap: 1 }}>

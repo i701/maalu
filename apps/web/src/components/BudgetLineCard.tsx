@@ -96,7 +96,7 @@ const BudgetLineCard = memo(function BudgetLineCard({
 				sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1 }}
 			>
 				<Box sx={{ minWidth: 0 }}>
-					<Typography variant="subtitle1" sx={{ fontWeight: 600 }} noWrap>
+					<Typography variant="subtitle1" noWrap>
 						{line.name}
 					</Typography>
 					{(dated ? fixedWindow(dated) : runsWindow(line)) && (

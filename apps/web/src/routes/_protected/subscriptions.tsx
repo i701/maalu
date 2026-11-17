@@ -326,7 +326,7 @@ function SubscriptionsPage() {
 					<StatCard
 						label="Monthly total"
 						value={formatMoney(summary.monthly_base_total, summary.currency)}
-						tint="violet"
+						tone="primary"
 						icon="payments"
 						shape={2}
 					/>
@@ -335,7 +335,7 @@ function SubscriptionsPage() {
 					<StatCard
 						label="Active subscriptions"
 						value={String(summary.active_count)}
-						tone="primary"
+						tone="neutral"
 						icon="event_repeat"
 						shape={5}
 					/>

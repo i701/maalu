@@ -97,7 +97,7 @@ const MonthlyCard = memo(function MonthlyCard({ stats }: { stats: MonthlyStats }
 				formatValue={format}
 				ariaLabel={`Income and expenses for each of the last ${rows.length} months`}
 			/>
-			<Typography variant="subtitle2" sx={{ fontWeight: 600, mt: 1, mb: 1 }}>
+			<Typography variant="subtitle2" sx={{ mt: 1, mb: 1 }}>
 				Kept each month
 			</Typography>
 			<Box sx={{ mb: 1 }}>
@@ -110,7 +110,7 @@ const MonthlyCard = memo(function MonthlyCard({ stats }: { stats: MonthlyStats }
 				overColor={OVERSPENT.color}
 				ariaLabel={`Money kept or overspent in each of the last ${rows.length} months`}
 			/>
-			<Typography variant="subtitle2" sx={{ fontWeight: 600, mt: 1, mb: 1 }}>
+			<Typography variant="subtitle2" sx={{ mt: 1, mb: 1 }}>
 				Kept in total
 			</Typography>
 			<AreaChart

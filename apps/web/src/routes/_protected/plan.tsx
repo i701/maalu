@@ -145,7 +145,7 @@ function PlanPage() {
 									bgcolor: "var(--md-sys-color-surface-container-low)",
 								}}
 							>
-								<Typography variant="h2" sx={{ fontSize: 18, fontWeight: 600, mb: 1.5 }}>
+								<Typography variant="h2" sx={{ fontSize: 18, mb: 1.5 }}>
 									Bills by day
 								</Typography>
 								{days.length === 0 ? (

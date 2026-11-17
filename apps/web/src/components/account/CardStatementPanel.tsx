@@ -57,7 +57,7 @@ const CardStatementPanel = memo(function CardStatementPanel({
 		>
 			<Box sx={{ display: "flex", justifyContent: "space-between", gap: 1, flexWrap: "wrap" }}>
 				<Box>
-					<Typography variant="h2" sx={{ fontSize: 18, fontWeight: 600 }}>
+					<Typography variant="h2" sx={{ fontSize: 18 }}>
 						Statement
 					</Typography>
 					<Typography variant="caption" sx={{ color: "text.secondary" }}>

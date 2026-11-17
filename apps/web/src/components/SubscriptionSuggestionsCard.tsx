@@ -55,9 +55,7 @@ const SubscriptionSuggestionsCard = memo(function SubscriptionSuggestionsCard({
 					sx={{ px: 2, borderRadius: "var(--shape-xl)" }}
 				>
 					<Stack direction="row" sx={{ alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-						<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-							Suggested subscriptions
-						</Typography>
+						<Typography variant="subtitle1">Suggested subscriptions</Typography>
 						<TonalChip accent={ACCENT.green} label={String(candidates.length)} />
 						<Typography variant="body2" sx={{ color: "text.secondary" }}>
 							Charges that repeat in what you have paid

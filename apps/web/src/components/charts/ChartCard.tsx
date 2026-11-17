@@ -51,9 +51,7 @@ export default function ChartCard({
 				}}
 			>
 				<Box sx={{ minWidth: 0 }}>
-					<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-						{title}
-					</Typography>
+					<Typography variant="subtitle1">{title}</Typography>
 					{subtitle && (
 						<Typography variant="body2" sx={{ color: "text.secondary" }}>
 							{subtitle}

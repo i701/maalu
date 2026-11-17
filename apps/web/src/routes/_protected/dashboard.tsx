@@ -20,6 +20,7 @@ import NeedsWantsCard from "#/components/dashboard/NeedsWantsCard";
 import UpcomingSoonCard from "#/components/dashboard/UpcomingSoonCard";
 import SpendingCard from "#/components/dashboard/SpendingCard";
 import PageHeader from "#/components/PageHeader";
+import PageSkeleton from "#/components/PageSkeleton";
 import PendingOverlay from "#/components/PendingOverlay";
 import Symbol from "#/components/Symbol";
 import { monthBounds, monthLabel, percentChange, shiftMonth } from "#/lib/dashboard";
@@ -53,6 +54,10 @@ const today = () => {
 };
 
 export const Route = createFileRoute("/_protected/dashboard")({
+	// Slow loads show the page's shape; quick ones never flash it.
+	pendingComponent: PageSkeleton,
+	pendingMs: 500,
+	pendingMinMs: 300,
 	validateSearch: searchSchema,
 	loaderDeps: ({ search }) => search,
 	loader: async ({ deps }) => {

@@ -65,9 +65,7 @@ export default function UpcomingCard({
 					sx={{ px: 2, borderRadius: "var(--shape-xl)" }}
 				>
 					<Stack direction="row" sx={{ alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-						<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-							Upcoming
-						</Typography>
+						<Typography variant="subtitle1">Upcoming</Typography>
 						<TonalChip accent={ACCENT.blue} label={String(items.length)} />
 						{overdueCount > 0 && (
 							<TonalChip accent="var(--md-sys-color-error)" label={`${overdueCount} overdue`} />

@@ -71,9 +71,7 @@ const TransferSuggestionsCard = memo(function TransferSuggestionsCard({
 				sx={{ px: 2, borderRadius: "var(--shape-xl)" }}
 			>
 				<Stack direction="row" sx={{ alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-					<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-						Possible transfers
-					</Typography>
+					<Typography variant="subtitle1">Possible transfers</Typography>
 					<TonalChip accent={ACCENT.blue} label={String(suggestions.length)} />
 					<Typography variant="body2" sx={{ color: "text.secondary" }}>
 						Moves of your own money that were entered twice

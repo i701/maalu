@@ -39,7 +39,7 @@ export default function SalaryRulesCard({
 			<CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
 				<Box sx={{ display: "flex", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
 					<Box>
-						<Typography variant="h2" sx={{ fontSize: 18, fontWeight: 600 }}>
+						<Typography variant="h2" sx={{ fontSize: 18 }}>
 							When my salary arrives
 						</Typography>
 						<Typography variant="body2" sx={{ color: "text.secondary", mt: 0.5 }}>

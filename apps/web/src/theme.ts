@@ -255,7 +255,7 @@ const theme = createTheme({
 					"& .MuiDrawer-paper": {
 						borderTopLeftRadius: "var(--shape-xl)",
 						borderTopRightRadius: "var(--shape-xl)",
-						backgroundColor: "var(--md-sys-color-surface-container-low)",
+						backgroundColor: "var(--md-sys-color-surface-container)",
 					},
 				},
 			},
@@ -274,7 +274,9 @@ const theme = createTheme({
 					width: "calc(100% - 32px)",
 					maxHeight: "calc(100dvh - 32px)",
 					borderRadius: "var(--shape-xl)",
-					backgroundColor: "var(--md-sys-color-surface-container-low)",
+					// a step off white (M3's dialog is a container, not the card colour), so the white
+					// fields inside it stand out
+					backgroundColor: "var(--md-sys-color-surface-container)",
 				},
 				// `fullScreen` (FormDialog's big forms on a phone): the rules above would keep the margin,
 				// the rounded corners and a capped height, so undo them.
@@ -331,7 +333,7 @@ const theme = createTheme({
 				// No row lines: rows are told apart by spacing and a tonal hover.
 				root: { borderBottom: "none" },
 				head: ({ theme: t }) => ({
-					fontWeight: 600,
+					fontWeight: 500,
 					color: t.vars.palette.text.secondary,
 					whiteSpace: "nowrap",
 				}),

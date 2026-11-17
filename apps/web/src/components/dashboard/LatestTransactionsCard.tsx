@@ -39,9 +39,7 @@ const LatestTransactionsCard = memo(function LatestTransactionsCard({
 			}}
 		>
 			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-				<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-					Latest transactions
-				</Typography>
+				<Typography variant="subtitle1">Latest transactions</Typography>
 				<RouterButton
 					to="/transactions"
 					search={{ page: 1, pageSize: 20 }}

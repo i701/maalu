@@ -33,9 +33,7 @@ const UpcomingSoonCard = memo(function UpcomingSoonCard({
 			}}
 		>
 			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-				<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-					Coming up
-				</Typography>
+				<Typography variant="subtitle1">Coming up</Typography>
 				<RouterLink to="/plan">Open the month plan</RouterLink>
 			</Box>
 			{shown.length === 0 ? (

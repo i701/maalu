@@ -20,9 +20,7 @@ const CreditUsageCard = memo(function CreditUsageCard({ accounts }: { accounts: 
 			}}
 		>
 			<Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-				<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-					Credit used
-				</Typography>
+				<Typography variant="subtitle1">Credit used</Typography>
 				<RouterButton to="/accounts" search={{ q: undefined }} color="inherit" size="small">
 					Open
 				</RouterButton>

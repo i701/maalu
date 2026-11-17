@@ -30,7 +30,7 @@ export default function AccountPlanned({
 			}}
 		>
 			<Box sx={{ display: "flex", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
-				<Typography variant="h2" sx={{ fontSize: 18, fontWeight: 600 }}>
+				<Typography variant="h2" sx={{ fontSize: 18 }}>
 					Planned
 				</Typography>
 				<RouterLink to="/plan">Open the month plan</RouterLink>

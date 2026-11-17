@@ -214,7 +214,8 @@ function AccountsPage() {
 					<StatCard
 						label="Total"
 						value={formatMoney(summary.total, summary.currency)}
-						tint={isNegative(summary.total) ? "rose" : "navy"}
+						tint="rose"
+						tone={isNegative(summary.total) ? undefined : "primary"}
 						icon="savings"
 						shape={6}
 						reverse

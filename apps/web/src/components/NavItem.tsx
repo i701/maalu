@@ -108,8 +108,9 @@ function NavBadge({ count }: { count: number }) {
 				fontSize: 11,
 				fontWeight: 700,
 				lineHeight: 1,
-				bgcolor: "var(--md-sys-color-error)",
-				color: "var(--md-sys-color-on-error)",
+				// tertiary: a small thing that needs a look, not an alarm
+				bgcolor: "var(--md-sys-color-tertiary)",
+				color: "var(--md-sys-color-on-tertiary)",
 			}}
 		>
 			{count > 99 ? "99+" : count}

@@ -47,7 +47,7 @@ const AccountCards = memo(function AccountCards({
 			}}
 		>
 			<Box sx={{ display: "flex", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
-				<Typography variant="h2" sx={{ fontSize: 18, fontWeight: 600 }}>
+				<Typography variant="h2" sx={{ fontSize: 18 }}>
 					Cards
 				</Typography>
 				{canHaveCards && !archived && (

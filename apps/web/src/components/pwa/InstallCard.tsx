@@ -24,7 +24,7 @@ export default function InstallCard() {
 	return (
 		<Card sx={{ maxWidth: 640 }}>
 			<CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
-				<Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+				<Typography variant="subtitle1" sx={{ mb: 1 }}>
 					Install the app
 				</Typography>
 				<Typography variant="body2" sx={{ color: "text.secondary" }}>

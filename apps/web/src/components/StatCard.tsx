@@ -7,6 +7,10 @@ import { MORPH_TRANSITION, morphUp } from "#/lib/shape";
 
 /** Solid tonal containers (adapt to light and dark), like the site's cyan and lavender tiles. */
 const TONAL = {
+	neutral: {
+		bg: "var(--md-sys-color-surface-container-low)",
+		fg: "var(--md-sys-color-on-surface)",
+	},
 	primary: {
 		bg: "var(--md-sys-color-primary-container)",
 		fg: "var(--md-sys-color-on-primary-container)",

@@ -33,7 +33,7 @@ export default function NotificationSettings({ me, email }: { me: User; email: E
 	return (
 		<Card sx={{ maxWidth: 640 }}>
 			<CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
-				<Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+				<Typography variant="subtitle1" sx={{ mb: 1 }}>
 					Notifications
 				</Typography>
 				<Stack sx={{ gap: 1 }}>
@@ -55,7 +55,7 @@ export default function NotificationSettings({ me, email }: { me: User; email: E
 						</div>
 					))}
 				</Stack>
-				<Typography variant="subtitle2" sx={{ fontWeight: 600, mt: 2.5 }}>
+				<Typography variant="subtitle2" sx={{ mt: 2.5 }}>
 					Email
 				</Typography>
 				{email.configured ? (

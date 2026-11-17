@@ -11,6 +11,7 @@ import PeriodPicker from "#/components/compare/PeriodPicker";
 import TotalsCards from "#/components/compare/TotalsCards";
 import EmptyState from "#/components/EmptyState";
 import PageHeader from "#/components/PageHeader";
+import PageSkeleton from "#/components/PageSkeleton";
 import PendingOverlay from "#/components/PendingOverlay";
 import {
 	compareRows,
@@ -55,6 +56,10 @@ const toCustom = (s: z.infer<typeof searchSchema>): Partial<CustomRanges> => ({
 });
 
 export const Route = createFileRoute("/_protected/compare")({
+	// Slow loads show the page's shape; quick ones never flash it.
+	pendingComponent: PageSkeleton,
+	pendingMs: 500,
+	pendingMinMs: 300,
 	validateSearch: searchSchema,
 	loaderDeps: ({ search }) => ({ preset: search.preset ?? DEFAULT_PRESET, ...toCustom(search) }),
 	loader: async ({ deps }) => {
@@ -236,7 +241,7 @@ function ComparePage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
 	return (
 		<Box>
-			<Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+			<Typography variant="subtitle1" sx={{ mb: 1 }}>
 				{title}
 			</Typography>
 			{children}

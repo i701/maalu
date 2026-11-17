@@ -20,8 +20,8 @@ const TABLE = {
 	"& .MuiTableHead-root .MuiTableCell-root": {
 		bgcolor: "var(--md-sys-color-surface-container)",
 		color: "var(--md-sys-color-on-surface-variant)",
-		fontSize: "0.6875rem",
-		fontWeight: 600,
+		fontSize: "0.75rem",
+		fontWeight: 500,
 		letterSpacing: "0.06em",
 		textTransform: "uppercase",
 		py: 0.75,

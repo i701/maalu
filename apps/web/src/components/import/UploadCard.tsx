@@ -72,9 +72,7 @@ export default function UploadCard({
 		<Card>
 			<CardContent>
 				<Stack sx={{ gap: 2 }}>
-					<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-						Import a bank statement
-					</Typography>
+					<Typography variant="subtitle1">Import a bank statement</Typography>
 					<Typography variant="body2" sx={{ color: "text.secondary" }}>
 						Choose the account, then the CSV you downloaded from BML or MIB. You review everything
 						before anything is saved.

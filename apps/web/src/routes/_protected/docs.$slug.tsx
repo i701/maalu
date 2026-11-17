@@ -56,7 +56,7 @@ function DocPage() {
 					<DocBlocks blocks={doc.blocks} />
 					{doc.where.length > 0 && (
 						<Box sx={{ mt: 5 }}>
-							<Typography variant="h2" sx={{ fontSize: 18, fontWeight: 600, mb: 1 }}>
+							<Typography variant="h2" sx={{ fontSize: 18, mb: 1 }}>
 								Where to find it
 							</Typography>
 							<Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
