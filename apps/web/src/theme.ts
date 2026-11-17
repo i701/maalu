@@ -63,6 +63,12 @@ const SEGMENT_TINT = (color: "success" | "error" | "info") =>
 const accentRules = (scheme: "light" | "dark", selector: (name: string) => string) =>
 	Object.fromEntries(ACCENT_NAMES.map((name) => [selector(name), accentVars(name, scheme)]));
 
+// A glow of the page's accent across the top of every dialog: an ellipse centred on the top edge,
+// wide as the dialog and 150px tall (enough to sit behind the title), fading to nothing below it.
+// `primary-container` follows the page's accent (lib/accent-roles.ts).
+const DIALOG_GLOW =
+	"radial-gradient(ellipse 110% 150px at 50% 0%, var(--md-sys-color-primary-container) 0%, color-mix(in srgb, var(--md-sys-color-primary-container) 45%, transparent) 55%, transparent 100%)";
+
 const SPATIAL_BOUNCY = "var(--spring-spatial-bouncy-dur) var(--spring-spatial-bouncy)";
 const SPATIAL_FAST = "var(--spring-spatial-fast-dur) var(--spring-spatial-fast)";
 const EFFECTS_FAST = "var(--spring-effects-fast-dur) var(--spring-effects-fast)";
@@ -319,6 +325,8 @@ const theme = createTheme({
 					borderRadius: "var(--shape-xl)",
 					// white like the cards; the fields inside stand out by their `outline` border
 					backgroundColor: "var(--md-sys-color-surface-container-low)",
+					backgroundImage: DIALOG_GLOW,
+					backgroundRepeat: "no-repeat",
 				},
 				// `fullScreen` (FormDialog's big forms on a phone): the rules above would keep the margin,
 				// the rounded corners and a capped height, so undo them.
