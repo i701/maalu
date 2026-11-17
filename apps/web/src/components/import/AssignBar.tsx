@@ -2,7 +2,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Autocomplete from "@mui/material/Autocomplete";
 import Button from "@mui/material/Button";
 import FormControlLabel from "@mui/material/FormControlLabel";
-import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
@@ -13,8 +12,7 @@ import { z } from "zod";
 import type { RowPatch } from "#/lib/imports";
 import { plural } from "#/lib/imports";
 import type { Account } from "#/types/api";
-import FormTextField from "../FormTextField";
-import { accountMenuItems } from "../transaction-form/accountMenuItems";
+import AccountPicker from "../transaction-form/AccountPicker";
 
 // Blank leaves that thing as it is on each row.
 const schema = z.object({
@@ -157,18 +155,20 @@ export default function AssignBar({
 				</Button>
 			</Stack>
 			<Stack direction={{ xs: "column", md: "row" }} sx={{ gap: 1.5, alignItems: "flex-start" }}>
-				<FormTextField
-					control={control}
+				<Controller
 					name="transfer"
-					select
-					fullWidth
-					size="small"
-					label="Transfer to or from my account"
-					helperText="Money moving between your own accounts is not spending or income"
-				>
-					{accountMenuItems(otherAccounts)}
-					{otherAccounts.length === 0 && <MenuItem disabled>No other accounts</MenuItem>}
-				</FormTextField>
+					control={control}
+					render={({ field }) => (
+						<AccountPicker
+							accounts={otherAccounts}
+							size="small"
+							label="Transfer to or from my account"
+							value={field.value}
+							onChange={field.onChange}
+							helperText="Money moving between your own accounts is not spending or income"
+						/>
+					)}
+				/>
 				<Button
 					variant="contained"
 					disabled={!transfer}

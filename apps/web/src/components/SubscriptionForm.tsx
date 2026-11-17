@@ -32,7 +32,7 @@ import {
 	subscriptionDefaults,
 	subscriptionSchema,
 } from "./subscription-form";
-import { accountMenuItems } from "./transaction-form/accountMenuItems";
+import AccountPicker from "./transaction-form/AccountPicker";
 import VendorField from "./VendorField";
 
 type FormControl = Control<SubscriptionFormInput, unknown, SubscriptionFormOutput>;
@@ -126,20 +126,23 @@ function MoneyFields({
 	return (
 		<>
 			<Grid size={12}>
-				<FormTextField
-					control={control}
+				<Controller
 					name="account_id"
-					select
-					label="Pay from"
-					helperText={
-						account
-							? `Planned payments go in this account, in ${account.currency}`
-							: "Optional. The account its planned payments are made in"
-					}
-				>
-					<MenuItem value="">None</MenuItem>
-					{accountMenuItems(accounts)}
-				</FormTextField>
+					control={control}
+					render={({ field }) => (
+						<AccountPicker
+							accounts={accounts}
+							label="Pay from"
+							value={field.value}
+							onChange={field.onChange}
+							helperText={
+								account
+									? `Planned payments go in this account, in ${account.currency}`
+									: "Optional. The account its planned payments are made in"
+							}
+						/>
+					)}
+				/>
 			</Grid>
 
 			<Grid size={{ xs: 12, sm: 6 }}>

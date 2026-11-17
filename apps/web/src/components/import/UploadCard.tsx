@@ -4,16 +4,14 @@ import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
-import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { accountForFilename } from "#/lib/imports";
 import type { Account, ImportPreview } from "#/types/api";
-import FormTextField from "../FormTextField";
-import { accountMenuItems } from "../transaction-form/accountMenuItems";
+import AccountPicker from "../transaction-form/AccountPicker";
 
 const schema = z.object({ account_id: z.string() });
 
@@ -81,16 +79,19 @@ export default function UploadCard({
 						Choose the account, then the CSV you downloaded from BML or MIB. You review everything
 						before anything is saved.
 					</Typography>
-					<FormTextField
-						control={form.control}
+					<Controller
 						name="account_id"
-						select
-						label="Account"
-						helperText="Or leave it and pick the file: the account is found from its number in the file name"
-					>
-						{accountMenuItems(accounts)}
-						{accounts.length === 0 && <MenuItem disabled>No accounts yet</MenuItem>}
-					</FormTextField>
+						control={form.control}
+						render={({ field }) => (
+							<AccountPicker
+								accounts={accounts}
+								label="Account"
+								value={field.value}
+								onChange={field.onChange}
+								helperText="Or leave it and pick the file: the account is found from its number in the file name"
+							/>
+						)}
+					/>
 					{error && <Alert severity="error">{error}</Alert>}
 					<Stack direction="row">
 						<Button

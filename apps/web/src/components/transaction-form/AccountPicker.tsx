@@ -26,6 +26,7 @@ export default function AccountPicker({
 	required,
 	error,
 	helperText,
+	size,
 }: {
 	accounts: AccountChoice[];
 	/** An account to leave out (the other side of a transfer). */
@@ -36,11 +37,14 @@ export default function AccountPicker({
 	required?: boolean;
 	error?: boolean;
 	helperText?: string;
+	size?: "small" | "medium";
 }) {
 	const options = accounts.filter((a) => a.id !== exclude);
 	const picked = options.find((a) => a.id === value) ?? null;
 	return (
 		<Autocomplete
+			fullWidth
+			size={size}
 			options={options}
 			value={picked}
 			onChange={(_, a) => onChange(a?.id ?? "")}
@@ -48,7 +52,7 @@ export default function AccountPicker({
 			isOptionEqualToValue={(a, b) => a.id === b.id}
 			filterOptions={filter}
 			disableClearable={required}
-			noOptionsText="No matching account"
+			noOptionsText={options.length ? "No matching account" : "No accounts to choose from"}
 			renderOption={({ key, ...props }, a) => (
 				<Box
 					component="li"
