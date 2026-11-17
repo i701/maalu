@@ -185,9 +185,10 @@ const theme = createTheme({
 					borderRadius: "var(--shape-xs)",
 					// white, so a field on the grey page (a search box) reads like the cards
 					backgroundColor: "var(--md-sys-color-surface-container-low)",
-					// `outline`, not `outline-variant`: a field's edge is a target boundary (3:1)
+					// A field's edge is a target boundary, so it must keep 3:1 against its surface. `inputOutline`
+					// (lib/m3.ts) is the lightest grey that does, in each mode; hover and focus go to full strength.
 					"& .MuiOutlinedInput-notchedOutline": {
-						borderColor: "var(--md-sys-color-outline)",
+						borderColor: "var(--md-sys-color-input-outline)",
 					},
 					"&:hover .MuiOutlinedInput-notchedOutline": {
 						borderColor: "var(--md-sys-color-on-surface-variant)",

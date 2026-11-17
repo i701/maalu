@@ -24,6 +24,9 @@ type Roles = {
 	inverseOnSurface: string;
 	outline: string;
 	outlineVariant: string;
+	/** The resting edge of an input: the lightest grey that still keeps 3:1 against the page, a card or
+	 * a dialog (3.07 on the grey page in light mode, 3.05 on a dark card). Not an M3 role. */
+	inputOutline: string;
 	primary: string;
 	onPrimary: string;
 	primaryContainer: string;
@@ -77,6 +80,7 @@ export const M3_LIGHT: Roles = {
 	inverseOnSurface: "#f0f3f7",
 	outline: "#757a7f",
 	outlineVariant: "#d8dee4",
+	inputOutline: "#898d92",
 	primary: "#0a6e9e",
 	onPrimary: "#ffffff",
 	primaryContainer: "#dff3fb",
@@ -128,6 +132,7 @@ export const M3_DARK: Roles = {
 	inverseOnSurface: "#2e3134",
 	outline: "#8b9095",
 	outlineVariant: "#303539",
+	inputOutline: "#62666a",
 	primary: "#8fd6f2",
 	onPrimary: "#00344b",
 	primaryContainer: "#0d4d6b",
