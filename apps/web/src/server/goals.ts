@@ -6,6 +6,7 @@ import { apiRequest } from "./api";
 /** A positive amount of money, as the goal forms send it. */
 export const money = z
 	.string()
+	.trim()
 	.regex(/^\d+(\.\d{1,4})?$/, "Enter a valid positive amount (max 4 decimals)")
 	.refine((v) => Number(v) > 0, "The amount must be greater than 0");
 

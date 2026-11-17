@@ -1,11 +1,12 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import Grid from "@mui/material/Grid";
 import MenuItem from "@mui/material/MenuItem";
-import TextField from "@mui/material/TextField";
-import { type SubmitEvent, useState } from "react";
+import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
 import { bulkMessage, transactionCount } from "#/lib/bulk-message";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
-import { getString, isOneOf } from "#/lib/utils";
 import { bulkUpdateFn } from "#/server/transactions";
 import {
 	type BulkResult,
@@ -17,9 +18,30 @@ import {
 } from "#/types/api";
 import CategoryField from "./CategoryField";
 import FormDialog from "./FormDialog";
+import FormTextField from "./FormTextField";
 import { useNotify } from "./Notify";
 import TagsField from "./TagsField";
 import VendorField from "./VendorField";
+
+// Every field is optional: blank or empty leaves that thing as it is.
+const blank = z
+	.string()
+	.trim()
+	.transform((v) => v || undefined);
+const tagList = z
+	.array(z.string())
+	.max(10)
+	.transform((v) => (v.length > 0 ? v : undefined));
+const schema = z.object({
+	category: blank,
+	vendor_name: blank,
+	payment_method: z
+		.enum(PAYMENT_METHODS)
+		.or(z.literal(""))
+		.transform((v) => v || undefined),
+	add_tags: tagList,
+	remove_tags: tagList,
+});
 
 /** Change the same things on every selected transaction. Leave a field empty to leave that thing
  * as it is; what does not fit a transaction (a category on a transfer) is skipped and reported. */
@@ -44,19 +66,22 @@ export default function BulkEditDialog({
 	const notify = useNotify();
 	const [localError, setLocalError] = useState<string | null>(null);
 
-	async function submit(e: SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
-		const f = new FormData(e.currentTarget);
-		const text = (k: string) => getString(f, k).trim();
-		const names = (k: string) => f.getAll(k).map(String);
-		const method = text("payment_method");
-		const change = {
-			category: text("category") || undefined,
-			vendor_name: text("vendor") || undefined,
-			payment_method: isOneOf(method, PAYMENT_METHODS) ? method : undefined,
-			add_tags: names("add_tags").length > 0 ? names("add_tags") : undefined,
-			remove_tags: names("remove_tags").length > 0 ? names("remove_tags") : undefined,
-		};
+	const { control, handleSubmit } = useForm<
+		z.input<typeof schema>,
+		unknown,
+		z.output<typeof schema>
+	>({
+		resolver: zodResolver(schema),
+		defaultValues: {
+			category: "",
+			vendor_name: "",
+			payment_method: "",
+			add_tags: [],
+			remove_tags: [],
+		},
+	});
+
+	async function submit(change: z.output<typeof schema>) {
 		if (!Object.values(change).some(Boolean)) return setLocalError("Choose something to change");
 		setLocalError(null);
 
@@ -79,28 +104,47 @@ export default function BulkEditDialog({
 			title={`Edit ${transactionCount(ids.length)}`}
 			error={localError ?? error}
 			pending={pending}
-			onSubmit={submit}
+			onSubmit={handleSubmit(submit)}
+			noValidate
 			sheet={sheet}
 		>
 			<Grid container spacing={2}>
 				<Grid size={{ xs: 12, sm: 6 }}>
-					<CategoryField
-						categories={categories}
+					<Controller
 						name="category"
-						label="Set category"
-						required={false}
-						helper={false}
+						control={control}
+						render={({ field, fieldState }) => (
+							<CategoryField
+								categories={categories}
+								label="Set category"
+								required={false}
+								helper={false}
+								onValueChange={field.onChange}
+								error={fieldState.error?.message}
+							/>
+						)}
 					/>
 				</Grid>
 				<Grid size={{ xs: 12, sm: 6 }}>
-					<VendorField vendors={vendors} label="Set vendor" />
+					<Controller
+						name="vendor_name"
+						control={control}
+						render={({ field, fieldState }) => (
+							<VendorField
+								vendors={vendors}
+								label="Set vendor"
+								onValueChange={field.onChange}
+								error={fieldState.error?.message}
+							/>
+						)}
+					/>
 				</Grid>
 				<Grid size={12}>
-					<TextField
+					<FormTextField
+						control={control}
+						name="payment_method"
 						select
 						label="Set payment method"
-						name="payment_method"
-						defaultValue=""
 						helperText="Leave empty to keep each one's own"
 					>
 						<MenuItem value="">Don't change</MenuItem>
@@ -109,13 +153,25 @@ export default function BulkEditDialog({
 								{PAYMENT_METHOD_LABELS[m]}
 							</MenuItem>
 						))}
-					</TextField>
+					</FormTextField>
 				</Grid>
 				<Grid size={12}>
-					<TagsField tags={tags} name="add_tags" label="Add tags" />
+					<Controller
+						name="add_tags"
+						control={control}
+						render={({ field }) => (
+							<TagsField tags={tags} label="Add tags" onChange={field.onChange} />
+						)}
+					/>
 				</Grid>
 				<Grid size={12}>
-					<TagsField tags={tags} name="remove_tags" label="Remove tags" />
+					<Controller
+						name="remove_tags"
+						control={control}
+						render={({ field }) => (
+							<TagsField tags={tags} label="Remove tags" onChange={field.onChange} />
+						)}
+					/>
 				</Grid>
 			</Grid>
 		</FormDialog>

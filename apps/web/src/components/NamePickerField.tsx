@@ -32,6 +32,7 @@ export default function NamePickerField({
 	maxLength,
 	helper = true,
 	onValueChange,
+	error,
 }: {
 	/** Existing names to pick from */
 	names: string[];
@@ -48,6 +49,8 @@ export default function NamePickerField({
 	helper?: boolean;
 	/** `fromUser` is false when the field sets its own starting value (no event behind it). */
 	onValueChange?: (value: string, fromUser: boolean) => void;
+	/** A message from the form's schema, shown under the field in place of the help text. */
+	error?: string;
 }) {
 	const [text, setText] = useState(defaultValue);
 	const typed = text.trim().replace(/\s+/g, " ");
@@ -93,19 +96,21 @@ export default function NamePickerField({
 					label={label}
 					name={name}
 					required={required}
+					error={Boolean(error)}
 					helperText={
-						helper
+						error ??
+						(helper
 							? isNew
 								? `New ${noun} "${typed}" will be created when you save`
 								: required
 									? `Pick an existing ${noun} or type a new name`
 									: `Optional. Pick an existing ${noun} or type a new name`
-							: undefined
+							: undefined)
 					}
 					slotProps={{
 						...params.slotProps,
 						htmlInput: { ...params.slotProps.htmlInput, maxLength },
-						formHelperText: { sx: isNew ? { color: "primary.main" } : undefined },
+						formHelperText: { sx: isNew && !error ? { color: "primary.main" } : undefined },
 					}}
 				/>
 			)}

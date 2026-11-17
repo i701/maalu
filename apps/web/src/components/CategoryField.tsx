@@ -11,6 +11,7 @@ export default function CategoryField({
 	required = true,
 	helper = true,
 	onValueChange,
+	error,
 }: {
 	categories: Category[];
 	defaultValue?: string;
@@ -19,6 +20,8 @@ export default function CategoryField({
 	required?: boolean;
 	helper?: boolean;
 	onValueChange?: (value: string, fromUser: boolean) => void;
+	/** A message from the form's schema, shown under the field. */
+	error?: string;
 }) {
 	return (
 		<NamePickerField
@@ -34,6 +37,7 @@ export default function CategoryField({
 			helper={helper}
 			maxLength={100}
 			onValueChange={onValueChange}
+			error={error}
 		/>
 	);
 }

@@ -152,7 +152,7 @@ export const getMeFn = createServerFn({ method: "GET" }).handler(async () =>
 	apiRequest<User>("/users/me"),
 );
 
-const codeField = z.string().trim().min(6, "Enter the code from your app").max(32);
+export const codeField = z.string().trim().min(6, "Enter the code from your app").max(32);
 /** A code from the authenticator app, as the setup dialog sends it. */
 export const twoFactorCodeSchema = z.object({ code: codeField });
 
@@ -168,7 +168,11 @@ export const enableTwoFactorFn = createServerFn({ method: "POST" })
 		apiRequest<RecoveryCodes>("/auth/2fa/enable", { method: "POST", body: data }),
 	);
 
-const confirmSchema = z.object({ password: z.string().min(1).max(128), code: codeField });
+/** The password and a code, which turning two-factor off and new recovery codes both need. */
+export const confirmSchema = z.object({
+	password: z.string().min(1, "Enter your password").max(128),
+	code: codeField,
+});
 
 export const disableTwoFactorFn = createServerFn({ method: "POST" })
 	.validator(confirmSchema)

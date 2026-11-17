@@ -20,6 +20,7 @@ export default function TagsField({
 	name = "tags",
 	label = "Tags",
 	onChange,
+	error,
 }: {
 	/** Every existing tag, to pick from */
 	tags: Tag[];
@@ -28,6 +29,8 @@ export default function TagsField({
 	label?: string;
 	/** Called with the tags after every change. */
 	onChange?: (names: string[]) => void;
+	/** A message from the form's schema, shown under the field. */
+	error?: string;
 }) {
 	const [value, setValue] = useState<string[]>(defaultValue);
 	const known = new Map(tags.map((t) => [t.name.toLowerCase(), t]));
@@ -77,10 +80,12 @@ export default function TagsField({
 							...params.slotProps,
 							htmlInput: { ...params.slotProps.htmlInput, maxLength: 50 },
 						}}
+						error={Boolean(error)}
 						helperText={
-							value.length >= MAX_TAGS
+							error ??
+							(value.length >= MAX_TAGS
 								? `Up to ${MAX_TAGS} tags`
-								: "Optional. Type a tag and press Enter, for example Trip"
+								: "Optional. Type a tag and press Enter, for example Trip")
 						}
 					/>
 				)}
