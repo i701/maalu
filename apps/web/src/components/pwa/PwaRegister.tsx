@@ -15,17 +15,14 @@ const CHECK_EVERY_MS = 60 * 60 * 1000;
  */
 export default function PwaRegister() {
 	const [waiting, setWaiting] = useState<ServiceWorker | null>(null);
+	const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
 
 	useEffect(() => {
 		startPwa();
 		if (!import.meta.env.PROD || !("serviceWorker" in navigator)) return undefined;
-
-		let timer: ReturnType<typeof setInterval> | undefined;
+		const workers = navigator.serviceWorker;
 		let reloading = false;
-		const onVisible = () => {
-			if (document.visibilityState === "visible") void registration?.update();
-		};
-		let registration: ServiceWorkerRegistration | undefined;
+		let cleaned = false;
 
 		// The new worker took over after "Reload": load the new files once.
 		const onController = () => {
@@ -33,34 +30,54 @@ export default function PwaRegister() {
 			reloading = true;
 			window.location.reload();
 		};
-		navigator.serviceWorker.addEventListener("controllerchange", onController);
+		workers.addEventListener("controllerchange", onController);
 
-		navigator.serviceWorker
+		workers
 			.register("/sw.js", { scope: "/", updateViaCache: "none" })
 			.then((reg) => {
-				registration = reg;
+				if (cleaned) return; // unmounted before the worker was registered
+				setRegistration(reg);
 				// a version that finished downloading while the app was closed
-				if (reg.waiting && navigator.serviceWorker.controller) setWaiting(reg.waiting);
-				reg.addEventListener("updatefound", () => {
-					const next = reg.installing;
-					next?.addEventListener("statechange", () => {
-						// "installed" with a controller already in charge = an update, not a first visit
-						if (next.state === "installed" && navigator.serviceWorker.controller) setWaiting(next);
-					});
-				});
-				timer = setInterval(() => void reg.update(), CHECK_EVERY_MS);
-				document.addEventListener("visibilitychange", onVisible);
+				if (reg.waiting && workers.controller) setWaiting(reg.waiting);
 			})
 			.catch(() => {
 				// no service worker (a private window, an old browser): the app works as a website
 			});
 
 		return () => {
-			navigator.serviceWorker.removeEventListener("controllerchange", onController);
-			document.removeEventListener("visibilitychange", onVisible);
-			if (timer) clearInterval(timer);
+			cleaned = true;
+			workers.removeEventListener("controllerchange", onController);
 		};
 	}, []);
+
+	// Once registered: watch for a new version, and look for one hourly and on coming back.
+	useEffect(() => {
+		if (!registration) return undefined;
+		const stop = new AbortController(); // ends the listener on each new worker too
+		const onUpdateFound = () => {
+			const next = registration.installing;
+			next?.addEventListener(
+				"statechange",
+				() => {
+					// "installed" with a controller already in charge = an update, not a first visit
+					if (next.state === "installed" && navigator.serviceWorker.controller) setWaiting(next);
+				},
+				{ signal: stop.signal },
+			);
+		};
+		const onVisible = () => {
+			if (document.visibilityState === "visible") void registration.update();
+		};
+		registration.addEventListener("updatefound", onUpdateFound);
+		document.addEventListener("visibilitychange", onVisible);
+		const timer = setInterval(() => void registration.update(), CHECK_EVERY_MS);
+		return () => {
+			stop.abort();
+			registration.removeEventListener("updatefound", onUpdateFound);
+			document.removeEventListener("visibilitychange", onVisible);
+			clearInterval(timer);
+		};
+	}, [registration]);
 
 	return (
 		<Snackbar
