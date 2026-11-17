@@ -3,10 +3,17 @@ import leafletCss from "leaflet/dist/leaflet.css?url";
 import m3Css from "#/styles/m3.css?url";
 import mapCss from "#/styles/map.css?url";
 import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
-import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
+import {
+	createRootRoute,
+	HeadContent,
+	Outlet,
+	Scripts,
+	useRouterState,
+} from "@tanstack/react-router";
 import Providers from "#/components/Providers";
 import PwaRegister from "#/components/pwa/PwaRegister";
 import ReactScan from "#/components/ReactScan";
+import { accentForPath } from "#/lib/nav";
 
 export const Route = createRootRoute({
 	head: () => ({
@@ -38,8 +45,14 @@ export const Route = createRootRoute({
 			{ rel: "stylesheet", href: mapCss },
 		],
 	}),
-	component: () => (
-		<html lang="en" suppressHydrationWarning>
+	component: RootDocument,
+});
+
+/** `data-accent` on <html>, not on the page, so dialogs and menus (rendered outside it) follow too. */
+function RootDocument() {
+	const accent = useRouterState({ select: (s) => accentForPath(s.location.pathname) });
+	return (
+		<html lang="en" data-accent={accent} suppressHydrationWarning>
 			<head>
 				<HeadContent />
 			</head>
@@ -54,5 +67,5 @@ export const Route = createRootRoute({
 				<Scripts />
 			</body>
 		</html>
-	),
-});
+	);
+}

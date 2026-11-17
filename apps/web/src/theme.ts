@@ -2,6 +2,7 @@ import type { Shadows } from "@mui/material";
 import { createTheme } from "@mui/material/styles";
 import { createElement } from "react";
 import LoadingIndicator from "#/components/LoadingIndicator";
+import { ACCENT_NAMES, accentVars } from "#/lib/accent-roles";
 import { CHART_DARK, CHART_LIGHT, chartVars, colorVars, M3_DARK, M3_LIGHT, SCRIM } from "#/lib/m3";
 import { EASE_OUT } from "#/lib/motion";
 import { morph } from "#/lib/shape";
@@ -55,6 +56,11 @@ const SEGMENT_TINT = (color: "success" | "error" | "info") =>
 			backgroundColor: `color-mix(in srgb, var(--mui-palette-${color}-main) 28%, var(--md-sys-color-surface-container))`,
 		},
 	}) as const;
+
+// The page accents (lib/accent-roles.ts): `<html data-accent>` recolours the primary family. Dark
+// comes after light, and the system-dark rule is the most specific, so each scheme wins where it applies.
+const accentRules = (scheme: "light" | "dark", selector: (name: string) => string) =>
+	Object.fromEntries(ACCENT_NAMES.map((name) => [selector(name), accentVars(name, scheme)]));
 
 const SPATIAL_FAST = "var(--spring-spatial-fast-dur) var(--spring-spatial-fast)";
 const EFFECTS_FAST = "var(--spring-effects-fast-dur) var(--spring-effects-fast)";
@@ -144,15 +150,21 @@ const theme = createTheme({
 			styleOverrides: {
 				// Roles MUI has no slot for (surface containers, secondary/tertiary containers...).
 				":root": { ...colorVars(M3_LIGHT), ...chartVars(CHART_LIGHT) },
+				...accentRules("light", (name) => `:root[data-accent="${name}"]`),
 				// MUI marks the chosen mode with `data-dark` / `data-light` on <html> (the "data"
 				// colorSchemeSelector). In "system" mode it sets neither and relies on the media
 				// query, so dark must also apply when the OS is dark and no mode attribute is set.
 				"[data-dark]": { ...colorVars(M3_DARK), ...chartVars(CHART_DARK) },
+				...accentRules("dark", (name) => `[data-dark][data-accent="${name}"]`),
 				"@media (prefers-color-scheme: dark)": {
 					":root:not([data-light]):not([data-dark])": {
 						...colorVars(M3_DARK),
 						...chartVars(CHART_DARK),
 					},
+					...accentRules(
+						"dark",
+						(name) => `:root:not([data-light]):not([data-dark])[data-accent="${name}"]`,
+					),
 				},
 			},
 		},

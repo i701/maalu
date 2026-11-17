@@ -87,6 +87,11 @@ export const BOTTOM_NAV_ITEMS = NAV_ITEMS.filter((item) => item.bottom);
 export const inBottomBar = (pathname: string): boolean =>
 	BOTTOM_NAV_ITEMS.some((item) => pathname === item.to || pathname.startsWith(`${item.to}/`));
 
+/** The accent of the page at `pathname` (its nav destination's colour, or its parent's for a page
+ * under one, like an account's page under Accounts). Pages outside the nav have none. */
+export const accentForPath = (pathname: string): Accent | undefined =>
+	NAV_ITEMS.find((item) => pathname === item.to || pathname.startsWith(`${item.to}/`))?.accent;
+
 /** Heights (px) the page leaves clear for the top bar and the bottom bar (bottom excludes the
  * safe-area inset), the width of the sidebar on wide screens and of the rail on medium ones. */
 export const TOP_BAR_HEIGHT = 64;
