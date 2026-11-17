@@ -3,7 +3,8 @@ import { CHECK_MASK } from "#/lib/symbols";
 import Symbol from "./Symbol";
 
 const SPRING_SHAPE = "border-radius var(--spring-spatial-fast-dur) var(--spring-spatial-fast)";
-const SPRING_WIDTH = "var(--spring-spatial-fast-dur) var(--spring-spatial-fast)";
+const SPRING_WIDTH = "var(--spring-spatial-bouncy-dur) var(--spring-spatial-bouncy)";
+const SPRING_PRESS = "var(--spring-spatial-fast-dur) var(--spring-spatial-fast)";
 const SPRING_COLOUR = "var(--spring-effects-default-dur) var(--spring-effects-default)";
 
 /** The chip's colours for its state: the selected tint (the accent's, or the secondary container),
@@ -38,8 +39,8 @@ function chipSx(selected: boolean, accent: string | undefined, hasIcon: boolean)
 		bgcolor: bg,
 		color: fg,
 		boxShadow: selected ? "none" : "inset 0 0 0 1px var(--md-sys-color-outline-variant)",
-		transition: `background-color ${SPRING_COLOUR}, ${SPRING_SHAPE}, box-shadow ${SPRING_COLOUR}, transform ${SPRING_WIDTH}`,
-		// Selecting opens a check, so the chip widens on a spring with a little overshoot; one that
+		transition: `background-color ${SPRING_COLOUR}, ${SPRING_SHAPE}, box-shadow ${SPRING_COLOUR}, transform ${SPRING_PRESS}`,
+		// Selecting opens a check that scales in, so the chip widens on a bouncy spring; one that
 		// already has an icon fills that instead. A press squashes it.
 		...(!hasIcon && {
 			"&::before": {
@@ -47,7 +48,8 @@ function chipSx(selected: boolean, accent: string | undefined, hasIcon: boolean)
 				width: selected ? 18 : 0,
 				marginLeft: selected ? "8px" : 0,
 				opacity: selected ? 1 : 0,
-				transition: `width ${SPRING_WIDTH}, margin ${SPRING_WIDTH}, opacity ${SPRING_COLOUR}`,
+				transform: selected ? "none" : "scale(0.4)",
+				transition: `width ${SPRING_WIDTH}, margin ${SPRING_WIDTH}, transform ${SPRING_WIDTH}, opacity ${SPRING_COLOUR}`,
 			},
 		}),
 		"&:active": { transform: "scale(.96)" },

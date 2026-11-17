@@ -67,6 +67,53 @@
 		1
 	);
 	--spring-spatial-fast-dur: 0.409s;
+
+	/* A bouncier spatial spring (damping 0.45, stiffness 800) for a selection that should pop: about
+	 * 20% overshoot where the fast one has 9%. Not an M3 token; used only where something is chosen. */
+	--spring-spatial-bouncy: linear(
+		0,
+		0.0784,
+		0.2678,
+		0.5049,
+		0.7398,
+		0.9385,
+		1.0832,
+		1.1697,
+		1.2037,
+		1.1969,
+		1.1633,
+		1.1162,
+		1.067,
+		1.0235,
+		0.9903,
+		0.9691,
+		0.9592,
+		0.9585,
+		0.9641,
+		0.9732,
+		0.9834,
+		0.9928,
+		1.0002,
+		1.0053,
+		1.008,
+		1.0086,
+		1.0078,
+		1.0061,
+		1.004,
+		1.002,
+		1.0003,
+		0.9992,
+		0.9985,
+		0.9982,
+		0.9983,
+		0.9986,
+		0.999,
+		0.9995,
+		0.9998,
+		1.0001,
+		1
+	);
+	--spring-spatial-bouncy-dur: 0.6s;
 	--spring-spatial-default: linear(
 		0,
 		0.0245,

@@ -63,6 +63,7 @@ const SEGMENT_TINT = (color: "success" | "error" | "info") =>
 const accentRules = (scheme: "light" | "dark", selector: (name: string) => string) =>
 	Object.fromEntries(ACCENT_NAMES.map((name) => [selector(name), accentVars(name, scheme)]));
 
+const SPATIAL_BOUNCY = "var(--spring-spatial-bouncy-dur) var(--spring-spatial-bouncy)";
 const SPATIAL_FAST = "var(--spring-spatial-fast-dur) var(--spring-spatial-fast)";
 const EFFECTS_FAST = "var(--spring-effects-fast-dur) var(--spring-effects-fast)";
 
@@ -206,6 +207,13 @@ const theme = createTheme({
 			styleOverrides: {
 				root: {
 					gap: 2,
+					// An equal-width group: the selected segment takes a bigger share, so the others
+					// visibly give way (and the spring has room to overshoot).
+					"&.MuiToggleButtonGroup-fullWidth .MuiToggleButtonGroup-grouped": {
+						flexGrow: 1,
+						flexBasis: 0,
+						"&.Mui-selected": { flexGrow: 1.25 },
+					},
 					"& .MuiToggleButtonGroup-grouped": {
 						margin: 0,
 						border: 0,
@@ -215,17 +223,23 @@ const theme = createTheme({
 						backgroundColor: "var(--md-sys-color-surface-container)",
 						color: "var(--md-sys-color-on-surface-variant)",
 						fontWeight: 500,
-						transition: `border-radius ${SPATIAL_FAST}, transform ${SPATIAL_FAST}, background-color var(--spring-effects-default-dur) var(--spring-effects-default)`,
-						// The selected segment opens a check and so widens on a spring, overshooting a little,
-						// while its neighbours slide over (M3: a selected button changes shape and width).
+						transition: `border-radius ${SPATIAL_FAST}, transform ${SPATIAL_FAST}, flex-grow ${SPATIAL_BOUNCY}, background-color var(--spring-effects-default-dur) var(--spring-effects-default)`,
+						// The selected segment opens a check that scales in and widens it, on a bouncier spring so
+						// the overshoot shows, while its neighbours give way (M3: a selected button changes width).
 						// Segments that hold an icon already say what they are, so they get no check.
 						"&::before": {
 							...CHECK_MASK,
 							width: 0,
 							opacity: 0,
-							transition: `width ${SPATIAL_FAST}, margin ${SPATIAL_FAST}, opacity ${EFFECTS_FAST}`,
+							transform: "scale(0.4)",
+							transition: `width ${SPATIAL_BOUNCY}, margin ${SPATIAL_BOUNCY}, transform ${SPATIAL_BOUNCY}, opacity ${EFFECTS_FAST}`,
 						},
-						"&.Mui-selected::before": { width: 18, marginRight: "6px", opacity: 1 },
+						"&.Mui-selected::before": {
+							width: 18,
+							marginRight: "6px",
+							opacity: 1,
+							transform: "none",
+						},
 						"&:has(> svg)::before, &:has(> .sym)::before": { display: "none" },
 						"&:active": { transform: "scale(.96)" },
 						"@media (prefers-reduced-motion: reduce)": {
