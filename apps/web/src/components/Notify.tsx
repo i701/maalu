@@ -24,8 +24,8 @@ function SlideUp(props: SlideProps) {
 
 const ICON: Record<Severity, { name: string; color: string }> = {
 	success: { name: "check", color: "var(--md-sys-color-inverse-primary)" },
-	error: { name: "close", color: "var(--md-sys-color-error)" },
-	warning: { name: "warning", color: "#facc15" },
+	error: { name: "close", color: "var(--md-sys-color-error-container)" },
+	warning: { name: "warning", color: "var(--md-sys-color-warning-container)" },
 };
 
 const NotifyContext = createContext<Notify>(() => {});

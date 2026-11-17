@@ -80,6 +80,7 @@ export default function TwoFactorSetupDialog({
 							width: 200,
 							height: 200,
 							borderRadius: "var(--shape-md)",
+							// white in both modes: an authenticator app cannot scan a QR code on a dark ground
 							bgcolor: "#fff",
 						}}
 					/>

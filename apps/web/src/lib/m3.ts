@@ -41,6 +41,21 @@ type Roles = {
 	onError: string;
 	errorContainer: string;
 	onErrorContainer: string;
+	scrim: string;
+	shadow: string;
+	/* Status colours MUI has slots for. M3 has no role for them, so they follow its container pattern. */
+	success: string;
+	onSuccess: string;
+	successContainer: string;
+	onSuccessContainer: string;
+	warning: string;
+	onWarning: string;
+	warningContainer: string;
+	onWarningContainer: string;
+	info: string;
+	onInfo: string;
+	infoContainer: string;
+	onInfoContainer: string;
 	/** The logo's colour (navy in light mode, pale blue in dark): the main buttons. */
 	brand: string;
 	onBrand: string;
@@ -79,6 +94,20 @@ export const M3_LIGHT: Roles = {
 	onError: "#ffffff",
 	errorContainer: "#ffdad6",
 	onErrorContainer: "#93000a",
+	scrim: "#000000",
+	shadow: "#000000",
+	success: "#16694a",
+	onSuccess: "#ffffff",
+	successContainer: "#b8f1d4",
+	onSuccessContainer: "#002113",
+	warning: "#8a5100",
+	onWarning: "#ffffff",
+	warningContainer: "#ffddb3",
+	onWarningContainer: "#2c1600",
+	info: "#345ca8",
+	onInfo: "#ffffff",
+	infoContainer: "#d9e2ff",
+	onInfoContainer: "#001945",
 	brand: "#081d48",
 	onBrand: "#ffffff",
 };
@@ -116,9 +145,26 @@ export const M3_DARK: Roles = {
 	onError: "#690005",
 	errorContainer: "#93000a",
 	onErrorContainer: "#ffdad6",
+	scrim: "#000000",
+	shadow: "#000000",
+	success: "#8fd9b0",
+	onSuccess: "#00391f",
+	successContainer: "#0a5233",
+	onSuccessContainer: "#b8f1d4",
+	warning: "#ffb86b",
+	onWarning: "#4a2800",
+	warningContainer: "#693c00",
+	onWarningContainer: "#ffddb3",
+	info: "#b0c6ff",
+	onInfo: "#002e6c",
+	infoContainer: "#214482",
+	onInfoContainer: "#d9e2ff",
 	brand: "#dff3fb",
 	onBrand: "#081d48",
 };
+
+/** The veil behind a dialog or sheet: the scrim role at 32%. */
+export const SCRIM = "color-mix(in srgb, var(--md-sys-color-scrim) 32%, transparent)";
 
 const kebab = (s: string) => s.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
 

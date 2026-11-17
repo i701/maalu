@@ -4,6 +4,7 @@ import Button from "@mui/material/Button";
 import Drawer from "@mui/material/Drawer";
 import type { SxProps, Theme } from "@mui/material/styles";
 import { type ReactNode, useState } from "react";
+import { SCRIM } from "#/lib/m3";
 import SheetHandle from "./SheetHandle";
 
 /** "Filters" button plus the bottom drawer it opens. The open state lives here, not in the page,
@@ -65,7 +66,7 @@ export default function FiltersDrawer({
 				// during the slide (that mounting on the main thread is what made it stutter).
 				keepMounted
 				slotProps={{
-					backdrop: { sx: { backgroundColor: "rgb(0 0 0 / 0.32)" } },
+					backdrop: { sx: { backgroundColor: SCRIM } },
 					paper: {
 						sx: {
 							maxHeight: "85vh",

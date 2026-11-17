@@ -3,6 +3,7 @@ import Drawer from "@mui/material/Drawer";
 import Typography from "@mui/material/Typography";
 import { useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
+import { SCRIM } from "#/lib/m3";
 import { BOTTOM_BAR_HEIGHT, BOTTOM_NAV_ITEMS, inBottomBar, NAV_GROUPS, NAV_ITEMS } from "#/lib/nav";
 import NavItem, { NavButton } from "./NavItem";
 import SheetHandle from "./SheetHandle";
@@ -82,7 +83,7 @@ function MoreSheet({
 			open={open}
 			onClose={onClose}
 			slotProps={{
-				backdrop: { sx: { backgroundColor: "rgb(0 0 0 / 0.32)" } },
+				backdrop: { sx: { backgroundColor: SCRIM } },
 				paper: {
 					role: "dialog",
 					"aria-label": "All pages",

@@ -257,9 +257,15 @@
 	--shape-full: 999px;
 
 	/* Elevation (M3 keeps shadows light and leans on tonal surfaces instead) */
-	--elev-1: 0 1px 2px #00000029, 0 1px 3px 1px #00000012;
-	--elev-2: 0 1px 2px #00000029, 0 2px 6px 2px #00000017;
-	--elev-3: 0 4px 8px 3px #00000017, 0 1px 3px #00000029;
+	--elev-1:
+		0 1px 2px color-mix(in srgb, var(--md-sys-color-shadow) 16%, transparent),
+		0 1px 3px 1px color-mix(in srgb, var(--md-sys-color-shadow) 7%, transparent);
+	--elev-2:
+		0 1px 2px color-mix(in srgb, var(--md-sys-color-shadow) 16%, transparent),
+		0 2px 6px 2px color-mix(in srgb, var(--md-sys-color-shadow) 9%, transparent);
+	--elev-3:
+		0 4px 8px 3px color-mix(in srgb, var(--md-sys-color-shadow) 9%, transparent),
+		0 1px 3px color-mix(in srgb, var(--md-sys-color-shadow) 16%, transparent);
 
 	/* Emphasized easing, for non-spring transitions */
 	--ease-emph: cubic-bezier(0.2, 0, 0, 1);

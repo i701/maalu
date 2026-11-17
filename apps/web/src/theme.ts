@@ -2,7 +2,7 @@ import type { Shadows } from "@mui/material";
 import { createTheme } from "@mui/material/styles";
 import { createElement } from "react";
 import LoadingIndicator from "#/components/LoadingIndicator";
-import { CHART_DARK, CHART_LIGHT, chartVars, colorVars, M3_DARK, M3_LIGHT } from "#/lib/m3";
+import { CHART_DARK, CHART_LIGHT, chartVars, colorVars, M3_DARK, M3_LIGHT, SCRIM } from "#/lib/m3";
 import { EASE_OUT } from "#/lib/motion";
 import { morph } from "#/lib/shape";
 
@@ -38,6 +38,9 @@ const palette = (c: typeof M3_LIGHT) => ({
 	primary: { main: c.primary, contrastText: c.onPrimary },
 	secondary: { main: c.secondary, contrastText: c.onSecondary },
 	error: { main: c.error, contrastText: c.onError },
+	success: { main: c.success, contrastText: c.onSuccess },
+	warning: { main: c.warning, contrastText: c.onWarning },
+	info: { main: c.info, contrastText: c.onInfo },
 	background: { default: c.surface, paper: c.surfaceContainerLow },
 	text: { primary: c.onSurface, secondary: c.onSurfaceVariant },
 	divider: c.outlineVariant,
@@ -162,9 +165,9 @@ const theme = createTheme({
 					borderRadius: "var(--shape-xs)",
 					// white, so a field on the grey page (a search box) reads like the cards
 					backgroundColor: "var(--md-sys-color-surface-container-low)",
+					// `outline`, not `outline-variant`: a field's edge is a target boundary (3:1)
 					"& .MuiOutlinedInput-notchedOutline": {
-						borderColor:
-							"var(--md-sys-color-outline-variant, var(--md-sys-color-on-surface-variant))",
+						borderColor: "var(--md-sys-color-outline)",
 					},
 					"&:hover .MuiOutlinedInput-notchedOutline": {
 						borderColor: "var(--md-sys-color-on-surface-variant)",
@@ -264,7 +267,7 @@ const theme = createTheme({
 		MuiDialog: {
 			styleOverrides: {
 				root: {
-					"& .MuiBackdrop-root": { backgroundColor: "rgb(0 0 0 / 0.32)" },
+					"& .MuiBackdrop-root": { backgroundColor: SCRIM },
 				},
 				paper: {
 					margin: 16,
