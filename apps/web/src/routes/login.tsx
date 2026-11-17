@@ -1,17 +1,24 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 import AuthLayout from "#/components/AuthLayout";
+import FormTextField from "#/components/FormTextField";
 import { RouterLink } from "#/components/RouterLinks";
 import TwoFactorStep from "#/components/TwoFactorStep";
 import { safeRedirect } from "#/lib/safe-redirect";
-import { cancelTwoFactorFn, getRegistrationFn, getSessionFn, loginFn } from "#/server/auth";
-import { getString } from "#/lib/utils";
+import {
+	cancelTwoFactorFn,
+	getRegistrationFn,
+	getSessionFn,
+	loginFn,
+	loginSchema,
+} from "#/server/auth";
 
 export const Route = createFileRoute("/login")({
 	validateSearch: z.object({
@@ -32,6 +39,10 @@ function LoginPage() {
 	const [pending, setPending] = useState(false);
 	// After a right password with two-factor on, the code comes next.
 	const [step, setStep] = useState<"password" | "code">("password");
+	const { control, handleSubmit } = useForm({
+		resolver: zodResolver(loginSchema),
+		defaultValues: { email: "", password: "" },
+	});
 
 	function finish() {
 		router.clearCache();
@@ -44,18 +55,11 @@ function LoginPage() {
 		setStep("password");
 	}
 
-	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
-		const f = new FormData(e.currentTarget);
+	async function submit(data: z.output<typeof loginSchema>) {
 		setPending(true);
 		setError(null);
 		try {
-			const res = await loginFn({
-				data: {
-					email: getString(f, "email"),
-					password: getString(f, "password"),
-				},
-			});
+			const res = await loginFn({ data });
 			if (!res.ok) return setError(res.error);
 			if (res.data.twoFactor) return setStep("code");
 			finish();
@@ -76,18 +80,20 @@ function LoginPage() {
 
 	return (
 		<AuthLayout title="Sign in" subtitle="Welcome back. Enter your email and password.">
-			<Stack component="form" onSubmit={submit} spacing={2.5}>
-				<TextField
-					label="Email"
+			<Stack component="form" onSubmit={handleSubmit(submit)} noValidate spacing={2.5}>
+				<FormTextField
+					control={control}
 					name="email"
+					label="Email"
 					type="email"
 					autoComplete="email"
 					required
 					autoFocus
 				/>
-				<TextField
-					label="Password"
+				<FormTextField
+					control={control}
 					name="password"
+					label="Password"
 					type="password"
 					autoComplete="current-password"
 					required
