@@ -6,25 +6,26 @@ import NamePickerField from "./NamePickerField";
 export default function VendorField({
 	vendors,
 	defaultValue = "",
-	name = "vendor",
 	label = "Vendor",
 	onValueChange,
+	error,
 }: {
 	vendors: Vendor[];
 	defaultValue?: string;
-	name?: string;
 	label?: string;
 	onValueChange?: (value: string, fromUser: boolean) => void;
+	/** A message from the form's schema, shown under the field. */
+	error?: string;
 }) {
 	return (
 		<NamePickerField
 			names={vendors.map((v) => v.name)}
 			noun="vendor"
 			label={label}
-			name={name}
 			defaultValue={defaultValue}
 			maxLength={200}
 			onValueChange={onValueChange}
+			error={error}
 		/>
 	);
 }

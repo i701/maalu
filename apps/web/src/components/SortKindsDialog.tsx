@@ -1,3 +1,4 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Switch from "@mui/material/Switch";
@@ -5,20 +6,20 @@ import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import { useMemo, useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
+import { z } from "zod";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
 import { setCategoryKindsFn } from "#/server/categories";
-import {
-	CATEGORY_KIND_LABELS,
-	CATEGORY_KINDS,
-	type Category,
-	type CategoryKind,
-} from "#/types/api";
+import { CATEGORY_KIND_LABELS, CATEGORY_KINDS, type Category } from "#/types/api";
 import CategoryDot from "./CategoryDot";
 import FormDialog from "./FormDialog";
 import { useNotify } from "./Notify";
 
-type Choice = CategoryKind | "none";
+const schema = z.object({
+	choices: z.record(z.string(), z.enum(CATEGORY_KINDS).or(z.literal("none"))),
+});
+type Choice = z.output<typeof schema>["choices"][string];
 
 const choiceOf = (c: Category): Choice => c.kind ?? "none";
 
@@ -36,9 +37,11 @@ export default function SortKindsDialog({
 	const notify = useNotify();
 	// The default Salary category is pay, not spending, so it has no need or want to choose.
 	const spending = useMemo(() => categories.filter((c) => !c.is_salary), [categories]);
-	const [choices, setChoices] = useState<Record<string, Choice>>(() =>
-		Object.fromEntries(spending.map((c) => [c.id, choiceOf(c)])),
-	);
+	const { control, handleSubmit, setValue } = useForm({
+		resolver: zodResolver(schema),
+		defaultValues: { choices: Object.fromEntries(spending.map((c) => [c.id, choiceOf(c)])) },
+	});
+	const choices = useWatch({ control, name: "choices" });
 	const [onlyUnsorted, setOnlyUnsorted] = useState(false);
 
 	const changed = useMemo(
@@ -48,8 +51,7 @@ export default function SortKindsDialog({
 	// "Unsorted" is judged on what was opened, so a row doesn't vanish the moment it is set.
 	const shown = onlyUnsorted ? spending.filter((c) => c.effective_kind == null) : spending;
 
-	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
+	async function submit() {
 		const groups = [...CATEGORY_KINDS, "none" as const].map((choice) => ({
 			kind: choice === "none" ? null : choice,
 			ids: changed.filter((c) => choices[c.id] === choice).map((c) => c.id),
@@ -74,7 +76,7 @@ export default function SortKindsDialog({
 			title="Needs and wants"
 			error={error}
 			pending={pending}
-			onSubmit={submit}
+			onSubmit={handleSubmit(submit)}
 			sheet={sheet}
 			submitLabel={changed.length > 0 ? `Save ${changed.length}` : "Save"}
 			submitDisabled={changed.length === 0}
@@ -121,7 +123,7 @@ export default function SortKindsDialog({
 							size="small"
 							value={choices[c.id]}
 							onChange={(_, next: Choice | null) =>
-								next && setChoices((prev) => ({ ...prev, [c.id]: next }))
+								next && setValue("choices", { ...choices, [c.id]: next })
 							}
 							aria-label={`${c.name}: need or want`}
 						>

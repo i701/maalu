@@ -14,15 +14,29 @@ import { apiRequest } from "./api";
 // Decimals are validated as strings and forwarded untouched: no float round-trip.
 const cost = z
 	.string()
+	.trim()
 	.regex(/^\d+(\.\d{1,4})?$/, "Enter a valid positive amount (max 4 decimals)")
 	.refine((v) => Number(v) > 0, "Amount must be greater than 0");
 const exchangeRate = z
 	.string()
+	.trim()
 	.regex(/^\d+(\.\d{1,8})?$/, "Enter a valid rate (max 8 decimals)")
 	.refine((v) => Number(v) > 0, "Rate must be greater than 0");
 const currency = z.string().regex(/^[A-Za-z]{3}$/, "Use a 3-letter currency code");
 const name = z.string().trim().min(1).max(200);
 const intervalCount = z.number().int().min(1).max(120);
+
+/** How often a subscription repeats, as a form holds it (the count is typed text). */
+export const repeatFields = {
+	interval_unit: z.enum(INTERVAL_UNITS),
+	interval_count: z.coerce.number().int().min(1, "At least 1").max(120, "At most 120"),
+};
+/** A subscription's name and amount, as a form holds them. */
+// The message goes on the first check: the form shows only the first problem of a field.
+export const subscriptionFormFields = {
+	name: z.string().trim().min(1, "Give it a name").max(200),
+	amount: cost,
+};
 
 const createSchema = z.object({
 	name,

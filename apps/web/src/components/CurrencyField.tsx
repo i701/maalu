@@ -9,21 +9,22 @@ const filterOptions = createFilterOptions<string>({
 });
 
 export default function CurrencyField({
-	name,
 	label,
 	currencies,
 	defaultValue = "",
 	required,
 	helperText,
 	onInputChange,
+	error,
 }: {
-	name: string;
 	label: string;
 	currencies: string[];
 	defaultValue?: string;
 	required?: boolean;
 	helperText?: string;
 	onInputChange?: (value: string) => void;
+	/** A message from the form's schema, shown under the field. */
+	error?: string;
 }) {
 	return (
 		<Autocomplete
@@ -47,9 +48,9 @@ export default function CurrencyField({
 				<TextField
 					{...params}
 					label={label}
-					name={name}
 					required={required}
-					helperText={helperText}
+					error={Boolean(error)}
+					helperText={error ?? helperText}
 					slotProps={{
 						...params.slotProps,
 						htmlInput: {

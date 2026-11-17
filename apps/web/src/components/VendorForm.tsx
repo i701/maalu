@@ -1,19 +1,42 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import Grid from "@mui/material/Grid";
 import MenuItem from "@mui/material/MenuItem";
-import TextField from "@mui/material/TextField";
-import { useState } from "react";
-import { type PlaceValue, placeOf, placePayload } from "#/lib/places";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
+import { placeOf, placePayload, placeValueSchema } from "#/lib/places";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
-import { getString } from "#/lib/utils";
 import { createVendorFn, updateVendorFn } from "#/server/vendors";
 import type { Category, Tag, Vendor } from "#/types/api";
 import CategoryField from "./CategoryField";
 import CurrencyField from "./CurrencyField";
 import FormDialog from "./FormDialog";
+import FormTextField from "./FormTextField";
 import LocationField from "./LocationField";
 import { useNotify } from "./Notify";
 import TagsField from "./TagsField";
+
+const blankIsNull = (max: number) =>
+	z
+		.string()
+		.trim()
+		.max(max)
+		.transform((v) => v || null);
+
+const schema = z.object({
+	name: z.string().trim().min(1, "Give the vendor a name").max(200),
+	is_local: z.enum(["", "true", "false"]).transform((v) => (v === "" ? null : v === "true")),
+	currency: z
+		.string()
+		.trim()
+		.regex(/^([A-Za-z]{3})?$/, "Use a 3-letter currency code")
+		.transform((v) => v.toUpperCase() || null),
+	default_category: blankIsNull(100),
+	default_tags: z.array(z.string()).max(10),
+	contact: blankIsNull(255),
+	address: blankIsNull(500),
+	location: placeValueSchema.nullable(),
+});
 
 export default function VendorForm({
 	vendor,
@@ -33,25 +56,26 @@ export default function VendorForm({
 	const { run, pending, error } = useAction();
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
-	const [location, setLocation] = useState<PlaceValue | null>(vendor ? placeOf(vendor) : null);
+	const { control, handleSubmit } = useForm<
+		z.input<typeof schema>,
+		unknown,
+		z.output<typeof schema>
+	>({
+		resolver: zodResolver(schema),
+		defaultValues: {
+			name: vendor?.name ?? "",
+			is_local: vendor?.is_local == null ? "" : vendor.is_local ? "true" : "false",
+			currency: vendor?.currency ?? "",
+			default_category: vendor?.default_category ?? "",
+			default_tags: vendor?.default_tags.map((t) => t.name) ?? [],
+			contact: vendor?.contact ?? "",
+			address: vendor?.address ?? "",
+			location: vendor ? placeOf(vendor) : null,
+		},
+	});
 
-	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
-		const f = new FormData(e.currentTarget);
-		const text = (k: string) => getString(f, k).trim();
-		const local = text("is_local");
-
-		const fields = {
-			name: text("name"),
-			address: text("address") || null,
-			is_local: local === "" ? null : local === "true",
-			currency: text("currency") ? text("currency").toUpperCase() : null,
-			contact: text("contact") || null,
-			default_category: text("default_category") || null,
-			default_tags: f.getAll("default_tags").map(String),
-			...placePayload(location),
-		};
-
+	async function submit({ location, ...rest }: z.output<typeof schema>) {
+		const fields = { ...rest, ...placePayload(location) };
 		const ok = await run(() =>
 			vendor
 				? updateVendorFn({ data: { id: vendor.id, changes: fields } })
@@ -68,75 +92,101 @@ export default function VendorForm({
 			title={vendor ? "Edit vendor" : "Add vendor"}
 			error={error}
 			pending={pending}
-			onSubmit={submit}
+			onSubmit={handleSubmit(submit)}
 			sheet={sheet}
 		>
 			<Grid container spacing={2}>
 				<Grid size={12}>
-					<TextField
-						label="Name"
+					<FormTextField
+						control={control}
 						name="name"
-						defaultValue={vendor?.name}
+						label="Name"
 						required
 						autoFocus
 						slotProps={{ htmlInput: { maxLength: 200 } }}
 					/>
 				</Grid>
 				<Grid size={{ xs: 12, sm: 6 }}>
-					<TextField
-						select
-						label="Local or foreign"
-						name="is_local"
-						defaultValue={vendor?.is_local == null ? "" : String(vendor.is_local)}
-					>
+					<FormTextField control={control} name="is_local" select label="Local or foreign">
 						<MenuItem value="">Unknown</MenuItem>
 						<MenuItem value="true">Local</MenuItem>
 						<MenuItem value="false">Foreign</MenuItem>
-					</TextField>
+					</FormTextField>
 				</Grid>
 				<Grid size={{ xs: 12, sm: 6 }}>
-					<CurrencyField
+					<Controller
 						name="currency"
-						label="Usual currency"
-						currencies={currencies}
-						defaultValue={vendor?.currency ?? ""}
-						helperText="Optional"
+						control={control}
+						render={({ field, fieldState }) => (
+							<CurrencyField
+								label="Usual currency"
+								currencies={currencies}
+								defaultValue={field.value}
+								onInputChange={field.onChange}
+								error={fieldState.error?.message}
+								helperText="Optional"
+							/>
+						)}
 					/>
 				</Grid>
 				<Grid size={{ xs: 12, sm: 6 }}>
-					<CategoryField
-						categories={categories}
+					<Controller
 						name="default_category"
-						label="Usual category"
-						required={false}
-						defaultValue={vendor?.default_category ?? ""}
+						control={control}
+						render={({ field, fieldState }) => (
+							<CategoryField
+								categories={categories}
+								label="Usual category"
+								required={false}
+								defaultValue={field.value}
+								onValueChange={field.onChange}
+								error={fieldState.error?.message}
+							/>
+						)}
 					/>
 				</Grid>
 				<Grid size={{ xs: 12, sm: 6 }}>
-					<TagsField
-						tags={tags}
+					<Controller
 						name="default_tags"
-						label="Usual tags"
-						defaultValue={vendor?.default_tags.map((t) => t.name) ?? []}
+						control={control}
+						render={({ field, fieldState }) => (
+							<TagsField
+								tags={tags}
+								label="Usual tags"
+								defaultValue={field.value}
+								onChange={field.onChange}
+								error={fieldState.error?.message}
+							/>
+						)}
 					/>
 				</Grid>
 				<Grid size={12}>
-					<TextField
-						label="Contact"
+					<FormTextField
+						control={control}
 						name="contact"
-						defaultValue={vendor?.contact ?? ""}
+						label="Contact"
 						placeholder="Phone, email, contact person…"
 						slotProps={{ htmlInput: { maxLength: 255 } }}
 					/>
 				</Grid>
 				<Grid size={12}>
-					<LocationField value={location} onChange={setLocation} title="Where it usually is" />
+					<Controller
+						name="location"
+						control={control}
+						render={({ field }) => (
+							<LocationField
+								value={field.value}
+								onChange={field.onChange}
+								title="Where it usually is"
+							/>
+						)}
+					/>
 				</Grid>
 				<Grid size={12}>
-					<TextField
-						label="Address"
+					<FormTextField
+						control={control}
 						name="address"
-						defaultValue={vendor?.address ?? ""}
+						label="Address"
 						multiline
 						minRows={2}
 						slotProps={{ htmlInput: { maxLength: 500 } }}

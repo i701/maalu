@@ -1,8 +1,15 @@
+import { z } from "zod";
 import { monthBounds, shiftMonth } from "./dashboard";
 
 /** A spot on the map as the forms and the API carry it: coordinates as decimal strings (six
  * decimals, about 10 cm) and an optional name. */
-export type PlaceValue = { latitude: string; longitude: string; place: string };
+/** A marked spot as a form holds it. */
+export const placeValueSchema = z.object({
+	latitude: z.string(),
+	longitude: z.string(),
+	place: z.string(),
+});
+export type PlaceValue = z.infer<typeof placeValueSchema>;
 
 /** Where the map starts when nothing is marked yet: Malé. */
 export const DEFAULT_CENTER: [number, number] = [4.1755, 73.5093];

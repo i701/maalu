@@ -1,3 +1,4 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import Autocomplete from "@mui/material/Autocomplete";
 import Button from "@mui/material/Button";
 import FormControlLabel from "@mui/material/FormControlLabel";
@@ -6,11 +7,23 @@ import Stack from "@mui/material/Stack";
 import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
+import { z } from "zod";
 import type { RowPatch } from "#/lib/imports";
 import { plural } from "#/lib/imports";
 import type { Account } from "#/types/api";
+import FormTextField from "../FormTextField";
 import { accountMenuItems } from "../transaction-form/accountMenuItems";
+
+// Blank leaves that thing as it is on each row.
+const schema = z.object({
+	vendor: z.string().trim().max(200),
+	category: z.string().trim().max(100),
+	transfer: z.string(),
+	sameName: z.boolean(),
+});
+type Values = z.output<typeof schema>;
 
 /** What to do with the selected rows: give them a vendor and category, mark them as a transfer to
  * another of your accounts, or leave them out. A vendor is usually chosen once for every row the
@@ -33,19 +46,21 @@ export default function AssignBar({
 	/** Beside the count, for example an offer to select more. */
 	extra?: ReactNode;
 }) {
-	const [vendor, setVendor] = useState("");
-	const [category, setCategory] = useState("");
-	const [transfer, setTransfer] = useState("");
-	const [sameName, setSameName] = useState(true);
+	const { control, handleSubmit, getValues } = useForm({
+		resolver: zodResolver(schema),
+		defaultValues: { vendor: "", category: "", transfer: "", sameName: true },
+	});
+	const [vendor, category, transfer] = useWatch({
+		control,
+		name: ["vendor", "category", "transfer"],
+	});
 
-	const setLabels = () => {
-		onApply(
-			{
-				...(vendor.trim() ? { vendor_name: vendor.trim() } : {}),
-				...(category.trim() ? { category_name: category.trim() } : {}),
-			},
-			sameName,
-		);
+	const setLabels = ({ vendor: v, category: c, sameName }: Values) =>
+		onApply({ ...(v ? { vendor_name: v } : {}), ...(c ? { category_name: c } : {}) }, sameName);
+	// a transfer uses only the account and the switch, so a vendor typed above can't block it
+	const markTransfer = () => {
+		const { transfer: to, sameName } = getValues();
+		onApply({ transfer_account_id: to }, sameName);
 	};
 
 	return (
@@ -68,7 +83,19 @@ export default function AssignBar({
 				</Typography>
 				{extra}
 				<FormControlLabel
-					control={<Switch size="small" checked={sameName} onChange={(_, v) => setSameName(v)} />}
+					control={
+						<Controller
+							name="sameName"
+							control={control}
+							render={({ field }) => (
+								<Switch
+									size="small"
+									checked={field.value}
+									onChange={(_, on) => field.onChange(on)}
+								/>
+							)}
+						/>
+					}
 					label="Also rows with the same name"
 				/>
 				<Button color="inherit" size="small" onClick={onClear}>
@@ -76,50 +103,76 @@ export default function AssignBar({
 				</Button>
 			</Stack>
 			<Stack direction={{ xs: "column", md: "row" }} sx={{ gap: 1.5, alignItems: "flex-start" }}>
-				<Autocomplete
-					freeSolo
-					fullWidth
-					size="small"
-					options={vendors}
-					inputValue={vendor}
-					onInputChange={(_, v) => setVendor(v)}
-					renderInput={(params) => <TextField {...params} label="Vendor" />}
+				<Controller
+					name="vendor"
+					control={control}
+					render={({ field, fieldState }) => (
+						<Autocomplete
+							freeSolo
+							fullWidth
+							size="small"
+							options={vendors}
+							inputValue={field.value}
+							onInputChange={(_, v) => field.onChange(v)}
+							renderInput={(params) => (
+								<TextField
+									{...params}
+									label="Vendor"
+									error={Boolean(fieldState.error)}
+									helperText={fieldState.error?.message}
+								/>
+							)}
+						/>
+					)}
 				/>
-				<Autocomplete
-					freeSolo
-					fullWidth
-					size="small"
-					options={categories}
-					inputValue={category}
-					onInputChange={(_, v) => setCategory(v)}
-					renderInput={(params) => <TextField {...params} label="Category" />}
+				<Controller
+					name="category"
+					control={control}
+					render={({ field, fieldState }) => (
+						<Autocomplete
+							freeSolo
+							fullWidth
+							size="small"
+							options={categories}
+							inputValue={field.value}
+							onInputChange={(_, v) => field.onChange(v)}
+							renderInput={(params) => (
+								<TextField
+									{...params}
+									label="Category"
+									error={Boolean(fieldState.error)}
+									helperText={fieldState.error?.message}
+								/>
+							)}
+						/>
+					)}
 				/>
 				<Button
 					variant="contained"
 					disabled={!vendor.trim() && !category.trim()}
-					onClick={setLabels}
+					onClick={() => void handleSubmit(setLabels)()}
 					sx={{ flexShrink: 0 }}
 				>
 					Set
 				</Button>
 			</Stack>
 			<Stack direction={{ xs: "column", md: "row" }} sx={{ gap: 1.5, alignItems: "flex-start" }}>
-				<TextField
+				<FormTextField
+					control={control}
+					name="transfer"
 					select
 					fullWidth
 					size="small"
 					label="Transfer to or from my account"
-					value={transfer}
-					onChange={(e) => setTransfer(e.target.value)}
 					helperText="Money moving between your own accounts is not spending or income"
 				>
 					{accountMenuItems(otherAccounts)}
 					{otherAccounts.length === 0 && <MenuItem disabled>No other accounts</MenuItem>}
-				</TextField>
+				</FormTextField>
 				<Button
 					variant="contained"
 					disabled={!transfer}
-					onClick={() => onApply({ transfer_account_id: transfer }, sameName)}
+					onClick={markTransfer}
 					sx={{ flexShrink: 0 }}
 				>
 					Mark as transfer

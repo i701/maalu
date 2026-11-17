@@ -63,11 +63,6 @@ export function isWebManifest(value: unknown): value is WebManifest {
 	);
 }
 
-export function getString(formData: FormData, key: string): string {
-	const value = formData.get(key);
-	return typeof value === "string" ? value : "";
-}
-
 export function isOneOf<T extends string>(value: string, allowed: readonly T[]): value is T {
 	return (allowed as readonly string[]).includes(value);
 }

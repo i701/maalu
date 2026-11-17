@@ -1,16 +1,26 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import Grid from "@mui/material/Grid";
 import MenuItem from "@mui/material/MenuItem";
-import TextField from "@mui/material/TextField";
-import { useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
+import { z } from "zod";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
-import { getString } from "#/lib/utils";
-import { createGoalFn, updateGoalFn } from "#/server/goals";
+import { createGoalFn, money, updateGoalFn } from "#/server/goals";
 import type { Account, Goal } from "#/types/api";
 import FormDialog from "./FormDialog";
+import FormTextField from "./FormTextField";
 import { useNotify } from "./Notify";
 
 const BY_HAND = "";
+
+// The optional fields stay "" when blank; submit turns that into null (edit) or leaves it out (new).
+const schema = z.object({
+	name: z.string().trim().min(1, "Give the goal a name").max(200),
+	target_amount: money,
+	target_date: z.iso.date().or(z.literal("")),
+	source: z.string(),
+	monthly_amount: money.or(z.literal("")),
+});
 
 /** Add or edit a savings goal. Its progress follows a savings account's balance, or, with no
  * account, a log of money you set aside by hand (for savings kept inside your main account). */
@@ -31,7 +41,17 @@ export default function GoalForm({
 	const { run, pending, error } = useAction();
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
-	const [source, setSource] = useState(goal?.account?.id ?? BY_HAND);
+	const { control, handleSubmit } = useForm({
+		resolver: zodResolver(schema),
+		defaultValues: {
+			name: goal?.name ?? "",
+			target_amount: goal?.target_amount ?? "",
+			target_date: goal?.target_date ?? "",
+			source: goal?.account?.id ?? BY_HAND,
+			monthly_amount: goal?.monthly_amount ?? "",
+		},
+	});
+	const source = useWatch({ control, name: "source" });
 
 	// A cards/loans balance is debt, and an account can follow only one goal.
 	const taken = new Set(
@@ -39,11 +59,8 @@ export default function GoalForm({
 	);
 	const choices = accounts.filter((a) => !a.is_liability);
 
-	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
-		const f = new FormData(e.currentTarget);
-		const text = (k: string) => getString(f, k).trim();
-		const fields = { name: text("name"), target_amount: text("target_amount") };
+	async function submit(v: z.output<typeof schema>) {
+		const fields = { name: v.name, target_amount: v.target_amount };
 		const ok = await run(() =>
 			goal
 				? updateGoalFn({
@@ -51,18 +68,18 @@ export default function GoalForm({
 							id: goal.id,
 							changes: {
 								...fields,
-								target_date: text("target_date") || null,
-								monthly_amount: text("monthly_amount") || null,
-								account_id: source || null,
+								target_date: v.target_date || null,
+								monthly_amount: v.monthly_amount || null,
+								account_id: v.source || null,
 							},
 						},
 					})
 				: createGoalFn({
 						data: {
 							...fields,
-							target_date: text("target_date") || undefined,
-							monthly_amount: text("monthly_amount") || undefined,
-							account_id: source || undefined,
+							target_date: v.target_date || undefined,
+							monthly_amount: v.monthly_amount || undefined,
+							account_id: v.source || undefined,
 						},
 					}),
 		);
@@ -77,15 +94,15 @@ export default function GoalForm({
 			title={goal ? "Edit goal" : "Add goal"}
 			error={error}
 			pending={pending}
-			onSubmit={submit}
+			onSubmit={handleSubmit(submit)}
 			sheet={sheet}
 		>
 			<Grid container spacing={2}>
 				<Grid size={12}>
-					<TextField
-						label="Name"
+					<FormTextField
+						control={control}
 						name="name"
-						defaultValue={goal?.name}
+						label="Name"
 						placeholder="Trip fund"
 						required
 						autoFocus
@@ -93,31 +110,31 @@ export default function GoalForm({
 					/>
 				</Grid>
 				<Grid size={{ xs: 12, sm: 6 }}>
-					<TextField
-						label={`Target (${currency})`}
+					<FormTextField
+						control={control}
 						name="target_amount"
-						defaultValue={goal?.target_amount}
+						label={`Target (${currency})`}
 						placeholder="10000"
 						required
 						slotProps={{ htmlInput: { inputMode: "decimal" } }}
 					/>
 				</Grid>
 				<Grid size={{ xs: 12, sm: 6 }}>
-					<TextField
-						label="Target date"
+					<FormTextField
+						control={control}
 						name="target_date"
+						label="Target date"
 						type="date"
-						defaultValue={goal?.target_date ?? ""}
 						helperText="Optional. Used to work out what to save each month"
 						slotProps={{ inputLabel: { shrink: true } }}
 					/>
 				</Grid>
 				<Grid size={12}>
-					<TextField
+					<FormTextField
+						control={control}
+						name="source"
 						select
 						label="Where is the money?"
-						value={source}
-						onChange={(e) => setSource(e.target.value)}
 						helperText={
 							source
 								? "Progress follows this account's balance"
@@ -131,13 +148,13 @@ export default function GoalForm({
 								{taken.has(a.id) ? " (used by another goal)" : ""}
 							</MenuItem>
 						))}
-					</TextField>
+					</FormTextField>
 				</Grid>
 				<Grid size={12}>
-					<TextField
-						label={`Plan to set aside each period (${currency})`}
+					<FormTextField
+						control={control}
 						name="monthly_amount"
-						defaultValue={goal?.monthly_amount ?? ""}
+						label={`Plan to set aside each period (${currency})`}
 						helperText="Optional. The budget then shows whether this period's amount is done"
 						slotProps={{ htmlInput: { inputMode: "decimal" } }}
 					/>

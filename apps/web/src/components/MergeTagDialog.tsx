@@ -1,12 +1,16 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import MenuItem from "@mui/material/MenuItem";
-import TextField from "@mui/material/TextField";
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
 import { mergeTagFn } from "#/server/tags";
 import type { Tag } from "#/types/api";
 import FormDialog from "./FormDialog";
+import FormTextField from "./FormTextField";
 import { useNotify } from "./Notify";
+
+const schema = z.object({ into_id: z.string().min(1, "Choose where to merge it") });
 
 /** Gives everything with one tag another tag instead, then removes it: the way to fix duplicates. */
 export default function MergeTagDialog({
@@ -23,11 +27,12 @@ export default function MergeTagDialog({
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
 	const others = tags.filter((t) => t.id !== tag.id);
-	const [target, setTarget] = useState("");
+	const { control, handleSubmit } = useForm({
+		resolver: zodResolver(schema),
+		defaultValues: { into_id: "" },
+	});
 
-	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
-		if (!target) return;
+	async function submit({ into_id: target }: z.output<typeof schema>) {
 		if (await run(() => mergeTagFn({ data: { id: tag.id, into_id: target } }))) {
 			notify(`Merged "${tag.name}"`);
 			sheet.close();
@@ -39,15 +44,15 @@ export default function MergeTagDialog({
 			title={`Merge "${tag.name}"`}
 			error={error}
 			pending={pending}
-			onSubmit={submit}
+			onSubmit={handleSubmit(submit)}
 			sheet={sheet}
 			maxWidth="xs"
 		>
-			<TextField
+			<FormTextField
+				control={control}
+				name="into_id"
 				select
 				label="Merge into"
-				value={target}
-				onChange={(e) => setTarget(e.target.value)}
 				required
 				autoFocus
 				helperText={`Its transactions and templates get that tag instead, then "${tag.name}" is removed`}
@@ -57,7 +62,7 @@ export default function MergeTagDialog({
 						{t.name}
 					</MenuItem>
 				))}
-			</TextField>
+			</FormTextField>
 		</FormDialog>
 	);
 }

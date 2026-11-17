@@ -3,78 +3,69 @@ import MenuItem from "@mui/material/MenuItem";
 import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import { Fragment } from "react";
+import { type Control, Controller } from "react-hook-form";
+import { cardText } from "#/lib/cards";
 import {
-	PAYMENT_METHODS,
-	PAYMENT_METHOD_LABELS,
 	type AccountRef,
 	type Card,
 	type Category,
-	type PaymentMethod,
+	PAYMENT_METHOD_LABELS,
+	PAYMENT_METHODS,
 	type TransactionType,
 } from "#/types/api";
-import { isOneOf } from "#/lib/utils";
-import { cardText } from "#/lib/cards";
 import CategoryField from "../CategoryField";
 import CurrencyField from "../CurrencyField";
+import FormTextField from "../FormTextField";
 import RateField from "../RateField";
-import { Cell, RevealCell } from "./Cells";
-import SplitEditor from "./SplitEditor";
-import type { TransactionSeed } from "./request";
-import type { SplitsState } from "./useSplits";
 import { accountMenuItems } from "./accountMenuItems";
+import { Cell, RevealCell } from "./Cells";
+import type { TxValues } from "./schema";
+import SplitEditor from "./SplitEditor";
+import type { SplitsState } from "./useSplits";
 
 /** The fields for an income or expense: amount, account, currency and rate, method, category. */
 export default function OrdinaryFields({
+	control,
 	type,
 	accounts,
-	accountId,
+	account,
 	onPickAccount,
 	cards,
-	cardId,
 	onPickCard,
 	currencies,
-	currency,
 	onCurrencyChange,
 	effectiveCurrency,
 	foreign,
 	baseCurrency,
-	paymentMethod,
-	onPaymentMethodChange,
-	seed,
 	switched,
 	splits,
 	categories,
-	category,
+	categoryKey,
 	date,
 }: {
+	control: Control<TxValues>;
 	type: TransactionType;
 	accounts: AccountRef[];
-	accountId: string;
+	/** The chosen account, which fixes the currency. */
+	account: AccountRef | null;
 	onPickAccount: (id: string) => void;
 	/** Every card; only the ones on the chosen account are offered once one is picked. */
 	cards: Card[];
-	cardId: string;
 	onPickCard: (id: string) => void;
 	currencies: string[];
-	currency: string;
 	onCurrencyChange: (currency: string) => void;
 	/** The account's currency when one is picked, otherwise what was typed. */
 	effectiveCurrency: string;
 	foreign: boolean;
 	baseCurrency: string;
-	paymentMethod: PaymentMethod;
-	onPaymentMethodChange: (method: PaymentMethod) => void;
-	seed?: TransactionSeed;
 	switched: boolean;
 	splits: SplitsState;
 	categories: Category[];
-	/** The category field: remounted with a new default when a vendor fills it in. */
-	category: { defaultValue: string; remountKey: number; onChange: (value: string) => void };
+	/** Changes when a vendor fills the category in, so the picker shows it. */
+	categoryKey: number;
 	/** The transaction date, which the suggested exchange rate is looked up for */
 	date: string;
 }) {
-	const account = accounts.find((a) => a.id === accountId) ?? null;
-
 	return (
 		<Fragment>
 			<Cell size={12} fadeIn={switched}>
@@ -87,11 +78,11 @@ export default function OrdinaryFields({
 						disabled
 					/>
 				) : (
-					<TextField
+					<FormTextField
 						key="amount-typed"
-						label="Amount"
+						control={control}
 						name="amount"
-						defaultValue={seed?.amount}
+						label="Amount"
 						placeholder="12.50"
 						helperText={type === "income" ? "Money received" : "Money spent"}
 						required
@@ -102,40 +93,52 @@ export default function OrdinaryFields({
 			</Cell>
 
 			<Cell size={12} fadeIn={switched}>
-				<TextField
-					select
-					label="Account"
-					value={accountId}
-					onChange={(e) => onPickAccount(e.target.value)}
-					helperText={
-						account
-							? `Uses the account's currency (${account.currency}) and updates its balance`
-							: "Optional. Choose where the money moved"
-					}
-				>
-					<MenuItem value="">None</MenuItem>
-					{accountMenuItems(accounts)}
-				</TextField>
+				<Controller
+					name="account_id"
+					control={control}
+					render={({ field }) => (
+						<TextField
+							select
+							label="Account"
+							value={field.value}
+							onChange={(e) => onPickAccount(e.target.value)}
+							helperText={
+								account
+									? `Uses the account's currency (${account.currency}) and updates its balance`
+									: "Optional. Choose where the money moved"
+							}
+						>
+							<MenuItem value="">None</MenuItem>
+							{accountMenuItems(accounts)}
+						</TextField>
+					)}
+				/>
 			</Cell>
 
 			{type === "expense" && cards.length > 0 && (
 				<Cell size={12} fadeIn={switched}>
-					<TextField
-						select
-						label="Card"
-						value={cardId}
-						onChange={(e) => onPickCard(e.target.value)}
-						helperText="Optional. A card spends from its own account"
-					>
-						<MenuItem value="">None</MenuItem>
-						{cards
-							.filter((c) => !accountId || c.account.id === accountId)
-							.map((c) => (
-								<MenuItem key={c.id} value={c.id}>
-									{cardText(c)} · {c.account.name}
-								</MenuItem>
-							))}
-					</TextField>
+					<Controller
+						name="card_id"
+						control={control}
+						render={({ field }) => (
+							<TextField
+								select
+								label="Card"
+								value={field.value}
+								onChange={(e) => onPickCard(e.target.value)}
+								helperText="Optional. A card spends from its own account"
+							>
+								<MenuItem value="">None</MenuItem>
+								{cards
+									.filter((c) => !account || c.account.id === account.id)
+									.map((c) => (
+										<MenuItem key={c.id} value={c.id}>
+											{cardText(c)} · {c.account.name}
+										</MenuItem>
+									))}
+							</TextField>
+						)}
+					/>
 				</Cell>
 			)}
 
@@ -143,27 +146,41 @@ export default function OrdinaryFields({
 				{account ? (
 					<TextField key="currency-locked" label="Currency" value={account.currency} disabled />
 				) : (
-					<CurrencyField
-						key="currency-free"
+					<Controller
 						name="currency"
-						label="Currency"
-						currencies={currencies}
-						defaultValue={currency}
-						onInputChange={(v) => onCurrencyChange(v.toUpperCase())}
-						required
+						control={control}
+						render={({ field, fieldState }) => (
+							<CurrencyField
+								key="currency-free"
+								label="Currency"
+								currencies={currencies}
+								defaultValue={field.value}
+								onInputChange={onCurrencyChange}
+								error={fieldState.error?.message}
+								required
+							/>
+						)}
 					/>
 				)}
 			</Cell>
 
 			<Cell size={{ xs: 12, sm: 6 }} fadeIn={switched}>
 				{foreign ? (
-					<RateField
-						key={`rate-${effectiveCurrency}`}
-						from={effectiveCurrency}
-						to={baseCurrency}
-						on={date}
-						label={`Rate: 1 ${effectiveCurrency} = ? ${baseCurrency}`}
-						initial={seed?.currency === effectiveCurrency ? seed.exchange_rate : ""}
+					<Controller
+						name="exchange_rate"
+						control={control}
+						render={({ field, fieldState }) => (
+							<RateField
+								key={`rate-${effectiveCurrency}`}
+								from={effectiveCurrency}
+								to={baseCurrency}
+								on={date}
+								label={`Rate: 1 ${effectiveCurrency} = ? ${baseCurrency}`}
+								value={field.value}
+								onChange={field.onChange}
+								error={fieldState.error?.message}
+							/>
+						)}
 					/>
 				) : (
 					<TextField
@@ -176,14 +193,11 @@ export default function OrdinaryFields({
 			</Cell>
 
 			<Cell size={{ xs: 12, sm: 6 }} fadeIn={switched}>
-				<TextField
+				<FormTextField
+					control={control}
+					name="payment_method"
 					select
 					label="Payment method"
-					name="payment_method"
-					value={paymentMethod}
-					onChange={(e) => {
-						if (isOneOf(e.target.value, PAYMENT_METHODS)) onPaymentMethodChange(e.target.value);
-					}}
 					required
 				>
 					{PAYMENT_METHODS.map((m) => (
@@ -191,7 +205,7 @@ export default function OrdinaryFields({
 							{PAYMENT_METHOD_LABELS[m]}
 						</MenuItem>
 					))}
-				</TextField>
+				</FormTextField>
 			</Cell>
 
 			<Cell size={{ xs: 12, sm: 6 }} fadeIn={switched}>
@@ -201,12 +215,18 @@ export default function OrdinaryFields({
 						label="Split by item and category"
 					/>
 				) : (
-					<CategoryField
-						key={category.remountKey}
-						categories={categories}
+					<Controller
 						name="category"
-						defaultValue={category.defaultValue}
-						onValueChange={category.onChange}
+						control={control}
+						render={({ field, fieldState }) => (
+							<CategoryField
+								key={categoryKey}
+								categories={categories}
+								defaultValue={field.value}
+								onValueChange={field.onChange}
+								error={fieldState.error?.message}
+							/>
+						)}
 					/>
 				)}
 			</Cell>

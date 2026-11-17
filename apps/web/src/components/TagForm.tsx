@@ -1,21 +1,25 @@
-import TextField from "@mui/material/TextField";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
-import { createTagFn, renameTagFn } from "#/server/tags";
+import { createTagFn, renameTagFn, tagSchema } from "#/server/tags";
 import type { Tag } from "#/types/api";
 import FormDialog from "./FormDialog";
+import FormTextField from "./FormTextField";
 import { useNotify } from "./Notify";
-import { getString } from "#/lib/utils";
 
 /** Add a tag, or rename one (every transaction and template with it follows). */
 export default function TagForm({ tag, onClose }: { tag?: Tag; onClose: () => void }) {
 	const { run, pending, error } = useAction();
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
+	const { control, handleSubmit } = useForm({
+		resolver: zodResolver(tagSchema),
+		defaultValues: { name: tag?.name ?? "" },
+	});
 
-	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
-		const name = getString(new FormData(e.currentTarget), "name").trim();
+	async function submit({ name }: z.output<typeof tagSchema>) {
 		const ok = await run(() =>
 			tag ? renameTagFn({ data: { id: tag.id, name } }) : createTagFn({ data: { name } }),
 		);
@@ -30,14 +34,14 @@ export default function TagForm({ tag, onClose }: { tag?: Tag; onClose: () => vo
 			title={tag ? "Rename tag" : "Add tag"}
 			error={error}
 			pending={pending}
-			onSubmit={submit}
+			onSubmit={handleSubmit(submit)}
 			sheet={sheet}
 			maxWidth="xs"
 		>
-			<TextField
-				label="Name"
+			<FormTextField
+				control={control}
 				name="name"
-				defaultValue={tag?.name}
+				label="Name"
 				required
 				autoFocus
 				helperText={tag ? "Everything with this tag is renamed with it" : undefined}

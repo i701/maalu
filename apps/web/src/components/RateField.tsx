@@ -10,15 +10,17 @@ import { useMarketRate } from "#/lib/use-market-rate";
  * the field it says where the number came from, and offers the market rate again if yours differs.
  * What is saved is always what is in the field.
  *
- * Mount it with a `key` that changes with the currency, so each currency starts fresh.
+ * Mount it with a `key` that changes with the currency, and reset `value` when the currency
+ * changes, so each currency starts fresh. A rate already in `value` when it mounts counts as typed.
  */
 export default function RateField({
 	from,
 	to,
 	on,
 	label,
-	initial = "",
-	name = "exchange_rate",
+	value,
+	onChange,
+	error,
 	hint,
 }: {
 	/** The foreign currency */
@@ -28,20 +30,33 @@ export default function RateField({
 	/** The day to look the rate up for (YYYY-MM-DD) */
 	on: string;
 	label: string;
-	/** A rate already saved for this record; it is never replaced by a suggestion */
-	initial?: string;
-	name?: string;
+	value: string;
+	onChange: (rate: string) => void;
+	/** A message from the form's schema, shown under the field. */
+	error?: string;
 	/** Shown when there is nothing to say about the market rate */
 	hint?: string;
 }) {
-	// What the user typed, or null while they haven't: then the field shows the market rate. A rate
-	// saved earlier counts as typed, so a suggestion never replaces it.
-	const [typed, setTyped] = useState<string | null>(initial !== "" ? initial : null);
-	const { market, status } = useMarketRate({ from, to, on, enabled: true });
+	// Whether the rate in the field is the person's own: then a market rate never replaces it.
+	const [own, setOwn] = useState(value !== "");
+	const { market, status } = useMarketRate({
+		from,
+		to,
+		on,
+		enabled: true,
+		onFound: (m) => {
+			if (!own) onChange(trimRate(m.rate));
+		},
+	});
 
 	const suggestion = market ? trimRate(market.rate) : null;
-	const value = typed ?? suggestion ?? "";
 	const differs = suggestion !== null && value.trim() !== suggestion;
+
+	function takeMarketRate() {
+		if (suggestion === null) return;
+		setOwn(false);
+		onChange(suggestion);
+	}
 
 	let helper: ReactNode = hint ?? null;
 	if (status === "loading" && value === "") helper = "Looking up the market rate…";
@@ -50,7 +65,7 @@ export default function RateField({
 		helper = differs ? (
 			<>
 				Market rate is {suggestion} ({day}).{" "}
-				<Link component="button" type="button" onClick={() => setTyped(null)}>
+				<Link component="button" type="button" onClick={takeMarketRate}>
 					Use it
 				</Link>
 			</>
@@ -65,11 +80,14 @@ export default function RateField({
 	return (
 		<TextField
 			label={label}
-			name={name}
 			value={value}
-			onChange={(e) => setTyped(e.target.value)}
+			onChange={(e) => {
+				setOwn(true);
+				onChange(e.target.value);
+			}}
 			placeholder="15.42"
-			helperText={helper}
+			error={Boolean(error)}
+			helperText={error ?? helper}
 			required
 			slotProps={{ htmlInput: { inputMode: "decimal" } }}
 		/>

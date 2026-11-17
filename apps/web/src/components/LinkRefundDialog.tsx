@@ -1,3 +1,4 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import Alert from "@mui/material/Alert";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Radio from "@mui/material/Radio";
@@ -5,9 +6,11 @@ import RadioGroup from "@mui/material/RadioGroup";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useCallback, useEffect, useState } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
+import { z } from "zod";
 import Money from "#/components/Money";
 import { formatDate, formatMoney, sumDecimals } from "#/lib/format";
-import { amountLeft, itemsToPick, type RefundItem, refundLines } from "#/lib/refund";
+import { amountLeft, itemsToPick, refundLines } from "#/lib/refund";
 import { useSheet } from "#/lib/sheet";
 import { txTitle } from "#/lib/tx-display";
 import { useAction } from "#/lib/use-action";
@@ -15,8 +18,26 @@ import { listRefundCandidatesFn, updateTransactionFn } from "#/server/transactio
 import type { Transaction } from "#/types/api";
 import FormDialog from "./FormDialog";
 import { useNotify } from "./Notify";
+import { refundItem } from "./refund-form";
 import RefundItems from "./RefundItems";
 import SearchField from "./SearchField";
+
+/** A purchase must be chosen; when it has items, the ticked ones must add up to the money back. */
+const linkSchema = (amount: string) =>
+	z
+		.object({ purchase_id: z.string().min(1, "Choose the purchase"), items: z.array(refundItem) })
+		.superRefine(({ items }, ctx) => {
+			if (items.length === 0) return;
+			const ticked = items.filter((i) => i.on);
+			if (ticked.length === 0)
+				ctx.addIssue({ code: "custom", path: ["items"], message: "Tick the items it was for" });
+			else if (sumDecimals(ticked.map((i) => i.amount || "0")) !== sumDecimals([amount]))
+				ctx.addIssue({
+					code: "custom",
+					path: ["items"],
+					message: "The ticked items must add up to the money that came back",
+				});
+		});
 
 /** The facts of a purchase to pick: when, what it cost and how much is left to refund. */
 function describeTransaction(p: Transaction): string {
@@ -41,8 +62,18 @@ export default function LinkRefundDialog({
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
 	const [found, setFound] = useState<Transaction[] | null>(null);
+	// The chosen purchase as found, kept while later searches show other ones.
 	const [chosen, setChosen] = useState<Transaction | null>(null);
-	const [items, setItems] = useState<RefundItem[]>([]);
+	const {
+		control,
+		handleSubmit,
+		setValue,
+		formState: { errors },
+	} = useForm({
+		resolver: zodResolver(linkSchema(income.amount)),
+		defaultValues: { purchase_id: "", items: [] },
+	});
+	const items = useWatch({ control, name: "items" });
 	const [failed, setFailed] = useState<string | null>(null);
 
 	const search = useCallback(
@@ -63,7 +94,8 @@ export default function LinkRefundDialog({
 	function choose(id: string) {
 		const purchase = found?.find((p) => p.id === id) ?? null;
 		setChosen(purchase);
-		setItems(purchase?.splits.length ? itemsToPick(purchase) : []);
+		setValue("purchase_id", purchase?.id ?? "");
+		setValue("items", purchase?.splits.length ? itemsToPick(purchase) : []);
 	}
 
 	const ticked = items.filter((i) => i.on);
@@ -71,12 +103,10 @@ export default function LinkRefundDialog({
 	const itemsAdd = items.length === 0 || itemsTotal === sumDecimals([income.amount]);
 	const ready = chosen !== null && itemsAdd && (items.length === 0 || ticked.length > 0);
 
-	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
-		if (!chosen) return;
+	async function submit(v: z.output<ReturnType<typeof linkSchema>>) {
 		const changes = {
-			refund_of_id: chosen.id,
-			...(items.length ? { splits: refundLines(items) } : {}),
+			refund_of_id: v.purchase_id,
+			...(v.items.length ? { splits: refundLines(v.items) } : {}),
 		};
 		if (await run(() => updateTransactionFn({ data: { id: income.id, changes } }))) {
 			notify("Linked as a refund");
@@ -88,10 +118,10 @@ export default function LinkRefundDialog({
 		<FormDialog
 			title="Link to a purchase"
 			submitLabel="Link"
-			error={error ?? failed}
+			error={error ?? failed ?? errors.purchase_id?.message ?? errors.items?.message ?? null}
 			pending={pending}
 			submitDisabled={!ready}
-			onSubmit={submit}
+			onSubmit={handleSubmit(submit)}
 			sheet={sheet}
 			maxWidth="sm"
 		>
@@ -139,11 +169,17 @@ export default function LinkRefundDialog({
 					<Typography variant="body2">
 						This purchase has items: tick the ones this money was for.
 					</Typography>
-					<RefundItems
-						items={items}
-						currency={chosen.currency}
-						locked={false}
-						onChange={setItems}
+					<Controller
+						name="items"
+						control={control}
+						render={({ field }) => (
+							<RefundItems
+								items={field.value}
+								currency={chosen.currency}
+								locked={false}
+								onChange={field.onChange}
+							/>
+						)}
 					/>
 					<Typography
 						variant="caption"

@@ -1,3 +1,4 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import MyLocationIcon from "@mui/icons-material/MyLocation";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
@@ -9,7 +10,9 @@ import DialogTitle from "@mui/material/DialogTitle";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
 import {
 	DEFAULT_CENTER,
 	formatCoordinates,
@@ -20,10 +23,21 @@ import {
 } from "#/lib/places";
 import { useSheet } from "#/lib/sheet";
 import type { PlaceSearchHit } from "#/types/api";
+import FormTextField from "../FormTextField";
 import PlaceSearch from "./PlaceSearch";
 import { useLeafletMap } from "./useLeafletMap";
 
 type Point = { lat: number; lng: number };
+
+const schema = z.object({
+	coords: z
+		.string()
+		.refine(
+			(text) => text.trim() === "" || parseCoordinates(text) !== null,
+			"Latitude and longitude, like 4.1755, 73.5093",
+		),
+	name: z.string().trim().max(200),
+});
 
 /**
  * Marks where something happened: click the map (or drag the pin), type or paste coordinates, or
@@ -45,8 +59,21 @@ export default function LocationDialog({
 	const [point, setPoint] = useState<Point | null>(
 		initial ? { lat: Number(initial.latitude), lng: Number(initial.longitude) } : null,
 	);
-	const [name, setName] = useState(initial?.place ?? "");
-	const [coords, setCoords] = useState(initial ? formatCoordinates(initial) : "");
+	// The coordinates are checked as you type, as before; the pin keeps full precision.
+	const {
+		control,
+		handleSubmit,
+		setValue,
+		getValues,
+		formState: { errors },
+	} = useForm({
+		resolver: zodResolver(schema),
+		mode: "onChange",
+		defaultValues: {
+			coords: initial ? formatCoordinates(initial) : "",
+			name: initial?.place ?? "",
+		},
+	});
 	const [geoError, setGeoError] = useState<string | null>(null);
 	const { ref, L, map } = useLeafletMap({
 		center: point ? [point.lat, point.lng] : DEFAULT_CENTER,
@@ -54,21 +81,25 @@ export default function LocationDialog({
 	});
 
 	/** A pin placed on the map: its coordinates also fill the text box. */
-	const drop = useCallback((lat: number, lng: number) => {
+	function drop(lat: number, lng: number) {
 		setPoint({ lat, lng: wrapLongitude(lng) });
-		setCoords(formatCoordinates({ latitude: lat, longitude: wrapLongitude(lng) }));
+		setValue("coords", formatCoordinates({ latitude: lat, longitude: wrapLongitude(lng) }), {
+			shouldValidate: true,
+		});
 		setGeoError(null);
-	}, []);
+	}
+	// the map's own listeners call the latest `drop` without being added again
+	const dropFromMap = useEffectEvent(drop);
 
 	useEffect(() => {
 		if (!map) return undefined;
 		const onClick = (e: { latlng: { lat: number; lng: number } }) =>
-			drop(e.latlng.lat, e.latlng.lng);
+			dropFromMap(e.latlng.lat, e.latlng.lng);
 		map.on("click", onClick);
 		return () => {
 			map.off("click", onClick);
 		};
-	}, [map, drop]);
+	}, [map]);
 
 	useEffect(() => {
 		if (!map || !L || !point) return undefined;
@@ -78,16 +109,16 @@ export default function LocationDialog({
 		}).addTo(map);
 		marker.on("dragend", () => {
 			const at = marker.getLatLng();
-			drop(at.lat, at.lng);
+			dropFromMap(at.lat, at.lng);
 		});
 		return () => {
 			marker.off();
 			marker.remove();
 		};
-	}, [map, L, point, drop]);
+	}, [map, L, point]);
 
 	function typed(text: string) {
-		setCoords(text);
+		setValue("coords", text, { shouldValidate: true });
 		const parsed = parseCoordinates(text);
 		if (!parsed) return;
 		setPoint(parsed);
@@ -110,23 +141,17 @@ export default function LocationDialog({
 	function pick(hit: PlaceSearchHit) {
 		drop(Number(hit.latitude), Number(hit.longitude));
 		map?.setView([Number(hit.latitude), Number(hit.longitude)], 17);
-		setName((current) => current.trim() || hit.name);
+		if (!getValues("name").trim()) setValue("name", hit.name);
 	}
 
-	function save() {
+	function save({ name }: z.output<typeof schema>) {
 		onSave(
 			point
-				? {
-						latitude: toCoordinate(point.lat),
-						longitude: toCoordinate(point.lng),
-						place: name.trim(),
-					}
+				? { latitude: toCoordinate(point.lat), longitude: toCoordinate(point.lng), place: name }
 				: null,
 		);
 		sheet.close();
 	}
-
-	const typedBad = coords.trim() !== "" && parseCoordinates(coords) === null;
 
 	return (
 		<Dialog
@@ -158,12 +183,18 @@ export default function LocationDialog({
 						Search above, or click the map to drop the pin, then drag it to adjust.
 					</Typography>
 					<Stack direction={{ xs: "column", sm: "row" }} sx={{ gap: 1.5 }}>
-						<TextField
-							label="Coordinates"
-							value={coords}
-							onChange={(e) => typed(e.target.value)}
-							error={typedBad}
-							helperText={typedBad ? "Latitude and longitude, like 4.1755, 73.5093" : " "}
+						<Controller
+							name="coords"
+							control={control}
+							render={({ field, fieldState }) => (
+								<TextField
+									{...field}
+									label="Coordinates"
+									onChange={(e) => typed(e.target.value)}
+									error={Boolean(fieldState.error)}
+									helperText={fieldState.error?.message ?? " "}
+								/>
+							)}
 						/>
 						<Button
 							variant="outlined"
@@ -175,10 +206,10 @@ export default function LocationDialog({
 						</Button>
 					</Stack>
 					{geoError && <Alert severity="warning">{geoError}</Alert>}
-					<TextField
+					<FormTextField
+						control={control}
+						name="name"
 						label="Name (optional)"
-						value={name}
-						onChange={(e) => setName(e.target.value)}
 						placeholder="Fish market"
 						slotProps={{ htmlInput: { maxLength: 200 } }}
 					/>
@@ -190,7 +221,7 @@ export default function LocationDialog({
 						color="inherit"
 						onClick={() => {
 							setPoint(null);
-							setCoords("");
+							setValue("coords", "", { shouldValidate: true });
 						}}
 						sx={{ mr: "auto" }}
 					>
@@ -200,7 +231,11 @@ export default function LocationDialog({
 				<Button onClick={sheet.close} color="inherit">
 					Cancel
 				</Button>
-				<Button variant="contained" onClick={save} disabled={typedBad}>
+				<Button
+					variant="contained"
+					onClick={() => void handleSubmit(save)()}
+					disabled={Boolean(errors.coords)}
+				>
 					Done
 				</Button>
 			</DialogActions>

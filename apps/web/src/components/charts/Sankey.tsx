@@ -1,5 +1,5 @@
 import Box from "@mui/material/Box";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { spreadLabels } from "#/lib/charts";
 import { type FlowKind, layoutFlow, type MoneyFlow, type PlacedNode } from "#/lib/money-flow";
 import ChartTooltip from "./ChartTooltip";
@@ -50,21 +50,14 @@ export default function Sankey({
 	const [width, setWidth] = useState(0);
 	const [active, setActive] = useState<string | null>(null);
 
-	const observerRef = useRef<ResizeObserver | null>(null);
-
 	const measure = useCallback((el: HTMLDivElement | null) => {
-		if (observerRef.current) {
-			observerRef.current.disconnect();
-			observerRef.current = null;
-		}
-		if (!el) return;
-
+		if (!el) return undefined;
 		const observer = new ResizeObserver(([entry]) => {
 			if (entry) setWidth(entry.contentRect.width);
 		});
 		observer.observe(el);
 		setWidth(el.clientWidth);
-		observerRef.current = observer;
+		return () => observer.disconnect();
 	}, []);
 
 	const inner = Math.max(MIN_WIDTH, width) - 2 * LABEL_WIDTH;

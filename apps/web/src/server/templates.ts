@@ -10,6 +10,8 @@ const amount = z
 	.refine((v) => Number(v) > 0, "Amount must be greater than 0");
 
 const name = z.string().trim().min(1, "Give the template a name").max(200);
+/** A template's name, as the save and rename dialogs send it. */
+export const templateNameSchema = z.object({ name });
 
 const createSchema = z.object({
 	name,
@@ -58,7 +60,7 @@ export const createTemplateFn = createServerFn({ method: "POST" })
 	);
 
 export const renameTemplateFn = createServerFn({ method: "POST" })
-	.validator(z.object({ id: z.uuid(), name }))
+	.validator(templateNameSchema.extend({ id: z.uuid() }))
 	.handler(async ({ data }) =>
 		apiRequest<TransactionTemplate>(`/templates/${data.id}`, {
 			method: "PATCH",

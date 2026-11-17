@@ -1,23 +1,38 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import IconButton from "@mui/material/IconButton";
-import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
-import { useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
+import { z } from "zod";
 import Money from "#/components/Money";
 import { formatDate } from "#/lib/format";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
-import { addGoalEntryFn, deleteGoalEntryFn } from "#/server/goals";
+import { addGoalEntryFn, deleteGoalEntryFn, money } from "#/server/goals";
 import type { Goal } from "#/types/api";
 import FormDialog from "./FormDialog";
+import FormTextField from "./FormTextField";
 import { useNotify } from "./Notify";
-import { getString } from "#/lib/utils";
 
 const SHOWN = 5;
+
+const schema = z.object({
+	direction: z.enum(["add", "take"]),
+	amount: money,
+	entry_date: z.iso
+		.date()
+		.or(z.literal(""))
+		.transform((v) => v || undefined),
+	note: z
+		.string()
+		.trim()
+		.max(200)
+		.transform((v) => v || undefined),
+});
 
 const today = () => {
 	const d = new Date();
@@ -29,25 +44,29 @@ export default function GoalEntryDialog({ goal, onClose }: { goal: Goal; onClose
 	const { run, pending, error } = useAction();
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
-	const [direction, setDirection] = useState<"add" | "take">("add");
+	const { control, handleSubmit, setValue } = useForm<
+		z.input<typeof schema>,
+		unknown,
+		z.output<typeof schema>
+	>({
+		resolver: zodResolver(schema),
+		defaultValues: { direction: "add", amount: "", entry_date: today(), note: "" },
+	});
+	const direction = useWatch({ control, name: "direction" });
 
-	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
-		const f = new FormData(e.currentTarget);
-		const text = (k: string) => getString(f, k).trim();
-		const amount = text("amount");
+	async function submit({ direction: way, amount, entry_date, note }: z.output<typeof schema>) {
 		const ok = await run(() =>
 			addGoalEntryFn({
 				data: {
 					id: goal.id,
-					amount: direction === "take" ? `-${amount}` : amount,
-					entry_date: text("entry_date") || undefined,
-					note: text("note") || undefined,
+					amount: way === "take" ? `-${amount}` : amount,
+					entry_date,
+					note,
 				},
 			}),
 		);
 		if (ok) {
-			notify(direction === "take" ? "Money taken out" : "Money set aside");
+			notify(way === "take" ? "Money taken out" : "Money set aside");
 			sheet.close();
 		}
 	}
@@ -57,7 +76,7 @@ export default function GoalEntryDialog({ goal, onClose }: { goal: Goal; onClose
 			title={`${goal.name}: add or take out`}
 			error={error}
 			pending={pending}
-			onSubmit={submit}
+			onSubmit={handleSubmit(submit)}
 			sheet={sheet}
 			maxWidth="xs"
 		>
@@ -68,7 +87,7 @@ export default function GoalEntryDialog({ goal, onClose }: { goal: Goal; onClose
 						fullWidth
 						size="small"
 						value={direction}
-						onChange={(_, next: "add" | "take" | null) => next && setDirection(next)}
+						onChange={(_, next: typeof direction | null) => next && setValue("direction", next)}
 						aria-label="Add or take out"
 					>
 						<ToggleButton value="add" color="success" sx={{ py: 1 }}>
@@ -80,25 +99,31 @@ export default function GoalEntryDialog({ goal, onClose }: { goal: Goal; onClose
 					</ToggleButtonGroup>
 				</Grid>
 				<Grid size={{ xs: 12, sm: 6 }}>
-					<TextField
-						label={`Amount (${goal.currency})`}
+					<FormTextField
+						control={control}
 						name="amount"
+						label={`Amount (${goal.currency})`}
 						required
 						autoFocus
 						slotProps={{ htmlInput: { inputMode: "decimal" } }}
 					/>
 				</Grid>
 				<Grid size={{ xs: 12, sm: 6 }}>
-					<TextField
-						label="Date"
+					<FormTextField
+						control={control}
 						name="entry_date"
+						label="Date"
 						type="date"
-						defaultValue={today()}
 						slotProps={{ inputLabel: { shrink: true } }}
 					/>
 				</Grid>
 				<Grid size={12}>
-					<TextField label="Note" name="note" slotProps={{ htmlInput: { maxLength: 200 } }} />
+					<FormTextField
+						control={control}
+						name="note"
+						label="Note"
+						slotProps={{ htmlInput: { maxLength: 200 } }}
+					/>
 				</Grid>
 				{goal.entries.length > 0 && (
 					<Grid size={12}>

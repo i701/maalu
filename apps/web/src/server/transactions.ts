@@ -22,15 +22,20 @@ import { DEFAULT_PAGE_SIZE, PAGE_SIZES } from "#/lib/pagination";
 // always positive: the transaction `type` decides whether money comes in or goes out.
 const amount = z
 	.string()
+	.trim()
 	.regex(/^\d+(\.\d{1,4})?$/, "Enter a valid positive amount (max 4 decimals)")
 	.refine((v) => Number(v) > 0, "Amount must be greater than 0");
 const exchangeRate = z
 	.string()
+	.trim()
 	.regex(/^\d+(\.\d{1,8})?$/, "Enter a valid rate (max 8 decimals)")
 	.refine((v) => Number(v) > 0, "Rate must be greater than 0");
 // "14:30" from a time input, or "14:30:00" as the API sends it.
 const timeOfDay = z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/);
 const currency = z.string().regex(/^[A-Za-z]{3}$/, "Use a 3-letter currency code");
+
+/** The same rules for the forms that build these requests. */
+export { amount as positiveAmount, exchangeRate, timeOfDay };
 
 const splitSchema = z.object({
 	name: z.string().trim().min(1).max(200),

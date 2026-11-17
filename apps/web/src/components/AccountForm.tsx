@@ -1,30 +1,29 @@
-import FormControlLabel from "@mui/material/FormControlLabel";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Grid from "@mui/material/Grid";
 import MenuItem from "@mui/material/MenuItem";
-import Switch from "@mui/material/Switch";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { type SubmitEvent, useState } from "react";
-import {
-	bankChoices,
-	GROUP_HELP,
-	hasCreditLimit,
-	isOwedGroup,
-	spendableValue,
-	statementDays,
-} from "#/lib/accounts";
-import { todayIso } from "#/lib/format";
+import { Controller, useForm, useWatch } from "react-hook-form";
+import { bankChoices, GROUP_HELP, isOwedGroup } from "#/lib/accounts";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
 import { createAccountFn, updateAccountFn } from "#/server/accounts";
-import { ACCOUNT_GROUP_LABELS, ACCOUNT_GROUPS, type Account, type AccountGroup } from "#/types/api";
+import { ACCOUNT_GROUP_LABELS, ACCOUNT_GROUPS, type Account } from "#/types/api";
 import CurrencyChips from "./CurrencyChips";
 import FormDialog from "./FormDialog";
+import FormTextField from "./FormTextField";
 import NamePickerField from "./NamePickerField";
 import { useNotify } from "./Notify";
-import RateField from "./RateField";
 import SpendableField from "./SpendableField";
-import { getString, isOneOf } from "#/lib/utils";
+import CardFields from "./account-form/CardFields";
+import ForeignRateFields from "./account-form/ForeignRateFields";
+import {
+	accountDefaults,
+	type AccountFormInput,
+	type AccountFormOutput,
+	accountRequest,
+	accountSchema,
+} from "./account-form/schema";
+import FormSwitch from "./FormSwitch";
 
 export default function AccountForm({
 	account,
@@ -44,45 +43,25 @@ export default function AccountForm({
 	const { run, pending, error } = useAction();
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
-	const [currency, setCurrency] = useState(account?.currency ?? baseCurrency);
-	const [group, setGroup] = useState<AccountGroup>(account?.group ?? "cash");
-	const [spend, setSpend] = useState<boolean | null>(account?.spendable ?? null);
-	const [localError, setLocalError] = useState<string | null>(null);
+	const { control, handleSubmit, setValue } = useForm<AccountFormInput, unknown, AccountFormOutput>(
+		{
+			resolver: zodResolver(accountSchema(baseCurrency)),
+			defaultValues: accountDefaults(account, baseCurrency),
+		},
+	);
+	const [group, currency] = useWatch({ control, name: ["group", "currency"] });
 	const foreign = currency !== baseCurrency;
 	const locked = (account?.transaction_count ?? 0) > 0;
 	const quick = [...new Set([baseCurrency, ...accounts.map((a) => a.currency)])].slice(0, 5);
 
-	async function submit(e: SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
-		const f = new FormData(e.currentTarget);
-		const text = (k: string) => getString(f, k).trim();
+	/** A new currency starts its rate fresh (the saved one only for the account's own currency). */
+	function pickCurrency(code: string) {
+		setValue("currency", code);
+		setValue("exchange_rate", account?.currency === code ? account.exchange_rate : "");
+	}
 
-		const days = group === "card" ? statementDays(text("statement_day"), text("due_day")) : null;
-		if (days && !days.ok) {
-			setLocalError(days.error);
-			return;
-		}
-		setLocalError(null);
-
-		const fields = {
-			group,
-			name: text("name"),
-			opening_amount: text("opening_amount") || "0",
-			currency,
-			exchange_rate: foreign ? text("exchange_rate") : undefined,
-			description: text("description") || null,
-			// only cards and overdrafts have one; empty means none
-			credit_limit: hasCreditLimit(group) ? text("credit_limit") || null : null,
-			// credit cards only; both or neither
-			statement_day: days?.ok ? days.statement_day : null,
-			due_day: days?.ok ? days.due_day : null,
-			exclude_from_stats: f.get("exclude_from_stats") === "on",
-			spendable: spendableValue(spend, group),
-			// only a foreign-currency account has a rate to keep up to date
-			auto_rate: foreign && f.get("auto_rate") === "on",
-			bank: text("bank") || null,
-			account_number: text("account_number") || null,
-		};
+	async function submit(v: AccountFormOutput) {
+		const fields = accountRequest(v, baseCurrency);
 
 		const ok = await run(() =>
 			account
@@ -98,35 +77,26 @@ export default function AccountForm({
 	return (
 		<FormDialog
 			title={account ? "Edit account" : "Add account"}
-			error={localError ?? error}
+			error={error}
 			pending={pending}
-			onSubmit={submit}
+			onSubmit={handleSubmit(submit)}
 			sheet={sheet}
 		>
 			<Grid container spacing={2}>
 				<Grid size={{ xs: 12, sm: 5 }}>
-					<TextField
-						select
-						label="Group"
-						name="group"
-						value={group}
-						onChange={(e) => {
-							if (isOneOf(e.target.value, ACCOUNT_GROUPS)) setGroup(e.target.value);
-						}}
-						required
-					>
+					<FormTextField control={control} name="group" select label="Group" required>
 						{ACCOUNT_GROUPS.map((g) => (
 							<MenuItem key={g} value={g}>
 								{ACCOUNT_GROUP_LABELS[g]}
 							</MenuItem>
 						))}
-					</TextField>
+					</FormTextField>
 				</Grid>
 				<Grid size={{ xs: 12, sm: 7 }}>
-					<TextField
-						label="Name"
+					<FormTextField
+						control={control}
 						name="name"
-						defaultValue={account?.name}
+						label="Name"
 						placeholder="Wallet, BML Savings…"
 						required
 						autoFocus
@@ -140,21 +110,28 @@ export default function AccountForm({
 				</Grid>
 
 				<Grid size={{ xs: 12, sm: 5 }}>
-					<NamePickerField
-						names={bankChoices(accounts)}
-						noun="bank"
-						label="Bank"
+					<Controller
 						name="bank"
-						defaultValue={account?.bank ?? ""}
-						maxLength={100}
-						helper={false}
+						control={control}
+						render={({ field, fieldState }) => (
+							<NamePickerField
+								names={bankChoices(accounts)}
+								noun="bank"
+								label="Bank"
+								defaultValue={field.value}
+								onValueChange={field.onChange}
+								error={fieldState.error?.message}
+								maxLength={100}
+								helper={false}
+							/>
+						)}
 					/>
 				</Grid>
 				<Grid size={{ xs: 12, sm: 7 }}>
-					<TextField
-						label="Account number"
+					<FormTextField
+						control={control}
 						name="account_number"
-						defaultValue={account?.account_number ?? ""}
+						label="Account number"
 						helperText="Optional. Tells accounts with the same name apart."
 						slotProps={{
 							htmlInput: {
@@ -167,10 +144,10 @@ export default function AccountForm({
 				</Grid>
 
 				<Grid size={12}>
-					<TextField
-						label="Amount"
+					<FormTextField
+						control={control}
 						name="opening_amount"
-						defaultValue={account?.opening_amount ?? ""}
+						label="Amount"
 						placeholder="0.00"
 						helperText="Starting balance. Use a negative amount for money you owe (cards, loans)."
 						slotProps={{ htmlInput: { inputMode: "decimal" } }}
@@ -180,7 +157,7 @@ export default function AccountForm({
 				<Grid size={12}>
 					<CurrencyChips
 						value={currency}
-						onChange={setCurrency}
+						onChange={pickCurrency}
 						quick={quick}
 						currencies={currencies}
 						disabled={locked}
@@ -194,82 +171,17 @@ export default function AccountForm({
 
 				{foreign && (
 					<Grid size={12}>
-						<RateField
-							key={`rate-${currency}`}
-							from={currency}
-							to={baseCurrency}
-							on={todayIso()}
-							label={`Rate: 1 ${currency} = ? ${baseCurrency}`}
-							initial={account?.currency === currency ? account.exchange_rate : ""}
-							hint="Used to value this account in your base currency."
-						/>
-						<FormControlLabel
-							control={<Switch name="auto_rate" defaultChecked={account?.auto_rate} />}
-							label="Keep this rate up to date"
-							sx={{ mt: 0.5 }}
-						/>
-						<Typography variant="caption" component="p" sx={{ color: "text.secondary", mt: -0.5 }}>
-							Maalu sets the rate from the market now and again every day, so a rate you type is
-							replaced. Leave it off to keep your own, such as your bank's.
-						</Typography>
+						<ForeignRateFields control={control} currency={currency} baseCurrency={baseCurrency} />
 					</Grid>
 				)}
 
-				{hasCreditLimit(group) && (
-					<Grid size={12}>
-						<TextField
-							label="Credit limit"
-							name="credit_limit"
-							defaultValue={account?.credit_limit ?? ""}
-							placeholder="10000"
-							helperText={`The most you can owe on it, in ${currency}. It changes no balance: it only shows how much is used.`}
-							slotProps={{ htmlInput: { inputMode: "decimal" } }}
-						/>
-					</Grid>
-				)}
-
-				{group === "card" && (
-					<>
-						<Grid size={{ xs: 12, sm: 6 }}>
-							<TextField
-								label="Statement closes on day"
-								name="statement_day"
-								defaultValue={account?.statement_day ?? ""}
-								placeholder="5"
-								slotProps={{
-									htmlInput: { inputMode: "numeric", maxLength: 2 },
-								}}
-							/>
-						</Grid>
-						<Grid size={{ xs: 12, sm: 6 }}>
-							<TextField
-								label="Payment due on day"
-								name="due_day"
-								defaultValue={account?.due_day ?? ""}
-								placeholder="25"
-								slotProps={{
-									htmlInput: { inputMode: "numeric", maxLength: 2 },
-								}}
-							/>
-						</Grid>
-						<Grid size={12}>
-							<Typography
-								variant="caption"
-								sx={{ color: "text.secondary", mt: -1, display: "block" }}
-							>
-								Optional. Day of the month, 1 to 31 (a short month uses its last day). With both
-								set, Maalu shows what is owed on the last statement, when to pay it, and tells you
-								before it is due.
-							</Typography>
-						</Grid>
-					</>
-				)}
+				<CardFields control={control} group={group} currency={currency} />
 
 				<Grid size={12}>
-					<TextField
-						label="Description"
+					<FormTextField
+						control={control}
 						name="description"
-						defaultValue={account?.description ?? ""}
+						label="Description"
 						multiline
 						minRows={2}
 						slotProps={{ htmlInput: { maxLength: 1000 } }}
@@ -278,17 +190,18 @@ export default function AccountForm({
 
 				{!isOwedGroup(group) && (
 					<Grid size={12}>
-						<SpendableField group={group} value={spend} onChange={setSpend} />
+						<Controller
+							name="spendable"
+							control={control}
+							render={({ field }) => (
+								<SpendableField group={group} value={field.value} onChange={field.onChange} />
+							)}
+						/>
 					</Grid>
 				)}
 
 				<Grid size={12}>
-					<FormControlLabel
-						control={
-							<Switch name="exclude_from_stats" defaultChecked={account?.exclude_from_stats} />
-						}
-						label="Leave out of my totals"
-					/>
+					<FormSwitch control={control} name="exclude_from_stats" label="Leave out of my totals" />
 					<Typography variant="caption" component="p" sx={{ color: "text.secondary", mt: -0.5 }}>
 						For an account that is not really yours, like a card you manage for someone else. Its
 						balance and transactions stay, but it is not counted in totals, reports, budgets or net

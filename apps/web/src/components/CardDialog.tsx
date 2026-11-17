@@ -1,15 +1,16 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import Grid from "@mui/material/Grid";
 import MenuItem from "@mui/material/MenuItem";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { type SubmitEvent, useState } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { canRepayFrom } from "#/lib/cards";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
-import { getString } from "#/lib/utils";
-import { createCardFn, updateCardFn } from "#/server/cards";
+import { cardFormSchema, createCardFn, updateCardFn } from "#/server/cards";
 import type { Account, Card } from "#/types/api";
 import FormDialog from "./FormDialog";
+import FormTextField from "./FormTextField";
 import { useNotify } from "./Notify";
 
 /**
@@ -34,16 +35,20 @@ export default function CardDialog({
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
 	const credit = account.group === "card";
-	const [repay, setRepay] = useState(card?.repay_account?.id ?? "");
 	const repayChoices = accounts.filter(
 		(a) => a.id !== account.id && a.archived_at === null && canRepayFrom(a.group),
 	);
 
-	async function submit(e: SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
-		const f = new FormData(e.currentTarget);
-		const name = getString(f, "name").trim();
-		const digits = getString(f, "last_digits").trim();
+	const { control, handleSubmit } = useForm({
+		resolver: zodResolver(cardFormSchema),
+		defaultValues: {
+			name: card?.name ?? "",
+			last_digits: card?.last_digits ?? "",
+			repay: card?.repay_account?.id ?? "",
+		},
+	});
+
+	async function submit({ name, last_digits: digits, repay }: z.output<typeof cardFormSchema>) {
 		const ok = await run(() =>
 			card
 				? updateCardFn({
@@ -77,7 +82,7 @@ export default function CardDialog({
 			title={card ? "Edit card" : credit ? "Add credit card" : "Add debit card"}
 			error={error}
 			pending={pending}
-			onSubmit={submit}
+			onSubmit={handleSubmit(submit)}
 			sheet={sheet}
 			maxWidth="xs"
 		>
@@ -90,10 +95,10 @@ export default function CardDialog({
 					</Typography>
 				</Grid>
 				<Grid size={{ xs: 12, sm: 8 }}>
-					<TextField
-						label="Name"
+					<FormTextField
+						control={control}
 						name="name"
-						defaultValue={card?.name}
+						label="Name"
 						placeholder={credit ? "BML Visa credit" : "MIB Visa debit"}
 						required
 						autoFocus
@@ -101,27 +106,26 @@ export default function CardDialog({
 					/>
 				</Grid>
 				<Grid size={{ xs: 12, sm: 4 }}>
-					<TextField
-						label="Last 4 digits"
+					<FormTextField
+						control={control}
 						name="last_digits"
-						defaultValue={card?.last_digits ?? ""}
+						label="Last 4 digits"
 						placeholder="2815"
 						slotProps={{
 							htmlInput: {
 								inputMode: "numeric",
 								maxLength: 4,
-								pattern: "\\d{4}|",
 							},
 						}}
 					/>
 				</Grid>
 				{credit && (
 					<Grid size={12}>
-						<TextField
+						<FormTextField
+							control={control}
+							name="repay"
 							select
 							label="Repaid from"
-							value={repay}
-							onChange={(e) => setRepay(e.target.value)}
 							helperText="The bank account that pays this card off. Optional"
 						>
 							<MenuItem value="">Not set</MenuItem>
@@ -130,7 +134,7 @@ export default function CardDialog({
 									{a.name}
 								</MenuItem>
 							))}
-						</TextField>
+						</FormTextField>
 					</Grid>
 				)}
 			</Grid>

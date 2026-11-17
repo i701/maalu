@@ -49,7 +49,7 @@ export default function FormDialog({
 				transition: { onExited: sheet.onExited },
 			}}
 		>
-			<form onSubmit={onSubmit} style={{ display: "contents" }}>
+			<form onSubmit={onSubmit} noValidate style={{ display: "contents" }}>
 				<DialogTitle id="form-dialog-title">{title}</DialogTitle>
 				<DialogContent>
 					{/* A disabled fieldset turns every field, switch and button inside it off while the form

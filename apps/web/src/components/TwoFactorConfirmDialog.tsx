@@ -1,10 +1,12 @@
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
-import { getString } from "#/lib/utils";
 import type { ApiResult } from "#/types/api";
-import TextField from "@mui/material/TextField";
-import type { SubmitEvent } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
+import { confirmSchema } from "#/server/auth";
 import FormDialog from "./FormDialog";
+import FormTextField from "./FormTextField";
 import SecondFactorField from "./SecondFactorField";
 
 /** Asks for your password and a code (from the app, or a recovery code) before something that
@@ -27,13 +29,12 @@ export default function TwoFactorConfirmDialog<T>({
 	const { run, pending, error } = useAction();
 	const sheet = useSheet(onClose);
 
-	async function submit(e: SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
-		const f = new FormData(e.currentTarget);
-		const values = {
-			password: getString(f, "password"),
-			code: getString(f, "code").trim(),
-		};
+	const { control, handleSubmit } = useForm({
+		resolver: zodResolver(confirmSchema),
+		defaultValues: { password: "", code: "" },
+	});
+
+	async function submit(values: z.output<typeof confirmSchema>) {
 		let sent: { data: T } | undefined;
 		const done = await run(async () => {
 			const res = await send(values);
@@ -52,13 +53,14 @@ export default function TwoFactorConfirmDialog<T>({
 			submitLabel={submitLabel}
 			error={error}
 			pending={pending}
-			onSubmit={submit}
+			onSubmit={handleSubmit(submit)}
 			sheet={sheet}
 			maxWidth="xs"
 		>
-			<TextField
-				label="Password"
+			<FormTextField
+				control={control}
 				name="password"
+				label="Password"
 				type="password"
 				autoComplete="current-password"
 				required
@@ -66,7 +68,7 @@ export default function TwoFactorConfirmDialog<T>({
 				helperText={help}
 				sx={{ mb: 2 }}
 			/>
-			<SecondFactorField />
+			<SecondFactorField control={control} name="code" />
 		</FormDialog>
 	);
 }

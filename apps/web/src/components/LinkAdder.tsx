@@ -1,11 +1,23 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import TextField from "@mui/material/TextField";
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { parseUrl } from "#/lib/links";
+import FormTextField from "./FormTextField";
+
+const schema = z.object({
+	url: z.string().superRefine((typed, ctx) => {
+		const parsed = parseUrl(typed);
+		if ("error" in parsed) ctx.addIssue({ code: "custom", message: parsed.error });
+	}),
+	title: z.string().trim().max(200),
+});
 
 /**
  * The small "address and name" entry for a web link. It sits inside the transaction form, so it
- * is not a form of its own: Enter adds the link and is kept from submitting the transaction.
+ * is not a form of its own: its button and Enter submit it, and Enter is kept from submitting the
+ * transaction.
  */
 export default function LinkAdder({
 	busy,
@@ -17,13 +29,14 @@ export default function LinkAdder({
 	onAdd: (url: string, title: string) => Promise<boolean>;
 	onClose: () => void;
 }) {
-	const [url, setUrl] = useState("");
-	const [title, setTitle] = useState("");
+	const { control, handleSubmit, reset } = useForm({
+		resolver: zodResolver(schema),
+		defaultValues: { url: "", title: "" },
+	});
 
-	async function add() {
+	async function add({ url, title }: z.output<typeof schema>) {
 		if (await onAdd(url, title)) {
-			setUrl("");
-			setTitle("");
+			reset();
 			onClose();
 		}
 	}
@@ -31,26 +44,26 @@ export default function LinkAdder({
 	function onEnter(e: React.KeyboardEvent) {
 		if (e.key !== "Enter") return;
 		e.preventDefault();
-		void add();
+		void handleSubmit(add)();
 	}
 
 	return (
 		<Box sx={{ display: "grid", gap: 1 }}>
-			<TextField
+			<FormTextField
+				control={control}
+				name="url"
 				label="Web address"
 				placeholder="https://shop.example.com/orders/123"
-				value={url}
-				onChange={(e) => setUrl(e.target.value)}
 				onKeyDown={onEnter}
 				size="small"
 				autoFocus
 				slotProps={{ htmlInput: { maxLength: 2000, inputMode: "url" } }}
 			/>
-			<TextField
+			<FormTextField
+				control={control}
+				name="title"
 				label="Name (optional)"
 				placeholder="Order confirmation"
-				value={title}
-				onChange={(e) => setTitle(e.target.value)}
 				onKeyDown={onEnter}
 				size="small"
 				slotProps={{ htmlInput: { maxLength: 200 } }}
@@ -59,7 +72,12 @@ export default function LinkAdder({
 				<Button size="small" color="inherit" onClick={onClose}>
 					Cancel
 				</Button>
-				<Button size="small" variant="contained" loading={busy} onClick={() => void add()}>
+				<Button
+					size="small"
+					variant="contained"
+					loading={busy}
+					onClick={() => void handleSubmit(add)()}
+				>
 					Add
 				</Button>
 			</Box>

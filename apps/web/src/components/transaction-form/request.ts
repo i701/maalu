@@ -1,20 +1,16 @@
-import { SUGGESTED_PAYMENT_METHOD } from "#/lib/accounts";
 import { toScaled } from "#/lib/decimal";
 import { newPlacePayload, placeOf, placePayload, type PlaceValue } from "#/lib/places";
-import { getString, isOneOf } from "#/lib/utils";
 import type { TemplateDraft } from "#/server/templates";
 import { createTransactionFn, updateTransactionFn } from "#/server/transactions";
 import type {
 	Account,
 	AccountRef,
 	CardRef,
-	PaymentMethod,
 	Subscription,
 	Transaction,
 	TransactionTemplate,
-	TransactionType,
 } from "#/types/api";
-import { PAYMENT_METHODS } from "#/types/api";
+import type { TxValues } from "./schema";
 import type { SplitsState } from "./useSplits";
 
 /** What the form starts from when it is not editing a transaction: a duplicate of one, a template,
@@ -86,56 +82,56 @@ export function seedFromTemplate(t: TransactionTemplate): TransactionSeed {
 
 /** After "Add another": keep where the money goes (account, category, vendor, method), clear what
  * differs every time (the amount and the note). */
-export function seedAfterSave(f: FormData, s: State): TransactionSeed {
-	const keepItems = s.type !== "transfer" && !s.splits;
+export function seedAfterSave(v: TxValues, s: State): TransactionSeed {
+	const transfer = v.type === "transfer";
 	return {
-		type: s.type,
+		type: v.type,
 		amount: "",
 		to_amount: null,
-		payment_method: paymentMethod(f),
-		category: keepItems ? text(f, "category") : "",
+		payment_method: v.payment_method,
+		category: !transfer && !s.splits ? v.category.trim() : "",
 		description: null,
 		splits: [],
-		currency: s.account?.currency ?? text(f, "currency").toUpperCase(),
+		currency: s.account?.currency ?? v.currency.trim().toUpperCase(),
 		exchange_rate: "",
-		subscription: s.subscription,
+		subscription: v.subscription,
 		account: s.account,
-		card: s.type === "expense" ? s.card : null,
-		to_account: s.type === "transfer" ? s.toAccount : null,
-		vendorName: s.type === "transfer" ? "" : text(f, "vendor"),
-		tags: tagNames(f),
-		location: s.type === "transfer" ? null : s.location,
+		card: v.type === "expense" ? s.card : null,
+		to_account: transfer ? s.toAccount : null,
+		vendorName: transfer ? "" : v.vendor.trim(),
+		tags: v.tags,
+		location: transfer ? null : v.location,
 	};
 }
 
-/** The form's current values as a template, or a message about what is missing. */
+/** The form's current values (not yet checked) as a template, or a message about what is missing. */
 export function buildTemplateRequest(
-	f: FormData,
+	v: TxValues,
 	s: State,
 	name: string,
 ): { error: string } | { draft: TemplateDraft } {
-	const transfer = s.type === "transfer";
-	if (transfer && (!s.accountId || !s.toAccountId))
+	const transfer = v.type === "transfer";
+	if (transfer && (!v.account_id || !v.to_account_id))
 		return {
 			error: "Choose both accounts first: a transfer template needs them",
 		};
-	const amount = text(f, "amount");
-	const category = text(f, "category");
-	const vendor = text(f, "vendor");
-	const description = text(f, "description");
-	const currency = text(f, "currency");
+	const amount = v.amount.trim();
+	const category = v.category.trim();
+	const vendor = v.vendor.trim();
+	const description = v.description.trim();
+	const currency = v.currency.trim();
 	return {
 		draft: {
 			name,
-			type: s.type,
+			type: v.type,
 			amount: s.splits || !amount || Number(amount) <= 0 ? undefined : amount,
-			...(transfer ? {} : { payment_method: paymentMethod(f) }),
+			...(transfer ? {} : { payment_method: v.payment_method }),
 			...(!transfer && !s.splits && category ? { category } : {}),
 			...(!transfer && vendor ? { vendor_name: vendor } : {}),
 			...(description ? { description } : {}),
-			...(tagNames(f).length > 0 ? { tags: tagNames(f) } : {}),
-			...(s.accountId ? { account_id: s.accountId } : currency ? { currency } : {}),
-			...(transfer && s.toAccountId ? { to_account_id: s.toAccountId } : {}),
+			...(v.tags.length > 0 ? { tags: v.tags } : {}),
+			...(v.account_id ? { account_id: v.account_id } : currency ? { currency } : {}),
+			...(transfer && v.to_account_id ? { to_account_id: v.to_account_id } : {}),
 		},
 	};
 }
@@ -147,83 +143,35 @@ type Send = () => ReturnType<typeof createTransactionFn | typeof updateTransacti
 /** Either a message for the user, or the request to send and what to tell them when it worked. */
 export type TransactionRequest = { error: string } | { send: Send; success: string };
 
-type State = {
-	type: TransactionType;
+/** What the form's values point at, looked up: the request builders need these as well. */
+export type State = {
 	transaction?: Transaction;
-	accountId: string;
-	toAccountId: string;
 	account: AccountRef | null;
-	/** The card it was paid with, when one is picked (not for transfers). */
+	/** The card it was paid with, when one is picked (expenses only). */
 	card: CardRef | null;
 	toAccount: AccountRef | null;
 	crossCurrency: boolean;
 	foreign: boolean;
-	subscription: SubRef | null;
-	/** Coming up, not happened yet: counts toward nothing until it is marked as paid. */
-	planned: boolean;
 	/** The item table, when it is switched on (not for transfers). */
 	splits: SplitsState | null;
-	/** Where it happened, if marked on the map (not for transfers). */
-	location: PlaceValue | null;
 };
 
-/** The form's controlled values (what `useFormFields` holds) as the state a request is built from. */
-export function stateFrom(
-	fields: Pick<
-		State,
-		| "type"
-		| "accountId"
-		| "toAccountId"
-		| "account"
-		| "card"
-		| "toAccount"
-		| "crossCurrency"
-		| "foreign"
-		| "subscription"
-		| "planned"
-		| "location"
-	>,
-	transaction: Transaction | undefined,
-	splits: SplitsState,
-): State {
-	const transfer = fields.type === "transfer";
-	return {
-		...fields,
-		transaction,
-		splits: !transfer && splits.enabled ? splits : null,
-		location: transfer ? null : fields.location,
-	};
-}
-
-const text = (f: FormData, k: string) => getString(f, k).trim();
-/** The payment method select always holds one; "cash" only if the field is missing. */
-const paymentMethod = (f: FormData): PaymentMethod => {
-	const method = text(f, "payment_method");
-	return isOneOf(method, PAYMENT_METHODS) ? method : "cash";
-};
-const tagNames = (f: FormData) =>
-	f.getAll("tags").filter((v): v is string => typeof v === "string");
-
-function transferRequest(f: FormData, s: State): TransactionRequest {
-	const { transaction, accountId, toAccountId } = s;
-	if (!accountId || !toAccountId) return { error: "Choose the accounts to move money between" };
-	if (accountId === toAccountId) return { error: "Choose two different accounts" };
-
-	const description = text(f, "description");
+function transferRequest(v: TxValues, s: State): TransactionRequest {
+	const { transaction } = s;
 	const fields = {
-		type: s.type,
-		amount: text(f, "amount"),
-		transaction_date: text(f, "transaction_date"),
-		transaction_time: text(f, "transaction_time") || null,
-		account_id: accountId,
-		to_account_id: toAccountId,
-		to_amount: s.crossCurrency ? text(f, "to_amount") : undefined,
-		planned: s.planned,
+		type: v.type,
+		amount: v.amount,
+		transaction_date: v.transaction_date,
+		transaction_time: v.transaction_time || null,
+		account_id: v.account_id,
+		to_account_id: v.to_account_id,
+		to_amount: s.crossCurrency ? v.to_amount : undefined,
+		planned: v.planned,
 	};
 	return {
 		success: transaction
 			? "Transfer updated"
-			: s.planned
+			: v.planned
 				? "Planned transfer added"
 				: "Transfer added",
 		send: () =>
@@ -231,19 +179,11 @@ function transferRequest(f: FormData, s: State): TransactionRequest {
 				? updateTransactionFn({
 						data: {
 							id: transaction.id,
-							changes: {
-								...fields,
-								description: description || null,
-								tags: tagNames(f),
-							},
+							changes: { ...fields, description: v.description || null, tags: v.tags },
 						},
 					})
 				: createTransactionFn({
-						data: {
-							...fields,
-							description: description || undefined,
-							tags: tagNames(f),
-						},
+						data: { ...fields, description: v.description || undefined, tags: v.tags },
 					}),
 	};
 }
@@ -271,28 +211,27 @@ function splitPayload(splits: SplitsState) {
 	return payload;
 }
 
-function ordinaryRequest(f: FormData, s: State): TransactionRequest {
-	const { transaction, accountId, account, subscription, card } = s;
-	const description = text(f, "description");
-	const vendorName = text(f, "vendor");
+function ordinaryRequest(v: TxValues, s: State): TransactionRequest {
+	const { transaction, account, card } = s;
+	const { subscription, account_id: accountId, vendor: vendorName, description } = v;
 	const split = s.splits ? splitPayload(s.splits) : null;
 	if (typeof split === "string") return { error: split };
 	const base = {
-		type: s.type,
+		type: v.type,
 		// With items, the amount is their total and the category comes from the biggest item.
-		amount: s.splits ? s.splits.total : text(f, "amount"),
-		transaction_date: text(f, "transaction_date"),
-		transaction_time: text(f, "transaction_time") || null,
-		currency: account ? account.currency : text(f, "currency").toUpperCase(),
-		exchange_rate: s.foreign ? text(f, "exchange_rate") : undefined,
-		payment_method: paymentMethod(f),
-		planned: s.planned,
-		...(split ? { splits: split } : { category: text(f, "category") }),
+		amount: s.splits ? s.splits.total : v.amount,
+		transaction_date: v.transaction_date,
+		transaction_time: v.transaction_time || null,
+		currency: account ? account.currency : v.currency.toUpperCase(),
+		exchange_rate: s.foreign ? v.exchange_rate : undefined,
+		payment_method: v.payment_method,
+		planned: v.planned,
+		...(split ? { splits: split } : { category: v.category }),
 	};
 
 	if (!transaction) {
 		return {
-			success: s.planned ? "Planned transaction added" : "Transaction added",
+			success: v.planned ? "Planned transaction added" : "Transaction added",
 			send: () =>
 				createTransactionFn({
 					data: {
@@ -302,8 +241,8 @@ function ordinaryRequest(f: FormData, s: State): TransactionRequest {
 						subscription_id: subscription?.id,
 						account_id: accountId || undefined,
 						card_id: card?.id,
-						tags: tagNames(f),
-						...newPlacePayload(s.location),
+						tags: v.tags,
+						...newPlacePayload(v.location),
 					},
 				}),
 		};
@@ -320,8 +259,8 @@ function ordinaryRequest(f: FormData, s: State): TransactionRequest {
 						// switching the items off on a split transaction removes them
 						...(!split && transaction.splits.length > 0 ? { splits: null } : {}),
 						description: description || null,
-						tags: tagNames(f), // replaces the tags: an empty list removes them
-						...placePayload(s.location), // all three null removes the location
+						tags: v.tags, // replaces the tags: an empty list removes them
+						...placePayload(v.location), // all three null removes the location
 						// changed -> link / unlink; unchanged -> omit
 						...(accountId === (transaction.account?.id ?? "")
 							? {}
@@ -344,38 +283,9 @@ function ordinaryRequest(f: FormData, s: State): TransactionRequest {
 	};
 }
 
-/** Turns the submitted form plus the controlled state into the create / update request. */
-export function buildTransactionRequest(form: FormData, state: State): TransactionRequest {
-	return state.type === "transfer" ? transferRequest(form, state) : ordinaryRequest(form, state);
-}
-
-/** Starting values for the controlled fields: the edited transaction's, or sensible defaults. */
-export function initialValues(
-	seed: TransactionSeed | undefined,
-	baseCurrency: string,
-	/** Where a brand-new transaction starts (no seed). */
-	defaultAccount?: AccountRef,
-) {
-	if (!seed && defaultAccount)
-		return {
-			type: "expense" as TransactionType,
-			accountId: defaultAccount.id,
-			toAccountId: "",
-			currency: defaultAccount.currency,
-			paymentMethod: SUGGESTED_PAYMENT_METHOD[defaultAccount.group],
-			subscription: null,
-			cardId: "",
-		};
-	const ordinary = seed && seed.type !== "transfer" ? seed : undefined;
-	return {
-		type: seed?.type ?? "expense",
-		accountId: seed?.account?.id ?? "",
-		toAccountId: seed?.to_account?.id ?? "",
-		currency: ordinary?.currency ?? baseCurrency,
-		paymentMethod: ordinary?.payment_method ?? "cash",
-		subscription: seed?.subscription ?? null,
-		cardId: seed?.card?.id ?? "",
-	};
+/** Turns the checked values plus what they point at into the create / update request. */
+export function buildTransactionRequest(v: TxValues, s: State): TransactionRequest {
+	return v.type === "transfer" ? transferRequest(v, s) : ordinaryRequest(v, s);
 }
 
 /** Accounts to offer. The ones the transaction is already in may have been archived since (so are

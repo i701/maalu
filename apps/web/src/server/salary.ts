@@ -3,8 +3,10 @@ import { z } from "zod";
 import type { SalaryRule, SalarySplitPlan, SalarySplitTask } from "#/types/api";
 import { apiRequest } from "./api";
 
-const amount = z
+/** A positive amount (or a rule's percent), as the salary dialogs send it. */
+export const ruleValue = z
 	.string()
+	.trim()
 	.regex(/^\d+(\.\d{1,4})?$/, "Enter a valid positive amount (max 4 decimals)")
 	.refine((v) => Number(v) > 0, "The amount must be greater than 0");
 const mode = z.enum(["percent", "fixed"]);
@@ -20,7 +22,7 @@ export const createSalaryRuleFn = createServerFn({ method: "POST" })
 			account_id: z.uuid().optional(),
 			goal_id: z.uuid().optional(),
 			mode,
-			value: amount,
+			value: ruleValue,
 			auto: z.boolean().optional(),
 		}),
 	)
@@ -33,7 +35,7 @@ export const updateSalaryRuleFn = createServerFn({ method: "POST" })
 		z.object({
 			id: z.uuid(),
 			mode: mode.optional(),
-			value: amount.optional(),
+			value: ruleValue.optional(),
 			auto: z.boolean().optional(),
 		}),
 	)
@@ -58,7 +60,13 @@ export const applySalarySplitFn = createServerFn({ method: "POST" })
 		z.object({
 			id: z.uuid(),
 			items: z
-				.array(z.object({ target_type: z.enum(["account", "goal"]), target_id: z.uuid(), amount }))
+				.array(
+					z.object({
+						target_type: z.enum(["account", "goal"]),
+						target_id: z.uuid(),
+						amount: ruleValue,
+					}),
+				)
 				.min(1)
 				.max(50),
 		}),

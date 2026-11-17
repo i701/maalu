@@ -1,11 +1,13 @@
-import TextField from "@mui/material/TextField";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
-import { renameTemplateFn } from "#/server/templates";
+import { renameTemplateFn, templateNameSchema } from "#/server/templates";
 import type { TransactionTemplate } from "#/types/api";
 import FormDialog from "./FormDialog";
+import FormTextField from "./FormTextField";
 import { useNotify } from "./Notify";
-import { getString } from "#/lib/utils";
 
 export default function TemplateRenameDialog({
 	template,
@@ -17,10 +19,12 @@ export default function TemplateRenameDialog({
 	const { run, pending, error } = useAction();
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
+	const { control, handleSubmit } = useForm({
+		resolver: zodResolver(templateNameSchema),
+		defaultValues: { name: template.name },
+	});
 
-	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
-		const name = getString(new FormData(e.currentTarget), "name").trim();
+	async function submit({ name }: z.output<typeof templateNameSchema>) {
 		if (await run(() => renameTemplateFn({ data: { id: template.id, name } }))) {
 			notify("Template renamed");
 			sheet.close();
@@ -32,14 +36,14 @@ export default function TemplateRenameDialog({
 			title="Rename template"
 			error={error}
 			pending={pending}
-			onSubmit={submit}
+			onSubmit={handleSubmit(submit)}
 			sheet={sheet}
 			maxWidth="xs"
 		>
-			<TextField
-				label="Name"
+			<FormTextField
+				control={control}
 				name="name"
-				defaultValue={template.name}
+				label="Name"
 				required
 				autoFocus
 				slotProps={{ htmlInput: { maxLength: 200 } }}

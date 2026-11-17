@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Vendor } from "#/types/api";
-import type { TransactionSeed } from "./request";
+import type { UseFormReturn } from "react-hook-form";
+import type { TxValues } from "./schema";
 
 const norm = (s: string) => s.trim().replace(/\s+/g, " ").toLowerCase();
 
@@ -23,19 +24,20 @@ export function defaultsToFill(
  * what you already typed is never overwritten, and nothing happens when the form merely opens
  * (editing a transaction, duplicating one, choosing a template).
  *
- * The category and tag fields are uncontrolled, so this tracks what they hold and refills one by
- * remounting it with a new `key` and default. `reset` follows the form being refilled from a seed.
+ * The category and tag pickers only read their starting value, so a filled-in one is remounted
+ * with a new `key` to show it.
  */
 export function useVendorDefaults(
 	vendors: Vendor[],
-	start: TransactionSeed | undefined,
+	{
+		getValues,
+		setValue,
+		formState,
+	}: Pick<UseFormReturn<TxValues>, "getValues" | "setValue" | "formState">,
 	/** False while the items table replaces the category field. */
 	categoryVisible: boolean,
 ) {
-	const startCategory = start && start.type !== "transfer" ? start.category : "";
-	const startTags = start?.tags ?? [];
-	const [category, setCategory] = useState({ text: startCategory, initial: startCategory, key: 0 });
-	const [tags, setTags] = useState({ names: startTags, initial: startTags, key: 0 });
+	const [keys, setKeys] = useState({ category: 0, tags: 0 });
 
 	/** `fromUser`: typed or picked, as opposed to the field setting its own starting value. */
 	function onVendorChange(name: string, fromUser: boolean) {
@@ -43,31 +45,19 @@ export function useVendorDefaults(
 		const vendor = vendors.find((v) => norm(v.name) === norm(name));
 		if (!vendor) return;
 		const fill = defaultsToFill(vendor, {
-			categoryText: category.text,
-			tagNames: tags.names,
+			categoryText: getValues("category"),
+			tagNames: getValues("tags"),
 			categoryVisible,
 		});
-		const { category: usualCategory, tags: usualTags } = fill;
-		if (usualCategory !== undefined)
-			setCategory((c) => ({ text: usualCategory, initial: usualCategory, key: c.key + 1 }));
-		if (usualTags !== undefined)
-			setTags((t) => ({ names: usualTags, initial: usualTags, key: t.key + 1 }));
+		const { category, tags } = fill;
+		const options = { shouldValidate: formState.isSubmitted };
+		if (category !== undefined) setValue("category", category, options);
+		if (tags !== undefined) setValue("tags", tags, options);
+		setKeys((k) => ({
+			category: k.category + (category === undefined ? 0 : 1),
+			tags: k.tags + (tags === undefined ? 0 : 1),
+		}));
 	}
 
-	function reset(next: TransactionSeed) {
-		const nextCategory = next.type !== "transfer" ? next.category : "";
-		setCategory((c) => ({ text: nextCategory, initial: nextCategory, key: c.key + 1 }));
-		setTags((t) => ({ names: next.tags, initial: next.tags, key: t.key + 1 }));
-	}
-
-	return {
-		categoryDefault: category.initial,
-		categoryKey: category.key,
-		onCategoryChange: (text: string) => setCategory((c) => ({ ...c, text })),
-		tagsDefault: tags.initial,
-		tagsKey: tags.key,
-		onTagsChange: (names: string[]) => setTags((t) => ({ ...t, names })),
-		onVendorChange,
-		reset,
-	};
+	return { categoryKey: keys.category, tagsKey: keys.tags, onVendorChange };
 }

@@ -1,25 +1,23 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import Typography from "@mui/material/Typography";
-import { type SubmitEvent, useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
 import { sumDecimals } from "#/lib/format";
-import {
-	amountLeft,
-	itemsOfRefund,
-	itemsToPick,
-	type RefundItem,
-	refundContext,
-	refundLines,
-} from "#/lib/refund";
+import { amountLeft, refundContext } from "#/lib/refund";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
-import { getString } from "#/lib/utils";
 import { createTransactionFn, updateTransactionFn } from "#/server/transactions";
 import type { Account, Transaction } from "#/types/api";
 import FormDialog from "./FormDialog";
 import { useNotify } from "./Notify";
 import RefundAmount from "./RefundAmount";
 import RefundDetails from "./RefundDetails";
-
-const text = (f: FormData, key: string) => getString(f, key).trim();
+import {
+	refundDefaults,
+	refundFields,
+	type RefundFormInput,
+	type RefundFormOutput,
+	refundSchema,
+} from "./refund-form";
 
 /**
  * Giving money back for a purchase: pass the `purchase` for a new refund, or the `refund` to change
@@ -43,36 +41,29 @@ export default function RefundDialog({
 	const { run, pending, error } = useAction();
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
-	const [localError, setLocalError] = useState<string | null>(null);
 
 	const source = refund ?? purchase;
 	const currency = source?.currency ?? baseCurrency;
+	const foreign = currency !== baseCurrency;
 	const usable = accounts.filter((a) => a.currency === currency);
-	const [accountId, setAccountId] = useState(() =>
-		usable.some((a) => a.id === source?.account?.id) ? (source?.account?.id ?? "") : "",
-	);
 	const hasItems = Boolean(source?.splits.length);
-	const [items, setItems] = useState<RefundItem[]>(() => {
-		if (refund) return itemsOfRefund(refund);
-		return purchase && hasItems ? itemsToPick(purchase) : [];
-	});
-	const ticked = items.filter((i) => i.on);
-	const total = hasItems ? sumDecimals(ticked.map((i) => i.amount || "0")) : null;
 	const left = purchase ? amountLeft(purchase.amount, purchase.refunded_amount) : undefined;
 
-	async function submit(e: SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
-		const f = new FormData(e.currentTarget);
-		if (hasItems && ticked.length === 0) return setLocalError("Choose at least one item");
-		setLocalError(null);
-		const fields = {
-			amount: total ?? text(f, "amount"),
-			transaction_date: text(f, "transaction_date"),
-			transaction_time: text(f, "transaction_time") || null,
-			...(currency === baseCurrency ? {} : { exchange_rate: text(f, "exchange_rate") }),
-			...(hasItems ? { splits: refundLines(items) } : {}),
-		};
-		const description = text(f, "description");
+	const {
+		control,
+		handleSubmit,
+		formState: { errors },
+	} = useForm<RefundFormInput, unknown, RefundFormOutput>({
+		resolver: zodResolver(refundSchema(hasItems, foreign)),
+		defaultValues: refundDefaults({ purchase, refund, accounts: usable, left, hasItems }),
+	});
+	const items = useWatch({ control, name: "items" });
+	const total = hasItems
+		? sumDecimals(items.filter((i) => i.on).map((i) => i.amount || "0"))
+		: null;
+
+	async function submit(v: RefundFormOutput) {
+		const fields = refundFields(v, { total, foreign, hasItems });
 		const send = () =>
 			refund
 				? updateTransactionFn({
@@ -80,8 +71,8 @@ export default function RefundDialog({
 							id: refund.id,
 							changes: {
 								...fields,
-								description: description || null,
-								account_id: accountId || null,
+								description: v.description || null,
+								account_id: v.account_id || null,
 							},
 						},
 					})
@@ -90,8 +81,8 @@ export default function RefundDialog({
 							type: "income",
 							refund_of_id: purchase?.id,
 							...fields,
-							description: description || undefined,
-							account_id: accountId || undefined,
+							description: v.description || undefined,
+							account_id: v.account_id || undefined,
 						},
 					});
 		if (await run(send)) {
@@ -104,9 +95,9 @@ export default function RefundDialog({
 		<FormDialog
 			title={refund ? "Edit refund" : "Refund a purchase"}
 			submitLabel={refund ? "Save" : "Refund"}
-			error={localError ?? error}
+			error={errors.items?.message ?? error}
 			pending={pending}
-			onSubmit={submit}
+			onSubmit={handleSubmit(submit)}
 			sheet={sheet}
 			maxWidth="xs"
 		>
@@ -114,22 +105,17 @@ export default function RefundDialog({
 				{refundContext(purchase, refund)}
 			</Typography>
 			<RefundAmount
-				items={items}
+				control={control}
 				total={total}
 				currency={currency}
-				defaultAmount={refund?.amount ?? left ?? ""}
 				left={left}
 				locked={Boolean(refund)}
-				onItems={setItems}
 			/>
 			<RefundDetails
-				refund={refund}
-				rate={source?.exchange_rate ?? ""}
+				control={control}
 				currency={currency}
 				baseCurrency={baseCurrency}
 				accounts={usable}
-				accountId={accountId}
-				onAccount={setAccountId}
 			/>
 		</FormDialog>
 	);

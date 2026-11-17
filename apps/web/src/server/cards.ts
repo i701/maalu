@@ -15,6 +15,16 @@ export const listCardsFn = createServerFn({ method: "GET" })
 		apiRequest<Card[]>("/cards", { query: { account_id: data?.account_id } }),
 	);
 
+/** The card dialog's fields; blank last digits and "Not set" repayment are none. */
+export const cardFormSchema = z.object({
+	name: z.string().trim().min(1, "Give the card a name").max(100),
+	last_digits: z
+		.string()
+		.trim()
+		.regex(/^(\d{4})?$/, "Enter the last four digits only"),
+	repay: z.string(),
+});
+
 const fields = {
 	name: z.string().trim().min(1, "Give the card a name").max(100),
 	kind: z.enum(["debit", "credit"]),

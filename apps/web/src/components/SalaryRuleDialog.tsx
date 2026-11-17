@@ -1,22 +1,39 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import Box from "@mui/material/Box";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import Switch from "@mui/material/Switch";
-import TextField from "@mui/material/TextField";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
-import { useState } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
+import { z } from "zod";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
-import { createSalaryRuleFn, updateSalaryRuleFn } from "#/server/salary";
+import { createSalaryRuleFn, ruleValue, updateSalaryRuleFn } from "#/server/salary";
 import type { Account, Goal, SalaryRule } from "#/types/api";
 import FormDialog from "./FormDialog";
+import FormTextField from "./FormTextField";
 import { useNotify } from "./Notify";
 
-type Mode = SalaryRule["mode"];
-type Target = "account" | "goal";
+/** A new rule needs its account or goal; a percent is at most the whole salary. */
+const ruleSchema = (isNew: boolean) =>
+	z
+		.object({
+			target: z.enum(["account", "goal"]),
+			target_id: z.string(),
+			mode: z.enum(["percent", "fixed"]),
+			value: ruleValue,
+			auto: z.boolean(),
+		})
+		.superRefine((v, ctx) => {
+			if (isNew && !v.target_id)
+				ctx.addIssue({ code: "custom", path: ["target_id"], message: `Choose the ${v.target}` });
+			if (v.mode === "percent" && Number(v.value) > 100)
+				ctx.addIssue({ code: "custom", path: ["value"], message: "At most 100 percent" });
+		});
+type Values = z.input<ReturnType<typeof ruleSchema>>;
 
 /** Add what one account or goal gets when a salary is split, or change how much a rule sends (the
  * target of a rule is fixed: delete it to point somewhere else). */
@@ -39,17 +56,22 @@ export default function SalaryRuleDialog({
 	const { run, pending, error } = useAction();
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
-	const [target, setTarget] = useState<Target>("account");
-	const [targetId, setTargetId] = useState("");
-	const [mode, setMode] = useState<Mode>(rule?.mode ?? "percent");
-	const [value, setValue] = useState(rule ? String(Number(rule.value)) : "");
-	const [auto, setAuto] = useState(rule?.auto ?? false);
+	const { control, handleSubmit, setValue } = useForm<Values>({
+		resolver: zodResolver(ruleSchema(!rule)),
+		defaultValues: {
+			target: "account",
+			target_id: "",
+			mode: rule?.mode ?? "percent",
+			value: rule ? String(Number(rule.value)) : "",
+			auto: rule?.auto ?? false,
+		},
+	});
+	const [target, mode, auto] = useWatch({ control, name: ["target", "mode", "auto"] });
 
 	const taken = new Set(rules.map((r) => r.account_id ?? r.goal_id));
 	const choices = (target === "account" ? accounts : goals).filter((t) => !taken.has(t.id));
 
-	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
+	async function submit({ target_id: targetId, value }: Values) {
 		const ok = await run(() =>
 			rule
 				? updateSalaryRuleFn({ data: { id: rule.id, mode, value, auto } })
@@ -73,10 +95,9 @@ export default function SalaryRuleDialog({
 			title={rule ? `Change the rule for ${rule.target_name}` : "Add a rule"}
 			error={error}
 			pending={pending}
-			onSubmit={submit}
+			onSubmit={handleSubmit(submit)}
 			sheet={sheet}
 			maxWidth="xs"
-			submitDisabled={!rule && !targetId}
 		>
 			<Stack spacing={2.5}>
 				{!rule && (
@@ -86,23 +107,23 @@ export default function SalaryRuleDialog({
 							fullWidth
 							size="small"
 							value={target}
-							onChange={(_, next: Target | null) => {
+							onChange={(_, next: Values["target"] | null) => {
 								if (!next) return;
-								setTarget(next);
-								setTargetId("");
+								setValue("target", next);
+								setValue("target_id", "");
 							}}
 							aria-label="Account or goal"
 						>
 							<ToggleButton value="account">An account</ToggleButton>
 							<ToggleButton value="goal">A goal</ToggleButton>
 						</ToggleButtonGroup>
-						<TextField
+						<FormTextField
+							control={control}
+							name="target_id"
 							select
 							fullWidth
 							required
 							label={target === "account" ? "Account" : "Goal"}
-							value={targetId}
-							onChange={(e) => setTargetId(e.target.value)}
 							disabled={choices.length === 0}
 							helperText={
 								choices.length === 0
@@ -117,7 +138,7 @@ export default function SalaryRuleDialog({
 									{t.name}
 								</MenuItem>
 							))}
-						</TextField>
+						</FormTextField>
 					</>
 				)}
 				<ToggleButtonGroup
@@ -125,18 +146,18 @@ export default function SalaryRuleDialog({
 					fullWidth
 					size="small"
 					value={mode}
-					onChange={(_, next: Mode | null) => next && setMode(next)}
+					onChange={(_, next: Values["mode"] | null) => next && setValue("mode", next)}
 					aria-label="A share or a fixed amount"
 				>
 					<ToggleButton value="percent">A share of the salary</ToggleButton>
 					<ToggleButton value="fixed">A fixed amount</ToggleButton>
 				</ToggleButtonGroup>
-				<TextField
+				<FormTextField
+					control={control}
+					name="value"
 					fullWidth
 					required
 					label={mode === "percent" ? "Percent of the salary" : "Amount"}
-					value={value}
-					onChange={(e) => setValue(e.target.value)}
 					slotProps={{ htmlInput: { inputMode: "decimal" } }}
 					helperText={
 						mode === "percent"
@@ -146,7 +167,15 @@ export default function SalaryRuleDialog({
 				/>
 				<Box>
 					<FormControlLabel
-						control={<Switch checked={auto} onChange={(_, v) => setAuto(v)} />}
+						control={
+							<Controller
+								name="auto"
+								control={control}
+								render={({ field }) => (
+									<Switch checked={field.value} onChange={(_, on) => field.onChange(on)} />
+								)}
+							/>
+						}
 						label="Move it automatically when a salary arrives"
 					/>
 					<Typography variant="caption" component="p" sx={{ color: "text.secondary" }}>

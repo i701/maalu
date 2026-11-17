@@ -1,3 +1,4 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
@@ -9,9 +10,17 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
 import { destination, nameKey, plural } from "#/lib/imports";
 import type { ReviewRow, RowPatch } from "#/lib/imports";
 import type { Account } from "#/types/api";
+
+const editSchema = z.object({
+	vendor_name: z.string().trim().max(200),
+	category_name: z.string().trim().max(100),
+	sameName: z.boolean(),
+});
 
 function Editor({
 	row,
@@ -29,37 +38,66 @@ function Editor({
 	onSave: (patch: RowPatch, sameName: boolean) => void;
 	onCancel: () => void;
 }) {
-	const [vendor, setVendor] = useState(row.vendor_name);
-	const [category, setCategory] = useState(row.category_name);
-	const [sameName, setSameName] = useState(true);
+	const { control, handleSubmit } = useForm({
+		resolver: zodResolver(editSchema),
+		defaultValues: {
+			vendor_name: row.vendor_name,
+			category_name: row.category_name,
+			sameName: true,
+		},
+	});
 	return (
 		<Stack
 			component="form"
 			sx={{ gap: 0.5, minWidth: 280 }}
-			onSubmit={(e) => {
-				e.preventDefault();
-				onSave({ vendor_name: vendor.trim(), category_name: category.trim() }, sameName);
-			}}
+			onSubmit={handleSubmit(({ sameName, ...patch }) => onSave(patch, sameName))}
 			onKeyDown={(e) => e.key === "Escape" && onCancel()}
 		>
 			<Stack direction="row" sx={{ gap: 1, alignItems: "center" }}>
-				<Autocomplete
-					freeSolo
-					fullWidth
-					size="small"
-					options={vendors}
-					inputValue={vendor}
-					onInputChange={(_, v) => setVendor(v)}
-					renderInput={(params) => <TextField {...params} label="Vendor" autoFocus />}
+				<Controller
+					name="vendor_name"
+					control={control}
+					render={({ field, fieldState }) => (
+						<Autocomplete
+							freeSolo
+							fullWidth
+							size="small"
+							options={vendors}
+							inputValue={field.value}
+							onInputChange={(_, v) => field.onChange(v)}
+							renderInput={(params) => (
+								<TextField
+									{...params}
+									label="Vendor"
+									autoFocus
+									error={Boolean(fieldState.error)}
+									helperText={fieldState.error?.message}
+								/>
+							)}
+						/>
+					)}
 				/>
-				<Autocomplete
-					freeSolo
-					fullWidth
-					size="small"
-					options={categories}
-					inputValue={category}
-					onInputChange={(_, v) => setCategory(v)}
-					renderInput={(params) => <TextField {...params} label="Category" />}
+				<Controller
+					name="category_name"
+					control={control}
+					render={({ field, fieldState }) => (
+						<Autocomplete
+							freeSolo
+							fullWidth
+							size="small"
+							options={categories}
+							inputValue={field.value}
+							onInputChange={(_, v) => field.onChange(v)}
+							renderInput={(params) => (
+								<TextField
+									{...params}
+									label="Category"
+									error={Boolean(fieldState.error)}
+									helperText={fieldState.error?.message}
+								/>
+							)}
+						/>
+					)}
 				/>
 				<IconButton type="submit" size="small" aria-label="Save" title="Save">
 					<CheckIcon fontSize="small" />
@@ -70,7 +108,19 @@ function Editor({
 			</Stack>
 			{others > 0 && (
 				<FormControlLabel
-					control={<Checkbox size="small" checked={sameName} onChange={(_, v) => setSameName(v)} />}
+					control={
+						<Controller
+							name="sameName"
+							control={control}
+							render={({ field }) => (
+								<Checkbox
+									size="small"
+									checked={field.value}
+									onChange={(_, on) => field.onChange(on)}
+								/>
+							)}
+						/>
+					}
 					label={`Also the ${plural(others, "other row")} named "${row.counterparty}"`}
 					slotProps={{ typography: { variant: "caption" } }}
 				/>

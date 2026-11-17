@@ -1,21 +1,26 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
-import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
 import { ACCENT_NAMES, parentChoices } from "#/lib/categories";
+import { isAccent } from "#/lib/m3";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
-import { getString, isOneOf } from "#/lib/utils";
 import { createCategoryFn, updateCategoryFn } from "#/server/categories";
-import {
-	CATEGORY_KIND_LABELS,
-	CATEGORY_KINDS,
-	type Category,
-	type CategoryKind,
-} from "#/types/api";
+import { CATEGORY_KIND_LABELS, CATEGORY_KINDS, type Category } from "#/types/api";
 import ColorSwatches from "./ColorSwatches";
 import FormDialog from "./FormDialog";
+import FormTextField from "./FormTextField";
 import { useNotify } from "./Notify";
+
+// "" means: no colour chosen (the API picks the least used one), no parent, not sorted.
+const schema = z.object({
+	name: z.string().trim().min(1, "Give the category a name").max(100),
+	color: z.enum(ACCENT_NAMES).or(z.literal("")),
+	parent_id: z.string(),
+	kind: z.enum(CATEGORY_KINDS).or(z.literal("")),
+});
 
 /** Add a category, or change one: its name (everything in it follows), colour and parent. */
 export default function CategoryForm({
@@ -32,21 +37,27 @@ export default function CategoryForm({
 	const { run, pending, error } = useAction();
 	const sheet = useSheet(onClose);
 	const notify = useNotify();
-	// Empty = let the API pick the least used colour (new categories only)
-	const [color, setColor] = useState(category?.color ?? "");
-	const [parentId, setParentId] = useState(category?.parent_id ?? "");
-	// Empty = not sorted
-	const [kind, setKind] = useState<CategoryKind | "">(category?.kind ?? "");
 	const parents = parentChoices(categories, category);
+	const startColor = category?.color;
+	const { control, handleSubmit } = useForm<
+		z.input<typeof schema>,
+		unknown,
+		z.output<typeof schema>
+	>({
+		resolver: zodResolver(schema),
+		defaultValues: {
+			name: category?.name ?? "",
+			color: isAccent(startColor) ? startColor : "",
+			parent_id: category?.parent_id ?? "",
+			kind: category?.kind ?? "",
+		},
+	});
 
-	async function submit(e: React.SubmitEvent<HTMLFormElement>) {
-		e.preventDefault();
-		const f = new FormData(e.currentTarget);
-		const name = getString(f, "name").trim();
+	async function submit({ name, color, parent_id, kind }: z.output<typeof schema>) {
 		const fields = {
 			name: category?.is_salary ? category.name : name,
-			...(isOneOf(color, ACCENT_NAMES) ? { color } : {}),
-			parent_id: parentId || null,
+			...(color ? { color } : {}),
+			parent_id: parent_id || null,
 			kind: kind || null,
 		};
 		const ok = await run(() =>
@@ -65,16 +76,16 @@ export default function CategoryForm({
 			title={category ? "Edit category" : "Add category"}
 			error={error}
 			pending={pending}
-			onSubmit={submit}
+			onSubmit={handleSubmit(submit)}
 			sheet={sheet}
 			maxWidth="xs"
 		>
 			<Stack spacing={2.5}>
-				<TextField
+				<FormTextField
+					control={control}
+					name="name"
 					fullWidth
 					label="Name"
-					name="name"
-					defaultValue={category?.name}
 					required
 					autoFocus
 					disabled={category?.is_salary}
@@ -87,13 +98,17 @@ export default function CategoryForm({
 					}
 					slotProps={{ htmlInput: { maxLength: 100 } }}
 				/>
-				<ColorSwatches value={color} onChange={setColor} />
-				<TextField
+				<Controller
+					name="color"
+					control={control}
+					render={({ field }) => <ColorSwatches value={field.value} onChange={field.onChange} />}
+				/>
+				<FormTextField
+					control={control}
+					name="parent_id"
 					select
 					fullWidth
 					label="Parent category"
-					value={parentId}
-					onChange={(e) => setParentId(e.target.value)}
 					disabled={parents.length === 0 || category?.is_salary}
 					helperText={
 						category && category.child_count > 0
@@ -107,13 +122,13 @@ export default function CategoryForm({
 							{p.name}
 						</MenuItem>
 					))}
-				</TextField>
-				<TextField
+				</FormTextField>
+				<FormTextField
+					control={control}
+					name="kind"
 					select
 					fullWidth
 					label="Need or want"
-					value={kind}
-					onChange={(e) => setKind(isOneOf(e.target.value, CATEGORY_KINDS) ? e.target.value : "")}
 					helperText="Spending here counts as a need or a want in your reports. A sub-category with none takes its parent's"
 				>
 					<MenuItem value="">Not sorted</MenuItem>
@@ -122,7 +137,7 @@ export default function CategoryForm({
 							{CATEGORY_KIND_LABELS[k]}
 						</MenuItem>
 					))}
-				</TextField>
+				</FormTextField>
 			</Stack>
 		</FormDialog>
 	);

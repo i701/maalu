@@ -10,15 +10,26 @@ import type {
 import { apiRequest } from "./api";
 import { getAppSession, getChallengeSession } from "#/utils/session";
 
-const loginSchema = z.object({
-	email: z.email(),
-	password: z.string().min(1),
+export const codeField = z.string().trim().min(6, "Enter the code from your app").max(32);
+/** A code from the authenticator app (or a recovery code), as the setup dialog and the second
+ * sign-in step send it. */
+export const twoFactorCodeSchema = z.object({ code: codeField });
+
+/** The sign-in form, which the page validates with too. */
+export const loginSchema = z.object({
+	email: z.email("Enter a valid email address"),
+	password: z.string().min(1, "Enter your password"),
 });
 
-const registerSchema = z.object({
-	email: z.email(),
-	password: z.string().min(8).max(128),
-	base_currency: z.string().regex(/^[A-Za-z]{3}$/, "Use a 3-letter currency code"),
+/** The sign-up form, which the page validates with too. */
+export const registerSchema = z.object({
+	email: z.email("Enter a valid email address"),
+	password: z.string().min(8, "Use at least 8 characters").max(128),
+	base_currency: z
+		.string()
+		.trim()
+		.regex(/^[A-Za-z]{3}$/, "Use a 3-letter currency code")
+		.transform((v) => v.toUpperCase()),
 });
 
 /** Store the API's token in the cookie session: the user is signed in. */
@@ -75,7 +86,7 @@ export const registerFn = createServerFn({ method: "POST" })
 
 /** The second step of signing in: a code from the authenticator app, or a recovery code. */
 export const verifyTwoFactorFn = createServerFn({ method: "POST" })
-	.validator(z.object({ code: z.string().trim().min(6).max(32) }))
+	.validator(twoFactorCodeSchema)
 	.handler(async ({ data }) => {
 		const pending = await getChallengeSession();
 		const challenge = pending.data.challenge;
@@ -152,8 +163,6 @@ export const getMeFn = createServerFn({ method: "GET" }).handler(async () =>
 	apiRequest<User>("/users/me"),
 );
 
-const codeField = z.string().trim().min(6).max(32);
-
 /** Start setting up an authenticator app: the secret and the QR code to scan. */
 export const startTwoFactorFn = createServerFn({ method: "POST" }).handler(async () =>
 	apiRequest<TwoFactorSetup>("/auth/2fa/setup", { method: "POST" }),
@@ -161,12 +170,16 @@ export const startTwoFactorFn = createServerFn({ method: "POST" }).handler(async
 
 /** Turn two-factor on with a code from the app. Answers with the recovery codes, shown once. */
 export const enableTwoFactorFn = createServerFn({ method: "POST" })
-	.validator(z.object({ code: codeField }))
+	.validator(twoFactorCodeSchema)
 	.handler(async ({ data }) =>
 		apiRequest<RecoveryCodes>("/auth/2fa/enable", { method: "POST", body: data }),
 	);
 
-const confirmSchema = z.object({ password: z.string().min(1).max(128), code: codeField });
+/** The password and a code, which turning two-factor off and new recovery codes both need. */
+export const confirmSchema = z.object({
+	password: z.string().min(1, "Enter your password").max(128),
+	code: codeField,
+});
 
 export const disableTwoFactorFn = createServerFn({ method: "POST" })
 	.validator(confirmSchema)
