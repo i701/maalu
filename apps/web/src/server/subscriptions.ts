@@ -32,7 +32,11 @@ export const repeatFields = {
 	interval_count: z.coerce.number().int().min(1, "At least 1").max(120, "At most 120"),
 };
 /** A subscription's name and amount, as a form holds them. */
-export const subscriptionFormFields = { name: name.min(1, "Give it a name"), amount: cost };
+// The message goes on the first check: the form shows only the first problem of a field.
+export const subscriptionFormFields = {
+	name: z.string().trim().min(1, "Give it a name").max(200),
+	amount: cost,
+};
 
 const createSchema = z.object({
 	name,

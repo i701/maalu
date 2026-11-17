@@ -22,7 +22,13 @@ export const refundSchema = (hasItems: boolean, foreign: boolean) =>
 		amount: hasItems ? z.string() : positiveAmount,
 		items: z
 			.array(refundItem)
-			.refine((items) => !hasItems || items.some((i) => i.on), "Choose at least one item"),
+			.refine((items) => !hasItems || items.some((i) => i.on), "Choose at least one item")
+			.superRefine((items, ctx) => {
+				items.forEach((item, i) => {
+					if (item.on && !positiveAmount.safeParse(item.amount).success)
+						ctx.addIssue({ code: "custom", path: [i, "amount"], message: "Enter an amount" });
+				});
+			}),
 		transaction_date: z.iso.date("Choose a date"),
 		transaction_time: timeOfDay.or(z.literal("")),
 		account_id: z.string(),

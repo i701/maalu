@@ -28,7 +28,11 @@ export default function UploadCard({
 	onPreview: (preview: ImportPreview, filename: string) => void;
 }) {
 	const picker = useRef<HTMLInputElement>(null);
-	const form = useForm({ resolver: zodResolver(schema), defaultValues: { account_id: "" } });
+	const form = useForm({
+		resolver: zodResolver(schema),
+		mode: "onChange", // picking an account clears "choose the account" at once
+		defaultValues: { account_id: "" },
+	});
 	const [busy, setBusy] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 

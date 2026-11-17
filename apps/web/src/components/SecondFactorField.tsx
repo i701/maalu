@@ -18,9 +18,10 @@ export default function SecondFactorField<T extends FieldValues, Out extends Fie
 		<Controller
 			name={name}
 			control={control}
-			render={({ field, fieldState }) => (
+			render={({ field: { ref, ...field }, fieldState }) => (
 				<TextField
 					{...field}
+					inputRef={ref}
 					value={field.value ?? ""}
 					label={recovery ? "Recovery code" : "Authentication code"}
 					autoComplete="one-time-code"

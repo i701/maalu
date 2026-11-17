@@ -44,7 +44,7 @@ export default function KeyFormDialog({
 		control,
 		handleSubmit,
 		setValue,
-		formState: { errors },
+		formState: { errors, isSubmitted },
 	} = useForm({
 		resolver: zodResolver(schema),
 		defaultValues: {
@@ -58,11 +58,11 @@ export default function KeyFormDialog({
 
 	function pickRole(value: string) {
 		const picked = catalog.roles.find((r) => r.key === value);
-		if (picked) setValue("scopes", [...picked.scopes]);
+		if (picked) setValue("scopes", [...picked.scopes], { shouldValidate: isSubmitted });
 	}
 
 	function toggle(scope: string, on: boolean) {
-		setValue("scopes", toggleScope(scopes, scope, on));
+		setValue("scopes", toggleScope(scopes, scope, on), { shouldValidate: isSubmitted });
 	}
 
 	async function submit({ name, expiry }: z.output<typeof schema>) {

@@ -29,7 +29,11 @@ export function defaultsToFill(
  */
 export function useVendorDefaults(
 	vendors: Vendor[],
-	{ getValues, setValue }: Pick<UseFormReturn<TxValues>, "getValues" | "setValue">,
+	{
+		getValues,
+		setValue,
+		formState,
+	}: Pick<UseFormReturn<TxValues>, "getValues" | "setValue" | "formState">,
 	/** False while the items table replaces the category field. */
 	categoryVisible: boolean,
 ) {
@@ -46,8 +50,9 @@ export function useVendorDefaults(
 			categoryVisible,
 		});
 		const { category, tags } = fill;
-		if (category !== undefined) setValue("category", category);
-		if (tags !== undefined) setValue("tags", tags);
+		const options = { shouldValidate: formState.isSubmitted };
+		if (category !== undefined) setValue("category", category, options);
+		if (tags !== undefined) setValue("tags", tags, options);
 		setKeys((k) => ({
 			category: k.category + (category === undefined ? 0 : 1),
 			tags: k.tags + (tags === undefined ? 0 : 1),

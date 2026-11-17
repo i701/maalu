@@ -12,7 +12,8 @@ export const groupSchema = z.object({
 		.trim()
 		.max(500)
 		.nullish()
-		.transform((v) => v || null),
+		// blank clears it; left out (a change of name only) leaves it as it is
+		.transform((v) => (v === undefined ? undefined : v || null)),
 });
 const ids = z.array(z.uuid()).min(1).max(50);
 

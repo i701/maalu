@@ -77,7 +77,8 @@ function save(
 				id: subscription.id,
 				changes: {
 					...base,
-					...accountChange(subscription, account?.id ?? ""),
+					// the form's own id: an archived account is not in `accounts`, and must stay linked
+					...accountChange(subscription, v.account_id),
 					...vendorChange(subscription, v.vendor),
 				},
 			},

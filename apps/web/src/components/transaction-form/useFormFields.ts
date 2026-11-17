@@ -44,7 +44,10 @@ export function useFormFields({
 			defaultAccount,
 		}),
 	});
-	const { control, setValue, getValues, reset } = form;
+	const { control, getValues, reset } = form;
+	// Fields these rules fill in are checked again once a save has failed, like typed ones are.
+	const setValue: typeof form.setValue = (name, value) =>
+		form.setValue(name, value, { shouldValidate: form.formState.isSubmitted });
 	const [switched, setSwitched] = useState(false); // true once the user has changed the type
 	// "Planned" follows the date until you set it yourself (an existing transaction keeps its own).
 	const [plannedChosen, setPlannedChosen] = useState(Boolean(transaction));
@@ -59,7 +62,7 @@ export function useFormFields({
 	// Cards are for spending: an income or transfer never carries one, so editing an older income
 	// that has a card unlinks it on save.
 	const card = type === "expense" ? (cards.find((c) => c.id === cardId) ?? null) : null;
-	const effectiveCurrency = account ? account.currency : currency.toUpperCase();
+	const effectiveCurrency = account ? account.currency : currency.trim().toUpperCase();
 	const foreign = effectiveCurrency.length === 3 && effectiveCurrency !== baseCurrency;
 	const crossCurrency = Boolean(
 		isTransfer && account && toAccount && account.currency !== toAccount.currency,
@@ -77,7 +80,7 @@ export function useFormFields({
 	}
 
 	function changeCurrency(typed: string) {
-		const code = typed.toUpperCase();
+		const code = typed.trim().toUpperCase();
 		const before = effectiveCurrency;
 		setValue("currency", code);
 		if (!account) currencyChanged(before, code);
@@ -97,18 +100,19 @@ export function useFormFields({
 		const before = effectiveCurrency;
 		setValue("account_id", id);
 		const picked = accounts.find((a) => a.id === id);
-		if (card && card.account.id !== id) setValue("card_id", ""); // a card belongs to its own account
+		// a card belongs to its own account (read now: a card picked this moment is not rendered yet)
+		const current = cards.find((c) => c.id === getValues("card_id"));
+		if (current && current.account.id !== id) setValue("card_id", "");
 		if (picked && !isTransfer) setValue("payment_method", SUGGESTED_PAYMENT_METHOD[picked.group]);
-		currencyChanged(before, picked ? picked.currency : currency.toUpperCase());
+		currencyChanged(before, picked ? picked.currency : currency.trim().toUpperCase());
 	}
 
 	/** A card spends from its account, so picking one sets the account and the method. */
 	function pickCard(id: string) {
-		setValue("card_id", id);
 		const picked = cards.find((c) => c.id === id);
-		if (!picked) return;
-		pickAccount(picked.account.id);
-		setValue("payment_method", cardMethod(picked.kind));
+		if (picked) pickAccount(picked.account.id);
+		setValue("card_id", id);
+		if (picked) setValue("payment_method", cardMethod(picked.kind));
 	}
 
 	function changeType(next: TransactionType) {

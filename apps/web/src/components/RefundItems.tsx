@@ -15,9 +15,12 @@ export default function RefundItems({
 	items,
 	currency,
 	locked,
+	errors,
 	onChange,
 }: {
 	items: RefundItem[];
+	/** What is wrong with an item's amount, by item id. */
+	errors?: Record<string, string>;
 	currency: string;
 	/** Editing an existing refund: the items are fixed, only the amounts change. */
 	locked: boolean;
@@ -65,6 +68,8 @@ export default function RefundItems({
 							value={item.amount}
 							disabled={!item.on}
 							onChange={(e) => change(item.id, { amount: e.target.value })}
+							error={Boolean(errors?.[item.id])}
+							helperText={errors?.[item.id]}
 							slotProps={{
 								htmlInput: { inputMode: "decimal", "aria-label": `Refund for ${item.name}` },
 							}}

@@ -17,10 +17,11 @@ export default function FormTextField<T extends FieldValues, Out extends FieldVa
 		<Controller
 			name={name}
 			control={control}
-			render={({ field, fieldState }) => (
+			render={({ field: { ref, ...field }, fieldState }) => (
 				<TextField
 					{...props}
 					{...field}
+					inputRef={ref}
 					value={field.value ?? ""}
 					error={Boolean(fieldState.error)}
 					helperText={fieldState.error?.message ?? helperText}

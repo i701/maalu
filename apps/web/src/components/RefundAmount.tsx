@@ -1,5 +1,5 @@
 import Typography from "@mui/material/Typography";
-import { type Control, Controller } from "react-hook-form";
+import { type Control, Controller, useFormState } from "react-hook-form";
 import Money from "#/components/Money";
 import { formatMoney } from "#/lib/format";
 import FormTextField from "./FormTextField";
@@ -22,6 +22,7 @@ export default function RefundAmount({
 	left?: string;
 	locked: boolean;
 }) {
+	const { errors } = useFormState({ control, name: "items" });
 	if (total !== null) {
 		return (
 			<>
@@ -33,6 +34,12 @@ export default function RefundAmount({
 							items={field.value}
 							currency={currency}
 							locked={locked}
+							errors={Object.fromEntries(
+								field.value.flatMap((item, i) => {
+									const message = errors.items?.[i]?.amount?.message;
+									return message ? [[item.id, message]] : [];
+								}),
+							)}
 							onChange={field.onChange}
 						/>
 					)}
