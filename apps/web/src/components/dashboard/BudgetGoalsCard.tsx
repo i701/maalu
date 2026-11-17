@@ -17,8 +17,27 @@ import { RouterButton } from "../RouterLinks";
 import ProgressBar from "../ProgressBar";
 import TonalChip from "../TonalChip";
 
-function Meter({ percent, color, label }: { percent: number; color: string; label: string }) {
-	return <ProgressBar percent={percent} color={color} height={8} label={label} sx={{ mt: 0.75 }} />;
+function Meter({
+	percent,
+	color,
+	label,
+	wavy = false,
+}: {
+	percent: number;
+	color: string;
+	label: string;
+	wavy?: boolean;
+}) {
+	return (
+		<ProgressBar
+			percent={percent}
+			color={color}
+			height={wavy ? 5 : 8}
+			wavy={wavy}
+			label={label}
+			sx={{ mt: 0.75 }}
+		/>
+	);
 }
 
 /** The budget at a glance (everything spent against the limits, and which limits need attention)
@@ -147,6 +166,7 @@ const BudgetGoalsCard = memo(function BudgetGoalsCard({
 								percent={g.percent}
 								color={g.reached ? ACCENT.green : "var(--chart-line)"}
 								label={`${g.name} progress`}
+								wavy
 							/>
 						</Box>
 					))}

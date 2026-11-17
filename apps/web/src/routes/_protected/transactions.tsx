@@ -20,7 +20,7 @@ import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, startTransition, useCallback, useMemo, useOptimistic, useState } from "react";
 import { z } from "zod";
 import ActiveFilters from "#/components/ActiveFilters";
 import BulkEditDialog from "#/components/BulkEditDialog";
@@ -923,11 +923,26 @@ function TransactionsPage() {
 
 	const filtered = hasAnyFilter(search);
 	const filterValues = pickFilterValues(search);
-	const activeCount = countActiveFilters(search);
 
+	// A chip or field shows its change at once. The URL (what `filterValues` reads) only changes once
+	// the page's data has loaded, so the change is held as an optimistic value for the length of the
+	// navigation (`navigate` settles when the load does) and drops back to the URL's own after it,
+	// or straight away if the load fails.
+	const [shownFilters, showFilters] = useOptimistic(
+		filterValues,
+		(current, change: Partial<TransactionFilterValues>) => ({ ...current, ...change }),
+	);
+	const activeCount = countActiveFilters(shownFilters);
 	const patch = (p: Partial<TransactionFilterValues>) =>
-		navigate({ search: (prev) => ({ ...prev, page: 1, ...p }) });
-	const clearAll = () => navigate({ search: (p) => ({ page: 1, pageSize: p.pageSize, q: p.q }) });
+		startTransition(async () => {
+			showFilters(p);
+			await navigate({ search: (prev) => ({ ...prev, page: 1, ...p }) });
+		});
+	const clearAll = () =>
+		startTransition(async () => {
+			showFilters(pickFilterValues({}));
+			await navigate({ search: (p) => ({ page: 1, pageSize: p.pageSize, q: p.q }) });
+		});
 
 	const activeFilters = buildActiveFilters({
 		filters: filterValues,
@@ -942,7 +957,7 @@ function TransactionsPage() {
 
 	const filterPanel = (
 		<TransactionFilters
-			filters={filterValues}
+			filters={shownFilters}
 			selectedAccount={selectedAccount}
 			selectedVendor={selectedVendor}
 			selectedCategory={selectedCategory}

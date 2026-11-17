@@ -15,15 +15,11 @@ import { ACCENT } from "#/lib/m3";
 import type { Goal } from "#/types/api";
 import TonalChip from "./TonalChip";
 
-/** The progress track for a goal, in the goal's colour (green once reached). */
+/** The progress track for a goal, in the goal's colour (green once reached): a wave while the goal is
+ * still being worked toward, flat once it is done. */
 function Bar({ percent, color }: { percent: number; color: string }) {
 	return (
-		<ProgressBar
-			percent={percent}
-			color={color}
-			height={{ xs: 6, sm: 10 }}
-			sx={{ mt: { xs: 0.75, sm: 1.5 } }}
-		/>
+		<ProgressBar percent={percent} color={color} height={6} wavy sx={{ mt: { xs: 0.5, sm: 1 } }} />
 	);
 }
 
