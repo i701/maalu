@@ -276,6 +276,15 @@ const theme = createTheme({
 					borderRadius: "var(--shape-xl)",
 					backgroundColor: "var(--md-sys-color-surface-container-low)",
 				},
+				// `fullScreen` (FormDialog's big forms on a phone): the rules above would keep the margin,
+				// the rounded corners and a capped height, so undo them.
+				paperFullScreen: {
+					margin: 0,
+					width: "100%",
+					height: "100dvh",
+					maxHeight: "none",
+					borderRadius: 0,
+				},
 			},
 		},
 		MuiPopover: {
@@ -386,10 +395,117 @@ const theme = createTheme({
 				},
 			},
 		},
+		// Switch (M3: 52x32 track, a small thumb off that grows when on and again when pressed). Written
+		// as nested selectors on the root so they outrank MUI's own checked and disabled rules.
+		MuiSwitch: {
+			styleOverrides: {
+				root: {
+					width: 52,
+					height: 32,
+					padding: 0,
+					"& .MuiSwitch-switchBase": {
+						padding: 0,
+						width: 32,
+						height: 32,
+						"&.Mui-checked": { transform: "translateX(20px)" },
+						"&:hover, &.Mui-checked:hover": { backgroundColor: "transparent" },
+						"&.Mui-disabled": { opacity: 0.38 },
+					},
+					"& .MuiSwitch-thumb": {
+						width: 16,
+						height: 16,
+						boxShadow: "none",
+						backgroundColor: "var(--md-sys-color-outline)",
+						transition: `width ${SPATIAL_FAST}, height ${SPATIAL_FAST}, background-color ${EFFECTS_FAST}`,
+					},
+					"& .MuiSwitch-switchBase:active .MuiSwitch-thumb": { width: 28, height: 28 },
+					"& .MuiSwitch-switchBase.Mui-checked .MuiSwitch-thumb": {
+						width: 24,
+						height: 24,
+						backgroundColor: "var(--md-sys-color-on-primary)",
+					},
+					"& .MuiSwitch-switchBase.Mui-checked:active .MuiSwitch-thumb": { width: 28, height: 28 },
+					"& .MuiSwitch-track": {
+						boxSizing: "border-box",
+						borderRadius: "var(--shape-full)",
+						opacity: 1,
+						backgroundColor: "var(--md-sys-color-surface-container-highest)",
+						border: "2px solid var(--md-sys-color-outline)",
+						transition: `background-color ${EFFECTS_FAST}, border-color ${EFFECTS_FAST}`,
+					},
+					"& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+						opacity: 1,
+						backgroundColor: "var(--md-sys-color-primary)",
+						borderColor: "var(--md-sys-color-primary)",
+					},
+					"& .MuiSwitch-switchBase.Mui-disabled + .MuiSwitch-track": { opacity: 0.38 },
+					"@media (prefers-reduced-motion: reduce)": {
+						"& .MuiSwitch-thumb, & .MuiSwitch-track": { transition: "none" },
+					},
+				},
+			},
+		},
+		// MUI pulls a labelled control 11px left to cancel its own padding. The switch has none, so it
+		// sits flush with the form's edge and gets a gap before its label instead.
+		MuiFormControlLabel: {
+			styleOverrides: {
+				root: { "& > .MuiSwitch-root": { marginLeft: 11, marginRight: 12 } },
+			},
+		},
+		// Checkbox and radio: the unchecked box is `on-surface-variant` (M3), checked is primary.
+		MuiCheckbox: {
+			styleOverrides: {
+				root: {
+					color: "var(--md-sys-color-on-surface-variant)",
+					"&.Mui-checked, &.MuiCheckbox-indeterminate": { color: "var(--md-sys-color-primary)" },
+					"&.Mui-disabled": {
+						color: "color-mix(in srgb, var(--md-sys-color-on-surface) 38%, transparent)",
+					},
+				},
+			},
+		},
+		MuiRadio: {
+			styleOverrides: {
+				root: {
+					color: "var(--md-sys-color-on-surface-variant)",
+					"&.Mui-checked": { color: "var(--md-sys-color-primary)" },
+					"&.Mui-disabled": {
+						color: "color-mix(in srgb, var(--md-sys-color-on-surface) 38%, transparent)",
+					},
+				},
+			},
+		},
+		// Chips: 8px corners, a tonal fill, and `outline-variant` on the outlined kind. FilterChip and
+		// TonalChip set their own colours on top.
+		MuiChip: {
+			styleOverrides: {
+				root: { borderRadius: "var(--shape-sm)" },
+				// The `filled` and `outlined` slots, not `&.MuiChip-filled` on root: that has two classes
+				// and would beat the colours FilterChip and TonalChip set in their own `sx`.
+				filled: {
+					backgroundColor: "var(--md-sys-color-surface-container-high)",
+					color: "var(--md-sys-color-on-surface-variant)",
+				},
+				outlined: { borderColor: "var(--md-sys-color-outline-variant)" },
+			},
+		},
 		MuiIconButton: {
 			styleOverrides: {
 				root: {
 					...pressable("var(--shape-md)", "var(--shape-sm)"),
+					// A finger needs 48px (M3): on touch screens the tap area grows past the visible
+					// button without moving the layout.
+					"@media (pointer: coarse)": {
+						"&::after": {
+							content: '""',
+							position: "absolute",
+							top: "50%",
+							left: "50%",
+							width: 48,
+							height: 48,
+							transform: "translate(-50%, -50%)",
+						},
+					},
 					"&:active": {
 						borderRadius: "var(--shape-sm)",
 						transform: "scale(.94)",

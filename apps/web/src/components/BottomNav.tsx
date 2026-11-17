@@ -4,12 +4,22 @@ import Typography from "@mui/material/Typography";
 import { useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
 import { SCRIM } from "#/lib/m3";
-import { BOTTOM_BAR_HEIGHT, BOTTOM_NAV_ITEMS, inBottomBar, NAV_GROUPS, NAV_ITEMS } from "#/lib/nav";
+import {
+	BOTTOM_BAR_HEIGHT,
+	BOTTOM_NAV_ITEMS,
+	inBottomBar,
+	NAV_GROUPS,
+	NAV_ITEMS,
+	RAIL_WIDTH,
+	TOP_BAR_HEIGHT,
+} from "#/lib/nav";
 import NavItem, { NavButton } from "./NavItem";
 import SheetHandle from "./SheetHandle";
 
 /**
- * The bottom navigation bar on narrow screens: a flush, full-width tonal band with no border,
+ * The bottom navigation bar on narrow screens (under 600px), and on medium ones (600 to 900px) the
+ * same items stood on end as a navigation rail down the left edge, below the top bar. It is a
+ * flush, full-width tonal band with no border,
  * holding the destinations marked `bottom` in lib/nav.ts and a More button that opens every
  * destination, grouped like the sidebar. Wide screens use the sidebar instead.
  */
@@ -30,22 +40,25 @@ export default function BottomNav({ badges = {} }: { badges?: Record<string, num
 				// wide screens have the sidebar instead
 				display: { xs: "block", md: "none" },
 				position: "fixed",
-				inset: "auto 0 0 0",
+				inset: { xs: "auto 0 0 0", sm: `${TOP_BAR_HEIGHT}px auto 0 0` },
+				width: { sm: RAIL_WIDTH },
 				zIndex: (t) => t.zIndex.appBar,
-				height: `calc(${BOTTOM_BAR_HEIGHT}px + env(safe-area-inset-bottom))`,
+				height: { xs: `calc(${BOTTOM_BAR_HEIGHT}px + env(safe-area-inset-bottom))`, sm: "auto" },
 				pt: 1,
-				pb: "env(safe-area-inset-bottom)",
+				pb: { xs: "env(safe-area-inset-bottom)", sm: 2 },
+				overflowY: { sm: "auto" },
 				bgcolor: "var(--md-sys-color-surface-container)",
 			}}
 		>
 			<Box
 				sx={{
 					display: "grid",
-					gridTemplateColumns: `repeat(${BOTTOM_NAV_ITEMS.length + 1}, 1fr)`,
+					gridTemplateColumns: { xs: `repeat(${BOTTOM_NAV_ITEMS.length + 1}, 1fr)`, sm: "1fr" },
+					rowGap: { sm: 1.5 },
 					alignItems: "start",
-					maxWidth: 640,
+					maxWidth: { xs: 640, sm: "none" },
 					mx: "auto",
-					px: 1,
+					px: { xs: 1, sm: 0 },
 				}}
 			>
 				{BOTTOM_NAV_ITEMS.map((item) => (

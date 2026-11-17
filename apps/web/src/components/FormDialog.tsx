@@ -5,6 +5,7 @@ import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import type { ReactNode, SubmitEvent } from "react";
 import { useLastDefined } from "#/lib/motion";
 import type { Sheet } from "#/lib/sheet";
@@ -40,12 +41,16 @@ export default function FormDialog({
 	submitDisabled?: boolean;
 }) {
 	const shownError = useLastDefined(error); // keeps the text while the alert closes
+	// A form wider than "xs" has too many fields for a card on a phone: it takes the whole screen (M3's
+	// full-screen dialog). The small ones (a name, an amount) stay a card.
+	const phone = useMediaQuery((theme) => theme.breakpoints.down("sm"));
 
 	return (
 		<Dialog
 			open={sheet.open}
 			// not while it is saving: Escape or a click outside must not close a form mid-save
 			onClose={pending ? undefined : sheet.close}
+			fullScreen={phone && maxWidth !== "xs"}
 			maxWidth={maxWidth}
 			fullWidth={fullWidth}
 			aria-labelledby="form-dialog-title"
@@ -71,7 +76,7 @@ export default function FormDialog({
 						</Alert>
 					</Reveal>
 				</DialogContent>
-				<DialogActions sx={{ px: 3, pb: 2 }}>
+				<DialogActions sx={{ px: 3, pb: "max(16px, env(safe-area-inset-bottom))" }}>
 					<Button onClick={sheet.close} color="inherit" disabled={pending}>
 						Cancel
 					</Button>

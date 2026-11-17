@@ -120,7 +120,7 @@ export default function AreaChart({
 							top: `${y(t)}%`,
 							transform: "translateY(-50%)",
 							pr: 1,
-							fontSize: 11,
+							fontSize: 12,
 							color: "text.secondary",
 							fontVariantNumeric: "tabular-nums",
 							whiteSpace: "nowrap",
@@ -183,7 +183,7 @@ export default function AreaChart({
 							left: `${x(i)}%`,
 							transform: `translateX(${k === 0 ? "0" : k === labelAt.length - 1 ? "-100%" : "-50%"})`,
 							pt: 0.75,
-							fontSize: 11,
+							fontSize: 12,
 							color: "text.secondary",
 							whiteSpace: "nowrap",
 						}}

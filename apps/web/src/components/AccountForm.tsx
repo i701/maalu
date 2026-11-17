@@ -202,7 +202,11 @@ export default function AccountForm({
 
 				<Grid size={12}>
 					<FormSwitch control={control} name="exclude_from_stats" label="Leave out of my totals" />
-					<Typography variant="caption" component="p" sx={{ color: "text.secondary", mt: -0.5 }}>
+					<Typography
+						variant="caption"
+						component="p"
+						sx={{ color: "text.secondary", mt: 0.5, ml: "64px" }}
+					>
 						For an account that is not really yours, like a card you manage for someone else. Its
 						balance and transactions stay, but it is not counted in totals, reports, budgets or net
 						worth.

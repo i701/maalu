@@ -66,7 +66,7 @@ export default function ColumnPairs({
 								top: "50%",
 								transform: "translateY(-50%)",
 								pr: 1,
-								fontSize: 11,
+								fontSize: 12,
 								color: "text.secondary",
 								fontVariantNumeric: "tabular-nums",
 							}}
@@ -128,7 +128,7 @@ export default function ColumnPairs({
 									right: 0,
 									textAlign: "center",
 									pt: 0.75,
-									fontSize: 11,
+									fontSize: 12,
 									color: "text.secondary",
 								}}
 							>

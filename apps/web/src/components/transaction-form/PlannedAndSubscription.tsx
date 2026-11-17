@@ -39,7 +39,7 @@ export default function PlannedAndSubscription({
 				<Typography
 					variant="caption"
 					component="p"
-					sx={{ color: "text.secondary", mt: -0.5, mb: 1 }}
+					sx={{ color: "text.secondary", mt: 0.5, mb: 1, ml: "64px" }}
 				>
 					Coming up, not happened yet. It counts toward nothing until you mark it as paid.
 				</Typography>

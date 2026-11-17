@@ -88,7 +88,9 @@ export const inBottomBar = (pathname: string): boolean =>
 	BOTTOM_NAV_ITEMS.some((item) => pathname === item.to || pathname.startsWith(`${item.to}/`));
 
 /** Heights (px) the page leaves clear for the top bar and the bottom bar (bottom excludes the
- * safe-area inset), and the width of the sidebar on wide screens. */
+ * safe-area inset), the width of the sidebar on wide screens and of the rail on medium ones. */
 export const TOP_BAR_HEIGHT = 64;
 export const BOTTOM_BAR_HEIGHT = 80;
 export const SIDEBAR_WIDTH = 264;
+/** The navigation rail on medium screens (600-900px): the bottom bar turned on its side. */
+export const RAIL_WIDTH = 80;

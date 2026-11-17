@@ -1,7 +1,7 @@
 import Chip, { type ChipProps } from "@mui/material/Chip";
 
 /**
- * A small tag tinted with an accent colour (the demo's `.tag`: 22px, 11px text, 8px corners): a soft fill of the colour over the surface and text
+ * A small tag tinted with an accent colour (the demo's `.tag`: 22px, 12px text, 8px corners): a soft fill of the colour over the surface and text
  * in a deeper mix of it. Quieter than MUI's saturated colour chips, and it works in light and dark.
  */
 export default function TonalChip({
@@ -16,7 +16,7 @@ export default function TonalChip({
 			sx={[
 				{
 					height: 22,
-					fontSize: 11,
+					fontSize: 12,
 					fontWeight: 500,
 					borderRadius: "var(--shape-sm)",
 					bgcolor: `color-mix(in oklab, ${accent} 20%, var(--md-sys-color-surface-container-low))`,

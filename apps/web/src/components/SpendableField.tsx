@@ -27,7 +27,11 @@ export default function SpendableField({
 				}
 				label="I spend from this account"
 			/>
-			<Typography variant="caption" component="p" sx={{ color: "text.secondary", mt: -0.5 }}>
+			<Typography
+				variant="caption"
+				component="p"
+				sx={{ color: "text.secondary", mt: 0.5, ml: "64px" }}
+			>
 				When on, its money counts toward what you can spend this month. When off, it is kept apart,
 				like savings. A savings goal that follows the account keeps it apart either way.
 			</Typography>
