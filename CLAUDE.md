@@ -32,6 +32,7 @@ This file holds the rules and the architecture. The detailed notes on each featu
 - `docs/claude/e2e.md` — the Playwright end-to-end tests: how they run, `open()`/`hydrated`, the specs.
 - `docs/claude/deployment.md` — Docker images, `docker-compose.prod.yml`, `scripts/restore-drill.sh`, `scripts/backup.sh`.
 - `apps/ios/CLAUDE.md` — the iOS app (loaded by Claude Code when working in `apps/ios`).
+- `graphify-out/` — a knowledge graph of `apps/web`, `apps/api` and `docs/claude` (scope in `.graphifyignore`). For a question about how parts connect (what calls or depends on something, what a change reaches), ask it with `/graphify query "<question>"` before searching broadly; `GRAPH_REPORT.md` is its overview. It is a snapshot: refresh it with `/graphify . --update` after larger changes, and trust the code where they disagree.
 
 ## Web app (`apps/web`)
 
