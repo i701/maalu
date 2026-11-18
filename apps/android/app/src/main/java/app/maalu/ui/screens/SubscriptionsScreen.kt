@@ -2,6 +2,9 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.theme.tintBadge
+import app.maalu.ui.theme.tintIcon
+import app.maalu.ui.theme.tintSurface
 import app.maalu.ui.components.Disclosure
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -235,13 +238,13 @@ fun SubscriptionsScreen(api: Api) {
 @Composable
 private fun SummaryRow(s: SubscriptionSummary) {
     Row(Modifier.fillMaxWidth().padding(bottom = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Surface(Modifier.weight(1f), shape = MaterialTheme.shapes.large, color = Accents.getValue("violet").copy(alpha = 0.16f)) {
+        Surface(Modifier.weight(1f), shape = MaterialTheme.shapes.large, color = Accents.getValue("violet").tintSurface()) {
             Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text("Active", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("${s.activeCount}", style = MaterialTheme.typography.titleMedium.merge(MoneyStyle))
             }
         }
-        Surface(Modifier.weight(1f), shape = MaterialTheme.shapes.large, color = Accents.getValue("orange").copy(alpha = 0.16f)) {
+        Surface(Modifier.weight(1f), shape = MaterialTheme.shapes.large, color = Accents.getValue("orange").tintSurface()) {
             Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text("Costs a month", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 MoneyText(s.monthlyBaseTotal, s.currency, style = MaterialTheme.typography.titleMedium)
@@ -255,7 +258,7 @@ private fun SummaryRow(s: SubscriptionSummary) {
 private fun SuggestionsCard(candidates: List<SubscriptionCandidate>, onAdd: (SubscriptionCandidate) -> Unit, onDismiss: (SubscriptionCandidate) -> Unit) {
     var open by rememberSaveable { mutableStateOf(false) }
     val tint = Accents.getValue("amber")
-    Surface(Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = MaterialTheme.shapes.extraLarge, color = tint.copy(alpha = 0.16f)) {
+    Surface(Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = MaterialTheme.shapes.extraLarge, color = tint.tintSurface()) {
         Column {
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Outlined.Lightbulb, null, tint = tint, modifier = Modifier.padding(end = 12.dp))
@@ -295,7 +298,7 @@ private fun SuggestionsCard(candidates: List<SubscriptionCandidate>, onAdd: (Sub
 private fun SubscriptionRow(s: Subscription) {
     val tint = idTint(s.id)
     Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Box(Modifier.size(36.dp).clip(CircleShape).background(tint.copy(alpha = 0.18f)), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(36.dp).clip(CircleShape).background(tint.tintIcon()), contentAlignment = Alignment.Center) {
             Text(s.name.firstOrNull()?.uppercase() ?: "?", style = MaterialTheme.typography.labelLarge, color = tint, fontWeight = FontWeight.SemiBold)
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -304,7 +307,7 @@ private fun SubscriptionRow(s: Subscription) {
         }
         Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
             MoneyText(s.amount, s.currency, prefix = amountPrefix(s.amountVaries), style = MaterialTheme.typography.bodyMedium)
-            if (s.status != "active") Surface(shape = RoundedCornerShape(8.dp), color = statusTint(s.status).copy(alpha = 0.25f)) {
+            if (s.status != "active") Surface(shape = RoundedCornerShape(8.dp), color = statusTint(s.status).tintBadge()) {
                 Text(subscriptionStatusLabel(s.status), style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp))
             }
         }

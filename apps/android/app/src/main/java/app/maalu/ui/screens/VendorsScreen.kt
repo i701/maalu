@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.theme.tintBadge
+import app.maalu.ui.theme.tintIcon
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import app.maalu.data.placeLabel
@@ -215,7 +217,7 @@ fun VendorsScreen(api: Api) {
 private fun VendorRow(v: Vendor) {
     val tint = idTint(v.id)
     Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Box(Modifier.size(36.dp).clip(CircleShape).background(tint.copy(alpha = 0.18f)), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(36.dp).clip(CircleShape).background(tint.tintIcon()), contentAlignment = Alignment.Center) {
             Text(v.name.firstOrNull()?.uppercase() ?: "?", style = MaterialTheme.typography.labelLarge, color = tint, fontWeight = FontWeight.SemiBold)
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -224,7 +226,7 @@ private fun VendorRow(v: Vendor) {
             if (sub.isNotEmpty()) Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         localityLabel(v.isLocal)?.let { label ->
-            Surface(shape = RoundedCornerShape(8.dp), color = Accents.getValue(if (v.isLocal == true) "green" else "orange").copy(alpha = 0.22f)) {
+            Surface(shape = RoundedCornerShape(8.dp), color = Accents.getValue(if (v.isLocal == true) "green" else "orange").tintBadge()) {
                 Text(label, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp))
             }
         }

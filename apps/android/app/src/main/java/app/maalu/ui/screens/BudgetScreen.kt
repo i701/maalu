@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.theme.tintSurface
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -278,7 +279,7 @@ private fun SummaryCard(b: Budget) {
     val t = b.totals
     val color = statusColor(t.status)
     val over = t.status == "over"
-    Surface(shape = MaterialTheme.shapes.extraLarge, color = color.copy(alpha = 0.14f)) {
+    Surface(shape = MaterialTheme.shapes.extraLarge, color = color.tintSurface()) {
         Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.Bottom) {
                 Column(Modifier.weight(1f)) {

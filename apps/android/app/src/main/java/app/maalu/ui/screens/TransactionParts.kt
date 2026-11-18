@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.theme.tintIcon
 import androidx.compose.material3.OutlinedButton
 import app.maalu.data.canLinkAsTransfer
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -143,7 +144,7 @@ fun RowDetails(t: Transaction) {
 fun CategoryBadge(t: Transaction) {
     val accent = Accents[t.categoryColor] ?: MaterialTheme.colorScheme.outline
     val letter = (if (t.type == "transfer") "⇄" else t.category.firstOrNull()?.uppercase() ?: "?")
-    Box(Modifier.size(36.dp).clip(CircleShape).background(accent.copy(alpha = 0.18f)), contentAlignment = Alignment.Center) {
+    Box(Modifier.size(36.dp).clip(CircleShape).background(accent.tintIcon()), contentAlignment = Alignment.Center) {
         Text(letter, style = MaterialTheme.typography.labelLarge, color = accent, fontWeight = FontWeight.SemiBold)
     }
 }

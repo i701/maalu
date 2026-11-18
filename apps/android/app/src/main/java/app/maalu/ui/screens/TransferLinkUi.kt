@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.theme.tintSurface
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -76,7 +77,7 @@ fun TransferSuggestionsCard(api: Api, suggestions: List<TransferSuggestion>, onC
     var busy by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val tint = Accents.getValue("blue")
-    Surface(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.extraLarge, color = tint.copy(alpha = 0.14f)) {
+    Surface(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.extraLarge, color = tint.tintSurface()) {
         Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Icon(Icons.Outlined.SwapHoriz, null, tint = tint)

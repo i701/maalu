@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.theme.tintIcon
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -106,7 +107,7 @@ fun destinationById(id: String?): Destination? = MoreDestinations.firstOrNull { 
 fun ComingSoon(d: Destination) {
     val tint = Accents.getValue(d.accent)
     Column(Modifier.fillMaxSize().padding(32.dp), verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(Modifier.size(72.dp).clip(RoundedCornerShape(24.dp)).background(tint.copy(alpha = 0.2f)), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(72.dp).clip(RoundedCornerShape(24.dp)).background(tint.tintIcon()), contentAlignment = Alignment.Center) {
             Icon(d.icon, null, tint = tint, modifier = Modifier.size(36.dp))
         }
         Text(d.label, style = MaterialTheme.typography.titleLarge)

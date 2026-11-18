@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.theme.tintIcon
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -175,7 +176,7 @@ fun TagsScreen(api: Api) {
 private fun TagRow(t: Tag) {
     val tint = Accents[t.color] ?: Accents.getValue("slate")
     Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Box(Modifier.size(36.dp).clip(CircleShape).background(tint.copy(alpha = 0.2f)), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(36.dp).clip(CircleShape).background(tint.tintIcon()), contentAlignment = Alignment.Center) {
             Icon(Icons.Outlined.Sell, null, tint = tint, modifier = Modifier.size(20.dp))
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {

@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.theme.tintIcon
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -73,7 +74,7 @@ fun AppDrawer(
                         selected = d.id == selectedId,
                         onClick = { onOpen(d) },
                         badge = badges[d.id]?.takeIf { it > 0 }?.let { n -> { androidx.compose.material3.Badge { Text(app.maalu.data.badgeText(n)) } } },
-                        colors = NavigationDrawerItemDefaults.colors(selectedContainerColor = tint.copy(alpha = 0.22f), unselectedContainerColor = androidx.compose.ui.graphics.Color.Transparent),
+                        colors = NavigationDrawerItemDefaults.colors(selectedContainerColor = tint.tintIcon(), unselectedContainerColor = androidx.compose.ui.graphics.Color.Transparent),
                     )
                 }
             }

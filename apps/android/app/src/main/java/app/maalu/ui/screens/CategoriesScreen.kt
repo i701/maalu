@@ -2,6 +2,9 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.theme.tintIcon
+import app.maalu.ui.theme.tintBadge
+import app.maalu.ui.theme.tintSurface
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -200,7 +203,7 @@ private fun CategoryRow(c: Category, indented: Boolean = false) {
     val tint = accent(c.color)
     // a sub-category is the same width as the rest, with more room inside on the left
     Row(Modifier.fillMaxWidth().padding(start = if (indented) 34.dp else 14.dp, end = 14.dp, top = 12.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Box(Modifier.size(36.dp).clip(CircleShape).background(tint.copy(alpha = 0.2f)), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(36.dp).clip(CircleShape).background(tint.tintIcon()), contentAlignment = Alignment.Center) {
             Text(c.name.firstOrNull()?.uppercase() ?: "?", style = MaterialTheme.typography.labelLarge, color = tint, fontWeight = FontWeight.SemiBold)
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -215,11 +218,11 @@ private fun CategoryRow(c: Category, indented: Boolean = false) {
         // a kind of its own is full colour; one taken from the parent is faded
         kindLabel(c.effectiveKind)?.let { label ->
             val own = c.kind != null
-            Surface(shape = RoundedCornerShape(8.dp), color = kindTint(c.effectiveKind!!).copy(alpha = if (own) 0.3f else 0.14f)) {
+            Surface(shape = RoundedCornerShape(8.dp), color = kindTint(c.effectiveKind!!).let { if (own) it.tintBadge() else it.tintSurface() }) {
                 Text(label, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp))
             }
         }
-        if (c.isSalary) Surface(shape = RoundedCornerShape(8.dp), color = accent("green").copy(alpha = 0.25f)) {
+        if (c.isSalary) Surface(shape = RoundedCornerShape(8.dp), color = accent("green").tintBadge()) {
             Text("Pay", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp))
         }
     }

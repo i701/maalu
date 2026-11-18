@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.theme.tintSurface
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -333,7 +334,7 @@ private fun GroupSheet(api: Api, id: String, onClose: () -> Unit, onChanged: () 
 
 @Composable
 private fun Tile(label: String, value: String, currency: String, tint: androidx.compose.ui.graphics.Color, modifier: Modifier) {
-    Surface(modifier, shape = MaterialTheme.shapes.large, color = tint.copy(alpha = 0.16f)) {
+    Surface(modifier, shape = MaterialTheme.shapes.large, color = tint.tintSurface()) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             MoneyText(value, currency, style = MaterialTheme.typography.titleSmall)

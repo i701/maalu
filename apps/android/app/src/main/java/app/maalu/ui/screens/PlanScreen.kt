@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.theme.tintSurface
 import app.maalu.ui.components.Disclosure
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -153,7 +154,7 @@ fun PlanScreen(api: Api, onOpenAccount: (id: String, name: String) -> Unit) {
 
 @Composable
 private fun Tile(label: String, value: String, currency: String, tint: Color, modifier: Modifier) {
-    Surface(modifier, shape = MaterialTheme.shapes.large, color = tint.copy(alpha = 0.16f)) {
+    Surface(modifier, shape = MaterialTheme.shapes.large, color = tint.tintSurface()) {
         Column(Modifier.padding(horizontal = 14.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             MoneyText(value, currency, style = MaterialTheme.typography.titleMedium)
@@ -183,7 +184,7 @@ private fun Tiles(d: AvailableToSpend) {
 @Composable
 private fun Verdict(d: AvailableToSpend, culprit: PlanRow?) {
     val short = d.isShort()
-    Surface(Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = MaterialTheme.shapes.large, color = (if (short) MaterialTheme.colorScheme.error else ChartColors.IncomeLight).copy(alpha = 0.14f)) {
+    Surface(Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = MaterialTheme.shapes.large, color = (if (short) MaterialTheme.colorScheme.error else ChartColors.IncomeLight).tintSurface()) {
         Text(
             if (!short) "Every bill planned until ${shortDate(d.periodEnd)} is covered."
             else if (culprit != null) "The money runs out at ${culprit.title} (${shortDate(culprit.date)})."

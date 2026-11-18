@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.theme.tintIcon
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -181,7 +182,7 @@ private fun NotificationRow(n: AppNotification, first: Boolean, last: Boolean, o
     val tint = if (meta.accent == "error") MaterialTheme.colorScheme.error else Accents.getValue(meta.accent)
     MorphTile(onClick = onOpen, first = first, last = last, modifier = Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
-            Box(Modifier.size(40.dp).clip(RoundedCornerShape(14.dp)).background(tint.copy(alpha = 0.22f)), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(40.dp).clip(RoundedCornerShape(14.dp)).background(tint.tintIcon()), contentAlignment = Alignment.Center) {
                 Icon(Icons.Outlined.Notifications, null, tint = tint)
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {

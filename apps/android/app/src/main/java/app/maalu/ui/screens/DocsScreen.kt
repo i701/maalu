@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.theme.tintIcon
+import app.maalu.ui.theme.tintSurface
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -111,7 +113,7 @@ private fun GuideList(empty: Boolean, hits: List<DocHit>, query: String, onQuery
             val tint = Accents[hit.doc.accent] ?: MaterialTheme.colorScheme.primary
             MorphTile(onClick = { onOpen(hit) }, first = i == 0, last = i == hits.lastIndex, modifier = Modifier.fillMaxWidth()) {
                 Row(Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
-                    Box(Modifier.size(40.dp).clip(RoundedCornerShape(14.dp)).background(tint.copy(alpha = 0.22f)), contentAlignment = Alignment.Center) {
+                    Box(Modifier.size(40.dp).clip(RoundedCornerShape(14.dp)).background(tint.tintIcon()), contentAlignment = Alignment.Center) {
                         Icon(Icons.AutoMirrored.Outlined.Article, null, tint = tint)
                     }
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -141,7 +143,7 @@ private fun Article(doc: DocItem, section: String?, onLink: (String) -> Unit) {
         item { Text(doc.title, style = MaterialTheme.typography.headlineSmall) }
         item { Text(doc.summary, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         if (doc.webOnly) item {
-            Surface(shape = MaterialTheme.shapes.large, color = Accents.getValue("amber").copy(alpha = 0.14f)) {
+            Surface(shape = MaterialTheme.shapes.large, color = Accents.getValue("amber").tintSurface()) {
                 Row(Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Icon(Icons.Outlined.Info, null, tint = Accents.getValue("amber"), modifier = Modifier.size(22.dp))
                     Text("This is done in the web app, not in this one. The guide is here so you can read how it works.", style = MaterialTheme.typography.bodyMedium)
@@ -188,7 +190,7 @@ private fun Block(b: DocBlockItem, tint: Color, onLink: (String) -> Unit) {
         "steps" -> Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             b.items.forEachIndexed { i, item ->
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Box(Modifier.size(24.dp).background(tint.copy(alpha = 0.22f), CircleShape), contentAlignment = Alignment.Center) { Text("${i + 1}", style = MaterialTheme.typography.labelMedium) }
+                    Box(Modifier.size(24.dp).background(tint.tintIcon(), CircleShape), contentAlignment = Alignment.Center) { Text("${i + 1}", style = MaterialTheme.typography.labelMedium) }
                     Text(inline(item, tint, onLink), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
                 }
             }
@@ -202,7 +204,7 @@ private fun Block(b: DocBlockItem, tint: Color, onLink: (String) -> Unit) {
                 "tip" -> Icons.Outlined.Lightbulb to Accents.getValue("green")
                 else -> Icons.Outlined.Info to Accents.getValue("blue")
             }
-            Surface(shape = MaterialTheme.shapes.large, color = color.copy(alpha = 0.14f)) {
+            Surface(shape = MaterialTheme.shapes.large, color = color.tintSurface()) {
                 Row(Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Icon(icon, null, tint = color, modifier = Modifier.size(22.dp))
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {

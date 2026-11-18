@@ -1,5 +1,6 @@
 package app.maalu.ui.components
 
+import app.maalu.ui.theme.tintIcon
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -37,7 +38,7 @@ import androidx.compose.ui.unit.dp
 fun Section(title: String, icon: ImageVector, tint: Color, content: @Composable () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Box(Modifier.size(28.dp).clip(RoundedCornerShape(10.dp)).background(tint.copy(alpha = 0.2f)), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(28.dp).clip(RoundedCornerShape(10.dp)).background(tint.tintIcon()), contentAlignment = Alignment.Center) {
                 Icon(icon, null, tint = tint, modifier = Modifier.size(18.dp))
             }
             Text(title, style = MaterialTheme.typography.titleSmall)

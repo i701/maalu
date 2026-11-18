@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.theme.tintIcon
+import app.maalu.ui.theme.tintSurface
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -230,7 +232,7 @@ private fun SummaryRow(s: AccountSummary) {
 
 @Composable
 private fun SummaryCard(label: String, amount: String, currency: String, tint: androidx.compose.ui.graphics.Color, modifier: Modifier) {
-    Surface(modifier, shape = MaterialTheme.shapes.large, color = tint.copy(alpha = 0.16f)) {
+    Surface(modifier, shape = MaterialTheme.shapes.large, color = tint.tintSurface()) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             MoneyText(amount, currency, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
@@ -242,7 +244,7 @@ private fun SummaryCard(label: String, amount: String, currency: String, tint: a
 private fun AccountRow(a: Account, trend: List<Double>?, baseCurrency: String) {
     val tint = idTint(a.id)
     Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Box(Modifier.size(36.dp).clip(CircleShape).background(tint.copy(alpha = 0.18f)), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(36.dp).clip(CircleShape).background(tint.tintIcon()), contentAlignment = Alignment.Center) {
             Text(a.name.firstOrNull()?.uppercase() ?: "?", style = MaterialTheme.typography.labelLarge, color = tint, fontWeight = FontWeight.SemiBold)
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {

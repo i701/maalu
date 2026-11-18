@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.theme.tintSurface
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -305,7 +306,7 @@ private fun Header(a: Account, month: Totals?) {
     val tint = idTint(a.id)
     val negative = a.balance.startsWith("-")
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Surface(shape = MaterialTheme.shapes.extraLarge, color = tint.copy(alpha = 0.14f)) {
+        Surface(shape = MaterialTheme.shapes.extraLarge, color = tint.tintSurface()) {
             Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(if (a.isLiability) "Owed" else "Balance", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 MoneyText(
@@ -332,7 +333,7 @@ private fun creditLine(a: Account): String? =
 
 @Composable
 private fun MonthCard(label: String, amount: String, currency: String, tint: Color, modifier: Modifier) {
-    Surface(modifier, shape = MaterialTheme.shapes.large, color = tint.copy(alpha = 0.16f)) {
+    Surface(modifier, shape = MaterialTheme.shapes.large, color = tint.tintSurface()) {
         Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             MoneyText(amount, currency, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
@@ -358,7 +359,7 @@ private fun Actions(a: Account, onAdd: () -> Unit, onAdjust: () -> Unit, onEdit:
 @Composable
 private fun StatementPanel(s: CardStatement, onRepay: () -> Unit) {
     val tint = when (s.state) { "overdue" -> MaterialTheme.colorScheme.error; "paid", "none" -> ChartColors.IncomeLight; else -> ChartColors.Warning }
-    Surface(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), shape = MaterialTheme.shapes.extraLarge, color = tint.copy(alpha = 0.14f)) {
+    Surface(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), shape = MaterialTheme.shapes.extraLarge, color = tint.tintSurface()) {
         Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Statement", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(statementLine(s), style = MaterialTheme.typography.titleSmall)

@@ -134,3 +134,11 @@ fun kindTint(kind: String): Color = when (kind) {
     "want" -> Accents.getValue("orange")
     else -> Accents.getValue("slate")
 }
+
+// The three see-through fills a tint becomes, so the same kind of thing is always the same strength.
+/** A card or banner behind text. */
+fun Color.tintSurface(): Color = copy(alpha = 0.16f)
+/** An icon tile or a selected row. */
+fun Color.tintIcon(): Color = copy(alpha = 0.2f)
+/** A small badge. */
+fun Color.tintBadge(): Color = copy(alpha = 0.25f)
