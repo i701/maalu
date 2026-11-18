@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AccountRow: View {
     let account: Account
+    let trend: [Double]?
 
     var body: some View {
         AmountRow {
@@ -12,10 +13,17 @@ struct AccountRow: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
+                if let usage = CreditUsage(balance: account.balance, limit: account.creditLimit) {
+                    CreditUsageBar(usage: usage, currency: account.currency)
+                }
             }
         } amount: {
-            Text(Money.decimal(account.balance) ?? 0, format: .currency(code: account.currency).presentation(.isoCode))
-                .monospacedDigit()
+            VStack(alignment: .trailing) {
+                MoneyText(account.balance, currency: account.currency)
+                if let trend, trend.count > 1 {
+                    AccountSparkline(values: trend)
+                }
+            }
         }
     }
 }

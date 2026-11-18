@@ -286,7 +286,7 @@
       },
       "ios": {
         "status": "partial",
-        "note": "Accounts by group with their balances and bank: no credit-use bars, small balance lines or the net worth summary yet.",
+        "note": "Accounts by group with their balances, bank, credit-use bars, 30-day balance lines and the net worth summary: no bank filter or grouping by bank yet.",
         "evidence": [
           "apps/ios/Maalu/Features/Accounts/AccountsView.swift"
         ]

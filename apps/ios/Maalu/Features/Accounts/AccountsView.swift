@@ -11,11 +11,14 @@ struct AccountsView: View {
                 if let message = model.errorMessage {
                     Text(message).foregroundStyle(.red)
                 }
+                if let summary = model.summary, !model.showsArchived, !model.accounts.isEmpty {
+                    AccountsSummarySection(summary: summary)
+                }
                 ForEach(model.groups) { section in
                     Section(String(localized: section.group.title)) {
                         ForEach(section.accounts) { account in
                             NavigationLink(value: AccountRoute(id: account.id)) {
-                                AccountRow(account: account)
+                                AccountRow(account: account, trend: model.trends[account.id])
                             }
                         }
                     }
