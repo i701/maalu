@@ -24,6 +24,19 @@ struct TransactionFilterTests {
         #expect(filter.detailCount == 0)
     }
 
+    @Test func methodCardAndNeedsOrWantsAreSentAndCounted() {
+        var filter = TransactionFilter()
+        filter.paymentMethod = .debitCard
+        filter.cardID = "k1"
+        filter.kind = .unsorted
+        let sent = values(filter.queryItems)
+        #expect(sent["payment_method"] == "debit_card")
+        #expect(sent["card_id"] == "k1")
+        #expect(sent["kind"] == "unsorted")
+        #expect(filter.detailCount == 3)
+        #expect(filter.clearingDetails().detailCount == 0)
+    }
+
     @Test func everyFilterIsSentUnderTheApisName() {
         var filter = TransactionFilter(text: " taxi ", type: .expense)
         filter.accountID = "a1"

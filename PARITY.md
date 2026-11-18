@@ -9,8 +9,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 67 | 59 | 23 |
-| 🟡 partial | 0 | 1 | 6 |
+| ✅ done | 67 | 59 | 24 |
+| 🟡 partial | 0 | 1 | 5 |
 | ❌ missing | 0 | 3 | 34 |
 | ➖ n/a | 1 | 5 | 5 |
 
@@ -21,9 +21,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (40)
+## Still to build on iOS (39)
 
-- 🟡 **Filters** (Transactions). Type, date range (with quick ranges), account, category, tags (any or all) and amount. No payment method, card, needs or wants, or planned filter.
 - 🟡 **Add and edit a transaction** (Transactions). Income, expense and transfer with amount, account, category, vendor, payment method, date, note and an exchange rate for a foreign account. No time, tags, card, items, location, receipts or planned switch (a future date is planned by itself).
 - 🟡 **Budget limits** (Budget, goals and planning). Monthly limits: see, make, change, delete, move money between them with undo and history. No budget settings (period start day, warning level), no rollover choice per period, and no limits for set dates.
 - 🟡 **Limits for set dates** (Budget, goals and planning). Read only: limits for set dates are listed under the period their days touch, with days left. Not made, changed, repeated or deleted.
@@ -101,7 +100,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | Feature | Web | Android | iOS |
 |---|:---:|:---:|:---:|
 | **Transactions list**<br>The list by day with search, the type chips, paging and the totals line. | ✅ done | ✅ done | ✅ done |
-| **Filters**<br>Dates, account, card, category, tags with any or all, payment method, need or want and an amount range. | ✅ done | ✅ done | 🟡 partial |
+| **Filters**<br>Dates, account, card, category, tags with any or all, payment method, need or want and an amount range. | ✅ done | ✅ done | ✅ done |
 | **Add and edit a transaction**<br>Expense, income or transfer with account, rate, category, vendor, date and time, way of paying, tags, note and planned. | ✅ done | ✅ done | 🟡 partial |
 | **Save and add another, and duplicate**<br>Keep the form open for the next entry, or copy a transaction. | ✅ done | ✅ done | ❌ missing |
 | **Templates**<br>Start from a saved template and save a form as one; the Templates page to rename and delete them. | ✅ done | ✅ done | ✅ done |
@@ -117,7 +116,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Export to Excel**<br>Download what the filters show as a workbook with a summary and a sheet by category. | ✅ done | ❌ missing | ❌ missing |
 | **Import a bank statement**<br>Read a bank's CSV, review the rows, assign vendors and categories, import as one undoable batch. | ✅ done | ➖ n/a | ➖ n/a |
 
-- **Filters** (iOS): Type, date range (with quick ranges), account, category, tags (any or all) and amount. No payment method, card, needs or wants, or planned filter.
 - **Add and edit a transaction** (iOS): Income, expense and transfer with amount, account, category, vendor, payment method, date, note and an exchange rate for a foreign account. No time, tags, card, items, location, receipts or planned switch (a future date is planned by itself).
 - **Trash** (iOS): Restore and delete for good one by one; bulk actions wait for tx-bulk.
 - **Import a bank statement** (Android): Web only, by choice: importing a statement is done on the web, where the rows are easier to review.

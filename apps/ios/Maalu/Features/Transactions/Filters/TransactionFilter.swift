@@ -9,6 +9,9 @@ struct TransactionFilter: Hashable {
     var dateTo: Date?
     var accountID: String?
     var categoryID: String?
+    var cardID: String?
+    var paymentMethod: PaymentMethod?
+    var kind: NeedsWantsFilter?
     var tagIDs: Set<String> = []
     var matchesAllTags = false
     var minAmount: Decimal?
@@ -29,7 +32,7 @@ struct TransactionFilter: Hashable {
     var detailCount: Int {
         let dates = dateFrom != nil || dateTo != nil ? 1 : 0
         let amounts = minAmount != nil || maxAmount != nil ? 1 : 0
-        return dates + amounts + [accountID, categoryID].compactMap { $0 }.count + (tagIDs.isEmpty ? 0 : 1)
+        return dates + amounts + [accountID, categoryID, cardID, paymentMethod?.rawValue, kind?.rawValue].compactMap { $0 }.count + (tagIDs.isEmpty ? 0 : 1)
     }
 
     var isActive: Bool { !text.trimmingCharacters(in: .whitespaces).isEmpty || type != nil || planned || detailCount > 0 }
@@ -48,6 +51,9 @@ struct TransactionFilter: Hashable {
         if let dateTo { items.append(URLQueryItem(name: "date_to", value: ISODate.string(dateTo))) }
         if let accountID { items.append(URLQueryItem(name: "account_id", value: accountID)) }
         if let categoryID { items.append(URLQueryItem(name: "category_id", value: categoryID)) }
+        if let cardID { items.append(URLQueryItem(name: "card_id", value: cardID)) }
+        if let paymentMethod { items.append(URLQueryItem(name: "payment_method", value: paymentMethod.rawValue)) }
+        if let kind { items.append(URLQueryItem(name: "kind", value: kind.rawValue)) }
         if !tagIDs.isEmpty {
             items += tagIDs.sorted().map { URLQueryItem(name: "tag_id", value: $0) }
             items.append(URLQueryItem(name: "tag_match", value: matchesAllTags ? "all" : "any"))

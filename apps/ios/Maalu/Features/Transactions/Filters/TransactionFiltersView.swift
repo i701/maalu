@@ -32,6 +32,28 @@ struct TransactionFiltersView: View {
                     NavigationLink(value: FilterRoute.tags) {
                         LabeledContent("Tags", value: filter.tagIDs.isEmpty ? String(localized: "Any") : "\(filter.tagIDs.count)")
                     }
+                    Picker("Needs or wants", selection: $filter.kind) {
+                        Text("Any").tag(NeedsWantsFilter?.none)
+                        ForEach(NeedsWantsFilter.allCases) { kind in
+                            Text(kind.title).tag(Optional(kind))
+                        }
+                    }
+                }
+                Section {
+                    Picker("Payment method", selection: $filter.paymentMethod) {
+                        Text("Any").tag(PaymentMethod?.none)
+                        ForEach(PaymentMethod.allCases) { method in
+                            Text(method.title).tag(Optional(method))
+                        }
+                    }
+                    if !options.cards.isEmpty || filter.cardID != nil {
+                        Picker("Card", selection: $filter.cardID) {
+                            Text("Any").tag(String?.none)
+                            ForEach(options.cards, id: \.id) { card in
+                                Text(card.name).tag(Optional(card.id))
+                            }
+                        }
+                    }
                 }
                 FilterAmountSection(filter: $filter)
                 Section {

@@ -569,8 +569,7 @@
         ]
       },
       "ios": {
-        "status": "partial",
-        "note": "Type, date range (with quick ranges), account, category, tags (any or all) and amount. No payment method, card, needs or wants, or planned filter.",
+        "status": "done",
         "evidence": [
           "apps/ios/Maalu/Features/Transactions/Filters/TransactionFiltersView.swift",
           "apps/ios/Maalu/Features/Transactions/Filters/TransactionFilter.swift"
