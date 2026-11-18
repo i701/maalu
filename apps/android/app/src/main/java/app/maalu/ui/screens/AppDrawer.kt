@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.height
 import app.maalu.ui.theme.tintIcon
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -50,47 +52,49 @@ fun AppDrawer(
     /** A count shown at the end of a destination's row, by its id (Pending's waiting salaries). */
     badges: Map<String, Int> = emptyMap(),
 ) {
-    ModalDrawerSheet(drawerContainerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
-        Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 12.dp).padding(bottom = 16.dp)) {
+    // 272dp, not Material's 360dp, and rows of 44dp, not 56dp: more of the list on screen without scrolling
+    ModalDrawerSheet(modifier = Modifier.width(272.dp), drawerContainerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
+        Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 8.dp).padding(bottom = 8.dp)) {
             // the brand: a tinted tile with the initial, the name, and where this app is signed in
-            Row(Modifier.padding(start = 12.dp, top = 24.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Box(Modifier.size(40.dp).clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
-                    Text("M", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onPrimaryContainer, fontWeight = FontWeight.Bold)
+            Row(Modifier.padding(start = 12.dp, top = 16.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Box(Modifier.size(32.dp).clip(RoundedCornerShape(11.dp)).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
+                    Text("M", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onPrimaryContainer, fontWeight = FontWeight.Bold)
                 }
                 Column {
-                    Text("Maalu", style = MaterialTheme.typography.titleLarge)
+                    Text("Maalu", style = MaterialTheme.typography.titleMedium)
                     Text(server, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                 }
             }
             NavGroup.entries.forEach { group ->
                 val items = MoreDestinations.filter { it.group == group && it.inDrawer }
                 if (items.isEmpty()) return@forEach
-                Text(group.label, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp))
+                Text(group.label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 12.dp, top = 10.dp, bottom = 2.dp))
                 items.forEach { d ->
                     val tint = Accents.getValue(d.accent)
                     NavigationDrawerItem(
                         label = { Text(d.label) },
-                        icon = { Icon(d.icon, null, tint = tint) },
+                        icon = { Icon(d.icon, null, tint = tint, modifier = Modifier.size(22.dp)) },
                         selected = d.id == selectedId,
                         onClick = { onOpen(d) },
+                        modifier = Modifier.height(44.dp),
                         badge = badges[d.id]?.takeIf { it > 0 }?.let { n -> { androidx.compose.material3.Badge { Text(app.maalu.data.badgeText(n)) } } },
                         colors = NavigationDrawerItemDefaults.colors(selectedContainerColor = tint.tintIcon(), unselectedContainerColor = androidx.compose.ui.graphics.Color.Transparent),
                     )
                 }
             }
-            HorizontalDivider(Modifier.padding(vertical = 16.dp, horizontal = 12.dp), color = MaterialTheme.colorScheme.outlineVariant)
-            Text("Appearance", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 16.dp, bottom = 8.dp))
+            HorizontalDivider(Modifier.padding(vertical = 8.dp, horizontal = 8.dp), color = MaterialTheme.colorScheme.outlineVariant)
+            Text("Appearance", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 12.dp, bottom = 6.dp))
             SegmentedPills(
                 ThemeMode.entries.map { it to it.label }, themeMode, onThemeMode,
-                modifier = Modifier.padding(horizontal = 12.dp),
+                modifier = Modifier.padding(horizontal = 4.dp),
                 tint = { Accents.getValue(when (it) { ThemeMode.Light -> "amber"; ThemeMode.Dark -> "violet"; ThemeMode.System -> "blue" }) },
             )
             NavigationDrawerItem(
                 label = { Text("Sign out", color = MaterialTheme.colorScheme.error) },
-                icon = { Icon(Icons.Outlined.Logout, null, tint = MaterialTheme.colorScheme.error) },
+                icon = { Icon(Icons.Outlined.Logout, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(22.dp)) },
                 selected = false,
                 onClick = onSignOut,
-                modifier = Modifier.padding(top = 8.dp),
+                modifier = Modifier.padding(top = 4.dp).height(44.dp),
                 colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = androidx.compose.ui.graphics.Color.Transparent),
             )
         }
