@@ -95,7 +95,7 @@ fun TransferSuggestionsCard(api: Api, suggestions: List<TransferSuggestion>, onC
                 PairRows(s)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(onClick = { confirming = s }, enabled = !busy, shapes = ButtonDefaults.shapes()) { Text("Make one transfer") }
-                    TextButton(
+                    TextButton(shapes = ButtonDefaults.shapes(),
                         enabled = !busy,
                         onClick = {
                             busy = true
@@ -154,7 +154,7 @@ fun MakeTransferDialog(api: Api, expense: Transaction, income: Transaction, onCl
             }
         },
         confirmButton = {
-            TextButton(enabled = !busy, onClick = {
+            TextButton(shapes = ButtonDefaults.shapes(), enabled = !busy, onClick = {
                 busy = true; error = null
                 scope.launch {
                     when (val r = api.postJson<Transaction>("transactions/link-transfer", pairJson(expense.id, income.id).toString())) {
@@ -164,7 +164,7 @@ fun MakeTransferDialog(api: Api, expense: Transaction, income: Transaction, onCl
                 }
             }) { Text(if (busy) "Working…" else "Make transfer") }
         },
-        dismissButton = { TextButton(onClick = onClose, enabled = !busy) { Text("Cancel") } },
+        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onClose, enabled = !busy) { Text("Cancel") } },
     )
 }
 

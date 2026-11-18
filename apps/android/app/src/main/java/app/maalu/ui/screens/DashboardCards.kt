@@ -1,5 +1,6 @@
 package app.maalu.ui.screens
 
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.foundation.background
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
@@ -383,7 +384,7 @@ fun MoneyFlowCard(categories: List<CategoryTotal>, currency: String) {
     var table by remember { mutableStateOf(false) }
     SectionCard("Money flow", formatMoney(flow.nodes.first { it.kind == FlowKind.Total }.value.toString(), currency)) {
         if (table) FlowTable(flow, currency) else FlowDiagram(flow, currency)
-        TextButton(onClick = { table = !table }) { Text(if (table) "Show the diagram" else "Show as a table") }
+        TextButton(shapes = ButtonDefaults.shapes(), onClick = { table = !table }) { Text(if (table) "Show the diagram" else "Show as a table") }
     }
 }
 

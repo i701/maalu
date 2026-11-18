@@ -230,7 +230,7 @@ private fun PlanRowContent(row: PlanRow, currency: String, canPay: Boolean, onPa
         if (row.firstShort) Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.errorContainer) {
             Text("Short from here", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onErrorContainer, modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp))
         }
-        if (row.kind != PlanKind.Card && canPay) TextButton(onClick = onPay, contentPadding = PaddingValues(0.dp)) {
+        if (row.kind != PlanKind.Card && canPay) TextButton(shapes = ButtonDefaults.shapes(), onClick = onPay, contentPadding = PaddingValues(0.dp)) {
             Text(if (row.kind == PlanKind.Income) "Mark as received" else if (row.transfer) "Mark as done" else if (row.estimate) "Enter the real amount" else "Mark as paid")
         }
     }
@@ -244,7 +244,7 @@ private fun Aside(d: AvailableToSpend) {
         Column {
             Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("What this counts", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
-                TextButton(onClick = { open = !open }) { Icon(if (open) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, if (open) "Hide" else "Show") }
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = { open = !open }) { Icon(if (open) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, if (open) "Hide" else "Show") }
             }
             Disclosure(open) {
                 Column(Modifier.padding(horizontal = 20.dp).padding(bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {

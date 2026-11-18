@@ -143,7 +143,7 @@ fun TrashScreen(api: Api) {
                         }
                     }
                     if (list.size < total) item {
-                        TextButton(
+                        TextButton(shapes = ButtonDefaults.shapes(),
                             onClick = {
                                 loadingMore = true
                                 scope.launch {
@@ -199,9 +199,9 @@ fun TrashScreen(api: Api) {
             title = { Text("Delete forever?") },
             text = { Text("Delete ${transactionCount(ids.size)} for good? This can't be undone.") },
             confirmButton = {
-                TextButton(onClick = { deleting = null; bulk("transactions/bulk/purge", ids) { "Deleted ${transactionCount(it)} for good" } }) { Text("Delete forever", color = MaterialTheme.colorScheme.error) }
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = { deleting = null; bulk("transactions/bulk/purge", ids) { "Deleted ${transactionCount(it)} for good" } }) { Text("Delete forever", color = MaterialTheme.colorScheme.error) }
             },
-            dismissButton = { TextButton(onClick = { deleting = null }) { Text("Keep them") } },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { deleting = null }) { Text("Keep them") } },
         )
     }
 }
@@ -212,12 +212,12 @@ private fun SelectionBar(count: Int, total: Int, loaded: Int, busy: Boolean, onR
         Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("$count selected", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
-                TextButton(onClick = onClear, enabled = !busy) { Text("Clear") }
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = onClear, enabled = !busy) { Text("Clear") }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Button(onClick = onRestore, enabled = !busy, shapes = ButtonDefaults.shapes()) { Icon(Icons.Outlined.RestoreFromTrash, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Restore") }
                 OutlinedButton(onClick = onDelete, enabled = !busy, shapes = ButtonDefaults.shapes()) { Icon(Icons.Outlined.DeleteForever, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Delete forever") }
-                if (total > loaded && count < total) TextButton(onClick = onSelectAll, enabled = !busy) { Text("Select all $total") }
+                if (total > loaded && count < total) TextButton(shapes = ButtonDefaults.shapes(), onClick = onSelectAll, enabled = !busy) { Text("Select all $total") }
             }
         }
     }
@@ -237,8 +237,8 @@ private fun TrashSheet(t: Transaction, onClose: () -> Unit, onRestore: () -> Uni
             DetailFact("Note", t.description)
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = onRestore, shapes = ButtonDefaults.shapes(), modifier = Modifier.weight(1f), colors = ButtonDefaults.filledTonalButtonColors()) { Icon(Icons.Outlined.RestoreFromTrash, null, Modifier.padding(end = 8.dp)); Text("Restore") }
-                Button(
-                    onClick = onDelete, shapes = ButtonDefaults.shapes(), modifier = Modifier.weight(1f),
+                Button(shapes = ButtonDefaults.shapes(),
+                    onClick = onDelete, modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer),
                 ) { Icon(Icons.Outlined.DeleteForever, null, Modifier.padding(end = 8.dp)); Text("Delete forever") }
             }

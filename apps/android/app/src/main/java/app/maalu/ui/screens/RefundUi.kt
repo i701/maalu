@@ -210,16 +210,16 @@ fun RefundDialog(api: Api, purchase: Transaction?, refund: Transaction?, onClose
         val state = rememberDatePickerState(initialSelectedDateMillis = LocalDate.parse(date).atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli())
         DatePickerDialog(
             onDismissRequest = { pickingDate = false },
-            confirmButton = { TextButton(onClick = { state.selectedDateMillis?.let { date = Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate().toString() }; pickingDate = false }) { Text("OK") } },
-            dismissButton = { TextButton(onClick = { pickingDate = false }) { Text("Cancel") } },
+            confirmButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { state.selectedDateMillis?.let { date = Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate().toString() }; pickingDate = false }) { Text("OK") } },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { pickingDate = false }) { Text("Cancel") } },
         ) { DatePicker(state) }
     }
     if (pickingTime) {
         val state = rememberTimePickerState(is24Hour = true)
         AlertDialog(
             onDismissRequest = { pickingTime = false },
-            confirmButton = { TextButton(onClick = { time = "%02d:%02d".format(state.hour, state.minute); pickingTime = false }) { Text("OK") } },
-            dismissButton = { TextButton(onClick = { pickingTime = false }) { Text("Cancel") } },
+            confirmButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { time = "%02d:%02d".format(state.hour, state.minute); pickingTime = false }) { Text("OK") } },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { pickingTime = false }) { Text("Cancel") } },
             text = { TimePicker(state) },
         )
     }
@@ -297,8 +297,8 @@ fun LinkRefundDialog(api: Api, income: Transaction, onClose: () -> Unit, onDone:
                 }
                 Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
-                    Button(
-                        enabled = ready && !busy, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth(),
+                    Button(shapes = ButtonDefaults.shapes(),
+                        enabled = ready && !busy, modifier = Modifier.fillMaxWidth(),
                         onClick = {
                             val p = chosen ?: return@Button
                             busy = true; error = null

@@ -214,22 +214,22 @@ fun DetailSheet(t: Transaction, onEdit: (() -> Unit)?, onDelete: () -> Unit, onC
                 Text(app.maalu.data.payTitle(t.type))
             }
             // the same money entered twice (an expense here and an income in another account): pair them into one transfer
-            if (onLinkTransfer != null) OutlinedButton(onClick = onLinkTransfer, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) { Text(app.maalu.data.mergeLabel(matchCount)) }
-            if (onRefund != null) OutlinedButton(onClick = onRefund, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) { Text("Refund") }
-            if (onLinkRefund != null) OutlinedButton(onClick = onLinkRefund, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) { Text("Link to a purchase") }
-            if (onDuplicate != null) OutlinedButton(onClick = onDuplicate, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) { Text("Duplicate as a new transaction") }
+            if (onLinkTransfer != null) OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = onLinkTransfer, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) { Text(app.maalu.data.mergeLabel(matchCount)) }
+            if (onRefund != null) OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = onRefund, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) { Text("Refund") }
+            if (onLinkRefund != null) OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = onLinkRefund, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) { Text("Link to a purchase") }
+            if (onDuplicate != null) OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = onDuplicate, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) { Text("Duplicate as a new transaction") }
             if (onSplit != null) Button(onClick = onSplit, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth().padding(top = 4.dp), colors = ButtonDefaults.filledTonalButtonColors()) { Text("Split salary") }
             if (onEdit == null && t.adjustment) Text(
                 if (t.adjustment) "A balance adjustment can only be deleted." else "",
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (onEdit != null) Button(
-                    onClick = onEdit, shapes = ButtonDefaults.shapes(), modifier = Modifier.weight(1f),
+                if (onEdit != null) Button(shapes = ButtonDefaults.shapes(),
+                    onClick = onEdit, modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.filledTonalButtonColors(),
                 ) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 8.dp)); Text("Edit") }
-                Button(
-                    onClick = onDelete, shapes = ButtonDefaults.shapes(), modifier = Modifier.weight(1f),
+                Button(shapes = ButtonDefaults.shapes(),
+                    onClick = onDelete, modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer),
                 ) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 8.dp)); Text("Delete") }
             }
@@ -286,7 +286,7 @@ fun TransactionDetailHost(api: Api, t: Transaction, scope: kotlinx.coroutines.Co
             title = { Text("Move to the trash?") },
             text = { Text("${t.title()} (${signed(t)}) will leave your balances and reports. You can undo this right after.") },
             confirmButton = {
-                TextButton(onClick = {
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = {
                     onClose()
                     scope.launch {
                         when (val r = api.delete("transactions/${t.id}")) {
@@ -301,7 +301,7 @@ fun TransactionDetailHost(api: Api, t: Transaction, scope: kotlinx.coroutines.Co
                     }
                 }) { Text("Move to trash", color = MaterialTheme.colorScheme.error) }
             },
-            dismissButton = { TextButton(onClick = onClose) { Text("Cancel") } },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onClose) { Text("Cancel") } },
         )
     }
 }

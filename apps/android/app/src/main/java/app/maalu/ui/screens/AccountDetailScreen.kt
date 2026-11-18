@@ -472,7 +472,7 @@ private fun AdjustBalanceDialog(api: Api, a: Account, onClose: () -> Unit, onDon
             }
         },
         confirmButton = {
-            TextButton(enabled = !busy && preview != null && preview.kind != null, onClick = {
+            TextButton(shapes = ButtonDefaults.shapes(), enabled = !busy && preview != null && preview.kind != null, onClick = {
                 busy = true
                 scope.launch {
                     when (val r = api.postJson<kotlinx.serialization.json.JsonElement>("accounts/${a.id}/adjust", adjustJson(mode, typed, note).toString())) {
@@ -482,6 +482,6 @@ private fun AdjustBalanceDialog(api: Api, a: Account, onClose: () -> Unit, onDon
                 }
             }) { Text(if (busy) "Saving…" else "Adjust") }
         },
-        dismissButton = { TextButton(onClick = onClose, enabled = !busy) { Text("Cancel") } },
+        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onClose, enabled = !busy) { Text("Cancel") } },
     )
 }

@@ -1,5 +1,6 @@
 package app.maalu.ui.screens
 
+import androidx.compose.material3.ButtonDefaults
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -123,13 +124,13 @@ fun AddReceiptButtons(enabled: Boolean, onFile: (PickedFile) -> Unit, onProblem:
         if (uri != null) scope.launch { readPicked(context, uri)?.let(onFile) ?: onProblem("That file could not be read.") }
     }
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedButton(enabled = enabled, onClick = {
+        OutlinedButton(shapes = ButtonDefaults.shapes(), enabled = enabled, onClick = {
             val target = newPhotoTarget(context)
             photo = target
             try { camera.launch(target.second) } catch (e: ActivityNotFoundException) { photo = null; onProblem("There is no camera app on this device.") }
         }) { Icon(Icons.Outlined.AddAPhoto, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Photo") }
-        OutlinedButton(enabled = enabled, onClick = { files.launch(ATTACHMENT_TYPES) }) { Icon(Icons.Outlined.AttachFile, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("File") }
-        OutlinedButton(enabled = enabled, onClick = onLink) { Icon(Icons.Outlined.Link, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Link") }
+        OutlinedButton(shapes = ButtonDefaults.shapes(), enabled = enabled, onClick = { files.launch(ATTACHMENT_TYPES) }) { Icon(Icons.Outlined.AttachFile, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("File") }
+        OutlinedButton(shapes = ButtonDefaults.shapes(), enabled = enabled, onClick = onLink) { Icon(Icons.Outlined.Link, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Link") }
     }
 }
 
@@ -151,12 +152,12 @@ fun AddLinkDialog(have: Int, onClose: () -> Unit, onAdd: (url: String, title: St
             }
         },
         confirmButton = {
-            TextButton(onClick = {
+            TextButton(shapes = ButtonDefaults.shapes(), onClick = {
                 error = linkProblem(url, have)
                 if (error == null) onAdd(url, title)
             }) { Text("Add") }
         },
-        dismissButton = { TextButton(onClick = onClose) { Text("Cancel") } },
+        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onClose) { Text("Cancel") } },
     )
 }
 
@@ -251,7 +252,7 @@ fun ReceiptsSection(api: Api, t: Transaction, onChanged: () -> Unit, say: (Strin
             title = { Text("Remove this file?") },
             text = { Text("${a.filename} is deleted for good. This can't be undone.") },
             confirmButton = {
-                TextButton(onClick = {
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = {
                     removingFile = null; busy = true
                     scope.launch {
                         when (val r = api.delete("attachments/${a.id}")) {
@@ -262,7 +263,7 @@ fun ReceiptsSection(api: Api, t: Transaction, onChanged: () -> Unit, say: (Strin
                     }
                 }) { Text("Remove", color = MaterialTheme.colorScheme.error) }
             },
-            dismissButton = { TextButton(onClick = { removingFile = null }) { Text("Keep it") } },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { removingFile = null }) { Text("Keep it") } },
         )
     }
     removingLink?.let { l ->
@@ -271,7 +272,7 @@ fun ReceiptsSection(api: Api, t: Transaction, onChanged: () -> Unit, say: (Strin
             title = { Text("Remove this link?") },
             text = { Text(linkLabel(l)) },
             confirmButton = {
-                TextButton(onClick = {
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = {
                     removingLink = null; busy = true
                     scope.launch {
                         when (val r = api.delete("links/${l.id}")) {
@@ -282,7 +283,7 @@ fun ReceiptsSection(api: Api, t: Transaction, onChanged: () -> Unit, say: (Strin
                     }
                 }) { Text("Remove", color = MaterialTheme.colorScheme.error) }
             },
-            dismissButton = { TextButton(onClick = { removingLink = null }) { Text("Keep it") } },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { removingLink = null }) { Text("Keep it") } },
         )
     }
 }

@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -199,12 +200,12 @@ fun SubscriptionFormScreen(api: Api, editing: Subscription?, onClose: () -> Unit
         DatePickerDialog(
             onDismissRequest = { pickingDate = false },
             confirmButton = {
-                TextButton(onClick = {
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = {
                     state.selectedDateMillis?.let { set(form.copy(startDate = Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate().toString())) }
                     pickingDate = false
                 }) { Text("OK") }
             },
-            dismissButton = { TextButton(onClick = { pickingDate = false }) { Text("Cancel") } },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { pickingDate = false }) { Text("Cancel") } },
         ) { DatePicker(state) }
     }
 }

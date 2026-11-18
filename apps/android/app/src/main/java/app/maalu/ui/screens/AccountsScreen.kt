@@ -156,7 +156,7 @@ fun AccountsScreen(api: Api, onOpen: (Account) -> Unit) {
                         // closed accounts: out of the totals and the pickers, history kept; collapsed, since they are not what you came for
                         if (s.data.archived.isNotEmpty()) {
                             item(key = "archived-header") {
-                                TextButton(onClick = { showArchived = !showArchived }, modifier = Modifier.padding(top = 12.dp)) {
+                                TextButton(shapes = ButtonDefaults.shapes(), onClick = { showArchived = !showArchived }, modifier = Modifier.padding(top = 12.dp)) {
                                     Icon(if (showArchived) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, null, Modifier.padding(end = 6.dp))
                                     Text("Archived (${s.data.archived.size})")
                                 }

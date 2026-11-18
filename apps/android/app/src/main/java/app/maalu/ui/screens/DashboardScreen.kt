@@ -213,10 +213,10 @@ private fun AvailableCard(a: AvailableToSpend, onOpenPlan: () -> Unit) {
             Text("until ${shortDate(a.periodEnd)}", style = MaterialTheme.typography.bodySmall)
             Text(working(a), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                TextButton(onClick = { open = !open }, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) {
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = { open = !open }, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) {
                     Text(if (open) "Hide the working" else "Show the working")
                 }
-                TextButton(onClick = onOpenPlan, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) { Text("Open the month plan") }
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = onOpenPlan, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) { Text("Open the month plan") }
             }
             Disclosure(open) { Working(a) }
         }

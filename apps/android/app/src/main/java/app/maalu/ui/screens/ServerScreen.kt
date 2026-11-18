@@ -56,8 +56,7 @@ fun ServerScreen(onConnected: (String) -> Unit) {
             supportingText = error?.let { { Text(it) } },
             modifier = Modifier.fillMaxWidth(),
         )
-        Button(
-            shapes = ButtonDefaults.shapes(),
+        Button(shapes = ButtonDefaults.shapes(),
             enabled = text.isNotBlank() && !checking,
             modifier = Modifier.fillMaxWidth(),
             onClick = {

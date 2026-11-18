@@ -128,7 +128,7 @@ fun LocationDialog(api: Api, initial: Spot?, onClose: () -> Unit, onDone: (Spot?
                 if (hits.isNotEmpty()) Surface(Modifier.fillMaxWidth().padding(horizontal = 16.dp), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
                     Column {
                         hits.forEach { h ->
-                            TextButton(
+                            TextButton(shapes = ButtonDefaults.shapes(),
                                 onClick = {
                                     hits = emptyList()
                                     h.latitude.toDoubleOrNull()?.let { la -> h.longitude.toDoubleOrNull()?.let { lo -> place(la, lo, 17.0) } }
@@ -160,20 +160,19 @@ fun LocationDialog(api: Api, initial: Spot?, onClose: () -> Unit, onDone: (Spot?
                                 "Or paste: 4.1755, 73.5093", isError = coords.isNotBlank() && parseCoordinates(coords) == null && pin == null,
                             )
                         }
-                        OutlinedButton(
+                        OutlinedButton(shapes = ButtonDefaults.shapes(),
                             onClick = {
                                 if (context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED || context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)
                                     lastKnown(context)?.let { place(it.first, it.second, 17.0) } ?: say("Could not find where you are. Tap the map instead.")
                                 else askLocation.launch(Manifest.permission.ACCESS_FINE_LOCATION)
                             },
-                            shapes = ButtonDefaults.shapes(),
                         ) { Icon(Icons.Outlined.MyLocation, null, Modifier.padding(end = 6.dp)); Text("Where I am") }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (initial != null) OutlinedButton(onClick = { onDone(null) }, shapes = ButtonDefaults.shapes()) { Text("Remove") }
-                        Button(
+                        Button(shapes = ButtonDefaults.shapes(),
                             onClick = { pin?.let { onDone(Spot(toCoordinate(it.first), toCoordinate(it.second), name.trim())) } },
-                            enabled = pin != null, shapes = ButtonDefaults.shapes(), modifier = Modifier.weight(1f),
+                            enabled = pin != null, modifier = Modifier.weight(1f),
                         ) { Icon(Icons.Outlined.LocationOn, null, Modifier.padding(end = 6.dp)); Text("Use this spot") }
                     }
                 }

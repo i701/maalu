@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -100,13 +101,13 @@ fun ChangePasswordDialog(api: Api, twoFactor: Boolean, onClose: () -> Unit, onDo
                 if (twoFactor) {
                     if (recovery) CompactField(code, { code = it.take(14); error = null }, "Recovery code", keyboard = KeyboardOptions(keyboardType = KeyboardType.Ascii), enabled = !busy)
                     else Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { app.maalu.ui.components.OtpInput(code, { code = it; error = null }, enabled = !busy, isError = false) }
-                    TextButton(onClick = { recovery = !recovery; code = ""; error = null }, enabled = !busy) { Text(if (recovery) "Use an authenticator code" else "Use a recovery code instead") }
+                    TextButton(shapes = ButtonDefaults.shapes(), onClick = { recovery = !recovery; code = ""; error = null }, enabled = !busy) { Text(if (recovery) "Use an authenticator code" else "Use a recovery code instead") }
                 }
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
             }
         },
         confirmButton = {
-            TextButton(enabled = !busy, onClick = {
+            TextButton(shapes = ButtonDefaults.shapes(), enabled = !busy, onClick = {
                 error = passwordProblem(current, new, again)
                 if (error != null) return@TextButton
                 val send = if (twoFactor) codeToSend(code, allowRecovery = recovery).also { if (it == null) error = codeProblem(code, recovery) } else null
@@ -120,7 +121,7 @@ fun ChangePasswordDialog(api: Api, twoFactor: Boolean, onClose: () -> Unit, onDo
                 }
             }) { Text(if (busy) "Working…" else "Change password") }
         },
-        dismissButton = { TextButton(onClick = onClose, enabled = !busy) { Text("Cancel") } },
+        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onClose, enabled = !busy) { Text("Cancel") } },
     )
 }
 
@@ -137,9 +138,9 @@ fun SessionsList(sessions: List<SessionRow>, busy: Boolean, onEnd: (SessionRow) 
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                if (!s.current) TextButton(onClick = { onEnd(s) }, enabled = !busy) { Text("Sign out", color = MaterialTheme.colorScheme.error) }
+                if (!s.current) TextButton(shapes = ButtonDefaults.shapes(), onClick = { onEnd(s) }, enabled = !busy) { Text("Sign out", color = MaterialTheme.colorScheme.error) }
             }
         }
-        if (sessions.count { !it.current } > 0) TextButton(onClick = onEndOthers, enabled = !busy) { Text("Sign out all other devices", color = MaterialTheme.colorScheme.error) }
+        if (sessions.count { !it.current } > 0) TextButton(shapes = ButtonDefaults.shapes(), onClick = onEndOthers, enabled = !busy) { Text("Sign out all other devices", color = MaterialTheme.colorScheme.error) }
     }
 }

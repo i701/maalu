@@ -122,7 +122,7 @@ fun FiltersSheet(api: Api, initial: TxFilters, onApply: (TxFilters) -> Unit, onD
                     Icon(Icons.Outlined.Tune, null, tint = MaterialTheme.colorScheme.onPrimaryContainer, modifier = Modifier.size(20.dp))
                 }
                 Text("Filters", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f).padding(start = 12.dp))
-                TextButton(onClick = { draft = draft.clearDetails() }, enabled = draft.detailCount() > 0) { Text("Reset") }
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = { draft = draft.clearDetails() }, enabled = draft.detailCount() > 0) { Text("Reset") }
             }
             Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Section("Date", Icons.Outlined.CalendarMonth, Accents.getValue("blue")) {
@@ -208,9 +208,8 @@ fun FiltersSheet(api: Api, initial: TxFilters, onApply: (TxFilters) -> Unit, onD
                     Text("In each transaction's own currency.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-            Button(
+            Button(shapes = ButtonDefaults.shapes(),
                 onClick = { onApply(draft) },
-                shapes = ButtonDefaults.shapes(),
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 24.dp),
             ) { Text("Show results") }
         }
@@ -221,7 +220,7 @@ fun FiltersSheet(api: Api, initial: TxFilters, onApply: (TxFilters) -> Unit, onD
         DatePickerDialog(
             onDismissRequest = { pickingDates = false },
             confirmButton = {
-                TextButton(
+                TextButton(shapes = ButtonDefaults.shapes(),
                     enabled = state.selectedStartDateMillis != null,
                     onClick = {
                         fun iso(ms: Long?) = ms?.let { Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate().toString() }
@@ -231,7 +230,7 @@ fun FiltersSheet(api: Api, initial: TxFilters, onApply: (TxFilters) -> Unit, onD
                     },
                 ) { Text("OK") }
             },
-            dismissButton = { TextButton(onClick = { pickingDates = false }) { Text("Cancel") } },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { pickingDates = false }) { Text("Cancel") } },
         ) { DateRangePicker(state, modifier = Modifier.weight(1f, fill = false)) }
     }
 }

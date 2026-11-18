@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -190,7 +191,7 @@ fun LineFormScreen(api: Api, currency: String, budget: Budget, start: LineForm?,
         DatePickerDialog(
             onDismissRequest = { pickingDate = null },
             confirmButton = {
-                TextButton(onClick = {
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = {
                     state.selectedDateMillis?.let {
                         val d = Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate().toString()
                         // choosing a first day after the last one moves the last day with it
@@ -200,7 +201,7 @@ fun LineFormScreen(api: Api, currency: String, budget: Budget, start: LineForm?,
                     pickingDate = null
                 }) { Text("OK") }
             },
-            dismissButton = { TextButton(onClick = { pickingDate = null }) { Text("Cancel") } },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { pickingDate = null }) { Text("Cancel") } },
         ) { DatePicker(state) }
     }
 }
@@ -277,12 +278,12 @@ fun GoalFormScreen(api: Api, currency: String, editing: Goal?, onClose: () -> Un
         DatePickerDialog(
             onDismissRequest = { pickingDate = false },
             confirmButton = {
-                TextButton(onClick = {
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = {
                     state.selectedDateMillis?.let { form = form.copy(targetDate = Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate().toString()) }
                     pickingDate = false
                 }) { Text("OK") }
             },
-            dismissButton = { TextButton(onClick = { pickingDate = false }) { Text("Cancel") } },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { pickingDate = false }) { Text("Cancel") } },
         ) { DatePicker(state) }
     }
 }
@@ -310,7 +311,7 @@ fun GoalMoneyDialog(api: Api, goal: Goal, onClose: () -> Unit, onDone: () -> Uni
             }
         },
         confirmButton = {
-            TextButton(enabled = !busy, onClick = {
+            TextButton(shapes = ButtonDefaults.shapes(), enabled = !busy, onClick = {
                 if (!isPositive(amount)) { error = "Enter an amount above zero."; return@TextButton }
                 busy = true
                 scope.launch {
@@ -321,6 +322,6 @@ fun GoalMoneyDialog(api: Api, goal: Goal, onClose: () -> Unit, onDone: () -> Uni
                 }
             }) { Text(if (busy) "Saving…" else if (take) "Take out" else "Add") }
         },
-        dismissButton = { TextButton(onClick = onClose, enabled = !busy) { Text("Cancel") } },
+        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onClose, enabled = !busy) { Text("Cancel") } },
     )
 }

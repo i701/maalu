@@ -266,7 +266,7 @@ private fun SuggestionsCard(candidates: List<SubscriptionCandidate>, onAdd: (Sub
                     Text("${candidates.size} suggested ${if (candidates.size == 1) "subscription" else "subscriptions"}", style = MaterialTheme.typography.titleSmall)
                     Text("Repeating payments we found in your history.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                TextButton(onClick = { open = !open }) { Icon(if (open) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, if (open) "Hide suggestions" else "Show suggestions") }
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = { open = !open }) { Icon(if (open) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, if (open) "Hide suggestions" else "Show suggestions") }
             }
             Disclosure(open) {
                 Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -283,7 +283,7 @@ private fun SuggestionsCard(candidates: List<SubscriptionCandidate>, onAdd: (Sub
                                 )
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     Button(onClick = { onAdd(c) }, shapes = ButtonDefaults.shapes()) { Text("Add") }
-                                    TextButton(onClick = { onDismiss(c) }) { Text("Not a subscription") }
+                                    TextButton(shapes = ButtonDefaults.shapes(), onClick = { onDismiss(c) }) { Text("Not a subscription") }
                                 }
                             }
                         }
@@ -345,8 +345,8 @@ private fun SubscriptionSheet(s: Subscription, onEdit: () -> Unit, onToggle: () 
                     Icon(if (s.canPause()) Icons.Outlined.Pause else Icons.Outlined.PlayArrow, null, Modifier.padding(end = 6.dp)); Text(if (s.canPause()) "Pause" else "Resume")
                 }
             }
-            Button(
-                onClick = onDelete, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth(),
+            Button(shapes = ButtonDefaults.shapes(),
+                onClick = onDelete, modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer),
             ) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 6.dp)); Text("Delete") }
         }
@@ -380,7 +380,7 @@ private fun AcceptDialog(api: Api, c: SubscriptionCandidate, onClose: () -> Unit
             }
         },
         confirmButton = {
-            TextButton(enabled = !busy, onClick = {
+            TextButton(shapes = ButtonDefaults.shapes(), enabled = !busy, onClick = {
                 busy = true
                 scope.launch {
                     when (val r = api.postJson<Subscription>("subscriptions/candidates/accept", acceptJson(c, name, amount, count, unit).toString())) {
@@ -390,6 +390,6 @@ private fun AcceptDialog(api: Api, c: SubscriptionCandidate, onClose: () -> Unit
                 }
             }) { Text(if (busy) "Adding…" else "Add") }
         },
-        dismissButton = { TextButton(onClick = onClose, enabled = !busy) { Text("Cancel") } },
+        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onClose, enabled = !busy) { Text("Cancel") } },
     )
 }

@@ -173,7 +173,7 @@ private fun TaskCard(task: SplitTask, busy: Boolean, onApprove: () -> Unit, onRe
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Button(onClick = onApprove, enabled = !busy && ready.isNotEmpty() && !plan.over, shapes = ButtonDefaults.shapes()) { Text(if (busy) "Working…" else "Approve") }
                 OutlinedButton(onClick = onReview, enabled = !busy, shapes = ButtonDefaults.shapes()) { Text("Review and edit") }
-                TextButton(onClick = onDismiss, enabled = !busy) { Text("Dismiss") }
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss, enabled = !busy) { Text("Dismiss") }
             }
         }
     }

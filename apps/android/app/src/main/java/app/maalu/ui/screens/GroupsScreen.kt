@@ -144,7 +144,7 @@ fun GroupsScreen(api: Api) {
                         }
                     }
                     if (list.size < total) item {
-                        TextButton(
+                        TextButton(shapes = ButtonDefaults.shapes(),
                             onClick = {
                                 loadingMore = true
                                 scope.launch {
@@ -287,7 +287,7 @@ private fun GroupSheet(api: Api, id: String, onClose: () -> Unit, onChanged: () 
                     }
                 }
                 item {
-                    TextButton(onClick = { deleting = true }, enabled = !busy) { Text("Delete the group", color = MaterialTheme.colorScheme.error) }
+                    TextButton(shapes = ButtonDefaults.shapes(), onClick = { deleting = true }, enabled = !busy) { Text("Delete the group", color = MaterialTheme.colorScheme.error) }
                     Text("Deleting a group only unlinks its transactions; they stay as they are.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
@@ -317,7 +317,7 @@ private fun GroupSheet(api: Api, id: String, onClose: () -> Unit, onChanged: () 
             title = { Text("Delete ${g2.name}?") },
             text = { Text("The transactions in it stay as they are; only the group goes.") },
             confirmButton = {
-                TextButton(onClick = {
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = {
                     deleting = false
                     scope.launch {
                         when (val r = api.delete("groups/$id")) {
@@ -327,7 +327,7 @@ private fun GroupSheet(api: Api, id: String, onClose: () -> Unit, onChanged: () 
                     }
                 }) { Text("Delete", color = MaterialTheme.colorScheme.error) }
             },
-            dismissButton = { TextButton(onClick = { deleting = false }) { Text("Keep it") } },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { deleting = false }) { Text("Keep it") } },
         )
     }
 }
@@ -360,7 +360,7 @@ private fun EditGroupDialog(api: Api, id: String, g: GroupDetail, onClose: () ->
             }
         },
         confirmButton = {
-            TextButton(enabled = !busy, onClick = {
+            TextButton(shapes = ButtonDefaults.shapes(), enabled = !busy, onClick = {
                 error = groupNameProblem(name)
                 if (error != null) return@TextButton
                 busy = true
@@ -372,7 +372,7 @@ private fun EditGroupDialog(api: Api, id: String, g: GroupDetail, onClose: () ->
                 }
             }) { Text(if (busy) "Saving…" else "Save") }
         },
-        dismissButton = { TextButton(onClick = onClose, enabled = !busy) { Text("Cancel") } },
+        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onClose, enabled = !busy) { Text("Cancel") } },
     )
 }
 
@@ -427,7 +427,7 @@ fun TransactionPicker(api: Api, initial: Set<String>, maxPick: Int, onClose: () 
                             }
                         }
                         if (list.size < total) item {
-                            TextButton(
+                            TextButton(shapes = ButtonDefaults.shapes(),
                                 onClick = {
                                     loadingMore = true
                                     scope.launch {

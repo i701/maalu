@@ -126,7 +126,7 @@ fun TemplatesScreen(api: Api) {
             title = { Text("Delete ${t.name}?") },
             text = { Text("Transactions made from it are not affected.") },
             confirmButton = {
-                TextButton(onClick = {
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = {
                     deleting = null
                     scope.launch {
                         when (val r = api.delete("templates/${t.id}")) {
@@ -136,7 +136,7 @@ fun TemplatesScreen(api: Api) {
                     }
                 }) { Text("Delete", color = MaterialTheme.colorScheme.error) }
             },
-            dismissButton = { TextButton(onClick = { deleting = null }) { Text("Keep it") } },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { deleting = null }) { Text("Keep it") } },
         )
     }
 }
@@ -157,7 +157,7 @@ private fun RenameDialog(api: Api, t: Template, onClose: () -> Unit, onDone: () 
             }
         },
         confirmButton = {
-            TextButton(enabled = !busy, onClick = {
+            TextButton(shapes = ButtonDefaults.shapes(), enabled = !busy, onClick = {
                 error = templateNameProblem(name)
                 if (error != null) return@TextButton
                 busy = true
@@ -169,6 +169,6 @@ private fun RenameDialog(api: Api, t: Template, onClose: () -> Unit, onDone: () 
                 }
             }) { Text(if (busy) "Saving…" else "Save") }
         },
-        dismissButton = { TextButton(onClick = onClose, enabled = !busy) { Text("Cancel") } },
+        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onClose, enabled = !busy) { Text("Cancel") } },
     )
 }

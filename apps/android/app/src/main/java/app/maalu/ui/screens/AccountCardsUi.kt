@@ -67,7 +67,7 @@ fun AccountCardsSection(api: Api, account: Account, accounts: List<Account>, car
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Cards", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-                if (canHaveCards(account.group) && !archived) TextButton(onClick = { dialog = credit to null }) { Text(if (credit) "Add credit card" else "Add debit card") }
+                if (canHaveCards(account.group) && !archived) TextButton(shapes = ButtonDefaults.shapes(), onClick = { dialog = credit to null }) { Text(if (credit) "Add credit card" else "Add debit card") }
             }
             if (own.isEmpty() && repaid.isEmpty()) Text(
                 if (credit) "Add the card to pick it on purchases. What you spend with it is owed here."
@@ -83,7 +83,7 @@ fun AccountCardsSection(api: Api, account: Account, accounts: List<Account>, car
                             c.repayAccount?.let { Text("Repaid from ${it.name}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                         }
                     }
-                    repaymentForm(c)?.let { form -> if (!archived) TextButton(onClick = { onRepay(form) }) { Text("Repay") } }
+                    repaymentForm(c)?.let { form -> if (!archived) TextButton(shapes = ButtonDefaults.shapes(), onClick = { onRepay(form) }) { Text("Repay") } }
                     IconButton(onClick = { dialog = credit to c }) { Icon(Icons.Outlined.Edit, "Edit ${c.name}") }
                     IconButton(onClick = { deleting = c }) { Icon(Icons.Outlined.Delete, "Delete ${c.name}") }
                 }
@@ -91,7 +91,7 @@ fun AccountCardsSection(api: Api, account: Account, accounts: List<Account>, car
             repaid.forEach { c ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("${c.text()} is repaid from this account", Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    repaymentForm(c)?.let { form -> if (!archived) TextButton(onClick = { onRepay(form) }) { Text("Repay") } }
+                    repaymentForm(c)?.let { form -> if (!archived) TextButton(shapes = ButtonDefaults.shapes(), onClick = { onRepay(form) }) { Text("Repay") } }
                 }
             }
         }
@@ -106,7 +106,7 @@ fun AccountCardsSection(api: Api, account: Account, accounts: List<Account>, car
             title = { Text("Delete card?") },
             text = { Text("Delete \"${c.text()}\"? Its transactions stay, and keep their account.") },
             confirmButton = {
-                TextButton(onClick = {
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = {
                     deleting = null
                     scope.launch {
                         when (val r = api.delete("cards/${c.id}")) {
@@ -116,7 +116,7 @@ fun AccountCardsSection(api: Api, account: Account, accounts: List<Account>, car
                     }
                 }) { Text("Delete", color = MaterialTheme.colorScheme.error) }
             },
-            dismissButton = { TextButton(onClick = { deleting = null }) { Text("Keep it") } },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { deleting = null }) { Text("Keep it") } },
         )
     }
 }
@@ -147,7 +147,7 @@ private fun CardDialog(api: Api, account: Account, accounts: List<Account>, card
             }
         },
         confirmButton = {
-            TextButton(enabled = !busy, onClick = {
+            TextButton(shapes = ButtonDefaults.shapes(), enabled = !busy, onClick = {
                 error = cardNameProblem(name) ?: cardDigitsProblem(digits)
                 if (error != null) return@TextButton
                 busy = true
@@ -161,6 +161,6 @@ private fun CardDialog(api: Api, account: Account, accounts: List<Account>, card
                 }
             }) { Text(if (busy) "Saving…" else "Save") }
         },
-        dismissButton = { TextButton(onClick = onClose, enabled = !busy) { Text("Cancel") } },
+        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onClose, enabled = !busy) { Text("Cancel") } },
     )
 }

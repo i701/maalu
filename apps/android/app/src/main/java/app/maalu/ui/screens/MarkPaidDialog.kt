@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -131,7 +132,7 @@ fun MarkPaidDialog(api: Api, t: Transaction, baseCurrency: String?, onClose: () 
             }
         },
         confirmButton = {
-            TextButton(enabled = !busy, onClick = {
+            TextButton(shapes = ButtonDefaults.shapes(), enabled = !busy, onClick = {
                 if (!transfer && !isPositive(amount)) { amountError = true; error = "Enter an amount above zero."; return@TextButton }
                 busy = true; error = null
                 val pay: PayAmounts? = if (transfer) null else payBody(amount.trim(), foreign, rate, plannedRate, charged)
@@ -143,7 +144,7 @@ fun MarkPaidDialog(api: Api, t: Transaction, baseCurrency: String?, onClose: () 
                 }
             }) { Text(if (busy) "Saving…" else payTitle(t.type)) }
         },
-        dismissButton = { TextButton(onClick = onClose, enabled = !busy) { Text("Cancel") } },
+        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onClose, enabled = !busy) { Text("Cancel") } },
     )
 
     if (pickingDate) {
@@ -151,20 +152,20 @@ fun MarkPaidDialog(api: Api, t: Transaction, baseCurrency: String?, onClose: () 
         DatePickerDialog(
             onDismissRequest = { pickingDate = false },
             confirmButton = {
-                TextButton(onClick = {
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = {
                     state.selectedDateMillis?.let { date = Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate().toString() }
                     pickingDate = false
                 }) { Text("OK") }
             },
-            dismissButton = { TextButton(onClick = { pickingDate = false }) { Text("Cancel") } },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { pickingDate = false }) { Text("Cancel") } },
         ) { DatePicker(state) }
     }
     if (pickingTime) {
         val state = rememberTimePickerState(is24Hour = true)
         AlertDialog(
             onDismissRequest = { pickingTime = false },
-            confirmButton = { TextButton(onClick = { time = "%02d:%02d".format(state.hour, state.minute); pickingTime = false }) { Text("OK") } },
-            dismissButton = { TextButton(onClick = { pickingTime = false }) { Text("Cancel") } },
+            confirmButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { time = "%02d:%02d".format(state.hour, state.minute); pickingTime = false }) { Text("OK") } },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { pickingTime = false }) { Text("Cancel") } },
             text = { TimePicker(state) },
         )
     }

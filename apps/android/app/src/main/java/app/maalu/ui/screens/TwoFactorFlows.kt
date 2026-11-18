@@ -128,20 +128,19 @@ fun TwoFactorSetupScreen(api: Api, onClose: () -> Unit, onEnabled: (List<String>
                 if (loadError == null) Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             } else {
                 Text("Use any authenticator app, such as Google Authenticator, Aegis or 2FAS.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (isOtpauthUri(s.otpauthUri)) Button(
+                if (isOtpauthUri(s.otpauthUri)) Button(shapes = ButtonDefaults.shapes(),
                     onClick = {
                         try { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(s.otpauthUri)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
                         catch (e: ActivityNotFoundException) { scope.launch { snackbar.showSnackbar("No authenticator app found. Copy the key instead.") } }
                     },
-                    shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                 ) { Icon(Icons.Outlined.OpenInNew, null, Modifier.padding(end = 8.dp)); Text("Open in authenticator app") }
                 Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
                     Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("Or type this key in by hand", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(groupSecret(s.secret), style = MaterialTheme.typography.titleMedium, fontFamily = FontFamily.Monospace)
-                        OutlinedButton(
+                        OutlinedButton(shapes = ButtonDefaults.shapes(),
                             onClick = { copySecret(context, "Authenticator key", s.secret); scope.launch { snackbar.showSnackbar("Key copied") } },
-                            shapes = ButtonDefaults.shapes(),
                         ) { Icon(Icons.Outlined.ContentCopy, null, Modifier.padding(end = 8.dp)); Text("Copy key") }
                     }
                 }
@@ -187,7 +186,7 @@ fun RecoveryCodesDialog(codes: List<String>, onDone: () -> Unit) {
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDone) { Text("I have saved them") } },
+        confirmButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onDone) { Text("I have saved them") } },
     )
 }
 
@@ -222,12 +221,12 @@ fun ConfirmSecondFactorDialog(api: Api, action: ConfirmAction, onClose: () -> Un
                 ) else Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     OtpInput(code, { code = it; error = null }, enabled = !busy, isError = error != null)
                 }
-                TextButton(onClick = { recovery = !recovery; code = ""; error = null }, enabled = !busy) { Text(if (recovery) "Use an authenticator code" else "Use a recovery code instead") }
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = { recovery = !recovery; code = ""; error = null }, enabled = !busy) { Text(if (recovery) "Use an authenticator code" else "Use a recovery code instead") }
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
             }
         },
         confirmButton = {
-            TextButton(enabled = !busy, onClick = {
+            TextButton(shapes = ButtonDefaults.shapes(), enabled = !busy, onClick = {
                 val send = codeToSend(code, allowRecovery = recovery)
                 when {
                     password.isEmpty() -> { error = "Enter your password."; return@TextButton }
@@ -249,6 +248,6 @@ fun ConfirmSecondFactorDialog(api: Api, action: ConfirmAction, onClose: () -> Un
                 }
             }) { Text(if (busy) "Working…" else if (action == ConfirmAction.Disable) "Turn off" else "Make new codes", color = if (action == ConfirmAction.Disable) MaterialTheme.colorScheme.error else androidx.compose.ui.graphics.Color.Unspecified) }
         },
-        dismissButton = { TextButton(onClick = onClose, enabled = !busy) { Text("Cancel") } },
+        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onClose, enabled = !busy) { Text("Cancel") } },
     )
 }

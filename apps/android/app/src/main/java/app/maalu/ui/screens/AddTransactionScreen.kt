@@ -312,7 +312,7 @@ private fun SaveTemplateDialog(api: Api, form: AddForm, accounts: List<Account>,
             }
         },
         confirmButton = {
-            TextButton(enabled = !busy, onClick = {
+            TextButton(shapes = ButtonDefaults.shapes(), enabled = !busy, onClick = {
                 error = templateNameProblem(name)
                 if (error != null) return@TextButton
                 busy = true
@@ -324,7 +324,7 @@ private fun SaveTemplateDialog(api: Api, form: AddForm, accounts: List<Account>,
                 }
             }) { Text(if (busy) "Saving…" else "Save") }
         },
-        dismissButton = { TextButton(onClick = onClose, enabled = !busy) { Text("Cancel") } },
+        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onClose, enabled = !busy) { Text("Cancel") } },
     )
 }
 
@@ -504,7 +504,7 @@ private fun Form(o: FormOptions, saveLabel: String, form: AddForm, onForm: (AddF
             Button(onClick = onSave, enabled = !busy, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth()) {
                 Text(if (busy) "Saving…" else saveLabel)
             }
-            if (onSaveAnother != null) OutlinedButton(onClick = onSaveAnother, enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text("Save and add another") }
+            if (onSaveAnother != null) OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = onSaveAnother, enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text("Save and add another") }
         }
     }
 
@@ -513,12 +513,12 @@ private fun Form(o: FormOptions, saveLabel: String, form: AddForm, onForm: (AddF
         DatePickerDialog(
             onDismissRequest = { pickingDate = false },
             confirmButton = {
-                TextButton(onClick = {
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = {
                     state.selectedDateMillis?.let { ms -> onForm(form.withDate(Instant.ofEpochMilli(ms).atZone(ZoneOffset.UTC).toLocalDate().toString())) }
                     pickingDate = false
                 }) { Text("OK") }
             },
-            dismissButton = { TextButton(onClick = { pickingDate = false }) { Text("Cancel") } },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { pickingDate = false }) { Text("Cancel") } },
         ) { DatePicker(state) }
     }
     if (pickingTime) {
@@ -526,9 +526,9 @@ private fun Form(o: FormOptions, saveLabel: String, form: AddForm, onForm: (AddF
         AlertDialog(
             onDismissRequest = { pickingTime = false },
             confirmButton = {
-                TextButton(onClick = { onForm(form.copy(time = "%02d:%02d".format(state.hour, state.minute))); pickingTime = false }) { Text("OK") }
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = { onForm(form.copy(time = "%02d:%02d".format(state.hour, state.minute))); pickingTime = false }) { Text("OK") }
             },
-            dismissButton = { TextButton(onClick = { pickingTime = false }) { Text("Cancel") } },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { pickingTime = false }) { Text("Cancel") } },
             text = { TimePicker(state) },
         )
     }
@@ -569,13 +569,13 @@ private fun PendingReceipts(files: MutableList<PickedFile>, links: MutableList<P
         files.forEachIndexed { i, f ->
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text("${f.name} · ${humanSize(f.bytes.size.toLong())}", Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-                TextButton(onClick = { files.removeAt(i) }, enabled = !busy) { Text("Remove") }
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = { files.removeAt(i) }, enabled = !busy) { Text("Remove") }
             }
         }
         links.forEachIndexed { i, (url, title) ->
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(title.ifBlank { url }, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-                TextButton(onClick = { links.removeAt(i) }, enabled = !busy) { Text("Remove") }
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = { links.removeAt(i) }, enabled = !busy) { Text("Remove") }
             }
         }
         AddReceiptButtons(
@@ -641,7 +641,7 @@ private fun ItemsEditor(form: AddForm, onForm: (AddForm) -> Unit, categories: Li
             }
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = { onForm(form.copy(items = form.items + newItem())) }, enabled = !busy) { Text("Add item") }
+            TextButton(shapes = ButtonDefaults.shapes(), onClick = { onForm(form.copy(items = form.items + newItem())) }, enabled = !busy) { Text("Add item") }
             Spacer(Modifier.weight(1f))
             Text("Total ", style = MaterialTheme.typography.bodyMedium)
             MoneyText(splitTotal(lines).toPlainString(), currency, style = MaterialTheme.typography.titleSmall)

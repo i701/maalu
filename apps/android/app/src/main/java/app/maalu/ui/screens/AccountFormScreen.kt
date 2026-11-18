@@ -136,7 +136,7 @@ fun AccountFormScreen(api: Api, existing: List<Account>, editing: Account?, onCl
                     }
                     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
-                        Button(
+                        Button(shapes = ButtonDefaults.shapes(),
                             onClick = {
                                 val problem = form.problem(l.base)
                                 if (problem != null) {
@@ -160,7 +160,7 @@ fun AccountFormScreen(api: Api, existing: List<Account>, editing: Account?, onCl
                                     }
                                 }
                             },
-                            enabled = !busy, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth(),
+                            enabled = !busy, modifier = Modifier.fillMaxWidth(),
                         ) { Text(if (busy) "Saving…" else if (editing != null) "Save changes" else "Add account") }
                     }
                 }

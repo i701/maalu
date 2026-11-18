@@ -2,6 +2,11 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -193,34 +198,46 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
             },
         ) { padding ->
             Box(Modifier.fillMaxSize().padding(padding)) {
-                if (destination != null) when (destination.id) {
-                    "categories" -> CategoriesScreen(api)
-                    "tags" -> TagsScreen(api)
-                    "vendors" -> VendorsScreen(api)
-                    "subscriptions" -> SubscriptionsScreen(api)
-                    "settings" -> SettingsScreen(api)
-                    "pending" -> PendingScreen(api, onChanged = { bellTick++ })
-                    "trash" -> TrashScreen(api)
-                    "groups" -> GroupsScreen(api)
-                    "net-worth" -> NetWorthScreen(api)
-                    "compare" -> CompareScreen(api)
-                    "trends" -> TrendsScreen(api)
-                    "places" -> PlacesScreen(api)
-                    "templates" -> TemplatesScreen(api)
-                    "notifications" -> NotificationsScreen(api, onChanged = { bellTick++ }, onOpen = openTarget)
-                    "docs" -> DocsScreen(slug = docSlug, onSlug = { docSlug = it }, onOpenApp = openTarget)
-                    "plan" -> PlanScreen(api, onOpenAccount = { id, name -> openAccountId = id; openAccountName = name; selected = ACCOUNTS; route = null })
-                    else -> ComingSoon(destination)
-                }
-                else when (selected) {
-                    DASHBOARD -> DashboardScreen(api, month, onOpenPlan = { route = "plan" })
-                    TRANSACTIONS -> TransactionsScreen(api)
-                    ACCOUNTS -> {
-                        val id = openAccountId
-                        if (id == null) AccountsScreen(api, onOpen = { openAccountId = it.id; openAccountName = it.name })
-                        else AccountDetailScreen(api, id, onBack = { openAccountId = null })
+                val motion = MaterialTheme.motionScheme
+                // the key is what is on screen: the outgoing screen keeps its own, so it fades out as itself
+                AnimatedContent(
+                    targetState = Triple(route, selected, openAccountId),
+                    transitionSpec = {
+                        (fadeIn(motion.defaultEffectsSpec<Float>()) + scaleIn(motion.defaultSpatialSpec<Float>(), initialScale = 0.96f)) togetherWith
+                            fadeOut(motion.fastEffectsSpec<Float>())
+                    },
+                    label = "screen",
+                ) { (r, tab, acct) ->
+                val dest = destinationById(r)
+                    if (dest != null) when (dest.id) {
+                        "categories" -> CategoriesScreen(api)
+                        "tags" -> TagsScreen(api)
+                        "vendors" -> VendorsScreen(api)
+                        "subscriptions" -> SubscriptionsScreen(api)
+                        "settings" -> SettingsScreen(api)
+                        "pending" -> PendingScreen(api, onChanged = { bellTick++ })
+                        "trash" -> TrashScreen(api)
+                        "groups" -> GroupsScreen(api)
+                        "net-worth" -> NetWorthScreen(api)
+                        "compare" -> CompareScreen(api)
+                        "trends" -> TrendsScreen(api)
+                        "places" -> PlacesScreen(api)
+                        "templates" -> TemplatesScreen(api)
+                        "notifications" -> NotificationsScreen(api, onChanged = { bellTick++ }, onOpen = openTarget)
+                        "docs" -> DocsScreen(slug = docSlug, onSlug = { docSlug = it }, onOpenApp = openTarget)
+                        "plan" -> PlanScreen(api, onOpenAccount = { id, name -> openAccountId = id; openAccountName = name; selected = ACCOUNTS; route = null })
+                        else -> ComingSoon(dest)
                     }
-                    BUDGET -> BudgetScreen(api, month)
+                    else when (tab) {
+                        DASHBOARD -> DashboardScreen(api, month, onOpenPlan = { route = "plan" })
+                        TRANSACTIONS -> TransactionsScreen(api)
+                        ACCOUNTS -> {
+                            val id = acct
+                            if (id == null) AccountsScreen(api, onOpen = { openAccountId = it.id; openAccountName = it.name })
+                            else AccountDetailScreen(api, id, onBack = { openAccountId = null })
+                        }
+                        BUDGET -> BudgetScreen(api, month)
+                    }
                 }
             }
         }

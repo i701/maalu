@@ -108,7 +108,7 @@ fun NotificationsScreen(api: Api, onOpen: (Target) -> Unit, onChanged: () -> Uni
                     Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                         val unread = list.count { it.unread }
                         Text(if (unread == 0) "All caught up" else "$unread unread", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f).padding(start = 4.dp))
-                        if (unread > 0) TextButton(onClick = {
+                        if (unread > 0) TextButton(shapes = ButtonDefaults.shapes(), onClick = {
                             scope.launch {
                                 when (val r = api.postJson<UnreadCount>("notifications/read-all", "{}")) {
                                     is ApiResult.Ok -> { val now = Instant.now().toString(); items = list.map { it.copy(readAt = it.readAt ?: now) }; onChanged() }
@@ -141,7 +141,7 @@ fun NotificationsScreen(api: Api, onOpen: (Target) -> Unit, onChanged: () -> Uni
                     )
                 }
                 if (list.size < total) item {
-                    TextButton(
+                    TextButton(shapes = ButtonDefaults.shapes(),
                         onClick = {
                             loadingMore = true
                             scope.launch {

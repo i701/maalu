@@ -94,7 +94,7 @@ fun SalaryRulesCard(api: Api, rules: List<SalaryRule>, accounts: List<Account>, 
             title = { Text("Delete the rule for ${r.targetName}?") },
             text = { Text("Salaries stop sending money there. What was already moved stays.") },
             confirmButton = {
-                TextButton(onClick = {
+                TextButton(shapes = ButtonDefaults.shapes(), onClick = {
                     deleting = null
                     scope.launch {
                         when (val res = api.delete("salary-rules/${r.id}")) {
@@ -104,7 +104,7 @@ fun SalaryRulesCard(api: Api, rules: List<SalaryRule>, accounts: List<Account>, 
                     }
                 }) { Text("Delete", color = MaterialTheme.colorScheme.error) }
             },
-            dismissButton = { TextButton(onClick = { deleting = null }) { Text("Keep it") } },
+            dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { deleting = null }) { Text("Keep it") } },
         )
     }
 }
@@ -158,7 +158,7 @@ private fun RuleDialog(api: Api, rule: SalaryRule?, rules: List<SalaryRule>, acc
             }
         },
         confirmButton = {
-            TextButton(enabled = !busy, onClick = {
+            TextButton(shapes = ButtonDefaults.shapes(), enabled = !busy, onClick = {
                 error = ruleProblem(mode, value, rule != null || targetId != null)
                 if (error != null) return@TextButton
                 busy = true
@@ -172,6 +172,6 @@ private fun RuleDialog(api: Api, rule: SalaryRule?, rules: List<SalaryRule>, acc
                 }
             }) { Text(if (busy) "Saving…" else "Save") }
         },
-        dismissButton = { TextButton(onClick = onClose, enabled = !busy) { Text("Cancel") } },
+        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onClose, enabled = !busy) { Text("Cancel") } },
     )
 }

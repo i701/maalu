@@ -101,14 +101,13 @@ fun LoginScreen(api: Api, server: String, onSignedIn: (String) -> Unit, onChange
             ) else Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 OtpInput(code, { code = it; error = null }, enabled = !busy, isError = error != null, autoFocus = true, onComplete = { verify(it) })
             }
-            TextButton(onClick = { recoveryMode = !recoveryMode; code = ""; error = null }, enabled = !busy) {
+            TextButton(shapes = ButtonDefaults.shapes(), onClick = { recoveryMode = !recoveryMode; code = ""; error = null }, enabled = !busy) {
                 Text(if (recoveryMode) "Use an authenticator code" else "Use a recovery code instead")
             }
         }
         error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
 
-        Button(
-            shapes = ButtonDefaults.shapes(),
+        Button(shapes = ButtonDefaults.shapes(),
             enabled = !busy && (if (challenge == null) email.isNotBlank() && password.isNotEmpty() else code.isNotBlank()),
             modifier = Modifier.fillMaxWidth(),
             onClick = {
@@ -119,7 +118,7 @@ fun LoginScreen(api: Api, server: String, onSignedIn: (String) -> Unit, onChange
             },
         ) { Text(if (busy) "Signing in…" else if (challenge == null) "Sign in" else "Verify") }
 
-        TextButton(onClick = { if (challenge != null) { challenge = null; code = ""; recoveryMode = false } else onChangeServer() }, enabled = !busy) {
+        TextButton(shapes = ButtonDefaults.shapes(), onClick = { if (challenge != null) { challenge = null; code = ""; recoveryMode = false } else onChangeServer() }, enabled = !busy) {
             Text(if (challenge != null) "Back" else "Use a different server")
         }
     }

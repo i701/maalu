@@ -151,7 +151,7 @@ fun BudgetScreen(api: Api, on: String) {
             PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; attempt++ }, modifier = Modifier.fillMaxSize()) {
                 LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 32.dp)) {
                     if (b.lines.isNotEmpty()) item { SummaryCard(b) }
-                    item { TextButton(onClick = { settings = true }) { Icon(Icons.Outlined.Settings, null, Modifier.size(18.dp)); Text(settingsText(b), Modifier.padding(start = 6.dp)) } }
+                    item { TextButton(shapes = ButtonDefaults.shapes(), onClick = { settings = true }) { Icon(Icons.Outlined.Settings, null, Modifier.size(18.dp)); Text(settingsText(b), Modifier.padding(start = 6.dp)) } }
                     item { SectionHeader("Monthly limits", "Add limit") { limitForm = LimitFormRequest(null, null) } }
                     if (b.lines.isEmpty()) item { Text("No limits yet. A limit is an amount you allow yourself to spend on some categories each month.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)) }
                     items(b.lines.size, key = { "l-" + b.lines[it].id }) { i ->
@@ -253,8 +253,8 @@ fun BudgetScreen(api: Api, on: String) {
 private fun ConfirmDelete(title: String, text: String, onDismiss: () -> Unit, onConfirm: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss, title = { Text(title) }, text = { Text(text) },
-        confirmButton = { TextButton(onClick = onConfirm) { Text("Delete", color = MaterialTheme.colorScheme.error) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        confirmButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onConfirm) { Text("Delete", color = MaterialTheme.colorScheme.error) } },
+        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss) { Text("Cancel") } },
     )
 }
 
@@ -262,7 +262,7 @@ private fun ConfirmDelete(title: String, text: String, onDismiss: () -> Unit, on
 private fun SectionHeader(title: String, action: String?, onAction: () -> Unit) {
     Row(Modifier.fillMaxWidth().padding(top = 20.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(title, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f).padding(start = 4.dp))
-        if (action != null) TextButton(onClick = onAction) { Icon(Icons.Outlined.Add, null, Modifier.size(18.dp)); Text(action, Modifier.padding(start = 4.dp)) }
+        if (action != null) TextButton(shapes = ButtonDefaults.shapes(), onClick = onAction) { Icon(Icons.Outlined.Add, null, Modifier.size(18.dp)); Text(action, Modifier.padding(start = 4.dp)) }
     }
 }
 
@@ -401,8 +401,8 @@ private fun SheetActions(onEdit: (() -> Unit)?, onDelete: (() -> Unit)?, extra: 
         extra?.invoke()
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (onEdit != null) Button(onClick = onEdit, shapes = ButtonDefaults.shapes(), modifier = Modifier.weight(1f), colors = ButtonDefaults.filledTonalButtonColors()) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Edit") }
-            if (onDelete != null) Button(
-                onClick = onDelete, shapes = ButtonDefaults.shapes(), modifier = Modifier.weight(1f),
+            if (onDelete != null) Button(shapes = ButtonDefaults.shapes(),
+                onClick = onDelete, modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer),
             ) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 6.dp)); Text("Delete") }
         }
@@ -431,13 +431,13 @@ private fun LineSheet(l: BudgetLine, currency: String, moves: List<LineMove>, on
                             Text(m.text, style = MaterialTheme.typography.bodyMedium)
                             m.note?.takeIf { it.isNotBlank() }?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                         }
-                        TextButton(onClick = { onUndo(m.id) }) { Text("Undo") }
+                        TextButton(shapes = ButtonDefaults.shapes(), onClick = { onUndo(m.id) }) { Text("Undo") }
                     }
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = onMove, modifier = Modifier.weight(1f)) { Text("Move money here") }
-                OutlinedButton(onClick = onHistory, modifier = Modifier.weight(1f)) { Text("History") }
+                OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = onMove, modifier = Modifier.weight(1f)) { Text("Move money here") }
+                OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = onHistory, modifier = Modifier.weight(1f)) { Text("History") }
             }
             SheetActions(onEdit, onDelete)
         }
@@ -455,7 +455,7 @@ private fun FixedSheet(f: FixedLine, currency: String, onEdit: () -> Unit, onRep
             Text("A limit for set dates is one total for the whole stretch.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             SheetActions(onEdit, onDelete) {
                 // for the stretch that follows: same name, categories and amount, starting the day after and as long
-                OutlinedButton(onClick = onRepeat, modifier = Modifier.fillMaxWidth()) { Text("Repeat for the next stretch") }
+                OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = onRepeat, modifier = Modifier.fillMaxWidth()) { Text("Repeat for the next stretch") }
             }
         }
     }

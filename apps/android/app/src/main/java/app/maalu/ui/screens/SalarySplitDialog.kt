@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -138,7 +139,7 @@ fun SalarySplitDialog(api: Api, transactionId: String, onClose: () -> Unit, onDo
                         )
                     }
                 }
-                if (p.applied) TextButton(onClick = { confirmingUndo = true }, enabled = !busy) { Text(if (complete) "Undo the split" else "Undo what was made", color = MaterialTheme.colorScheme.error) }
+                if (p.applied) TextButton(shapes = ButtonDefaults.shapes(), onClick = { confirmingUndo = true }, enabled = !busy) { Text(if (complete) "Undo the split" else "Undo what was made", color = MaterialTheme.colorScheme.error) }
             }
         }
     }
@@ -148,7 +149,7 @@ fun SalarySplitDialog(api: Api, transactionId: String, onClose: () -> Unit, onDo
         title = { Text("Undo the split?") },
         text = { Text("The transfers made from this salary go to the trash and the amounts set aside for goals are removed.") },
         confirmButton = {
-            TextButton(onClick = {
+            TextButton(shapes = ButtonDefaults.shapes(), onClick = {
                 confirmingUndo = false; busy = true
                 scope.launch {
                     when (val r = api.delete("transactions/$transactionId/salary-split")) {
@@ -158,7 +159,7 @@ fun SalarySplitDialog(api: Api, transactionId: String, onClose: () -> Unit, onDo
                 }
             }) { Text("Undo it", color = MaterialTheme.colorScheme.error) }
         },
-        dismissButton = { TextButton(onClick = { confirmingUndo = false }) { Text("Keep it") } },
+        dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { confirmingUndo = false }) { Text("Keep it") } },
     )
 }
 
