@@ -41,15 +41,10 @@ import app.maalu.data.netRows
 import app.maalu.data.monthShort
 import app.maalu.data.lastMonths
 import app.maalu.data.targetText
-import app.maalu.data.spreadLabels
 import app.maalu.data.percentText
-import app.maalu.data.moneyFlow
-import app.maalu.data.layoutFlow
 import app.maalu.data.creditUsage
 import app.maalu.data.RuleStatus
-import app.maalu.data.MoneyFlow
 import app.maalu.data.IncomeRule
-import app.maalu.data.FlowKind
 import app.maalu.data.CategoryTotal
 import app.maalu.data.Account
 import app.maalu.data.Budget
@@ -69,7 +64,7 @@ import app.maalu.ui.theme.MoneyStyle
 
 /** The card every dashboard section sits on: the large corner, one tonal step above the page. */
 @Composable
-private fun SectionCard(title: String, trailing: String? = null, content: @Composable () -> Unit) {
+fun SectionCard(title: String, trailing: String? = null, content: @Composable () -> Unit) {
     Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerLow) {
         Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -369,87 +364,6 @@ fun CreditUsageCard(accounts: List<Account>) {
                     )
                 }
                 Bar(u.percent / 100f, if (high) MaterialTheme.colorScheme.error else ChartColors.Line)
-            }
-        }
-    }
-}
-
-/**
- * Where the month's money came from and where it went: income categories flow into one total and out to spending and what was kept. Labels sit
- * at the sides with their amounts; on a narrow phone the diagram scrolls sideways instead of squeezing them. A table lists every flow.
- */
-@Composable
-fun MoneyFlowCard(categories: List<CategoryTotal>, currency: String) {
-    val flow = remember(categories) { moneyFlow(categories) } ?: return
-    var table by remember { mutableStateOf(false) }
-    SectionCard("Money flow", formatMoney(flow.nodes.first { it.kind == FlowKind.Total }.value.toString(), currency)) {
-        if (table) FlowTable(flow, currency) else FlowDiagram(flow, currency)
-        TextButton(shapes = ButtonDefaults.shapes(), onClick = { table = !table }) { Text(if (table) "Show the diagram" else "Show as a table") }
-    }
-}
-
-private fun flowColor(kind: FlowKind): Color = when (kind) {
-    FlowKind.Income -> ChartColors.IncomeLight
-    FlowKind.Deficit, FlowKind.Spending -> ChartColors.ExpenseLight
-    FlowKind.Total, FlowKind.Saved -> ChartColors.Line
-}
-
-@Composable
-private fun FlowDiagram(flow: MoneyFlow, currency: String) {
-    val labelW = 88.dp
-    val height = 230.dp
-    androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val totalW = maxOf(maxWidth, 340.dp)
-        val flowW = totalW - labelW * 2
-        val layout = remember(flow, flowW) { layoutFlow(flow, flowW.value.toDouble(), height.value.toDouble()) }
-        val density = androidx.compose.ui.platform.LocalDensity.current.density
-        val scrollMod = if (totalW > maxWidth) Modifier.horizontalScroll(androidx.compose.foundation.rememberScrollState()) else Modifier
-        Box(scrollMod) {
-            Box(Modifier.width(totalW).height(height)) {
-                androidx.compose.foundation.Canvas(Modifier.padding(start = labelW, end = labelW).fillMaxSize()) {
-                    layout.links.forEach { l ->
-                        val color = flowColor(if (l.link.source == "total") layout.nodes.first { it.node.id == l.link.target }.node.kind else layout.nodes.first { it.node.id == l.link.source }.node.kind)
-                        val path = androidx.compose.ui.graphics.Path().apply {
-                            val x0 = (l.x0 * density).toFloat(); val x1 = (l.x1 * density).toFloat(); val mid = (x0 + x1) / 2
-                            val y0 = (l.y0 * density).toFloat(); val y1 = (l.y1 * density).toFloat()
-                            moveTo(x0, y0); cubicTo(mid, y0, mid, y1, x1, y1)
-                        }
-                        drawPath(path, color.copy(alpha = 0.32f), style = androidx.compose.ui.graphics.drawscope.Stroke(width = (l.thickness * density).toFloat()))
-                    }
-                    layout.nodes.forEach { n ->
-                        drawRoundRect(
-                            flowColor(n.node.kind), androidx.compose.ui.geometry.Offset((n.x * density).toFloat(), (n.y * density).toFloat()),
-                            androidx.compose.ui.geometry.Size((n.width * density).toFloat(), (n.height * density).toFloat()), androidx.compose.ui.geometry.CornerRadius(3f * density),
-                        )
-                    }
-                }
-                // labels at the sides, kept apart; the total node is named in the card's header
-                listOf(0, 2).forEach { col ->
-                    val side = layout.nodes.filter { it.node.column == col }
-                    val ys = spreadLabels(side.map { it.y + it.height / 2 - 15 }, 32.0, height.value - 30.0)
-                    side.forEachIndexed { i, n ->
-                        Column(
-                            Modifier.width(labelW - 8.dp).offset(x = if (col == 0) 0.dp else totalW - labelW + 8.dp, y = ys[i].dp),
-                            horizontalAlignment = if (col == 0) Alignment.End else Alignment.Start,
-                        ) {
-                            Text(n.node.label, style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            Text(formatMoney(n.node.value.toString(), currency), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun FlowTable(flow: MoneyFlow, currency: String) {
-    val name = flow.nodes.associate { it.id to it.label }
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        flow.links.forEach { l ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("${name[l.source]} → ${name[l.target]}", Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-                Text(formatMoney(l.value.toString(), currency), style = MaterialTheme.typography.bodyMedium.merge(MoneyStyle))
             }
         }
     }

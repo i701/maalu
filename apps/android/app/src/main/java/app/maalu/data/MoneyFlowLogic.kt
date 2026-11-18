@@ -44,14 +44,15 @@ data class PlacedNode(val node: FlowNode, val x: Double, val y: Double, val widt
 /** A link's centre line from the source to the target, to be stroked [thickness] wide: a curve with both control points at the middle x. */
 data class PlacedLink(val link: FlowLink, val x0: Double, val y0: Double, val x1: Double, val y1: Double, val thickness: Double)
 
-data class FlowLayout(val nodes: List<PlacedNode>, val links: List<PlacedLink>)
+/** [seam] is where the incoming bands end and the outgoing ones begin: the middle of the (undrawn) total bar. */
+data class FlowLayout(val nodes: List<PlacedNode>, val links: List<PlacedLink>, val seam: Double)
 
 /**
  * Positions the nodes and links in a [width] by [height] box: one column per side with the total in the middle, heights in proportion to the
  * money (the same scale everywhere), each column centred vertically, links stacked along the sides of the nodes in the order of the nodes. A
  * node never gets thinner than [minHeight], so a tiny category stays visible.
  */
-fun layoutFlow(flow: MoneyFlow, width: Double, height: Double, nodeWidth: Double = 12.0, gap: Double = 8.0, minHeight: Double = 4.0): FlowLayout {
+fun layoutFlow(flow: MoneyFlow, width: Double, height: Double, nodeWidth: Double = 4.0, gap: Double = 8.0, minHeight: Double = 4.0): FlowLayout {
     val total = flow.nodes.firstOrNull { it.kind == FlowKind.Total }?.value ?: 1.0
     val columns = (0..2).map { c -> flow.nodes.filter { it.column == c } }
     val tallest = columns.maxOf { it.size }
@@ -78,7 +79,7 @@ fun layoutFlow(flow: MoneyFlow, width: Double, height: Double, nodeWidth: Double
         inCursor[to.node.id] = endTop + thickness
         PlacedLink(link, from.x + from.width, startTop + thickness / 2, to.x, endTop + thickness / 2, thickness)
     }
-    return FlowLayout(placed.values.toList(), links)
+    return FlowLayout(placed.values.toList(), links, xs[1] + nodeWidth / 2)
 }
 
 /** Keeps stacked labels apart: each centre at least [gap] from the one above, kept inside 0..[limit] (port of spreadLabels). */
@@ -90,4 +91,66 @@ fun spreadLabels(centers: List<Double>, gap: Double, limit: Double): List<Double
     var next = limit
     for (i in order.reversed()) { out[i] = minOf(out[i], next); next = out[i] - gap }
     return out.map { maxOf(0.0, it) }
+}
+
+// Reading the diagram: which part a tap lands on, the colours along a band and the readout (ported from the iOS FlowLayout+Hit/+Colors).
+
+fun FlowLayout.node(id: String): PlacedNode? = nodes.firstOrNull { it.node.id == id }
+
+/** Where a band is drawn from and to: incoming bands run from their source to the seam, outgoing ones from the seam to their destination. */
+fun FlowLayout.span(link: PlacedLink): Pair<Double, Double> = if (link.link.target == "total") link.x0 to seam else seam to link.x1
+
+/** The id of the income or spending node a band belongs to. */
+fun outerNodeId(link: PlacedLink): String = if (link.link.target == "total") link.link.source else link.link.target
+
+/** The centre line of a band at an x position: a cubic curve with both control points at the middle x. */
+fun FlowLayout.bandCenterY(link: PlacedLink, x: Double): Double {
+    val (start, end) = span(link)
+    val middle = (start + end) / 2
+    var low = 0.0
+    var high = 1.0
+    repeat(24) {
+        val t = (low + high) / 2
+        val u = 1 - t
+        val curveX = u * u * u * start + 3 * u * u * t * middle + 3 * u * t * t * middle + t * t * t * end
+        if (curveX < x) low = t else high = t
+    }
+    val t = (low + high) / 2
+    val u = 1 - t
+    return u * u * u * link.y0 + 3 * u * u * t * link.y0 + 3 * u * t * t * link.y1 + t * t * t * link.y1
+}
+
+/** The node a tap lands on: a bar (a generous target, since bars are thin) or anywhere along a band; null when it hits neither. */
+fun FlowLayout.nodeIdAt(x: Double, y: Double, barSlop: Double = 10.0, bandSlop: Double = 6.0): String? {
+    for (p in nodes) {
+        if (p.node.kind == FlowKind.Total) continue
+        if (x >= p.x - barSlop && x <= p.x + p.width + barSlop && y >= p.y && y <= p.y + p.height) return p.node.id
+    }
+    for (link in links) {
+        val (start, end) = span(link)
+        if (x < start || x > end) continue
+        if (kotlin.math.abs(y - bandCenterY(link, x)) <= maxOf(link.thickness / 2, bandSlop)) return outerNodeId(link)
+    }
+    return null
+}
+
+/**
+ * The kinds at the two ends of a band, so the whole flow reads as one continuous gradient. An income band is its own colour all the way to the
+ * middle. A band leaving the middle starts as the colour of the income band that sits at the same height there, and ends as its destination's.
+ */
+fun FlowLayout.gradientKinds(link: PlacedLink): Pair<FlowKind, FlowKind> {
+    if (link.link.target == "total") {
+        val own = node(link.link.source)?.node?.kind ?: FlowKind.Income
+        return own to own
+    }
+    val end = node(link.link.target)?.node?.kind ?: FlowKind.Spending
+    val incoming = links.filter { it.link.target == "total" }
+    val match = incoming.firstOrNull { kotlin.math.abs(it.y1 - link.y0) <= it.thickness / 2 + 0.001 } ?: incoming.firstOrNull()
+    return (match?.let { node(it.link.source)?.node?.kind } ?: FlowKind.Income) to end
+}
+
+/** "12.5%": a node's share of the total, to at most one decimal. */
+fun flowShareText(value: Double, total: Double): String {
+    val pct = if (total > 0) value / total * 100 else 0.0
+    return java.math.BigDecimal(pct).setScale(1, java.math.RoundingMode.HALF_EVEN).stripTrailingZeros().toPlainString() + "%"
 }
