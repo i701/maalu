@@ -9,6 +9,9 @@ struct TransactionsView: View {
     var body: some View {
         NavigationStack {
             List {
+                if let totals = model.totals, !model.isEmpty {
+                    TransactionTotalsSection(totals: totals)
+                }
                 ForEach(model.days) { day in
                     TransactionDaySection(day: day)
                 }

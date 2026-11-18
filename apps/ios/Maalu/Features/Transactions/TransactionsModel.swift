@@ -5,6 +5,7 @@ import Observation
 final class TransactionsModel {
     var filter = TransactionFilter()
     private(set) var days: [TransactionDay] = []
+    private(set) var totals: TransactionTotals?
     private(set) var isLoading = false
     private(set) var errorMessage: String?
     private var transactions: [Transaction] = []
@@ -21,9 +22,14 @@ final class TransactionsModel {
             guard !Task.isCancelled else { return }
         }
         isLoading = true
-        let result: ApiResult<[Transaction]> = await api.get("transactions", query: query(offset: 0))
+        // the totals line is for a narrowed list; planned rows are not counted in totals
+        let showsTotals = filter.isActive && !filter.planned
+        async let pageResult: ApiResult<[Transaction]> = api.get("transactions", query: query(offset: 0))
+        async let totalsResult: ApiResult<TransactionTotals>? = showsTotals ? api.get("transactions/summary", query: filter.queryItems) : nil
+        let (result, totals) = await (pageResult, totalsResult)
         guard !Task.isCancelled else { return }
         isLoading = false
+        if case .ok(let value, _) = totals { self.totals = value } else { self.totals = nil }
         if case .ok(let page, let total) = result {
             transactions = page
             self.total = total ?? page.count

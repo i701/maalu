@@ -535,8 +535,7 @@
         ]
       },
       "ios": {
-        "status": "partial",
-        "note": "Search, a type filter, paging, a detail screen and delete (to the trash) only: no date, account, category, tag or amount filters, no selection, no planned list.",
+        "status": "done",
         "evidence": [
           "apps/ios/Maalu/Features/Transactions/TransactionsView.swift",
           "apps/ios/Maalu/Features/Transactions/Detail/TransactionDetailView.swift"
