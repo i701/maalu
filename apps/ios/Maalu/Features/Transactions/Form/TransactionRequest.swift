@@ -12,13 +12,20 @@ struct TransactionRequest: Encodable {
     var currency: String?
     var exchangeRate: String?
     var planned: Bool?
-    /// On an edit, a blank vendor or note has to be sent as an explicit null to clear it.
+    var transactionTime: String?
+    var tags: [String]?
+    var cardId: String?
+    /// On an edit, a blank vendor, note, time or card has to be sent as an explicit null to clear it.
     var clearsVendor = false
     var clearsDescription = false
+    var clearsTime = false
+    var clearsCard = false
 
     private enum Keys: String, CodingKey {
-        case type, amount, category, currency, planned, description
+        case type, amount, category, currency, planned, description, tags
         case transactionDate = "transaction_date"
+        case transactionTime = "transaction_time"
+        case cardId = "card_id"
         case accountId = "account_id"
         case toAccountId = "to_account_id"
         case toAmount = "to_amount"
@@ -41,6 +48,17 @@ struct TransactionRequest: Encodable {
         try container.encodeIfPresent(currency, forKey: .currency)
         try container.encodeIfPresent(exchangeRate, forKey: .exchangeRate)
         try container.encodeIfPresent(planned, forKey: .planned)
+        try container.encodeIfPresent(tags, forKey: .tags)
+        if let transactionTime {
+            try container.encode(transactionTime, forKey: .transactionTime)
+        } else if clearsTime {
+            try container.encodeNil(forKey: .transactionTime)
+        }
+        if let cardId {
+            try container.encode(cardId, forKey: .cardId)
+        } else if clearsCard {
+            try container.encodeNil(forKey: .cardId)
+        }
         if let vendorName {
             try container.encode(vendorName, forKey: .vendorName)
         } else if clearsVendor {

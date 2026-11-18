@@ -9,6 +9,10 @@ struct TransactionDraft {
     var category = ""
     var vendor = ""
     var date = Date.now
+    /// Only the hour and minute count; nil when the time of day is not known.
+    var time: Date?
+    var tags: [String] = []
+    var cardID: String?
     var note = ""
     var method: PaymentMethod = .other
     var rate: Decimal?
@@ -38,6 +42,9 @@ struct TransactionDraft {
         category = transaction.category
         vendor = transaction.vendor?.name ?? ""
         date = ISODate.date(transaction.transactionDate) ?? .now
+        time = transaction.transactionTime.flatMap { ClockTime.date($0) }
+        tags = transaction.tags.map(\.name)
+        cardID = transaction.card?.id
         note = transaction.description ?? ""
         method = transaction.paymentMethod
         rate = Money.decimal(transaction.exchangeRate)
@@ -74,6 +81,13 @@ struct TransactionDraft {
         let note = note.trimmingCharacters(in: .whitespacesAndNewlines)
         request.description = note.isEmpty ? nil : note
         request.clearsDescription = original != nil && note.isEmpty
+        request.transactionTime = time.map { ClockTime.string($0) }
+        request.clearsTime = original?.transactionTime != nil && time == nil
+        // on an edit the list replaces the tags, so an empty one removes them
+        request.tags = original != nil || !tags.isEmpty ? tags : nil
+        // only an expense is paid with a card
+        request.cardId = type == .expense ? cardID : nil
+        request.clearsCard = original?.card != nil && request.cardId == nil
 
         if type == .transfer {
             request.toAccountId = to?.id

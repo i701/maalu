@@ -595,8 +595,7 @@
         ]
       },
       "ios": {
-        "status": "partial",
-        "note": "Income, expense and transfer with amount, account, category, vendor, payment method, date, note and an exchange rate for a foreign account. No time, tags, card, items, location, receipts or planned switch (a future date is planned by itself).",
+        "status": "done",
         "evidence": [
           "apps/ios/Maalu/Features/Transactions/Form/TransactionFormView.swift",
           "apps/ios/Maalu/Features/Transactions/Form/TransactionFormModel.swift"

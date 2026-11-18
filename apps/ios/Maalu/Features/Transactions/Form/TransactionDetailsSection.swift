@@ -16,6 +16,14 @@ struct TransactionDetailsSection: View {
                     Text(method.title).tag(method)
                 }
             }
+            if model.draft.type == .expense, !model.accountCards.isEmpty {
+                Picker("Card", selection: $model.draft.cardID) {
+                    Text("None").tag(String?.none)
+                    ForEach(model.accountCards) { card in
+                        Text(card.label).tag(Optional(card.id))
+                    }
+                }
+            }
         }
     }
 }

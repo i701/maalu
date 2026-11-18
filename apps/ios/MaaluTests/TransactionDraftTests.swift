@@ -101,4 +101,37 @@ struct TransactionDraftTests {
         #expect(body["description"] is NSNull)
         #expect(body["vendor_name"] == nil)
     }
+
+    @Test func timeTagsAndCardAreSentOnANewExpenseButNotACardOnATransfer() throws {
+        let noon = try #require(ClockTime.date("12:05:00"))
+        let body = try json(draft { $0.time = noon; $0.tags = ["Trip"]; $0.cardID = "k" }.request(accounts: try accounts(), baseCurrency: "MVR", editing: nil))
+        #expect(body["transaction_time"] as? String == "12:05")
+        #expect(body["tags"] as? [String] == ["Trip"])
+        #expect(body["card_id"] as? String == "k")
+        let plain = try json(draft { _ in }.request(accounts: try accounts(), baseCurrency: "MVR", editing: nil))
+        #expect(plain["tags"] == nil)
+        #expect(plain["transaction_time"] == nil)
+        let transfer = try json(draft { $0.type = .transfer; $0.toAccountID = "mvr2"; $0.cardID = "k" }.request(accounts: try accounts(), baseCurrency: "MVR", editing: nil))
+        #expect(transfer["card_id"] == nil)
+    }
+
+    @Test func clearingTheTimeTagsOrCardOnAnEditSendsNullOrAnEmptyList() throws {
+        let original = try Api.decoder.decode(Transaction.self, from: Data(#"""
+        {"id":"1","type":"expense","amount":"12","to_amount":null,"currency":"MVR","exchange_rate":"1","base_amount":"12",
+         "category":"Food","description":null,"transaction_date":"2026-11-12","transaction_time":"08:30:00","planned":false,
+         "payment_method":"debit_card","account":{"id":"mvr","name":"BML","currency":"MVR"},"to_account":null,
+         "vendor":null,"card":{"id":"k","name":"Visa"},"subscription":null,"tags":[{"id":"t","name":"Trip"}],"refund_of":null,
+         "refunded_amount":"0","splits":[],"adjustment":false}
+        """#.utf8))
+        var edited = TransactionDraft(editing: original)
+        #expect(edited.time.map { ClockTime.string($0) } == "08:30")
+        #expect(edited.tags == ["Trip"])
+        edited.time = nil
+        edited.tags = []
+        edited.cardID = nil
+        let body = try json(edited.request(accounts: try accounts(), baseCurrency: "MVR", editing: original))
+        #expect(body["transaction_time"] is NSNull)
+        #expect(body["card_id"] is NSNull)
+        #expect(body["tags"] as? [String] == [])
+    }
 }

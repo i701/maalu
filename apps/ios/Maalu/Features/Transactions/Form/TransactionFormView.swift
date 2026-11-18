@@ -63,6 +63,9 @@ struct TransactionFormView: View {
                     NamePickerView(title: "Vendor", options: model.vendors, allowsNone: true, selection: $model.draft.vendor)
                 }
             }
+            .navigationDestination(for: TagsRoute.self) { _ in
+                TagsPickerView(options: model.tags, selection: $model.draft.tags)
+            }
             .task { await load() }
         }
     }

@@ -7,6 +7,8 @@ final class TransactionFormModel {
     private(set) var accounts: [Account] = []
     private(set) var categories: [String] = []
     private(set) var vendors: [String] = []
+    private(set) var tags: [String] = []
+    private(set) var cards: [Card] = []
     private(set) var templates: [TransactionTemplate] = []
     private(set) var baseCurrency = ""
     private(set) var isLoading = true
@@ -48,6 +50,17 @@ final class TransactionFormModel {
         draft.planned = draft.isFuture
     }
     var account: Account? { accounts.first { $0.id == draft.accountID } }
+    var accountCards: [Card] { cards.filter { $0.account.id == draft.accountID } }
+
+    var hasTime: Bool {
+        get { draft.time != nil }
+        set { draft.time = newValue ? (draft.time ?? .now) : nil }
+    }
+
+    var time: Date {
+        get { draft.time ?? .now }
+        set { draft.time = newValue }
+    }
     var toAccount: Account? { accounts.first { $0.id == draft.toAccountID } }
     var problem: LocalizedStringResource? { draft.problem(accounts: accounts, baseCurrency: baseCurrency) }
     var canSave: Bool { !isLoading && !isSaving && problem == nil }
@@ -67,8 +80,12 @@ final class TransactionFormModel {
         async let categoriesResult: ApiResult<[NamedRef]> = api.get("categories")
         async let vendorsResult: ApiResult<[NamedRef]> = api.get("vendors")
         async let templatesResult: ApiResult<[TransactionTemplate]> = api.get("templates")
+        async let tagsResult: ApiResult<[NamedRef]> = api.get("tags")
+        async let cardsResult: ApiResult<[Card]> = api.get("cards")
         async let profileResult: ApiResult<Profile> = api.get("users/me")
-        let (accounts, categories, vendors, templates, profile) = await (accountsResult, categoriesResult, vendorsResult, templatesResult, profileResult)
+        let (accounts, categories, vendors, templates, tags, cards, profile) = await (
+            accountsResult, categoriesResult, vendorsResult, templatesResult, tagsResult, cardsResult, profileResult
+        )
         isLoading = false
 
         guard case .ok(let accountList, _) = accounts, case .ok(let me, _) = profile else {
@@ -81,10 +98,13 @@ final class TransactionFormModel {
         if case .ok(let list, _) = categories { self.categories = list.map(\.name) }
         if case .ok(let list, _) = vendors { self.vendors = list.map(\.name) }
         if case .ok(let list, _) = templates { self.templates = list }
+        if case .ok(let list, _) = tags { self.tags = list.map(\.name) }
+        if case .ok(let list, _) = cards { self.cards = list }
         if !isEditing { settleAccount(preferring: defaultAccountId) }
     }
 
     func accountChanged() {
+        if let cardID = draft.cardID, !accountCards.contains(where: { $0.id == cardID }) { draft.cardID = nil }
         guard let account else { return }
         if let rate = Money.decimal(account.exchangeRate), account.currency != baseCurrency { draft.rate = rate }
         let suggestion = PaymentMethod.suggested(for: account.group)
