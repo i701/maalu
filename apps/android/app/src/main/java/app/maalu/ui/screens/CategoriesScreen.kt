@@ -2,6 +2,9 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.material3.OutlinedButton
+import app.maalu.data.unsortedCount
+import app.maalu.data.sortKindsButtonLabel
 import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
 import app.maalu.ui.theme.tintIcon
@@ -110,6 +113,7 @@ fun CategoriesScreen(api: Api) {
     var merging by remember { mutableStateOf<Category?>(null) }
     var mergePair by remember { mutableStateOf<Pair<Category, Category>?>(null) }
     var deleting by remember { mutableStateOf<Category?>(null) }
+    var sorting by remember { mutableStateOf(false) }
     val snackbar = LocalSnackbar.current
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
@@ -127,6 +131,10 @@ fun CategoriesScreen(api: Api) {
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
             SearchPill(query, { query = it.take(100) }, Modifier.padding(horizontal = 16.dp, vertical = 6.dp), placeholder = "Search categories")
+            // sort them all at once; says how many are still unsorted
+            if (all.any { !it.isSalary }) OutlinedButton(onClick = { sorting = true }, shapes = ButtonDefaults.shapes(), modifier = Modifier.padding(horizontal = 16.dp)) {
+                Text(sortKindsButtonLabel(unsortedCount(all)))
+            }
             when (val s = state) {
                 CatLoad.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
                 is CatLoad.Failed -> Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -158,6 +166,7 @@ fun CategoriesScreen(api: Api) {
     selected?.let { c ->
         CategorySheet(c, onEdit = { editing = c; selected = null }, onMerge = { merging = c; selected = null }, onDelete = { deleting = c; selected = null }, onClose = { selected = null })
     }
+    if (sorting) SortKindsDialog(api, all, onClose = { sorting = false }, onSaved = { msg -> sorting = false; attempt++; scope.launch { snackbar?.showSnackbar(msg) } })
     if (adding) CategoryFormScreen(api, all, null, { adding = false }) { adding = false; attempt++; scope.launch { snackbar?.showSnackbar("Category added") } }
     editing?.let { c -> CategoryFormScreen(api, all, c, { editing = null }) { editing = null; attempt++; scope.launch { snackbar?.showSnackbar("Changes saved") } } }
     merging?.let { from ->

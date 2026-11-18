@@ -1017,8 +1017,10 @@
         ]
       },
       "android": {
-        "status": "missing",
-        "note": "Each category's kind can be set one by one in its form."
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/SortKindsDialog.kt"
+        ]
       },
       "ios": {
         "status": "done",

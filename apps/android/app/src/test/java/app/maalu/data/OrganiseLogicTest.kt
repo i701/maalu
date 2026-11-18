@@ -103,4 +103,39 @@ class OrganiseLogicTest {
         assertEquals("""{"latitude":null,"longitude":null,"place":null}""", f.copy(latitude = "", longitude = "", place = "").patchJson(f).toString())
         assertEquals(false, VendorForm(name = "x").toJson().containsKey("latitude"))
     }
+
+    @Test fun theSalaryCategoryIsNotSortedIntoNeedsAndWants() {
+        assertEquals(listOf("c1", "c2", "c3"), sortableCategories(all).map { it.id })
+        assertEquals(setOf("c1", "c2", "c3"), startingKinds(all).keys)
+    }
+
+    @Test fun aSubCategoryThatTakesItsParentsKindIsSorted() {
+        assertEquals(3, unsortedCount(all))
+        val sorted = listOf(food.copy(kind = "need", effectiveKind = "need"), dining.copy(effectiveKind = "need"), rent)
+        assertEquals(1, unsortedCount(sorted)) // Dining takes Food's, so only Rent is left
+        assertEquals("Needs and wants (1 not sorted)", sortKindsButtonLabel(1))
+        assertEquals("Needs and wants", sortKindsButtonLabel(0))
+    }
+
+    @Test fun onlyWhatChangedIsSentOneRequestPerKind() {
+        val start = startingKinds(all)
+        assertEquals(0, changedKindCount(all, start))
+        assertTrue(kindRequests(all, start).isEmpty())
+        val picked = start + mapOf("c1" to "need", "c2" to "need", "c3" to "want")
+        assertEquals(3, changedKindCount(all, picked))
+        val requests = kindRequests(all, picked)
+        assertEquals(2, requests.size)
+        val need = requests.first { it["kind"]?.jsonPrimitive?.content == "need" }
+        assertEquals(listOf("c1", "c2"), need["ids"]!!.jsonArray.map { it.jsonPrimitive.content })
+    }
+
+    @Test fun clearingAKindIsAnExplicitNullAndBigSetsAreSplit() {
+        val sorted = listOf(food.copy(kind = "need"), dining, rent)
+        val cleared = kindRequests(sorted, startingKinds(sorted) + ("c1" to null))
+        assertEquals(1, cleared.size)
+        assertTrue(cleared[0]["kind"] is JsonNull)
+        val many = (1..1200).map { Category("x$it", "C$it") }
+        val requests = kindRequests(many, startingKinds(many).mapValues { "want" })
+        assertEquals(listOf(500, 500, 200), requests.map { it["ids"]!!.jsonArray.size })
+    }
 }

@@ -53,6 +53,33 @@ fun CategoryForm.patchJson(before: CategoryForm): JsonObject = buildJsonObject {
     if (kind != before.kind) { if (kind == null) put("kind", JsonNull) else put("kind", kind) }
 }
 
+/** The categories that can be given a need or a want: all but the default Salary one, which is pay, not spending. */
+fun sortableCategories(all: List<Category>): List<Category> = all.filter { !it.isSalary }
+
+/** How many still have no kind of their own and take none from a parent (what the Categories page counts as "not sorted"). */
+fun unsortedCount(all: List<Category>): Int = sortableCategories(all).count { it.effectiveKind == null }
+
+fun sortKindsButtonLabel(unsorted: Int): String = if (unsorted > 0) "Needs and wants ($unsorted not sorted)" else "Needs and wants"
+
+/** Where the sort dialog starts: each category's own kind (null = not set), so one left alone is not saved as a change. */
+fun startingKinds(all: List<Category>): Map<String, String?> = sortableCategories(all).associate { it.id to it.kind }
+
+/** How many categories the choices change. */
+fun changedKindCount(all: List<Category>, choices: Map<String, String?>): Int = sortableCategories(all).count { choices[it.id] != it.kind }
+
+/** What to ask the server to change: one request per new kind (null clears it), at most 500 ids each, only what changed. */
+fun kindRequests(all: List<Category>, choices: Map<String, String?>): List<JsonObject> =
+    sortableCategories(all).filter { choices[it.id] != it.kind }
+        .groupBy({ choices[it.id] }, { it.id })
+        .flatMap { (kind, ids) ->
+            ids.chunked(500).map { chunk ->
+                buildJsonObject {
+                    put("ids", JsonArray(chunk.map(::JsonPrimitive)))
+                    if (kind == null) put("kind", JsonNull) else put("kind", kind)
+                }
+            }
+        }
+
 /**
  * The categories a category may sit under: top-level ones other than itself. A category that has sub-categories
  * of its own cannot get a parent (one level only), and the default Salary category takes none.
