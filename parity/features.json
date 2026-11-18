@@ -827,7 +827,11 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "partial",
+        "note": "Photos and PDFs added while making a new transaction, uploaded once it is saved. Not yet: seeing, opening or removing a transaction's files, files on an edit, or web links.",
+        "evidence": [
+          "apps/ios/Maalu/Features/Transactions/Form/TransactionAttachmentsSection.swift"
+        ]
       },
       "api": [
         "/api/v1/transactions/{transaction_id}/attachments",

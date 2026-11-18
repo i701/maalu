@@ -51,6 +51,14 @@ struct Api: Sendable {
         await empty(method: "DELETE", path: path)
     }
 
+    /// Sends a file as the raw request body.
+    func upload(_ path: String, query: [URLQueryItem], data: Data, contentType: String) async -> ApiResult<Void> {
+        switch await perform(method: "POST", path: path, query: query, body: data, contentType: contentType) {
+        case .ok(_, let total): .ok((), total: total)
+        case .failed(let status, let message): .failed(status: status, message: message)
+        }
+    }
+
     func postForm<T: Decodable>(_ path: String, fields: [String: String]) async -> ApiResult<T> {
         var allowed = CharacterSet.alphanumerics
         allowed.insert(charactersIn: "-._~")

@@ -16,6 +16,9 @@ final class TransactionFormModel {
     private(set) var errorMessage: String?
     /// How many were saved with "Save and add another" while the form stayed open.
     private(set) var savedCount = 0
+    private(set) var pending: [PendingAttachment] = []
+    /// Set when the transaction was created but some of its files were not.
+    private(set) var filesPendingFor: String?
     private let original: Transaction?
     /// Whether the person has set "Planned" themselves, which a change of date then never overrides.
     private var plannedTouched: Bool
@@ -147,6 +150,9 @@ final class TransactionFormModel {
     func save(using api: Api) async -> Bool {
         isSaving = true
         errorMessage = nil
+        defer { isSaving = false }
+        // a transaction already made whose files did not all go up: only the files are sent again
+        if let savedID = filesPendingFor { return await uploadPending(to: savedID, using: api) }
         let request = draft.request(accounts: accounts, baseCurrency: baseCurrency, editing: original)
         let result: ApiResult<Transaction>
         if let original {
@@ -154,11 +160,43 @@ final class TransactionFormModel {
         } else {
             result = await api.postJSON("transactions", body: request)
         }
-        isSaving = false
-        if let message = failure(result) {
+        switch result {
+        case .failed(_, let message):
             errorMessage = message
             return false
+        case .ok(let saved, _):
+            return pending.isEmpty ? true : await uploadPending(to: saved.id, using: api)
         }
+    }
+
+    /// Returns a message when the file cannot be added.
+    func attach(_ data: Data, filename: String, contentType: String) -> LocalizedStringResource? {
+        if let problem = PendingAttachment.problem(adding: data, to: pending) { return problem }
+        pending.append(PendingAttachment(filename: filename, data: data, contentType: contentType))
+        return nil
+    }
+
+    func removeAttachment(_ attachment: PendingAttachment) {
+        pending.removeAll { $0.id == attachment.id }
+    }
+
+    private func uploadPending(to transactionID: String, using api: Api) async -> Bool {
+        var failed: [PendingAttachment] = []
+        var lastMessage = ""
+        for file in pending {
+            let result = await api.upload("transactions/\(transactionID)/attachments", query: [URLQueryItem(name: "filename", value: file.filename)], data: file.data, contentType: file.contentType)
+            if case .failed(_, let message) = result {
+                failed.append(file)
+                lastMessage = message
+            }
+        }
+        pending = failed
+        guard failed.isEmpty else {
+            filesPendingFor = transactionID
+            errorMessage = String(localized: "The transaction is saved, but \(failed.count) file(s) did not upload (\(lastMessage)). Save again to retry them.")
+            return false
+        }
+        filesPendingFor = nil
         return true
     }
 

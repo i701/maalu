@@ -10,8 +10,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | | Web | Android | iOS |
 |---|---:|---:|---:|
 | ✅ done | 67 | 59 | 26 |
-| 🟡 partial | 0 | 1 | 4 |
-| ❌ missing | 0 | 3 | 33 |
+| 🟡 partial | 0 | 1 | 5 |
+| ❌ missing | 0 | 3 | 32 |
 | ➖ n/a | 1 | 5 | 5 |
 
 ## Still to build on Android (4)
@@ -23,6 +23,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 ## Still to build on iOS (37)
 
+- 🟡 **Receipts and web links** (Transactions). Photos and PDFs added while making a new transaction, uploaded once it is saved. Not yet: seeing, opening or removing a transaction's files, files on an edit, or web links.
 - 🟡 **Budget limits** (Budget, goals and planning). Monthly limits: see, make, change, delete, move money between them with undo and history. No budget settings (period start day, warning level), no rollover choice per period, and no limits for set dates.
 - 🟡 **Limits for set dates** (Budget, goals and planning). Read only: limits for set dates are listed under the period their days touch, with days left. Not made, changed, repeated or deleted.
 - 🟡 **Cash flow** (Dashboard and reports). Income and expenses by month (6 or 12 months) and this month's income, spending and what was kept. No kept-per-month chart or running total, and no table view of the chart.
@@ -39,7 +40,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Bulk actions on selected rows** (Transactions).
 - ❌ **Refunds** (Transactions).
 - ❌ **Split a purchase into items** (Transactions).
-- ❌ **Receipts and web links** (Transactions).
 - ❌ **Mark a transaction on the map** (Transactions).
 - ❌ **Merge two entries into one transfer** (Transactions).
 - ❌ **Transaction groups** (Transactions).
@@ -107,7 +107,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Planned transactions and Mark as paid**<br>Something coming up that counts toward nothing until it is paid with the real day and amount. | ✅ done | ✅ done | ✅ done |
 | **Refunds**<br>Give money back for a purchase (whole or by item), or link existing income to a purchase. | ✅ done | ✅ done | ❌ missing |
 | **Split a purchase into items**<br>Items with quantity, category and tax (GST included or excluded) that add up to the amount. | ✅ done | ✅ done | ❌ missing |
-| **Receipts and web links**<br>Photos and PDFs and web links on a transaction. | ✅ done | ✅ done | ❌ missing |
+| **Receipts and web links**<br>Photos and PDFs and web links on a transaction. | ✅ done | ✅ done | 🟡 partial |
 | **Mark a transaction on the map**<br>A pin and an optional place name, with place search by name. | ✅ done | ✅ done | ❌ missing |
 | **Merge two entries into one transfer**<br>A suggestion card for pairs entered twice, and a manual merge when an entry has an exact match. | ✅ done | ✅ done | ❌ missing |
 | **Transaction groups**<br>Bundle related transactions under a name and see what they add up to. | ✅ done | ✅ done | ❌ missing |
@@ -115,6 +115,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Import a bank statement**<br>Read a bank's CSV, review the rows, assign vendors and categories, import as one undoable batch. | ✅ done | ➖ n/a | ➖ n/a |
 
 - **Trash** (iOS): Restore and delete for good one by one; bulk actions wait for tx-bulk.
+- **Receipts and web links** (iOS): Photos and PDFs added while making a new transaction, uploaded once it is saved. Not yet: seeing, opening or removing a transaction's files, files on an edit, or web links.
 - **Import a bank statement** (Android): Web only, by choice: importing a statement is done on the web, where the rows are easier to review.
 - **Import a bank statement** (iOS): Web only, by choice: importing a statement is done on the web, where the rows are easier to review.
 

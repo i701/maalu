@@ -22,6 +22,9 @@ struct TransactionFormView: View {
                     TransactionDetailsSection(model: model)
                 }
                 TransactionDateSection(model: model)
+                if !model.isEditing {
+                    TransactionAttachmentsSection(model: model)
+                }
                 if let message = model.errorMessage {
                     Text(message).foregroundStyle(.red)
                 }
@@ -41,7 +44,7 @@ struct TransactionFormView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(model.savedCount > 0 ? "Done" : "Cancel", role: .cancel) { dismiss() }
+                    Button(model.savedCount > 0 ? "Done" : "Cancel", role: .cancel, action: close)
                 }
                 ToolbarItem(placement: .primaryAction) {
                     if !model.isEditing {
@@ -91,6 +94,12 @@ struct TransactionFormView: View {
             onSaved()
             dismiss()
         }
+    }
+
+    private func close() {
+        // the transaction was made even though some of its files were not
+        if model.filesPendingFor != nil { onSaved() }
+        dismiss()
     }
 
     private func saveAndAddAnother() {
