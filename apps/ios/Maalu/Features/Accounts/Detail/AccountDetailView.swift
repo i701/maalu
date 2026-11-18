@@ -23,10 +23,14 @@ struct AccountDetailView: View {
                             .bold()
                     }
                 }
+                if let month = model.month {
+                    AccountMonthSection(month: month)
+                }
                 AccountFactsSection(account: account, baseCurrency: model.baseCurrency)
                 AccountBalanceSection(model: model, account: account)
-                AccountTransactionsSection(transactions: model.transactions, balances: model.balances, account: account)
+                AccountTransactionsSection(model: model, account: account, loadMore: loadMore)
             }
+            .searchable(text: $model.query, prompt: "Search this account")
             .navigationTitle(account.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbar(for: account) }
@@ -46,6 +50,7 @@ struct AccountDetailView: View {
                 Text(message)
             }
             .task(id: model.range) { await loadDetail() }
+            .task(id: model.query) { await loadTransactions(debounced: !model.query.isEmpty) }
         } else {
             ContentUnavailableView("Account not found", systemImage: "questionmark.circle")
         }
@@ -75,11 +80,24 @@ struct AccountDetailView: View {
         await model.load(accountID: id, using: api)
     }
 
+    private func loadTransactions(debounced: Bool = false) async {
+        guard let api = session.api else { return }
+        await model.loadTransactions(accountID: id, using: api, debounced: debounced)
+    }
+
+    private func loadMore() {
+        Task {
+            guard let api = session.api else { return }
+            await model.loadMore(accountID: id, using: api)
+        }
+    }
+
     private func reload() {
         Task {
             guard let api = session.api else { return }
             await listModel.load(using: api)
             await model.load(accountID: id, using: api)
+            await model.loadTransactions(accountID: id, using: api)
         }
     }
 

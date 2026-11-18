@@ -402,8 +402,7 @@
         ]
       },
       "ios": {
-        "status": "partial",
-        "note": "The balance, facts, a balance chart with three ranges and the 20 latest transactions with the balance after each row: no this-month figures, search or paging yet.",
+        "status": "done",
         "evidence": [
           "apps/ios/Maalu/Features/Accounts/Detail/AccountDetailView.swift"
         ]
