@@ -14,8 +14,8 @@ struct AccountsView: View {
                 if let summary = model.summary, !model.showsArchived, !model.accounts.isEmpty {
                     AccountsSummarySection(summary: summary)
                 }
-                ForEach(model.groups) { section in
-                    Section(String(localized: section.group.title)) {
+                ForEach(model.sections) { section in
+                    Section(section.title) {
                         ForEach(section.accounts) { account in
                             NavigationLink(value: AccountRoute(id: account.id)) {
                                 AccountRow(account: account, trend: model.trends[account.id])
@@ -28,6 +28,7 @@ struct AccountsView: View {
             .navigationTitle(model.showsArchived ? "Archived Accounts" : "Accounts")
             .toolbar {
                 ToolbarItemGroup(placement: .primaryAction) {
+                    AccountsViewMenu(model: model)
                     Toggle("Archived", systemImage: "archivebox", isOn: $model.showsArchived)
                     Button("Add Account", systemImage: "plus") { isAdding = true }
                 }

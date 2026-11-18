@@ -9,12 +9,13 @@ final class AccountsModel {
     private(set) var isLoading = true
     private(set) var errorMessage: String?
     var showsArchived = false
+    var grouping = AccountGrouping.type
+    var bank: String?
 
-    var groups: [AccountGroupSection] {
-        AccountGroup.allCases.compactMap { group in
-            let members = accounts.filter { $0.group == group }
-            return members.isEmpty ? nil : AccountGroupSection(group: group, accounts: members)
-        }
+    var banks: [String] { AccountGroupSection.banks(in: accounts) }
+
+    var sections: [AccountGroupSection] {
+        AccountGroupSection.sections(of: accounts.filter { bank == nil || $0.bank == bank }, by: grouping)
     }
 
     func account(id: String) -> Account? {
@@ -33,6 +34,7 @@ final class AccountsModel {
         switch result {
         case .ok(let accounts, _):
             self.accounts = accounts
+            if let bank, !banks.contains(bank) { self.bank = nil }
             errorMessage = nil
         case .failed(_, let message):
             errorMessage = message

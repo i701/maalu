@@ -9,8 +9,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 67 | 59 | 20 |
-| 🟡 partial | 0 | 1 | 9 |
+| ✅ done | 67 | 59 | 21 |
+| 🟡 partial | 0 | 1 | 8 |
 | ❌ missing | 0 | 3 | 34 |
 | ➖ n/a | 1 | 5 | 5 |
 
@@ -21,9 +21,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (43)
+## Still to build on iOS (42)
 
-- 🟡 **Accounts list** (Accounts and cards). Accounts by group with their balances, bank, credit-use bars, 30-day balance lines and the net worth summary: no bank filter or grouping by bank yet.
 - 🟡 **An account's page** (Accounts and cards). The balance, facts, a balance chart with three ranges and the 20 latest transactions with the balance after each row: no this-month figures, search or paging yet.
 - 🟡 **Transactions list** (Transactions). Search, a type filter, paging, a detail screen and delete (to the trash) only: no date, account, category, tag or amount filters, no selection, no planned list.
 - 🟡 **Filters** (Transactions). Type, date range (with quick ranges), account, category, tags (any or all) and amount. No payment method, card, needs or wants, or planned filter.
@@ -89,7 +88,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | Feature | Web | Android | iOS |
 |---|:---:|:---:|:---:|
-| **Accounts list**<br>Accounts by group with balances, credit use, small balance lines, the net worth summary, a bank filter and grouping by bank. | ✅ done | ✅ done | 🟡 partial |
+| **Accounts list**<br>Accounts by group with balances, credit use, small balance lines, the net worth summary, a bank filter and grouping by bank. | ✅ done | ✅ done | ✅ done |
 | **Add and edit an account**<br>Group, bank and number, currency and rate, credit limit, statement days, spendable switch, exclude from stats. | ✅ done | ✅ done | ✅ done |
 | **Archive and unarchive an account**<br>Hide an account without losing its history. | ✅ done | ✅ done | ✅ done |
 | **Adjust balance**<br>Set the balance to what the bank shows, or add or take away, as a transaction that reports ignore. | ✅ done | ✅ done | ✅ done |
@@ -99,7 +98,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Cards**<br>Debit cards on a bank account and credit cards with a repayment account; a Card field on a purchase and a card filter. | ✅ done | ✅ done | ❌ missing |
 | **Credit card statements and due dates**<br>The statement balance, what is left, the due date and a Repay button, worked out each time. | ✅ done | ✅ done | ❌ missing |
 
-- **Accounts list** (iOS): Accounts by group with their balances, bank, credit-use bars, 30-day balance lines and the net worth summary: no bank filter or grouping by bank yet.
 - **An account's page** (iOS): The balance, facts, a balance chart with three ranges and the 20 latest transactions with the balance after each row: no this-month figures, search or paging yet.
 
 ## Transactions
