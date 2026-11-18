@@ -2,10 +2,11 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -203,7 +204,7 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
                 AnimatedContent(
                     targetState = Triple(route, selected, openAccountId),
                     transitionSpec = {
-                        (fadeIn(motion.defaultEffectsSpec<Float>()) + scaleIn(motion.defaultSpatialSpec<Float>(), initialScale = 0.96f)) togetherWith
+                        (fadeIn(motion.defaultEffectsSpec<Float>()) + slideInVertically(motion.defaultSpatialSpec<IntOffset>()) { it / 12 }) togetherWith
                             fadeOut(motion.fastEffectsSpec<Float>())
                     },
                     label = "screen",

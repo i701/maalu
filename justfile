@@ -67,6 +67,11 @@ ios-project:
 test-ios: ios-project
     cd apps/ios && xcodebuild test -project Maalu.xcodeproj -scheme Maalu -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath build -quiet
 
+# Android: build the debug APK and install it into the running Waydroid session (`waydroid app launch app.maalu` alone runs the old build)
+android-install:
+    cd apps/android && ./gradlew :app:assembleDebug
+    waydroid app install apps/android/app/build/outputs/apk/debug/app-debug.apk
+
 # The guides as JSON for the Android app (apps/android/app/src/main/assets/docs.json), made from apps/web/src/lib/docs.
 # Run after changing a guide and commit the file (CI fails if it is stale).
 docs-json:
