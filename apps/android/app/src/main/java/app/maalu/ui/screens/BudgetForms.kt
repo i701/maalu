@@ -121,13 +121,13 @@ fun LineFormScreen(api: Api, currency: String, budget: Budget, start: LineForm?,
         },
     ) {
         Section("Name", Icons.Outlined.Savings, Accents.getValue("blue")) {
-            CompactField(form.name, { errorField = null; form = form.copy(name = it.take(100)) }, "For example Food", enabled = !busy, isError = errorField == LineField.Name)
+            CompactField(form.name, { errorField = null; form = form.copy(name = it.take(100)) }, "Name", enabled = !busy, isError = errorField == LineField.Name, placeholder = "For example Food")
         }
         Section(if (form.dated && !form.repeat) "Limit for these dates" else "Amount each period", Icons.Outlined.Numbers, Accents.getValue("orange")) {
             CompactField(
-                form.amount, { errorField = null; form = form.copy(amount = cleanAmount(it)) }, "0.00",
+                form.amount, { errorField = null; form = form.copy(amount = cleanAmount(it)) }, "Amount",
                 keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !busy, isError = errorField == LineField.Amount, suffix = currency,
-            )
+            placeholder = "0.00")
         }
         Section("Dates", Icons.Outlined.CalendarMonth, Accents.getValue("violet")) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(32.dp)) {
@@ -244,7 +244,7 @@ fun GoalFormScreen(api: Api, currency: String, editing: Goal?, onClose: () -> Un
         },
     ) {
         Section("Name", Icons.Outlined.Savings, Accents.getValue("pink")) {
-            CompactField(form.name, { errorField = null; form = form.copy(name = it.take(100)) }, "For example Trip to Sri Lanka", enabled = !busy, isError = errorField == GoalField.Name)
+            CompactField(form.name, { errorField = null; form = form.copy(name = it.take(100)) }, "Name", enabled = !busy, isError = errorField == GoalField.Name, placeholder = "For example Trip to Sri Lanka")
         }
         Section("Target", Icons.Outlined.Numbers, Accents.getValue("orange")) {
             CompactField(

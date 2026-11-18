@@ -459,9 +459,9 @@ private fun AdjustBalanceDialog(api: Api, a: Account, onClose: () -> Unit, onDon
                     tint = { Accents.getValue(if (it == AdjustMode.Balance) "blue" else "violet") }, enabled = !busy,
                 )
                 CompactField(
-                    typed, { typed = cleanSigned(it); error = null }, if (mode == AdjustMode.Balance) "What the bank shows" else "For example -50 or 200",
+                    typed, { typed = cleanSigned(it); error = null }, "Amount",
                     keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !busy, isError = error != null, suffix = a.currency,
-                )
+                placeholder = if (mode == AdjustMode.Balance) "What the bank shows" else "For example -50 or 200")
                 CompactField(note, { note = it.take(200) }, "Note (optional)", enabled = !busy)
                 Text("Now ${formatMoney(a.balance, a.currency)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 preview?.let { p ->

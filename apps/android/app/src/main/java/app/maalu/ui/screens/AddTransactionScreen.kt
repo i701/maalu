@@ -307,7 +307,7 @@ private fun SaveTemplateDialog(api: Api, form: AddForm, accounts: List<Account>,
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("It will fill in the type, account, category, vendor, way of paying, tags and note, and the amount if you typed one.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                CompactField(name, { name = it; error = null }, "Name, for example Weekly shop", enabled = !busy, isError = error != null)
+                CompactField(name, { name = it; error = null }, "Name", enabled = !busy, isError = error != null, placeholder = "For example Weekly shop")
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
             }
         },
@@ -367,10 +367,10 @@ private fun Form(o: FormOptions, saveLabel: String, form: AddForm, onForm: (AddF
                         Text("  total of the items", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 } else CompactField(
-                    form.amount, { onForm(form.copy(amount = cleanAmount(it))) }, "0.00",
+                    form.amount, { onForm(form.copy(amount = cleanAmount(it))) }, "Amount",
                     keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     enabled = !busy, isError = errorField == FormField.Amount, suffix = currency,
-                )
+                placeholder = "0.00")
             }
 
             Section(if (form.type == "transfer") "From" else "Account", Icons.Outlined.AccountBalance, Accents.getValue("violet")) {
@@ -391,9 +391,9 @@ private fun Form(o: FormOptions, saveLabel: String, form: AddForm, onForm: (AddF
                     onPick = { r -> val c = cardChoices.firstOrNull { it.id == r?.id }; onForm(if (c == null) form.copy(cardId = null) else form.withCard(c, o.accounts)) },
                 )
                 if (foreign) CompactField(
-                    form.rate, { onForm(form.copy(rate = cleanAmount(it))) }, "Exchange rate: 1 $currency = ? $base",
+                    form.rate, { onForm(form.copy(rate = cleanAmount(it))) }, "Exchange rate",
                     keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !busy, isError = errorField == FormField.Rate,
-                )
+                placeholder = "1 $currency = ? $base")
             }
 
             if (form.type == "transfer") Section("To", Icons.Outlined.SwapHoriz, Accents.getValue("blue")) {
@@ -609,9 +609,9 @@ private fun ItemsEditor(form: AddForm, onForm: (AddForm) -> Unit, categories: Li
             TaxMode.entries.forEach { m -> TintChip(paletteTint(m.ordinal), form.taxMode == m, { onForm(form.copy(taxMode = m, items = unlocked(form.items))) }, { Text(m.label) }) }
         }
         if (form.taxMode != TaxMode.None) CompactField(
-            form.taxRate, { onForm(form.copy(taxRate = cleanAmount(it), items = unlocked(form.items))) }, "GST rate (%), for example 8",
+            form.taxRate, { onForm(form.copy(taxRate = cleanAmount(it), items = unlocked(form.items))) }, "GST rate (%)",
             keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !busy,
-        )
+        placeholder = "For example 8")
         form.items.forEachIndexed { i, row ->
             androidx.compose.runtime.key(row.key) {
                 androidx.compose.material3.Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLow) {

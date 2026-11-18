@@ -204,7 +204,7 @@ fun RefundDialog(api: Api, purchase: Transaction?, refund: Transaction?, onClose
             Text("Where the money went back. Only accounts in $currency are offered.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Section("Note", Icons.Outlined.Notes, Accents.getValue("violet")) {
-            CompactField(note, { note = it }, "For example: damaged, returned", enabled = !busy)
+            CompactField(note, { note = it }, "Note (optional)", enabled = !busy, placeholder = "For example: damaged, returned")
         }
     }
 

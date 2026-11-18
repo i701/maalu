@@ -201,7 +201,7 @@ private fun NewGroupDialog(api: Api, onClose: () -> Unit, onCreated: (String) ->
         },
     ) {
         Column(Modifier.padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            CompactField(name, { name = it; error = null }, "Name, for example Trip to Male", enabled = !busy, isError = error != null && groupNameProblem(name) != null)
+            CompactField(name, { name = it; error = null }, "Name", enabled = !busy, isError = error != null && groupNameProblem(name) != null, placeholder = "For example Trip to Male")
             CompactField(note, { note = it.take(500) }, "Note (optional)", enabled = !busy, singleLine = false, minHeight = 80.dp)
             Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
                 Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {

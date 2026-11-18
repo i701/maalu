@@ -106,14 +106,14 @@ fun MoveMoneyDialog(api: Api, budget: Budget, line: BudgetLine, onClose: () -> U
         }
         Section("Amount (${budget.currency})", Icons.Outlined.Numbers, Accents.getValue("orange")) {
             CompactField(
-                amount, { amount = cleanAmount(it); problem = null }, "500", keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                amount, { amount = cleanAmount(it); problem = null }, "Amount", keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 enabled = !busy, isError = problem != null,
-            )
+            placeholder = "500")
             if (source != null) Text("Up to ${money(source.left)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             problem?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
         }
         Section("Note", Icons.Outlined.Notes, Accents.getValue("lime")) {
-            CompactField(note, { note = it.take(200) }, "Guests over for the weekend (optional)", enabled = !busy)
+            CompactField(note, { note = it.take(200) }, "Note (optional)", enabled = !busy, placeholder = "Guests over for the weekend")
         }
     }
 }

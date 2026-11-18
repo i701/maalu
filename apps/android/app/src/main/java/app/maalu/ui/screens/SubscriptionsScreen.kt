@@ -373,8 +373,7 @@ private fun AcceptDialog(api: Api, c: SubscriptionCandidate, onClose: () -> Unit
                 CompactField(name, { name = it.take(100) }, "Name", enabled = !busy)
                 CompactField(amount, { amount = cleanAmount(it); error = null }, "Amount", keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !busy, suffix = c.currency)
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Every", style = MaterialTheme.typography.bodyMedium)
-                    CompactField(count, { count = it.filter(Char::isDigit).take(2) }, "1", Modifier.weight(0.4f), KeyboardOptions(keyboardType = KeyboardType.Number), enabled = !busy)
+                    CompactField(count, { count = it.filter(Char::isDigit).take(2) }, "Every", Modifier.weight(0.4f), KeyboardOptions(keyboardType = KeyboardType.Number), enabled = !busy, placeholder = "1")
                 }
                 SegmentedPills(IntervalUnits, unit, { unit = it }, tint = { Accents.getValue(listOf("blue", "violet", "pink")[IntervalUnits.indexOfFirst { p -> p.first == it }.coerceAtLeast(0)]) }, enabled = !busy)
                 Text("Every payment of this pattern is linked to it, so its history and next payment are right from the start.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

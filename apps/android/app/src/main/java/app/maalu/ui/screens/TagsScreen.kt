@@ -236,7 +236,7 @@ private fun TagFormScreen(api: Api, existing: List<Tag>, editing: Tag?, onClose:
         },
     ) {
         Section("Name", Icons.Outlined.Sell, Accents.getValue("violet")) {
-            CompactField(name, { nameError = false; name = it.take(50) }, "For example weekly", enabled = !busy, isError = nameError)
+            CompactField(name, { nameError = false; name = it.take(50) }, "Name", enabled = !busy, isError = nameError, placeholder = "For example weekly")
             Text("A tag's colour is picked for you.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }

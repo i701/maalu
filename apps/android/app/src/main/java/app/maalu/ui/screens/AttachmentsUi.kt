@@ -146,7 +146,7 @@ fun AddLinkDialog(have: Int, onClose: () -> Unit, onAdd: (url: String, title: St
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("An online receipt or order page. It is only opened when you tap it; Maalu never visits it.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                CompactField(url, { url = it; error = null }, "Address, for example shop.example/order/123", isError = error != null)
+                CompactField(url, { url = it; error = null }, "Address", isError = error != null, placeholder = "shop.example/order/123")
                 CompactField(title, { title = it }, "Title (optional)")
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
             }

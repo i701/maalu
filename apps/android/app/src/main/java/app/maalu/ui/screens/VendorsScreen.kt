@@ -330,7 +330,7 @@ private fun VendorFormScreen(api: Api, editing: Vendor?, onClose: () -> Unit, on
         },
     ) {
         Section("Name", Icons.Outlined.Storefront, Accents.getValue("orange")) {
-            CompactField(form.name, { nameError = false; form = form.copy(name = it.take(100)) }, "For example Ensis Mart", enabled = !busy, isError = nameError)
+            CompactField(form.name, { nameError = false; form = form.copy(name = it.take(100)) }, "Name", enabled = !busy, isError = nameError, placeholder = "For example Ensis Mart")
         }
         Section("Usual place", Icons.Outlined.LocationOn, Accents.getValue("pink")) {
             val marked = form.latitude.isNotBlank() && form.longitude.isNotBlank()

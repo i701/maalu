@@ -12,9 +12,9 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -31,6 +31,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 
 /** A section of a sheet or form: an accent-coloured icon tile and a title, so each group reads as its own thing. */
@@ -47,17 +49,22 @@ fun Section(title: String, icon: ImageVector, tint: Color, content: @Composable 
     }
 }
 
-/** A compact tonal text field (44dp) with an outline at rest and a thicker primary ring on focus: the input used across the forms. */
+/**
+ * The app's text input: Material's outlined text field (4dp corners, a hairline outline that turns into a primary ring on focus, and a
+ * floating [label] that stays above the text once there is some), the same look as the web's. [placeholder] is a hint that shows while the
+ * field is focused and empty, for an example such as "For example Groceries".
+ */
 @Composable
 fun CompactField(
     value: String,
     onChange: (String) -> Unit,
-    placeholder: String,
+    label: String,
     modifier: Modifier = Modifier,
     keyboard: KeyboardOptions = KeyboardOptions.Default,
     singleLine: Boolean = true,
     enabled: Boolean = true,
-    minHeight: Dp = 44.dp,
+    /** The least height: a note field passes more, so it opens with room for several lines. */
+    minHeight: Dp = 56.dp,
     isError: Boolean = false,
     /** Something fixed at the end of the field, such as a currency code. */
     suffix: String? = null,
@@ -65,41 +72,21 @@ fun CompactField(
     hidden: Boolean = false,
     /** What the keyboard's action key does (Search, Done). */
     actions: androidx.compose.foundation.text.KeyboardActions = androidx.compose.foundation.text.KeyboardActions.Default,
+    placeholder: String? = null,
 ) {
-    var focused by remember { mutableStateOf(false) }
-    Surface(
-        modifier,
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        border = when {
-            isError -> BorderStroke(2.dp, MaterialTheme.colorScheme.error)
-            focused -> BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
-            // the resting edge: the fill alone vanishes where a field sits on the same surface (a dialog), so an input must be
-            // defined by `outline`, the role guaranteed 3:1 against the surface
-            else -> BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-        },
-    ) {
-        BasicTextField(
-            value = value,
-            onValueChange = onChange,
-            enabled = enabled,
-            singleLine = singleLine,
-            keyboardOptions = keyboard,
-            keyboardActions = actions,
-            visualTransformation = if (hidden) androidx.compose.ui.text.input.PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,
-            textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
-            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-            modifier = Modifier.fillMaxWidth().onFocusChanged { focused = it.isFocused },
-            decorationBox = { inner ->
-                Box(
-                    Modifier.fillMaxWidth().heightIn(min = minHeight).then(if (singleLine) Modifier else Modifier.padding(vertical = 12.dp)).padding(horizontal = 14.dp),
-                    contentAlignment = if (singleLine) Alignment.CenterStart else Alignment.TopStart,
-                ) {
-                    if (value.isEmpty()) Text(placeholder, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    inner()
-                    if (suffix != null) Text(suffix, Modifier.align(Alignment.CenterEnd), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            },
-        )
-    }
+    OutlinedTextField(
+        value = value,
+        onValueChange = onChange,
+        modifier = modifier.fillMaxWidth().heightIn(min = minHeight),
+        enabled = enabled,
+        singleLine = singleLine,
+        keyboardOptions = keyboard,
+        keyboardActions = actions,
+        isError = isError,
+        label = { Text(label) },
+        placeholder = placeholder?.let { hint -> { Text(hint) } },
+        suffix = suffix?.let { unit -> { Text(unit) } },
+        visualTransformation = if (hidden) PasswordVisualTransformation() else VisualTransformation.None,
+        shape = MaterialTheme.shapes.extraSmall,
+    )
 }

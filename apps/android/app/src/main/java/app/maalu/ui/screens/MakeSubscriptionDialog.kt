@@ -56,14 +56,9 @@ fun MakeSubscriptionDialog(api: Api, t: Transaction, onClose: () -> Unit, onDone
                     "${formatMoney(t.amount, t.currency)} on ${dayLabel(t.date)} becomes the first payment. Amount, currency, rate, vendor and category are copied.",
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                // a label that stays: the field's own placeholder is gone once a name is in it
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("Name", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    CompactField(name, { name = it.take(200) }, "Name", enabled = !busy)
-                }
+                CompactField(name, { name = it.take(200) }, "Name", enabled = !busy)
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Every", style = MaterialTheme.typography.bodyMedium)
-                    CompactField(count, { count = it.filter(Char::isDigit).take(3) }, "1", Modifier.weight(0.4f), KeyboardOptions(keyboardType = KeyboardType.Number), enabled = !busy)
+                    CompactField(count, { count = it.filter(Char::isDigit).take(3) }, "Every", Modifier.weight(0.4f), KeyboardOptions(keyboardType = KeyboardType.Number), enabled = !busy, placeholder = "1")
                 }
                 SegmentedPills(
                     IntervalUnits, unit, { unit = it },

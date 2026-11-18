@@ -184,7 +184,7 @@ private fun AccountFields(form: AccountForm, onForm: (AccountForm) -> Unit, l: L
         Text(GroupHelp[form.group].orEmpty(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
     Section("Name", Icons.Outlined.AccountBalance, Accents.getValue("blue")) {
-        CompactField(form.name, { onForm(form.copy(name = it.take(100))) }, "For example BML Current", enabled = enabled, isError = errorField == AccountField.Name)
+        CompactField(form.name, { onForm(form.copy(name = it.take(100))) }, "Name", enabled = enabled, isError = errorField == AccountField.Name, placeholder = "For example BML Current")
     }
     Section("Currency", Icons.Outlined.Payments, Accents.getValue("green")) {
         PickerField(
@@ -194,18 +194,18 @@ private fun AccountFields(form: AccountForm, onForm: (AccountForm) -> Unit, l: L
         )
         if (foreign) {
             CompactField(
-                form.rate, { onForm(form.copy(rate = cleanAmount(it), rateTouched = true)) }, "1 ${form.currency} = ? ${l.base}",
+                form.rate, { onForm(form.copy(rate = cleanAmount(it), rateTouched = true)) }, "Exchange rate",
                 keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = enabled, isError = errorField == AccountField.Rate,
-            )
+            placeholder = "1 ${form.currency} = ? ${l.base}")
             SwitchRow("Keep this rate up to date", "Follows the market rate every day.", form.autoRate, enabled) { onForm(form.copy(autoRate = it)) }
         }
     }
     Section("Opening amount", Icons.Outlined.Numbers, Accents.getValue("orange")) {
         CompactField(
-            form.opening, { onForm(form.copy(opening = cleanSigned(it))) }, "0.00",
+            form.opening, { onForm(form.copy(opening = cleanSigned(it))) }, "Opening balance",
             keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = enabled,
             isError = errorField == AccountField.Opening, suffix = form.currency.ifBlank { l.base },
-        )
+        placeholder = "0.00")
         Text(
             if (liability) "What you owe counts below zero: enter it as a negative number." else "What the account held before the first transaction you track.",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -221,10 +221,10 @@ private fun AccountFields(form: AccountForm, onForm: (AccountForm) -> Unit, l: L
     }
     if (form.group in CreditLimitGroups) Section("Credit limit", Icons.Outlined.Payments, Accents.getValue("pink")) {
         CompactField(
-            form.creditLimit, { onForm(form.copy(creditLimit = cleanAmount(it))) }, "The most that can be owed",
+            form.creditLimit, { onForm(form.copy(creditLimit = cleanAmount(it))) }, "Credit limit",
             keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = enabled,
             isError = errorField == AccountField.CreditLimit, suffix = form.currency.ifBlank { l.base },
-        )
+        placeholder = "The most that can be owed")
         if (form.group == "card") Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             CompactField(form.statementDay, { onForm(form.copy(statementDay = it.filter(Char::isDigit).take(2))) }, "Statement day", Modifier.weight(1f), KeyboardOptions(keyboardType = KeyboardType.Number), enabled = enabled, isError = errorField == AccountField.Days)
             CompactField(form.dueDay, { onForm(form.copy(dueDay = it.filter(Char::isDigit).take(2))) }, "Due day", Modifier.weight(1f), KeyboardOptions(keyboardType = KeyboardType.Number), enabled = enabled, isError = errorField == AccountField.Days)

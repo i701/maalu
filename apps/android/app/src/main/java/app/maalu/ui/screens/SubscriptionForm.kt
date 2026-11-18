@@ -126,13 +126,13 @@ fun SubscriptionFormScreen(api: Api, editing: Subscription?, onClose: () -> Unit
         },
     ) {
         Section("Name", Icons.Outlined.EventRepeat, Accents.getValue("violet")) {
-            CompactField(form.name, { set(form.copy(name = it.take(100))) }, "For example Netflix", enabled = !busy, isError = errorField == SubField.Name)
+            CompactField(form.name, { set(form.copy(name = it.take(100))) }, "Name", enabled = !busy, isError = errorField == SubField.Name, placeholder = "For example Netflix")
         }
         Section("Amount", Icons.Outlined.Numbers, Accents.getValue("orange")) {
             CompactField(
-                form.amount, { set(form.copy(amount = cleanAmount(it))) }, "0.00",
+                form.amount, { set(form.copy(amount = cleanAmount(it))) }, "Amount",
                 keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !busy, isError = errorField == SubField.Amount, suffix = currency,
-            )
+            placeholder = "0.00")
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(32.dp)) {
                 Column(Modifier.weight(1f)) {
                     Text("The amount changes each time", style = MaterialTheme.typography.bodyMedium)
@@ -149,9 +149,9 @@ fun SubscriptionFormScreen(api: Api, editing: Subscription?, onClose: () -> Unit
                 onPick = { r -> set(form.copy(accountId = r?.id, rate = r?.let { p -> accounts.firstOrNull { it.id == p.id }?.let { tidyRate(it.exchangeRate) } } ?: "1")) },
             )
             if (foreign) CompactField(
-                form.rate, { set(form.copy(rate = cleanAmount(it))) }, "Exchange rate: 1 $currency = ? $baseCurrency",
+                form.rate, { set(form.copy(rate = cleanAmount(it))) }, "Exchange rate",
                 keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !busy, isError = errorField == SubField.Rate,
-            )
+            placeholder = "1 $currency = ? $baseCurrency")
         }
         Section("Vendor", Icons.Outlined.Storefront, Accents.getValue("pink")) {
             VendorPickerField(api, form.vendor, onPick = { name, picked -> set(form.copy(vendor = name, category = if (form.category.isBlank()) picked?.defaultCategory ?: form.category else form.category)) })
@@ -170,8 +170,7 @@ fun SubscriptionFormScreen(api: Api, editing: Subscription?, onClose: () -> Unit
         }
         Section("How often", Icons.Outlined.Tune, Accents.getValue("blue")) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("Every", style = MaterialTheme.typography.bodyMedium)
-                CompactField(form.count, { set(form.copy(count = it.filter(Char::isDigit).take(2))) }, "1", Modifier.weight(0.35f), KeyboardOptions(keyboardType = KeyboardType.Number), enabled = !busy, isError = errorField == SubField.Count)
+                CompactField(form.count, { set(form.copy(count = it.filter(Char::isDigit).take(2))) }, "Every", Modifier.weight(0.35f), KeyboardOptions(keyboardType = KeyboardType.Number), enabled = !busy, isError = errorField == SubField.Count, placeholder = "1")
             }
             SegmentedPills(IntervalUnits, form.unit, { set(form.copy(unit = it)) }, tint = { u -> paletteTint(IntervalUnits.indexOfFirst { it.first == u }) }, enabled = !busy)
         }
@@ -181,9 +180,9 @@ fun SubscriptionFormScreen(api: Api, editing: Subscription?, onClose: () -> Unit
         }
         Section("Number of payments", Icons.Outlined.Numbers, Accents.getValue("violet")) {
             CompactField(
-                form.installments, { set(form.copy(installments = it.filter(Char::isDigit).take(3))) }, "Leave empty if it goes on",
+                form.installments, { set(form.copy(installments = it.filter(Char::isDigit).take(3))) }, "Number of payments",
                 keyboard = KeyboardOptions(keyboardType = KeyboardType.Number), enabled = !busy, isError = errorField == SubField.Installments,
-            )
+            placeholder = "Leave empty if it goes on")
         }
         Section("Remind me", Icons.Outlined.Notifications, Accents.getValue("amber")) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

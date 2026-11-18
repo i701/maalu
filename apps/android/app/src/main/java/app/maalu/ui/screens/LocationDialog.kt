@@ -157,8 +157,8 @@ fun LocationDialog(api: Api, initial: Spot?, onClose: () -> Unit, onDone: (Spot?
                         Box(Modifier.weight(1f)) {
                             CompactField(
                                 coords, { coords = it; parseCoordinates(it)?.let { (la, lo) -> pin = la to lo; focus = MapFocus(la, lo, 16.0, ++nonce) } },
-                                "Or paste: 4.1755, 73.5093", isError = coords.isNotBlank() && parseCoordinates(coords) == null && pin == null,
-                            )
+                                "Or paste coordinates", isError = coords.isNotBlank() && parseCoordinates(coords) == null && pin == null,
+                            placeholder = "4.1755, 73.5093")
                         }
                         OutlinedButton(shapes = ButtonDefaults.shapes(),
                             onClick = {

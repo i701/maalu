@@ -306,7 +306,7 @@ private fun CategoryFormScreen(api: Api, existing: List<Category>, editing: Cate
         },
     ) {
         Section("Name", Icons.Outlined.Category, accent("blue")) {
-            CompactField(form.name, { nameError = false; form = form.copy(name = it.take(100)) }, "For example Groceries", enabled = !busy && editing?.isSalary != true, isError = nameError)
+            CompactField(form.name, { nameError = false; form = form.copy(name = it.take(100)) }, "Name", enabled = !busy && editing?.isSalary != true, isError = nameError, placeholder = "For example Groceries")
         }
         Section("Colour", Icons.Outlined.Palette, accent("pink")) {
             ColorSwatches(AccentNames, form.color, { form = form.copy(color = it) }, enabled = !busy)

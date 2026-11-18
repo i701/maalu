@@ -140,7 +140,7 @@ private fun CardDialog(api: Api, account: Account, accounts: List<Account>, card
                     if (credit) "What you spend with this card is owed on ${account.name}." else "This card spends from ${account.name}: it has no balance of its own.",
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                CompactField(name, { name = it.take(100); error = null }, if (credit) "Name, for example BML Visa credit" else "Name, for example MIB Visa debit", enabled = !busy, isError = error != null)
+                CompactField(name, { name = it.take(100); error = null }, "Name", enabled = !busy, isError = error != null, placeholder = if (credit) "For example BML Visa credit" else "For example MIB Visa debit")
                 CompactField(digits, { digits = it.filter(Char::isDigit).take(4); error = null }, "Last 4 digits (optional)", enabled = !busy)
                 if (credit) PickerField("Repaid from", repay, "Repaid from (optional)", choices, onPick = { repay = it }, anyLabel = "Not set")
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
