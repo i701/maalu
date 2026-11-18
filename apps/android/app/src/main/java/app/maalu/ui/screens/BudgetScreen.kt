@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.springItem
 import app.maalu.ui.theme.tintSurface
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -154,25 +155,25 @@ fun BudgetScreen(api: Api, on: String) {
                     item { TextButton(shapes = ButtonDefaults.shapes(), onClick = { settings = true }) { Icon(Icons.Outlined.Settings, null, Modifier.size(18.dp)); Text(settingsText(b), Modifier.padding(start = 6.dp)) } }
                     item { SectionHeader("Monthly limits", "Add limit") { limitForm = LimitFormRequest(null, null) } }
                     if (b.lines.isEmpty()) item { Text("No limits yet. A limit is an amount you allow yourself to spend on some categories each month.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)) }
-                    items(b.lines.size, key = { "l-" + b.lines[it].id }) { i ->
+                    items(b.lines.size, key = { "l-" + b.lines[it].id }) { i -> Box(springItem()) {
                         val l = b.lines[i]
                         MorphTile({ line = l }, first = i == 0, last = i == b.lines.lastIndex, modifier = Modifier.padding(bottom = 2.dp)) { LineRow(l, b.currency, movesFor(b.moves, l.id, b.currency)) }
-                    }
+                     }}
                     // limits for set dates whose dates touch this period (a November limit is not listed under December)
                     val running = fixedInPeriod(b)
                     if (running.isNotEmpty()) {
                         item { SectionHeader("For set dates", null) {} }
-                        items(running.size, key = { "f-" + running[it].id }) { i ->
+                        items(running.size, key = { "f-" + running[it].id }) { i -> Box(springItem()) {
                             val f = running[i]
                             MorphTile({ fixed = f }, first = i == 0, last = i == running.lastIndex, modifier = Modifier.padding(bottom = 2.dp)) { FixedRow(f, b.currency) }
-                        }
+                         }}
                     }
                     item { SectionHeader("Savings goals", "Add goal") { addingGoal = true } }
                     if (s.data.goals.isEmpty()) item { Text("Save toward something, like a trip, and see what each month needs.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)) }
-                    items(s.data.goals.size, key = { "g-" + s.data.goals[it].id }) { i ->
+                    items(s.data.goals.size, key = { "g-" + s.data.goals[it].id }) { i -> Box(springItem()) {
                         val g = s.data.goals[i]
                         MorphTile({ goal = g }, first = i == 0, last = i == s.data.goals.lastIndex, modifier = Modifier.padding(bottom = 2.dp)) { GoalRow(g) }
-                    }
+                     }}
                 }
             }
         }

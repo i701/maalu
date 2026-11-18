@@ -1,5 +1,6 @@
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.springItem
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -301,7 +302,7 @@ fun TransactionsScreen(api: Api) {
                                 )
                             }
                         }
-                        items(list.size, key = { list[it].id }) { i ->
+                        items(list.size, key = { list[it].id }) { i -> Box(springItem()) {
                             val t = list[i]
                             // the native expressive list item: large outer corners, small inner ones, and the
                             // shape springs toward squarer while it is pressed
@@ -329,7 +330,7 @@ fun TransactionsScreen(api: Api) {
                                     MoneyText(t.amount, t.currency, prefix = signPrefix(t), style = MaterialTheme.typography.bodyMedium, color = amountColor(t))
                                 }
                             }
-                        }
+                         }}
                     }
                     if (loadingMore) item { Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() } }
                 }

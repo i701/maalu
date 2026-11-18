@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.springItem
 import app.maalu.ui.theme.tintIcon
 import app.maalu.ui.theme.tintSurface
 import androidx.activity.compose.BackHandler
@@ -109,7 +110,7 @@ private fun GuideList(empty: Boolean, hits: List<DocHit>, query: String, onQuery
         item { Box(Modifier.padding(bottom = 10.dp)) { CompactField(query, onQuery, "Search the guides") } }
         if (empty) item { Text("The guides could not be loaded.", color = MaterialTheme.colorScheme.error) }
         else if (hits.isEmpty()) item { Text("No guide has all of those words.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-        itemsIndexed(hits, key = { _, h -> h.doc.slug }) { i, hit ->
+        itemsIndexed(hits, key = { _, h -> h.doc.slug }) { i, hit -> Box(springItem()) {
             val tint = Accents[hit.doc.accent] ?: MaterialTheme.colorScheme.primary
             MorphTile(onClick = { onOpen(hit) }, first = i == 0, last = i == hits.lastIndex, modifier = Modifier.fillMaxWidth()) {
                 Row(Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
@@ -126,7 +127,7 @@ private fun GuideList(empty: Boolean, hits: List<DocHit>, query: String, onQuery
                     }
                 }
             }
-        }
+         }}
     }
 }
 

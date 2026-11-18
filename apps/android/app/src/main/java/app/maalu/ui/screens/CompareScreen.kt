@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.springItem
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -101,10 +102,10 @@ fun CompareScreen(api: Api) {
                     }
                     item { SectionLabel("Spending by category") }
                     if (spending.isEmpty()) item { Text("No spending in either period.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-                    itemsIndexed(spending, key = { _, r -> "e-" + r.categoryId }) { i, r -> CategoryChangeRow(r, d.currency, upIsGood = false, first = i == 0, last = i == spending.lastIndex) }
+                    itemsIndexed(spending, key = { _, r -> "e-" + r.categoryId }) { i, r -> Box(springItem()) { CategoryChangeRow(r, d.currency, upIsGood = false, first = i == 0, last = i == spending.lastIndex)  }}
                     if (income.isNotEmpty()) {
                         item { SectionLabel("Income by category") }
-                        itemsIndexed(income, key = { _, r -> "i-" + r.categoryId }) { i, r -> CategoryChangeRow(r, d.currency, upIsGood = true, first = i == 0, last = i == income.lastIndex) }
+                        itemsIndexed(income, key = { _, r -> "i-" + r.categoryId }) { i, r -> Box(springItem()) { CategoryChangeRow(r, d.currency, upIsGood = true, first = i == 0, last = i == income.lastIndex)  }}
                     }
                 }
             }

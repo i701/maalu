@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.springItem
 import app.maalu.ui.theme.tintSurface
 import app.maalu.ui.components.Disclosure
 import androidx.compose.foundation.layout.Arrangement
@@ -122,14 +123,14 @@ fun PlanScreen(api: Api, onOpenAccount: (id: String, name: String) -> Unit) {
                                 modifier = Modifier.padding(start = 4.dp, top = 16.dp, bottom = 6.dp),
                             )
                         }
-                        items(day.rows.size, key = { "r-${day.key}-${day.rows[it].kind}-${day.rows[it].id}" }) { i ->
+                        items(day.rows.size, key = { "r-${day.key}-${day.rows[it].kind}-${day.rows[it].id}" }) { i -> Box(springItem()) {
                             val row = day.rows[i]
                             val tx = planned[row.id]
                             MorphTile(
                                 onClick = { if (row.kind == PlanKind.Card && row.cardId != null) onOpenAccount(row.cardId, row.title.removeSuffix(" card payment")) else tx?.let { opened = it } },
                                 first = i == 0, last = i == day.rows.lastIndex, modifier = Modifier.padding(bottom = 2.dp),
                             ) { PlanRowContent(row, d.currency, canPay = tx != null, onPay = { tx?.let { paying = it } }) }
-                        }
+                         }}
                     }
                     item { Aside(d) }
                 }

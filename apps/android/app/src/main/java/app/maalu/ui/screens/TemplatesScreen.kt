@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.springItem
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -97,7 +98,7 @@ fun TemplatesScreen(api: Api) {
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 )
             } else LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                itemsIndexed(list, key = { _, t -> t.id }) { i, t ->
+                itemsIndexed(list, key = { _, t -> t.id }) { i, t -> Box(springItem()) {
                     MorphTile(onClick = { using = t }, first = i == 0, last = i == list.lastIndex, modifier = Modifier.fillMaxWidth()) {
                         Row(Modifier.fillMaxWidth().padding(start = 16.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -108,7 +109,7 @@ fun TemplatesScreen(api: Api) {
                             IconButton(onClick = { deleting = t }) { Icon(Icons.Outlined.Delete, "Delete ${t.name}") }
                         }
                     }
-                }
+                 }}
             }
         }
     }

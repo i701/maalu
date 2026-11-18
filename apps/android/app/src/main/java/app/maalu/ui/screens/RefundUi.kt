@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.springItem
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -271,7 +273,7 @@ fun LinkRefundDialog(api: Api, income: Transaction, onClose: () -> Unit, onDone:
                             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    itemsIndexed(list.orEmpty(), key = { _, p -> p.id }) { _, p ->
+                    itemsIndexed(list.orEmpty(), key = { _, p -> p.id }) { _, p -> Box(springItem()) {
                         Row(
                             Modifier.fillMaxWidth().padding(vertical = 2.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -282,7 +284,7 @@ fun LinkRefundDialog(api: Api, income: Transaction, onClose: () -> Unit, onDone:
                                 Text(candidateFacts(p), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
-                    }
+                     }}
                     val c = chosen
                     if (c != null && items.isNotEmpty()) item {
                         Column(Modifier.padding(top = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {

@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.springItem
 import app.maalu.ui.theme.tintSurface
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -259,12 +260,12 @@ fun AccountDetailScreen(api: Api, accountId: String, onBack: () -> Unit) {
                             Text(dayLabel(day), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
                         }
                     }
-                    items(list.size, key = { list[it].id }) { i ->
+                    items(list.size, key = { list[it].id }) { i -> Box(springItem()) {
                         val t = list[i]
                         MorphTile({ selected = t }, first = i == 0, last = i == list.lastIndex, modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 2.dp)) {
                             AccountTransactionRow(t, acc, balances[t.id])
                         }
-                    }
+                     }}
                 }
                 if (loadingMore) item { Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() } }
             }

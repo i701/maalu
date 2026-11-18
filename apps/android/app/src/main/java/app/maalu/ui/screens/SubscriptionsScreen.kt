@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.springItem
 import app.maalu.ui.theme.tintBadge
 import app.maalu.ui.theme.tintIcon
 import app.maalu.ui.theme.tintSurface
@@ -183,10 +184,10 @@ fun SubscriptionsScreen(api: Api) {
                     if (items.isEmpty()) item {
                         Text(if (committed.isNotEmpty() || status != null) "Nothing matches." else "No subscriptions yet. Add a bill that repeats, like rent or a streaming service.", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(vertical = 24.dp, horizontal = 4.dp))
                     }
-                    items(items.size, key = { items[it].id }) { i ->
+                    items(items.size, key = { items[it].id }) { i -> Box(springItem()) {
                         val s = items[i]
                         MorphTile({ selected = s }, first = i == 0, last = i == items.lastIndex, modifier = Modifier.padding(top = if (i == 0) 8.dp else 0.dp, bottom = 2.dp)) { SubscriptionRow(s) }
-                    }
+                     }}
                 }
             }
         }

@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.springItem
 import app.maalu.ui.theme.tintIcon
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -114,10 +115,10 @@ fun TagsScreen(api: Api) {
                         if (shown.isEmpty()) Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Text(if (query.isBlank()) "No tags yet. A tag is a label you can put on any transaction." else "Nothing matches.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         } else LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 96.dp)) {
-                            items(shown.size, key = { shown[it].id }) { i ->
+                            items(shown.size, key = { shown[it].id }) { i -> Box(springItem()) {
                                 val t = shown[i]
                                 MorphTile({ selected = t }, first = i == 0, last = i == shown.lastIndex, modifier = Modifier.padding(bottom = 2.dp)) { TagRow(t) }
-                            }
+                             }}
                         }
                     }
                 }

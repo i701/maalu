@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.springItem
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -93,7 +94,7 @@ fun NetWorthScreen(api: Api) {
                     item { SectionLabel("What moved it") }
                     val bars = driverBars(d.drivers)
                     if (bars.isEmpty()) item { Text("Nothing moved it: no money came in, went out or was corrected in this period.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-                    itemsIndexed(bars, key = { _, b -> b.key }) { i, b ->
+                    itemsIndexed(bars, key = { _, b -> b.key }) { i, b -> Box(springItem()) {
                         val positive = b.value.toBigDecimalOrNull()?.signum()?.let { it > 0 } == true
                         MorphTile(onClick = {}, first = i == 0, last = i == bars.lastIndex, modifier = Modifier.fillMaxWidth()) {
                             Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -108,10 +109,10 @@ fun NetWorthScreen(api: Api) {
                                 Text(DriverHelp[b.key].orEmpty(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
-                    }
+                     }}
                     item { SectionLabel("Accounts") }
                     if (d.accounts.isEmpty()) item { Text("No account held anything in this period.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-                    itemsIndexed(d.accounts, key = { _, a -> a.accountId }) { i, a ->
+                    itemsIndexed(d.accounts, key = { _, a -> a.accountId }) { i, a -> Box(springItem()) {
                         val rose = a.change.toBigDecimalOrNull()?.signum()?.let { it >= 0 } != false
                         MorphTile(onClick = {}, first = i == 0, last = i == d.accounts.lastIndex, modifier = Modifier.fillMaxWidth()) {
                             Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -125,7 +126,7 @@ fun NetWorthScreen(api: Api) {
                                 }
                             }
                         }
-                    }
+                     }}
                 }
             }
         }

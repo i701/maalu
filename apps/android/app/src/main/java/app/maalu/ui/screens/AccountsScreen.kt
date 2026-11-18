@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.springItem
 import app.maalu.ui.theme.tintIcon
 import app.maalu.ui.theme.tintSurface
 import androidx.compose.foundation.background
@@ -146,12 +147,12 @@ fun AccountsScreen(api: Api, onOpen: (Account) -> Unit) {
                             item(key = "h-$group") {
                                 Text(groupLabel(group), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp, top = 20.dp, bottom = 8.dp))
                             }
-                            items(list.size, key = { list[it].id }) { i ->
+                            items(list.size, key = { list[it].id }) { i -> Box(springItem()) {
                                 val a = list[i]
                                 MorphTile(onClick = { onOpen(a) }, first = i == 0, last = i == list.lastIndex, modifier = Modifier.padding(bottom = 2.dp)) {
                                     AccountRow(a, s.data.trends[a.id], s.data.summary?.currency ?: "")
                                 }
-                            }
+                             }}
                         }
                         // closed accounts: out of the totals and the pickers, history kept; collapsed, since they are not what you came for
                         if (s.data.archived.isNotEmpty()) {
@@ -165,7 +166,7 @@ fun AccountsScreen(api: Api, onOpen: (Account) -> Unit) {
                                 item(key = "archived-note") {
                                     Text("Not counted in your totals or offered on new transactions. Their past transactions are kept.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp, bottom = 8.dp))
                                 }
-                                items(s.data.archived.size, key = { "archived-" + s.data.archived[it].id }) { i ->
+                                items(s.data.archived.size, key = { "archived-" + s.data.archived[it].id }) { i -> Box(springItem()) {
                                     val a = s.data.archived[i]
                                     Surface(Modifier.fillMaxWidth().padding(bottom = 2.dp), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLow) {
                                         Row(Modifier.padding(start = 14.dp, top = 6.dp, bottom = 6.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -185,7 +186,7 @@ fun AccountsScreen(api: Api, onOpen: (Account) -> Unit) {
                                             IconButton(onClick = { deletingArchived = a }) { Icon(Icons.Outlined.Delete, "Delete ${a.name}") }
                                         }
                                     }
-                                }
+                                 }}
                             }
                         }
                     }

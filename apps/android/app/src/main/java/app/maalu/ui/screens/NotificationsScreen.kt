@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.springItem
 import app.maalu.ui.theme.tintIcon
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -118,7 +119,7 @@ fun NotificationsScreen(api: Api, onOpen: (Target) -> Unit, onChanged: () -> Uni
                         }) { Icon(Icons.Outlined.DoneAll, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Mark all read") }
                     }
                 }
-                items(list, key = { it.id }) { n ->
+                items(list, key = { it.id }) { n -> Box(springItem()) {
                     val index = list.indexOf(n)
                     SwipeRow(
                         n, first = index == 0, last = index == list.lastIndex,
@@ -139,7 +140,7 @@ fun NotificationsScreen(api: Api, onOpen: (Target) -> Unit, onChanged: () -> Uni
                             }
                         },
                     )
-                }
+                 }}
                 if (list.size < total) item {
                     TextButton(shapes = ButtonDefaults.shapes(),
                         onClick = {

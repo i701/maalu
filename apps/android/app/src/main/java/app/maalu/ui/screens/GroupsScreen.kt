@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.springItem
 import app.maalu.ui.theme.tintSurface
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -129,7 +130,7 @@ fun GroupsScreen(api: Api) {
                         style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     )
                 } else LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 96.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    itemsIndexed(list, key = { _, g -> g.id }) { i, g ->
+                    itemsIndexed(list, key = { _, g -> g.id }) { i, g -> Box(springItem()) {
                         MorphTile(onClick = { opened = g.id }, first = i == 0, last = i == list.lastIndex, modifier = Modifier.fillMaxWidth()) {
                             Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -142,7 +143,7 @@ fun GroupsScreen(api: Api) {
                                 }
                             }
                         }
-                    }
+                     }}
                     if (list.size < total) item {
                         TextButton(shapes = ButtonDefaults.shapes(),
                             onClick = {
@@ -252,7 +253,7 @@ private fun GroupSheet(api: Api, id: String, onClose: () -> Unit, onChanged: () 
                         Tile("Net", g.net, g.currency, if (isNegative(g.net)) MaterialTheme.colorScheme.error else ChartColors.Line, Modifier.weight(1f))
                     }
                 }
-                itemsIndexed(g.transactions, key = { _, t -> t.id }) { i, t ->
+                itemsIndexed(g.transactions, key = { _, t -> t.id }) { i, t -> Box(springItem()) {
                     MorphTile(onClick = {}, first = i == 0, last = i == g.transactions.lastIndex, modifier = Modifier.fillMaxWidth()) {
                         Row(Modifier.fillMaxWidth().padding(start = 12.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             CategoryBadge(t)
@@ -279,7 +280,7 @@ private fun GroupSheet(api: Api, id: String, onClose: () -> Unit, onChanged: () 
                             ) { Icon(Icons.Outlined.Close, "Take ${t.title()} out of the group") }
                         }
                     }
-                }
+                 }}
                 item {
                     Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button(onClick = { adding = true }, enabled = !busy && g.transactionCount < MAX_GROUP, shapes = ButtonDefaults.shapes(), modifier = Modifier.weight(1f)) { Text("Add transactions") }
@@ -413,7 +414,7 @@ fun TransactionPicker(api: Api, initial: Set<String>, maxPick: Int, onClose: () 
                     list == null -> Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
                     list.isEmpty() -> Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) { Text("Nothing matches.", color = MaterialTheme.colorScheme.onSurfaceVariant) }
                     else -> LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        itemsIndexed(list, key = { _, t -> t.id }) { i, t ->
+                        itemsIndexed(list, key = { _, t -> t.id }) { i, t -> Box(springItem()) {
                             val reason = cannotGroupReason(t)
                             MorphTile(onClick = { if (reason == null) chosen = if (t.id !in chosen && chosen.size >= maxPick) chosen else toggled(chosen, t.id) }, first = i == 0, last = i == list.lastIndex, modifier = Modifier.fillMaxWidth()) {
                                 Row(Modifier.fillMaxWidth().padding(end = 14.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -425,7 +426,7 @@ fun TransactionPicker(api: Api, initial: Set<String>, maxPick: Int, onClose: () 
                                     MoneyText(t.amount, t.currency, prefix = signPrefix(t), style = MaterialTheme.typography.bodyMedium, color = amountColor(t))
                                 }
                             }
-                        }
+                         }}
                         if (list.size < total) item {
                             TextButton(shapes = ButtonDefaults.shapes(),
                                 onClick = {

@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.springItem
 import app.maalu.ui.theme.tintIcon
 import app.maalu.ui.theme.tintBadge
 import app.maalu.ui.theme.tintSurface
@@ -137,10 +138,10 @@ fun CategoriesScreen(api: Api) {
                         if (shown.isEmpty()) Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Text(if (query.isBlank()) "No categories yet." else "Nothing matches.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         } else LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 96.dp)) {
-                            items(shown.size, key = { shown[it].id }) { i ->
+                            items(shown.size, key = { shown[it].id }) { i -> Box(springItem()) {
                                 val c = shown[i]
                                 MorphTile({ selected = c }, first = i == 0, last = i == shown.lastIndex, modifier = Modifier.padding(bottom = 2.dp)) { CategoryRow(c, indented = c.parentId != null) }
-                            }
+                             }}
                         }
                     }
                 }

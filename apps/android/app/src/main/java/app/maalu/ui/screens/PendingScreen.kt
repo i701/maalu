@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.springItem
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -97,7 +98,7 @@ fun PendingScreen(api: Api, onChanged: () -> Unit) {
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 )
             } else LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(list, key = { it.id }) { task ->
+                items(list, key = { it.id }) { task -> Box(springItem()) {
                     TaskCard(
                         task, busy = busyId == task.id,
                         onApprove = {
@@ -122,7 +123,7 @@ fun PendingScreen(api: Api, onChanged: () -> Unit) {
                             }
                         },
                     )
-                }
+                 }}
             }
         }
     }

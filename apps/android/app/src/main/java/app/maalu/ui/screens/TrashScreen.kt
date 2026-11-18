@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.springItem
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -129,7 +130,7 @@ fun TrashScreen(api: Api) {
             PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
                 LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = if (selected.isEmpty()) 16.dp else 120.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     item { Text("Deleted transactions wait here until you restore them or delete them for good.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)) }
-                    itemsIndexed(list, key = { _, t -> t.id }) { i, t ->
+                    itemsIndexed(list, key = { _, t -> t.id }) { i, t -> Box(springItem()) {
                         MorphTile(onClick = { opened = t }, first = i == 0, last = i == list.lastIndex, modifier = Modifier.fillMaxWidth()) {
                             Row(Modifier.fillMaxWidth().padding(end = 14.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Checkbox(checked = t.id in selected, onCheckedChange = { selected = toggled(selected, t.id) }, enabled = !busy)
@@ -141,7 +142,7 @@ fun TrashScreen(api: Api) {
                                 MoneyText(t.amount, t.currency, prefix = signPrefix(t), style = MaterialTheme.typography.bodyMedium, color = amountColor(t))
                             }
                         }
-                    }
+                     }}
                     if (list.size < total) item {
                         TextButton(shapes = ButtonDefaults.shapes(),
                             onClick = {
