@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
 import app.maalu.ui.theme.tintIcon
 import app.maalu.ui.theme.tintSurface
@@ -140,7 +141,7 @@ fun AccountsScreen(api: Api, onOpen: (Account) -> Unit) {
             is Load.Loaded -> {
                 val groups = s.data.accounts.groupBy { it.group }
                 PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; attempt++ }, modifier = Modifier.fillMaxSize()) {
-                    LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 96.dp)) {
+                    LazyColumn(Modifier.fillMaxSize().fadeInOnAppear(), state = listState, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 96.dp)) {
                         s.data.summary?.let { item { SummaryRow(it) } }
                         if (s.data.accounts.isEmpty()) item { Text("No accounts yet. Add your first one.", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 24.dp)) }
                         groups.forEach { (group, list) ->

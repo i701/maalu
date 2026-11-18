@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
 import app.maalu.ui.theme.tintBadge
 import app.maalu.ui.theme.tintIcon
@@ -171,7 +172,7 @@ fun SubscriptionsScreen(api: Api) {
                 Button(onClick = { reload++ }, shapes = ButtonDefaults.shapes()) { Text("Try again") }
             }
             else -> PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
-                LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 96.dp)) {
+                LazyColumn(Modifier.fillMaxSize().fadeInOnAppear(), state = listState, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 96.dp)) {
                     summary?.let { sm -> item { SummaryRow(sm) } }
                     if (candidates.isNotEmpty()) item { SuggestionsCard(candidates, onAdd = { accepting = it }, onDismiss = { c ->
                         scope.launch {

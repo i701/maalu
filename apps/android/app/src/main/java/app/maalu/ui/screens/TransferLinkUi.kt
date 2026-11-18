@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
 import app.maalu.ui.theme.tintSurface
 import androidx.compose.foundation.layout.Arrangement
@@ -194,7 +195,7 @@ private fun CounterpartPicker(base: Transaction, matches: List<Transaction>, onC
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                LazyColumn(Modifier.fillMaxSize().fadeInOnAppear(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     itemsIndexed(matches, key = { _, t -> t.id }) { i, t -> Box(springItem()) {
                         MorphTile(onClick = { onPick(t) }, first = i == 0, last = i == matches.lastIndex, modifier = Modifier.fillMaxWidth()) {
                             Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {

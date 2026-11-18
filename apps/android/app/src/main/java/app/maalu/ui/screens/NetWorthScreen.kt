@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -79,7 +80,7 @@ fun NetWorthScreen(api: Api) {
             val money = { a: String -> app.maalu.data.formatMoney(a, d.currency) }
             val up = d.change.toBigDecimalOrNull()?.signum()?.let { it >= 0 } != false
             PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
-                LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                LazyColumn(Modifier.fillMaxSize().fadeInOnAppear(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     item { SentenceCard(netWorthSentence(d, money)) }
                     item {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

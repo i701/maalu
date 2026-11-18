@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.BottomReveal
 import app.maalu.ui.components.springItem
 import androidx.compose.foundation.layout.Arrangement
@@ -129,7 +130,7 @@ fun TrashScreen(api: Api) {
         }
         else -> Box(Modifier.fillMaxSize()) {
             PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
-                LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = if (selected.isEmpty()) 16.dp else 120.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                LazyColumn(Modifier.fillMaxSize().fadeInOnAppear(), contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = if (selected.isEmpty()) 16.dp else 120.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     item { Text("Deleted transactions wait here until you restore them or delete them for good.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)) }
                     itemsIndexed(list, key = { _, t -> t.id }) { i, t -> Box(springItem()) {
                         MorphTile(onClick = { opened = t }, first = i == 0, last = i == list.lastIndex, modifier = Modifier.fillMaxWidth()) {

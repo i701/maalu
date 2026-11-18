@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
 import app.maalu.ui.theme.tintIcon
 import app.maalu.ui.theme.tintSurface
@@ -106,7 +107,7 @@ fun DocsScreen(slug: String?, onSlug: (String?) -> Unit, onOpenApp: (Target) -> 
 
 @Composable
 private fun GuideList(empty: Boolean, hits: List<DocHit>, query: String, onQuery: (String) -> Unit, onOpen: (DocHit) -> Unit) {
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+    LazyColumn(Modifier.fillMaxSize().fadeInOnAppear(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         item { Box(Modifier.padding(bottom = 10.dp)) { CompactField(query, onQuery, "Search the guides") } }
         if (empty) item { Text("The guides could not be loaded.", color = MaterialTheme.colorScheme.error) }
         else if (hits.isEmpty()) item { Text("No guide has all of those words.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
@@ -140,7 +141,7 @@ private fun Article(doc: DocItem, section: String?, onLink: (String) -> Unit) {
         val at = doc.blocks.indexOfFirst { it.type == "h2" && it.id == section }
         if (section != null && at >= 0) state.scrollToItem(at + 2 + (if (doc.webOnly) 1 else 0)) else state.scrollToItem(0)
     }
-    LazyColumn(Modifier.fillMaxSize(), state = state, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    LazyColumn(Modifier.fillMaxSize().fadeInOnAppear(), state = state, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Text(doc.title, style = MaterialTheme.typography.headlineSmall) }
         item { Text(doc.summary, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         if (doc.webOnly) item {

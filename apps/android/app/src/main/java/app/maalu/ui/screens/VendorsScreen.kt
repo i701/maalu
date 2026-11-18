@@ -2,6 +2,10 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.ui.zIndex
+import androidx.compose.material3.LinearProgressIndicator
+import app.maalu.ui.components.dimWhen
+import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
 import app.maalu.ui.theme.tintBadge
 import app.maalu.ui.theme.tintIcon
@@ -154,15 +158,16 @@ fun VendorsScreen(api: Api) {
         Column(Modifier.fillMaxSize()) {
             SearchPill(query, { query = it.take(100) }, Modifier.padding(horizontal = 16.dp, vertical = 6.dp), placeholder = "Search vendors")
             when {
-                loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                loading && items.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
                 error != null -> Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(error ?: "", color = MaterialTheme.colorScheme.error)
                     Button(onClick = { reload++ }, shapes = ButtonDefaults.shapes()) { Text("Try again") }
                 }
                 else -> PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
+                if (loading && !refreshing) LinearProgressIndicator(Modifier.fillMaxWidth().align(Alignment.TopCenter).zIndex(1f))
                     if (items.isEmpty()) Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(if (committed.isEmpty()) "No vendors yet." else "Nothing matches.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    } else LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 96.dp)) {
+                    } else LazyColumn(Modifier.fillMaxSize().fadeInOnAppear().dimWhen(loading && !refreshing), state = listState, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 96.dp)) {
                         items(items.size, key = { items[it].id }) { i -> Box(springItem()) {
                             val v = items[i]
                             MorphTile({ selected = v }, first = i == 0, last = i == items.lastIndex, modifier = Modifier.padding(bottom = 2.dp)) { VendorRow(v) }

@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -112,7 +113,7 @@ fun PlacesScreen(api: Api) {
                         "Mark where a purchase happened with the pin button when you add or edit a transaction, and it shows up here.",
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     )
-                } else LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                } else LazyColumn(Modifier.fillMaxSize().fadeInOnAppear(), state = listState, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     itemsIndexed(d.places, key = { i, p -> "$i-${p.latitude}-${p.longitude}" }) { i, p -> Box(springItem()) {
                         SpotRow(p, d.currency, selected = i == selected, first = i == 0, last = i == d.places.lastIndex) {
                             selected = i; focus = MapFocus(p.lat, p.lng, 16.0, (focus?.nonce ?: 0) + 1)

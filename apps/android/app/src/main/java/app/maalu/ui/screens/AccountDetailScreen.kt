@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
 import app.maalu.ui.theme.tintSurface
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -206,7 +207,7 @@ fun AccountDetailScreen(api: Api, accountId: String, onBack: () -> Unit) {
         acc == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         else -> PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
             val groups = groupByDay(items.toList())
-            LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(bottom = 24.dp)) {
+            LazyColumn(Modifier.fillMaxSize().fadeInOnAppear(), state = listState, contentPadding = PaddingValues(bottom = 24.dp)) {
                 item { Header(acc, month) }
                 item {
                     Actions(

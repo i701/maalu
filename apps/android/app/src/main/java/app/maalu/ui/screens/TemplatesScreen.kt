@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -97,7 +98,7 @@ fun TemplatesScreen(api: Api) {
                     "Fill in a transaction you repeat, then use the bookmark button at the top of the new-transaction form to save it as a template.",
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 )
-            } else LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            } else LazyColumn(Modifier.fillMaxSize().fadeInOnAppear(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 itemsIndexed(list, key = { _, t -> t.id }) { i, t -> Box(springItem()) {
                     MorphTile(onClick = { using = t }, first = i == 0, last = i == list.lastIndex, modifier = Modifier.fillMaxWidth()) {
                         Row(Modifier.fillMaxWidth().padding(start = 16.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {

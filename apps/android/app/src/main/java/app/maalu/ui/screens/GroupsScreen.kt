@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
 import app.maalu.ui.theme.tintSurface
 import androidx.compose.foundation.layout.Arrangement
@@ -129,7 +130,7 @@ fun GroupsScreen(api: Api) {
                         "Bundle related transactions, like a trip or an instalment plan, and see what they add up to. Nothing else about them changes.",
                         style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     )
-                } else LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 96.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                } else LazyColumn(Modifier.fillMaxSize().fadeInOnAppear(), state = listState, contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 96.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     itemsIndexed(list, key = { _, g -> g.id }) { i, g -> Box(springItem()) {
                         MorphTile(onClick = { opened = g.id }, first = i == 0, last = i == list.lastIndex, modifier = Modifier.fillMaxWidth()) {
                             Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
