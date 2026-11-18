@@ -1,5 +1,7 @@
 package app.maalu.ui.screens
 
+import androidx.compose.material3.BottomSheetDefaults
+import app.maalu.ui.components.glowSheet
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -44,7 +46,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.DatePickerDialog
+import app.maalu.ui.components.DatePickerDialog
+import app.maalu.ui.components.glowDatePickerColors
 import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.DropdownMenuPopup
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -115,7 +118,7 @@ fun FiltersSheet(api: Api, initial: TxFilters, onApply: (TxFilters) -> Unit, onD
         )
     }
 
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheet, containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheet, containerColor = androidx.compose.ui.graphics.Color.Transparent, modifier = Modifier.glowSheet(MaterialTheme.colorScheme.surfaceContainerLow)) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                 Box(Modifier.size(36.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = androidx.compose.ui.Alignment.Center) {
@@ -231,7 +234,7 @@ fun FiltersSheet(api: Api, initial: TxFilters, onApply: (TxFilters) -> Unit, onD
                 ) { Text("OK") }
             },
             dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { pickingDates = false }) { Text("Cancel") } },
-        ) { DateRangePicker(state, modifier = Modifier.weight(1f, fill = false)) }
+        ) { DateRangePicker(state, modifier = Modifier.weight(1f, fill = false), colors = glowDatePickerColors()) }
     }
 }
 

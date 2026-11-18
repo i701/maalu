@@ -1,5 +1,7 @@
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.glowTopBarColors
+import app.maalu.ui.components.glowBackground
 import androidx.compose.material3.ButtonDefaults
 import android.content.ActivityNotFoundException
 import android.content.Context
@@ -29,7 +31,7 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.PictureAsPdf
-import androidx.compose.material3.AlertDialog
+import app.maalu.ui.components.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -316,7 +318,7 @@ private fun ReceiptViewer(api: Api, a: Attachment, onClose: () -> Unit, say: (St
     }
     if (!isImageType(a.mimeType) && failed == null) return
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
-        Scaffold(topBar = { TopAppBar(title = { Text(a.filename, maxLines = 1, overflow = TextOverflow.Ellipsis) }, navigationIcon = { IconButton(onClick = onClose) { Icon(Icons.Outlined.Close, "Close") } }) }) { padding ->
+        Scaffold(modifier = Modifier.glowBackground(), containerColor = androidx.compose.ui.graphics.Color.Transparent, topBar = { TopAppBar(colors = glowTopBarColors(), title = { Text(a.filename, maxLines = 1, overflow = TextOverflow.Ellipsis) }, navigationIcon = { IconButton(onClick = onClose) { Icon(Icons.Outlined.Close, "Close") } }) }) { padding ->
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 val image = bitmap
                 when {

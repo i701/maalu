@@ -22,7 +22,7 @@ import androidx.compose.material.icons.outlined.Dialpad
 import androidx.compose.material.icons.outlined.Key
 import androidx.compose.material.icons.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.QrCode2
-import androidx.compose.material3.AlertDialog
+import app.maalu.ui.components.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator

@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.material3.BottomSheetDefaults
+import app.maalu.ui.components.glowSheet
 import app.maalu.ui.components.SpringBar
 import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
@@ -27,7 +29,7 @@ import androidx.compose.material.icons.outlined.Settings
 import app.maalu.data.settingsText
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material3.AlertDialog
+import app.maalu.ui.components.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -412,7 +414,7 @@ private fun SheetActions(onEdit: (() -> Unit)?, onDelete: (() -> Unit)?, extra: 
 
 @Composable
 private fun LineSheet(l: BudgetLine, currency: String, moves: List<LineMove>, onMove: () -> Unit, onHistory: () -> Unit, onUndo: (String) -> Unit, onEdit: () -> Unit, onDelete: () -> Unit, onClose: () -> Unit) {
-    ModalBottomSheet(onDismissRequest = onClose, containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
+    ModalBottomSheet(onDismissRequest = onClose, containerColor = androidx.compose.ui.graphics.Color.Transparent, modifier = Modifier.glowSheet(MaterialTheme.colorScheme.surfaceContainerLow)) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(l.name, style = MaterialTheme.typography.titleMedium)
             LineRow(l, currency)
@@ -447,7 +449,7 @@ private fun LineSheet(l: BudgetLine, currency: String, moves: List<LineMove>, on
 
 @Composable
 private fun FixedSheet(f: FixedLine, currency: String, onEdit: () -> Unit, onRepeat: () -> Unit, onDelete: () -> Unit, onClose: () -> Unit) {
-    ModalBottomSheet(onDismissRequest = onClose, containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
+    ModalBottomSheet(onDismissRequest = onClose, containerColor = androidx.compose.ui.graphics.Color.Transparent, modifier = Modifier.glowSheet(MaterialTheme.colorScheme.surfaceContainerLow)) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(f.name, style = MaterialTheme.typography.titleMedium)
             FixedRow(f, currency)
@@ -464,7 +466,7 @@ private fun FixedSheet(f: FixedLine, currency: String, onEdit: () -> Unit, onRep
 
 @Composable
 private fun GoalSheet(g: Goal, onMoney: () -> Unit, onEdit: () -> Unit, onDelete: () -> Unit, onClose: () -> Unit) {
-    ModalBottomSheet(onDismissRequest = onClose, containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
+    ModalBottomSheet(onDismissRequest = onClose, containerColor = androidx.compose.ui.graphics.Color.Transparent, modifier = Modifier.glowSheet(MaterialTheme.colorScheme.surfaceContainerLow)) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(g.name, style = MaterialTheme.typography.titleMedium)
             GoalRow(g)

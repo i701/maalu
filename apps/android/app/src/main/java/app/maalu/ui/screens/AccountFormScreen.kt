@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.glowTopBarColors
+import app.maalu.ui.components.glowBackground
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -117,9 +119,11 @@ fun AccountFormScreen(api: Api, existing: List<Account>, editing: Account?, onCl
 
     Dialog(onDismissRequest = { if (!busy) onClose() }, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         Scaffold(
+            modifier = Modifier.glowBackground(), containerColor = androidx.compose.ui.graphics.Color.Transparent,
             snackbarHost = { SnackbarHost(snackbar) },
             topBar = {
                 TopAppBar(
+                    colors = glowTopBarColors(),
                     title = { Text(if (editing == null) "New account" else "Edit account") },
                     navigationIcon = { IconButton(onClick = onClose, enabled = !busy) { Icon(Icons.Outlined.Close, "Close") } },
                 )

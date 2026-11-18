@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.glowTopBarColors
+import app.maalu.ui.components.glowBackground
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
@@ -117,8 +119,9 @@ fun LocationDialog(api: Api, initial: Spot?, onClose: () -> Unit, onDone: (Spot?
 
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         Scaffold(
+            modifier = Modifier.glowBackground(), containerColor = androidx.compose.ui.graphics.Color.Transparent,
             snackbarHost = { SnackbarHost(snackbar) },
-            topBar = { TopAppBar(title = { Text("Mark the spot") }, navigationIcon = { IconButton(onClick = onClose) { Icon(Icons.Outlined.Close, "Close") } }) },
+            topBar = { TopAppBar(colors = glowTopBarColors(), title = { Text("Mark the spot") }, navigationIcon = { IconButton(onClick = onClose) { Icon(Icons.Outlined.Close, "Close") } }) },
         ) { padding ->
             Column(Modifier.padding(padding).fillMaxSize().imePadding()) {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {

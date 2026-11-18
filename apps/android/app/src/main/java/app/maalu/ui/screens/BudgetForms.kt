@@ -18,9 +18,10 @@ import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.Numbers
 import androidx.compose.material.icons.outlined.Savings
 import androidx.compose.material.icons.outlined.Sell
-import androidx.compose.material3.AlertDialog
+import app.maalu.ui.components.AlertDialog
 import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
+import app.maalu.ui.components.DatePickerDialog
+import app.maalu.ui.components.glowDatePickerColors
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
@@ -202,7 +203,7 @@ fun LineFormScreen(api: Api, currency: String, budget: Budget, start: LineForm?,
                 }) { Text("OK") }
             },
             dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { pickingDate = null }) { Text("Cancel") } },
-        ) { DatePicker(state) }
+        ) { DatePicker(state, colors = glowDatePickerColors()) }
     }
 }
 
@@ -284,7 +285,7 @@ fun GoalFormScreen(api: Api, currency: String, editing: Goal?, onClose: () -> Un
                 }) { Text("OK") }
             },
             dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { pickingDate = false }) { Text("Cancel") } },
-        ) { DatePicker(state) }
+        ) { DatePicker(state, colors = glowDatePickerColors()) }
     }
 }
 

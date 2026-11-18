@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.material3.BottomSheetDefaults
+import app.maalu.ui.components.glowSheet
 import androidx.compose.ui.zIndex
 import androidx.compose.material3.LinearProgressIndicator
 import app.maalu.ui.components.dimWhen
@@ -250,7 +252,7 @@ private fun Fact(label: String, value: String?) {
 
 @Composable
 private fun VendorSheet(v: Vendor, onEdit: () -> Unit, onMerge: () -> Unit, onDelete: () -> Unit, onClose: () -> Unit) {
-    ModalBottomSheet(onDismissRequest = onClose, containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
+    ModalBottomSheet(onDismissRequest = onClose, containerColor = androidx.compose.ui.graphics.Color.Transparent, modifier = Modifier.glowSheet(MaterialTheme.colorScheme.surfaceContainerLow)) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(v.name, style = MaterialTheme.typography.titleMedium)
             Fact("Usual category", v.defaultCategory)

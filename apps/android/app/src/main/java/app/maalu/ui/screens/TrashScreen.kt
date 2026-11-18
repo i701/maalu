@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.material3.BottomSheetDefaults
+import app.maalu.ui.components.glowSheet
 import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.BottomReveal
 import app.maalu.ui.components.springItem
@@ -20,7 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.RestoreFromTrash
-import androidx.compose.material3.AlertDialog
+import app.maalu.ui.components.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
@@ -232,7 +234,7 @@ private fun SelectionBar(count: Int, total: Int, loaded: Int, busy: Boolean, onR
 
 @Composable
 private fun TrashSheet(t: Transaction, onClose: () -> Unit, onRestore: () -> Unit, onDelete: () -> Unit) {
-    ModalBottomSheet(onDismissRequest = onClose) {
+    ModalBottomSheet(onDismissRequest = onClose, containerColor = androidx.compose.ui.graphics.Color.Transparent, modifier = Modifier.glowSheet(BottomSheetDefaults.ContainerColor)) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(t.title(), style = MaterialTheme.typography.titleMedium)
             MoneyText(t.amount, t.currency, prefix = signPrefix(t), style = MaterialTheme.typography.titleLarge, color = amountColor(t))

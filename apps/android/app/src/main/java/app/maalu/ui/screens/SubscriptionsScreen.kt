@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.material3.BottomSheetDefaults
+import app.maalu.ui.components.glowSheet
 import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
 import app.maalu.ui.theme.tintBadge
@@ -35,7 +37,7 @@ import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.PlayArrow
-import androidx.compose.material3.AlertDialog
+import app.maalu.ui.components.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -327,7 +329,7 @@ private fun Fact(label: String, value: String?) {
 
 @Composable
 private fun SubscriptionSheet(s: Subscription, onEdit: () -> Unit, onToggle: () -> Unit, onDelete: () -> Unit, onClose: () -> Unit) {
-    ModalBottomSheet(onDismissRequest = onClose, containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
+    ModalBottomSheet(onDismissRequest = onClose, containerColor = androidx.compose.ui.graphics.Color.Transparent, modifier = Modifier.glowSheet(MaterialTheme.colorScheme.surfaceContainerLow)) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(s.name, style = MaterialTheme.typography.titleMedium)
             MoneyText(s.amount, s.currency, prefix = amountPrefix(s.amountVaries), style = MaterialTheme.typography.titleLarge)

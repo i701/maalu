@@ -1,5 +1,7 @@
 package app.maalu.ui.components
 
+import androidx.compose.material3.BottomSheetDefaults
+import app.maalu.ui.components.glowSheet
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -91,8 +93,7 @@ fun PickerSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-    ) {
+        containerColor = androidx.compose.ui.graphics.Color.Transparent, modifier = Modifier.glowSheet(MaterialTheme.colorScheme.surfaceContainerLow)) {
         Column(Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
             Text(title, style = MaterialTheme.typography.titleLarge)
             if (searchable || allowCreate) CompactField(query, { query = it }, "Search or type a name", Modifier.padding(top = 12.dp))

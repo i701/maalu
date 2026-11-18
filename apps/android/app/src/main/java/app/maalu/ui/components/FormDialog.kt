@@ -3,6 +3,9 @@
 package app.maalu.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.graphics.Color
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -51,9 +54,12 @@ fun FormDialog(
     Dialog(onDismissRequest = { if (!busy) onClose() }, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         if (secure) SecureWindow()
         Scaffold(
+            modifier = Modifier.glowBackground(),
+            containerColor = Color.Transparent,
             snackbarHost = { SnackbarHost(snackbar) },
             topBar = {
                 TopAppBar(
+                    colors = glowTopBarColors(),
                     title = { Text(title) },
                     navigationIcon = { IconButton(onClick = onClose, enabled = !busy) { Icon(Icons.Outlined.Close, "Close") } },
                 )

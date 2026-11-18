@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.material3.BottomSheetDefaults
+import app.maalu.ui.components.glowSheet
 import androidx.compose.material3.OutlinedButton
 import app.maalu.data.unsortedCount
 import app.maalu.data.sortKindsButtonLabel
@@ -241,7 +243,7 @@ private fun CategoryRow(c: Category, indented: Boolean = false) {
 
 @Composable
 private fun CategorySheet(c: Category, onEdit: () -> Unit, onMerge: () -> Unit, onDelete: () -> Unit, onClose: () -> Unit) {
-    ModalBottomSheet(onDismissRequest = onClose, containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
+    ModalBottomSheet(onDismissRequest = onClose, containerColor = androidx.compose.ui.graphics.Color.Transparent, modifier = Modifier.glowSheet(MaterialTheme.colorScheme.surfaceContainerLow)) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(c.name, style = MaterialTheme.typography.titleMedium)
             CategoryRow(c)

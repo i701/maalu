@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.glowTopBarColors
+import app.maalu.ui.components.glowBackground
 import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
 import app.maalu.ui.theme.tintSurface
@@ -20,7 +22,7 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.SwapHoriz
-import androidx.compose.material3.AlertDialog
+import app.maalu.ui.components.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -185,7 +187,7 @@ fun LinkTransferFlow(api: Api, base: Transaction, matches: List<Transaction>, on
 @Composable
 private fun CounterpartPicker(base: Transaction, matches: List<Transaction>, onClose: () -> Unit, onPick: (Transaction) -> Unit) {
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
-        Scaffold(topBar = { TopAppBar(title = { Text("Pick the matching entry") }, navigationIcon = { IconButton(onClick = onClose) { Icon(Icons.Outlined.Close, "Close") } }) }) { padding ->
+        Scaffold(modifier = Modifier.glowBackground(), containerColor = androidx.compose.ui.graphics.Color.Transparent, topBar = { TopAppBar(colors = glowTopBarColors(), title = { Text("Pick the matching entry") }, navigationIcon = { IconButton(onClick = onClose) { Icon(Icons.Outlined.Close, "Close") } }) }) { padding ->
             Column(Modifier.padding(padding).fillMaxSize()) {
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     SideRow(if (base.type == "expense") "Out" else "In", base)

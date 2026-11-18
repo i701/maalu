@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.glowTopBarColors
+import app.maalu.ui.components.glowBackground
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material.icons.outlined.LocationOn
 import app.maalu.ui.components.PickerSheet
@@ -38,12 +40,13 @@ import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material.icons.outlined.Sell
 import androidx.compose.material.icons.outlined.Storefront
-import androidx.compose.material3.AlertDialog
+import app.maalu.ui.components.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
+import app.maalu.ui.components.DatePickerDialog
+import app.maalu.ui.components.glowDatePickerColors
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -238,9 +241,11 @@ fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit, edi
 
     androidx.compose.runtime.CompositionLocalProvider(LocalApi provides api) { Dialog(onDismissRequest = { if (!busy) onClose() }, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         Scaffold(
+            modifier = Modifier.glowBackground(), containerColor = androidx.compose.ui.graphics.Color.Transparent,
             snackbarHost = { SnackbarHost(snackbar) },
             topBar = {
                 TopAppBar(
+                    colors = glowTopBarColors(),
                     title = { Text((if (editing == null) "New " else "Edit ") + (TYPES.first { it.first == form.type }.second.lowercase())) },
                     navigationIcon = { IconButton(onClick = onClose, enabled = !busy) { Icon(Icons.Outlined.Close, "Close") } },
                     actions = {
@@ -301,7 +306,7 @@ private fun SaveTemplateDialog(api: Api, form: AddForm, accounts: List<Account>,
     var error by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    androidx.compose.material3.AlertDialog(
+    app.maalu.ui.components.AlertDialog(
         onDismissRequest = { if (!busy) onClose() },
         title = { Text("Save as a template") },
         text = {
@@ -519,7 +524,7 @@ private fun Form(o: FormOptions, saveLabel: String, form: AddForm, onForm: (AddF
                 }) { Text("OK") }
             },
             dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { pickingDate = false }) { Text("Cancel") } },
-        ) { DatePicker(state) }
+        ) { DatePicker(state, colors = glowDatePickerColors()) }
     }
     if (pickingTime) {
         val state = rememberTimePickerState(is24Hour = true)

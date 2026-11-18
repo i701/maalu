@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.glowTopBarColors
+import app.maalu.ui.components.glowBackground
 import app.maalu.ui.components.springItem
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
@@ -26,7 +28,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
+import app.maalu.ui.components.DatePickerDialog
+import app.maalu.ui.components.glowDatePickerColors
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -39,7 +42,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.AlertDialog
+import app.maalu.ui.components.AlertDialog
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
@@ -214,7 +217,7 @@ fun RefundDialog(api: Api, purchase: Transaction?, refund: Transaction?, onClose
             onDismissRequest = { pickingDate = false },
             confirmButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { state.selectedDateMillis?.let { date = Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate().toString() }; pickingDate = false }) { Text("OK") } },
             dismissButton = { TextButton(shapes = ButtonDefaults.shapes(), onClick = { pickingDate = false }) { Text("Cancel") } },
-        ) { DatePicker(state) }
+        ) { DatePicker(state, colors = glowDatePickerColors()) }
     }
     if (pickingTime) {
         val state = rememberTimePickerState(is24Hour = true)
@@ -255,7 +258,7 @@ fun LinkRefundDialog(api: Api, income: Transaction, onClose: () -> Unit, onDone:
     val ready = chosen != null && itemsAdd && (items.isEmpty() || ticked.isNotEmpty())
 
     Dialog(onDismissRequest = { if (!busy) onClose() }, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
-        Scaffold(topBar = { TopAppBar(title = { Text("Link to a purchase") }, navigationIcon = { IconButton(onClick = onClose, enabled = !busy) { Icon(Icons.Outlined.Close, "Close") } }) }) { padding ->
+        Scaffold(modifier = Modifier.glowBackground(), containerColor = androidx.compose.ui.graphics.Color.Transparent, topBar = { TopAppBar(colors = glowTopBarColors(), title = { Text("Link to a purchase") }, navigationIcon = { IconButton(onClick = onClose, enabled = !busy) { Icon(Icons.Outlined.Close, "Close") } }) }) { padding ->
             Column(Modifier.padding(padding).fillMaxSize()) {
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(

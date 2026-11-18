@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.glowTopBarColors
+import app.maalu.ui.components.glowBackground
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
@@ -230,8 +232,10 @@ private fun MoneyFlowExpanded(flow: MoneyFlow, currency: String, onClose: () -> 
     fun zoomTo(value: Float) { zoom = value.coerceIn(MinZoom, MaxZoom) }
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         Scaffold(
+            modifier = Modifier.glowBackground(), containerColor = androidx.compose.ui.graphics.Color.Transparent,
             topBar = {
                 TopAppBar(
+                    colors = glowTopBarColors(),
                     title = { Text("Money flow") },
                     navigationIcon = { TextButton(shapes = ButtonDefaults.shapes(), onClick = onClose) { Text("Done") } },
                     actions = {

@@ -1,5 +1,7 @@
 package app.maalu.ui.screens
 
+import androidx.compose.material3.BottomSheetDefaults
+import app.maalu.ui.components.glowSheet
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -133,7 +135,7 @@ fun MoveHistorySheet(api: Api, line: BudgetLine, currency: String, onClose: () -
             is ApiResult.Failed -> { entries = emptyList(); error = r.message.lines().first() }
         }
     }
-    ModalBottomSheet(onDismissRequest = onClose) {
+    ModalBottomSheet(onDismissRequest = onClose, containerColor = androidx.compose.ui.graphics.Color.Transparent, modifier = Modifier.glowSheet(BottomSheetDefaults.ContainerColor)) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("Money moved, ${line.name}", style = MaterialTheme.typography.titleLarge)
             val list = entries

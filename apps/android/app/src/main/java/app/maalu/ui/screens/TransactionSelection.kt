@@ -1,5 +1,7 @@
 package app.maalu.ui.screens
 
+import androidx.compose.material3.BottomSheetDefaults
+import app.maalu.ui.components.glowSheet
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -115,7 +117,7 @@ fun BulkEditSheet(api: Api, count: Int, onClose: () -> Unit, onApply: (BulkEdit)
         categories = (api.get<List<CategoryItem>>("categories") as? ApiResult.Ok)?.data.orEmpty()
         tags = (api.get<List<TagItem>>("tags") as? ApiResult.Ok)?.data.orEmpty()
     }
-    ModalBottomSheet(onDismissRequest = onClose) {
+    ModalBottomSheet(onDismissRequest = onClose, containerColor = androidx.compose.ui.graphics.Color.Transparent, modifier = Modifier.glowSheet(BottomSheetDefaults.ContainerColor)) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Text("Edit ${transactionCount(count)}", style = MaterialTheme.typography.titleLarge)
             Text("Only what you set changes. Anything that does not fit a transaction, like a category on a transfer, is skipped.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

@@ -2,6 +2,10 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.material3.BottomSheetDefaults
+import app.maalu.ui.components.glowSheet
+import app.maalu.ui.components.glowTopBarColors
+import app.maalu.ui.components.glowBackground
 import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
 import app.maalu.ui.theme.tintSurface
@@ -21,7 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Inventory2
-import androidx.compose.material3.AlertDialog
+import app.maalu.ui.components.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
@@ -234,7 +238,7 @@ private fun GroupSheet(api: Api, id: String, onClose: () -> Unit, onChanged: () 
         }
     }
 
-    ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+    ModalBottomSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = androidx.compose.ui.graphics.Color.Transparent, modifier = Modifier.glowSheet(BottomSheetDefaults.ContainerColor)) {
         val g = group
         when {
             failed != null -> Text(failed ?: "", color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(24.dp))
@@ -404,8 +408,9 @@ fun TransactionPicker(api: Api, initial: Set<String>, maxPick: Int, onClose: () 
 
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         Scaffold(
+            modifier = Modifier.glowBackground(), containerColor = androidx.compose.ui.graphics.Color.Transparent,
             snackbarHost = { SnackbarHost(snackbar) },
-            topBar = { TopAppBar(title = { Text("Choose transactions") }, navigationIcon = { IconButton(onClick = onClose) { Icon(Icons.Outlined.Close, "Close") } }) },
+            topBar = { TopAppBar(colors = glowTopBarColors(), title = { Text("Choose transactions") }, navigationIcon = { IconButton(onClick = onClose) { Icon(Icons.Outlined.Close, "Close") } }) },
         ) { padding ->
             Column(Modifier.padding(padding).fillMaxSize()) {
                 Box(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) { CompactField(query, { query = it }, "Search transactions") }
