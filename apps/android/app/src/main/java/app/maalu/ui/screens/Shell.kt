@@ -204,7 +204,7 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
                 AnimatedContent(
                     targetState = Triple(route, selected, openAccountId),
                     transitionSpec = {
-                        (fadeIn(motion.defaultEffectsSpec<Float>()) + slideInVertically(motion.defaultSpatialSpec<IntOffset>()) { it / 12 }) togetherWith
+                        (fadeIn(motion.defaultEffectsSpec<Float>()) + slideInVertically(motion.defaultSpatialSpec<IntOffset>()) { it / 24 }) togetherWith
                             fadeOut(motion.fastEffectsSpec<Float>())
                     },
                     label = "screen",
