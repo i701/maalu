@@ -357,7 +357,7 @@ private fun Actions(a: Account, onAdd: () -> Unit, onAdjust: () -> Unit, onEdit:
 /** A card's latest statement: what to pay and by when, the four figures, and Repay. */
 @Composable
 private fun StatementPanel(s: CardStatement, onRepay: () -> Unit) {
-    val tint = when (s.state) { "overdue" -> MaterialTheme.colorScheme.error; "paid", "none" -> ChartColors.IncomeLight; else -> Color(0xFFEAB308) }
+    val tint = when (s.state) { "overdue" -> MaterialTheme.colorScheme.error; "paid", "none" -> ChartColors.IncomeLight; else -> ChartColors.Warning }
     Surface(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), shape = MaterialTheme.shapes.extraLarge, color = tint.copy(alpha = 0.14f)) {
         Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Statement", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)

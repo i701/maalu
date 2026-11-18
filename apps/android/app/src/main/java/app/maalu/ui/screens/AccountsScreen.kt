@@ -250,7 +250,7 @@ private fun AccountRow(a: Account, trend: List<Double>?, baseCurrency: String) {
             val sub = listOfNotNull(a.bank, a.accountNumber).joinToString(" · ")
             if (sub.isNotEmpty()) Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
             creditUsage(a.balance, a.creditLimit)?.let { u ->
-                val color = when { u.percent >= 90 -> MaterialTheme.colorScheme.error; u.percent >= 60 -> androidx.compose.ui.graphics.Color(0xFFEAB308); else -> ChartColors.IncomeLight }
+                val color = when { u.percent >= 90 -> MaterialTheme.colorScheme.error; u.percent >= 60 -> ChartColors.Warning; else -> ChartColors.IncomeLight }
                 Box(Modifier.padding(top = 4.dp).fillMaxWidth().height(5.dp).clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surfaceContainerHighest)) {
                     Box(Modifier.fillMaxWidth((u.percent / 100f).coerceIn(0.03f, 1f)).height(5.dp).clip(RoundedCornerShape(50)).background(color))
                 }

@@ -89,7 +89,7 @@ private fun Bar(fraction: Float, color: Color, height: Int = 8) {
 @Composable
 private fun statusColor(status: String): Color = when (status) {
     "over" -> MaterialTheme.colorScheme.error
-    "warning" -> Color(0xFFEAB308)
+    "warning" -> ChartColors.Warning
     else -> ChartColors.IncomeLight
 }
 

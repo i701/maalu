@@ -2,7 +2,7 @@
 
 package app.maalu.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
+import app.maalu.ui.components.Disclosure
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -245,7 +245,7 @@ private fun Aside(d: AvailableToSpend) {
                 Text("What this counts", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
                 TextButton(onClick = { open = !open }) { Icon(if (open) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, if (open) "Hide" else "Show") }
             }
-            AnimatedVisibility(open) {
+            Disclosure(open) {
                 Column(Modifier.padding(horizontal = 20.dp).padding(bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     SectionLines("In your everyday accounts", d.accounts.map { it.name to it.balance }, d.currency)
                     if (d.reserved.isNotEmpty()) SectionLines("Set aside for goals", d.reserved.map { it.name to it.amount }, d.currency)

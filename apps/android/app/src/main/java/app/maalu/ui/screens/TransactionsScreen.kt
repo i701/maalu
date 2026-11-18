@@ -261,7 +261,7 @@ fun TransactionsScreen(api: Api) {
             TYPES.forEach { (value, label) ->
                 TintChip(typeTint(value), selected = filters.type == value && !filters.planned, onClick = { filters = filters.copy(type = value, planned = false) }, label = { Text(label) })
             }
-            TintChip(Color(0xFFEAB308), selected = filters.planned, onClick = { filters = filters.copy(planned = !filters.planned, type = null) }, label = { Text("Planned") })
+            TintChip(ChartColors.Warning, selected = filters.planned, onClick = { filters = filters.copy(planned = !filters.planned, type = null) }, label = { Text("Planned") })
         }
 
         ActiveFilters(filters, onChange = { filters = it })

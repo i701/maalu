@@ -2,7 +2,7 @@
 
 package app.maalu.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
+import app.maalu.ui.components.Disclosure
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -103,7 +103,7 @@ private val STATUS_FILTERS = listOf<Pair<String?, String>>(null to "All", "activ
 @Composable
 private fun statusTint(status: String): Color = when (status) {
     "active" -> ChartColors.IncomeLight
-    "paused" -> Color(0xFFEAB308)
+    "paused" -> ChartColors.Warning
     "completed" -> ChartColors.Line
     else -> MaterialTheme.colorScheme.outline
 }
@@ -265,7 +265,7 @@ private fun SuggestionsCard(candidates: List<SubscriptionCandidate>, onAdd: (Sub
                 }
                 TextButton(onClick = { open = !open }) { Icon(if (open) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, if (open) "Hide suggestions" else "Show suggestions") }
             }
-            AnimatedVisibility(open) {
+            Disclosure(open) {
                 Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     candidates.forEach { c ->
                         Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLow) {

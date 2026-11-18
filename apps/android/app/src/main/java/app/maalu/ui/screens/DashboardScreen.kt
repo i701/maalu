@@ -19,7 +19,7 @@ import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.ArrowDownward
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.ArrowUpward
-import androidx.compose.animation.AnimatedVisibility
+import app.maalu.ui.components.Disclosure
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -218,7 +218,7 @@ private fun AvailableCard(a: AvailableToSpend, onOpenPlan: () -> Unit) {
                 }
                 TextButton(onClick = onOpenPlan, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) { Text("Open the month plan") }
             }
-            AnimatedVisibility(open) { Working(a) }
+            Disclosure(open) { Working(a) }
         }
     }
 }

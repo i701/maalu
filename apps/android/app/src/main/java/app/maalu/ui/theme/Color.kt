@@ -89,6 +89,7 @@ object ChartColors {
     val ExpenseLight = Color(0xFFF97316)
     val ExpenseDark = Color(0xFFEA580C)
     val Line = Color(0xFF3B82F6)
+    val Warning = Color(0xFFEAB308)
 }
 
 /** Category and tag accents by name (apps/web/src/lib/m3.ts ACCENT). */
