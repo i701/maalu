@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.BottomReveal
 import app.maalu.ui.components.springItem
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -160,8 +161,12 @@ fun TrashScreen(api: Api) {
                     }
                 }
             }
-            if (selected.isNotEmpty()) Box(Modifier.align(Alignment.BottomCenter)) { SelectionBar(
-                count = selected.size, total = total, loaded = list.size, busy = busy,
+            // the bar fades out as itself: while it leaves, `selected` is already empty, so the count is the last one
+            var lastCount by remember { mutableIntStateOf(0) }
+            LaunchedEffect(selected.size) { if (selected.isNotEmpty()) lastCount = selected.size }
+            val shownCount = if (selected.isEmpty()) lastCount else selected.size
+            BottomReveal(selected.isNotEmpty()) { SelectionBar(
+                count = shownCount, total = total, loaded = list.size, busy = busy,
                 onRestore = { bulk("transactions/bulk/restore", selected.toList()) { "Restored ${transactionCount(it)}" } },
                 onDelete = { deleting = selected.toList() },
                 onSelectAll = {

@@ -1,5 +1,7 @@
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.BottomReveal
+import androidx.compose.animation.animateContentSize
 import app.maalu.ui.components.springItem
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -265,8 +267,10 @@ fun TransactionsScreen(api: Api) {
             TintChip(ChartColors.Warning, selected = filters.planned, onClick = { filters = filters.copy(planned = !filters.planned, type = null) }, label = { Text("Planned") })
         }
 
-        ActiveFilters(filters, onChange = { filters = it })
-        totals?.let { SumsLine(it) }
+        Column(Modifier.animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec())) {
+            ActiveFilters(filters, onChange = { filters = it })
+            totals?.let { SumsLine(it) }
+        }
 
         when {
             loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
@@ -338,8 +342,12 @@ fun TransactionsScreen(api: Api) {
         }
     }
     val expanded by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
-    if (picked.isNotEmpty()) TransactionSelectionBar(
-        count = picked.size, selectAll = selectAllState(total ?: items.size, items.size, picked.size, wide), busy = bulkBusy, modifier = Modifier.align(Alignment.BottomCenter),
+    // the bar fades out as itself: while it leaves, `picked` is already empty, so the count is the last one
+    var lastCount by remember { mutableIntStateOf(0) }
+    LaunchedEffect(picked.size) { if (picked.isNotEmpty()) lastCount = picked.size }
+    val shownCount = if (picked.isEmpty()) lastCount else picked.size
+    BottomReveal(picked.isNotEmpty()) { TransactionSelectionBar(
+        count = shownCount, selectAll = selectAllState(total ?: items.size, items.size, shownCount, wide), busy = bulkBusy,
         onEdit = { editing = true },
         onDelete = {
             bulk(
@@ -359,7 +367,8 @@ fun TransactionsScreen(api: Api) {
             }
         },
         onClear = { picked = emptySet(); wide = false },
-    ) else ExtendedFloatingActionButton(
+    ) }
+    if (picked.isEmpty()) ExtendedFloatingActionButton(
         onClick = { adding = true },
         expanded = expanded,
         icon = { Icon(Icons.Outlined.Add, null) },

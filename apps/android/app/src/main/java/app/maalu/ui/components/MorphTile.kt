@@ -1,5 +1,6 @@
 package app.maalu.ui.components
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -47,14 +48,16 @@ fun MorphTile(
     val source = remember { MutableInteractionSource() }
     val pressed by source.collectIsPressedAsState()
     val spring = MaterialTheme.motionScheme.fastSpatialSpec<Dp>()
+    // selecting a row tints it on an effects spring (colour never overshoots)
+    val fill by animateColorAsState(color, MaterialTheme.motionScheme.defaultEffectsSpec(), label = "fill")
     fun corner(big: Boolean): Dp = if (big) (if (pressed) TileCorners.OuterPressed else TileCorners.Outer)
     else (if (pressed) TileCorners.InnerPressed else TileCorners.Inner)
     val top by animateDpAsState(corner(first), spring, label = "top")
     val bottom by animateDpAsState(corner(last), spring, label = "bottom")
     val shape = RoundedCornerShape(topStart = top, topEnd = top, bottomStart = bottom, bottomEnd = bottom)
-    if (onLongClick == null) Surface(onClick = onClick, modifier = modifier, shape = shape, color = color, interactionSource = source, content = content)
+    if (onLongClick == null) Surface(onClick = onClick, modifier = modifier, shape = shape, color = fill, interactionSource = source, content = content)
     else Surface(
         modifier = modifier.clip(shape).combinedClickable(interactionSource = source, indication = ripple(), onClick = onClick, onLongClick = onLongClick),
-        shape = shape, color = color, content = content,
+        shape = shape, color = fill, content = content,
     )
 }
