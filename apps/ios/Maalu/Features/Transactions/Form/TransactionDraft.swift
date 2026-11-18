@@ -51,6 +51,29 @@ struct TransactionDraft {
         planned = transaction.planned
     }
 
+    /// A copy dated today and not planned; the rate comes fresh from the account.
+    init(duplicating transaction: Transaction) {
+        self.init(editing: transaction)
+        date = .now
+        time = nil
+        rate = nil
+        planned = false
+    }
+
+    /// What "Save and add another" leaves on the form: where the money went and how, without the amount or note.
+    func nextEntry() -> TransactionDraft {
+        var next = TransactionDraft()
+        next.type = type
+        next.accountID = accountID
+        next.toAccountID = type == .transfer ? toAccountID : nil
+        next.category = category
+        next.vendor = vendor
+        next.method = method
+        next.tags = tags
+        next.cardID = type == .expense ? cardID : nil
+        return next
+    }
+
     /// The first thing wrong with the draft, or nil when it can be sent. The server checks everything again.
     func problem(accounts: [Account], baseCurrency: String) -> LocalizedStringResource? {
         guard let amount, amount > 0 else { return "Enter an amount above zero." }

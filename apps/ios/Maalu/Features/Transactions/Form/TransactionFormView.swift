@@ -8,8 +8,8 @@ struct TransactionFormView: View {
     @State private var isSavingTemplate = false
     private let onSaved: () -> Void
 
-    init(editing transaction: Transaction? = nil, startingFrom template: TransactionTemplate? = nil, onSaved: @escaping () -> Void) {
-        _model = State(initialValue: TransactionFormModel(editing: transaction, startingFrom: template))
+    init(editing transaction: Transaction? = nil, duplicating copy: Transaction? = nil, startingFrom template: TransactionTemplate? = nil, onSaved: @escaping () -> Void) {
+        _model = State(initialValue: TransactionFormModel(editing: transaction, duplicating: copy, startingFrom: template))
         self.onSaved = onSaved
     }
 
@@ -25,13 +25,23 @@ struct TransactionFormView: View {
                 if let message = model.errorMessage {
                     Text(message).foregroundStyle(.red)
                 }
+                if !model.isEditing {
+                    Section {
+                        Button("Save and Add Another", action: saveAndAddAnother).disabled(!model.canSave)
+                    } footer: {
+                        if model.savedCount > 0 {
+                            Text("Saved \(model.savedCount). Enter the next one.")
+                        }
+                    }
+                }
             }
+            .sensoryFeedback(.success, trigger: model.savedCount)
             .overlay { if model.isLoading { ProgressView() } }
             .navigationTitle(model.isEditing ? "Edit Transaction" : "New Transaction")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", role: .cancel) { dismiss() }
+                    Button(model.savedCount > 0 ? "Done" : "Cancel", role: .cancel) { dismiss() }
                 }
                 ToolbarItem(placement: .primaryAction) {
                     if !model.isEditing {
@@ -80,6 +90,13 @@ struct TransactionFormView: View {
             guard let api = session.api, await model.save(using: api) else { return }
             onSaved()
             dismiss()
+        }
+    }
+
+    private func saveAndAddAnother() {
+        Task {
+            guard let api = session.api, await model.saveAndAddAnother(using: api) else { return }
+            onSaved()
         }
     }
 

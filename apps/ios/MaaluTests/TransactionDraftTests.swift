@@ -134,4 +134,35 @@ struct TransactionDraftTests {
         #expect(body["card_id"] is NSNull)
         #expect(body["tags"] as? [String] == [])
     }
+
+    @Test func theNextEntryKeepsWhereAndHowButNotTheAmountOrNote() {
+        let next = draft { $0.vendor = "Cafe"; $0.tags = ["Trip"]; $0.cardID = "k"; $0.note = "Lunch"; $0.method = .debitCard; $0.planned = true }.nextEntry()
+        #expect(next.amount == nil)
+        #expect(next.note.isEmpty)
+        #expect(!next.planned)
+        #expect(next.accountID == "mvr")
+        #expect(next.category == "Food")
+        #expect(next.vendor == "Cafe")
+        #expect(next.tags == ["Trip"])
+        #expect(next.cardID == "k")
+        #expect(next.method == .debitCard)
+    }
+
+    @Test func aDuplicateIsDatedTodayUnplannedAndTakesAFreshRate() throws {
+        let original = try Api.decoder.decode(Transaction.self, from: Data(#"""
+        {"id":"1","type":"expense","amount":"12","to_amount":null,"currency":"USD","exchange_rate":"15.1","base_amount":"181.2",
+         "category":"Food","description":"Lunch","transaction_date":"2025-01-02","transaction_time":"08:30:00","planned":true,
+         "payment_method":"cash","account":{"id":"usd","name":"Dollar","currency":"USD"},"to_account":null,
+         "vendor":null,"card":null,"subscription":null,"tags":[{"id":"t","name":"Trip"}],"refund_of":null,
+         "refunded_amount":"0","splits":[],"adjustment":false}
+        """#.utf8))
+        let copy = TransactionDraft(duplicating: original)
+        #expect(Calendar.current.isDateInToday(copy.date))
+        #expect(copy.time == nil)
+        #expect(copy.rate == nil)
+        #expect(!copy.planned)
+        #expect(copy.amount == 12)
+        #expect(copy.note == "Lunch")
+        #expect(copy.tags == ["Trip"])
+    }
 }

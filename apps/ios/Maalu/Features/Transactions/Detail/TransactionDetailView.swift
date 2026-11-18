@@ -26,6 +26,11 @@ struct TransactionDetailView: View {
                             Button("Edit", systemImage: "pencil") { sheet = .edit(transaction) }
                         }
                     }
+                    if transaction.canEdit {
+                        ToolbarItem {
+                            Button("Duplicate", systemImage: "plus.square.on.square") { sheet = .duplicate(transaction) }
+                        }
+                    }
                     ToolbarItem {
                         Button("Delete", systemImage: "trash", role: .destructive) { isConfirmingDelete = true }
                             .confirmationDialog("Delete this transaction?", isPresented: $isConfirmingDelete, titleVisibility: .visible) {
@@ -38,6 +43,7 @@ struct TransactionDetailView: View {
                 .sheet(item: $sheet) { sheet in
                     switch sheet {
                     case .edit(let transaction): TransactionFormView(editing: transaction, onSaved: reload)
+                    case .duplicate(let transaction): TransactionFormView(duplicating: transaction, onSaved: reload)
                     }
                 }
                 .markPaidDialog(dialog, session: session)

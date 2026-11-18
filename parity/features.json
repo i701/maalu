@@ -621,7 +621,11 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Transactions/Form/TransactionFormView.swift",
+          "apps/ios/Maalu/Features/Transactions/Detail/TransactionDetailView.swift"
+        ]
       }
     },
     {

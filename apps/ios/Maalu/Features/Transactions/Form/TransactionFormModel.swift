@@ -14,17 +14,21 @@ final class TransactionFormModel {
     private(set) var isLoading = true
     private(set) var isSaving = false
     private(set) var errorMessage: String?
+    /// How many were saved with "Save and add another" while the form stayed open.
+    private(set) var savedCount = 0
     private let original: Transaction?
     /// Whether the person has set "Planned" themselves, which a change of date then never overrides.
     private var plannedTouched: Bool
     private var suggestedMethod = PaymentMethod.other
     private var defaultAccountId: String?
 
-    init(editing transaction: Transaction? = nil, startingFrom template: TransactionTemplate? = nil) {
+    init(editing transaction: Transaction? = nil, duplicating copy: Transaction? = nil, startingFrom template: TransactionTemplate? = nil) {
         original = transaction
         plannedTouched = transaction != nil
         if let transaction {
             draft = TransactionDraft(editing: transaction)
+        } else if let copy {
+            draft = TransactionDraft(duplicating: copy)
         } else if let template {
             draft = TransactionDraft(startingFrom: template)
         } else {
@@ -155,6 +159,16 @@ final class TransactionFormModel {
             errorMessage = message
             return false
         }
+        return true
+    }
+
+    /// Saves a new transaction and leaves the form ready for the next one.
+    func saveAndAddAnother(using api: Api) async -> Bool {
+        guard await save(using: api) else { return false }
+        draft = draft.nextEntry()
+        plannedTouched = false
+        settleAccount(preferring: defaultAccountId)
+        savedCount += 1
         return true
     }
 
