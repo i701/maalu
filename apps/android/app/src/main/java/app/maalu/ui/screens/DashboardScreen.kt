@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.SpringBar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -327,9 +328,7 @@ private fun SpendingCard(categories: List<CategoryTotal>, currency: String) {
                         Text(row.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
                         MoneyText(row.total.toPlainString(), currency, style = MaterialTheme.typography.bodyMedium)
                     }
-                    Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surfaceContainerHighest)) {
-                        Box(Modifier.fillMaxWidth(row.share.toFloat().coerceIn(0.02f, 1f)).height(8.dp).clip(RoundedCornerShape(50)).background(color))
-                    }
+                    SpringBar(row.share.toFloat(), color, 8.dp)
                 }
             }
         }

@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.SpringBar
 import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
 import app.maalu.ui.theme.tintSurface
@@ -270,9 +271,7 @@ private fun SectionHeader(title: String, action: String?, onAction: () -> Unit) 
 
 @Composable
 private fun Bar(percent: Int, color: Color, height: Int = 8) {
-    Box(Modifier.fillMaxWidth().height(height.dp).clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surfaceContainerHighest)) {
-        Box(Modifier.fillMaxWidth((percent / 100f).coerceIn(0.02f, 1f)).height(height.dp).clip(RoundedCornerShape(50)).background(color))
-    }
+    SpringBar(percent / 100f, color, height.dp)
 }
 
 /** Everything spent against every limit, with the needs and wants split when limits have kinds. */

@@ -1,5 +1,6 @@
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.SpringBar
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.foundation.background
 import androidx.compose.runtime.setValue
@@ -82,9 +83,7 @@ private fun SectionCard(title: String, trailing: String? = null, content: @Compo
 
 @Composable
 private fun Bar(fraction: Float, color: Color, height: Int = 8) {
-    Box(Modifier.fillMaxWidth().height(height.dp).clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surfaceContainerHighest)) {
-        Box(Modifier.fillMaxWidth(fraction.coerceIn(0.02f, 1f)).height(height.dp).clip(RoundedCornerShape(50)).background(color))
-    }
+    SpringBar(fraction, color, height.dp)
 }
 
 @Composable
@@ -331,8 +330,9 @@ private fun IncomeRuleSection(rule: IncomeRule, currency: String) {
                     Text("  ${percentText(r.percent)}", style = MaterialTheme.typography.bodyMedium.merge(MoneyStyle))
                 }
                 Box(Modifier.fillMaxWidth().height(10.dp)) {
-                    Box(Modifier.fillMaxWidth().height(10.dp).clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surfaceContainerHighest))
-                    if (r.percent > 0) Box(Modifier.fillMaxWidth((r.percent / 100.0).toFloat().coerceIn(0.02f, 1f)).height(10.dp).clip(RoundedCornerShape(50)).background(color))
+                    // an empty track while there is nothing to show; otherwise the spring fill draws the track too
+                    if (r.percent > 0) SpringBar((r.percent / 100.0).toFloat(), color, 10.dp)
+                    else Box(Modifier.fillMaxWidth().height(10.dp).clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surfaceContainerHighest))
                     // a tick at the target
                     Box(Modifier.fillMaxWidth(r.target / 100f).height(10.dp)) {
                         Box(Modifier.align(Alignment.CenterEnd).size(width = 2.dp, height = 14.dp).background(MaterialTheme.colorScheme.onSurface))

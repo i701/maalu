@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.SpringBar
 import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
 import app.maalu.ui.theme.tintIcon
@@ -255,9 +256,7 @@ private fun AccountRow(a: Account, trend: List<Double>?, baseCurrency: String) {
             if (sub.isNotEmpty()) Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
             creditUsage(a.balance, a.creditLimit)?.let { u ->
                 val color = when { u.percent >= 90 -> MaterialTheme.colorScheme.error; u.percent >= 60 -> ChartColors.Warning; else -> ChartColors.IncomeLight }
-                Box(Modifier.padding(top = 4.dp).fillMaxWidth().height(5.dp).clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surfaceContainerHighest)) {
-                    Box(Modifier.fillMaxWidth((u.percent / 100f).coerceIn(0.03f, 1f)).height(5.dp).clip(RoundedCornerShape(50)).background(color))
-                }
+                SpringBar(u.percent / 100f, color, 5.dp, Modifier.padding(top = 4.dp), minVisible = 0.03f)
                 Text("${u.percent}% of ${formatMoney(u.limit.toPlainString(), a.currency)} used", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
