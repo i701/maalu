@@ -419,7 +419,7 @@ private fun AccountTransactionRow(t: Transaction, account: Account, balanceAfter
     Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         CategoryBadge(t)
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(t.title(), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(t.title(), style = MaterialTheme.typography.bodyMediumEmphasized, maxLines = 2, overflow = TextOverflow.Ellipsis)
             val sub = listOfNotNull(shortTime(t.time), t.category.takeIf { t.type != "transfer" }, effect.counterpart).joinToString(" · ")
             Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
             val marks = listOfNotNull("Planned".takeIf { t.planned }, "Refund".takeIf { t.isRefund }, "Adjustment".takeIf { t.adjustment })

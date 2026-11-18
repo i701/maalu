@@ -117,7 +117,7 @@ private fun GuideList(empty: Boolean, hits: List<DocHit>, query: String, onQuery
                         Icon(Icons.AutoMirrored.Outlined.Article, null, tint = tint)
                     }
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                        Text(hit.doc.title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+                        Text(hit.doc.title, style = MaterialTheme.typography.bodyLargeEmphasized)
                         Text(hit.doc.summary, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 3, overflow = TextOverflow.Ellipsis)
                         if (hit.snippet != null) Text(
                             (hit.sectionTitle?.let { "$it: " } ?: "") + hit.snippet, style = MaterialTheme.typography.labelSmall,
@@ -221,7 +221,7 @@ private fun Block(b: DocBlockItem, tint: Color, onLink: (String) -> Unit) {
                     // two columns with fixed shares: a long value wraps in its own column instead of squeezing the label to a letter wide
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(row.getOrElse(0) { "" }, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(0.42f))
-                        Text(row.getOrElse(1) { "" }, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, textAlign = androidx.compose.ui.text.style.TextAlign.End, modifier = Modifier.weight(0.58f))
+                        Text(row.getOrElse(1) { "" }, style = MaterialTheme.typography.bodyMediumEmphasized, textAlign = androidx.compose.ui.text.style.TextAlign.End, modifier = Modifier.weight(0.58f))
                     }
                 }
                 b.note?.let { Text(inline(it, tint, onLink), style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic, color = MaterialTheme.colorScheme.onSurfaceVariant) }

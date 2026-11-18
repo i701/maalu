@@ -278,7 +278,7 @@ fun LinkRefundDialog(api: Api, income: Transaction, onClose: () -> Unit, onDone:
                         ) {
                             RadioButton(chosen?.id == p.id, onClick = { chosen = p; items = if (p.splits.isNotEmpty()) itemsToPick(p) else emptyList(); error = null }, enabled = !busy)
                             Column(Modifier.weight(1f)) {
-                                Text(p.title(), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text(p.title(), style = MaterialTheme.typography.bodyMediumEmphasized, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 Text(candidateFacts(p), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }

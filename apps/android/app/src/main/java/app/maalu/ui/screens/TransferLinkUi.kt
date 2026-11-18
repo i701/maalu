@@ -198,7 +198,7 @@ private fun CounterpartPicker(base: Transaction, matches: List<Transaction>, onC
                         MorphTile(onClick = { onPick(t) }, first = i == 0, last = i == matches.lastIndex, modifier = Modifier.fillMaxWidth()) {
                             Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 Column(Modifier.weight(1f)) {
-                                    Text(t.title(), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    Text(t.title(), style = MaterialTheme.typography.bodyMediumEmphasized, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                     Text("${t.account?.name.orEmpty()} · ${dayLabel(t.date)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 }
                                 MoneyText(t.amount, t.currency, prefix = signPrefix(t), style = MaterialTheme.typography.bodyMedium, color = amountColor(t))

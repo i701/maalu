@@ -204,10 +204,10 @@ private fun CategoryRow(c: Category, indented: Boolean = false) {
     // a sub-category is the same width as the rest, with more room inside on the left
     Row(Modifier.fillMaxWidth().padding(start = if (indented) 34.dp else 14.dp, end = 14.dp, top = 12.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Box(Modifier.size(36.dp).clip(CircleShape).background(tint.tintIcon()), contentAlignment = Alignment.Center) {
-            Text(c.name.firstOrNull()?.uppercase() ?: "?", style = MaterialTheme.typography.labelLarge, color = tint, fontWeight = FontWeight.SemiBold)
+            Text(c.name.firstOrNull()?.uppercase() ?: "?", style = MaterialTheme.typography.labelLargeEmphasized, color = tint)
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(c.name, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(c.name, style = MaterialTheme.typography.bodyMediumEmphasized, maxLines = 1, overflow = TextOverflow.Ellipsis)
             val sub = listOfNotNull(
                 "${c.transactionCount} ${if (c.transactionCount == 1) "transaction" else "transactions"}",
                 c.childCount.takeIf { it > 0 }?.let { "$it sub-categories" },

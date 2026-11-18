@@ -199,7 +199,7 @@ private fun PlanRowContent(row: PlanRow, currency: String, canPay: Boolean, onPa
     Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(row.title, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(row.title, style = MaterialTheme.typography.bodyMediumEmphasized, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 val sub = listOfNotNull(
                     when (row.kind) { PlanKind.Card -> "Credit card statement"; else -> row.account }, row.subscription,
                 ).joinToString(" · ")

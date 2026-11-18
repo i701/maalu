@@ -131,7 +131,7 @@ private fun SpotRow(p: PlaceTotal, currency: String, selected: Boolean, first: B
     ) {
         Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(placeLabel(p.place, p.latitude, p.longitude), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(placeLabel(p.place, p.latitude, p.longitude), style = MaterialTheme.typography.bodyMediumEmphasized, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(
                     "${p.count} ${if (p.count == 1) "transaction" else "transactions"}" + (p.lastDate?.let { " · last ${dayLabel(it)}" } ?: ""),
                     style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,

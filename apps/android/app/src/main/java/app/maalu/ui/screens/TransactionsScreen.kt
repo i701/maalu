@@ -323,7 +323,7 @@ fun TransactionsScreen(api: Api) {
                                     // a picked row swaps its badge for a tick, in the same 36dp, so nothing shifts when picking starts
                                     if (t.id in picked) PickedBadge() else CategoryBadge(t)
                                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                        Text(t.title(), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                        Text(t.title(), style = MaterialTheme.typography.bodyMediumEmphasized, maxLines = 2, overflow = TextOverflow.Ellipsis)
                                         CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant) { RowDetails(t) }
                                     }
                                     MoneyText(t.amount, t.currency, prefix = signPrefix(t), style = MaterialTheme.typography.bodyMedium, color = amountColor(t))

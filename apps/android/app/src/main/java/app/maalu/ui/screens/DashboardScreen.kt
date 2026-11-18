@@ -303,7 +303,7 @@ private fun StripCell(label: String, amount: String, currency: String, percent: 
                 val tint = if (up == goodWhenUp) Color(0xFFA7F3D0) else Color(0xFFFECDD3)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(if (up) Icons.Outlined.ArrowUpward else Icons.Outlined.ArrowDownward, null, tint = tint, modifier = Modifier.height(12.dp))
-                    Text("${kotlin.math.abs(rounded)}%", style = MaterialTheme.typography.labelSmall, color = tint, fontWeight = FontWeight.SemiBold)
+                    Text("${kotlin.math.abs(rounded)}%", style = MaterialTheme.typography.labelSmallEmphasized, color = tint)
                 }
             }
         }

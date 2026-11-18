@@ -321,8 +321,8 @@ private fun LineRow(l: BudgetLine, currency: String, moves: List<LineMove> = emp
     val color = statusColor(l.status)
     Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(l.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(statusLabel(l.status), style = MaterialTheme.typography.labelSmall, color = color, fontWeight = FontWeight.SemiBold)
+            Text(l.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyMediumEmphasized, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(statusLabel(l.status), style = MaterialTheme.typography.labelSmallEmphasized, color = color)
         }
         runsText(l)?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         Bar(l.percent, color)
@@ -344,7 +344,7 @@ private fun FixedRow(f: FixedLine, currency: String) {
     val color = statusColor(f.status)
     Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(f.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(f.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyMediumEmphasized, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(fixedWindow(f), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Bar(f.percent, color)
@@ -371,8 +371,8 @@ private fun GoalRow(g: Goal) {
     val tint = Accents.getValue(if (g.reached) "green" else "pink")
     Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(g.name + if (g.reached) "  ✓" else "", Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium), maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text("${g.percent}%", style = MaterialTheme.typography.labelMedium, color = tint, fontWeight = FontWeight.SemiBold)
+            Text(g.name + if (g.reached) "  ✓" else "", Modifier.weight(1f), style = MaterialTheme.typography.bodyMediumEmphasized, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text("${g.percent}%", style = MaterialTheme.typography.labelMediumEmphasized, color = tint)
         }
         Bar(g.percent, tint)
         Row {
