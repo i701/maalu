@@ -47,7 +47,7 @@ fun Section(title: String, icon: ImageVector, tint: Color, content: @Composable 
     }
 }
 
-/** A compact tonal text field (44dp) with a focus ring: the quiet input used across the forms. */
+/** A compact tonal text field (44dp) with an outline at rest and a thicker primary ring on focus: the input used across the forms. */
 @Composable
 fun CompactField(
     value: String,
@@ -74,7 +74,9 @@ fun CompactField(
         border = when {
             isError -> BorderStroke(2.dp, MaterialTheme.colorScheme.error)
             focused -> BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
-            else -> null
+            // the resting edge: the fill alone vanishes where a field sits on the same surface (a dialog), so an input must be
+            // defined by `outline`, the role guaranteed 3:1 against the surface
+            else -> BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
         },
     ) {
         BasicTextField(

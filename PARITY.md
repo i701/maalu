@@ -9,17 +9,16 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 67 | 57 | 20 |
+| ✅ done | 67 | 58 | 20 |
 | 🟡 partial | 0 | 1 | 9 |
-| ❌ missing | 0 | 5 | 34 |
+| ❌ missing | 0 | 4 | 34 |
 | ➖ n/a | 1 | 5 | 5 |
 
-## Still to build on Android (6)
+## Still to build on Android (5)
 
 - 🟡 **Email digest** (Notifications). The switch and the email status are in Settings; sending a test email is not.
 - ❌ **Export to Excel** (Transactions).
 - ❌ **Sort every category into need or want** (Categories, tags and vendors). Each category's kind can be set one by one in its form.
-- ❌ **Make a subscription from a transaction** (Bills and subscriptions).
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
@@ -148,7 +147,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 |---|:---:|:---:|:---:|
 | **Subscriptions and recurring bills**<br>Plans with a next payment, pay-from account, installments, reminders and varying amounts. | ✅ done | ✅ done | ✅ done |
 | **Suggested subscriptions**<br>Recurring spending found in your transactions, accepted into a subscription in one tap. | ✅ done | ✅ done | ✅ done |
-| **Make a subscription from a transaction**<br>Turn a payment you already made into a recurring plan. | ✅ done | ❌ missing | ❌ missing |
+| **Make a subscription from a transaction**<br>Turn a payment you already made into a recurring plan. | ✅ done | ✅ done | ❌ missing |
 
 ## Budget, goals and planning
 

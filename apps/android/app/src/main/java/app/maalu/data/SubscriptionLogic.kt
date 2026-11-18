@@ -147,6 +147,19 @@ fun acceptJson(c: SubscriptionCandidate, name: String, amount: String, count: St
     if (unit != c.intervalUnit) put("interval_unit", unit)
 }
 
+/** Only an expense that is not already a subscription's payment can become one (the API says 422/409 otherwise). */
+fun Transaction.canMakeSubscription(): Boolean = type == "expense" && subscription == null
+
+/** What a subscription made from this payment is called when the person does not rename it: the vendor, else the category. */
+fun Transaction.defaultSubscriptionName(): String = vendor?.name ?: category
+
+/** The body for making a subscription from a payment: how often, and a name only when it was changed (the API fills the default). */
+fun fromTransactionJson(t: Transaction, name: String, count: String, unit: String): JsonObject = buildJsonObject {
+    name.trim().takeIf { it.isNotEmpty() && it != t.defaultSubscriptionName() }?.let { put("name", it) }
+    put("interval_count", (count.trim().toIntOrNull() ?: 1).coerceIn(1, 120))
+    put("interval_unit", unit)
+}
+
 /** The key a suggestion is dismissed by: a vendor can be charged in two currencies. */
 fun dismissJson(c: SubscriptionCandidate): JsonObject = buildJsonObject { put("vendor_id", c.vendorId); put("currency", c.currency) }
 

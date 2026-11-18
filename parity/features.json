@@ -1185,7 +1185,10 @@
         ]
       },
       "android": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/MakeSubscriptionDialog.kt"
+        ]
       },
       "ios": {
         "status": "missing"

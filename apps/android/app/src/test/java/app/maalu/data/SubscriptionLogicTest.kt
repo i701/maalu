@@ -92,6 +92,31 @@ class SubscriptionLogicTest {
         assertEquals(setOf("vendor_id", "currency", "name", "amount", "interval_count", "interval_unit"), changed.keys)
     }
 
+    private fun payment(type: String = "expense", subscription: NameRef? = null, vendor: NameRef? = null) =
+        Transaction(id = "t", type = type, amount = "129", currency = "MVR", category = "Entertainment", date = "2026-11-01", subscription = subscription, vendor = vendor)
+
+    @Test fun onlyAnExpenseThatIsNotYetASubscriptionCanBecomeOne() {
+        assertTrue(payment().canMakeSubscription())
+        assertFalse(payment(type = "income").canMakeSubscription())
+        assertFalse(payment(type = "transfer").canMakeSubscription())
+        assertFalse(payment(subscription = NameRef("Netflix", id = "s1")).canMakeSubscription())
+    }
+
+    @Test fun aSubscriptionFromAPaymentIsNamedAfterTheVendorThenTheCategory() {
+        assertEquals("Netflix", payment(vendor = NameRef("Netflix", id = "v1")).defaultSubscriptionName())
+        assertEquals("Entertainment", payment().defaultSubscriptionName())
+    }
+
+    @Test fun makingOneFromAPaymentSendsTheNameOnlyWhenItWasChangedAndKeepsHowOftenInRange() {
+        val t = payment(vendor = NameRef("Netflix", id = "v1"))
+        val untouched = fromTransactionJson(t, "Netflix", "1", "month")
+        assertEquals(setOf("interval_count", "interval_unit"), untouched.keys)
+        assertEquals(setOf("name", "interval_count", "interval_unit"), fromTransactionJson(t, "Netflix Premium", "3", "week").keys)
+        assertEquals(120, fromTransactionJson(t, "", "999", "year")["interval_count"]!!.jsonPrimitive.content.toInt())
+        assertEquals(1, fromTransactionJson(t, "", "0", "year")["interval_count"]!!.jsonPrimitive.content.toInt())
+        assertEquals(1, fromTransactionJson(t, "", "", "year")["interval_count"]!!.jsonPrimitive.content.toInt())
+    }
+
     @Test fun aSuggestionIsDismissedByVendorAndCurrency() {
         assertEquals(setOf("vendor_id", "currency"), dismissJson(cand).keys)
         assertEquals("Looks regular", confidenceText(cand)); assertEquals("Looser fit", confidenceText(cand.copy(confidence = "medium")))
