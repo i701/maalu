@@ -208,3 +208,17 @@ async def test_isolation_between_users(client: AsyncClient, auth, signup: Signup
 
 async def test_requires_auth(client: AsyncClient):
     assert (await client.get(URL)).status_code == 401
+
+
+async def test_restored_plan_does_not_double_the_cycle(client: AsyncClient, auth):
+    start = (date.today() + timedelta(days=5)).isoformat()
+    sub = await make_sub(client, auth, start_date=start)
+    first = (await client.get(TX, params={"planned": "true"}, headers=auth)).json()
+    assert len(first) == 1
+    # the web form resends start_date on every edit, which replans: the old plan goes to the trash
+    await client.patch(f"{URL}/{sub['id']}", json={"start_date": start, "name": "N"}, headers=auth)
+    # bringing the old one back must not leave two plans for the same cycle
+    restored = await client.post(f"{TX}/bulk/restore", json={"ids": [first[0]["id"]]}, headers=auth)
+    assert restored.status_code == 200, restored.text
+    planned = (await client.get(TX, params={"planned": "true"}, headers=auth)).json()
+    assert len(planned) == 1

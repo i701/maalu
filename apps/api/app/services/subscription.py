@@ -468,11 +468,15 @@ class SubscriptionService:
             through = s.planned_through
             through_k = nearest_occurrence_index(start, unit, count, through) if through else -1
             open_plans = []
+            cycles = set()
             for transaction in await self._live_planned(s.id):
                 due_k = nearest_occurrence_index(start, unit, count, transaction.transaction_date)
-                if paid and due_k <= paid_k:  # that cycle was paid another way
+                # a cycle already paid another way, or planned twice (a restored plan, two reads
+                # at once): only one plan per cycle stays
+                if (paid and due_k <= paid_k) or due_k in cycles:
                     transaction.deleted_at = datetime.now(UTC)
                 else:
+                    cycles.add(due_k)
                     open_plans.append(transaction)
             if open_plans:
                 continue
