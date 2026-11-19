@@ -915,7 +915,12 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Groups/GroupsView.swift",
+          "apps/ios/Maalu/Features/Groups/GroupDetailView.swift",
+          "apps/ios/Maalu/Features/Groups/TransactionPickerView.swift"
+        ]
       },
       "routes": [
         "/groups"

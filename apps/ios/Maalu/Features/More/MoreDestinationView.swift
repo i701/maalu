@@ -13,6 +13,7 @@ struct MoreDestinationView: View {
         case "compare": CompareView()
         case "vendors": VendorsView()
         case "tags": TagsView()
+        case "groups": GroupsView()
         case "net-worth": NetWorthView()
         case "places": PlacesView()
         default: ComingSoonView(title: item.title, systemImage: item.systemImage)

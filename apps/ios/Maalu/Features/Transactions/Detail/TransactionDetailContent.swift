@@ -32,6 +32,7 @@ struct TransactionDetailContent: View {
                     if !transaction.tags.isEmpty { LabeledContent("Tags", value: transaction.tags.map(\.name).formatted()) }
                     if let card = transaction.card { LabeledContent("Card", value: card.name) }
                     if let subscription = transaction.subscription { LabeledContent("Subscription", value: subscription.name) }
+                    if let group = transaction.group { LabeledContent("Group", value: group.name) }
                     if transaction.planned { Label("Planned", systemImage: "calendar") }
                 }
             }
@@ -55,6 +56,6 @@ struct TransactionDetailContent: View {
 
     private var hasMore: Bool {
         transaction.description?.isEmpty == false || !transaction.tags.isEmpty
-            || transaction.card != nil || transaction.subscription != nil || transaction.planned
+            || transaction.card != nil || transaction.subscription != nil || transaction.group != nil || transaction.planned
     }
 }

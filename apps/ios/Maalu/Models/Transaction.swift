@@ -25,6 +25,8 @@ struct Transaction: Decodable, Identifiable, Hashable {
     let splits: [TransactionSplit]
     let adjustment: Bool?
     let deletedAt: String?
+    /// The group it is bundled in, if any; at most one.
+    let group: NamedRef?
 
     var isRefund: Bool { refundOf != nil }
 
