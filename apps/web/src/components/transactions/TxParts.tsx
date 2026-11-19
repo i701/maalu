@@ -177,15 +177,46 @@ export function TxAmount({
 	);
 }
 
-/** A filled tonal button: a soft container fill with its own ink, as M3's "filled tonal". */
-const TONAL = (role: "secondary" | "error") =>
-	({
-		backgroundColor: `var(--md-sys-color-${role}-container)`,
-		color: `var(--md-sys-color-on-${role}-container)`,
-		"&:hover": {
-			backgroundColor: `color-mix(in srgb, var(--md-sys-color-${role}-container) 88%, var(--md-sys-color-on-${role}-container))`,
+/** Delete's colours: the deep red is the face and the pale pink the text (the error container's
+ * two roles swapped in light mode, where a pale face looked cheap); dark mode already has them
+ * that way round, so it keeps the container as it is. */
+const DANGER_KEY = {
+	"--key-face": "var(--md-sys-color-on-error-container)",
+	"--key-ink": "var(--md-sys-color-error-container)",
+	"[data-dark] &": {
+		"--key-face": "var(--md-sys-color-error-container)",
+		"--key-ink": "var(--md-sys-color-on-error-container)",
+	},
+	"@media (prefers-color-scheme: dark)": {
+		":root:not([data-light]):not([data-dark]) &": {
+			"--key-face": "var(--md-sys-color-error-container)",
+			"--key-ink": "var(--md-sys-color-on-error-container)",
 		},
-	}) as const;
+	},
+} as const;
+
+/** A filled key in a flat colour with no tint: neutral grey, or the deep red of Delete. (A
+ * blue-grey fill, like the secondary container, reads as glass.) */
+const TONAL = (role: "neutral" | "error") => {
+	if (role === "error")
+		return {
+			...DANGER_KEY,
+			backgroundColor: "var(--key-face)",
+			color: "var(--key-ink)",
+			"--key-edge": "color-mix(in srgb, var(--key-face) 62%, black)",
+			"&:hover": {
+				backgroundColor: "color-mix(in srgb, var(--key-face) 90%, var(--key-ink))",
+			},
+		} as const;
+	const face = "var(--md-sys-color-surface-container-highest)";
+	const ink = "var(--md-sys-color-on-surface)";
+	return {
+		backgroundColor: face,
+		color: ink,
+		"--key-edge": `color-mix(in srgb, ${face} 68%, black)`,
+		"&:hover": { backgroundColor: `color-mix(in srgb, ${face} 90%, ${ink})` },
+	} as const;
+};
 
 /** The actions on a transaction, as labelled buttons (they live in the detail drawer, which has
  * the room). Edit is the main one; Delete is last and red. */
@@ -206,17 +237,16 @@ export function TxActions({
 	onEdit: () => void;
 	onDelete: () => void;
 }) {
-	// every button is filled: Edit in the brand colour, the rest tonal (a soft container fill)
+	// every button is filled: Edit in the brand colour, the rest neutral grey keys
 	const secondary = {
 		variant: "contained",
 		color: "inherit",
-		size: "small",
-		sx: TONAL("secondary"),
+		sx: TONAL("neutral"),
 	} as const;
 	return (
 		<>
 			{!t.adjustment && (
-				<Button variant="contained" size="small" startIcon={<EditOutlinedIcon />} onClick={onEdit}>
+				<Button variant="contained" startIcon={<EditOutlinedIcon />} onClick={onEdit}>
 					Edit
 				</Button>
 			)}
@@ -258,7 +288,6 @@ export function TxActions({
 			<Button
 				variant="contained"
 				color="inherit"
-				size="small"
 				sx={TONAL("error")}
 				startIcon={<DeleteOutlineIcon />}
 				onClick={onDelete}

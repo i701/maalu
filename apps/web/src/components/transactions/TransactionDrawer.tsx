@@ -22,9 +22,6 @@ import {
 	TxSubscriptionChip,
 } from "./TxParts";
 
-/** The dots' colour by type: red for spending, green for income, blue for a transfer. */
-const TONE = { expense: "#F43F5E", income: ACCENT.green, transfer: ACCENT.blue } as const;
-
 /** One labelled fact; nothing is drawn when there is nothing to say. */
 function Fact({ label, children }: { label: string; children?: ReactNode }) {
 	if (!children) return null;
@@ -82,22 +79,7 @@ export default function TransactionDrawer({
 				paper: {
 					sx: {
 						// a bottom sheet on every screen, centred and no wider than reads well
-						"--tone": TONE[t?.type ?? "expense"],
 						backgroundColor: "var(--md-sys-color-surface-container-low)",
-						isolation: "isolate",
-						// a dot grid in the type's colour (red spent, green earned, blue moved), strongest
-						// at the bottom right corner and gone by two thirds of the way to the top left
-						"&::before": {
-							content: '""',
-							position: "absolute",
-							inset: 0,
-							zIndex: -1,
-							background:
-								"radial-gradient(circle, var(--tone) 1px, transparent 1.5px) 11px 11px / 22px 22px",
-							opacity: 0.4,
-							maskImage: "linear-gradient(to top left, #000, transparent 65%)",
-							pointerEvents: "none",
-						},
 						maxHeight: "85vh",
 						width: "min(800px, 100%)",
 						mx: "auto",
