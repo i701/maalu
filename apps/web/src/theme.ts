@@ -113,12 +113,13 @@ const theme = createTheme({
 	shape: { borderRadius: 12 },
 	// MUI transitions that use theme easing (menus, popovers...) get our curve too.
 	transitions: { easing: { easeOut: EASE_OUT } },
-	// The M3 type scale (display/headline/title/body/label), in Inter (with its optical sizes, so
-	// large figures get the tighter display cut).
+	// The M3 type scale (display/headline/title/body/label), in Sora (Manrope, the face before it, is still in assets and `m3.css`: swap this one line to go back). It is a variable font, so a
+	// weight need not be a hundred: running text sits at 450 because Manrope's 400 reads thin on
+	// screen, and the big headings are pulled in a little (-0.02em), as wide letterforms need.
 	typography: {
-		fontFamily: '"Inter Variable", system-ui, sans-serif',
-		h1: { fontSize: "1.75rem", lineHeight: "34px", fontWeight: 400 }, // headline-md
-		h2: { fontSize: "1.375rem", lineHeight: "28px", fontWeight: 500 }, // title-lg
+		fontFamily: '"Sora", "Sora Fallback", system-ui, sans-serif',
+		h1: { fontSize: "1.75rem", lineHeight: "34px", fontWeight: 450, letterSpacing: "-0.02em" }, // headline-md
+		h2: { fontSize: "1.375rem", lineHeight: "28px", fontWeight: 500, letterSpacing: "-0.01em" }, // title-lg
 		subtitle1: {
 			fontSize: "1rem",
 			lineHeight: "22px",
@@ -131,17 +132,17 @@ const theme = createTheme({
 			fontWeight: 500,
 			letterSpacing: "0.005em",
 		}, // title-sm
-		body1: { fontSize: "1rem", lineHeight: "23px", fontWeight: 400 }, // body-lg
+		body1: { fontSize: "1rem", lineHeight: "23px", fontWeight: 450 }, // body-lg
 		body2: {
 			fontSize: "0.875rem",
 			lineHeight: "20px",
-			fontWeight: 400,
+			fontWeight: 450,
 			letterSpacing: "0.01em",
 		}, // body-md
 		caption: {
 			fontSize: "0.75rem",
 			lineHeight: "16px",
-			fontWeight: 400,
+			fontWeight: 450,
 			letterSpacing: "0.02em",
 		}, // body-sm
 		button: {

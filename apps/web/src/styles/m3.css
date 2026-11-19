@@ -13,6 +13,48 @@
 	src: url(../assets/material-symbols-rounded.woff2) format("woff2");
 }
 
+/* Manrope (SIL OFL 1.1, licence in assets/Manrope-OFL.txt), the app's text face: a variable font,
+ * weights 200 to 800. */
+@font-face {
+	font-family: "Manrope";
+	font-weight: 200 800;
+	font-display: swap;
+	src: url(../assets/Manrope-Variable.woff2) format("woff2");
+}
+
+/* Sora (SIL OFL 1.1, licence in assets/Sora-OFL.txt), the face for big figures only (`Figure`, the
+ * transaction sheet's amount): round zeros and a flagged 1 make large numbers read as one shape.
+ * The Latin subset of a variable font, weights 100 to 800, with tabular digits. */
+@font-face {
+	font-family: "Sora";
+	font-weight: 100 800;
+	font-display: swap;
+	src: url(../assets/Sora-Variable.woff2) format("woff2");
+}
+
+/* Arial, resized to take the room Manrope will: the page keeps its height when the font arrives.
+ * Manrope runs wider than Arial from weight 500 up, hence the 104% (the numbers are the
+ * aero-slider site's, which measured them for text set at 500 and over). */
+@font-face {
+	font-family: "Manrope Fallback";
+	src: local("Arial"), local("ArialMT"), local("Liberation Sans");
+	ascent-override: 102.5%;
+	descent-override: 28.8461%;
+	line-gap-override: 0%;
+	size-adjust: 104%;
+}
+
+/* Arial resized to take the room Sora will (it runs about 14% wider than Arial), for the same
+ * reason as Manrope Fallback. Numbers from the aero-slider site. */
+@font-face {
+	font-family: "Sora Fallback";
+	src: local("Arial"), local("ArialMT"), local("Liberation Sans");
+	ascent-override: 85.2913%;
+	descent-override: 25.4995%;
+	line-gap-override: 0%;
+	size-adjust: 113.7279%;
+}
+
 /* Homemade Apple (Apache-2.0), a handwriting face used for the app name (Brand) in the sidebar and
  * the phone's top bar. */
 @font-face {

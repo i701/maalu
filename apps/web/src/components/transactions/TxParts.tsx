@@ -6,10 +6,12 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import InsertLinkOutlinedIcon from "@mui/icons-material/InsertLinkOutlined";
 import UndoIcon from "@mui/icons-material/Undo";
 import Chip from "@mui/material/Chip";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import { Link } from "@tanstack/react-router";
 import Money from "#/components/Money";
+import Symbol from "#/components/Symbol";
 import TonalChip from "#/components/TonalChip";
 import { PAYMENT_ACCENT, TRANSFER_ACCENT } from "#/lib/accents";
 import { formatMoney } from "#/lib/format";
@@ -107,19 +109,58 @@ export function TxSubscriptionChip({ t }: { t: Transaction }) {
 	);
 }
 
-export function TxAmount({ t, baseCurrency }: { t: Transaction; baseCurrency: string }) {
+const DIRECTION_SYMBOL = {
+	income: "arrow_downward",
+	expense: "arrow_upward",
+	transfer: "payments",
+} as const;
+
+/** Before a big amount: a round badge with the type's arrow (the one its list tile has), in the
+ * amount's colour and centred on the figure. A + or − character sits on the text baseline at
+ * another size and looks adrift beside the number; a badge does not. */
+function DirectionBadge({ type }: { type: Transaction["type"] }) {
+	return (
+		<Box
+			sx={{
+				width: 40,
+				height: 40,
+				mr: 1.5,
+				flexShrink: 0,
+				display: "grid",
+				placeItems: "center",
+				borderRadius: "50%",
+				bgcolor: "color-mix(in srgb, currentColor 14%, transparent)",
+			}}
+		>
+			<Symbol name={DIRECTION_SYMBOL[type]} size={24} />
+		</Box>
+	);
+}
+
+export function TxAmount({
+	t,
+	baseCurrency,
+	coloured = false,
+}: {
+	t: Transaction;
+	baseCurrency: string;
+	/** Spending in red as well as income in green (the list keeps spending in the text colour). */
+	coloured?: boolean;
+}) {
 	return (
 		<>
 			<Typography
 				variant="body2"
 				sx={{
 					fontWeight: 600,
-					color: TYPE_AMOUNT_COLOR[t.type],
+					color: coloured && t.type === "expense" ? "error.main" : TYPE_AMOUNT_COLOR[t.type],
 					fontVariantNumeric: "tabular-nums",
+					// a big amount: the badge is centred on the figure, not set on its baseline
+					...(coloured && { display: "flex", alignItems: "center", justifyContent: "flex-end" }),
 				}}
 			>
-				{TYPE_SIGN[t.type]}
-				<Money amount={t.amount} currency={t.currency} />
+				{coloured ? <DirectionBadge type={t.type} /> : TYPE_SIGN[t.type]}
+				<Money amount={t.amount} currency={t.currency} figure={coloured} />
 			</Typography>
 			{t.type === "transfer" && t.to_account && t.to_account.currency !== t.currency && (
 				<Typography variant="caption" sx={{ color: "text.secondary", display: "block" }}>
@@ -135,6 +176,16 @@ export function TxAmount({ t, baseCurrency }: { t: Transaction; baseCurrency: st
 		</>
 	);
 }
+
+/** A filled tonal button: a soft container fill with its own ink, as M3's "filled tonal". */
+const TONAL = (role: "secondary" | "error") =>
+	({
+		backgroundColor: `var(--md-sys-color-${role}-container)`,
+		color: `var(--md-sys-color-on-${role}-container)`,
+		"&:hover": {
+			backgroundColor: `color-mix(in srgb, var(--md-sys-color-${role}-container) 88%, var(--md-sys-color-on-${role}-container))`,
+		},
+	}) as const;
 
 /** The actions on a transaction, as labelled buttons (they live in the detail drawer, which has
  * the room). Edit is the main one; Delete is last and red. */
@@ -155,7 +206,13 @@ export function TxActions({
 	onEdit: () => void;
 	onDelete: () => void;
 }) {
-	const secondary = { variant: "outlined", color: "inherit", size: "small" } as const;
+	// every button is filled: Edit in the brand colour, the rest tonal (a soft container fill)
+	const secondary = {
+		variant: "contained",
+		color: "inherit",
+		size: "small",
+		sx: TONAL("secondary"),
+	} as const;
 	return (
 		<>
 			{!t.adjustment && (
@@ -199,9 +256,10 @@ export function TxActions({
 				</Button>
 			)}
 			<Button
-				variant="outlined"
-				color="error"
+				variant="contained"
+				color="inherit"
 				size="small"
+				sx={TONAL("error")}
 				startIcon={<DeleteOutlineIcon />}
 				onClick={onDelete}
 			>

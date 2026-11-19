@@ -1,5 +1,4 @@
 import Box from "@mui/material/Box";
-import Divider from "@mui/material/Divider";
 import Drawer from "@mui/material/Drawer";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
@@ -22,6 +21,9 @@ import {
 	TxStatsChips,
 	TxSubscriptionChip,
 } from "./TxParts";
+
+/** The dots' colour by type: red for spending, green for income, blue for a transfer. */
+const TONE = { expense: "#F43F5E", income: ACCENT.green, transfer: ACCENT.blue } as const;
 
 /** One labelled fact; nothing is drawn when there is nothing to say. */
 function Fact({ label, children }: { label: string; children?: ReactNode }) {
@@ -80,37 +82,79 @@ export default function TransactionDrawer({
 				paper: {
 					sx: {
 						// a bottom sheet on every screen, centred and no wider than reads well
+						"--tone": TONE[t?.type ?? "expense"],
+						backgroundColor: "var(--md-sys-color-surface-container-low)",
+						isolation: "isolate",
+						// a dot grid in the type's colour (red spent, green earned, blue moved), strongest
+						// at the bottom right corner and gone by two thirds of the way to the top left
+						"&::before": {
+							content: '""',
+							position: "absolute",
+							inset: 0,
+							zIndex: -1,
+							background:
+								"radial-gradient(circle, var(--tone) 1px, transparent 1.5px) 11px 11px / 22px 22px",
+							opacity: 0.4,
+							maskImage: "linear-gradient(to top left, #000, transparent 65%)",
+							pointerEvents: "none",
+						},
 						maxHeight: "85vh",
-						width: "min(640px, 100%)",
+						width: "min(800px, 100%)",
 						mx: "auto",
-						p: 2.5,
-						pt: 1.5,
+						p: { xs: 3, sm: 5 },
+						// the phone's grab bar sits close to the top; elsewhere the top matches the sides
+						pt: { xs: 1.5, sm: 5 },
 						borderTopLeftRadius: "var(--shape-xl)",
 						borderTopRightRadius: "var(--shape-xl)",
-						backgroundColor: "var(--md-sys-color-surface-container-low)",
 					},
 				},
 			}}
 		>
-			<SheetHandle />
+			{/* a grab bar only where the sheet is a phone's bottom sheet */}
+			<Box sx={{ display: { xs: "flex", sm: "none" } }}>
+				<SheetHandle />
+			</Box>
 			{t && (
 				<>
-					<Typography variant="h6" sx={{ fontWeight: 500 }}>
-						{txRowTitle(t)}
-					</Typography>
 					<Box
-						sx={{ mt: 0.5, "& .MuiTypography-body2": { fontSize: "1.375rem", fontWeight: 400 } }}
+						sx={{
+							display: "flex",
+							flexWrap: "wrap",
+							alignItems: "flex-end",
+							justifyContent: "space-between",
+							gap: 2,
+							pt: 1,
+							pb: 0.5,
+						}}
 					>
-						<TxAmount t={t} baseCurrency={baseCurrency} />
+						<Box sx={{ minWidth: 0, flex: "1 1 160px" }}>
+							<Typography variant="h6" sx={{ fontWeight: 600 }}>
+								{txRowTitle(t)}
+							</Typography>
+							<Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+								{t.planned && <TonalChip accent={ACCENT.amber} label="Planned" />}
+								<TxRefundChip t={t} />
+								<TxSubscriptionChip t={t} />
+								<TxGroupChip t={t} />
+								<TxStatsChips t={t} />
+							</Box>
+						</Box>
+						<Box
+							sx={{
+								textAlign: "right",
+								// big: red for spending, green for income, like the wash behind it
+								"& .MuiTypography-body2:first-of-type": {
+									// as big as the sheet allows: the number is the point of it
+									fontSize: "clamp(2.5rem, 9vw, 3.5rem)",
+									lineHeight: 0.9,
+									letterSpacing: "-0.03em",
+									"--figure-weight": 600,
+								},
+							}}
+						>
+							<TxAmount t={t} baseCurrency={baseCurrency} coloured />
+						</Box>
 					</Box>
-					<Box sx={{ mt: 1.5, display: "flex", flexWrap: "wrap", gap: 0.75 }}>
-						{t.planned && <TonalChip accent={ACCENT.amber} label="Planned" />}
-						<TxRefundChip t={t} />
-						<TxSubscriptionChip t={t} />
-						<TxGroupChip t={t} />
-						<TxStatsChips t={t} />
-					</Box>
-					<Divider sx={{ my: 1.5 }} />
 					<Fact label="Date">{formatWhen(t.transaction_date, t.transaction_time)}</Fact>
 					<Fact label="Category">
 						{t.type !== "transfer" && (
@@ -168,8 +212,9 @@ export default function TransactionDrawer({
 								.filter(Boolean)
 								.join(", ")}
 					</Fact>
-					<Divider sx={{ my: 1.5 }} />
-					<Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+					<Box
+						sx={{ display: "flex", flexWrap: "wrap", justifyContent: "flex-end", gap: 1, mt: 3 }}
+					>
 						<TxActions
 							t={t}
 							onConvert={then(onConvert)}
