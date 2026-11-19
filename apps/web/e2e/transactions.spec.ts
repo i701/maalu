@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { apiAs, open, signUp } from "./helpers";
+import { apiAs, open, openTransaction, signUp } from "./helpers";
 
 test("adding an expense puts it in the list and takes it off the account", async ({
 	page,
@@ -64,9 +64,12 @@ test("deleting a transaction moves it to the trash, and it can come back", async
 	});
 
 	await open(page, "/transactions");
+	await openTransaction(page, "Bananas");
 	await page.getByRole("button", { name: "Delete" }).first().click();
-	const confirm = page.getByRole("dialog");
-	if (await confirm.isVisible()) await confirm.getByRole("button", { name: /Delete|Move/ }).click();
+	await page
+		.getByRole("dialog")
+		.getByRole("button", { name: /Delete|Move/ })
+		.click();
 	await expect(page.getByText("Bananas")).toBeHidden();
 
 	await open(page, "/trash");

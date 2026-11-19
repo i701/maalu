@@ -4,7 +4,9 @@ import Box from "@mui/material/Box";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableContainer from "@mui/material/TableContainer";
+import TableCell from "@mui/material/TableCell";
 import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
 import { Fragment, type ReactNode, useCallback, useState } from "react";
 import { staggerChildren } from "#/lib/motion";
 import { useViewMode } from "#/lib/view-mode";
@@ -47,6 +49,22 @@ const FRAME = {
 	bgcolor: "var(--md-sys-color-surface-container-low)",
 } as const;
 
+/** A day heading (or any group) between rows: quiet text, no bar of its own. */
+const GROUP_HEAD = {
+	fontSize: "0.8125rem",
+	fontWeight: 500,
+	color: "var(--md-sys-color-on-surface-variant)",
+} as const;
+
+/** Rows split under headings, in the table view only (the cards grid has no room for them). */
+export type RowGroups<T> = {
+	/** The heading a row belongs to; consecutive rows with the same key share one heading. */
+	key: (row: T) => string;
+	label: (key: string) => ReactNode;
+	/** How many columns the desktop table has, for the heading to span. */
+	colSpan: number;
+};
+
 /**
  * A list with two modes (the Cards / Table toggle, see ViewToggle):
  *  - cards (the default): a grid of cards straight on the page, like the site's lists
@@ -70,6 +88,7 @@ export default function ResponsiveTable<T>({
 	head,
 	renderRow,
 	renderCard,
+	groups,
 	minWidth = 760,
 }: {
 	rows: T[];
@@ -80,6 +99,8 @@ export default function ResponsiveTable<T>({
 	renderRow: (row: T) => ReactNode;
 	/** The same record as a card for narrow screens. */
 	renderCard: (row: T) => ReactNode;
+	/** Headings between rows in the table view (the cards view ignores them). */
+	groups?: RowGroups<T>;
 	minWidth?: number;
 }) {
 	const cardsMode = useViewMode() === "cards";
@@ -99,6 +120,23 @@ export default function ResponsiveTable<T>({
 		},
 		[minWidth],
 	);
+
+	/** Each row, with its heading above it when it starts a new group. */
+	const withHeadings = (
+		row: T,
+		i: number,
+		heading: (label: ReactNode) => ReactNode,
+		node: ReactNode,
+	) => {
+		const key = groups?.key(row);
+		const starts = groups && key !== undefined && (i === 0 || groups.key(rows[i - 1]) !== key);
+		return (
+			<Fragment key={getKey(row)}>
+				{starts && heading(groups.label(key))}
+				{node}
+			</Fragment>
+		);
+	};
 
 	if (cardsMode) {
 		return (
@@ -137,9 +175,20 @@ export default function ResponsiveTable<T>({
 						<Table sx={TABLE}>
 							<TableHead>{head}</TableHead>
 							<TableBody sx={staggerChildren()}>
-								{rows.map((row) => (
-									<Fragment key={getKey(row)}>{renderRow(row)}</Fragment>
-								))}
+								{rows.map((row, i) =>
+									withHeadings(
+										row,
+										i,
+										(label) => (
+											<TableRow sx={{ "&&:hover": { bgcolor: "transparent" } }}>
+												<TableCell colSpan={groups?.colSpan} sx={{ ...GROUP_HEAD, pt: 2, pb: 0.5 }}>
+													{label}
+												</TableCell>
+											</TableRow>
+										),
+										renderRow(row),
+									),
+								)}
 							</TableBody>
 						</Table>
 					</TableContainer>
@@ -157,9 +206,14 @@ export default function ResponsiveTable<T>({
 						},
 					}}
 				>
-					{rows.map((row) => (
-						<Box key={getKey(row)}>{renderCard(row)}</Box>
-					))}
+					{rows.map((row, i) =>
+						withHeadings(
+							row,
+							i,
+							(label) => <Box sx={{ ...GROUP_HEAD, px: 2, pt: 1.5, pb: 0.5 }}>{label}</Box>,
+							<Box>{renderCard(row)}</Box>,
+						),
+					)}
 				</Box>
 			)}
 		</Box>

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { apiAs, open, signUp } from "./helpers";
+import { apiAs, open, openTransaction, signUp } from "./helpers";
 
 type Account = { id: string; name: string; balance: string };
 type Goal = { id: string; saved: string };
@@ -61,6 +61,7 @@ test("rules split a new salary, and the split can be undone", async ({ page, req
 
 	// it can't be done twice: the button now shows what was made, and undoes it
 	await expect(page.getByRole("dialog")).toBeHidden();
+	await openTransaction(page, /Salary/);
 	await page.getByRole("button", { name: "Split salary" }).click();
 	const done = page.getByRole("dialog", { name: "This salary was split" });
 	await expect(done.getByText(/Savings: MVR\s2,500\.00 moved/)).toBeVisible();
@@ -84,6 +85,7 @@ test("a salary with no rules says where to set them up", async ({ page, request 
 		transaction_date: day(),
 	});
 	await open(page, "/transactions");
+	await openTransaction(page, /Salary/);
 	await page.getByRole("button", { name: "Split salary" }).click();
 	await expect(page.getByText("You haven't set up any rules yet.")).toBeVisible();
 	await page.getByRole("link", { name: "Choose how your salary is split" }).click();

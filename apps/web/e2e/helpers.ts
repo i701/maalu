@@ -36,6 +36,11 @@ export async function open(page: Page, path: string) {
 	await hydrated(page);
 }
 
+/** Open a transaction's drawer by its title (its row is a button in both the table and cards view). */
+export async function openTransaction(page: Page, title: string | RegExp) {
+	await page.getByRole("button", { name: title }).first().click();
+}
+
 /** Sign up through the real sign-up page and land on the dashboard. */
 export async function signUp(page: Page, email = newEmail()): Promise<string> {
 	await open(page, "/register");

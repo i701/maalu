@@ -19,6 +19,7 @@ export default function MobileCard({
 	brief,
 	meta,
 	actions,
+	onOpen,
 }: {
 	/** A checkbox at the far left, when the list can be selected. */
 	select?: ReactNode;
@@ -38,13 +39,15 @@ export default function MobileCard({
 	meta?: ReactNode;
 	/** Icon buttons, right-aligned. */
 	actions?: ReactNode;
+	/** Makes the row a button that opens the record (a drawer), instead of expanding in place. */
+	onOpen?: () => void;
 }) {
 	// compact (tap to open) only on a phone, in the Table view; wider screens show everything
 	const phone = useMediaQuery((theme) => theme.breakpoints.down("sm"));
-	const collapsible = useViewMode() === "table" && phone && Boolean(meta || actions);
+	const collapsible = useViewMode() === "table" && phone && Boolean(meta || actions) && !onOpen;
 	const [open, setOpen] = useState(false);
 	const showMore = !collapsible || open;
-	const toggle = collapsible ? () => setOpen((o) => !o) : undefined;
+	const toggle = onOpen ?? (collapsible ? () => setOpen((o) => !o) : undefined);
 	const onKey = (e: KeyboardEvent<HTMLElement>) => {
 		if (toggle && (e.key === "Enter" || e.key === " ")) {
 			e.preventDefault();
@@ -79,7 +82,7 @@ export default function MobileCard({
 					onKeyDown={onKey}
 					role={toggle && "button"}
 					tabIndex={toggle && 0}
-					aria-expanded={toggle && open}
+					aria-expanded={collapsible ? open : undefined}
 					sx={{
 						justifyContent: "space-between",
 						// compact: a one-line name sits level with a two-line figure, not stuck at the top

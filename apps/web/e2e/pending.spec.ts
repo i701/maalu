@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { apiAs, open, signUp } from "./helpers";
+import { apiAs, open, openTransaction, signUp } from "./helpers";
 
 type Account = { id: string; name: string; balance: string };
 
@@ -97,6 +97,7 @@ test("dismissing a waiting split leaves the list, and it can still be split by h
 
 	// the salary still has its Split salary button
 	await open(page, "/transactions");
+	await openTransaction(page, /Bonus/);
 	await page.getByRole("button", { name: "Split salary" }).click();
 	const dialog = page.getByRole("dialog", { name: "Finish splitting this salary" });
 	await dialog.getByRole("button", { name: "Make the split" }).click();

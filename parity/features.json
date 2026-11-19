@@ -527,6 +527,31 @@
       ]
     },
     {
+      "id": "tx-quiet-list",
+      "area": "transactions",
+      "name": "Quiet list and detail sheet",
+      "summary": "Rows show only the title, category and method and the amount, grouped by day; everything else and the actions are in a detail sheet.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/transactions/TransactionDrawer.tsx",
+          "apps/web/src/routes/_protected/transactions.tsx"
+        ]
+      },
+      "android": {
+        "status": "missing"
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "routes": [
+        "/transactions"
+      ],
+      "api": [
+        "/api/v1/transactions"
+      ]
+    },
+    {
       "id": "tx-list",
       "area": "transactions",
       "name": "Transactions list",

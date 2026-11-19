@@ -1,12 +1,6 @@
 import AddIcon from "@mui/icons-material/Add";
-import Money from "#/components/Money";
-import AutorenewIcon from "@mui/icons-material/Autorenew";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
-import InsertLinkOutlinedIcon from "@mui/icons-material/InsertLinkOutlined";
-import UndoIcon from "@mui/icons-material/Undo";
-import CallSplitIcon from "@mui/icons-material/CallSplit";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
-import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import Box from "@mui/material/Box";
@@ -14,12 +8,10 @@ import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Checkbox from "@mui/material/Checkbox";
-import Chip from "@mui/material/Chip";
-import IconButton from "@mui/material/IconButton";
 import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
-import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
+import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { memo, startTransition, useCallback, useMemo, useOptimistic, useState } from "react";
 import { z } from "zod";
 import ActiveFilters from "#/components/ActiveFilters";
@@ -40,11 +32,12 @@ import ResponsiveTable from "#/components/ResponsiveTable";
 import SearchField from "#/components/SearchField";
 import ShapeTile from "#/components/ShapeTile";
 import Symbol from "#/components/Symbol";
-import { TagChips } from "#/components/TagChip";
+import { TxAmount } from "#/components/transactions/TxParts";
 import { excludedNote } from "#/lib/accounts";
-import { txSubtitle, txTitle } from "#/lib/tx-display";
-import CategoryDot from "#/components/CategoryDot";
-import AttachFileIcon from "@mui/icons-material/AttachFile";
+import { dayHeading, txRowLine, txRowTitle, txTitle } from "#/lib/tx-display";
+import TransactionDrawer from "#/components/transactions/TransactionDrawer";
+import { useViewMode } from "#/lib/view-mode";
+import { isOverdue, localToday } from "#/lib/planned";
 import TonalChip from "#/components/TonalChip";
 import TableCard from "#/components/TableCard";
 import TablePager from "#/components/TablePager";
@@ -58,8 +51,7 @@ import BudgetAlert from "#/components/BudgetAlert";
 import TransferSuggestionsCard from "#/components/TransferSuggestionsCard";
 import UpcomingCard from "#/components/UpcomingCard";
 import CategoryBreakdown from "#/components/CategoryBreakdown";
-import { formatDate, formatMoney, formatTime, formatWhen } from "#/lib/format";
-import { PAYMENT_ACCENT, TRANSFER_ACCENT } from "#/lib/accents";
+import { formatMoney, formatWhen } from "#/lib/format";
 import { ACCENT } from "#/lib/m3";
 import { useLiveSearch } from "#/lib/live-search";
 import { lastPageIfOutOfRange, pageSearch } from "#/lib/pagination";
@@ -82,7 +74,7 @@ import { listCurrenciesFn } from "#/server/currencies";
 import { listSubscriptionsFn } from "#/server/subscriptions";
 import { listSalaryRulesFn } from "#/server/salary";
 import { listTemplatesFn } from "#/server/templates";
-import { canSplitSalary, useSalarySplit } from "#/lib/use-salary-split";
+import { useSalarySplit } from "#/lib/use-salary-split";
 import SalarySplitHost from "#/components/SalarySplitHost";
 import {
 	listUpcomingFn,
@@ -99,15 +91,13 @@ import { getCategoryFn, listCategoriesFn } from "#/server/categories";
 import { listGroupsFn } from "#/server/groups";
 import { getMeFn } from "#/server/auth";
 import RefundDialogHost from "#/components/RefundDialogHost";
-import { placeLabel } from "#/lib/places";
 import { linkablePair } from "#/lib/transfer-link";
-import { canLinkRefund, canRefund, isRefund, wasRefunded } from "#/lib/refund";
+import { isRefund } from "#/lib/refund";
 import { useRefundDialog } from "#/lib/use-refund-dialog";
 import { listTagsFn } from "#/server/tags";
 import { getVendorFn, listVendorsFn } from "#/server/vendors";
 import {
 	ACCOUNT_GROUP_LABELS,
-	PAYMENT_METHOD_LABELS,
 	PAYMENT_METHODS,
 	TRANSACTION_TYPES,
 	type Category,
@@ -116,14 +106,6 @@ import {
 	type Transaction,
 	type Vendor,
 } from "#/types/api";
-
-/** Amounts are stored positive; the type decides the sign shown and the colour. */
-const TYPE_SIGN = { income: "+", expense: "−", transfer: "" } as const;
-const TYPE_AMOUNT_COLOR = {
-	income: "success.main",
-	expense: "error.main",
-	transfer: "text.primary",
-} as const;
 
 // The filter panel sits beside the table once its own container is this wide; below that the same
 // panel opens from a "Filters" button. The table needs ~760px, so 260 (panel) + 16 + 760.
@@ -299,209 +281,12 @@ function deleteCopy(t: Transaction) {
 	};
 }
 
-function TxSubtitle({ t }: { t: Transaction }) {
-	const dot = t.type !== "transfer" && t.splits.length <= 1 && t.category_color;
-	return (
-		<Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-			{dot && <CategoryDot color={dot} size={8} />}
-			<Typography variant="caption" sx={{ color: "text.secondary" }}>
-				{txSubtitle(t)}
-			</Typography>
-			{t.attachment_count + t.link_count > 0 && (
-				<Box
-					component="span"
-					title={`${t.attachment_count + t.link_count} attached`}
-					sx={{ display: "inline-flex", alignItems: "center", color: "text.secondary" }}
-				>
-					<AttachFileIcon sx={{ fontSize: 14 }} />
-				</Box>
-			)}
-		</Box>
-	);
-}
-
-function TxTile({ t }: { t: Transaction }) {
+function TxTile({ t, size = 52 }: { t: Transaction; size?: number }) {
 	const k = isRefund(t) ? REFUND_TILE : TYPE_TILE[t.type];
 	return (
-		<ShapeTile shape={k.shape} size={52} accent={k.accent}>
-			<Symbol name={k.symbol} size={24} filled />
+		<ShapeTile shape={k.shape} size={size} accent={k.accent}>
+			<Symbol name={k.symbol} size={size > 40 ? 24 : 20} filled />
 		</ShapeTile>
-	);
-}
-
-function TxMethodChip({ t }: { t: Transaction }) {
-	return t.type === "transfer" ? (
-		<TonalChip accent={TRANSFER_ACCENT} label="Transfer" />
-	) : (
-		<TonalChip
-			accent={PAYMENT_ACCENT[t.payment_method]}
-			label={PAYMENT_METHOD_LABELS[t.payment_method]}
-		/>
-	);
-}
-
-/** "Adjustment" on a balance correction, and a note when the account is left out of the totals:
- * neither counts as income or spending. */
-function TxStatsChips({ t }: { t: Transaction }) {
-	return (
-		<>
-			{t.adjustment && (
-				<TonalChip
-					accent={ACCENT.slate}
-					label="Adjustment"
-					title="A correction that makes the account match its bank: not income or spending"
-				/>
-			)}
-			{t.latitude != null && (
-				<TonalChip accent={ACCENT.pink} label={placeLabel(t)} title="Marked on the map" />
-			)}
-			{t.account?.exclude_from_stats && (
-				<TonalChip
-					accent={ACCENT.slate}
-					label="Not in my totals"
-					title="This account is left out of your totals and reports"
-				/>
-			)}
-		</>
-	);
-}
-
-/** "Refund" on money given back, and how much of a purchase has been refunded. */
-function TxRefundChip({ t }: { t: Transaction }) {
-	if (isRefund(t)) return <TonalChip accent={ACCENT.green} label="Refund" />;
-	if (!wasRefunded(t)) return null;
-	return (
-		<TonalChip
-			accent={ACCENT.amber}
-			label={
-				canRefund(t) ? `Refunded ${formatMoney(t.refunded_amount, t.currency)}` : "Fully refunded"
-			}
-		/>
-	);
-}
-
-/** The group it belongs to, opening that group. */
-function TxGroupChip({ t }: { t: Transaction }) {
-	if (!t.group) return null;
-	return (
-		<Link
-			to="/groups"
-			search={{ group: t.group.id, page: 1, pageSize: 20 }}
-			style={{ textDecoration: "none" }}
-			title={`Open the group "${t.group.name}"`}
-		>
-			<TonalChip accent={ACCENT.blue} label={t.group.name} clickable />
-		</Link>
-	);
-}
-
-function TxSubscriptionChip({ t }: { t: Transaction }) {
-	if (!t.subscription) return null;
-	return (
-		<Chip
-			icon={<AutorenewIcon />}
-			label={t.subscription.name}
-			size="small"
-			variant="outlined"
-			sx={{ display: "flex", width: "fit-content" }}
-		/>
-	);
-}
-
-function TxAmount({ t, baseCurrency }: { t: Transaction; baseCurrency: string }) {
-	return (
-		<>
-			<Typography variant="body2" sx={{ fontWeight: 600, color: TYPE_AMOUNT_COLOR[t.type] }}>
-				{TYPE_SIGN[t.type]}
-				<Money amount={t.amount} currency={t.currency} />
-			</Typography>
-			{t.type === "transfer" && t.to_account && t.to_account.currency !== t.currency && (
-				<Typography variant="caption" sx={{ color: "text.secondary", display: "block" }}>
-					→ <Money amount={t.to_amount ?? "0"} currency={t.to_account.currency} />
-				</Typography>
-			)}
-			{t.type !== "transfer" && t.currency !== baseCurrency && (
-				<Typography variant="caption" sx={{ color: "text.secondary", display: "block" }}>
-					≈ {TYPE_SIGN[t.type]}
-					<Money amount={t.base_amount} currency={baseCurrency} /> @ {Number(t.exchange_rate)}
-				</Typography>
-			)}
-		</>
-	);
-}
-
-function TxActions({
-	t,
-	onConvert,
-	onSplit,
-	onRefund,
-	onDuplicate,
-	onEdit,
-	onDelete,
-}: {
-	t: Transaction;
-	onConvert: () => void;
-	onSplit: () => void;
-	onRefund: () => void;
-	onDuplicate: () => void;
-	onEdit: () => void;
-	onDelete: () => void;
-}) {
-	if (t.adjustment)
-		return (
-			<IconButton aria-label="Delete" title="Delete" size="small" onClick={onDelete}>
-				<DeleteOutlineIcon fontSize="small" />
-			</IconButton>
-		);
-	return (
-		<>
-			{canRefund(t) && (
-				<IconButton aria-label="Refund" title="Refund" size="small" onClick={onRefund}>
-					<UndoIcon fontSize="small" />
-				</IconButton>
-			)}
-			{canLinkRefund(t) && (
-				<IconButton
-					aria-label="Link to a purchase"
-					title="This is a refund: link it to the purchase"
-					size="small"
-					onClick={onRefund}
-				>
-					<InsertLinkOutlinedIcon fontSize="small" />
-				</IconButton>
-			)}
-			{canSplitSalary(t) && (
-				<IconButton
-					aria-label="Split salary"
-					title="Split this salary between accounts and goals"
-					size="small"
-					onClick={onSplit}
-				>
-					<CallSplitIcon fontSize="small" />
-				</IconButton>
-			)}
-			{t.type === "expense" && !t.subscription && (
-				<IconButton
-					aria-label="Make subscription"
-					title="Make subscription"
-					size="small"
-					onClick={onConvert}
-				>
-					<AutorenewIcon fontSize="small" />
-				</IconButton>
-			)}
-			{!isRefund(t) && (
-				<IconButton aria-label="Duplicate" title="Duplicate" size="small" onClick={onDuplicate}>
-					<ContentCopyOutlinedIcon fontSize="small" />
-				</IconButton>
-			)}
-			<IconButton aria-label="Edit" title="Edit" size="small" onClick={onEdit}>
-				<EditOutlinedIcon fontSize="small" />
-			</IconButton>
-			<IconButton aria-label="Delete" title="Delete" size="small" onClick={onDelete}>
-				<DeleteOutlineIcon fontSize="small" />
-			</IconButton>
-		</>
 	);
 }
 
@@ -514,12 +299,7 @@ const TransactionsTable = memo(function TransactionsTable({
 	onToggle,
 	onToggleAll,
 	baseCurrency,
-	onConvert,
-	onSplit,
-	onRefund,
-	onDuplicate,
-	onEdit,
-	onDelete,
+	onOpen,
 }: {
 	items: Transaction[];
 	selected: ReadonlySet<string>;
@@ -527,18 +307,19 @@ const TransactionsTable = memo(function TransactionsTable({
 	onToggle: (id: string) => void;
 	onToggleAll: () => void;
 	baseCurrency: string;
-	onConvert: (t: Transaction) => void;
-	onSplit: (t: Transaction) => void;
-	onRefund: (t: Transaction) => void;
-	onDuplicate: (t: Transaction) => void;
-	onEdit: (t: Transaction) => void;
-	onDelete: (t: Transaction) => void;
+	onOpen: (t: Transaction) => void;
 }) {
+	const today = useMemo(() => localToday(), []);
 	return (
 		<ResponsiveTable
 			rows={items}
 			getKey={(t) => t.id}
-			minWidth={820}
+			minWidth={560}
+			groups={{
+				key: (t) => t.transaction_date,
+				label: (date) => dayHeading(date, today),
+				colSpan: 3,
+			}}
 			head={
 				<TableRow>
 					<TableCell padding="checkbox">
@@ -550,16 +331,18 @@ const TransactionsTable = memo(function TransactionsTable({
 							slotProps={{ input: { "aria-label": "Select all transactions on this page" } }}
 						/>
 					</TableCell>
-					<TableCell>Date</TableCell>
 					<TableCell>Details</TableCell>
-					<TableCell>Method</TableCell>
 					<TableCell align="right">Amount</TableCell>
-					<TableCell align="right" sx={{ width: 100 }} />
 				</TableRow>
 			}
 			renderRow={(t) => (
-				<TableRow hover selected={selected.has(t.id)}>
-					<TableCell padding="checkbox">
+				<TableRow
+					hover
+					selected={selected.has(t.id)}
+					onClick={() => onOpen(t)}
+					sx={{ cursor: "pointer" }}
+				>
+					<TableCell padding="checkbox" onClick={(e) => e.stopPropagation()}>
 						<Checkbox
 							size="small"
 							checked={selected.has(t.id)}
@@ -567,69 +350,35 @@ const TransactionsTable = memo(function TransactionsTable({
 							slotProps={{ input: { "aria-label": `Select ${txTitle(t)}` } }}
 						/>
 					</TableCell>
-					<TableCell sx={{ whiteSpace: "nowrap", color: "text.secondary" }}>
-						{formatDate(t.transaction_date)}
-						{t.transaction_time && (
-							<Typography variant="caption" sx={{ display: "block" }}>
-								{formatTime(t.transaction_time)}
-							</Typography>
-						)}
-					</TableCell>
 					<TableCell>
-						<Typography variant="body2" sx={{ fontWeight: 500 }}>
-							{txTitle(t)}
-						</Typography>
-						<TxSubtitle t={t} />
-						{t.subscription && (
-							<Box sx={{ mt: 0.5 }}>
-								<TxSubscriptionChip t={t} />
+						<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+							<TxTile t={t} size={36} />
+							<Box sx={{ minWidth: 0 }}>
+								<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+									<Box
+										component="button"
+										type="button"
+										sx={{
+											all: "unset",
+											cursor: "pointer",
+											fontSize: "0.875rem",
+											fontWeight: 500,
+											borderRadius: "var(--shape-xs)",
+											"&:focus-visible": { outline: "2px solid var(--md-sys-color-primary)" },
+										}}
+									>
+										{txRowTitle(t)}
+									</Box>
+									<TxStatusPill t={t} today={today} />
+								</Box>
+								<Typography variant="caption" sx={{ color: "text.secondary", display: "block" }}>
+									{txRowLine(t)}
+								</Typography>
 							</Box>
-						)}
-						{(isRefund(t) || wasRefunded(t)) && (
-							<Box sx={{ mt: 0.5 }}>
-								<TxRefundChip t={t} />
-							</Box>
-						)}
-						{t.group && (
-							<Box sx={{ mt: 0.5 }}>
-								<TxGroupChip t={t} />
-							</Box>
-						)}
-						{(t.adjustment || t.account?.exclude_from_stats) && (
-							<Box sx={{ mt: 0.5, display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-								<TxStatsChips t={t} />
-							</Box>
-						)}
-						{t.tags.length > 0 && (
-							<Box sx={{ mt: 0.5, display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-								<TagChips tags={t.tags} />
-							</Box>
-						)}
-					</TableCell>
-					<TableCell>
-						<TxMethodChip t={t} />
-						{t.type !== "transfer" && t.account && (
-							<Typography
-								variant="caption"
-								sx={{ display: "block", color: "text.secondary", mt: 0.5 }}
-							>
-								{t.account.name}
-							</Typography>
-						)}
+						</Box>
 					</TableCell>
 					<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
 						<TxAmount t={t} baseCurrency={baseCurrency} />
-					</TableCell>
-					<TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
-						<TxActions
-							t={t}
-							onConvert={() => onConvert(t)}
-							onSplit={() => onSplit(t)}
-							onRefund={() => onRefund(t)}
-							onDuplicate={() => onDuplicate(t)}
-							onEdit={() => onEdit(t)}
-							onDelete={() => onDelete(t)}
-						/>
 					</TableCell>
 				</TableRow>
 			)}
@@ -646,60 +395,45 @@ const TransactionsTable = memo(function TransactionsTable({
 					}
 					leading={<TxTile t={t} />}
 					primary={
-						<Typography variant="body2" sx={{ fontWeight: 500 }}>
-							{txTitle(t)}
-						</Typography>
+						<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+							<Typography variant="body2" sx={{ fontWeight: 500 }}>
+								{txRowTitle(t)}
+							</Typography>
+							<TxStatusPill t={t} today={today} />
+						</Box>
 					}
 					secondary={
-						(txSubtitle(t) || t.attachment_count + t.link_count > 0) && <TxSubtitle t={t} />
-					}
-					end={<TxAmount t={t} baseCurrency={baseCurrency} />}
-					endSecondary={
-						<Typography variant="caption" sx={{ display: "block", color: "text.secondary" }}>
-							{formatWhen(t.transaction_date, t.transaction_time)}
+						<Typography variant="caption" sx={{ color: "text.secondary" }}>
+							{txRowLine(t)}
 						</Typography>
 					}
-					brief={
-						<>
-							{t.type !== "transfer" && t.account && (
-								<Typography variant="caption" noWrap sx={{ color: "text.secondary", minWidth: 0 }}>
-									{t.account.name}
-								</Typography>
-							)}
-							<TagChips tags={t.tags} />
-						</>
-					}
-					meta={
-						<>
-							<TxMethodChip t={t} />
-							{t.type !== "transfer" && t.account && (
-								<Typography variant="caption" sx={{ color: "text.secondary" }}>
-									{t.account.name}
-								</Typography>
-							)}
-							<TxSubscriptionChip t={t} />
-							<TxRefundChip t={t} />
-							<TxGroupChip t={t} />
-							<TxStatsChips t={t} />
-							<TagChips tags={t.tags} />
-						</>
-					}
-					actions={
-						<TxActions
-							t={t}
-							onConvert={() => onConvert(t)}
-							onSplit={() => onSplit(t)}
-							onRefund={() => onRefund(t)}
-							onDuplicate={() => onDuplicate(t)}
-							onEdit={() => onEdit(t)}
-							onDelete={() => onDelete(t)}
-						/>
-					}
+					end={<TxAmount t={t} baseCurrency={baseCurrency} />}
+					endSecondary={<CardsDate t={t} />}
+					onOpen={() => onOpen(t)}
 				/>
 			)}
 		/>
 	);
 });
+
+/** "Planned" or "Overdue" beside a title: the one status worth a glance in the list. */
+function TxStatusPill({ t, today }: { t: Transaction; today: string }) {
+	if (!t.planned) return null;
+	const late = isOverdue(t, today);
+	return (
+		<TonalChip accent={late ? ACCENT.pink : ACCENT.amber} label={late ? "Overdue" : "Planned"} />
+	);
+}
+
+/** The date under a card's amount, only in the cards view: the table view has day headings. */
+function CardsDate({ t }: { t: Transaction }) {
+	if (useViewMode() !== "cards") return null;
+	return (
+		<Typography variant="caption" sx={{ display: "block", color: "text.secondary" }}>
+			{formatWhen(t.transaction_date, t.transaction_time)}
+		</Typography>
+	);
+}
 
 /** The table with row selection: a bar for the selected rows, and the dialogs for what it offers. */
 function TransactionList({
@@ -746,6 +480,9 @@ function TransactionList({
 		[items, selection.selected, selection.wide],
 	);
 	const [linking, setLinking] = useState(false);
+	// the transaction whose drawer is open; the id stays while the drawer slides out
+	const [openId, setOpenId] = useState<string | null>(null);
+	const [drawerOpen, setDrawerOpen] = useState(false);
 
 	return (
 		<>
@@ -805,6 +542,16 @@ function TransactionList({
 				selectionState={selection.state}
 				onToggle={selection.toggle}
 				onToggleAll={selection.toggleAll}
+				onOpen={(t) => {
+					setOpenId(t.id);
+					setDrawerOpen(true);
+				}}
+			/>
+			<TransactionDrawer
+				transaction={items.find((t) => t.id === openId) ?? null}
+				open={drawerOpen}
+				baseCurrency={baseCurrency}
+				onClose={() => setDrawerOpen(false)}
 				onConvert={onConvert}
 				onSplit={onSplit}
 				onRefund={onRefund}
