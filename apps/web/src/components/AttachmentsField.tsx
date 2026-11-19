@@ -149,7 +149,8 @@ export default function AttachmentsField({
 					Or a link to an online receipt or order page. Drop files here.
 				</Typography>
 			</Box>
-			<Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+			{/* room under the keys: their edge and shadow hang below them */}
+			<Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", pb: 1.5 }}>
 				<Button
 					size="small"
 					variant="outlined"

@@ -48,7 +48,7 @@ export default function LinkAdder({
 	}
 
 	return (
-		<Box sx={{ display: "grid", gap: 1 }}>
+		<Box sx={{ display: "grid", gap: 1.5, mt: 0.5 }}>
 			<FormTextField
 				control={control}
 				name="url"
@@ -68,7 +68,7 @@ export default function LinkAdder({
 				size="small"
 				slotProps={{ htmlInput: { maxLength: 200 } }}
 			/>
-			<Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
+			<Box sx={{ display: "flex", gap: 1.5, justifyContent: "flex-end", pb: 1 }}>
 				<Button size="small" color="inherit" onClick={onClose}>
 					Cancel
 				</Button>

@@ -93,6 +93,9 @@ export default function TransactionForm({
 	const [busy, setBusy] = useState(false);
 	const [another, setAnother] = useState(false);
 	const [savingTemplate, setSavingTemplate] = useState(false);
+	// The template the form started from. It lives here, not in the picker: filling the form
+	// remounts the fields (they are keyed on `round`), which would forget it.
+	const [templateId, setTemplateId] = useState<string | null>(null);
 	const accounts = accountChoices(activeAccounts, transaction);
 	const firstSeed = transaction ? seedFromTransaction(transaction) : startSeed;
 	const splits = useSplits(firstSeed);
@@ -162,6 +165,7 @@ export default function TransactionForm({
 					if (text) notify(text, "warning");
 				if (another && !transaction) {
 					fillFrom(seedAfterSave(values, state));
+					setTemplateId(null);
 					refocus = true; // the form was cleared: ready for the next one (once it is enabled again)
 				} else sheet.close();
 				if (created) onCreated?.(created);
@@ -185,7 +189,14 @@ export default function TransactionForm({
 				<Grid container columnSpacing={2} key={fields.round}>
 					{!transaction && templates.length > 0 && (
 						<Cell size={12}>
-							<TemplatePicker templates={templates} onPick={(t) => fillFrom(seedFromTemplate(t))} />
+							<TemplatePicker
+								templates={templates}
+								picked={templateId}
+								onPick={(t) => {
+									fillFrom(seedFromTemplate(t));
+									setTemplateId(t.id);
+								}}
+							/>
 						</Cell>
 					)}
 					<Cell size={12}>

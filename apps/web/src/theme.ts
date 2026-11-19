@@ -477,9 +477,29 @@ const theme = createTheme({
 							},
 						},
 						{
+							// Every destructive button (Delete, Move to trash): the deep red as the face and the
+							// pale pink as the text. These are the error container's two roles, swapped in light
+							// mode, where a pale face looked cheap; dark mode already has them that way round.
 							props: { variant: "contained", color: "error" },
 							style: {
-								"--key-edge": "color-mix(in srgb, var(--mui-palette-error-main) 58%, black)",
+								"--key-face": "var(--md-sys-color-on-error-container)",
+								"--key-ink": "var(--md-sys-color-error-container)",
+								"[data-dark] &": {
+									"--key-face": "var(--md-sys-color-error-container)",
+									"--key-ink": "var(--md-sys-color-on-error-container)",
+								},
+								"@media (prefers-color-scheme: dark)": {
+									":root:not([data-light]):not([data-dark]) &": {
+										"--key-face": "var(--md-sys-color-error-container)",
+										"--key-ink": "var(--md-sys-color-on-error-container)",
+									},
+								},
+								backgroundColor: "var(--key-face)",
+								color: "var(--key-ink)",
+								"--key-edge": "color-mix(in srgb, var(--key-face) 62%, black)",
+								"&:hover": {
+									backgroundColor: "color-mix(in srgb, var(--key-face) 90%, var(--key-ink))",
+								},
 							},
 						},
 						{
