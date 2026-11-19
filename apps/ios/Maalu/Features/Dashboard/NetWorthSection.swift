@@ -12,8 +12,7 @@ struct NetWorthSection: View {
             LabeledContent("Liabilities") { MoneyText(summary.liabilities, currency: summary.currency) }
             if let change {
                 LabeledContent("Change over the month") {
-                    Text(change, format: .currency(code: summary.currency).presentation(.isoCode).sign(strategy: .always()))
-                        .numericFont()
+                    MoneyText(change, currency: summary.currency, sign: .always())
                 }
             }
             if trend.count > 1 {

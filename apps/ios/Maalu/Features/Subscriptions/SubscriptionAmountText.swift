@@ -6,19 +6,11 @@ struct SubscriptionAmountText: View {
     let currency: String
     let varies: Bool
 
-    private var style: Decimal.FormatStyle.Currency {
-        .currency(code: currency).presentation(.isoCode)
-    }
-
     var body: some View {
-        let value = Money.decimal(amount) ?? 0
-        Group {
-            if varies {
-                Text("about \(value, format: style)")
-            } else {
-                Text(value, format: style)
-            }
+        if varies {
+            Text("about \(MoneyFormat.string(amount, currency: currency))").numericFont()
+        } else {
+            MoneyText(amount, currency: currency)
         }
-        .numericFont()
     }
 }

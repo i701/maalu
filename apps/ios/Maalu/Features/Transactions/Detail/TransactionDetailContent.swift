@@ -22,7 +22,7 @@ struct TransactionDetailContent: View {
                 if let account = transaction.account { LabeledContent(transaction.type == .transfer ? "From" : "Account", value: account.name) }
                 if let toAccount = transaction.toAccount { LabeledContent("To", value: toAccount.name) }
                 if let received, let toAccount = transaction.toAccount {
-                    LabeledContent("Arrived") { Text(received, format: .currency(code: toAccount.currency).presentation(.isoCode)) }
+                    LabeledContent("Arrived") { MoneyText(received, currency: toAccount.currency) }
                 }
                 if let rate { LabeledContent("Exchange rate", value: rate.formatted()) }
             }

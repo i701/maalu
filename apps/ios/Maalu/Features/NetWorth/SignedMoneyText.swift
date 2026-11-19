@@ -6,8 +6,7 @@ struct SignedMoneyText: View {
     let currency: String
 
     var body: some View {
-        Text(value, format: .currency(code: currency).presentation(.isoCode).sign(strategy: .always(showZero: false)))
-            .numericFont()
+        MoneyText(value, currency: currency, sign: .always(showZero: false))
             .foregroundStyle(value > 0 ? Color.green : value < 0 ? Color.red : Color.secondary)
     }
 }

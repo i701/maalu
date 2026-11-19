@@ -10,6 +10,12 @@ struct RootView: View {
             LoginView()
         } else {
             MainTabs()
+                .task(id: session.token) { await syncSettings() }
         }
+    }
+
+    private func syncSettings() async {
+        guard let api = session.api else { return }
+        await ShortNumbers.sync(using: api)
     }
 }

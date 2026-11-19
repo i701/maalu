@@ -6,11 +6,9 @@ struct TransactionAmount: View {
     var body: some View {
         if let value = transaction.signedAmount {
             if transaction.type == .transfer {
-                Text(value, format: .currency(code: transaction.currency).presentation(.isoCode))
-                    .numericFont()
+                MoneyText(value, currency: transaction.currency)
             } else {
-                Text(value, format: .currency(code: transaction.currency).presentation(.isoCode).sign(strategy: .always()))
-                    .numericFont()
+                MoneyText(value, currency: transaction.currency, sign: .always())
                     .foregroundStyle(transaction.type == .income ? Color.green : Color.red)
             }
         } else {

@@ -1834,7 +1834,12 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Core/MoneyFormat.swift",
+          "apps/ios/Maalu/Shared/MoneyText.swift",
+          "apps/ios/Maalu/Features/More/ShortNumbersSection.swift"
+        ]
       }
     },
     {

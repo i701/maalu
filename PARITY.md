@@ -9,9 +9,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 67 | 59 | 31 |
+| ✅ done | 67 | 59 | 32 |
 | 🟡 partial | 0 | 1 | 0 |
-| ❌ missing | 0 | 3 | 32 |
+| ❌ missing | 0 | 3 | 31 |
 | ➖ n/a | 1 | 5 | 5 |
 
 ## Still to build on Android (4)
@@ -21,7 +21,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (32)
+## Still to build on iOS (31)
 
 - ❌ **Two-factor sign-in** (Sign in and security).
 - ❌ **Set up and manage two-factor** (Sign in and security).
@@ -51,7 +51,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Email digest** (Notifications).
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Settings** (Settings and the rest).
-- ❌ **Short numbers** (Settings and the rest).
 - ❌ **Backup and restore** (Settings and the rest).
 - ❌ **Guides** (Settings and the rest).
 - ❌ **Health check** (Settings and the rest).
@@ -174,7 +173,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | Feature | Web | Android | iOS |
 |---|:---:|:---:|:---:|
 | **Settings**<br>Account details, numbers display, templates switch, default account and the notification and security cards. | ✅ done | ✅ done | ❌ missing |
-| **Short numbers**<br>Show large amounts as 1.23K with the exact amount a tap away. | ✅ done | ✅ done | ❌ missing |
+| **Short numbers**<br>Show large amounts as 1.23K with the exact amount a tap away. | ✅ done | ✅ done | ✅ done |
 | **Backup and restore**<br>Download everything you own as one file and restore it into an empty account. | ✅ done | ❌ missing | ❌ missing |
 | **Guides**<br>The in-app guides with search; on the app they are generated from the web's. | ✅ done | ✅ done | ❌ missing |
 | **Install the app**<br>Add to home screen (web), or the app itself. | ✅ done | ➖ n/a | ➖ n/a |
