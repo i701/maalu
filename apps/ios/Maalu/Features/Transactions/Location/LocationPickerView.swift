@@ -8,6 +8,7 @@ struct LocationPickerView: View {
     @State private var model: LocationPickerModel
     @State private var position: MapCameraPosition
     @State private var center: CLLocationCoordinate2D?
+    @State private var isFullScreen = false
     private let onSave: (TransactionLocation?) -> Void
 
     init(location: TransactionLocation?, onSave: @escaping (TransactionLocation?) -> Void) {
@@ -24,16 +25,8 @@ struct LocationPickerView: View {
         NavigationStack {
             List {
                 Section {
-                    MapReader { proxy in
-                        Map(position: $position) {
-                            if let location = model.location {
-                                Marker(location.label, coordinate: location.coordinate)
-                            }
-                        }
-                        .onTapGesture { point in drop(proxy.convert(point, from: .local)) }
-                        .onMapCameraChange { context in center = context.region.center }
-                    }
-                    .frame(height: 300)
+                    LocationPickMap(model: model, position: $position, center: $center, isFullScreen: $isFullScreen)
+                        .frame(height: 300)
                     .listRowInsets(EdgeInsets())
                 } footer: {
                     Text("Tap the map to put the pin there.")
@@ -61,6 +54,10 @@ struct LocationPickerView: View {
                     Button("Remove Location", systemImage: "mappin.slash", role: .destructive, action: model.remove)
                 }
             }
+            .fullScreenCover(isPresented: $isFullScreen) {
+                LocationPickMap(model: model, position: $position, center: $center, isFullScreen: $isFullScreen)
+                    .ignoresSafeArea(edges: .bottom)
+            }
             .navigationTitle("Location")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -78,11 +75,6 @@ struct LocationPickerView: View {
         withAnimation {
             position = .region(MKCoordinateRegion(center: coordinate, latitudinalMeters: 600, longitudinalMeters: 600))
         }
-    }
-
-    private func drop(_ coordinate: CLLocationCoordinate2D?) {
-        guard let coordinate else { return }
-        model.drop(at: coordinate)
     }
 
     private func useTyped() {

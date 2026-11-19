@@ -6,6 +6,7 @@ struct PlacesView: View {
     @Environment(Session.self) private var session
     @State private var model = PlacesModel()
     @State private var position = MapCameraPosition.automatic
+    @State private var isFullScreen = false
 
     var body: some View {
         @Bindable var model = model
@@ -23,7 +24,7 @@ struct PlacesView: View {
             }
             if !model.places.isEmpty {
                 Section {
-                    PlacesMap(model: model, position: $position, onSelect: select)
+                    PlacesMap(model: model, position: $position, isFullScreen: $isFullScreen, onSelect: select)
                         .frame(height: 320)
                         .listRowInsets(EdgeInsets())
                 } footer: {
@@ -41,6 +42,10 @@ struct PlacesView: View {
             }
         }
         .overlay { PlacesPlaceholder(model: model) }
+        .fullScreenCover(isPresented: $isFullScreen) {
+            PlacesMap(model: model, position: $position, isFullScreen: $isFullScreen, onSelect: select)
+                .ignoresSafeArea(edges: .bottom)
+        }
         .navigationTitle("Places")
         .navigationBarTitleDisplayMode(.inline)
         .refreshable { await load() }

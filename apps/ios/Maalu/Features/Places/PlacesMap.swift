@@ -5,7 +5,9 @@ import SwiftUI
 struct PlacesMap: View {
     let model: PlacesModel
     @Binding var position: MapCameraPosition
+    @Binding var isFullScreen: Bool
     let onSelect: (PlaceTotal) -> Void
+    @AppStorage(MapLook.key) private var look = MapLook.map
 
     var body: some View {
         Map(position: $position) {
@@ -24,9 +26,11 @@ struct PlacesMap: View {
                 .annotationTitles(.hidden)
             }
         }
+        .mapStyle(look.style)
         .mapControls {
             MapCompass()
             MapScaleView()
         }
+        .overlay(alignment: .topTrailing) { MapButtons(isFullScreen: $isFullScreen) }
     }
 }
