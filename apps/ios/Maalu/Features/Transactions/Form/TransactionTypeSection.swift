@@ -11,7 +11,12 @@ struct TransactionTypeSection: View {
                 }
             }
             .pickerStyle(.segmented)
-            DecimalField("Amount", value: $model.draft.amount)
+            if model.draft.hasItems {
+                AmountRow { Text("Amount") } amount: { MoneyText(model.draft.itemsTotal, currency: model.currency) }
+                    .foregroundStyle(.secondary)
+            } else {
+                DecimalField("Amount", value: $model.draft.amount)
+            }
         }
     }
 }

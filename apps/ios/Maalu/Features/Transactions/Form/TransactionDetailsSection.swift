@@ -5,8 +5,10 @@ struct TransactionDetailsSection: View {
 
     var body: some View {
         Section {
-            NavigationLink(value: NameField.category) {
-                LabeledContent("Category", value: model.draft.category.isEmpty ? String(localized: "Choose") : model.draft.category)
+            if !model.draft.hasItems {
+                NavigationLink(value: NameField.category) {
+                    LabeledContent("Category", value: model.draft.category.isEmpty ? String(localized: "Choose") : model.draft.category)
+                }
             }
             NavigationLink(value: NameField.vendor) {
                 LabeledContent("Vendor", value: model.draft.vendor.isEmpty ? String(localized: "None") : model.draft.vendor)

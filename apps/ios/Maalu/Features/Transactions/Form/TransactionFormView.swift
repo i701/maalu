@@ -20,6 +20,7 @@ struct TransactionFormView: View {
                 TransactionAccountSection(model: model)
                 if model.draft.type != .transfer {
                     TransactionDetailsSection(model: model)
+                    TransactionItemsSection(model: model)
                 }
                 TransactionDateSection(model: model)
                 TransactionLocationSection(model: model)
@@ -75,6 +76,8 @@ struct TransactionFormView: View {
                     NamePickerView(title: "Category", options: model.categories, selection: $model.draft.category)
                 case .vendor:
                     NamePickerView(title: "Vendor", options: model.vendors, allowsNone: true, selection: $model.draft.vendor)
+                case .itemCategory(let id):
+                    NamePickerView(title: "Category", options: model.categories, selection: itemCategory(id))
                 }
             }
             .navigationDestination(for: TagsRoute.self) { _ in
@@ -82,6 +85,17 @@ struct TransactionFormView: View {
             }
             .task { await load() }
         }
+    }
+
+    /// The category of one item, by its id, for the picker.
+    private func itemCategory(_ id: UUID) -> Binding<String> {
+        Binding(
+            get: { model.draft.items.first { $0.id == id }?.category ?? "" },
+            set: { name in
+                guard let index = model.draft.items.firstIndex(where: { $0.id == id }) else { return }
+                model.draft.items[index].category = name
+            }
+        )
     }
 
     private func load() async {

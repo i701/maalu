@@ -75,6 +75,9 @@ final class TransactionFormModel {
     }
     var toAccount: Account? { accounts.first { $0.id == draft.toAccountID } }
     var problem: LocalizedStringResource? { draft.problem(accounts: accounts, baseCurrency: baseCurrency) }
+
+    /// The chosen account's currency, which the amount is in.
+    var currency: String { accounts.first { $0.id == draft.accountID }?.currency ?? baseCurrency }
     var canSave: Bool { !isLoading && !isSaving && problem == nil }
 
     var needsRate: Bool {

@@ -18,6 +18,9 @@ struct TransactionDetailContent: View {
                     LabeledContent("Paid with", value: String(localized: transaction.paymentMethod.title))
                 }
             }
+            if !transaction.splits.isEmpty {
+                TransactionItemsList(items: transaction.splits, currency: transaction.currency)
+            }
             Section("Accounts") {
                 if let account = transaction.account { LabeledContent(transaction.type == .transfer ? "From" : "Account", value: account.name) }
                 if let toAccount = transaction.toAccount { LabeledContent("To", value: toAccount.name) }

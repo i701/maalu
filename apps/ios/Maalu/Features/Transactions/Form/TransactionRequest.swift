@@ -16,12 +16,14 @@ struct TransactionRequest: Encodable {
     var tags: [String]?
     var cardId: String?
     var location: TransactionLocation?
+    var splits: [SplitRequest]?
     /// On an edit, a blank vendor, note, time or card has to be sent as an explicit null to clear it.
     var clearsVendor = false
     var clearsDescription = false
     var clearsTime = false
     var clearsCard = false
     var clearsLocation = false
+    var clearsSplits = false
 
     private enum Keys: String, CodingKey {
         case type, amount, category, currency, planned, description, tags
@@ -35,7 +37,7 @@ struct TransactionRequest: Encodable {
         case vendorId = "vendor_id"
         case paymentMethod = "payment_method"
         case exchangeRate = "exchange_rate"
-        case latitude, longitude, place
+        case latitude, longitude, place, splits
     }
 
     func encode(to encoder: Encoder) throws {
@@ -66,6 +68,11 @@ struct TransactionRequest: Encodable {
             try container.encode(vendorName, forKey: .vendorName)
         } else if clearsVendor {
             try container.encodeNil(forKey: .vendorId)
+        }
+        if let splits {
+            try container.encode(splits, forKey: .splits)
+        } else if clearsSplits {
+            try container.encodeNil(forKey: .splits)
         }
         if let location {
             // all three together, so a name taken off on an edit goes too

@@ -38,6 +38,9 @@ struct SubscriptionFormView: View {
                     NamePickerView(title: "Category", options: model.categories, selection: $model.draft.category)
                 case .vendor:
                     NamePickerView(title: "Vendor", options: model.vendors, allowsNone: true, selection: $model.draft.vendor)
+                case .itemCategory:
+                    // a subscription has no items
+                    EmptyView()
                 }
             }
             .task { await load() }

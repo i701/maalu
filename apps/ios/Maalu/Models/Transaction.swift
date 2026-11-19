@@ -45,8 +45,8 @@ struct Transaction: Decodable, Identifiable, Hashable {
         return String(deletedAt.prefix(10))
     }
 
-    /// Refunds, balance adjustments and purchases with items have their own rules on the web.
-    var canEdit: Bool { !isRefund && adjustment != true && splits.isEmpty }
+    /// Refunds and balance adjustments have their own rules on the web.
+    var canEdit: Bool { !isRefund && adjustment != true }
 
     var title: String {
         if let vendor { return vendor.name }

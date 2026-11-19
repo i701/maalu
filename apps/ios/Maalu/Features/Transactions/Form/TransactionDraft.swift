@@ -20,6 +20,12 @@ struct TransactionDraft {
     var planned = false
     /// Where it happened, if marked on the map; a copy and "add another" keep it, a template has none.
     var location: TransactionLocation?
+    /// A purchase split into items: the amount is then their total and the category the biggest item's.
+    var isSplit = false
+    var items: [PurchaseItemDraft] = []
+    var taxMode = TaxMode.none
+    /// The GST rate in percent, such as 8.
+    var taxRate: Decimal?
 
     init() {}
 
@@ -61,6 +67,16 @@ struct TransactionDraft {
         rate = Money.decimal(transaction.exchangeRate)
         planned = transaction.planned
         location = transaction.location
+        if !transaction.splits.isEmpty {
+            isSplit = true
+            items = transaction.splits.map(PurchaseItemDraft.init(saved:))
+            if let taxed = transaction.splits.first(where: { Money.decimal($0.taxAmount ?? "0") ?? 0 > 0 }),
+               let amount = Money.decimal(taxed.amount), let tax = Money.decimal(taxed.taxAmount ?? ""), amount > tax {
+                // the rate the saved tax works out at, so an item edited later is taxed the same way
+                taxMode = .included
+                taxRate = PurchaseItemDraft.rounded(tax / (amount - tax) * 100, places: 2)
+            }
+        }
     }
 
     /// A copy dated today and not planned; the rate comes fresh from the account.
@@ -88,8 +104,48 @@ struct TransactionDraft {
     }
 
     /// The first thing wrong with the draft, or nil when it can be sent. The server checks everything again.
+    /// Whether the items count: a transfer is never split.
+    var hasItems: Bool { isSplit && type != .transfer }
+
+    /// The sum of the complete items' line totals.
+    var itemsTotal: Decimal {
+        items.compactMap { $0.line(mode: taxMode, rate: taxRate)?.amount }.reduce(0, +)
+    }
+
+    /// What the transaction comes to: the amount typed, or with items their total.
+    var effectiveAmount: Decimal? { hasItems ? itemsTotal : amount }
+
+    /// The first thing wrong with the items, or nil.
+    var itemsProblem: LocalizedStringResource? {
+        if items.isEmpty { return "Add at least one item." }
+        let needsRate = taxMode != .none && items.contains { $0.lockedAmount == nil }
+        if needsRate, (taxRate ?? 0) <= 0 { return "Enter the GST rate, for example 8." }
+        for (index, item) in items.enumerated() {
+            let name = item.name.trimmingCharacters(in: .whitespaces)
+            if name.isEmpty { return "Item \(index + 1) needs a name." }
+            if item.category.trimmingCharacters(in: .whitespaces).isEmpty { return "\(name) needs a category." }
+            if item.line(mode: taxMode, rate: taxRate) == nil { return "\(name) needs a quantity and a price." }
+        }
+        return nil
+    }
+
+    /// The items as the API takes them: the line total and the tax in it.
+    var splitRequests: [SplitRequest] {
+        items.compactMap { item in
+            guard let line = item.line(mode: taxMode, rate: taxRate) else { return nil }
+            return SplitRequest(
+                name: item.name.trimmingCharacters(in: .whitespaces),
+                quantity: Money.string(PurchaseItemDraft.rounded(item.quantity ?? 1, places: 3)),
+                category: item.category.trimmingCharacters(in: .whitespaces),
+                amount: Money.string(line.amount),
+                taxAmount: line.tax.map(Money.string)
+            )
+        }
+    }
+
     func problem(accounts: [Account], baseCurrency: String) -> LocalizedStringResource? {
-        guard let amount, amount > 0 else { return "Enter an amount above zero." }
+        if hasItems, let itemsProblem { return itemsProblem }
+        guard let amount = effectiveAmount, amount > 0 else { return hasItems ? "The items add up to nothing." : "Enter an amount above zero." }
         let from = accounts.first { $0.id == accountID }
         if type == .transfer {
             let to = accounts.first { $0.id == toAccountID }
@@ -99,7 +155,7 @@ struct TransactionDraft {
             if from.currency != to.currency, (toAmount ?? 0) <= 0 { return "Enter how much arrives in the other currency." }
             return nil
         }
-        if category.trimmingCharacters(in: .whitespaces).isEmpty { return "Choose a category." }
+        if !hasItems, category.trimmingCharacters(in: .whitespaces).isEmpty { return "Choose a category." }
         if let from, from.currency != baseCurrency, (rate ?? 0) <= 0 { return "Enter the exchange rate." }
         return nil
     }
@@ -109,7 +165,7 @@ struct TransactionDraft {
         let to = accounts.first { $0.id == toAccountID }
         var request = TransactionRequest(
             type: type,
-            amount: Money.string(amount ?? 0),
+            amount: Money.string(effectiveAmount ?? 0),
             transactionDate: ISODate.string(date),
             accountId: from?.id,
             planned: planned ? true : (original?.planned == true ? false : nil)
@@ -132,7 +188,13 @@ struct TransactionDraft {
             if let from, let to, from.currency != to.currency { request.toAmount = toAmount.map(Money.string) }
             return request
         }
-        request.category = category.trimmingCharacters(in: .whitespaces)
+        if hasItems {
+            // the API takes the category from the biggest item
+            request.splits = splitRequests
+        } else {
+            request.category = category.trimmingCharacters(in: .whitespaces)
+            request.clearsSplits = original?.splits.isEmpty == false
+        }
         let vendor = vendor.trimmingCharacters(in: .whitespaces)
         request.vendorName = vendor.isEmpty ? nil : vendor
         request.clearsVendor = original != nil && vendor.isEmpty
