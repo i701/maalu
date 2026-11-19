@@ -35,14 +35,15 @@ struct AcceptSuggestionView: View {
                     Text(message).foregroundStyle(.red)
                 }
             }
+            .saving(model.isSaving)
             .navigationTitle("Add \(model.candidate.vendorName)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", role: .cancel) { dismiss() }
+                    Button("Cancel", role: .cancel) { dismiss() }.disabled(model.isSaving)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Add", action: accept).disabled(!model.canSave)
+                    SaveButton("Add", isSaving: model.isSaving, isEnabled: model.canSave, action: accept)
                 }
             }
         }

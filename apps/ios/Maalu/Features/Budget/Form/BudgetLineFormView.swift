@@ -71,14 +71,15 @@ struct BudgetLineFormView: View {
                 }
             }
             .overlay { if model.isLoading { ProgressView() } }
+            .saving(model.isSaving)
             .navigationTitle(model.isEditing ? "Edit Limit" : "New Limit")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", role: .cancel) { dismiss() }
+                    Button("Cancel", role: .cancel) { dismiss() }.disabled(model.isSaving)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save", action: save).disabled(!model.canSave)
+                    SaveButton(isSaving: model.isSaving, isEnabled: model.canSave, action: save)
                 }
             }
             .task { await load() }

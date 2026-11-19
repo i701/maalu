@@ -42,11 +42,13 @@ struct TransactionFormView: View {
             }
             .sensoryFeedback(.success, trigger: model.savedCount)
             .overlay { if model.isLoading { ProgressView() } }
+            .saving(model.isSaving)
             .navigationTitle(model.isEditing ? "Edit Transaction" : "New Transaction")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(model.savedCount > 0 ? "Done" : "Cancel", role: .cancel, action: close)
+                        .disabled(model.isSaving)
                 }
                 ToolbarItem(placement: .primaryAction) {
                     if !model.isEditing {
@@ -56,10 +58,11 @@ struct TransactionFormView: View {
                             }
                             Button("Save as template", systemImage: "bookmark.fill") { isSavingTemplate = true }
                         }
+                        .disabled(model.isSaving)
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save", action: save).disabled(!model.canSave)
+                    SaveButton(isSaving: model.isSaving, isEnabled: model.canSave, action: save)
                 }
             }
             .sheet(isPresented: $isPickingTemplate) {

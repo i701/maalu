@@ -35,14 +35,15 @@ struct AdjustBalanceView: View {
                     Text(errorMessage).foregroundStyle(.red)
                 }
             }
+            .saving(isSaving)
             .navigationTitle("Adjust Balance")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", role: .cancel) { dismiss() }
+                    Button("Cancel", role: .cancel) { dismiss() }.disabled(isSaving)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save", action: save).disabled(isSaving || draft.problem != nil)
+                    SaveButton(isSaving: isSaving, isEnabled: draft.problem == nil, action: save)
                 }
             }
         }

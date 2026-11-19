@@ -34,17 +34,17 @@ struct TemplateNameSheet: View {
                     Text(errorMessage).foregroundStyle(.red)
                 }
             }
+            .saving(isSaving)
             .navigationTitle(String(localized: title))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", role: .cancel) { dismiss() }
+                    Button("Cancel", role: .cancel) { dismiss() }.disabled(isSaving)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save", action: save).disabled(isSaving || Self.problem(name) != nil)
+                    SaveButton(isSaving: isSaving, isEnabled: Self.problem(name) == nil, action: save)
                 }
             }
-            .interactiveDismissDisabled(isSaving)
         }
         .task { isFocused = true }
     }

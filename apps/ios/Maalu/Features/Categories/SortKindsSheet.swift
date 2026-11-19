@@ -41,15 +41,15 @@ struct SortKindsSheet: View {
                     }
                 }
             }
-            .overlay { if model.isSaving { ProgressView() } }
+            .saving(model.isSaving)
             .navigationTitle("Needs and wants")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", role: .cancel) { dismiss() }
+                    Button("Cancel", role: .cancel) { dismiss() }.disabled(model.isSaving)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save", action: save).disabled(model.changedCount == 0 || model.isSaving)
+                    SaveButton(isSaving: model.isSaving, isEnabled: model.changedCount > 0, action: save)
                 }
             }
         }

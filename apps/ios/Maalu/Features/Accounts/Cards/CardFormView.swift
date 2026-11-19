@@ -40,15 +40,15 @@ struct CardFormView: View {
                     Text(message).foregroundStyle(.red)
                 }
             }
-            .overlay { if model.isSaving { ProgressView() } }
+            .saving(model.isSaving)
             .navigationTitle(model.isEditing ? "Edit Card" : model.kind == .credit ? "New Credit Card" : "New Debit Card")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", role: .cancel) { dismiss() }
+                    Button("Cancel", role: .cancel) { dismiss() }.disabled(model.isSaving)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save", action: save).disabled(!model.canSave)
+                    SaveButton(isSaving: model.isSaving, isEnabled: model.canSave, action: save)
                 }
             }
         }

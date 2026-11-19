@@ -46,14 +46,15 @@ struct MoveMoneyView: View {
                     Text(message).foregroundStyle(.red)
                 }
             }
+            .saving(model.isSaving)
             .navigationTitle("Move money to \(line.name)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", role: .cancel) { dismiss() }
+                    Button("Cancel", role: .cancel) { dismiss() }.disabled(model.isSaving)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Move", action: save).disabled(!model.canSave)
+                    SaveButton("Move", isSaving: model.isSaving, isEnabled: model.canSave, action: save)
                 }
             }
         }
