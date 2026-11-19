@@ -40,7 +40,7 @@ final class CategoriesModel {
 
     /// Returns a message when the server refused, nil on success.
     func merge(_ category: Category, into target: Category, using api: Api) async -> String? {
-        let result: ApiResult<Category> = await api.postJSON("categories/\(category.id)/merge", body: CategoryMergeRequest(intoId: target.id))
+        let result: ApiResult<Category> = await api.postJSON("categories/\(category.id)/merge", body: MergeRequest(intoId: target.id))
         if case .failed(_, let message) = result { return message }
         await load(using: api)
         return nil

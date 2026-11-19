@@ -1,4 +1,4 @@
-struct CategoryMergeRequest: Encodable {
+struct MergeRequest: Encodable {
     var intoId: String
 
     private enum Keys: String, CodingKey {

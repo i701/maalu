@@ -9,9 +9,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 67 | 59 | 32 |
+| ✅ done | 67 | 59 | 33 |
 | 🟡 partial | 0 | 1 | 0 |
-| ❌ missing | 0 | 3 | 31 |
+| ❌ missing | 0 | 3 | 30 |
 | ➖ n/a | 1 | 5 | 5 |
 
 ## Still to build on Android (4)
@@ -21,7 +21,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (31)
+## Still to build on iOS (30)
 
 - ❌ **Two-factor sign-in** (Sign in and security).
 - ❌ **Set up and manage two-factor** (Sign in and security).
@@ -40,7 +40,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Transaction groups** (Transactions).
 - ❌ **Export to Excel** (Transactions).
 - ❌ **Tags** (Categories, tags and vendors).
-- ❌ **Vendors** (Categories, tags and vendors).
 - ❌ **A vendor's usual place** (Categories, tags and vendors).
 - ❌ **Make a subscription from a transaction** (Bills and subscriptions).
 - ❌ **Salary split rules** (Budget, goals and planning).
@@ -119,7 +118,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Categories**<br>Colours, one level of sub-categories, need or want, merge, and the default Salary category. | ✅ done | ✅ done | ✅ done |
 | **Sort every category into need or want**<br>One dialog to sort all categories (or only the unsorted ones) at once. | ✅ done | ✅ done | ✅ done |
 | **Tags**<br>Coloured labels that cut across categories, with merge. | ✅ done | ✅ done | ❌ missing |
-| **Vendors**<br>Address, contact, local or foreign, currency, usual category and tags, merge. | ✅ done | ✅ done | ❌ missing |
+| **Vendors**<br>Address, contact, local or foreign, currency, usual category and tags, merge. | ✅ done | ✅ done | ✅ done |
 | **A vendor's usual place**<br>A usual pin that a new transaction picks up. | ✅ done | ✅ done | ❌ missing |
 
 ## Bills and subscriptions

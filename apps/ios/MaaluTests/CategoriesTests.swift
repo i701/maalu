@@ -109,7 +109,7 @@ struct CategoriesTests {
     }
 
     @Test func mergeRequestUsesTheApisSpelling() throws {
-        let body = try self.body(CategoryMergeRequest(intoId: "food"))
+        let body = try self.body(MergeRequest(intoId: "food"))
         #expect(body["into_id"] as? String == "food")
     }
 
