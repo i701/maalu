@@ -9,9 +9,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 67 | 59 | 34 |
+| ✅ done | 67 | 59 | 35 |
 | 🟡 partial | 0 | 1 | 0 |
-| ❌ missing | 0 | 3 | 29 |
+| ❌ missing | 0 | 3 | 28 |
 | ➖ n/a | 1 | 5 | 5 |
 
 ## Still to build on Android (4)
@@ -21,7 +21,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (29)
+## Still to build on iOS (28)
 
 - ❌ **Two-factor sign-in** (Sign in and security).
 - ❌ **Set up and manage two-factor** (Sign in and security).
@@ -44,7 +44,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Salary split rules** (Budget, goals and planning).
 - ❌ **Split a salary and the Pending screen** (Budget, goals and planning).
 - ❌ **Trends** (Dashboard and reports).
-- ❌ **Places map** (Dashboard and reports).
 - ❌ **Notifications** (Notifications).
 - ❌ **Email digest** (Notifications).
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
@@ -153,7 +152,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Compare**<br>One period against another: income, spending, what was kept and every category. | ✅ done | ✅ done | ✅ done |
 | **Trends**<br>Category by month, spending or income over 6, 12 or 24 months, as a table or stacked columns. | ✅ done | ✅ done | ❌ missing |
 | **Net worth and what moved it**<br>How net worth changed over a period and the drivers that explain it. | ✅ done | ✅ done | ✅ done |
-| **Places map**<br>Where spending went, as circles on a map sized by spend. | ✅ done | ✅ done | ❌ missing |
+| **Places map**<br>Where spending went, as circles on a map sized by spend. | ✅ done | ✅ done | ✅ done |
 
 ## Notifications
 

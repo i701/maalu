@@ -1710,7 +1710,12 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Places/PlacesView.swift",
+          "apps/ios/Maalu/Features/Places/PlacesMap.swift",
+          "apps/ios/Maalu/Features/Places/PlacesModel.swift"
+        ]
       },
       "routes": [
         "/places"
