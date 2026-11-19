@@ -36,6 +36,9 @@ struct TransactionDetailContent: View {
                     if transaction.planned { Label("Planned", systemImage: "calendar") }
                 }
             }
+            if let location = transaction.location {
+                TransactionLocationMap(location: location)
+            }
             TransactionFilesSection(model: files, canAdd: transaction.deletedAt == nil)
         }
     }

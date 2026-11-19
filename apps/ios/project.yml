@@ -28,6 +28,8 @@ targets:
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
         # A development server on the Mac is plain http (http://localhost:8000).
         INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsLocalNetworking: YES
+        # Only asked when Where I Am is pressed while marking a transaction on the map.
+        INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "Maalu uses your location only when you press Where I Am, to put a transaction's pin where you are."
         ENABLE_PREVIEWS: YES
   MaaluTests:
     type: bundle.unit-test

@@ -870,7 +870,12 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Transactions/Location/LocationPickerView.swift",
+          "apps/ios/Maalu/Features/Transactions/Location/LocationPickerModel.swift",
+          "apps/ios/Maalu/Models/TransactionLocation.swift"
+        ]
       },
       "api": [
         "/api/v1/places/search"

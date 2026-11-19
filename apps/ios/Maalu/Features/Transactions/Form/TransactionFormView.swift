@@ -22,6 +22,7 @@ struct TransactionFormView: View {
                     TransactionDetailsSection(model: model)
                 }
                 TransactionDateSection(model: model)
+                TransactionLocationSection(model: model)
                 if !model.isEditing {
                     TransactionAttachmentsSection(model: model)
                 }

@@ -9,9 +9,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 67 | 59 | 39 |
+| ✅ done | 67 | 59 | 40 |
 | 🟡 partial | 0 | 1 | 0 |
-| ❌ missing | 0 | 3 | 24 |
+| ❌ missing | 0 | 3 | 23 |
 | ➖ n/a | 1 | 5 | 5 |
 
 ## Still to build on Android (4)
@@ -21,7 +21,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (24)
+## Still to build on iOS (23)
 
 - ❌ **Set up and manage two-factor** (Sign in and security).
 - ❌ **Where you are signed in** (Sign in and security).
@@ -33,7 +33,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Bulk actions on selected rows** (Transactions).
 - ❌ **Refunds** (Transactions).
 - ❌ **Split a purchase into items** (Transactions).
-- ❌ **Mark a transaction on the map** (Transactions).
 - ❌ **Merge two entries into one transfer** (Transactions).
 - ❌ **Export to Excel** (Transactions).
 - ❌ **A vendor's usual place** (Categories, tags and vendors).
@@ -95,7 +94,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Refunds**<br>Give money back for a purchase (whole or by item), or link existing income to a purchase. | ✅ done | ✅ done | ❌ missing |
 | **Split a purchase into items**<br>Items with quantity, category and tax (GST included or excluded) that add up to the amount. | ✅ done | ✅ done | ❌ missing |
 | **Receipts and web links**<br>Photos and PDFs and web links on a transaction. | ✅ done | ✅ done | ✅ done |
-| **Mark a transaction on the map**<br>A pin and an optional place name, with place search by name. | ✅ done | ✅ done | ❌ missing |
+| **Mark a transaction on the map**<br>A pin and an optional place name, with place search by name. | ✅ done | ✅ done | ✅ done |
 | **Merge two entries into one transfer**<br>A suggestion card for pairs entered twice, and a manual merge when an entry has an exact match. | ✅ done | ✅ done | ❌ missing |
 | **Transaction groups**<br>Bundle related transactions under a name and see what they add up to. | ✅ done | ✅ done | ✅ done |
 | **Export to Excel**<br>Download what the filters show as a workbook with a summary and a sheet by category. | ✅ done | ❌ missing | ❌ missing |

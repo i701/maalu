@@ -15,11 +15,13 @@ struct TransactionRequest: Encodable {
     var transactionTime: String?
     var tags: [String]?
     var cardId: String?
+    var location: TransactionLocation?
     /// On an edit, a blank vendor, note, time or card has to be sent as an explicit null to clear it.
     var clearsVendor = false
     var clearsDescription = false
     var clearsTime = false
     var clearsCard = false
+    var clearsLocation = false
 
     private enum Keys: String, CodingKey {
         case type, amount, category, currency, planned, description, tags
@@ -33,6 +35,7 @@ struct TransactionRequest: Encodable {
         case vendorId = "vendor_id"
         case paymentMethod = "payment_method"
         case exchangeRate = "exchange_rate"
+        case latitude, longitude, place
     }
 
     func encode(to encoder: Encoder) throws {
@@ -63,6 +66,17 @@ struct TransactionRequest: Encodable {
             try container.encode(vendorName, forKey: .vendorName)
         } else if clearsVendor {
             try container.encodeNil(forKey: .vendorId)
+        }
+        if let location {
+            // all three together, so a name taken off on an edit goes too
+            let name = location.place.trimmingCharacters(in: .whitespaces)
+            try container.encode(location.latitude, forKey: .latitude)
+            try container.encode(location.longitude, forKey: .longitude)
+            try container.encode(name.isEmpty ? nil : name, forKey: .place)
+        } else if clearsLocation {
+            try container.encodeNil(forKey: .latitude)
+            try container.encodeNil(forKey: .longitude)
+            try container.encodeNil(forKey: .place)
         }
         if let description {
             try container.encode(description, forKey: .description)

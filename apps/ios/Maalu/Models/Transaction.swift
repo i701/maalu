@@ -27,8 +27,17 @@ struct Transaction: Decodable, Identifiable, Hashable {
     let deletedAt: String?
     /// The group it is bundled in, if any; at most one.
     let group: NamedRef?
+    let latitude: String?
+    let longitude: String?
+    let place: String?
 
     var isRefund: Bool { refundOf != nil }
+
+    /// Where it was marked on the map, if it was.
+    var location: TransactionLocation? {
+        guard let latitude, let longitude else { return nil }
+        return TransactionLocation(latitude: latitude, longitude: longitude, place: place ?? "")
+    }
 
     /// The day the transaction was deleted, as a calendar date (the API sends a full timestamp).
     var deletedDay: String? {

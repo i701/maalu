@@ -18,6 +18,8 @@ struct TransactionDraft {
     var rate: Decimal?
     /// A planned transaction counts toward nothing until it is marked as paid.
     var planned = false
+    /// Where it happened, if marked on the map; a copy and "add another" keep it, a template has none.
+    var location: TransactionLocation?
 
     init() {}
 
@@ -58,6 +60,7 @@ struct TransactionDraft {
         method = transaction.paymentMethod
         rate = Money.decimal(transaction.exchangeRate)
         planned = transaction.planned
+        location = transaction.location
     }
 
     /// A copy dated today and not planned; the rate comes fresh from the account.
@@ -69,7 +72,7 @@ struct TransactionDraft {
         planned = false
     }
 
-    /// What "Save and add another" leaves on the form: where the money went and how, without the amount or note.
+    /// What "Save and add another" leaves on the form: where the money went and how, and where it happened, without the amount or note.
     func nextEntry() -> TransactionDraft {
         var next = TransactionDraft()
         next.type = type
@@ -80,6 +83,7 @@ struct TransactionDraft {
         next.method = method
         next.tags = tags
         next.cardID = type == .expense ? cardID : nil
+        next.location = location
         return next
     }
 
@@ -120,6 +124,8 @@ struct TransactionDraft {
         // only an expense is paid with a card
         request.cardId = type == .expense ? cardID : nil
         request.clearsCard = original?.card != nil && request.cardId == nil
+        request.location = location
+        request.clearsLocation = original?.location != nil && location == nil
 
         if type == .transfer {
             request.toAccountId = to?.id
