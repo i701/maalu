@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Git: stage the work, never commit it
 
-**Never run `git commit` (or amend, cherry-pick or anything else that creates a commit), and never push.** The user makes every commit and push themselves. When a piece of work is finished (the checks pass and the parity file is current), do this instead:
+**Never run `git commit` (or amend, cherry-pick or anything else that creates a commit), and never push.** The user makes every commit and push themselves. When a piece of work is finished (the checks pass and the parity file is current: after any change to `parity/features.json`, run `just parity` so the generated `PARITY.md` follows it, and stage both), do this instead:
 
 1. `git add` exactly the files that belong to it (name them or the folder; never `git add -A` or `.`), so the user can look at `git diff --staged`. Do not stage `.claude/` or anything unrelated. Work that is two separate changes is staged as one change at a time, and the first is left for the user to commit before the second is staged.
 2. Give the user the **commit message** to use, in the reply, in a fenced block they can copy: a `type(scope): subject` line in the style of `git log` (for example `feat(ios): ...`, `fix(api): ...`), then a short body saying what changed and why. Do not add attribution lines. When the work should be several commits, give one message per commit and say which files each covers.
