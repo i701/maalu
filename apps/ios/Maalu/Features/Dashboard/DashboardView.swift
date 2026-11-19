@@ -54,6 +54,8 @@ struct DashboardView: View {
                     if let available = model.available { AvailableWorkingView(available: available) }
                 case .plan:
                     PlanView()
+                case .netWorth:
+                    NetWorthView()
                 case .cashFlowTable(let count):
                     CashFlowTableView(months: KeptMonth.months(from: model.months.suffix(count)), currency: model.currency)
                 }

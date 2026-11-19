@@ -1663,9 +1663,11 @@
         ]
       },
       "ios": {
-        "status": "partial",
-        "note": "Only the dashboard's net worth card (total, assets, liabilities, 30-day change and chart). Not the Net worth page with a chosen period and what moved it.",
+        "status": "done",
         "evidence": [
+          "apps/ios/Maalu/Features/NetWorth/NetWorthView.swift",
+          "apps/ios/Maalu/Features/NetWorth/NetWorthText.swift",
+          "apps/ios/Maalu/Features/NetWorth/NetWorthBar.swift",
           "apps/ios/Maalu/Features/Dashboard/NetWorthSection.swift"
         ]
       },

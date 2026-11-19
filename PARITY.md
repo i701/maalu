@@ -9,8 +9,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 67 | 59 | 28 |
-| 🟡 partial | 0 | 1 | 3 |
+| ✅ done | 67 | 59 | 29 |
+| 🟡 partial | 0 | 1 | 2 |
 | ❌ missing | 0 | 3 | 32 |
 | ➖ n/a | 1 | 5 | 5 |
 
@@ -21,11 +21,10 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (35)
+## Still to build on iOS (34)
 
 - 🟡 **Receipts and web links** (Transactions). Photos and PDFs added while making a new transaction, uploaded once it is saved. Not yet: seeing, opening or removing a transaction's files, files on an edit, or web links.
 - 🟡 **Limits for set dates** (Budget, goals and planning). Read only: limits for set dates are listed under the period their days touch, with days left. Not made, changed, repeated or deleted.
-- 🟡 **Net worth and what moved it** (Dashboard and reports). Only the dashboard's net worth card (total, assets, liabilities, 30-day change and chart). Not the Net worth page with a chosen period and what moved it.
 - ❌ **Two-factor sign-in** (Sign in and security).
 - ❌ **Set up and manage two-factor** (Sign in and security).
 - ❌ **Where you are signed in** (Sign in and security).
@@ -161,10 +160,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Cash flow**<br>Income and expenses per month, what was kept each month and kept in total, over 6 or 12 months. | ✅ done | ✅ done | ✅ done |
 | **Compare**<br>One period against another: income, spending, what was kept and every category. | ✅ done | ✅ done | ✅ done |
 | **Trends**<br>Category by month, spending or income over 6, 12 or 24 months, as a table or stacked columns. | ✅ done | ✅ done | ❌ missing |
-| **Net worth and what moved it**<br>How net worth changed over a period and the drivers that explain it. | ✅ done | ✅ done | 🟡 partial |
+| **Net worth and what moved it**<br>How net worth changed over a period and the drivers that explain it. | ✅ done | ✅ done | ✅ done |
 | **Places map**<br>Where spending went, as circles on a map sized by spend. | ✅ done | ✅ done | ❌ missing |
-
-- **Net worth and what moved it** (iOS): Only the dashboard's net worth card (total, assets, liabilities, 30-day change and chart). Not the Net worth page with a chosen period and what moved it.
 
 ## Notifications
 

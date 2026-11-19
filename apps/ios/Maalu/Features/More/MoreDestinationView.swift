@@ -11,6 +11,7 @@ struct MoreDestinationView: View {
         case "categories": CategoriesView()
         case "trash": TrashView()
         case "compare": CompareView()
+        case "net-worth": NetWorthView()
         default: ComingSoonView(title: item.title, systemImage: item.systemImage)
         }
     }

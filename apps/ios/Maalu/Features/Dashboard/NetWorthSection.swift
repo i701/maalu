@@ -19,6 +19,7 @@ struct NetWorthSection: View {
             if trend.count > 1 {
                 NetWorthChart(points: trend)
             }
+            NavigationLink("What moved it", value: DashboardRoute.netWorth)
         }
     }
 
