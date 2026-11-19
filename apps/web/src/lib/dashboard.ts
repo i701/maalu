@@ -49,3 +49,14 @@ export function spendingRows(categories: CategoryTotal[], top = 6): SpendingRow[
 	const rows = rest > 0 ? [...head, { name: "Other", total: rest }] : head;
 	return rows.map((r) => ({ ...r, share: r.total / sum }));
 }
+
+/**
+ * `visible` (the sections on show, in their default order) arranged by the user's saved order.
+ * Ids the save does not know (a new section, or one that was hidden) go last in default order, and
+ * saved ids that are not on show are skipped, so adding a card never breaks anyone's layout.
+ */
+export function orderSections(saved: readonly string[] | null, visible: readonly string[]) {
+	const rank = new Map((saved ?? []).map((id, index) => [id, index]));
+	// Array.sort is stable, so ids sharing the "unsaved" rank keep their default order
+	return visible.toSorted((a, b) => (rank.get(a) ?? rank.size) - (rank.get(b) ?? rank.size));
+}

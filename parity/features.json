@@ -1498,6 +1498,31 @@
       ]
     },
     {
+      "id": "dashboard-order",
+      "area": "reports",
+      "name": "Arrange the dashboard",
+      "summary": "Drag the dashboard's cards, or move them with arrows, into your own order; kept on the server.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/dashboard/SectionGrid.tsx",
+          "apps/web/src/routes/_protected/dashboard.tsx"
+        ]
+      },
+      "android": {
+        "status": "missing"
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "routes": [
+        "/dashboard"
+      ],
+      "api": [
+        "/api/v1/users/me"
+      ]
+    },
+    {
       "id": "dashboard-budget-goals",
       "area": "reports",
       "name": "Budget and goals card",

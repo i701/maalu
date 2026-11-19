@@ -114,6 +114,8 @@ class UserService:
                         f'"{account.name}" is archived. Unarchive it to use it'
                     )
             user.default_account_id = account_id
+        if "dashboard_order" in changes:
+            user.dashboard_order = changes["dashboard_order"]
         if "start_from_template" in changes:
             user.start_from_template = changes["start_from_template"]
         for flag in (

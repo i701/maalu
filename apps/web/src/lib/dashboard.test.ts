@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { CategoryTotal } from "#/types/api";
-import { monthBounds, monthLabel, percentChange, shiftMonth, spendingRows } from "./dashboard";
+import {
+	monthBounds,
+	monthLabel,
+	orderSections,
+	percentChange,
+	shiftMonth,
+	spendingRows,
+} from "./dashboard";
 
 describe("monthBounds", () => {
 	it("gives the first and last day of the month", () => {
@@ -114,5 +121,17 @@ describe("spendingRows", () => {
 	it("is empty when nothing was spent", () => {
 		expect(spendingRows([])).toEqual([]);
 		expect(spendingRows([total("Salary", "1", "income")])).toEqual([]);
+	});
+});
+
+describe("orderSections", () => {
+	const visible = ["a", "b", "c", "d"];
+
+	it("keeps the default order with nothing saved", () => {
+		expect(orderSections(null, visible)).toEqual(visible);
+	});
+
+	it("follows the saved order, puts new sections last and skips saved ones not on show", () => {
+		expect(orderSections(["c", "gone", "a"], visible)).toEqual(["c", "a", "b", "d"]);
 	});
 });

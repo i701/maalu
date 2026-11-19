@@ -3,6 +3,7 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { z } from "zod";
 import BudgetAlert from "#/components/BudgetAlert";
 import AvailableCard from "#/components/dashboard/AvailableCard";
@@ -21,15 +22,17 @@ import UpcomingSoonCard from "#/components/dashboard/UpcomingSoonCard";
 import SpendingCard from "#/components/dashboard/SpendingCard";
 import PageHeader from "#/components/PageHeader";
 import PageSkeleton from "#/components/PageSkeleton";
+import SectionGrid, { type Section } from "#/components/dashboard/SectionGrid";
 import PendingOverlay from "#/components/PendingOverlay";
 import Symbol from "#/components/Symbol";
-import { monthBounds, monthLabel, percentChange, shiftMonth } from "#/lib/dashboard";
+import { monthBounds, monthLabel, orderSections, percentChange, shiftMonth } from "#/lib/dashboard";
 import { formatMoney, formatMoneyCompact, sumDecimals, formatMoneyFull } from "#/lib/format";
-import { staggerChildren } from "#/lib/motion";
 import { localToday } from "#/lib/planned";
 import { unwrap } from "#/lib/unwrap";
+import { useAction } from "#/lib/use-action";
 import { creditUsage } from "#/lib/accounts";
 import { listAccountsFn } from "#/server/accounts";
+import { getMeFn, updateMeFn } from "#/server/auth";
 import { getBudgetFn } from "#/server/budget";
 import { listGoalsFn } from "#/server/goals";
 import { getAvailableToSpendFn, getBalanceTrendFn, getMonthlyStatsFn } from "#/server/stats";
@@ -44,9 +47,6 @@ const searchSchema = z.object({
 	// Any day in the month to show; leave it out for the current month.
 	on: z.iso.date().optional().catch(undefined),
 });
-
-/** A grid cell spanning `n` of 6 columns on wide screens (narrow ones stack); its card fills the row. */
-const cell = (n: number) => ({ gridColumn: { lg: `span ${n}` }, "& > *": { height: "100%" } });
 
 const today = () => {
 	const d = new Date();
@@ -80,6 +80,7 @@ export const Route = createFileRoute("/_protected/dashboard")({
 			accounts,
 			available,
 			upcoming,
+			me,
 		] = await Promise.all([
 			getTransactionTotalsFn({ data: range }),
 			getTransactionTotalsFn({ data: { date_from: previous.start, date_to: previous.end } }),
@@ -92,6 +93,7 @@ export const Route = createFileRoute("/_protected/dashboard")({
 			listAccountsFn(),
 			getAvailableToSpendFn(),
 			listUpcomingFn(),
+			getMeFn(),
 		]);
 		return {
 			month: current.start,
@@ -104,6 +106,8 @@ export const Route = createFileRoute("/_protected/dashboard")({
 			// planned bills and income, soonest first (the page works without them)
 			upcoming: upcoming.ok ? upcoming.data : [],
 			asOf: localToday(),
+			// the user's own order of the sections (null is the default one)
+			savedOrder: unwrap(me).dashboard_order,
 			// the page works without these two
 			available: available.ok ? available.data : null,
 			budget: budget.ok ? budget.data : null,
@@ -132,7 +136,12 @@ function DashboardPage() {
 		available,
 		upcoming,
 		asOf,
+		savedOrder,
 	} = Route.useLoaderData();
+	const { run, pending } = useAction();
+	const [editing, setEditing] = useState(false);
+	// the order being arranged; saved once, when the user is done
+	const [draft, setDraft] = useState<string[] | null>(null);
 	const navigate = Route.useNavigate();
 	const goTo = (on: string | undefined) => navigate({ search: { on }, replace: true });
 	const label = monthLabel(month);
@@ -142,6 +151,171 @@ function DashboardPage() {
 
 	const saved = sumDecimals([totals.income, `-${totals.expense}`]);
 	const savedBefore = sumDecimals([before.income, `-${before.expense}`]);
+
+	const sections: Section[] = [
+		...(available
+			? [
+					{
+						id: "available",
+						label: "Available to spend",
+						span: 6,
+						node: <AvailableCard data={available} />,
+					},
+				]
+			: []),
+		{
+			id: "metrics",
+			label: "Income, spent and saved",
+			span: 6,
+			node: (
+				<Box
+					sx={{
+						display: "grid",
+						gap: 2,
+						gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "repeat(3, minmax(0, 1fr))" },
+					}}
+				>
+					{/* On a phone the three tiles are one strip (the tiles are for wider screens). */}
+					<Box sx={{ display: { xs: "block", sm: "none" } }}>
+						<MetricStrip
+							against={previousLabel}
+							items={[
+								{
+									label: "Income",
+									value: formatMoneyCompact(totals.income, currency),
+									full: formatMoneyFull(totals.income, currency),
+									percent: percentChange(totals.income, before.income),
+									goodWhenUp: true,
+								},
+								{
+									label: "Spent",
+									value: formatMoneyCompact(totals.expense, currency),
+									full: formatMoneyFull(totals.expense, currency),
+									percent: percentChange(totals.expense, before.expense),
+									goodWhenUp: false,
+								},
+								{
+									label: Number(saved) >= 0 ? "Saved" : "Overspent",
+									value: formatMoneyCompact(saved, currency),
+									full: formatMoneyFull(saved, currency),
+									percent: percentChange(saved, savedBefore),
+									goodWhenUp: true,
+								},
+							]}
+						/>
+					</Box>
+					<Box sx={{ display: { xs: "none", sm: "block" } }}>
+						<MetricCard
+							label={`Income in ${label}`}
+							value={formatMoney(totals.income, currency)}
+							badge={
+								<DeltaBadge
+									percent={percentChange(totals.income, before.income)}
+									goodWhenUp
+									against={previousLabel}
+								/>
+							}
+						/>
+					</Box>
+					<Box sx={{ display: { xs: "none", sm: "block" } }}>
+						<MetricCard
+							label={`Spent in ${label}`}
+							value={formatMoney(totals.expense, currency)}
+							badge={
+								<DeltaBadge
+									percent={percentChange(totals.expense, before.expense)}
+									goodWhenUp={false}
+									against={previousLabel}
+								/>
+							}
+						/>
+					</Box>
+					<Box sx={{ display: { xs: "none", sm: "block" } }}>
+						<MetricCard
+							label={Number(saved) >= 0 ? "Saved this month" : "Overspent this month"}
+							value={formatMoney(saved, currency)}
+							badge={
+								<DeltaBadge
+									percent={percentChange(saved, savedBefore)}
+									goodWhenUp
+									against={previousLabel}
+								/>
+							}
+						/>
+					</Box>
+				</Box>
+			),
+		},
+		{
+			id: "spending",
+			label: "Spending by category",
+			span: 2,
+			node: <SpendingCard categories={categories} period={label} />,
+		},
+		{
+			id: "balance",
+			label: "Balance trend",
+			span: 4,
+			node: <BalanceTrendCard trend={trend} against={monthLabel(month, true)} />,
+		},
+		{ id: "monthly", label: "Month by month", span: 4, node: <MonthlyCard stats={monthly} /> },
+		{
+			id: "budget",
+			label: "Budget and goals",
+			span: 2,
+			node: <BudgetGoalsCard budget={budget} goals={goals} />,
+		},
+		{
+			id: "needs-wants",
+			label: "Needs and wants",
+			span: 6,
+			node: <NeedsWantsCard categories={categories} period={label} />,
+		},
+		{
+			id: "money-flow",
+			label: "Money flow",
+			span: 6,
+			node: <MoneyFlowCard categories={categories} period={label} />,
+		},
+		...(creditAccounts.length > 0
+			? [
+					{
+						id: "credit",
+						label: "Credit usage",
+						span: 6,
+						node: <CreditUsageCard accounts={creditAccounts} />,
+					},
+				]
+			: []),
+		{
+			id: "upcoming",
+			label: "Coming up",
+			span: 3,
+			node: <UpcomingSoonCard upcoming={upcoming} today={asOf} />,
+		},
+		{
+			id: "latest",
+			label: "Latest transactions",
+			span: 3,
+			node: <LatestTransactionsCard transactions={latest} />,
+		},
+	];
+	const byId = new Map(sections.map((section) => [section.id, section]));
+	const ordered = orderSections(
+		editing ? draft : savedOrder,
+		sections.map((section) => section.id),
+	).flatMap((id) => byId.get(id) ?? []);
+
+	function startEditing() {
+		setDraft(ordered.map((section) => section.id));
+		setEditing(true);
+	}
+
+	async function finishEditing() {
+		// a failed save keeps the page in arranging mode, with the error shown by useAction's owner
+		if (!(await run(() => updateMeFn({ data: { dashboard_order: draft } })))) return;
+		setEditing(false);
+	}
 
 	return (
 		<CardMorph direction="up">
@@ -196,130 +370,49 @@ function DashboardPage() {
 								This month
 							</Button>
 						)}
+						<IconButton
+							color="inherit"
+							size="small"
+							aria-label="Arrange the dashboard"
+							aria-pressed={editing}
+							disabled={editing}
+							onClick={startEditing}
+						>
+							<Symbol name="tune" size={22} />
+						</IconButton>
 					</Box>
 				}
 			/>
 
 			<BudgetAlert budget={budget} />
 
-			<PendingOverlay>
+			{editing && (
 				<Box
 					sx={{
-						display: "grid",
-						gap: 2,
-						gridTemplateColumns: { xs: "minmax(0, 1fr)", lg: "repeat(6, minmax(0, 1fr))" },
-						...staggerChildren(),
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "space-between",
+						gap: 1,
+						flexWrap: "wrap",
+						mb: 2,
 					}}
 				>
-					{available && (
-						<Box sx={cell(6)}>
-							<AvailableCard data={available} />
-						</Box>
-					)}
-					{/* On a phone the three tiles are one strip (the tiles are for wider screens). */}
-					<Box sx={{ display: { xs: "block", sm: "none" } }}>
-						<MetricStrip
-							against={previousLabel}
-							items={[
-								{
-									label: "Income",
-									value: formatMoneyCompact(totals.income, currency),
-									full: formatMoneyFull(totals.income, currency),
-									percent: percentChange(totals.income, before.income),
-									goodWhenUp: true,
-								},
-								{
-									label: "Spent",
-									value: formatMoneyCompact(totals.expense, currency),
-									full: formatMoneyFull(totals.expense, currency),
-									percent: percentChange(totals.expense, before.expense),
-									goodWhenUp: false,
-								},
-								{
-									label: Number(saved) >= 0 ? "Saved" : "Overspent",
-									value: formatMoneyCompact(saved, currency),
-									full: formatMoneyFull(saved, currency),
-									percent: percentChange(saved, savedBefore),
-									goodWhenUp: true,
-								},
-							]}
-						/>
-					</Box>
-					<Box sx={{ ...cell(2), display: { xs: "none", sm: "block" } }}>
-						<MetricCard
-							label={`Income in ${label}`}
-							value={formatMoney(totals.income, currency)}
-							badge={
-								<DeltaBadge
-									percent={percentChange(totals.income, before.income)}
-									goodWhenUp
-									against={previousLabel}
-								/>
-							}
-						/>
-					</Box>
-					<Box sx={{ ...cell(2), display: { xs: "none", sm: "block" } }}>
-						<MetricCard
-							label={`Spent in ${label}`}
-							value={formatMoney(totals.expense, currency)}
-							badge={
-								<DeltaBadge
-									percent={percentChange(totals.expense, before.expense)}
-									goodWhenUp={false}
-									against={previousLabel}
-								/>
-							}
-						/>
-					</Box>
-					<Box sx={{ ...cell(2), display: { xs: "none", sm: "block" } }}>
-						<MetricCard
-							label={Number(saved) >= 0 ? "Saved this month" : "Overspent this month"}
-							value={formatMoney(saved, currency)}
-							badge={
-								<DeltaBadge
-									percent={percentChange(saved, savedBefore)}
-									goodWhenUp
-									against={previousLabel}
-								/>
-							}
-						/>
-					</Box>
-
-					<Box sx={cell(2)}>
-						<SpendingCard categories={categories} period={label} />
-					</Box>
-					<Box sx={cell(4)}>
-						<BalanceTrendCard trend={trend} against={monthLabel(month, true)} />
-					</Box>
-
-					<Box sx={cell(4)}>
-						<MonthlyCard stats={monthly} />
-					</Box>
-					<Box sx={cell(2)}>
-						<BudgetGoalsCard budget={budget} goals={goals} />
-					</Box>
-
-					<Box sx={cell(6)}>
-						<NeedsWantsCard categories={categories} period={label} />
-					</Box>
-
-					<Box sx={cell(6)}>
-						<MoneyFlowCard categories={categories} period={label} />
-					</Box>
-
-					{creditAccounts.length > 0 && (
-						<Box sx={cell(6)}>
-							<CreditUsageCard accounts={creditAccounts} />
-						</Box>
-					)}
-
-					<Box sx={cell(3)}>
-						<UpcomingSoonCard upcoming={upcoming} today={asOf} />
-					</Box>
-					<Box sx={cell(3)}>
-						<LatestTransactionsCard transactions={latest} />
+					<Typography variant="body2" color="text.secondary">
+						Drag the cards by their handle, or use the arrows, to put them in the order you like.
+					</Typography>
+					<Box sx={{ display: "flex", gap: 1 }}>
+						<Button color="inherit" size="small" disabled={pending} onClick={() => setDraft(null)}>
+							Reset
+						</Button>
+						<Button variant="contained" size="small" disabled={pending} onClick={finishEditing}>
+							Done
+						</Button>
 					</Box>
 				</Box>
+			)}
+
+			<PendingOverlay>
+				<SectionGrid sections={ordered} editing={editing} onReorder={setDraft} />
 			</PendingOverlay>
 		</CardMorph>
 	);

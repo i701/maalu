@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
@@ -41,6 +42,11 @@ class UserUpdate(BaseModel):
         default=False,
         description="Show amounts of a thousand and over in a short form (1.2K, 3.4M) everywhere.",
     )
+    dashboard_order: list[Annotated[str, Field(max_length=32)]] | None = Field(
+        default=None,
+        max_length=32,
+        description="The order of the dashboard's sections. Explicit null resets it.",
+    )
 
 
 class UserResponse(BaseModel):
@@ -57,6 +63,9 @@ class UserResponse(BaseModel):
     notify_email: bool
     notify_login: bool
     compact_numbers: bool
+    dashboard_order: list[str] | None = Field(
+        description="The order of the dashboard's sections; null is the default order."
+    )
     two_factor_enabled: bool = Field(
         description="Whether signing in also needs a code from an authenticator app."
     )

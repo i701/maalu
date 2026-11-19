@@ -33,6 +33,7 @@ export default defineConfig(({ mode }) => {
 					"DeleteOutlined",
 					"AttachFile",
 					"Download",
+					"DragIndicator",
 					"DoneAll",
 					"MyLocation",
 					"PlaceOutlined",
