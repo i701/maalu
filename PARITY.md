@@ -9,20 +9,21 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 68 | 59 | 41 |
+| ✅ done | 69 | 59 | 41 |
 | 🟡 partial | 0 | 1 | 0 |
-| ❌ missing | 0 | 4 | 23 |
+| ❌ missing | 0 | 5 | 24 |
 | ➖ n/a | 1 | 5 | 5 |
 
-## Still to build on Android (5)
+## Still to build on Android (6)
 
 - 🟡 **Email digest** (Notifications). The switch and the email status are in Settings; sending a test email is not.
 - ❌ **Export to Excel** (Transactions).
 - ❌ **Arrange the dashboard** (Dashboard and reports).
+- ❌ **Money flow by group** (Dashboard and reports).
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (23)
+## Still to build on iOS (24)
 
 - ❌ **Set up and manage two-factor** (Sign in and security).
 - ❌ **Where you are signed in** (Sign in and security).
@@ -40,6 +41,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Salary split rules** (Budget, goals and planning).
 - ❌ **Split a salary and the Pending screen** (Budget, goals and planning).
 - ❌ **Arrange the dashboard** (Dashboard and reports).
+- ❌ **Money flow by group** (Dashboard and reports).
 - ❌ **Trends** (Dashboard and reports).
 - ❌ **Notifications** (Notifications).
 - ❌ **Email digest** (Notifications).
@@ -144,6 +146,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Budget and goals card**<br>Per-period limits and goals with a meter, and the running limits for set dates. | ✅ done | ✅ done | ✅ done |
 | **Needs and wants, and 50/30/20**<br>Spending split by kind, and the shares of income against the 50/30/20 rule. | ✅ done | ✅ done | ✅ done |
 | **Money flow**<br>A Sankey of income into one total and out to spending and what was saved. | ✅ done | ✅ done | ✅ done |
+| **Money flow by group**<br>The money flow splits each spending group into its sub-categories as a fourth column, like a tree. | ✅ done | ❌ missing | ❌ missing |
 | **Credit used**<br>What is owed against each credit limit. | ✅ done | ✅ done | ✅ done |
 | **Cash flow**<br>Income and expenses per month, what was kept each month and kept in total, over 6 or 12 months. | ✅ done | ✅ done | ✅ done |
 | **Compare**<br>One period against another: income, spending, what was kept and every category. | ✅ done | ✅ done | ✅ done |

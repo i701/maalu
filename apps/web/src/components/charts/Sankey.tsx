@@ -1,11 +1,20 @@
 import Box from "@mui/material/Box";
 import { useCallback, useMemo, useState } from "react";
 import { spreadLabels } from "#/lib/charts";
-import { type FlowKind, layoutFlow, type MoneyFlow, type PlacedNode } from "#/lib/money-flow";
+import {
+	type FlowKind,
+	lastColumn,
+	layoutFlow,
+	type MoneyFlow,
+	tallestColumn,
+	type PlacedNode,
+} from "#/lib/money-flow";
 import ChartTooltip from "./ChartTooltip";
 
 const LABEL_WIDTH = 170; // room for a name beside each outer column
 const MIN_WIDTH = 620; // narrower than this the diagram scrolls rather than squeezes
+const MIN_WIDTH_DEEP = 860; // a fourth column (sub-categories) needs room for the group labels
+const GROUP_LABEL_WIDTH = 150; // a group's name, drawn just left of its bar
 const NODE_WIDTH = 6; // the thin bar at each node
 const LABEL_HEIGHT = 18;
 const TOP = 30; // room above the diagram for the total's label
@@ -40,7 +49,7 @@ type SankeyProps = {
  * A Sankey diagram of a period's money: where it came from, the total, where it went, fitted to its
  * card (and scrolling sideways when the card is narrower than it can be drawn).
  */
-export default function Sankey({ height = 320, ...props }: SankeyProps & { height?: number }) {
+export default function Sankey({ height, ...props }: SankeyProps & { height?: number }) {
 	const [width, setWidth] = useState(0);
 	const measure = useCallback((el: HTMLDivElement | null) => {
 		if (!el) return undefined;
@@ -54,7 +63,11 @@ export default function Sankey({ height = 320, ...props }: SankeyProps & { heigh
 
 	return (
 		<Box sx={{ overflowX: "auto" }} ref={measure}>
-			<SankeyDiagram {...props} width={Math.max(MIN_WIDTH, width)} height={height} />
+			<SankeyDiagram
+				{...props}
+				width={Math.max(lastColumn(props.flow) > 2 ? MIN_WIDTH_DEEP : MIN_WIDTH, width)}
+				height={height ?? roomyHeight(tallestColumn(props.flow))}
+			/>
 		</Box>
 	);
 }
@@ -88,10 +101,12 @@ export function SankeyDiagram({
 		[flow, inner, height],
 	);
 	const total = flow.nodes.find((n) => n.kind === "total")?.value ?? 1;
+	const last = lastColumn(flow);
 	const labelY = useMemo(() => {
 		const out = new Map<string, number>();
-		for (const column of [0, 2] as const) {
+		for (const column of [0, 2, 3] as const) {
 			const nodes = layout.nodes.filter((n) => n.column === column);
+			if (nodes.length === 0) continue;
 			const spread = spreadLabels(
 				nodes.map((n) => n.y + n.height / 2),
 				LABEL_HEIGHT,
@@ -146,6 +161,7 @@ export function SankeyDiagram({
 				<NodeLabel
 					key={n.id}
 					node={n}
+					last={last}
 					total={total}
 					y={(labelY.get(n.id) ?? n.y + n.height / 2) + TOP}
 					formatValue={formatValue}
@@ -157,7 +173,7 @@ export function SankeyDiagram({
 				<Box
 					sx={{
 						position: "absolute",
-						left: LABEL_WIDTH + activeNode.x + (activeNode.column === 2 ? -150 : 24),
+						left: LABEL_WIDTH + activeNode.x + (activeNode.column === last ? -150 : 24),
 						top: TOP + activeNode.y + activeNode.height / 2 - 28,
 						zIndex: 2,
 					}}
@@ -187,6 +203,7 @@ export function SankeyDiagram({
  * total for the middle. It is the hover and focus target of its node. */
 function NodeLabel({
 	node,
+	last,
 	total,
 	y,
 	formatValue,
@@ -194,13 +211,23 @@ function NodeLabel({
 	onActive,
 }: {
 	node: PlacedNode;
+	/** the right-most column, whose labels stand to the right of the bars */
+	last: number;
 	total: number;
 	y: number;
 	formatValue: (value: number) => string;
 	formatLabel: (value: number) => string;
 	onActive: (id: string | null) => void;
 }) {
-	const side = node.column;
+	// the outer columns label outwards; a group in a deeper diagram labels just left of its bar
+	const placement =
+		node.column === 1
+			? "total"
+			: node.column === 0
+				? "left"
+				: node.column === last
+					? "right"
+					: "inner";
 	const share = Math.round((node.value / total) * 100);
 	return (
 		<Box
@@ -224,16 +251,24 @@ function NodeLabel({
 				"&:focus-visible": {
 					boxShadow: "0 0 0 2px var(--md-sys-color-primary)",
 				},
-				...(side === 0 && {
+				...(placement === "left" && {
 					right: `calc(100% - ${LABEL_WIDTH - 8}px)`,
 					justifyContent: "flex-end",
 					maxWidth: LABEL_WIDTH - 12,
 				}),
-				...(side === 2 && {
+				...(placement === "right" && {
 					left: LABEL_WIDTH + node.x + NODE_WIDTH + 8,
 					maxWidth: LABEL_WIDTH - 12,
 				}),
-				...(side === 1 && {
+				...(placement === "inner" && {
+					right: `calc(100% - ${LABEL_WIDTH + node.x - 8}px)`,
+					justifyContent: "flex-end",
+					maxWidth: GROUP_LABEL_WIDTH,
+					px: 0.5,
+					// it sits over the bands coming in, so it gets a backing
+					bgcolor: "color-mix(in srgb, var(--md-sys-color-surface-container-low) 80%, transparent)",
+				}),
+				...(placement === "total" && {
 					left: LABEL_WIDTH + node.x - 74,
 					width: NODE_WIDTH + 148,
 					justifyContent: "center",

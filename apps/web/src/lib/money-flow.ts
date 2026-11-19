@@ -6,8 +6,9 @@ export type FlowKind = "income" | "deficit" | "total" | "spending" | "saved";
 export type FlowNode = {
 	id: string;
 	label: string;
-	/** 0 where the money comes from, 1 the total, 2 where it went */
-	column: 0 | 1 | 2;
+	/** 0 where the money comes from, 1 the total, 2 where it went (a spending group, or Saved),
+	 * 3 what a group was spent on, drawn only when some category has a parent */
+	column: 0 | 1 | 2 | 3;
 	value: number;
 	kind: FlowKind;
 };
@@ -21,7 +22,7 @@ export type MoneyFlow = {
 	spent: number;
 };
 
-type Row = { label: string; value: number };
+type Row = { label: string; value: number; children?: Row[] };
 
 /** The `top` biggest rows, the rest folded into one "Other" row; empty and negative ones dropped. */
 function biggest(rows: Row[], top: number, other: string): Row[] {
@@ -31,10 +32,36 @@ function biggest(rows: Row[], top: number, other: string): Row[] {
 	return [...sorted.slice(0, top), { label: other, value: rest }];
 }
 
-const rowsOf = (categories: CategoryTotal[], type: "income" | "expense"): Row[] =>
+const incomeRows = (categories: CategoryTotal[]): Row[] =>
 	categories
-		.filter((c) => c.type === type)
+		.filter((c) => c.type === "income")
 		.map((c) => ({ label: c.category, value: Number(c.total) }));
+
+/**
+ * Spending as groups: a category with a parent goes under it, and a parent's own spending (money
+ * put straight on it) becomes a "(other)" child beside its sub-categories. A category with no
+ * parent and no children is a group of its own with nothing under it. Families that net to zero or
+ * below are dropped like any other row.
+ */
+function spendingGroups(categories: CategoryTotal[]): Row[] {
+	const families = new Map<string, { label: string; own: number; children: Row[] }>();
+	for (const c of categories) {
+		const value = Number(c.total);
+		if (c.type !== "expense" || value <= 0) continue;
+		const key = c.parent_id ?? c.category_id;
+		const family = families.get(key) ?? { label: c.parent ?? c.category, own: 0, children: [] };
+		if (c.parent_id) family.children.push({ label: c.category, value });
+		else family.own += value;
+		families.set(key, family);
+	}
+	return [...families.values()].map(({ label, own, children }) => {
+		const withOwn =
+			own > 0 && children.length > 0
+				? [...children, { label: `${label} (other)`, value: own }]
+				: children;
+		return { label, value: own + children.reduce((sum, r) => sum + r.value, 0), children: withOwn };
+	});
+}
 
 /**
  * Where a period's money came from and where it went, as a flow: income categories into one total,
@@ -43,8 +70,8 @@ const rowsOf = (categories: CategoryTotal[], type: "income" | "expense"): Row[] 
  * Returns null when there is neither income nor spending.
  */
 export function moneyFlow(categories: CategoryTotal[], top = 5): MoneyFlow | null {
-	const sources = biggest(rowsOf(categories, "income"), top, "Other income");
-	const uses = biggest(rowsOf(categories, "expense"), top, "Other spending");
+	const sources = biggest(incomeRows(categories), top, "Other income");
+	const uses = biggest(spendingGroups(categories), top, "Other spending");
 	const income = sources.reduce((sum, r) => sum + r.value, 0);
 	const spent = uses.reduce((sum, r) => sum + r.value, 0);
 	if (income === 0 && spent === 0) return null;
@@ -68,6 +95,19 @@ export function moneyFlow(categories: CategoryTotal[], top = 5): MoneyFlow | nul
 		add({ id: `out:${i}`, label: r.label, column: 2, value: r.value, kind: "spending" });
 		links.push({ source: "total", target: `out:${i}`, value: r.value });
 	});
+	// what each group was spent on, kept in the groups' order so no band crosses another
+	uses.forEach((group, i) => {
+		biggest(group.children ?? [], top, `Other ${group.label}`).forEach((child, j) => {
+			add({
+				id: `out:${i}:${j}`,
+				label: child.label,
+				column: 3,
+				value: child.value,
+				kind: "spending",
+			});
+			links.push({ source: `out:${i}`, target: `out:${i}:${j}`, value: child.value });
+		});
+	});
 	if (income > spent) {
 		const kept = income - spent;
 		add({ id: "saved", label: "Saved", column: 2, value: kept, kind: "saved" });
@@ -75,6 +115,18 @@ export function moneyFlow(categories: CategoryTotal[], top = 5): MoneyFlow | nul
 	}
 	return { nodes, links, income, spent };
 }
+
+/** The right-most column in use: 2 for a flat flow, 3 when groups have something under them. */
+export const lastColumn = (flow: MoneyFlow) => Math.max(...flow.nodes.map((n) => n.column));
+
+/** How many nodes the fullest column holds, which is what sets the height a diagram needs. */
+export const tallestColumn = (flow: MoneyFlow) =>
+	Math.max(
+		...Array.from(
+			{ length: lastColumn(flow) + 1 },
+			(_, c) => flow.nodes.filter((n) => n.column === c).length,
+		),
+	);
 
 export type PlacedNode = FlowNode & { x: number; y: number; width: number; height: number };
 export type PlacedLink = FlowLink & {
@@ -103,11 +155,17 @@ export function layoutFlow(
 	{ width, height, nodeWidth = 12, gap = 8, minHeight = 4 }: LayoutOptions,
 ): FlowLayout {
 	const total = flow.nodes.find((n) => n.kind === "total")?.value ?? 1;
-	const columns = [0, 1, 2].map((c) => flow.nodes.filter((n) => n.column === c));
+	const last = lastColumn(flow);
+	const columns = Array.from({ length: last + 1 }, (_, c) =>
+		flow.nodes.filter((n) => n.column === c),
+	);
 	const tallest = Math.max(...columns.map((col) => col.length));
 	const scale = Math.max(0, height - gap * (tallest - 1)) / total;
 
-	const xs = [0, (width - nodeWidth) / 2, width - nodeWidth];
+	// Evenly spaced, except that with a fourth column the last gap is shorter: it only holds thin
+	// bands (the group labels need the gap before it), and an even gap leaves them stretched out.
+	const stops = last === 3 ? [0, 0.38, 0.76, 1] : columns.map((_, c) => c / last);
+	const xs = stops.map((stop) => stop * (width - nodeWidth));
 	const placed = new Map<string, PlacedNode>();
 	columns.forEach((col, c) => {
 		const heights = col.map((n) => Math.max(minHeight, n.value * scale));

@@ -16,7 +16,7 @@ import {
 } from "react";
 import { fitView, type Size, type View, zoomAt } from "#/lib/pan-zoom";
 import { roomyHeight, SankeyDiagram } from "./Sankey";
-import type { MoneyFlow } from "#/lib/money-flow";
+import { type MoneyFlow, tallestColumn } from "#/lib/money-flow";
 
 const CANVAS_WIDTH = 1280; // the diagram's real size, which the view then scales
 const STEP = 1.25; // one tap of + or -
@@ -55,7 +55,7 @@ export default function SankeyCanvas({
 	formatLabel?: (value: number) => string;
 	ariaLabel: string;
 }) {
-	const height = roomyHeight(flow.nodes.length);
+	const height = roomyHeight(tallestColumn(flow));
 	const content: Size = { width: CANVAS_WIDTH, height };
 	const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
 	const [view, setView] = useState<View>({ scale: 1, x: 0, y: 0 });

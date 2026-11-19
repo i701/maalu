@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { categoryTotal } from "#/test/fixtures";
-import { layoutFlow, moneyFlow } from "./money-flow";
+import { lastColumn, layoutFlow, moneyFlow } from "./money-flow";
 
 const cat = (type: "income" | "expense", category: string, total: number) =>
 	categoryTotal({ type, category, total: String(total) });
@@ -134,5 +134,57 @@ describe("layoutFlow", () => {
 		const tiny = moneyFlow([cat("income", "Pay", 100000), cat("expense", "Gum", 1)])!;
 		const { nodes } = layoutFlow(tiny, { ...box, minHeight: 4 });
 		expect(nodes.find((n) => n.label === "Gum")!.height).toBeGreaterThanOrEqual(4);
+	});
+});
+
+const sub = (category: string, parent: string, total: number) =>
+	categoryTotal({
+		type: "expense",
+		category,
+		total: String(total),
+		parent,
+		parent_id: `id-${parent.toLowerCase()}`,
+	});
+
+describe("moneyFlow with sub-categories", () => {
+	it("stays three columns deep when no category has a parent", () => {
+		const flow = moneyFlow([cat("income", "Pay", 1000), cat("expense", "Food", 300)])!;
+		expect(lastColumn(flow)).toBe(2);
+	});
+
+	it("groups sub-categories under their parent, with the parent's own spending beside them", () => {
+		const flow = moneyFlow([
+			cat("income", "Pay", 5000),
+			cat("expense", "Housing", 100),
+			sub("Rent", "Housing", 2000),
+			sub("Repairs", "Housing", 300),
+			cat("expense", "Food", 400),
+		])!;
+		const groups = flow.nodes.filter((n) => n.column === 2 && n.kind === "spending");
+		expect(groups.map((g) => [g.label, g.value])).toEqual([
+			["Housing", 2400],
+			["Food", 400],
+		]);
+		const children = flow.nodes.filter((n) => n.column === 3);
+		expect(children.map((n) => [n.label, n.value])).toEqual([
+			["Rent", 2000],
+			["Repairs", 300],
+			["Housing (other)", 100],
+		]);
+		expect(lastColumn(flow)).toBe(3);
+		// each group hands on exactly what it took in
+		const into = flow.links.find((l) => l.target === "out:0")!.value;
+		const out = flow.links.filter((l) => l.source === "out:0").reduce((s, l) => s + l.value, 0);
+		expect(out).toBe(into);
+	});
+
+	it("keeps the last gap shorter than the others when there are four columns", () => {
+		const flow = moneyFlow([cat("income", "Pay", 1000), sub("Rent", "Housing", 300)])!;
+		const xs = layoutFlow(flow, { width: 900, height: 300, nodeWidth: 10 })
+			.nodes.map((n) => n.x)
+			.toSorted((a, b) => a - b);
+		const gaps = xs.filter((x, i) => x !== xs[i - 1]).map((x, i, all) => x - (all[i - 1] ?? 0));
+		expect(gaps.slice(1)[2]).toBeLessThan(gaps.slice(1)[1]);
+		expect(xs.at(-1)).toBe(890);
 	});
 });

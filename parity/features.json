@@ -1603,6 +1603,31 @@
       }
     },
     {
+      "id": "dashboard-money-flow-groups",
+      "area": "reports",
+      "name": "Money flow by group",
+      "summary": "The money flow splits each spending group into its sub-categories as a fourth column, like a tree.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/lib/money-flow.ts",
+          "apps/web/src/components/charts/Sankey.tsx"
+        ]
+      },
+      "android": {
+        "status": "missing"
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "routes": [
+        "/dashboard"
+      ],
+      "api": [
+        "/api/v1/transactions/categories"
+      ]
+    },
+    {
       "id": "dashboard-credit-used",
       "area": "reports",
       "name": "Credit used",
