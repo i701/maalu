@@ -1,20 +1,23 @@
 import SwiftUI
 
-/// "Merge into another vendor": picking one moves everything over after one confirm.
-struct VendorMergeSheet: View {
+/// "Merge into another one": a searchable list of the others, and picking one moves everything over after one confirm.
+struct MergeSheet<Item: Identifiable & Sendable>: View {
     @Environment(\.dismiss) private var dismiss
-    let vendor: Vendor
-    let targets: [Vendor]
-    let onMerge: (Vendor) async -> String?
-    @State private var confirming: Vendor?
+    let targets: [Item]
+    let name: (Item) -> String
+    let question: LocalizedStringResource
+    /// What happens, said about the picked one.
+    let consequence: (Item) -> String
+    let onMerge: (Item) async -> String?
+    @State private var confirming: Item?
     @State private var isConfirming = false
     @State private var isMerging = false
     @State private var errorMessage: String?
     @State private var search = ""
 
-    private var shown: [Vendor] {
+    private var shown: [Item] {
         let typed = search.trimmingCharacters(in: .whitespaces)
-        return typed.isEmpty ? targets : targets.filter { $0.name.localizedStandardContains(typed) }
+        return typed.isEmpty ? targets : targets.filter { name($0).localizedStandardContains(typed) }
     }
 
     var body: some View {
@@ -24,7 +27,7 @@ struct VendorMergeSheet: View {
                     confirming = target
                     isConfirming = true
                 } label: {
-                    Text(target.name)
+                    Text(name(target))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .contentShape(Rectangle())
                 }
@@ -39,12 +42,12 @@ struct VendorMergeSheet: View {
                     Button("Cancel", role: .cancel) { dismiss() }
                 }
             }
-            .confirmationDialog("Merge this vendor?", isPresented: $isConfirming, titleVisibility: .visible) {
+            .confirmationDialog(Text(question), isPresented: $isConfirming, titleVisibility: .visible) {
                 if let target = confirming {
-                    Button("Merge into \(target.name)", role: .destructive) { merge(target) }
+                    Button("Merge into \(name(target))", role: .destructive) { merge(target) }
                 }
             } message: {
-                Text(confirming.map { "Every transaction, subscription and template of \(vendor.name) moves to \($0.name), which takes any details it lacks. \(vendor.name) is then deleted." } ?? "")
+                Text(confirming.map(consequence) ?? "")
             }
             .alert("Something went wrong", item: $errorMessage) { _ in
             } message: { message in
@@ -53,7 +56,7 @@ struct VendorMergeSheet: View {
         }
     }
 
-    private func merge(_ target: Vendor) {
+    private func merge(_ target: Item) {
         isMerging = true
         Task {
             if let message = await onMerge(target) {

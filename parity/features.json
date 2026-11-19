@@ -1055,7 +1055,12 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Tags/TagsView.swift",
+          "apps/ios/Maalu/Features/Tags/TagsModel.swift",
+          "apps/ios/Maalu/Shared/MergeSheet.swift"
+        ]
       },
       "routes": [
         "/tags"
@@ -1088,7 +1093,7 @@
         "evidence": [
           "apps/ios/Maalu/Features/Vendors/VendorsView.swift",
           "apps/ios/Maalu/Features/Vendors/Form/VendorFormView.swift",
-          "apps/ios/Maalu/Features/Vendors/VendorMergeSheet.swift"
+          "apps/ios/Maalu/Shared/MergeSheet.swift"
         ]
       },
       "routes": [

@@ -9,9 +9,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 67 | 59 | 33 |
+| ✅ done | 67 | 59 | 34 |
 | 🟡 partial | 0 | 1 | 0 |
-| ❌ missing | 0 | 3 | 30 |
+| ❌ missing | 0 | 3 | 29 |
 | ➖ n/a | 1 | 5 | 5 |
 
 ## Still to build on Android (4)
@@ -21,7 +21,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (30)
+## Still to build on iOS (29)
 
 - ❌ **Two-factor sign-in** (Sign in and security).
 - ❌ **Set up and manage two-factor** (Sign in and security).
@@ -39,7 +39,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Merge two entries into one transfer** (Transactions).
 - ❌ **Transaction groups** (Transactions).
 - ❌ **Export to Excel** (Transactions).
-- ❌ **Tags** (Categories, tags and vendors).
 - ❌ **A vendor's usual place** (Categories, tags and vendors).
 - ❌ **Make a subscription from a transaction** (Bills and subscriptions).
 - ❌ **Salary split rules** (Budget, goals and planning).
@@ -117,7 +116,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 |---|:---:|:---:|:---:|
 | **Categories**<br>Colours, one level of sub-categories, need or want, merge, and the default Salary category. | ✅ done | ✅ done | ✅ done |
 | **Sort every category into need or want**<br>One dialog to sort all categories (or only the unsorted ones) at once. | ✅ done | ✅ done | ✅ done |
-| **Tags**<br>Coloured labels that cut across categories, with merge. | ✅ done | ✅ done | ❌ missing |
+| **Tags**<br>Coloured labels that cut across categories, with merge. | ✅ done | ✅ done | ✅ done |
 | **Vendors**<br>Address, contact, local or foreign, currency, usual category and tags, merge. | ✅ done | ✅ done | ✅ done |
 | **A vendor's usual place**<br>A usual pin that a new transaction picks up. | ✅ done | ✅ done | ❌ missing |
 

@@ -59,9 +59,13 @@ struct VendorsView: View {
             }
         }
         .sheet(item: $merging) { vendor in
-            VendorMergeSheet(vendor: vendor, targets: model.mergeTargets(for: vendor)) { target in
-                await merge(vendor, into: target)
-            }
+            MergeSheet(
+                targets: model.mergeTargets(for: vendor),
+                name: \.name,
+                question: "Merge this vendor?",
+                consequence: { "Every transaction, subscription and template of \(vendor.name) moves to \($0.name), which takes any details it lacks. \(vendor.name) is then deleted." },
+                onMerge: { await merge(vendor, into: $0) }
+            )
         }
         .confirmationDialog("Delete this vendor?", isPresented: $isConfirmingDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive, action: deleteSelected)
