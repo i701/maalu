@@ -8,6 +8,8 @@ struct AccountDetailView: View {
     @State private var model = AccountDetailModel()
     @State private var sheet: AccountSheet?
     @State private var isConfirmingDelete = false
+    @State private var deletingCard: Card?
+    @State private var isConfirmingCardDelete = false
     @State private var errorMessage: String?
 
     var body: some View {
@@ -26,6 +28,16 @@ struct AccountDetailView: View {
                     AccountMonthSection(month: month)
                 }
                 AccountFactsSection(account: account, baseCurrency: model.baseCurrency)
+                if let kind = CardKind.forAccount(in: account.group), !account.isArchived {
+                    AccountCardsSection(
+                        cards: model.cards,
+                        kind: kind,
+                        onAdd: { sheet = .addCard(account, kind) },
+                        onEdit: { sheet = .editCard(account, $0) },
+                        onDelete: confirmDeleteCard,
+                        onRepay: { sheet = .repay($0) }
+                    )
+                }
                 AccountBalanceSection(model: model, account: account)
                 AccountTransactionsSection(model: model, account: account, loadMore: loadMore)
             }
@@ -38,10 +50,20 @@ struct AccountDetailView: View {
             } message: {
                 Text("Its transactions stay but lose their account. Archiving keeps everything.")
             }
+            .confirmationDialog("Delete this card?", isPresented: $isConfirmingCardDelete, titleVisibility: .visible) {
+                Button("Delete", role: .destructive, action: deleteCard)
+            } message: {
+                Text("Its purchases stay on this account, with no card.")
+            }
             .sheet(item: $sheet) { sheet in
                 switch sheet {
                 case .edit(let account): AccountFormView(editing: account, onSaved: reload)
                 case .adjust(let account): AdjustBalanceView(account: account, onSaved: reload)
+                case .addCard(let account, let kind):
+                    CardFormView(account: account, kind: kind, accounts: listModel.accounts, onSaved: reload)
+                case .editCard(let account, let card):
+                    CardFormView(account: account, kind: card.kind, editing: card, accounts: listModel.accounts, onSaved: reload)
+                case .repay(let card): TransactionFormView(seed: TransactionDraft(repaying: card), onSaved: reload)
                 }
             }
             .alert("Something went wrong", item: $errorMessage) { _ in
@@ -97,6 +119,19 @@ struct AccountDetailView: View {
             await listModel.load(using: api)
             await model.load(accountID: id, using: api)
             await model.loadTransactions(accountID: id, using: api)
+        }
+    }
+
+    private func confirmDeleteCard(_ card: Card) {
+        deletingCard = card
+        isConfirmingCardDelete = true
+    }
+
+    private func deleteCard() {
+        guard let card = deletingCard else { return }
+        Task {
+            guard let api = session.api else { return }
+            errorMessage = await model.deleteCard(card, using: api)
         }
     }
 

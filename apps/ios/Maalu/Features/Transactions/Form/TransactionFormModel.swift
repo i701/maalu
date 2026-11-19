@@ -27,7 +27,8 @@ final class TransactionFormModel {
     private var suggestedMethod = PaymentMethod.other
     private var defaultAccountId: String?
 
-    init(editing transaction: Transaction? = nil, duplicating copy: Transaction? = nil, startingFrom template: TransactionTemplate? = nil) {
+    /// `seed` is a new transaction already filled in, such as a card repayment.
+    init(editing transaction: Transaction? = nil, duplicating copy: Transaction? = nil, startingFrom template: TransactionTemplate? = nil, seed: TransactionDraft? = nil) {
         original = transaction
         plannedTouched = transaction != nil
         if let transaction {
@@ -36,6 +37,8 @@ final class TransactionFormModel {
             draft = TransactionDraft(duplicating: copy)
         } else if let template {
             draft = TransactionDraft(startingFrom: template)
+        } else if let seed {
+            draft = seed
         } else {
             draft = TransactionDraft()
         }

@@ -10,6 +10,8 @@ final class AccountDetailModel {
     private(set) var transactions: [Transaction] = []
     private(set) var balances: [String: String] = [:]
     private(set) var baseCurrency = ""
+    /// The cards on this account: its debit cards, or a credit card's own.
+    private(set) var cards: [Card] = []
     private(set) var isLoading = true
     private(set) var pageFailed = false
     private var total = 0
@@ -35,11 +37,13 @@ final class AccountDetailModel {
             URLQueryItem(name: "limit", value: String(Self.balancesLimit)),
         ])
         async let profileResult: ApiResult<Profile> = api.get("users/me")
-        let (history, totals, after, me) = await (historyResult, monthResult, afterResult, profileResult)
+        async let cardsResult: ApiResult<[Card]> = api.get("cards")
+        let (history, totals, after, me, cards) = await (historyResult, monthResult, afterResult, profileResult, cardsResult)
         if case .ok(let me, _) = me { baseCurrency = me.baseCurrency }
         guard !Task.isCancelled else { return }
         if case .ok(let value, _) = history { points = value.points }
         if case .ok(let value, _) = totals { self.month = value }
+        if case .ok(let value, _) = cards { self.cards = value.filter { $0.account.id == accountID } }
         if case .ok(let value, _) = after { balances = Dictionary(value.map { ($0.transactionId, $0.balance) }, uniquingKeysWith: { first, _ in first }) }
     }
 
@@ -91,5 +95,13 @@ final class AccountDetailModel {
         let text = query.trimmingCharacters(in: .whitespaces)
         if !text.isEmpty { items.append(URLQueryItem(name: "q", value: text)) }
         return items
+    }
+
+    /// Returns a message when the server refused, nil when the card is gone; its transactions keep their account.
+    func deleteCard(_ card: Card, using api: Api) async -> String? {
+        let result = await api.delete("cards/\(card.id)")
+        if case .failed(_, let message) = result { return message }
+        cards.removeAll { $0.id == card.id }
+        return nil
     }
 }

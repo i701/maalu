@@ -21,6 +21,15 @@ struct TransactionDraft {
 
     init() {}
 
+    /// Repaying a credit card: a transfer from the account it is repaid from into the card's own account, as on the web.
+    init(repaying card: Card) {
+        type = .transfer
+        accountID = card.repayAccount?.id
+        toAccountID = card.account.id
+        note = String(localized: "\(card.name) repayment")
+        method = .bankTransfer
+    }
+
     /// A template never carries a date, so the date is today and the rate comes from the account.
     init(startingFrom template: TransactionTemplate) {
         type = template.type

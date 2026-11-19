@@ -8,8 +8,8 @@ struct TransactionFormView: View {
     @State private var isSavingTemplate = false
     private let onSaved: () -> Void
 
-    init(editing transaction: Transaction? = nil, duplicating copy: Transaction? = nil, startingFrom template: TransactionTemplate? = nil, onSaved: @escaping () -> Void) {
-        _model = State(initialValue: TransactionFormModel(editing: transaction, duplicating: copy, startingFrom: template))
+    init(editing transaction: Transaction? = nil, duplicating copy: Transaction? = nil, startingFrom template: TransactionTemplate? = nil, seed: TransactionDraft? = nil, onSaved: @escaping () -> Void) {
+        _model = State(initialValue: TransactionFormModel(editing: transaction, duplicating: copy, startingFrom: template, seed: seed))
         self.onSaved = onSaved
     }
 
