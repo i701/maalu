@@ -18,26 +18,35 @@ export default function MetricCard({
 	return (
 		<Box
 			sx={{
-				// snug on a phone (label and value share one short row), roomier on a wide screen
+				// snug on a phone, roomier on a wide screen
 				px: { xs: 2, lg: 2.5 },
 				py: { xs: 1.25, lg: 2.5 },
 				minWidth: 0,
 				...cardMorph,
 				bgcolor: "var(--md-sys-color-surface-container-low)",
-				// On a narrow screen the label and value share a row, so three figures don't take a screen
-				display: { xs: "grid", lg: "block" },
+				// the label (and the change badge under it) on the left, the figure big on the right
+				display: "grid",
 				gridTemplateColumns: "minmax(0, 1fr) auto",
-				alignItems: "baseline",
+				gridTemplateAreas: { xs: '"label value" "badge badge"', lg: '"label value" "badge value"' },
+				alignItems: "center",
 				columnGap: 2,
 			}}
 		>
-			<Typography variant="body2" sx={{ color: "text.secondary" }}>
+			<Typography variant="body2" sx={{ color: "text.secondary", gridArea: "label" }}>
 				{label}
 			</Typography>
-			<Typography sx={{ fontSize: { xs: 22, lg: 32 }, lineHeight: 1.2, mt: { lg: 0.5 } }}>
+			<Typography
+				sx={{
+					gridArea: "value",
+					textAlign: "right",
+					fontSize: { xs: 24, lg: 36 },
+					lineHeight: 1.1,
+					"--figure-weight": 600,
+				}}
+			>
 				<Figure>{value}</Figure>
 			</Typography>
-			{badge && <Box sx={{ mt: 1, gridColumn: "1 / -1" }}>{badge}</Box>}
+			{badge && <Box sx={{ mt: 1, gridArea: "badge" }}>{badge}</Box>}
 		</Box>
 	);
 }

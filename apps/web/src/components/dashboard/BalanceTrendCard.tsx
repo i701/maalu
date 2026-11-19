@@ -44,12 +44,29 @@ const BalanceTrendCard = memo(function BalanceTrendCard({
 
 	return (
 		<ChartCard title="Net worth" subtitle="What your accounts are worth in total" table={table}>
-			<Box sx={{ display: "flex", alignItems: "baseline", gap: 1.5, flexWrap: "wrap", mb: 2 }}>
-				{/* 28px on a wide screen, the same as the figure tiles (larger read as too big); scaled down so it still fits a phone */}
-				<Typography sx={{ fontSize: "clamp(24px, 7vw, 32px)", lineHeight: 1.1 }}>
+			{/* the change on the left, the figure the card is about big and bold on the right */}
+			<Box
+				sx={{
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "space-between",
+					gap: 1.5,
+					flexWrap: "wrap",
+					mb: 2,
+				}}
+			>
+				<DeltaBadge percent={percentChange(last.total, first.total)} goodWhenUp against={against} />
+				<Typography
+					sx={{
+						ml: "auto",
+						textAlign: "right",
+						fontSize: "clamp(30px, 8vw, 44px)",
+						lineHeight: 1.05,
+						"--figure-weight": 600,
+					}}
+				>
 					<Money amount={last.total} currency={currency} figure />
 				</Typography>
-				<DeltaBadge percent={percentChange(last.total, first.total)} goodWhenUp against={against} />
 			</Box>
 			<AreaChart
 				points={chart}

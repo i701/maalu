@@ -53,6 +53,7 @@ export default function StatCard({
 		<Box
 			sx={{
 				display: "flex",
+				flexWrap: "wrap",
 				alignItems: "center",
 				gap: 2,
 				p: 2.5,
@@ -68,24 +69,6 @@ export default function StatCard({
 				},
 			}}
 		>
-			<Box sx={{ minWidth: 0, flexGrow: 1 }}>
-				<Typography variant="body2" sx={{ color: "inherit", opacity: 0.82 }}>
-					{label}
-				</Typography>
-				<Typography
-					component="p"
-					sx={{
-						mt: 0.5,
-						// the figure takes the tile's own colour: green on a green tile, red on a red one
-						color: tone ? "inherit" : tintText(tint),
-						fontSize: { xs: 22, lg: 28, xl: 32 },
-						lineHeight: 1.2,
-					}}
-					noWrap
-				>
-					<Figure>{value}</Figure>
-				</Typography>
-			</Box>
 			{/* the icon gives way to the figure where three tiles share a narrow row */}
 			<Box sx={{ display: { xs: "none", lg: "block" } }}>
 				<ShapeTile
@@ -101,6 +84,24 @@ export default function StatCard({
 					<Symbol name={icon} size={26} />
 				</ShapeTile>
 			</Box>
+			<Typography variant="body2" sx={{ color: "inherit", opacity: 0.82, flex: "1 1 80px" }}>
+				{label}
+			</Typography>
+			{/* the figure on the right, big, in the tile's own colour: green on a green tile, red on a red one */}
+			<Typography
+				component="p"
+				sx={{
+					ml: "auto",
+					textAlign: "right",
+					color: tone ? "inherit" : tintText(tint),
+					fontSize: { xs: 24, lg: 32, xl: 36 },
+					lineHeight: 1.1,
+					"--figure-weight": 600,
+				}}
+				noWrap
+			>
+				<Figure>{value}</Figure>
+			</Typography>
 		</Box>
 	);
 }

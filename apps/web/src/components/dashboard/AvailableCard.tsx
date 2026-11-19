@@ -138,24 +138,39 @@ const AvailableCard = memo(function AvailableCard({ data }: { data: AvailableToS
 				bgcolor: `color-mix(in srgb, ${short ? ACCENT.orange : ACCENT.green} 14%, var(--md-sys-color-surface-container-low))`,
 			}}
 		>
-			<Box sx={{ display: "flex", justifyContent: "space-between", gap: 1, flexWrap: "wrap" }}>
-				<Typography variant="body2" sx={{ color: "text.secondary" }}>
-					Available to spend until {formatDate(data.period_end)}
-				</Typography>
-				{short && <TonalChip accent={ACCENT.orange} label="Short" />}
-			</Box>
-			{hasAccounts(data) ? (
-				<>
+			<Box
+				sx={{
+					display: "flex",
+					justifyContent: "space-between",
+					alignItems: "center",
+					gap: 2,
+					flexWrap: "wrap",
+				}}
+			>
+				<Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+					<Typography variant="body2" sx={{ color: "text.secondary" }}>
+						Available to spend until {formatDate(data.period_end)}
+					</Typography>
+					{short && <TonalChip accent={ACCENT.orange} label="Short" />}
+				</Box>
+				{/* the number is the point of the card: big, bold and on the right */}
+				{hasAccounts(data) && (
 					<Typography
 						sx={{
-							fontSize: { xs: 30, lg: 40 },
-							lineHeight: 1.2,
-							mt: 0.5,
+							ml: "auto",
+							textAlign: "right",
+							fontSize: { xs: 36, lg: 52 },
+							lineHeight: 1.05,
+							"--figure-weight": 600,
 							color: short ? "var(--chart-expense)" : "text.primary",
 						}}
 					>
 						<Money amount={data.available} currency={data.currency} figure />
 					</Typography>
+				)}
+			</Box>
+			{hasAccounts(data) ? (
+				<>
 					<Typography variant="body2" sx={{ color: "text.secondary", mt: 0.5 }}>
 						{workingLine(data)}
 						{short && ". You are short unless more comes in or a bill moves."}
