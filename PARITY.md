@@ -9,8 +9,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 67 | 59 | 26 |
-| 🟡 partial | 0 | 1 | 5 |
+| ✅ done | 67 | 59 | 28 |
+| 🟡 partial | 0 | 1 | 3 |
 | ❌ missing | 0 | 3 | 32 |
 | ➖ n/a | 1 | 5 | 5 |
 
@@ -21,12 +21,10 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (37)
+## Still to build on iOS (35)
 
 - 🟡 **Receipts and web links** (Transactions). Photos and PDFs added while making a new transaction, uploaded once it is saved. Not yet: seeing, opening or removing a transaction's files, files on an edit, or web links.
-- 🟡 **Budget limits** (Budget, goals and planning). Monthly limits: see, make, change, delete, move money between them with undo and history. No budget settings (period start day, warning level), no rollover choice per period, and no limits for set dates.
 - 🟡 **Limits for set dates** (Budget, goals and planning). Read only: limits for set dates are listed under the period their days touch, with days left. Not made, changed, repeated or deleted.
-- 🟡 **Cash flow** (Dashboard and reports). Income and expenses by month (6 or 12 months) and this month's income, spending and what was kept. No kept-per-month chart or running total, and no table view of the chart.
 - 🟡 **Net worth and what moved it** (Dashboard and reports). Only the dashboard's net worth card (total, assets, liabilities, 30-day change and chart). Not the Net worth page with a chosen period and what moved it.
 - ❌ **Two-factor sign-in** (Sign in and security).
 - ❌ **Set up and manage two-factor** (Sign in and security).
@@ -141,7 +139,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | Feature | Web | Android | iOS |
 |---|:---:|:---:|:---:|
-| **Budget limits**<br>Per-period limits for categories with a warning percent, rollover and the summary by kind. | ✅ done | ✅ done | 🟡 partial |
+| **Budget limits**<br>Per-period limits for categories with a warning percent, rollover and the summary by kind. | ✅ done | ✅ done | ✅ done |
 | **Limits for set dates**<br>One total for a stretch of dates, a monthly limit that runs between two dates, and repeating a finished one. | ✅ done | ✅ done | 🟡 partial |
 | **Move money between limits**<br>Move what is left in one limit to another for one period, undo it, and see the history. | ✅ done | ✅ done | ✅ done |
 | **Savings goals**<br>A target that follows a savings account or a log of amounts set aside by hand. | ✅ done | ✅ done | ✅ done |
@@ -149,7 +147,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Salary split rules**<br>Rules that divide a salary between accounts and goals, each one manual or automatic. | ✅ done | ✅ done | ❌ missing |
 | **Split a salary and the Pending screen**<br>Review, edit, approve or dismiss waiting salary splits; undo one. | ✅ done | ✅ done | ❌ missing |
 
-- **Budget limits** (iOS): Monthly limits: see, make, change, delete, move money between them with undo and history. No budget settings (period start day, warning level), no rollover choice per period, and no limits for set dates.
 - **Limits for set dates** (iOS): Read only: limits for set dates are listed under the period their days touch, with days left. Not made, changed, repeated or deleted.
 
 ## Dashboard and reports
@@ -161,13 +158,12 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Needs and wants, and 50/30/20**<br>Spending split by kind, and the shares of income against the 50/30/20 rule. | ✅ done | ✅ done | ✅ done |
 | **Money flow**<br>A Sankey of income into one total and out to spending and what was saved. | ✅ done | ✅ done | ✅ done |
 | **Credit used**<br>What is owed against each credit limit. | ✅ done | ✅ done | ✅ done |
-| **Cash flow**<br>Income and expenses per month, what was kept each month and kept in total, over 6 or 12 months. | ✅ done | ✅ done | 🟡 partial |
+| **Cash flow**<br>Income and expenses per month, what was kept each month and kept in total, over 6 or 12 months. | ✅ done | ✅ done | ✅ done |
 | **Compare**<br>One period against another: income, spending, what was kept and every category. | ✅ done | ✅ done | ✅ done |
 | **Trends**<br>Category by month, spending or income over 6, 12 or 24 months, as a table or stacked columns. | ✅ done | ✅ done | ❌ missing |
 | **Net worth and what moved it**<br>How net worth changed over a period and the drivers that explain it. | ✅ done | ✅ done | 🟡 partial |
 | **Places map**<br>Where spending went, as circles on a map sized by spend. | ✅ done | ✅ done | ❌ missing |
 
-- **Cash flow** (iOS): Income and expenses by month (6 or 12 months) and this month's income, spending and what was kept. No kept-per-month chart or running total, and no table view of the chart.
 - **Net worth and what moved it** (iOS): Only the dashboard's net worth card (total, assets, liabilities, 30-day change and chart). Not the Net worth page with a chosen period and what moved it.
 
 ## Notifications
