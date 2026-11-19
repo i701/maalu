@@ -13,7 +13,11 @@ targets:
   Maalu:
     type: application
     platform: iOS
-    sources: [Maalu]
+    sources:
+      - Maalu
+      # The guides, exported from the web's by `just docs-json`; one file for both apps.
+      - path: ../android/app/src/main/assets/docs.json
+        buildPhase: resources
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.maalu

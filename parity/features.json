@@ -1913,7 +1913,12 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Docs/DocsView.swift",
+          "apps/ios/Maalu/Features/Docs/DocView.swift",
+          "apps/ios/Maalu/Features/Docs/DocSearch.swift"
+        ]
       },
       "routes": [
         "/docs",

@@ -14,6 +14,7 @@ struct MoreDestinationView: View {
         case "vendors": VendorsView()
         case "tags": TagsView()
         case "groups": GroupsView()
+        case "guides": DocsView()
         case "net-worth": NetWorthView()
         case "places": PlacesView()
         default: ComingSoonView(title: item.title, systemImage: item.systemImage)

@@ -9,9 +9,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 67 | 59 | 38 |
+| ✅ done | 67 | 59 | 39 |
 | 🟡 partial | 0 | 1 | 0 |
-| ❌ missing | 0 | 3 | 25 |
+| ❌ missing | 0 | 3 | 24 |
 | ➖ n/a | 1 | 5 | 5 |
 
 ## Still to build on Android (4)
@@ -21,7 +21,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (25)
+## Still to build on iOS (24)
 
 - ❌ **Set up and manage two-factor** (Sign in and security).
 - ❌ **Where you are signed in** (Sign in and security).
@@ -46,7 +46,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Settings** (Settings and the rest).
 - ❌ **Backup and restore** (Settings and the rest).
-- ❌ **Guides** (Settings and the rest).
 - ❌ **Health check** (Settings and the rest).
 
 ## Sign in and security
@@ -169,7 +168,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Settings**<br>Account details, numbers display, templates switch, default account and the notification and security cards. | ✅ done | ✅ done | ❌ missing |
 | **Short numbers**<br>Show large amounts as 1.23K with the exact amount a tap away. | ✅ done | ✅ done | ✅ done |
 | **Backup and restore**<br>Download everything you own as one file and restore it into an empty account. | ✅ done | ❌ missing | ❌ missing |
-| **Guides**<br>The in-app guides with search; on the app they are generated from the web's. | ✅ done | ✅ done | ❌ missing |
+| **Guides**<br>The in-app guides with search; on the app they are generated from the web's. | ✅ done | ✅ done | ✅ done |
 | **Install the app**<br>Add to home screen (web), or the app itself. | ✅ done | ➖ n/a | ➖ n/a |
 | **Offline page and cached app files**<br>A service worker keeps only static files; data is never cached. | ✅ done | ➖ n/a | ➖ n/a |
 | **Health check**<br>An unauthenticated endpoint for monitoring. | ✅ done | ✅ done | ❌ missing |
