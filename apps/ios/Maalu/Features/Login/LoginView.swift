@@ -8,12 +8,7 @@ struct LoginView: View {
         NavigationStack {
             Form {
                 if model.needsCode {
-                    Section("Two-factor code") {
-                        TextField("6-digit code or recovery code", text: $model.code)
-                            .textContentType(.oneTimeCode)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
-                    }
+                    TwoFactorCodeSection(model: model)
                 } else {
                     Section("Sign in to \(session.server ?? "")") {
                         TextField("Email", text: $model.email)
@@ -28,15 +23,29 @@ struct LoginView: View {
                 if let message = model.errorMessage {
                     Text(message).foregroundStyle(.red)
                 }
-                Button(model.isBusy ? "Signing in…" : "Sign in", action: submit)
-                    .disabled(model.isBusy)
-                Button("Use a different server", role: .destructive, action: session.clearServer)
+                Button(submitTitle, action: submit)
+                    .disabled(!model.canSubmit)
+                if model.needsCode {
+                    Button(model.usesRecoveryCode ? "Use my authenticator app" : "Use a recovery code instead", action: model.switchCodeKind)
+                    Button("Back to sign in", action: back)
+                } else {
+                    Button("Use a different server", role: .destructive, action: session.clearServer)
+                }
             }
             .navigationTitle("Maalu")
         }
     }
 
+    private var submitTitle: LocalizedStringKey {
+        if model.isBusy { return model.needsCode ? "Verifying…" : "Signing in…" }
+        return model.needsCode ? "Verify" : "Sign in"
+    }
+
     private func submit() {
         Task { await model.submit(using: session) }
+    }
+
+    private func back() {
+        model.backToPassword()
     }
 }
