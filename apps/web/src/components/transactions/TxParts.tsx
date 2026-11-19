@@ -177,19 +177,6 @@ export function TxAmount({
 	);
 }
 
-/** A neutral grey key, flat and with no tint (a blue-grey fill, like the secondary container, reads
- * as glass). Delete is a plain `color="error"` button, which the theme draws in the deep red. */
-const NEUTRAL_KEY = (() => {
-	const face = "var(--md-sys-color-surface-container-highest)";
-	const ink = "var(--md-sys-color-on-surface)";
-	return {
-		backgroundColor: face,
-		color: ink,
-		"--key-edge": `color-mix(in srgb, ${face} 68%, black)`,
-		"&:hover": { backgroundColor: `color-mix(in srgb, ${face} 90%, ${ink})` },
-	} as const;
-})();
-
 /** The actions on a transaction, as labelled buttons (they live in the detail drawer, which has
  * the room). Edit is the main one; Delete is last and red. */
 export function TxActions({
@@ -209,12 +196,8 @@ export function TxActions({
 	onEdit: () => void;
 	onDelete: () => void;
 }) {
-	// every button is filled: Edit in the brand colour, the rest neutral grey keys
-	const secondary = {
-		variant: "contained",
-		color: "inherit",
-		sx: NEUTRAL_KEY,
-	} as const;
+	// every button is a filled key in the brand navy; Delete is the deep red
+	const secondary = { variant: "contained" } as const;
 	return (
 		<>
 			{!t.adjustment && (

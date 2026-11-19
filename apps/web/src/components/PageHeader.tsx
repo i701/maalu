@@ -81,7 +81,7 @@ export default function PageHeader({
 						</Typography>
 					)}
 				</Box>
-				<Box sx={{ flex: "0 1 auto", maxWidth: "100%", ml: "auto" }}>{action}</Box>
+				<Box sx={{ flex: "0 0 auto", maxWidth: "100%", ml: "auto" }}>{action}</Box>
 			</Box>
 
 			<Stack

@@ -112,13 +112,13 @@ const KEY_STYLES = {
 		// The shadow is what makes the key: the lit top, the solid edge (its height), a tight contact
 		// shadow, a mid blur and a wide soft one beneath in the key's own colour (as spec-01's keys
 		// glow red under red, and grey under white).
-		rest: "inset 0 1px 0 rgb(255 255 255 / .1), 0 4px 0 var(--key-edge), 0 5px 2px rgb(0 0 0 / .1), 0 8px 6px color-mix(in srgb, var(--key-edge) 30%, transparent), 0 18px 22px -8px color-mix(in srgb, var(--key-edge) 60%, transparent)",
-		down: "inset 0 1px 0 rgb(255 255 255 / .1), 0 1px 0 var(--key-edge), 0 2px 2px rgb(0 0 0 / .1), 0 4px 4px color-mix(in srgb, var(--key-edge) 26%, transparent), 0 10px 16px -8px color-mix(in srgb, var(--key-edge) 50%, transparent)",
+		rest: "inset 0 1px 0 var(--key-rim), 0 4px 0 var(--key-edge), 0 5px 2px rgb(0 0 0 / .07), 0 8px 6px color-mix(in srgb, var(--key-edge) 12%, transparent), 0 18px 22px -8px color-mix(in srgb, var(--key-edge) 22%, transparent)",
+		down: "inset 0 1px 0 var(--key-rim), 0 1px 0 var(--key-edge), 0 2px 2px rgb(0 0 0 / .07), 0 4px 4px color-mix(in srgb, var(--key-edge) 10%, transparent), 0 10px 16px -8px color-mix(in srgb, var(--key-edge) 18%, transparent)",
 		// the key travels the 3px its edge loses, so its base does not move
 		translate: "0 3px",
 	},
 	inset: {
-		rest: "inset 0 1px 0 rgb(255 255 255 / .1), inset 0 -3px 0 var(--key-edge), inset 0 -4px 3px rgb(0 0 0 / .04), 0 0 0 2px var(--key-slot), 0 1px 0 2px var(--key-lit)",
+		rest: "inset 0 1px 0 var(--key-rim), inset 0 -3px 0 var(--key-edge), inset 0 -4px 3px rgb(0 0 0 / .04), 0 0 0 2px var(--key-slot), 0 1px 0 2px var(--key-lit)",
 		down: "inset 0 2px 3px rgb(0 0 0 / .2), inset 0 -1px 0 var(--key-edge), 0 0 0 2px var(--key-slot), 0 1px 0 2px var(--key-lit)",
 		translate: "none",
 	},
@@ -128,15 +128,43 @@ const KEY_STYLES = {
 const KEY_LIGHT = {
 	"--key-slot": "rgb(38 38 36 / .16)",
 	"--key-lit": "rgb(255 255 255 / .8)",
+	// the light rim along a key's top: a hint on a light page, a clear line on a dark one
+	"--key-rim": "rgb(255 255 255 / .1)",
 } as const;
-const KEY_DARK = { "--key-slot": "#000", "--key-lit": "rgb(255 255 255 / .07)" } as const;
+const KEY_DARK = {
+	"--key-slot": "#000",
+	"--key-lit": "rgb(255 255 255 / .07)",
+	"--key-rim": "rgb(255 255 255 / .24)",
+} as const;
 const KEY: keyof typeof KEY_STYLES = "edge";
 const { rest: KEY_REST, down: KEY_DOWN, translate: KEY_SINK } = KEY_STYLES[KEY];
+// An outlined button, flat as MUI draws it: a hairline border and no depth (raised keys are for
+// the main contained buttons only).
+const FLAT_BUTTON = {
+	backgroundImage: "none",
+	backgroundColor: "transparent",
+	boxShadow: "none",
+	color: "var(--md-sys-color-on-surface)",
+	border: "1px solid var(--md-sys-color-outline-variant)",
+	borderRadius: "var(--shape-lg)",
+	"&:hover": {
+		boxShadow: "none",
+		backgroundColor: "color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent)",
+		borderColor: "var(--md-sys-color-outline)",
+	},
+	"&.Mui-focusVisible": { boxShadow: "none" },
+	"&:active": { boxShadow: "none", backgroundImage: "none", translate: "none" },
+} as const;
+
 // Matt, not glossy: a fine grey grain over the face (lighter and darker speckle at 9%) and a face
 // that is nearly flat, with only the faintest rim of light along the top. A bright rim and a white
 // gradient are what read as gloss.
 const GRAIN = `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='.33 .33 .33 0 0 .33 .33 .33 0 0 .33 .33 .33 0 0 0 0 0 0 .09'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")`;
 const raisedKey = {
+	// The grain and the face gradient fill the whole key, border included. By default they sit in
+	// the padding box and tile into an outlined key's 1px border, which showed as a pale line along
+	// its bottom edge.
+	backgroundOrigin: "border-box",
 	backgroundImage: `${GRAIN}, linear-gradient(180deg, rgb(255 255 255 / .05), rgb(0 0 0 / .05))`,
 	boxShadow: KEY_REST,
 	"&:hover": { boxShadow: KEY_REST },
@@ -462,19 +490,10 @@ const theme = createTheme({
 					variants: [
 						{ props: { variant: "contained" }, style: raisedKey },
 						{
-							// An outlined button is a neutral key: no outline, a grey face and its own edge.
+							// Raised keys are for the main (contained) buttons only. An outlined button stays
+							// flat, as MUI draws it: a hairline border and no depth.
 							props: { variant: "outlined" },
-							style: {
-								...raisedKey,
-								border: "1px solid transparent",
-								backgroundColor: "var(--md-sys-color-surface-container-high)",
-								"--key-edge": "var(--md-sys-color-outline-variant)",
-								"&:hover": {
-									...raisedKey["&:hover"],
-									backgroundColor: "var(--md-sys-color-surface-container-highest)",
-									borderColor: "transparent",
-								},
-							},
+							style: FLAT_BUTTON,
 						},
 						{
 							// Every destructive button (Delete, Move to trash): the deep red as the face and the
@@ -518,19 +537,19 @@ const theme = createTheme({
 						},
 					],
 				},
-				// spec-01's key is 44px tall with 14px at the sides, but its site is usually looked at
-				// zoomed to 140%, where that is 62px. These are scaled up (x1.2) to look like it at 100%.
+				// The heights from before spec-01's exact key was tried (44px, which looked small and, scaled
+				// up, too big on a phone): the same on every screen. A toolbar's buttons share one size.
 				sizeSmall: {
-					minHeight: 40,
+					minHeight: 36,
 					paddingInline: 14,
 					minWidth: 64,
 					fontSize: 14,
 					borderRadius: "var(--shape-sm)",
 				},
-				sizeMedium: { minHeight: 52, paddingInline: 18, minWidth: 80, fontSize: 15 },
+				sizeMedium: { minHeight: 46, paddingInline: 20, minWidth: 80, fontSize: 15 },
 				sizeLarge: {
 					minHeight: 60,
-					paddingInline: 24,
+					paddingInline: 28,
 					minWidth: 96,
 					fontSize: 17,
 					borderRadius: "var(--shape-lg)",
@@ -541,10 +560,8 @@ const theme = createTheme({
 						color: "color-mix(in srgb, var(--md-sys-color-on-surface) 38%, transparent)",
 					},
 				},
-				outlined: {
-					borderColor: "var(--md-sys-color-outline-variant)",
-					"&:hover": { borderColor: "var(--md-sys-color-outline)" },
-				},
+				// (no `outlined` slot rule: its outline-variant border showed as a pale line round the neutral
+				// key, over the transparent border the key's own variant sets)
 			},
 		},
 		// Switch (M3: 52x32 track, a small thumb off that grows when on and again when pressed). Written

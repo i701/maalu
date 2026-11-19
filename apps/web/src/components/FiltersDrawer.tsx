@@ -28,6 +28,7 @@ export default function FiltersDrawer({
 			<Button
 				variant="outlined"
 				color="inherit"
+				size="small"
 				startIcon={<TuneIcon />}
 				onClick={() => setOpen(true)}
 				sx={sx}

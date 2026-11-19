@@ -93,7 +93,7 @@ export default function TransactionDrawer({
 			}}
 		>
 			{/* a grab bar only where the sheet is a phone's bottom sheet */}
-			<Box sx={{ display: { xs: "flex", sm: "none" } }}>
+			<Box sx={{ display: { xs: "flex", sm: "none" }, justifyContent: "center" }}>
 				<SheetHandle />
 			</Box>
 			{t && (
@@ -195,7 +195,18 @@ export default function TransactionDrawer({
 								.join(", ")}
 					</Fact>
 					<Box
-						sx={{ display: "flex", flexWrap: "wrap", justifyContent: "flex-end", gap: 1, mt: 3 }}
+						sx={{
+							display: "flex",
+							flexWrap: "wrap",
+							justifyContent: "flex-end",
+							gap: 1.5,
+							mt: 3,
+							// on a phone the buttons share the width two by two, not ragged
+							"& > .MuiButton-root": {
+								flex: "1 1 calc(50% - 6px)",
+								"@media (min-width: 600px)": { flex: "0 0 auto" },
+							},
+						}}
 					>
 						<TxActions
 							t={t}
