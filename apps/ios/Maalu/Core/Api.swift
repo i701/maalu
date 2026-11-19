@@ -51,6 +51,11 @@ struct Api: Sendable {
         await empty(method: "DELETE", path: path)
     }
 
+    /// The raw body, for a file.
+    func data(_ path: String) async -> ApiResult<Data> {
+        await perform(method: "GET", path: path)
+    }
+
     /// Sends a file as the raw request body.
     func upload(_ path: String, query: [URLQueryItem], data: Data, contentType: String) async -> ApiResult<Void> {
         switch await perform(method: "POST", path: path, query: query, body: data, contentType: contentType) {

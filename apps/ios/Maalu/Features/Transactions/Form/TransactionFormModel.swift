@@ -17,7 +17,9 @@ final class TransactionFormModel {
     /// How many were saved with "Save and add another" while the form stayed open.
     private(set) var savedCount = 0
     private(set) var pending: [PendingAttachment] = []
-    /// Set when the transaction was created but some of its files were not.
+    /// Web addresses for a new transaction, added once it exists.
+    private(set) var pendingLinks: [PendingLink] = []
+    /// Set when the transaction was created but some of its files or links were not.
     private(set) var filesPendingFor: String?
     private let original: Transaction?
     /// Whether the person has set "Planned" themselves, which a change of date then never overrides.
@@ -165,7 +167,7 @@ final class TransactionFormModel {
             errorMessage = message
             return false
         case .ok(let saved, _):
-            return pending.isEmpty ? true : await uploadPending(to: saved.id, using: api)
+            return pending.isEmpty && pendingLinks.isEmpty ? true : await uploadPending(to: saved.id, using: api)
         }
     }
 
@@ -180,8 +182,24 @@ final class TransactionFormModel {
         pending.removeAll { $0.id == attachment.id }
     }
 
+    /// Returns a message when the typed address cannot be added.
+    func addLink(_ typed: String) -> LocalizedStringResource? {
+        if pendingLinks.count >= PendingAttachment.maxCount { return "A transaction takes at most 10 links." }
+        switch ParsedLink(typed) {
+        case .problem(let problem): return problem
+        case .url(let url):
+            pendingLinks.append(PendingLink(url: url))
+            return nil
+        }
+    }
+
+    func removeLink(_ link: PendingLink) {
+        pendingLinks.removeAll { $0.id == link.id }
+    }
+
     private func uploadPending(to transactionID: String, using api: Api) async -> Bool {
         var failed: [PendingAttachment] = []
+        var failedLinks: [PendingLink] = []
         var lastMessage = ""
         for file in pending {
             let result = await api.upload("transactions/\(transactionID)/attachments", query: [URLQueryItem(name: "filename", value: file.filename)], data: file.data, contentType: file.contentType)
@@ -190,10 +208,18 @@ final class TransactionFormModel {
                 lastMessage = message
             }
         }
+        for link in pendingLinks {
+            let result: ApiResult<TransactionLink> = await api.postJSON("transactions/\(transactionID)/links", body: ["url": link.url])
+            if case .failed(_, let message) = result {
+                failedLinks.append(link)
+                lastMessage = message
+            }
+        }
         pending = failed
-        guard failed.isEmpty else {
+        pendingLinks = failedLinks
+        guard failed.isEmpty && failedLinks.isEmpty else {
             filesPendingFor = transactionID
-            errorMessage = String(localized: "The transaction is saved, but \(failed.count) file(s) did not upload (\(lastMessage)). Save again to retry them.")
+            errorMessage = String(localized: "The transaction is saved, but \(failed.count + failedLinks.count) file(s) or link(s) did not go up (\(lastMessage)). Save again to retry them.")
             return false
         }
         filesPendingFor = nil

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct TransactionDetailContent: View {
     let transaction: Transaction
+    let files: TransactionFilesModel
 
     var body: some View {
         List {
@@ -34,6 +35,7 @@ struct TransactionDetailContent: View {
                     if transaction.planned { Label("Planned", systemImage: "calendar") }
                 }
             }
+            TransactionFilesSection(model: files, canAdd: transaction.deletedAt == nil)
         }
     }
 

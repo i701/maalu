@@ -38,4 +38,32 @@ struct AttachmentTests {
         let full = (0..<PendingAttachment.maxCount).map { _ in PendingAttachment(filename: "a.pdf", data: small, contentType: "application/pdf") }
         #expect(PendingAttachment.problem(adding: small, to: full) != nil)
     }
+
+    @Test func aLinkKeepsAFullAddressAndAddsHttpsToABareOne() {
+        #expect(ParsedLink("https://shop.example.com/o/1") == .url("https://shop.example.com/o/1"))
+        #expect(ParsedLink("  example.com/receipt ") == .url("https://example.com/receipt"))
+        #expect(ParsedLink("localhost:8000/x") == .url("https://localhost:8000/x"))
+    }
+
+    @Test func aLinkMustBeHttpOrHttpsWithAHostAndNoPassword() {
+        for bad in ["javascript:alert(1)", "mailto:a@b.co", "ftp://example.com", "data:text/html,x", "", "not a url", "https://nodot", "https://user:pw@example.com"] {
+            if case .url = ParsedLink(bad) { Issue.record("\(bad) was let through") }
+        }
+    }
+
+    @Test func aLinkShowsItsSiteWithoutWww() throws {
+        let link = try Api.decoder.decode(TransactionLink.self, from: Data(#"{"id":"l","url":"https://www.example.com/a?b=1","title":null}"#.utf8))
+        #expect(link.site == "example.com")
+    }
+
+    @MainActor @Test func aNewTransactionKeepsItsLinksUntilSavedAndAtMostTen() {
+        let model = TransactionFormModel()
+        #expect(model.addLink("example.com") == nil)
+        #expect(model.pendingLinks.map(\.url) == ["https://example.com"])
+        #expect(model.addLink("mailto:a@b.co") != nil)
+        for n in 2...10 { #expect(model.addLink("example.com/\(n)") == nil) }
+        #expect(model.addLink("example.com/11") != nil)
+        model.removeLink(model.pendingLinks[0])
+        #expect(model.pendingLinks.count == 9)
+    }
 }

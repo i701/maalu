@@ -827,10 +827,12 @@
         ]
       },
       "ios": {
-        "status": "partial",
-        "note": "Photos and PDFs added while making a new transaction, uploaded once it is saved. Not yet: seeing, opening or removing a transaction's files, files on an edit, or web links.",
+        "status": "done",
         "evidence": [
-          "apps/ios/Maalu/Features/Transactions/Form/TransactionAttachmentsSection.swift"
+          "apps/ios/Maalu/Features/Transactions/Form/TransactionAttachmentsSection.swift",
+          "apps/ios/Maalu/Features/Transactions/Files/TransactionFilesSection.swift",
+          "apps/ios/Maalu/Features/Transactions/Files/TransactionFilesModel.swift",
+          "apps/ios/Maalu/Features/Transactions/Files/ParsedLink.swift"
         ]
       },
       "api": [

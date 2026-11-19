@@ -9,8 +9,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 67 | 59 | 30 |
-| 🟡 partial | 0 | 1 | 1 |
+| ✅ done | 67 | 59 | 31 |
+| 🟡 partial | 0 | 1 | 0 |
 | ❌ missing | 0 | 3 | 32 |
 | ➖ n/a | 1 | 5 | 5 |
 
@@ -21,9 +21,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (33)
+## Still to build on iOS (32)
 
-- 🟡 **Receipts and web links** (Transactions). Photos and PDFs added while making a new transaction, uploaded once it is saved. Not yet: seeing, opening or removing a transaction's files, files on an edit, or web links.
 - ❌ **Two-factor sign-in** (Sign in and security).
 - ❌ **Set up and manage two-factor** (Sign in and security).
 - ❌ **Where you are signed in** (Sign in and security).
@@ -103,7 +102,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Planned transactions and Mark as paid**<br>Something coming up that counts toward nothing until it is paid with the real day and amount. | ✅ done | ✅ done | ✅ done |
 | **Refunds**<br>Give money back for a purchase (whole or by item), or link existing income to a purchase. | ✅ done | ✅ done | ❌ missing |
 | **Split a purchase into items**<br>Items with quantity, category and tax (GST included or excluded) that add up to the amount. | ✅ done | ✅ done | ❌ missing |
-| **Receipts and web links**<br>Photos and PDFs and web links on a transaction. | ✅ done | ✅ done | 🟡 partial |
+| **Receipts and web links**<br>Photos and PDFs and web links on a transaction. | ✅ done | ✅ done | ✅ done |
 | **Mark a transaction on the map**<br>A pin and an optional place name, with place search by name. | ✅ done | ✅ done | ❌ missing |
 | **Merge two entries into one transfer**<br>A suggestion card for pairs entered twice, and a manual merge when an entry has an exact match. | ✅ done | ✅ done | ❌ missing |
 | **Transaction groups**<br>Bundle related transactions under a name and see what they add up to. | ✅ done | ✅ done | ❌ missing |
@@ -111,7 +110,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Import a bank statement**<br>Read a bank's CSV, review the rows, assign vendors and categories, import as one undoable batch. | ✅ done | ➖ n/a | ➖ n/a |
 
 - **Trash** (iOS): Restore and delete for good one by one; bulk actions wait for tx-bulk.
-- **Receipts and web links** (iOS): Photos and PDFs added while making a new transaction, uploaded once it is saved. Not yet: seeing, opening or removing a transaction's files, files on an edit, or web links.
 - **Import a bank statement** (Android): Web only, by choice: importing a statement is done on the web, where the rows are easier to review.
 - **Import a bank statement** (iOS): Web only, by choice: importing a statement is done on the web, where the rows are easier to review.
 

@@ -9,10 +9,17 @@ struct TransactionDetailView: View {
     @State private var dialog = MarkPaidDialogModel()
     @State private var isConfirmingDelete = false
     @State private var errorMessage: String?
+    @State private var files: TransactionFilesModel
+
+    init(model: TransactionsModel, id: String) {
+        self.model = model
+        self.id = id
+        _files = State(initialValue: TransactionFilesModel(transactionID: id))
+    }
 
     var body: some View {
         if let transaction = model.transaction(id: id) {
-            TransactionDetailContent(transaction: transaction)
+            TransactionDetailContent(transaction: transaction, files: files)
                 .navigationTitle(transaction.title)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
