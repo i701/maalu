@@ -1582,10 +1582,11 @@
         ]
       },
       "ios": {
-        "status": "partial",
-        "note": "Income and expenses by month (6 or 12 months) and this month's income, spending and what was kept. No kept-per-month chart or running total, and no table view of the chart.",
+        "status": "done",
         "evidence": [
-          "apps/ios/Maalu/Features/Dashboard/CashFlowSection.swift"
+          "apps/ios/Maalu/Features/Dashboard/CashFlowSection.swift",
+          "apps/ios/Maalu/Features/Dashboard/KeptMonth.swift",
+          "apps/ios/Maalu/Features/Dashboard/CashFlowTableView.swift"
         ]
       }
     },

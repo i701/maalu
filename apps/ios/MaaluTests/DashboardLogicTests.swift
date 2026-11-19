@@ -80,4 +80,15 @@ struct DashboardLogicTests {
         let october = november.shifted(by: -1, calendar: calendar)
         #expect(october.trendEnd(now: now) == october.end)
     }
+
+    @Test func keptRunsFromTheFirstMonthShownAndCanGoNegative() {
+        let months = KeptMonth.months(from: [
+            MonthlyPoint(month: "2026-09", income: "1000.10", expense: "400"),
+            MonthlyPoint(month: "2026-10", income: "500", expense: "800.20"),
+            MonthlyPoint(month: "2026-11", income: "0", expense: "0"),
+        ])
+        #expect(months.map(\.kept) == [Decimal(string: "600.10"), Decimal(string: "-300.20"), 0])
+        #expect(months.map(\.running) == [Decimal(string: "600.10"), Decimal(string: "299.90"), Decimal(string: "299.90")])
+        #expect(KeptMonth.months(from: []).isEmpty)
+    }
 }

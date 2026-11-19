@@ -13,7 +13,7 @@ struct CashFlowSection: View {
                 }
             }
             .pickerStyle(.segmented)
-            CashFlowChart(months: shown)
+            CashFlowChart(months: shown.map(\.point))
             if let latest = months.last, let start = latest.start {
                 Text(start, format: .dateTime.month(.wide).year())
                     .font(.subheadline)
@@ -22,10 +22,26 @@ struct CashFlowSection: View {
                 LabeledContent("Spent") { MoneyText(latest.expenseValue, currency: currency) }
                 LabeledContent("Kept") { MoneyText(latest.kept, currency: currency) }
             }
+            VStack(alignment: .leading) {
+                Text("Kept each month").font(.headline)
+                KeptChart(months: shown)
+            }
+            if shown.count > 1, let first = shown.first?.point.start, let last = shown.last {
+                VStack(alignment: .leading) {
+                    Text("Kept in total").font(.headline)
+                    KeptTotalChart(months: shown)
+                }
+                AmountRow {
+                    Text("Since \(first, format: .dateTime.month(.wide).year())")
+                } amount: {
+                    MoneyText(last.running, currency: currency)
+                }
+            }
+            NavigationLink("Show as Table", value: DashboardRoute.cashFlowTable(months: range.rawValue))
         }
     }
 
-    private var shown: [MonthlyPoint] {
-        Array(months.suffix(range.rawValue))
+    private var shown: [KeptMonth] {
+        KeptMonth.months(from: months.suffix(range.rawValue))
     }
 }
