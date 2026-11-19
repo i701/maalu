@@ -20,7 +20,6 @@ struct AccountDetailView: View {
                             .foregroundStyle(.secondary)
                         MoneyText(account.balance, currency: account.currency)
                             .font(.largeTitle)
-                            .bold()
                     }
                 }
                 if let month = model.month {

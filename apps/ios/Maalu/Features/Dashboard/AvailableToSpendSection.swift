@@ -11,7 +11,6 @@ struct AvailableToSpendSection: View {
                     .foregroundStyle(.secondary)
                 MoneyText(available.magnitude, currency: available.currency)
                     .font(.largeTitle)
-                    .bold()
                     .foregroundStyle(available.isShort ? Color.red : Color.primary)
                 if let end = ISODate.date(available.periodEnd) {
                     Text("until \(end, format: .dateTime.day().month(.wide))")

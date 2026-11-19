@@ -9,7 +9,7 @@ struct BudgetLineRow: View {
             AmountRow {
                 Text(line.name)
             } amount: {
-                Text("\(line.percent)%").monospacedDigit()
+                Text("\(line.percent)%").numericFont()
             }
             if let runs = BudgetText.runs(from: line.runsFrom, until: line.runsUntil) {
                 Text(runs).font(.subheadline).foregroundStyle(.secondary)

@@ -14,7 +14,6 @@ struct BudgetSummarySection: View {
                     .foregroundStyle(.secondary)
                 MoneyText(totals.activity, currency: budget.currency)
                     .font(.largeTitle)
-                    .bold()
                 Text("of \(MoneyFormat.string(totals.amount, currency: budget.currency))")
                     .foregroundStyle(.secondary)
                 ProgressView(value: min(Double(totals.percent) / 100, 1))
@@ -34,7 +33,7 @@ struct BudgetSummarySection: View {
                     Text(kind.title)
                 } amount: {
                     Text("\(MoneyFormat.string(kind.spent, currency: budget.currency)) / \(MoneyFormat.string(kind.limit, currency: budget.currency))")
-                        .monospacedDigit()
+                        .numericFont()
                 }
             }
         }

@@ -8,7 +8,7 @@ struct GoalRow: View {
             AmountRow {
                 Label(goal.name, systemImage: goal.reached ? "checkmark.circle.fill" : "target")
             } amount: {
-                Text("\(goal.percent)%").monospacedDigit()
+                Text("\(goal.percent)%").numericFont()
             }
             ProgressView(value: min(Double(goal.percent) / 100, 1))
                 .tint(goal.reached ? Color.green : Color.accentColor)

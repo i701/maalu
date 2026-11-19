@@ -19,6 +19,6 @@ struct SubscriptionAmountText: View {
                 Text(value, format: style)
             }
         }
-        .monospacedDigit()
+        .numericFont()
     }
 }

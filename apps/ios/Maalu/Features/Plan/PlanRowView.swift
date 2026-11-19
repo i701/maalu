@@ -15,12 +15,12 @@ struct PlanRowView: View {
             }
         } amount: {
             VStack(alignment: .trailing, spacing: 2) {
-                Text(prefix + MoneyFormat.string(row.amount, currency: currency)).monospacedDigit()
+                Text(prefix + MoneyFormat.string(row.amount, currency: currency)).numericFont()
                 if let left = row.left {
                     Text("Left \(MoneyFormat.string(left, currency: currency))")
                         .font(.subheadline)
                         .foregroundStyle(left < 0 ? Color.red : Color.secondary)
-                        .monospacedDigit()
+                        .numericFont()
                 } else {
                     Text("Expected · not counted").font(.subheadline).foregroundStyle(.secondary)
                 }

@@ -10,7 +10,7 @@ struct MoneyFlowTable: View {
             AmountRow {
                 Text("\(names[link.source] ?? "") → \(names[link.target] ?? "")")
             } amount: {
-                Text(MoneyFormat.string(Decimal(link.value), currency: currency)).monospacedDigit()
+                Text(MoneyFormat.string(Decimal(link.value), currency: currency)).numericFont()
             }
         }
     }

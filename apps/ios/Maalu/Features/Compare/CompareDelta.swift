@@ -21,7 +21,7 @@ struct CompareDelta: View {
                 Text("\(MoneyFormat.string(abs(moved), currency: currency))\(detail)")
             }
             .font(.subheadline)
-            .monospacedDigit()
+            .numericFont()
             .foregroundStyle(up == goodWhenUp ? Color.green : Color.red)
         }
     }

@@ -15,6 +15,6 @@ struct MoneyText: View {
 
     var body: some View {
         Text(amount, format: .currency(code: currency).presentation(.isoCode))
-            .monospacedDigit()
+            .numericFont()
     }
 }

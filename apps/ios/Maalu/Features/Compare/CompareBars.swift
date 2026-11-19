@@ -58,7 +58,7 @@ struct CompareBars: View {
             Text(MoneyFormat.string(value, currency: currency))
                 .font(.footnote)
                 .foregroundStyle(.secondary)
-                .monospacedDigit()
+                .numericFont()
                 .accessibilityLabel(String(localized: label) + " " + MoneyFormat.string(value, currency: currency))
         }
     }

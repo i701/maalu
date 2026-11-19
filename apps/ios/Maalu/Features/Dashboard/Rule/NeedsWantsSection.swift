@@ -12,7 +12,7 @@ struct NeedsWantsSection: View {
                         Text(share.kind.title)
                     } amount: {
                         Text("\(MoneyFormat.string(share.total, currency: currency)) · \(share.share, format: .percent.precision(.fractionLength(0)))")
-                            .monospacedDigit()
+                            .numericFont()
                     }
                     ProgressView(value: share.share)
                         .tint(share.kind == .need ? Color.blue : share.kind == .want ? Color.orange : Color.gray)

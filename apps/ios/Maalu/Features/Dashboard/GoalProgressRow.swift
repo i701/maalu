@@ -13,7 +13,7 @@ struct GoalProgressRow: View {
                         .foregroundStyle(.secondary)
                 }
             } amount: {
-                Text("\(goal.percent)%").monospacedDigit()
+                Text("\(goal.percent)%").numericFont()
             }
             ProgressView(value: min(Double(goal.percent) / 100, 1))
                 .accessibilityLabel(goal.name)

@@ -14,7 +14,7 @@ struct IncomeRuleSection: View {
                             Text(row.key.targetText).font(.subheadline).foregroundStyle(.secondary)
                         }
                     } amount: {
-                        Text("\(row.percent, format: .number.precision(.fractionLength(0...1)))%").monospacedDigit()
+                        Text("\(row.percent, format: .number.precision(.fractionLength(0...1)))%").numericFont()
                     }
                     ProgressView(value: min(max(row.percent / 100, 0), 1))
                         .accessibilityLabel(Text(row.key.title))

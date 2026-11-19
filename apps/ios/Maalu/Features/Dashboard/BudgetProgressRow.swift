@@ -19,7 +19,7 @@ struct BudgetProgressRow: View {
                 }
             } amount: {
                 Text("\(percent)%")
-                    .monospacedDigit()
+                    .numericFont()
                     .foregroundStyle(status == "ok" ? Color.secondary : Color(budgetStatus: status))
             }
             ProgressView(value: min(Double(percent) / 100, 1))

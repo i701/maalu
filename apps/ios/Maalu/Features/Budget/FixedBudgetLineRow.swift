@@ -9,7 +9,7 @@ struct FixedBudgetLineRow: View {
             AmountRow {
                 Text(line.name)
             } amount: {
-                Text("\(line.percent)%").monospacedDigit()
+                Text("\(line.percent)%").numericFont()
             }
             Text(BudgetText.window(of: line)).font(.subheadline).foregroundStyle(.secondary)
             ProgressView(value: min(Double(line.percent) / 100, 1))

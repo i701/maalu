@@ -7,10 +7,10 @@ struct TransactionAmount: View {
         if let value = transaction.signedAmount {
             if transaction.type == .transfer {
                 Text(value, format: .currency(code: transaction.currency).presentation(.isoCode))
-                    .monospacedDigit()
+                    .numericFont()
             } else {
                 Text(value, format: .currency(code: transaction.currency).presentation(.isoCode).sign(strategy: .always()))
-                    .monospacedDigit()
+                    .numericFont()
                     .foregroundStyle(transaction.type == .income ? Color.green : Color.red)
             }
         } else {

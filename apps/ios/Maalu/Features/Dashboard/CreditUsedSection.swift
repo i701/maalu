@@ -17,7 +17,7 @@ struct CreditUsedSection: View {
                     } amount: {
                         Text("\(card.usage.percent)%")
                             .foregroundStyle(card.usage.isHigh ? Color.red : Color.secondary)
-                            .monospacedDigit()
+                            .numericFont()
                     }
                     ProgressView(value: min(Double(card.usage.percent) / 100, 1))
                         .tint(card.usage.isHigh ? Color.red : Color.accentColor)
