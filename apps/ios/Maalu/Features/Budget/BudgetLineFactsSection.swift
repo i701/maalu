@@ -11,6 +11,7 @@ struct BudgetLineFactsSection: View {
             if let movedIn = nonZero(line.movedIn) { LabeledContent("Moved in", value: MoneyFormat.string(movedIn, currency: currency)) }
             if let movedOut = nonZero(line.movedOut) { LabeledContent("Moved out", value: MoneyFormat.string(movedOut, currency: currency)) }
             LabeledContent("Categories", value: line.categories.map(\.name).formatted())
+            if let warnPercent = line.warnPercent { LabeledContent("Warns at", value: (Double(warnPercent) / 100).formatted(.percent)) }
             if line.rollover { LabeledContent("Carries over", value: String(localized: "Yes")) }
             if let kind = line.kind { LabeledContent("Kind", value: kind == "need" ? String(localized: "Need") : String(localized: "Want")) }
         }

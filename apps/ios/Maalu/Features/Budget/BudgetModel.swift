@@ -10,6 +10,13 @@ final class BudgetModel {
     private(set) var errorMessage: String?
 
     var isCurrentMonth: Bool { month.isCurrent() }
+    /// The budget's own dates, when its months don't start on the 1st and so don't match the calendar month.
+    var periodDates: Range<Date>? {
+        guard let budget, budget.periodStartDay != 1,
+              let start = ISODate.date(budget.period.start), let end = ISODate.date(budget.period.end) else { return nil }
+        return start..<end
+    }
+
     var kindTotals: [BudgetKindTotal] { BudgetKindTotal.totals(of: budget?.lines ?? []) }
 
     func line(id: String) -> BudgetLine? {

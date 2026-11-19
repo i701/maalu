@@ -3,10 +3,10 @@ import Testing
 @testable import Maalu
 
 struct BudgetLineDraftTests {
-    private func line(rollover: Bool = false) throws -> BudgetLine {
+    private func line(rollover: Bool = false, warnPercent: Int? = nil) throws -> BudgetLine {
         try Api.decoder.decode(BudgetLine.self, from: Data(#"""
         {"id":"l","name":"Food","activity":"0","amount":"600.0000","available":"600","carried":"0","moved_in":"0","moved_out":"0",
-         "rollover":\#(rollover),"percent":0,"status":"ok","kind":null,"runs_from":null,"runs_until":null,
+         "rollover":\#(rollover),"warn_percent":\#(warnPercent.map(String.init) ?? "null"),"percent":0,"status":"ok","kind":null,"runs_from":null,"runs_until":null,
          "categories":[{"id":"c1","name":"Groceries"},{"id":"c2","name":"Dining"}]}
         """#.utf8))
     }
@@ -63,5 +63,22 @@ struct BudgetLineDraftTests {
         let more = try json(changed.patchRequest(from: original))
         #expect(more["category_ids"] as? [String] == ["c1"])
         #expect(more["rollover"] as? Bool == true)
+    }
+
+    @Test func anOwnWarningLevelIsSentAndClearingItSendsNull() throws {
+        let original = BudgetLineDraft(editing: try line(warnPercent: 90))
+        #expect(original.warnPercent == 90)
+        #expect(try json(original.patchRequest(from: original))["warn_percent"] == nil)
+
+        var cleared = original
+        cleared.warnPercent = nil
+        let body = try json(cleared.patchRequest(from: original))
+        #expect(body.keys.contains("warn_percent"))
+        #expect(body["warn_percent"] is NSNull)
+
+        var draft = BudgetLineDraft()
+        #expect(try json(draft.createRequest())["warn_percent"] == nil)
+        draft.warnPercent = 70
+        #expect(try json(draft.createRequest())["warn_percent"] as? Int == 70)
     }
 }

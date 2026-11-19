@@ -7,8 +7,8 @@ struct BudgetLineFormView: View {
     private let currency: String
     private let onSaved: () -> Void
 
-    init(editing line: BudgetLine? = nil, otherLines: [BudgetLine], currency: String, onSaved: @escaping () -> Void) {
-        _model = State(initialValue: BudgetLineFormModel(editing: line, otherLines: otherLines))
+    init(editing line: BudgetLine? = nil, otherLines: [BudgetLine], budgetWarnPercent: Int, currency: String, onSaved: @escaping () -> Void) {
+        _model = State(initialValue: BudgetLineFormModel(editing: line, otherLines: otherLines, budgetWarnPercent: budgetWarnPercent))
         self.currency = currency
         self.onSaved = onSaved
     }
@@ -31,6 +31,16 @@ struct BudgetLineFormView: View {
                     Toggle("Carry unspent money over", isOn: $model.draft.rollover)
                 } footer: {
                     Text("What is not spent in a month is added to the next month's limit.")
+                }
+                Section {
+                    Toggle("Own warning level", isOn: $model.hasOwnWarnLevel)
+                    if model.hasOwnWarnLevel {
+                        LabeledContent("Warn at", value: "\(model.ownWarnPercent)%")
+                        Slider(value: $model.ownWarnLevel, in: 1...100) { Text("Warn at") }
+                            .accessibilityValue("\(model.ownWarnPercent)%")
+                    }
+                } footer: {
+                    Text("Otherwise it warns at the budget's level, \(model.budgetWarnPercent)%.")
                 }
                 if let message = model.errorMessage {
                     Text(message).foregroundStyle(.red)

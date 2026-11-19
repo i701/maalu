@@ -22,7 +22,7 @@ struct BudgetTests {
 
     private func budget(lines: [String], fixed: [String] = [], period: (String, String) = ("2026-11-01", "2026-11-30")) throws -> Budget {
         try Api.decoder.decode(Budget.self, from: Data(#"""
-        {"currency":"MVR","attention":1,"moves":[],"period":{"start":"\#(period.0)","end":"\#(period.1)","is_current":true},
+        {"currency":"MVR","period_start_day":1,"warn_percent":80,"attention":1,"moves":[],"period":{"start":"\#(period.0)","end":"\#(period.1)","is_current":true},
          "totals":{"activity":"700","amount":"1000","available":"300","percent":70,"status":"ok"},
          "lines":[\#(lines.joined(separator: ","))],"fixed_lines":[\#(fixed.joined(separator: ","))]}
         """#.utf8))
@@ -93,5 +93,17 @@ struct BudgetTests {
         #expect(String(localized: BudgetStatus.title("ok")) == "On track")
         #expect(String(localized: BudgetStatus.title("warning")) == "Close to limit")
         #expect(String(localized: BudgetStatus.title("over")) == "Over the limit")
+    }
+
+    @MainActor @Test func settingsSendOnlyWhatChanged() throws {
+        let model = BudgetSettingsModel(budget: try budget(lines: []))
+        #expect(!model.canSave)
+        model.warnPercent = 90
+        #expect(model.request == BudgetSettingsRequest(warnPercent: 90))
+        model.startDay = 25
+        #expect(model.request == BudgetSettingsRequest(periodStartDay: 25, warnPercent: 90))
+        model.warnPercent = 80
+        #expect(model.request == BudgetSettingsRequest(periodStartDay: 25))
+        #expect(model.canSave)
     }
 }

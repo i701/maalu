@@ -1224,12 +1224,12 @@
         ]
       },
       "ios": {
-        "status": "partial",
-        "note": "Monthly limits: see, make, change, delete, move money between them with undo and history. No budget settings (period start day, warning level), no rollover choice per period, and no limits for set dates.",
+        "status": "done",
         "evidence": [
           "apps/ios/Maalu/Features/Budget/BudgetView.swift",
           "apps/ios/Maalu/Features/Budget/Form/BudgetLineFormView.swift",
-          "apps/ios/Maalu/Features/Budget/BudgetLineDetailView.swift"
+          "apps/ios/Maalu/Features/Budget/BudgetLineDetailView.swift",
+          "apps/ios/Maalu/Features/Budget/Settings/BudgetSettingsView.swift"
         ]
       },
       "routes": [

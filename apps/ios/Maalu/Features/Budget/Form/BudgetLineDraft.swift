@@ -5,6 +5,8 @@ struct BudgetLineDraft: Equatable {
     var amount: Decimal?
     var categoryIDs: Set<String> = []
     var rollover = false
+    /// The limit's own warning level; nil follows the budget's.
+    var warnPercent: Int?
 
     init() {}
 
@@ -13,6 +15,7 @@ struct BudgetLineDraft: Equatable {
         amount = Money.decimal(line.amount)
         categoryIDs = Set(line.categories.map(\.id))
         rollover = line.rollover
+        warnPercent = line.warnPercent
     }
 
     /// The first thing wrong with the draft, or nil when it can be sent. The server checks everything again.
@@ -28,6 +31,7 @@ struct BudgetLineDraft: Equatable {
             name: name.trimmingCharacters(in: .whitespaces),
             amount: amount.map(Money.string),
             categoryIds: categoryIDs.sorted(),
+            warnPercent: warnPercent.map(Optional.some),
             rollover: rollover
         )
     }
@@ -38,6 +42,7 @@ struct BudgetLineDraft: Equatable {
             name: name != original.name ? name.trimmingCharacters(in: .whitespaces) : nil,
             amount: amount != original.amount ? amount.map(Money.string) : nil,
             categoryIds: categoryIDs != original.categoryIDs ? categoryIDs.sorted() : nil,
+            warnPercent: warnPercent != original.warnPercent ? .some(warnPercent) : nil,
             rollover: rollover != original.rollover ? rollover : nil
         )
     }

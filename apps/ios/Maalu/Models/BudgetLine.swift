@@ -10,6 +10,7 @@ struct BudgetLine: Decodable, Identifiable, Hashable {
     let movedIn: String
     let movedOut: String
     let rollover: Bool
+    let warnPercent: Int?
     let percent: Int
     let status: String
     let kind: String?

@@ -4,6 +4,7 @@ struct BudgetView: View {
     @Environment(Session.self) private var session
     @State private var model = BudgetModel()
     @State private var addition: BudgetAddition?
+    @State private var isShowingSettings = false
 
     var body: some View {
         NavigationStack {
@@ -16,7 +17,7 @@ struct BudgetView: View {
             }
             .overlay { BudgetPlaceholder(model: model, retry: reloadNow) }
             .navigationTitle("Budget")
-            .navigationSubtitle(Text(model.month.start, format: .dateTime.month(.wide).year()))
+            .navigationSubtitle(model.periodDates.map { Text($0, format: .interval.month(.abbreviated).day()) } ?? Text(model.month.start, format: .dateTime.month(.wide).year()))
             .toolbar {
                 ToolbarItemGroup(placement: .primaryAction) {
                     MonthSwitcher(canGoForward: true, previous: previousMonth, next: nextMonth)
@@ -26,13 +27,24 @@ struct BudgetView: View {
                     }
                     .disabled(model.budget == nil)
                 }
+                ToolbarItem(placement: .secondaryAction) {
+                    Button("Budget Settings", systemImage: "gearshape") { isShowingSettings = true }
+                        .disabled(model.budget == nil)
+                }
             }
             .sheet(item: $addition) { addition in
-                switch addition {
-                case .limit:
-                    BudgetLineFormView(otherLines: model.budget?.lines ?? [], currency: model.budget?.currency ?? "", onSaved: reloadNow)
-                case .goal:
-                    GoalFormView(currency: model.budget?.currency ?? "", onSaved: reloadNow)
+                if let budget = model.budget {
+                    switch addition {
+                    case .limit:
+                        BudgetLineFormView(otherLines: budget.lines, budgetWarnPercent: budget.warnPercent, currency: budget.currency, onSaved: reloadNow)
+                    case .goal:
+                        GoalFormView(currency: budget.currency, onSaved: reloadNow)
+                    }
+                }
+            }
+            .sheet(isPresented: $isShowingSettings) {
+                if let budget = model.budget {
+                    BudgetSettingsView(budget: budget, onSaved: reloadNow)
                 }
             }
             .navigationDestination(for: BudgetRoute.self) { route in

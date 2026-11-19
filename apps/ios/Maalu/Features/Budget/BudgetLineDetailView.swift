@@ -40,7 +40,7 @@ struct BudgetLineDetailView: View {
             .sheet(item: $sheet) { sheet in
                 switch sheet {
                 case .edit(let line):
-                    BudgetLineFormView(editing: line, otherLines: budget.lines, currency: budget.currency, onSaved: reload)
+                    BudgetLineFormView(editing: line, otherLines: budget.lines, budgetWarnPercent: budget.warnPercent, currency: budget.currency, onSaved: reload)
                 case .move(let line):
                     MoveMoneyView(line: line, budget: budget, period: model.month.start, onSaved: reload)
                 }

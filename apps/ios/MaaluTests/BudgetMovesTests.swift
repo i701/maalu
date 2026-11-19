@@ -21,7 +21,7 @@ struct BudgetMovesTests {
             """#
         }
         return try Api.decoder.decode(Budget.self, from: Data(#"""
-        {"currency":"MVR","attention":0,"moves":[],"period":{"start":"2026-11-01","end":"2026-11-30","is_current":true},
+        {"currency":"MVR","period_start_day":1,"warn_percent":80,"attention":0,"moves":[],"period":{"start":"2026-11-01","end":"2026-11-30","is_current":true},
          "totals":{"activity":"0","amount":"100","available":"100","percent":0,"status":"ok"},
          "lines":[\#(lines.joined(separator: ","))],"fixed_lines":[]}
         """#.utf8))

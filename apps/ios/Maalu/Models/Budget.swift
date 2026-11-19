@@ -1,5 +1,7 @@
 struct Budget: Decodable {
     let currency: String
+    let periodStartDay: Int
+    let warnPercent: Int
     let period: BudgetPeriod
     let totals: BudgetTotals
     let lines: [BudgetLine]

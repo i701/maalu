@@ -12,8 +12,10 @@ final class BudgetLineFormModel {
     private let originalDraft: BudgetLineDraft
     /// Category id → the name of the other limit that already has it.
     private let takenBy: [String: String]
+    let budgetWarnPercent: Int
 
-    init(editing line: BudgetLine? = nil, otherLines: [BudgetLine]) {
+    init(editing line: BudgetLine? = nil, otherLines: [BudgetLine], budgetWarnPercent: Int) {
+        self.budgetWarnPercent = budgetWarnPercent
         let start = line.map(BudgetLineDraft.init(editing:)) ?? BudgetLineDraft()
         original = line
         draft = start
@@ -27,6 +29,18 @@ final class BudgetLineFormModel {
 
     var isEditing: Bool { original != nil }
     var canSave: Bool { !isLoading && !isSaving && draft.problem == nil && (!isEditing || draft != originalDraft) }
+
+    var hasOwnWarnLevel: Bool {
+        get { draft.warnPercent != nil }
+        set { draft.warnPercent = newValue ? budgetWarnPercent : nil }
+    }
+
+    var ownWarnPercent: Int { draft.warnPercent ?? budgetWarnPercent }
+
+    var ownWarnLevel: Double {
+        get { Double(ownWarnPercent) }
+        set { draft.warnPercent = Int(newValue.rounded()) }
+    }
 
     var selectedNames: String {
         categories.filter { draft.categoryIDs.contains($0.id) }.map(\.name).formatted()
