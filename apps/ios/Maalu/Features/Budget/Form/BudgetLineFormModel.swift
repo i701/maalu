@@ -8,26 +8,23 @@ final class BudgetLineFormModel {
     private(set) var isLoading = true
     private(set) var isSaving = false
     private(set) var errorMessage: String?
-    private let original: BudgetLine?
+    private let editingID: String?
     private let originalDraft: BudgetLineDraft
-    /// Category id → the name of the other limit that already has it.
-    private let takenBy: [String: String]
+    private let lines: [BudgetLine]
+    private let fixedLines: [FixedBudgetLine]
     let budgetWarnPercent: Int
 
-    init(editing line: BudgetLine? = nil, otherLines: [BudgetLine], budgetWarnPercent: Int) {
-        self.budgetWarnPercent = budgetWarnPercent
-        let start = line.map(BudgetLineDraft.init(editing:)) ?? BudgetLineDraft()
-        original = line
-        draft = start
-        originalDraft = start
-        var taken: [String: String] = [:]
-        for other in otherLines where other.id != line?.id {
-            for category in other.categories { taken[category.id] = other.name }
-        }
-        takenBy = taken
+    /// `editingID` is the limit being changed; without it the draft is saved as a new limit.
+    init(draft: BudgetLineDraft, editingID: String?, budget: Budget) {
+        self.draft = draft
+        originalDraft = draft
+        self.editingID = editingID
+        lines = budget.lines
+        fixedLines = budget.fixedLines
+        budgetWarnPercent = budget.warnPercent
     }
 
-    var isEditing: Bool { original != nil }
+    var isEditing: Bool { editingID != nil }
     var canSave: Bool { !isLoading && !isSaving && draft.problem == nil && (!isEditing || draft != originalDraft) }
 
     var hasOwnWarnLevel: Bool {
@@ -46,8 +43,27 @@ final class BudgetLineFormModel {
         categories.filter { draft.categoryIDs.contains($0.id) }.map(\.name).formatted()
     }
 
+    /// The other limit of the same kind that already has a category. A monthly limit for set dates is left to the server, as on the web.
     func takenName(of category: CategoryOption) -> String? {
-        takenBy[category.id]
+        if draft.isOneTotal {
+            return fixedLines.first { other in
+                other.id != editingID && other.startDate <= draft.endDate && draft.startDate <= other.endDate
+                    && other.categories.contains { $0.id == category.id }
+            }?.name
+        }
+        if draft.hasDates { return nil }
+        return lines.first { $0.id != editingID && $0.categories.contains { $0.id == category.id } }?.name
+    }
+
+    /// The date pickers' days, kept as the API's ISO dates in the draft.
+    var pickerStart: Date {
+        get { ISODate.date(draft.startDate) ?? .now }
+        set { draft.startDate = ISODate.string(newValue) }
+    }
+
+    var pickerEnd: Date {
+        get { ISODate.date(draft.endDate) ?? .now }
+        set { draft.endDate = ISODate.string(newValue) }
     }
 
     func load(using api: Api) async {
@@ -64,8 +80,8 @@ final class BudgetLineFormModel {
         isSaving = true
         errorMessage = nil
         let result: ApiResult<Budget>
-        if let original {
-            result = await api.patchJSON("budget/lines/\(original.id)", body: draft.patchRequest(from: originalDraft))
+        if let editingID {
+            result = await api.patchJSON("budget/lines/\(editingID)", body: draft.patchRequest(from: originalDraft))
         } else {
             result = await api.postJSON("budget/lines", body: draft.createRequest())
         }

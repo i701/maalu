@@ -9,8 +9,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 67 | 59 | 29 |
-| 🟡 partial | 0 | 1 | 2 |
+| ✅ done | 67 | 59 | 30 |
+| 🟡 partial | 0 | 1 | 1 |
 | ❌ missing | 0 | 3 | 32 |
 | ➖ n/a | 1 | 5 | 5 |
 
@@ -21,10 +21,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (34)
+## Still to build on iOS (33)
 
 - 🟡 **Receipts and web links** (Transactions). Photos and PDFs added while making a new transaction, uploaded once it is saved. Not yet: seeing, opening or removing a transaction's files, files on an edit, or web links.
-- 🟡 **Limits for set dates** (Budget, goals and planning). Read only: limits for set dates are listed under the period their days touch, with days left. Not made, changed, repeated or deleted.
 - ❌ **Two-factor sign-in** (Sign in and security).
 - ❌ **Set up and manage two-factor** (Sign in and security).
 - ❌ **Where you are signed in** (Sign in and security).
@@ -139,14 +138,12 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | Feature | Web | Android | iOS |
 |---|:---:|:---:|:---:|
 | **Budget limits**<br>Per-period limits for categories with a warning percent, rollover and the summary by kind. | ✅ done | ✅ done | ✅ done |
-| **Limits for set dates**<br>One total for a stretch of dates, a monthly limit that runs between two dates, and repeating a finished one. | ✅ done | ✅ done | 🟡 partial |
+| **Limits for set dates**<br>One total for a stretch of dates, a monthly limit that runs between two dates, and repeating a finished one. | ✅ done | ✅ done | ✅ done |
 | **Move money between limits**<br>Move what is left in one limit to another for one period, undo it, and see the history. | ✅ done | ✅ done | ✅ done |
 | **Savings goals**<br>A target that follows a savings account or a log of amounts set aside by hand. | ✅ done | ✅ done | ✅ done |
 | **Month plan**<br>What you have, the bills still to pay by day and where the money runs out. | ✅ done | ✅ done | ✅ done |
 | **Salary split rules**<br>Rules that divide a salary between accounts and goals, each one manual or automatic. | ✅ done | ✅ done | ❌ missing |
 | **Split a salary and the Pending screen**<br>Review, edit, approve or dismiss waiting salary splits; undo one. | ✅ done | ✅ done | ❌ missing |
-
-- **Limits for set dates** (iOS): Read only: limits for set dates are listed under the period their days touch, with days left. Not made, changed, repeated or deleted.
 
 ## Dashboard and reports
 

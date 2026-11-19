@@ -23,6 +23,10 @@ final class BudgetModel {
         budget?.lines.first { $0.id == id }
     }
 
+    func fixedLine(id: String) -> FixedBudgetLine? {
+        budget?.fixedLines.first { $0.id == id }
+    }
+
     func goal(id: String) -> Goal? {
         goals.first { $0.id == id }
     }

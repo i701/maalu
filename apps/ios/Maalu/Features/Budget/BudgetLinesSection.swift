@@ -18,7 +18,9 @@ struct BudgetLinesSection: View {
         if !budget.fixedLinesInPeriod.isEmpty {
             Section("For set dates") {
                 ForEach(budget.fixedLinesInPeriod) { line in
-                    FixedBudgetLineRow(line: line, currency: budget.currency)
+                    NavigationLink(value: BudgetRoute.fixedLine(line.id)) {
+                        FixedBudgetLineRow(line: line, currency: budget.currency)
+                    }
                 }
             }
         }

@@ -10,6 +10,7 @@ struct FixedBudgetLine: Decodable, Identifiable, Hashable {
     let startDate: String
     let endDate: String
     let daysLeft: Int?
+    let warnPercent: Int?
     let kind: String?
     let categories: [BudgetCategoryRef]
 

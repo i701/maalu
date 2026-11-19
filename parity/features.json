@@ -1261,9 +1261,11 @@
         ]
       },
       "ios": {
-        "status": "partial",
-        "note": "Read only: limits for set dates are listed under the period their days touch, with days left. Not made, changed, repeated or deleted.",
+        "status": "done",
         "evidence": [
+          "apps/ios/Maalu/Features/Budget/Form/BudgetLineDraft.swift",
+          "apps/ios/Maalu/Features/Budget/Form/BudgetLineFormView.swift",
+          "apps/ios/Maalu/Features/Budget/FixedBudgetLineDetailView.swift",
           "apps/ios/Maalu/Features/Budget/FixedBudgetLineRow.swift"
         ]
       }

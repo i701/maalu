@@ -36,7 +36,7 @@ struct BudgetView: View {
                 if let budget = model.budget {
                     switch addition {
                     case .limit:
-                        BudgetLineFormView(otherLines: budget.lines, budgetWarnPercent: budget.warnPercent, currency: budget.currency, onSaved: reloadNow)
+                        BudgetLineFormView(budget: budget, onSaved: reloadNow)
                     case .goal:
                         GoalFormView(currency: budget.currency, onSaved: reloadNow)
                     }
@@ -51,6 +51,7 @@ struct BudgetView: View {
                 switch route {
                 case .line(let id): BudgetLineDetailView(model: model, id: id)
                 case .goal(let id): GoalDetailView(model: model, id: id)
+                case .fixedLine(let id): FixedBudgetLineDetailView(model: model, id: id)
                 }
             }
             .refreshable { await load() }

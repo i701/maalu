@@ -7,9 +7,10 @@ struct BudgetLineFormView: View {
     private let currency: String
     private let onSaved: () -> Void
 
-    init(editing line: BudgetLine? = nil, otherLines: [BudgetLine], budgetWarnPercent: Int, currency: String, onSaved: @escaping () -> Void) {
-        _model = State(initialValue: BudgetLineFormModel(editing: line, otherLines: otherLines, budgetWarnPercent: budgetWarnPercent))
-        self.currency = currency
+    /// A new limit, or with `editingID` a change to the limit the draft was filled from.
+    init(draft: BudgetLineDraft = BudgetLineDraft(), editingID: String? = nil, budget: Budget, onSaved: @escaping () -> Void) {
+        _model = State(initialValue: BudgetLineFormModel(draft: draft, editingID: editingID, budget: budget))
+        currency = budget.currency
         self.onSaved = onSaved
     }
 
@@ -18,7 +19,11 @@ struct BudgetLineFormView: View {
             Form {
                 Section {
                     TextField("Name", text: $model.draft.name)
-                    DecimalField("Limit per month in \(currency)", value: $model.draft.amount)
+                    if model.draft.isOneTotal {
+                        DecimalField("Limit for these dates in \(currency)", value: $model.draft.amount)
+                    } else {
+                        DecimalField("Limit per month in \(currency)", value: $model.draft.amount)
+                    }
                 }
                 Section {
                     NavigationLink {
@@ -28,9 +33,28 @@ struct BudgetLineFormView: View {
                     }
                 }
                 Section {
-                    Toggle("Carry unspent money over", isOn: $model.draft.rollover)
+                    Toggle("Only for certain dates", isOn: $model.draft.hasDates)
+                    if model.draft.hasDates {
+                        DatePicker("From", selection: $model.pickerStart, displayedComponents: .date)
+                        DatePicker("Until", selection: $model.pickerEnd, in: model.pickerStart..., displayedComponents: .date)
+                        Picker("How it counts", selection: $model.draft.repeats) {
+                            Text("One total for these dates").tag(false)
+                            Text("Every month between them").tag(true)
+                        }
+                    }
                 } footer: {
-                    Text("What is not spent in a month is added to the next month's limit.")
+                    if model.draft.isOneTotal {
+                        Text("The amount is the most to spend between the two dates, counted once.")
+                    } else if model.draft.hasDates {
+                        Text("The limit applies in every month the dates touch, as whole months.")
+                    }
+                }
+                if !model.draft.isOneTotal {
+                    Section {
+                        Toggle("Carry unspent money over", isOn: $model.draft.rollover)
+                    } footer: {
+                        Text("What is not spent in a month is added to the next month's limit.")
+                    }
                 }
                 Section {
                     Toggle("Own warning level", isOn: $model.hasOwnWarnLevel)
