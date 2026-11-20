@@ -21,27 +21,14 @@ struct MonthSummarySection: View {
                 }
                 IncomeSpendBar(income: totals.incomeValue, spent: totals.expenseValue)
                 HStack(alignment: .top) {
-                    legend("Income", amount: totals.incomeValue, color: .brand)
+                    BarLegend(title: "Income", amount: totals.incomeValue, currency: totals.currency, color: .brand)
                     Spacer()
-                    legend("Spent", amount: totals.expenseValue, color: .brand.opacity(0.3))
+                    BarLegend(title: "Spent", amount: totals.expenseValue, currency: totals.currency, color: .brand.opacity(0.3))
                 }
             }
             .padding(.vertical, 6)
         } header: {
             SectionTitle("Income and spending")
-        }
-    }
-
-    private func legend(_ title: LocalizedStringKey, amount: Decimal, color: Color) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Label {
-                Text(title).foregroundStyle(.secondary)
-            } icon: {
-                Circle().fill(color).frame(width: 8, height: 8)
-            }
-            .font(.subheadline)
-            MoneyText(amount, currency: totals.currency)
-                .font(.headline)
         }
     }
 }

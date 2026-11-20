@@ -47,8 +47,9 @@ struct Elevation: ViewModifier {
     private static let highlight: [Double] = [0, 0.04, 0.08, 0.14, 0.18, 0.22, 0.26]
     private static let insetRing: [Double] = [0.02, 0.04, 0.05, 0.06, 0.08, 0.10, 0.12]
 
-    private var ring: Color { scheme == .dark ? .white.opacity(0.06) : .black.opacity(0.06) }
-    private var drop: Color { scheme == .dark ? .black.opacity(0.18) : .black.opacity(0.06) }
+    // lighter in light mode, where a faint edge and shadow are enough; dark mode keeps its own values
+    private var ring: Color { scheme == .dark ? .white.opacity(0.06) : .black.opacity(0.035) }
+    private var drop: Color { scheme == .dark ? .black.opacity(0.18) : .black.opacity(0.04) }
 }
 
 extension View {
