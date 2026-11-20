@@ -39,15 +39,22 @@ struct SettingsView: View {
                     Text(model.canEmail ? "Email goes to \(settings.email)." : "Email is not set up on this server.")
                 }
                 Section("Security") {
-                    NavigationLink("Change password") { ChangePasswordView(twoFactor: settings.twoFactorEnabled) }
-                    NavigationLink("Two-factor sign-in") { TwoFactorView(enabled: settings.twoFactorEnabled) { await load() } }
-                    NavigationLink("Where you are signed in") { SessionsView() }
+                    NavigationLink("Change password", value: SettingsRoute.password)
+                    NavigationLink("Two-factor sign-in", value: SettingsRoute.twoFactor)
+                    NavigationLink("Where you are signed in", value: SettingsRoute.sessions)
                 }
             }
         }
         .overlay { if model.settings == nil && model.errorMessage == nil { ProgressView() } }
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
+        .navigationDestination(for: SettingsRoute.self) { route in
+            switch route {
+            case .password: ChangePasswordView(twoFactor: model.settings?.twoFactorEnabled ?? false)
+            case .twoFactor: TwoFactorView(enabled: model.settings?.twoFactorEnabled ?? false) { await load() }
+            case .sessions: SessionsView()
+            }
+        }
         .refreshable { await load() }
         .task { await load() }
     }

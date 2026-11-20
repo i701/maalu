@@ -9,8 +9,8 @@ struct TwoFactorConfirmView: View {
         var button: LocalizedStringResource { self == .turnOff ? "Turn off" : "Make new codes" }
         var note: LocalizedStringResource {
             self == .turnOff
-                ? "Signing in will only need your password again. Your other devices are signed out."
-                : "The codes you have now stop working. Your other devices are signed out."
+                ? "Signing in will only need your password again. Your other devices are signed out. The code is from your authenticator app, or a recovery code."
+                : "The codes you have now stop working. Your other devices are signed out. The code is from your authenticator app, or a recovery code."
         }
     }
 
@@ -39,7 +39,7 @@ struct TwoFactorConfirmView: View {
                 if let errorMessage {
                     Text(errorMessage).foregroundStyle(.red)
                 } else {
-                    Text(kind.note) + Text(" The code is from your authenticator app, or a recovery code.")
+                    Text(kind.note)
                 }
             }
         }
