@@ -437,7 +437,8 @@ const theme = createTheme({
 					"&:active": { borderRadius: "var(--shape-lg)" },
 				},
 				contained: {
-					"&:hover": { boxShadow: "var(--elev-1)" },
+					// a filled button's hover is a change of colour, not a lift
+					"&:hover": { boxShadow: "none" },
 					"&.Mui-disabled": {
 						backgroundColor: "color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent)",
 						color: "color-mix(in srgb, var(--md-sys-color-on-surface) 38%, transparent)",
