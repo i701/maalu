@@ -21,19 +21,23 @@ struct TransactionDetailView: View {
     var body: some View {
         if let transaction = model.transaction(id: id) {
             TransactionDetailContent(transaction: transaction, files: files) {
-                TransactionActionsSection(
+                TransactionQuickActions(
                     transaction: transaction,
                     onMarkPaid: { markPaid(transaction) },
                     onEdit: { sheet = .edit(transaction) },
                     onDuplicate: { sheet = .duplicate(transaction) },
+                    onDelete: { isConfirmingDelete = true }
+                )
+            } actions: {
+                TransactionActionsSection(
+                    transaction: transaction,
                     onRefund: { sheet = .refund(transaction) },
                     onEditRefund: { sheet = .editRefund(transaction) },
                     onLinkRefund: { sheet = .linkRefund(transaction) },
                     onMakeSubscription: { sheet = .makeSubscription(transaction) },
                     onSplitSalary: { sheet = .splitSalary(transaction) },
                     transferMatches: transferMatches.count,
-                    onLinkTransfer: { sheet = .linkTransfer(transaction) },
-                    onDelete: { isConfirmingDelete = true }
+                    onLinkTransfer: { sheet = .linkTransfer(transaction) }
                 )
             }
                 .navigationTitle(transaction.title)

@@ -1,11 +1,8 @@
 import SwiftUI
 
-/// What can be done with a transaction, as labelled rows at the end of its detail sheet.
+/// The less common things to do with a transaction, as rows with coloured icons: refunds, splitting pay, merging into a transfer, making a subscription.
 struct TransactionActionsSection: View {
     let transaction: Transaction
-    let onMarkPaid: () -> Void
-    let onEdit: () -> Void
-    let onDuplicate: () -> Void
     let onRefund: () -> Void
     let onEditRefund: () -> Void
     let onLinkRefund: () -> Void
@@ -14,44 +11,34 @@ struct TransactionActionsSection: View {
     /// How many entries could be the other half of this one as a transfer.
     let transferMatches: Int
     let onLinkTransfer: () -> Void
-    let onDelete: () -> Void
 
     var body: some View {
-        Section {
-            if transaction.planned {
-                Button(markTitle, systemImage: "checkmark.circle", action: onMarkPaid)
+        if hasAny {
+            Section {
+                if transaction.isRefundable {
+                    TransactionActionRow(title: String(localized: "Refund"), systemImage: "arrow.uturn.backward", tint: .orange, action: onRefund)
+                }
+                if transaction.canEditRefund {
+                    TransactionActionRow(title: String(localized: "Edit refund"), systemImage: "pencil", tint: .orange, action: onEditRefund)
+                }
+                if transaction.isLinkableAsRefund {
+                    TransactionActionRow(title: String(localized: "Link to a purchase"), systemImage: "link", tint: .orange, action: onLinkRefund)
+                }
+                if transaction.canSplitSalary {
+                    TransactionActionRow(title: String(localized: "Split salary"), systemImage: "arrow.triangle.branch", tint: .success, action: onSplitSalary)
+                }
+                if transferMatches > 0 {
+                    TransactionActionRow(title: TransferLinkRules.mergeLabel(transferMatches), systemImage: "arrow.left.arrow.right", tint: .brand, action: onLinkTransfer)
+                }
+                if transaction.canMakeSubscription {
+                    TransactionActionRow(title: String(localized: "Make a subscription"), systemImage: "repeat", tint: .purple, action: onMakeSubscription)
+                }
             }
-            if transaction.canEdit {
-                Button("Edit", systemImage: "pencil", action: onEdit)
-                Button("Duplicate", systemImage: "plus.square.on.square", action: onDuplicate)
-            }
-            if transaction.isRefundable {
-                Button("Refund", systemImage: "arrow.uturn.backward", action: onRefund)
-            }
-            if transaction.canEditRefund {
-                Button("Edit refund", systemImage: "pencil", action: onEditRefund)
-            }
-            if transaction.isLinkableAsRefund {
-                Button("Link to a purchase", systemImage: "link", action: onLinkRefund)
-            }
-            if transaction.canSplitSalary {
-                Button("Split salary", systemImage: "arrow.triangle.branch", action: onSplitSalary)
-            }
-            if transferMatches > 0 {
-                Button(TransferLinkRules.mergeLabel(transferMatches), systemImage: "arrow.left.arrow.right", action: onLinkTransfer)
-            }
-            if transaction.canMakeSubscription {
-                Button("Make a subscription", systemImage: "repeat", action: onMakeSubscription)
-            }
-            Button("Delete", systemImage: "trash", role: .destructive, action: onDelete)
         }
     }
 
-    private var markTitle: LocalizedStringResource {
-        switch transaction.type {
-        case .transfer: "Mark as done"
-        case .income: "Mark as received"
-        case .expense: "Mark as paid"
-        }
+    private var hasAny: Bool {
+        transaction.isRefundable || transaction.canEditRefund || transaction.isLinkableAsRefund || transaction.canSplitSalary
+            || transferMatches > 0 || transaction.canMakeSubscription
     }
 }

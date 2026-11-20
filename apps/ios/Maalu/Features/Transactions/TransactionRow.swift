@@ -10,7 +10,7 @@ struct TransactionRow: View {
                 Text(transaction.rowTitle)
                     .fontWeight(.medium)
                     .lineLimit(1)
-                TransactionCategoryLabel(text: transaction.rowTag, tint: tint)
+                TransactionCategoryLabel(text: transaction.rowTag, tint: transaction.tint)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             VStack(alignment: .trailing, spacing: 2) {
@@ -22,10 +22,5 @@ struct TransactionRow: View {
             .fixedSize()
         }
         .accessibilityElement(children: .combine)
-    }
-
-    /// A transfer is the brand's blue; everything else takes its category's colour.
-    private var tint: Color {
-        transaction.type == .transfer ? .brand : Color(accent: transaction.categoryColor)
     }
 }
