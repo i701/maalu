@@ -18,6 +18,8 @@ struct TransactionDaySection: View {
                     TransactionRow(transaction: transaction)
                 }
                 .contentShape(.rect)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 7, leading: Spacing.screen + Spacing.card, bottom: 7, trailing: Spacing.screen + Spacing.card))
                 .onTapGesture { onTap(transaction) }
                 .onLongPressGesture { onHold(transaction) }
                 .accessibilityAddTraits(selection.contains(transaction.id) ? [.isButton, .isSelected] : .isButton)
@@ -25,6 +27,10 @@ struct TransactionDaySection: View {
             }
         } header: {
             Text(day.heading())
+                .font(.footnote.weight(.semibold))
+                .textCase(.uppercase)
+                .tracking(0.3)
+                .padding(.horizontal, Spacing.card - Spacing.screen)
         }
     }
 }

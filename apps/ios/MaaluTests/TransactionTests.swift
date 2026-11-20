@@ -29,10 +29,14 @@ struct TransactionTests {
         #expect(try transaction(type: "expense", description: "Lunch").title == "Lunch")
     }
 
-    @Test func aRowShowsTheTitleAndOneLineOfCategoryAndPayment() throws {
+    @Test func aRowShowsTheTitleAndTheCategoryLabel() throws {
         let row = try transaction(type: "expense", vendor: #"{"id":"v","name":"Ooredoo"}"#)
         #expect(row.rowTitle == "Ooredoo")
-        #expect(row.rowLine == "Food · Cash")
+        #expect(row.rowTag == "Food")
+    }
+
+    @Test func aTransferIsLabelledTransfer() throws {
+        #expect(try transaction(type: "transfer").rowTag == "Transfer")
     }
 
     @Test func aDayIsHeadedTodayYesterdayOrItsDate() throws {

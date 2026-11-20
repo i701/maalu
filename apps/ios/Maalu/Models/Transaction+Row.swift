@@ -1,6 +1,6 @@
 import Foundation
 
-/// What the quiet list shows of a transaction; everything else waits in its detail sheet.
+/// What the compact list shows of a transaction; everything else waits in its detail sheet.
 extension Transaction {
     /// The vendor, else what was typed as the description, else the category; a transfer reads "From → To".
     var rowTitle: String {
@@ -9,12 +9,11 @@ extension Transaction {
         return names.joined(separator: " → ")
     }
 
-    /// The one muted line under the title: the category (every one a split touches) and how it was paid.
-    var rowLine: String {
+    /// The category on the row's label ("Transfer" for a transfer), with how many more a split touches ("Groceries +1").
+    var rowTag: String {
         guard type != .transfer else { return String(localized: "Transfer") }
         let categories = splits.count > 1 ? splits.map(\.category).reduce(into: [String]()) { if !$0.contains($1) { $0.append($1) } } : [category]
-        let paid = card?.name ?? String(localized: paymentMethod.title)
-        return (categories + [paid]).joined(separator: " · ")
+        return categories.count > 1 ? "\(categories[0]) +\(categories.count - 1)" : categories[0]
     }
 
     /// A planned transaction whose day has passed: it just stays planned, the app calls it overdue.

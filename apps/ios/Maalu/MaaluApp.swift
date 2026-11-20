@@ -6,7 +6,7 @@ struct MaaluApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView().environment(session)
+            RootView().environment(session).tint(.brand)
         }
     }
 }

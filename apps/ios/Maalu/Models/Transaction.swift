@@ -10,6 +10,8 @@ struct Transaction: Decodable, Identifiable, Hashable {
     let baseAmount: String
     let category: String
     let categoryIsSalary: Bool?
+    /// The category's accent colour name.
+    let categoryColor: String?
     let description: String?
     let transactionDate: String
     let transactionTime: String?

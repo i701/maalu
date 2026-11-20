@@ -7,21 +7,25 @@ struct TransactionFilterChips: View {
 
     var body: some View {
         ScrollView(.horizontal) {
-            HStack {
+            HStack(spacing: 8) {
                 ForEach(chips) { chip in
                     Button { onRemove(chip) } label: {
-                        Label(chip.title, systemImage: "xmark")
-                            .labelStyle(.titleAndIcon)
-                            .lineLimit(1)
+                        HStack(spacing: 6) {
+                            Text(chip.title).lineLimit(1)
+                            Image(systemName: "xmark").font(.caption2.weight(.bold))
+                        }
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(Color.brand)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .background(Color.brand.opacity(0.12), in: .capsule)
                     }
                     .accessibilityHint("Removes this filter")
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, Spacing.card)
         }
         .scrollIndicators(.hidden)
-        .buttonStyle(.bordered)
-        .buttonBorderShape(.capsule)
-        .controlSize(.small)
+        .buttonStyle(.borderless)
     }
 }

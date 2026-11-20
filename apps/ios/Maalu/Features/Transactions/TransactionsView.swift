@@ -15,16 +15,19 @@ struct TransactionsView: View {
     var body: some View {
         NavigationStack {
             List {
-                if !chips.isEmpty {
-                    TransactionFilterChips(chips: chips, onRemove: remove)
-                        .listRowInsets(EdgeInsets())
-                        .listRowBackground(Color.clear)
-                }
+                TransactionSearchCard(
+                    text: $model.filter.text,
+                    chips: chips,
+                    totals: model.isEmpty ? nil : model.totals,
+                    filterCount: model.filter.detailCount,
+                    onFilters: { isFiltering = true },
+                    onRemove: remove
+                )
+                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 12, trailing: 16))
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
                 if !model.transferSuggestions.isEmpty {
                     TransferSuggestionsSection(suggestions: model.transferSuggestions, onChanged: changed, onFailed: { notice = $0 })
-                }
-                if let totals = model.totals, !model.isEmpty {
-                    TransactionTotalsSection(totals: totals)
                 }
                 ForEach(model.days) { day in
                     TransactionDaySection(day: day, selection: selection, onTap: tap, onHold: hold)
@@ -39,9 +42,9 @@ struct TransactionsView: View {
                     }
                 }
             }
+            .listStyle(.plain)
             .overlay { TransactionsPlaceholder(model: model, retry: reloadNow, clearFilters: clearFilters) }
             .navigationTitle("Transactions")
-            .searchable(text: $model.filter.text, prompt: "Search transactions")
             .navigationSubtitle(selection.isSelecting ? Text(selection.isWide ? "All \(selection.count) matching are selected" : "\(selection.count) selected") : Text(""))
             .sensoryFeedback(.selection, trigger: selection.count)
             .toolbar {
@@ -53,8 +56,6 @@ struct TransactionsView: View {
                 } else {
                     ToolbarItemGroup {
                         TransactionTypeMenu(selection: $model.filter.type, planned: $model.filter.planned)
-                        Button("Filters", systemImage: "slider.horizontal.3") { isFiltering = true }
-                            .foregroundStyle(model.filter.detailCount == 0 ? Color.primary : Color.accentColor)
                         Button("Select", systemImage: "checkmark.circle", action: selection.start)
                     }
                     ToolbarItem(placement: .primaryAction) {
