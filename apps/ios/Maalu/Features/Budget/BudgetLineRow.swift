@@ -5,7 +5,7 @@ struct BudgetLineRow: View {
     let currency: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 8) {
             AmountRow {
                 Text(line.name)
             } amount: {

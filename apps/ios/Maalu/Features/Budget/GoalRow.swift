@@ -4,7 +4,7 @@ struct GoalRow: View {
     let goal: Goal
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 8) {
             AmountRow {
                 Label(goal.name, systemImage: goal.reached ? "checkmark.circle.fill" : "target")
             } amount: {

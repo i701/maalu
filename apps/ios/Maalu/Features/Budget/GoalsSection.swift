@@ -4,7 +4,7 @@ struct GoalsSection: View {
     let goals: [Goal]
 
     var body: some View {
-        Section("Goals") {
+        Section {
             if goals.isEmpty {
                 Text("Save toward something, like a trip, and see what each month needs.")
                     .foregroundStyle(.secondary)
@@ -14,6 +14,8 @@ struct GoalsSection: View {
                     GoalRow(goal: goal)
                 }
             }
+        } header: {
+            SectionTitle("Goals")
         }
     }
 }
