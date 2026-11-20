@@ -4,7 +4,7 @@ struct CreditUsedSection: View {
     let cards: [CreditCardUsage]
 
     var body: some View {
-        Section("Credit used") {
+        Section {
             ForEach(cards) { card in
                 VStack(alignment: .leading) {
                     AmountRow {
@@ -19,10 +19,12 @@ struct CreditUsedSection: View {
                             .foregroundStyle(card.usage.isHigh ? Color.red : Color.secondary)
                             .numericFont()
                     }
-                    ProgressView(value: min(Double(card.usage.percent) / 100, 1))
+                    CapsuleProgress(value: min(Double(card.usage.percent) / 100, 1))
                         .tint(card.usage.isHigh ? Color.red : Color.accentColor)
                 }
             }
+        } header: {
+            SectionTitle("Credit used")
         }
     }
 }

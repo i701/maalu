@@ -10,7 +10,7 @@ struct GoalRow: View {
             } amount: {
                 Text("\(goal.percent)%").numericFont()
             }
-            ProgressView(value: min(Double(goal.percent) / 100, 1))
+            CapsuleProgress(value: min(Double(goal.percent) / 100, 1))
                 .tint(goal.reached ? Color.green : Color.accentColor)
                 .accessibilityLabel(goal.name)
                 .accessibilityValue("\(goal.percent)%")

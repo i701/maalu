@@ -5,7 +5,7 @@ struct NeedsWantsSection: View {
     let currency: String
 
     var body: some View {
-        Section("Needs and wants") {
+        Section {
             ForEach(shares) { share in
                 VStack(alignment: .leading) {
                     AmountRow {
@@ -14,10 +14,12 @@ struct NeedsWantsSection: View {
                         Text("\(MoneyFormat.string(share.total, currency: currency)) · \(share.share, format: .percent.precision(.fractionLength(0)))")
                             .numericFont()
                     }
-                    ProgressView(value: share.share)
+                    CapsuleProgress(value: share.share)
                         .tint(share.kind == .need ? Color.blue : share.kind == .want ? Color.orange : Color.gray)
                 }
             }
+        } header: {
+            SectionTitle("Needs and wants")
         }
     }
 }

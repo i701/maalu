@@ -26,7 +26,7 @@ struct MoneyFlowSection: View {
                     }
             }
         } header: {
-            Text("Money flow")
+            SectionTitle("Money flow")
         }
     }
 

@@ -14,7 +14,7 @@ struct BudgetLineRow: View {
             if let runs = BudgetText.runs(from: line.runsFrom, until: line.runsUntil) {
                 Text(runs).font(.subheadline).foregroundStyle(.secondary)
             }
-            ProgressView(value: min(Double(line.percent) / 100, 1))
+            CapsuleProgress(value: min(Double(line.percent) / 100, 1))
                 .tint(Color(budgetStatus: line.status))
                 .accessibilityLabel(line.name)
                 .accessibilityValue("\(line.percent)%")

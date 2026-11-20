@@ -5,7 +5,7 @@ struct SpendingSection: View {
     let currency: String
 
     var body: some View {
-        Section("Where it went") {
+        Section {
             ForEach(rows) { row in
                 VStack(alignment: .leading) {
                     AmountRow {
@@ -13,12 +13,14 @@ struct SpendingSection: View {
                     } amount: {
                         MoneyText(row.total, currency: currency)
                     }
-                    ProgressView(value: row.share)
+                    CapsuleProgress(value: row.share)
                         .tint(Color(accent: row.color))
                         .accessibilityLabel(row.name)
                         .accessibilityValue(Text(row.share, format: .percent.precision(.fractionLength(0))))
                 }
             }
+        } header: {
+            SectionTitle("Where it went")
         }
     }
 }

@@ -16,7 +16,7 @@ struct IncomeRuleSection: View {
                     } amount: {
                         Text("\(row.percent, format: .number.precision(.fractionLength(0...1)))%").numericFont()
                     }
-                    ProgressView(value: min(max(row.percent / 100, 0), 1))
+                    CapsuleProgress(value: min(max(row.percent / 100, 0), 1))
                         .accessibilityLabel(Text(row.key.title))
                         .accessibilityValue(Text(row.status.title))
                     Label { Text(row.status.title) } icon: { Image(systemName: row.status.systemImage) }
@@ -30,7 +30,7 @@ struct IncomeRuleSection: View {
                     .foregroundStyle(.secondary)
             }
         } header: {
-            Text("Against 50/30/20 of your income")
+            SectionTitle("Against 50/30/20 of your income")
         }
     }
 }

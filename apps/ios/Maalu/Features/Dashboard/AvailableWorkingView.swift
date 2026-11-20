@@ -5,32 +5,40 @@ struct AvailableWorkingView: View {
 
     var body: some View {
         List {
-            Section("In your everyday accounts") {
+            Section {
                 ForEach(available.accounts) { account in
                     WorkingRow(title: account.name, amount: account.balance, currency: available.currency)
                 }
+            } header: {
+                SectionTitle("In your everyday accounts")
             }
             if !available.bills.isEmpty {
-                Section("Bills still to pay") {
+                Section {
                     ForEach(available.bills) { bill in
                         WorkingRow(title: bill.title, amount: bill.amount, currency: available.currency,
                                    note: note(date: bill.date, overdue: bill.overdue, estimate: bill.estimate == true))
                     }
+                } header: {
+                    SectionTitle("Bills still to pay")
                 }
             }
             if !available.cardPayments.isEmpty {
-                Section("Credit card payments") {
+                Section {
                     ForEach(available.cardPayments) { payment in
                         WorkingRow(title: payment.title, amount: payment.amount, currency: available.currency,
                                    note: note(date: payment.date, overdue: payment.overdue, estimate: false))
                     }
+                } header: {
+                    SectionTitle("Credit card payments")
                 }
             }
             if !available.reserved.isEmpty {
-                Section("Set aside for goals") {
+                Section {
                     ForEach(available.reserved) { reserve in
                         WorkingRow(title: reserve.name, amount: reserve.amount, currency: available.currency)
                     }
+                } header: {
+                    SectionTitle("Set aside for goals")
                 }
             }
             Section {

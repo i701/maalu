@@ -14,7 +14,7 @@ struct TransactionsPreviewSection: View {
                 TransactionRow(transaction: transaction)
             }
         } header: {
-            Text(title)
+            SectionTitle(title)
         }
     }
 }

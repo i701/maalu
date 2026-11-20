@@ -16,7 +16,7 @@ struct BudgetSummarySection: View {
                     .font(.largeTitle)
                 Text("of \(MoneyFormat.string(totals.amount, currency: budget.currency))")
                     .foregroundStyle(.secondary)
-                ProgressView(value: min(Double(totals.percent) / 100, 1))
+                CapsuleProgress(value: min(Double(totals.percent) / 100, 1))
                     .tint(Color(budgetStatus: totals.status))
                     .padding(.top, 4)
                     .accessibilityLabel("All limits")

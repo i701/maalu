@@ -12,7 +12,7 @@ struct FixedBudgetLineRow: View {
                 Text("\(line.percent)%").numericFont()
             }
             Text(BudgetText.window(of: line)).font(.subheadline).foregroundStyle(.secondary)
-            ProgressView(value: min(Double(line.percent) / 100, 1))
+            CapsuleProgress(value: min(Double(line.percent) / 100, 1))
                 .tint(Color(budgetStatus: line.status))
                 .accessibilityLabel(line.name)
                 .accessibilityValue("\(line.percent)%")
