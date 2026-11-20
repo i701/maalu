@@ -22,10 +22,22 @@ export type SessionData = {
 const COOKIE_SECONDS = 90 * 24 * 60 * 60;
 const RENEW_AFTER_MS = 6 * 60 * 60 * 1000;
 
+/** The cookie password, checked when a session is opened (not at import, so a build does not need
+ * it): a missing or short secret fails here with a message, not deep inside the cookie code. */
+function sessionSecret() {
+	const secret = process.env.SESSION_SECRET;
+	if (!secret || secret.length < 32) {
+		throw new Error(
+			"SESSION_SECRET must be set to at least 32 characters (see apps/web/.env.example)",
+		);
+	}
+	return secret;
+}
+
 export function getAppSession() {
 	return openSession<SessionData>({
 		name: "maalu_session",
-		password: process.env.SESSION_SECRET!,
+		password: sessionSecret(),
 		maxAge: COOKIE_SECONDS,
 		cookie: {
 			httpOnly: true,
@@ -47,7 +59,7 @@ export async function renewSession(session: Awaited<ReturnType<typeof getAppSess
 export function getChallengeSession() {
 	return openSession<{ challenge?: string }>({
 		name: "maalu_2fa",
-		password: process.env.SESSION_SECRET!,
+		password: sessionSecret(),
 		maxAge: 5 * 60,
 		cookie: {
 			httpOnly: true,
