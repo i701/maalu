@@ -30,8 +30,9 @@ struct TransactionDraft {
     init() {}
 
     /// Repaying a credit card: a transfer from the account it is repaid from into the card's own account, as on the web.
-    init(repaying card: Card) {
+    init(repaying card: Card, amount: Decimal? = nil) {
         type = .transfer
+        self.amount = amount
         accountID = card.repayAccount?.id
         toAccountID = card.account.id
         note = String(localized: "\(card.name) repayment")

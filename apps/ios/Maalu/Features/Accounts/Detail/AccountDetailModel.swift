@@ -12,6 +12,8 @@ final class AccountDetailModel {
     private(set) var baseCurrency = ""
     /// The cards on this account: its debit cards, or a credit card's own.
     private(set) var cards: [Card] = []
+    /// A credit card's last statement, when it has statement days.
+    private(set) var statement: CardStatement?
     private(set) var isLoading = true
     private(set) var pageFailed = false
     private var total = 0
@@ -23,7 +25,10 @@ final class AccountDetailModel {
     var highest: AccountBalancePoint? { points.max { $0.value < $1.value } }
     var hasMore: Bool { transactions.count < total }
 
-    func load(accountID: String, using api: Api, now: Date = .now) async {
+    /// The credit card this account is repaid with: the first of its cards that names an account to repay from.
+    var repayingCard: Card? { cards.first { $0.kind == .credit && $0.repayAccount != nil } }
+
+    func load(accountID: String, hasStatement: Bool = false, using api: Api, now: Date = .now) async {
         let month = MonthRange(containing: now)
         async let historyResult: ApiResult<BalanceHistory> = api.get("accounts/\(accountID)/balance-history", query: [
             URLQueryItem(name: "days", value: String(range.rawValue)),
@@ -38,11 +43,13 @@ final class AccountDetailModel {
         ])
         async let profileResult: ApiResult<Profile> = api.get("users/me")
         async let cardsResult: ApiResult<[Card]> = api.get("cards")
+        let statementResult: ApiResult<CardStatement>? = hasStatement ? await api.get("accounts/\(accountID)/statement") : nil
         let (history, totals, after, me, cards) = await (historyResult, monthResult, afterResult, profileResult, cardsResult)
         if case .ok(let me, _) = me { baseCurrency = me.baseCurrency }
         guard !Task.isCancelled else { return }
         if case .ok(let value, _) = history { points = value.points }
         if case .ok(let value, _) = totals { self.month = value }
+        if case .ok(let value, _)? = statementResult { statement = value } else if !hasStatement { statement = nil }
         if case .ok(let value, _) = cards { self.cards = value.filter { $0.account.id == accountID } }
         if case .ok(let value, _) = after { balances = Dictionary(value.map { ($0.transactionId, $0.balance) }, uniquingKeysWith: { first, _ in first }) }
     }

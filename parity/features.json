@@ -544,7 +544,11 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Accounts/Detail/Statement/AccountStatementSection.swift",
+          "apps/ios/Maalu/Features/Accounts/Detail/Statement/CardStatementText.swift"
+        ]
       },
       "api": [
         "/api/v1/accounts/statements",

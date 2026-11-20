@@ -18,7 +18,7 @@ struct AccountsView: View {
                     Section(section.title) {
                         ForEach(section.accounts) { account in
                             NavigationLink(value: AccountRoute(id: account.id)) {
-                                AccountRow(account: account, trend: model.trends[account.id])
+                                AccountRow(account: account, trend: model.trends[account.id], statement: model.statements[account.id])
                             }
                         }
                     }

@@ -6,6 +6,8 @@ final class AccountsModel {
     private(set) var accounts: [Account] = []
     private(set) var summary: AccountSummary?
     private(set) var trends: [String: [Double]] = [:]
+    /// Each credit card with its statement days set, by account.
+    private(set) var statements: [String: CardStatement] = [:]
     private(set) var isLoading = true
     private(set) var errorMessage: String?
     var showsArchived = false
@@ -26,11 +28,13 @@ final class AccountsModel {
         async let listResult: ApiResult<[Account]> = api.get("accounts", query: showsArchived ? [URLQueryItem(name: "archived", value: "true")] : [])
         async let summaryResult: ApiResult<AccountSummary> = api.get("accounts/summary")
         async let trendsResult: ApiResult<[AccountTrend]> = api.get("accounts/trends", query: [URLQueryItem(name: "days", value: "30")])
-        let (result, summary, trends) = await (listResult, summaryResult, trendsResult)
+        async let statementsResult: ApiResult<[CardStatement]> = api.get("accounts/statements")
+        let (result, summary, trends, statements) = await (listResult, summaryResult, trendsResult, statementsResult)
         isLoading = false
         // the summary and trend lines are extras: the list stands without them
         if case .ok(let value, _) = summary { self.summary = value }
         if case .ok(let value, _) = trends { self.trends = Dictionary(value.map { ($0.accountId, $0.values) }, uniquingKeysWith: { first, _ in first }) }
+        if case .ok(let value, _) = statements { self.statements = Dictionary(value.map { ($0.accountId, $0) }, uniquingKeysWith: { first, _ in first }) }
         switch result {
         case .ok(let accounts, _):
             self.accounts = accounts

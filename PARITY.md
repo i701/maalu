@@ -9,9 +9,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 70 | 59 | 57 |
+| ✅ done | 70 | 59 | 58 |
 | 🟡 partial | 0 | 1 | 0 |
-| ❌ missing | 0 | 6 | 9 |
+| ❌ missing | 0 | 6 | 8 |
 | ➖ n/a | 1 | 5 | 5 |
 
 ## Still to build on Android (7)
@@ -24,9 +24,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (9)
+## Still to build on iOS (8)
 
-- ❌ **Credit card statements and due dates** (Accounts and cards).
 - ❌ **Bulk actions on selected rows** (Transactions).
 - ❌ **Merge two entries into one transfer** (Transactions).
 - ❌ **Export to Excel** (Transactions).
@@ -66,7 +65,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Market exchange rates**<br>A suggested rate for a foreign amount on a date, and the currency list. | ✅ done | ✅ done | ✅ done |
 | **Rate history**<br>How the market rate of a foreign account's currency moved, 30 days to a year. | ✅ done | ✅ done | ✅ done |
 | **Cards**<br>Debit cards on a bank account and credit cards with a repayment account; a Card field on a purchase and a card filter. | ✅ done | ✅ done | ✅ done |
-| **Credit card statements and due dates**<br>The statement balance, what is left, the due date and a Repay button, worked out each time. | ✅ done | ✅ done | ❌ missing |
+| **Credit card statements and due dates**<br>The statement balance, what is left, the due date and a Repay button, worked out each time. | ✅ done | ✅ done | ✅ done |
 
 ## Transactions
 

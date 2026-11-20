@@ -27,6 +27,9 @@ struct AccountDetailView: View {
                 if let month = model.month {
                     AccountMonthSection(month: month)
                 }
+                if let statement = model.statement {
+                    AccountStatementSection(statement: statement, onRepay: model.repayingCard.map { card in { sheet = .repay(card, amount: Money.decimal(statement.remaining)) } })
+                }
                 AccountFactsSection(account: account, baseCurrency: model.baseCurrency, onShowRateHistory: { sheet = .rateHistory(account) })
                 if let kind = CardKind.forAccount(in: account.group), !account.isArchived {
                     AccountCardsSection(
@@ -35,7 +38,7 @@ struct AccountDetailView: View {
                         onAdd: { sheet = .addCard(account, kind) },
                         onEdit: { sheet = .editCard(account, $0) },
                         onDelete: confirmDeleteCard,
-                        onRepay: { sheet = .repay($0) }
+                        onRepay: { sheet = .repay($0, amount: nil) }
                     )
                 }
                 AccountBalanceSection(model: model, account: account)
@@ -63,7 +66,7 @@ struct AccountDetailView: View {
                     CardFormView(account: account, kind: kind, accounts: listModel.accounts, onSaved: reload)
                 case .editCard(let account, let card):
                     CardFormView(account: account, kind: card.kind, editing: card, accounts: listModel.accounts, onSaved: reload)
-                case .repay(let card): TransactionFormView(seed: TransactionDraft(repaying: card), onSaved: reload)
+                case .repay(let card, let amount): TransactionFormView(seed: TransactionDraft(repaying: card, amount: amount), onSaved: reload)
                 case .rateHistory(let account): RateHistoryView(account: account, baseCurrency: model.baseCurrency)
                 }
             }
@@ -99,7 +102,8 @@ struct AccountDetailView: View {
 
     private func loadDetail() async {
         guard let api = session.api else { return }
-        await model.load(accountID: id, using: api)
+        let account = listModel.account(id: id)
+        await model.load(accountID: id, hasStatement: account?.group == .card && account?.statementDay != nil, using: api)
     }
 
     private func loadTransactions(debounced: Bool = false) async {
@@ -118,7 +122,8 @@ struct AccountDetailView: View {
         Task {
             guard let api = session.api else { return }
             await listModel.load(using: api)
-            await model.load(accountID: id, using: api)
+            let account = listModel.account(id: id)
+        await model.load(accountID: id, hasStatement: account?.group == .card && account?.statementDay != nil, using: api)
             await model.loadTransactions(accountID: id, using: api)
         }
     }
