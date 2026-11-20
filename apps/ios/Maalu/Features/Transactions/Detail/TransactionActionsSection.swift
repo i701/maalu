@@ -9,6 +9,7 @@ struct TransactionActionsSection: View {
     let onRefund: () -> Void
     let onEditRefund: () -> Void
     let onLinkRefund: () -> Void
+    let onMakeSubscription: () -> Void
     let onDelete: () -> Void
 
     var body: some View {
@@ -28,6 +29,9 @@ struct TransactionActionsSection: View {
             }
             if transaction.isLinkableAsRefund {
                 Button("Link to a purchase", systemImage: "link", action: onLinkRefund)
+            }
+            if transaction.canMakeSubscription {
+                Button("Make a subscription", systemImage: "repeat", action: onMakeSubscription)
             }
             Button("Delete", systemImage: "trash", role: .destructive, action: onDelete)
         }

@@ -28,6 +28,7 @@ struct TransactionDetailView: View {
                     onRefund: { sheet = .refund(transaction) },
                     onEditRefund: { sheet = .editRefund(transaction) },
                     onLinkRefund: { sheet = .linkRefund(transaction) },
+                    onMakeSubscription: { sheet = .makeSubscription(transaction) },
                     onDelete: { isConfirmingDelete = true }
                 )
             }
@@ -50,6 +51,7 @@ struct TransactionDetailView: View {
                     case .refund(let purchase): RefundFormView(purchase: purchase, onSaved: reload)
                     case .editRefund(let refund): RefundFormView(refund: refund, onSaved: reload)
                     case .linkRefund(let income): LinkRefundView(income: income, onSaved: reload)
+                    case .makeSubscription(let payment): MakeSubscriptionView(transaction: payment, onSaved: reload)
                     }
                 }
                 .markPaidDialog(dialog, session: session)

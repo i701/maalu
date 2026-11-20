@@ -33,6 +33,8 @@ struct Transaction: Decodable, Identifiable, Hashable {
     let place: String?
 
     var isRefund: Bool { refundOf != nil }
+    /// An expense can become the first payment of a subscription, unless it belongs to one.
+    var canMakeSubscription: Bool { type == .expense && subscription == nil }
     var isRefundable: Bool { RefundRules.canRefund(self) }
     var isLinkableAsRefund: Bool { RefundRules.canLink(self) }
 

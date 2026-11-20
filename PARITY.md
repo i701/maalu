@@ -9,9 +9,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 70 | 59 | 53 |
+| ✅ done | 70 | 59 | 54 |
 | 🟡 partial | 0 | 1 | 0 |
-| ❌ missing | 0 | 6 | 13 |
+| ❌ missing | 0 | 6 | 12 |
 | ➖ n/a | 1 | 5 | 5 |
 
 ## Still to build on Android (7)
@@ -24,13 +24,12 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (13)
+## Still to build on iOS (12)
 
 - ❌ **Credit card statements and due dates** (Accounts and cards).
 - ❌ **Bulk actions on selected rows** (Transactions).
 - ❌ **Merge two entries into one transfer** (Transactions).
 - ❌ **Export to Excel** (Transactions).
-- ❌ **Make a subscription from a transaction** (Bills and subscriptions).
 - ❌ **Salary split rules** (Budget, goals and planning).
 - ❌ **Split a salary and the Pending screen** (Budget, goals and planning).
 - ❌ **Arrange the dashboard** (Dashboard and reports).
@@ -114,7 +113,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 |---|:---:|:---:|:---:|
 | **Subscriptions and recurring bills**<br>Plans with a next payment, pay-from account, installments, reminders and varying amounts. | ✅ done | ✅ done | ✅ done |
 | **Suggested subscriptions**<br>Recurring spending found in your transactions, accepted into a subscription in one tap. | ✅ done | ✅ done | ✅ done |
-| **Make a subscription from a transaction**<br>Turn a payment you already made into a recurring plan. | ✅ done | ✅ done | ❌ missing |
+| **Make a subscription from a transaction**<br>Turn a payment you already made into a recurring plan. | ✅ done | ✅ done | ✅ done |
 
 ## Budget, goals and planning
 
