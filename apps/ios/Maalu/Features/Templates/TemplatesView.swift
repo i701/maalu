@@ -28,6 +28,7 @@ struct TemplatesView: View {
             }
         }
         .overlay { TemplatesPlaceholder(model: model) }
+        .gradientHeader(.accentLime)
         .navigationTitle("Templates")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $using) { template in

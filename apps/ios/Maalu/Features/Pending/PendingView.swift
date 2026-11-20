@@ -29,6 +29,7 @@ struct PendingView: View {
                 ContentUnavailableView("Nothing is waiting", systemImage: "checkmark.circle", description: Text("When a salary arrives and you have split rules, its split waits here for you to approve."))
             }
         }
+        .gradientHeader(.accentOrange)
         .navigationTitle("Pending")
         .navigationBarTitleDisplayMode(.inline)
         .refreshable { await load() }

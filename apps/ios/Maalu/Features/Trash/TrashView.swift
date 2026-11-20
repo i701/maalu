@@ -35,6 +35,7 @@ struct TrashView: View {
             }
         }
         .overlay { TrashPlaceholder(model: model) }
+        .gradientHeader(.accentSlate)
         .navigationTitle("Trash")
         .navigationBarTitleDisplayMode(.inline)
         .confirmationDialog("Delete this transaction for good?", isPresented: $isConfirmingDelete, titleVisibility: .visible) {

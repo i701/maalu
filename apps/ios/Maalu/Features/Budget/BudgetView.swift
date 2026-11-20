@@ -16,6 +16,7 @@ struct BudgetView: View {
                 GoalsSection(goals: model.goals)
             }
             .overlay { BudgetPlaceholder(model: model, retry: reloadNow) }
+            .gradientHeader(.accentAmber)
             .navigationTitle("Budget")
             .navigationSubtitle(model.periodDates.map { Text($0, format: .interval.month(.abbreviated).day()) } ?? Text(model.month.start, format: .dateTime.month(.wide).year()))
             .toolbar {

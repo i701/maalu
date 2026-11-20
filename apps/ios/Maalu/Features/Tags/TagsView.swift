@@ -41,6 +41,7 @@ struct TagsView: View {
             }
         }
         .overlay { TagsPlaceholder(model: model) }
+        .gradientHeader(.accentViolet)
         .navigationTitle("Tags")
         .navigationBarTitleDisplayMode(.inline)
         .searchable(text: $model.search, prompt: "Search tags")

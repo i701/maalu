@@ -27,7 +27,7 @@ struct MoreView: View {
                 .padding(.horizontal, 16)
                 .padding(.bottom, 24)
             }
-            .background(Color(.systemGroupedBackground))
+            .gradientHeader(.brand)
             .navigationTitle("More")
             .navigationDestination(for: MoreItem.self) { item in
                 MoreDestinationView(item: item)

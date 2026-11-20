@@ -12,6 +12,6 @@ struct MoreAccountCard: View {
             Button("Sign out", systemImage: "rectangle.portrait.and.arrow.right", role: .destructive, action: onSignOut)
         }
         .padding(16)
-        .card()
+        .card(elevation: 3)
     }
 }

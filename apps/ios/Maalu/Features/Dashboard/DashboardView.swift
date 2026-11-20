@@ -16,7 +16,7 @@ struct DashboardView: View {
                 .padding(.horizontal, Spacing.screen)
                 .padding(.vertical, 8)
             }
-            .background(Color(.systemGroupedBackground))
+            .gradientHeader(.accentLime)
             .overlay { DashboardPlaceholder(model: model, retry: reloadNow) }
             .navigationTitle("Dashboard")
             .navigationSubtitle(Text(model.month.start, format: .dateTime.month(.wide).year()))

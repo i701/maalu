@@ -34,6 +34,7 @@ struct DocsView: View {
                 ContentUnavailableView.search(text: search)
             }
         }
+        .gradientHeader(.brand)
         .navigationTitle("Guides")
         .navigationBarTitleDisplayMode(.inline)
         .searchable(text: $search, prompt: "Search the guides")

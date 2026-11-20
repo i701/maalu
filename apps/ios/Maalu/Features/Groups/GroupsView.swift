@@ -18,6 +18,7 @@ struct GroupsView: View {
             }
         }
         .overlay { GroupsPlaceholder(model: model) }
+        .gradientHeader(.brand)
         .navigationTitle("Groups")
         .navigationBarTitleDisplayMode(.inline)
         .searchable(text: $model.search, prompt: "Search groups")

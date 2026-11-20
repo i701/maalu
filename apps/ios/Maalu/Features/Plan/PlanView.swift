@@ -19,6 +19,7 @@ struct PlanView: View {
             }
         }
         .overlay { PlanPlaceholder(model: model, retry: reloadNow) }
+        .gradientHeader(.accentAmber)
         .navigationTitle("Month plan")
         .navigationBarTitleDisplayMode(.inline)
         .markPaidDialog(dialog, session: session)

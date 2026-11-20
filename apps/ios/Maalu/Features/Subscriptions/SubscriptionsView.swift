@@ -29,6 +29,7 @@ struct SubscriptionsView: View {
             }
         }
         .overlay { SubscriptionsPlaceholder(model: model) }
+        .gradientHeader(.accentViolet)
         .navigationTitle("Subscriptions")
         .navigationBarTitleDisplayMode(.inline)
         .searchable(text: $model.search, prompt: "Search subscriptions")

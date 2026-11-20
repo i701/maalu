@@ -61,6 +61,7 @@ struct NetWorthView: View {
             }
         }
         .overlay { if model.isLoading && model.data == nil { ProgressView() } }
+        .gradientHeader(.accentGreen)
         .navigationTitle("Net Worth")
         .navigationBarTitleDisplayMode(.inline)
         .refreshable { await load() }

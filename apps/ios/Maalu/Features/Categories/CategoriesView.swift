@@ -38,6 +38,7 @@ struct CategoriesView: View {
             }
         }
         .overlay { CategoriesPlaceholder(model: model) }
+        .gradientHeader(.accentPink)
         .navigationTitle("Categories")
         .navigationBarTitleDisplayMode(.inline)
         .searchable(text: $model.search, prompt: "Search categories")

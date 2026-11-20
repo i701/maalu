@@ -44,6 +44,7 @@ struct VendorsView: View {
             }
         }
         .overlay { VendorsPlaceholder(model: model) }
+        .gradientHeader(.accentOrange)
         .navigationTitle("Vendors")
         .navigationBarTitleDisplayMode(.inline)
         .searchable(text: $model.search, prompt: "Search vendors")

@@ -43,6 +43,7 @@ struct TrendsView: View {
             }
         }
         .overlay { if model.isLoading && model.data == nil { ProgressView() } }
+        .gradientHeader(.accentLime)
         .navigationTitle("Trends")
         .navigationBarTitleDisplayMode(.inline)
         .refreshable { await load() }

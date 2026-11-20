@@ -49,6 +49,7 @@ struct SettingsView: View {
             }
         }
         .overlay { if model.settings == nil && model.errorMessage == nil { ProgressView() } }
+        .gradientHeader(.brand)
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(for: SettingsRoute.self) { route in

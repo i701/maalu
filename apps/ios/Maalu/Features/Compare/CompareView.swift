@@ -72,6 +72,7 @@ struct CompareView: View {
             }
         }
         .overlay { ComparePlaceholder(model: model) }
+        .gradientHeader(.accentViolet)
         .navigationTitle("Compare")
         .navigationBarTitleDisplayMode(.inline)
         .refreshable { await load() }

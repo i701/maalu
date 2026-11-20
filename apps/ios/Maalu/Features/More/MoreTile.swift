@@ -17,6 +17,6 @@ struct MoreTile: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, minHeight: 104, alignment: .topLeading)
-        .card(radius: Radius.card - 4)
+        .card(radius: Radius.card - 4, elevation: 3)
     }
 }
