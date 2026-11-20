@@ -29,6 +29,7 @@ struct TransactionDetailView: View {
                     onEditRefund: { sheet = .editRefund(transaction) },
                     onLinkRefund: { sheet = .linkRefund(transaction) },
                     onMakeSubscription: { sheet = .makeSubscription(transaction) },
+                    onSplitSalary: { sheet = .splitSalary(transaction) },
                     onDelete: { isConfirmingDelete = true }
                 )
             }
@@ -52,6 +53,7 @@ struct TransactionDetailView: View {
                     case .editRefund(let refund): RefundFormView(refund: refund, onSaved: reload)
                     case .linkRefund(let income): LinkRefundView(income: income, onSaved: reload)
                     case .makeSubscription(let payment): MakeSubscriptionView(transaction: payment, onSaved: reload)
+                    case .splitSalary(let salary): SalarySplitView(transactionID: salary.id, onChanged: reload)
                     }
                 }
                 .markPaidDialog(dialog, session: session)

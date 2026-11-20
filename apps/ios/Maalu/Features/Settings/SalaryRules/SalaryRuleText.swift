@@ -4,8 +4,12 @@ import Foundation
 enum SalaryRuleText {
     /// "10% of each salary" or "MVR 1,500.00 each time".
     static func text(_ rule: SalaryRule, currency: String) -> String {
-        let value = Money.decimal(rule.value) ?? 0
-        switch rule.mode {
+        text(mode: rule.mode, value: rule.value, currency: currency)
+    }
+
+    static func text(mode: SalaryRuleMode, value: String, currency: String) -> String {
+        let value = Money.decimal(value) ?? 0
+        switch mode {
         case .percent: return String(localized: "\(value.formatted())% of each salary")
         case .fixed: return String(localized: "\(MoneyFormat.string(value, currency: currency)) each time")
         }

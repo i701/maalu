@@ -35,6 +35,8 @@ struct Transaction: Decodable, Identifiable, Hashable {
     var isRefund: Bool { refundOf != nil }
     /// An expense can become the first payment of a subscription, unless it belongs to one.
     var canMakeSubscription: Bool { type == .expense && subscription == nil }
+    /// Posted pay (the Salary category) in an account can be split between accounts and goals by the rules.
+    var canSplitSalary: Bool { type == .income && categoryIsSalary == true && account != nil && !planned }
     var isRefundable: Bool { RefundRules.canRefund(self) }
     var isLinkableAsRefund: Bool { RefundRules.canLink(self) }
 

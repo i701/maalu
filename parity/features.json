@@ -1522,7 +1522,11 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Pending/PendingView.swift",
+          "apps/ios/Maalu/Features/Transactions/Salary/SalarySplitView.swift"
+        ]
       },
       "routes": [
         "/pending"
