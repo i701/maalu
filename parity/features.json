@@ -542,7 +542,11 @@
         "status": "missing"
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Transactions/TransactionRow.swift",
+          "apps/ios/Maalu/Features/Transactions/Detail/TransactionDetailView.swift"
+        ]
       },
       "routes": [
         "/transactions"

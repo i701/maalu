@@ -9,9 +9,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 70 | 59 | 42 |
+| ✅ done | 70 | 59 | 43 |
 | 🟡 partial | 0 | 1 | 0 |
-| ❌ missing | 0 | 6 | 24 |
+| ❌ missing | 0 | 6 | 23 |
 | ➖ n/a | 1 | 5 | 5 |
 
 ## Still to build on Android (7)
@@ -24,7 +24,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (24)
+## Still to build on iOS (23)
 
 - ❌ **Set up and manage two-factor** (Sign in and security).
 - ❌ **Where you are signed in** (Sign in and security).
@@ -33,7 +33,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Market exchange rates** (Accounts and cards).
 - ❌ **Rate history** (Accounts and cards).
 - ❌ **Credit card statements and due dates** (Accounts and cards).
-- ❌ **Quiet list and detail sheet** (Transactions).
 - ❌ **Bulk actions on selected rows** (Transactions).
 - ❌ **Refunds** (Transactions).
 - ❌ **Merge two entries into one transfer** (Transactions).
@@ -87,7 +86,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | Feature | Web | Android | iOS |
 |---|:---:|:---:|:---:|
-| **Quiet list and detail sheet**<br>Rows show only the title, category and method and the amount, grouped by day; everything else and the actions are in a detail sheet. | ✅ done | ❌ missing | ❌ missing |
+| **Quiet list and detail sheet**<br>Rows show only the title, category and method and the amount, grouped by day; everything else and the actions are in a detail sheet. | ✅ done | ❌ missing | ✅ done |
 | **Transactions list**<br>The list by day with search, the type chips, paging and the totals line. | ✅ done | ✅ done | ✅ done |
 | **Filters**<br>Dates, account, card, category, tags with any or all, payment method, need or want and an amount range. | ✅ done | ✅ done | ✅ done |
 | **Add and edit a transaction**<br>Expense, income or transfer with account, rate, category, vendor, date and time, way of paying, tags, note and planned. | ✅ done | ✅ done | ✅ done |

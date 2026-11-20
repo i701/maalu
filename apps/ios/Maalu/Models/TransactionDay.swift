@@ -21,4 +21,13 @@ struct TransactionDay: Identifiable {
     var parsedDate: Date? {
         ISODate.date(date)
     }
+
+    /// "Today", "Yesterday", "Tomorrow" or the date, instead of a date on every row.
+    func heading(calendar: Calendar = .current) -> String {
+        guard let parsedDate else { return date }
+        if calendar.isDateInToday(parsedDate) { return String(localized: "Today") }
+        if calendar.isDateInYesterday(parsedDate) { return String(localized: "Yesterday") }
+        if calendar.isDateInTomorrow(parsedDate) { return String(localized: "Tomorrow") }
+        return parsedDate.formatted(.dateTime.weekday(.wide).day().month(.wide))
+    }
 }

@@ -29,6 +29,20 @@ struct TransactionTests {
         #expect(try transaction(type: "expense", description: "Lunch").title == "Lunch")
     }
 
+    @Test func aRowShowsTheTitleAndOneLineOfCategoryAndPayment() throws {
+        let row = try transaction(type: "expense", vendor: #"{"id":"v","name":"Ooredoo"}"#)
+        #expect(row.rowTitle == "Ooredoo")
+        #expect(row.rowLine == "Food · Cash")
+    }
+
+    @Test func aDayIsHeadedTodayYesterdayOrItsDate() throws {
+        let today = ISODate.string(.now)
+        let yesterday = ISODate.string(Calendar.current.date(byAdding: .day, value: -1, to: .now) ?? .now)
+        #expect(TransactionDay.grouping([try transaction(type: "expense", date: today)])[0].heading() == "Today")
+        #expect(TransactionDay.grouping([try transaction(type: "expense", date: yesterday)])[0].heading() == "Yesterday")
+        #expect(TransactionDay.grouping([try transaction(type: "expense", date: "2020-01-05")])[0].heading().contains("5"))
+    }
+
     @Test func moneyIgnoresTheDeviceLocale() {
         #expect(Money.decimal("1234.5") == Decimal(string: "1234.5"))
         #expect(Money.decimal("abc") == nil)

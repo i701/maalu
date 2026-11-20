@@ -2,20 +2,19 @@ import SwiftUI
 
 struct TransactionDaySection: View {
     let day: TransactionDay
+    let onOpen: (Transaction) -> Void
 
     var body: some View {
         Section {
             ForEach(day.transactions) { transaction in
-                NavigationLink(value: transaction) {
+                Button { onOpen(transaction) } label: {
                     TransactionRow(transaction: transaction)
+                        .contentShape(.rect)
                 }
+                .buttonStyle(.plain)
             }
         } header: {
-            if let date = day.parsedDate {
-                Text(date, format: .dateTime.weekday(.wide).day().month(.wide))
-            } else {
-                Text(day.date)
-            }
+            Text(day.heading())
         }
     }
 }

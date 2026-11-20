@@ -5,6 +5,7 @@ struct TransactionsView: View {
     @State private var model = TransactionsModel()
     @State private var isAdding = false
     @State private var isFiltering = false
+    @State private var opened: Transaction?
 
     var body: some View {
         NavigationStack {
@@ -13,7 +14,7 @@ struct TransactionsView: View {
                     TransactionTotalsSection(totals: totals)
                 }
                 ForEach(model.days) { day in
-                    TransactionDaySection(day: day)
+                    TransactionDaySection(day: day, onOpen: open)
                 }
                 if model.hasMore {
                     if model.errorMessage == nil {
@@ -38,8 +39,11 @@ struct TransactionsView: View {
                     Button("Add Transaction", systemImage: "plus") { isAdding = true }
                 }
             }
-            .navigationDestination(for: Transaction.self) { transaction in
-                TransactionDetailView(model: model, id: transaction.id)
+            .sheet(item: $opened) { transaction in
+                NavigationStack {
+                    TransactionDetailView(model: model, id: transaction.id)
+                }
+                .presentationDetents([.medium, .large])
             }
             .sheet(isPresented: $isFiltering) {
                 TransactionFiltersView(filter: model.filter) { model.filter = $0 }
@@ -64,6 +68,10 @@ struct TransactionsView: View {
 
     private func reloadNow() {
         Task { await reload() }
+    }
+
+    private func open(_ transaction: Transaction) {
+        opened = transaction
     }
 
     private func clearFilters() {

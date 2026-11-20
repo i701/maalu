@@ -19,33 +19,26 @@ struct TransactionDetailView: View {
 
     var body: some View {
         if let transaction = model.transaction(id: id) {
-            TransactionDetailContent(transaction: transaction, files: files)
+            TransactionDetailContent(transaction: transaction, files: files) {
+                TransactionActionsSection(
+                    transaction: transaction,
+                    onMarkPaid: { markPaid(transaction) },
+                    onEdit: { sheet = .edit(transaction) },
+                    onDuplicate: { sheet = .duplicate(transaction) },
+                    onDelete: { isConfirmingDelete = true }
+                )
+            }
                 .navigationTitle(transaction.title)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
-                    if transaction.planned {
-                        ToolbarItem(placement: .primaryAction) {
-                            Button(markTitle(for: transaction), systemImage: "checkmark.circle") { markPaid(transaction) }
-                        }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Done", action: dismiss.callAsFunction)
                     }
-                    if transaction.canEdit {
-                        ToolbarItem(placement: .primaryAction) {
-                            Button("Edit", systemImage: "pencil") { sheet = .edit(transaction) }
-                        }
-                    }
-                    if transaction.canEdit {
-                        ToolbarItem {
-                            Button("Duplicate", systemImage: "plus.square.on.square") { sheet = .duplicate(transaction) }
-                        }
-                    }
-                    ToolbarItem {
-                        Button("Delete", systemImage: "trash", role: .destructive) { isConfirmingDelete = true }
-                            .confirmationDialog("Delete this transaction?", isPresented: $isConfirmingDelete, titleVisibility: .visible) {
-                                Button("Delete", role: .destructive, action: delete)
-                            } message: {
-                                Text("It moves to the trash.")
-                            }
-                    }
+                }
+                .confirmationDialog("Delete this transaction?", isPresented: $isConfirmingDelete, titleVisibility: .visible) {
+                    Button("Delete", role: .destructive, action: delete)
+                } message: {
+                    Text("It moves to the trash.")
                 }
                 .sheet(item: $sheet) { sheet in
                     switch sheet {
@@ -60,14 +53,6 @@ struct TransactionDetailView: View {
                 }
         } else {
             ContentUnavailableView("Transaction not found", systemImage: "questionmark.circle")
-        }
-    }
-
-    private func markTitle(for transaction: Transaction) -> LocalizedStringResource {
-        switch transaction.type {
-        case .transfer: "Mark as done"
-        case .income: "Mark as received"
-        case .expense: "Mark as paid"
         }
     }
 

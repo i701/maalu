@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// Income is green with a plus, an expense red with a minus, and a transfer has no direction so it stays neutral.
 struct TransactionAmount: View {
     let transaction: Transaction
 

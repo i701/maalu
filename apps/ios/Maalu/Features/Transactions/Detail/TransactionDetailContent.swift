@@ -1,8 +1,9 @@
 import SwiftUI
 
-struct TransactionDetailContent: View {
+struct TransactionDetailContent<Actions: View>: View {
     let transaction: Transaction
     let files: TransactionFilesModel
+    @ViewBuilder let actions: Actions
 
     var body: some View {
         List {
@@ -43,6 +44,7 @@ struct TransactionDetailContent: View {
                 TransactionLocationMap(location: location)
             }
             TransactionFilesSection(model: files, canAdd: transaction.deletedAt == nil)
+            actions
         }
     }
 
