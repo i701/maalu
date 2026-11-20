@@ -15,7 +15,6 @@ struct MoreView: View {
                         }
                     }
                 }
-                ShortNumbersSection()
                 Section {
                     LabeledContent("Server", value: session.server ?? "")
                     Button("Sign out", role: .destructive, action: signOut)

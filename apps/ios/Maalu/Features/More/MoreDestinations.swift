@@ -26,6 +26,7 @@ enum MoreDestinations {
     ])
 
     private static let help = MoreGroup(id: "help", title: "Help", items: [
+        MoreItem(id: "settings", title: "Settings", systemImage: "gearshape"),
         MoreItem(id: "guides", title: "Guides", systemImage: "book"),
     ])
 }

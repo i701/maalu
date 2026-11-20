@@ -15,6 +15,7 @@ struct MoreDestinationView: View {
         case "vendors": VendorsView()
         case "tags": TagsView()
         case "groups": GroupsView()
+        case "settings": SettingsView()
         case "guides": DocsView()
         case "net-worth": NetWorthView()
         case "places": PlacesView()

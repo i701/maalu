@@ -9,9 +9,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 70 | 59 | 45 |
+| ✅ done | 70 | 59 | 47 |
 | 🟡 partial | 0 | 1 | 0 |
-| ❌ missing | 0 | 6 | 21 |
+| ❌ missing | 0 | 6 | 19 |
 | ➖ n/a | 1 | 5 | 5 |
 
 ## Still to build on Android (7)
@@ -24,12 +24,11 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (21)
+## Still to build on iOS (19)
 
 - ❌ **Set up and manage two-factor** (Sign in and security).
 - ❌ **Where you are signed in** (Sign in and security).
 - ❌ **Change password** (Sign in and security).
-- ❌ **Sign-in alerts** (Sign in and security).
 - ❌ **Market exchange rates** (Accounts and cards).
 - ❌ **Rate history** (Accounts and cards).
 - ❌ **Credit card statements and due dates** (Accounts and cards).
@@ -44,7 +43,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Notifications** (Notifications).
 - ❌ **Email digest** (Notifications).
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
-- ❌ **Settings** (Settings and the rest).
 - ❌ **Backup and restore** (Settings and the rest).
 - ❌ **Health check** (Settings and the rest).
 
@@ -58,7 +56,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Set up and manage two-factor**<br>Turn it on with a QR code, new recovery codes, turn it off. | ✅ done | ✅ done | ❌ missing |
 | **Where you are signed in**<br>List of devices, sign one out, sign out all the others. | ✅ done | ✅ done | ❌ missing |
 | **Change password**<br>Current password, a new one twice, and a code when two-factor is on. | ✅ done | ✅ done | ❌ missing |
-| **Sign-in alerts**<br>The switch for the email sent at every sign-in. | ✅ done | ✅ done | ❌ missing |
+| **Sign-in alerts**<br>The switch for the email sent at every sign-in. | ✅ done | ✅ done | ✅ done |
 | **API keys**<br>Keys for bots, scripts and agents with chosen permissions, an end date and rotation. | ✅ done | ➖ n/a | ➖ n/a |
 
 - **Create the first account** (Android): The app has no Create account: an account is made on the web or with just seed.
@@ -168,7 +166,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | Feature | Web | Android | iOS |
 |---|:---:|:---:|:---:|
-| **Settings**<br>Account details, numbers display, templates switch, default account and the notification and security cards. | ✅ done | ✅ done | ❌ missing |
+| **Settings**<br>Account details, numbers display, templates switch, default account and the notification and security cards. | ✅ done | ✅ done | ✅ done |
 | **Short numbers**<br>Show large amounts as 1.23K with the exact amount a tap away. | ✅ done | ✅ done | ✅ done |
 | **Backup and restore**<br>Download everything you own as one file and restore it into an empty account. | ✅ done | ❌ missing | ❌ missing |
 | **Guides**<br>The in-app guides with search; on the app they are generated from the web's. | ✅ done | ✅ done | ✅ done |

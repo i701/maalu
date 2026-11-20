@@ -239,7 +239,10 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Settings/SettingsView.swift"
+        ]
       },
       "api": [
         "/api/v1/users/me"
@@ -1935,7 +1938,11 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Settings/SettingsView.swift",
+          "apps/ios/Maalu/Features/Settings/SettingsModel.swift"
+        ]
       },
       "routes": [
         "/settings",
