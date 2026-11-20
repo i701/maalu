@@ -11,6 +11,9 @@ extension FlowLayout {
         if !start {
             return Color(flow: node(link.link.target)?.node.kind ?? .spending)
         }
+        if link.link.source != "total" {
+            return Color(flow: node(link.link.source)?.node.kind ?? .spending)
+        }
         let incomingLinks = links.filter { $0.link.target == "total" }
         let match = incomingLinks.first { abs($0.y1 - link.y0) <= $0.thickness / 2 + 0.001 } ?? incomingLinks.first
         return Color(flow: match.flatMap { node($0.link.source)?.node.kind } ?? .income)

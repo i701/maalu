@@ -8,8 +8,9 @@ struct CategoryTotal: Decodable, Identifiable {
     let type: String
     let kind: String?
     let parent: String?
+    let parentId: String?
 
-    init(categoryId: String, category: String, color: String, total: String, type: String, kind: String? = nil, parent: String? = nil) {
+    init(categoryId: String, category: String, color: String, total: String, type: String, kind: String? = nil, parent: String? = nil, parentId: String? = nil) {
         self.categoryId = categoryId
         self.category = category
         self.color = color
@@ -17,6 +18,7 @@ struct CategoryTotal: Decodable, Identifiable {
         self.type = type
         self.kind = kind
         self.parent = parent
+        self.parentId = parentId
     }
 
     var id: String { categoryId }

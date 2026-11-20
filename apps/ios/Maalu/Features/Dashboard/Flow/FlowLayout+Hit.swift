@@ -1,13 +1,12 @@
 import CoreGraphics
 
 extension FlowLayout {
-    /// The part of the flow a band covers: incoming bands run from their source to the seam, outgoing ones from the seam
-    /// to their destination.
+    /// The part of the flow a band covers. The total has no bar, so a band into or out of it already ends at the seam.
     func span(of link: PlacedLink) -> (start: Double, end: Double) {
-        link.link.target == "total" ? (link.x0, seam) : (seam, link.x1)
+        (link.x0, link.x1)
     }
 
-    /// The id of the income or spending node a band belongs to.
+    /// The id of the node a band belongs to: the income or spending node at its outer end.
     func outerNodeID(of link: PlacedLink) -> String {
         link.link.target == "total" ? link.link.source : link.link.target
     }

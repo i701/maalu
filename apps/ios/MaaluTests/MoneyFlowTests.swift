@@ -4,8 +4,8 @@ import Testing
 @testable import Maalu
 
 struct MoneyFlowTests {
-    private func category(_ name: String, _ total: String, type: String = "expense") -> CategoryTotal {
-        CategoryTotal(categoryId: name, category: name, color: "blue", total: total, type: type, kind: nil)
+    private func category(_ name: String, _ total: String, type: String = "expense", parent: String? = nil) -> CategoryTotal {
+        CategoryTotal(categoryId: name, category: name, color: "blue", total: total, type: type, kind: nil, parent: parent, parentId: parent)
     }
 
     private func flow(_ categories: [CategoryTotal], top: Int = 5) throws -> MoneyFlow {
@@ -114,6 +114,54 @@ struct MoneyFlowTests {
         #expect(layout.nodeID(at: CGPoint(x: incomeX, y: layout.bandCenterY(income, atX: incomeX))) == "in:0")
 
         #expect(layout.nodeID(at: CGPoint(x: 150, y: -50)) == nil)
+    }
+
+    @Test func subCategoriesGoUnderTheirParentAsAFourthColumn() throws {
+        let result = try flow([
+            category("Pay", "1000", type: "income"),
+            category("Food", "100"),
+            category("Groceries", "300", parent: "Food"),
+            category("Dining", "200", parent: "Food"),
+            category("Rent", "300"),
+        ])
+        #expect(result.lastColumn == 3)
+        let groups = result.nodes.filter { $0.column == 2 && $0.kind == .spending }
+        #expect(groups.map(\.value) == [600, 300])
+        let food = try #require(groups.first)
+        #expect(food.label == "Food")
+        let items = result.nodes.filter { $0.column == 3 }
+        #expect(items.map(\.label) == ["Groceries", "Dining", "Food (other)"])
+        #expect(items.reduce(0) { $0 + $1.value } == food.value)
+        #expect(result.links.filter { $0.source == food.id }.count == 3)
+    }
+
+    @Test func aFlatFlowStaysThreeColumns() throws {
+        let result = try flow([category("Pay", "1000", type: "income"), category("Rent", "600")])
+        #expect(result.lastColumn == 2)
+    }
+
+    @Test func whatAGroupWasSpentOnIsCentredOnItAndStaysInsideTheBox() throws {
+        let result = try flow([
+            category("Pay", "1000", type: "income"),
+            category("Groceries", "300", parent: "Food"),
+            category("Dining", "200", parent: "Food"),
+            category("Fuel", "100", parent: "Car"),
+            category("Parking", "50", parent: "Car"),
+        ])
+        let layout = FlowLayout.make(result, width: 400, height: 240)
+        let items = layout.nodes.filter { $0.node.column == 3 }
+        #expect(items.count == 4)
+        for node in layout.nodes {
+            #expect(node.y >= -0.001 && node.y + node.height <= 240.001)
+        }
+        for (upper, lower) in zip(items, items.dropFirst()) {
+            #expect(lower.y >= upper.y + upper.height - 0.001)
+        }
+        let food = try #require(layout.node("out:0"))
+        let foodItems = items.filter { $0.node.id.hasPrefix("out:0:") }
+        let top = try #require(foodItems.first).y
+        let bottom = try #require(foodItems.last).y + (foodItems.last?.height ?? 0)
+        #expect(abs((top + bottom) / 2 - food.centerY) < 0.5 || top <= 0.001 || bottom >= 239.999)
     }
 
     @Test func aBandsCentreLineMeetsItsEndpoints() throws {

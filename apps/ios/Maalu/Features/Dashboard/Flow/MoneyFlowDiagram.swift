@@ -10,13 +10,15 @@ struct MoneyFlowDiagram: View {
 
     private static let labelWidth = 88.0
     private static let height = 290.0
+    private static let rowHeight = 38.0
     private static let nodeWidth = 4.0
     private static let bandOpacity = 0.32
     private static let selectedOpacity = 0.55
     private static let dimmedOpacity = 0.12
 
+    /// Tall enough for a label per node of the fullest column.
     private var size: CGSize {
-        canvasSize ?? CGSize(width: width, height: Self.height)
+        canvasSize ?? CGSize(width: width, height: max(Self.height, Double(flow.tallestColumn) * Self.rowHeight))
     }
 
     private var layout: FlowLayout {
@@ -52,7 +54,10 @@ struct MoneyFlowDiagram: View {
                 }
                 .padding(.horizontal, Self.labelWidth)
                 FlowSideLabels(layout: layout, column: 0, currency: currency, labelWidth: Self.labelWidth, totalWidth: size.width, height: size.height, selectedID: selectedID, onSelect: select)
-                FlowSideLabels(layout: layout, column: 2, currency: currency, labelWidth: Self.labelWidth, totalWidth: size.width, height: size.height, selectedID: selectedID, onSelect: select)
+                if flow.lastColumn == 3 {
+                    FlowSideLabels(layout: layout, column: 2, currency: currency, labelWidth: Self.labelWidth, totalWidth: size.width, height: size.height, selectedID: selectedID, onSelect: select, isInner: true)
+                }
+                FlowSideLabels(layout: layout, column: flow.lastColumn, currency: currency, labelWidth: Self.labelWidth, totalWidth: size.width, height: size.height, selectedID: selectedID, onSelect: select)
             }
             .frame(width: canvasSize?.width, height: size.height)
             .onGeometryChange(for: Double.self) { $0.size.width } action: { width = $0 }
