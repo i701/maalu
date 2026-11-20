@@ -9,9 +9,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 70 | 59 | 59 |
+| ✅ done | 70 | 59 | 60 |
 | 🟡 partial | 0 | 1 | 0 |
-| ❌ missing | 0 | 6 | 6 |
+| ❌ missing | 0 | 6 | 5 |
 | ➖ n/a | 1 | 5 | 6 |
 
 ## Still to build on Android (7)
@@ -24,9 +24,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (6)
+## Still to build on iOS (5)
 
-- ❌ **Bulk actions on selected rows** (Transactions).
 - ❌ **Export to Excel** (Transactions).
 - ❌ **Notifications** (Notifications).
 - ❌ **Email digest** (Notifications).
@@ -75,7 +74,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Add and edit a transaction**<br>Expense, income or transfer with account, rate, category, vendor, date and time, way of paying, tags, note and planned. | ✅ done | ✅ done | ✅ done |
 | **Save and add another, and duplicate**<br>Keep the form open for the next entry, or copy a transaction. | ✅ done | ✅ done | ✅ done |
 | **Templates**<br>Start from a saved template and save a form as one; the Templates page to rename and delete them. | ✅ done | ✅ done | ✅ done |
-| **Bulk actions on selected rows**<br>Select rows, then change category, tags, vendor or payment method, or delete them; select all that match. | ✅ done | ✅ done | ❌ missing |
+| **Bulk actions on selected rows**<br>Select rows, then change category, tags, vendor or payment method, or delete them; select all that match. | ✅ done | ✅ done | ✅ done |
 | **Trash**<br>Deleted transactions wait to be restored or deleted for good, singly or in bulk. | ✅ done | ✅ done | ✅ done |
 | **Planned transactions and Mark as paid**<br>Something coming up that counts toward nothing until it is paid with the real day and amount. | ✅ done | ✅ done | ✅ done |
 | **Refunds**<br>Give money back for a purchase (whole or by item), or link existing income to a purchase. | ✅ done | ✅ done | ✅ done |

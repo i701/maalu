@@ -8,6 +8,9 @@ struct TransactionsView: View {
     @State private var opened: Transaction?
     @State private var options = FilterOptionsModel()
     @State private var notice: String?
+    @State private var selection = TransactionSelection()
+    @State private var isBulkEditing = false
+    @State private var isConfirmingDelete = false
 
     var body: some View {
         NavigationStack {
@@ -24,7 +27,7 @@ struct TransactionsView: View {
                     TransactionTotalsSection(totals: totals)
                 }
                 ForEach(model.days) { day in
-                    TransactionDaySection(day: day, onOpen: open)
+                    TransactionDaySection(day: day, selection: selection, onTap: tap, onHold: hold)
                 }
                 if model.hasMore {
                     if model.errorMessage == nil {
@@ -39,14 +42,24 @@ struct TransactionsView: View {
             .overlay { TransactionsPlaceholder(model: model, retry: reloadNow, clearFilters: clearFilters) }
             .navigationTitle("Transactions")
             .searchable(text: $model.filter.text, prompt: "Search transactions")
+            .navigationSubtitle(selection.isSelecting ? Text(selection.isWide ? "All \(selection.count) matching are selected" : "\(selection.count) selected") : Text(""))
+            .sensoryFeedback(.selection, trigger: selection.count)
             .toolbar {
-                ToolbarItemGroup {
-                    TransactionTypeMenu(selection: $model.filter.type, planned: $model.filter.planned)
-                    Button("Filters", systemImage: "slider.horizontal.3") { isFiltering = true }
-                        .foregroundStyle(model.filter.detailCount == 0 ? Color.primary : Color.accentColor)
-                }
-                ToolbarItem(placement: .primaryAction) {
-                    Button("Add Transaction", systemImage: "plus") { isAdding = true }
+                if selection.isSelecting {
+                    ToolbarItemGroup(placement: .primaryAction) {
+                        TransactionSelectionMenu(selection: selection, onEdit: { isBulkEditing = true }, onDelete: { isConfirmingDelete = true }, onSelectAll: selectAll)
+                        Button("Done", action: selection.finish)
+                    }
+                } else {
+                    ToolbarItemGroup {
+                        TransactionTypeMenu(selection: $model.filter.type, planned: $model.filter.planned)
+                        Button("Filters", systemImage: "slider.horizontal.3") { isFiltering = true }
+                            .foregroundStyle(model.filter.detailCount == 0 ? Color.primary : Color.accentColor)
+                        Button("Select", systemImage: "checkmark.circle", action: selection.start)
+                    }
+                    ToolbarItem(placement: .primaryAction) {
+                        Button("Add Transaction", systemImage: "plus") { isAdding = true }
+                    }
                 }
             }
             .sheet(item: $opened) { transaction in
@@ -65,6 +78,15 @@ struct TransactionsView: View {
             } message: {
                 Text(notice ?? "")
             }
+            .sheet(isPresented: $isBulkEditing) {
+                BulkEditView(selection: selection, onDone: bulkDone)
+            }
+            .confirmationDialog("Delete \(TransactionSelection.transactionCount(selection.count))?", isPresented: $isConfirmingDelete, titleVisibility: .visible) {
+                Button("Delete", role: .destructive, action: trash)
+            } message: {
+                Text("They move to the trash.")
+            }
+            .onChange(of: model.filter) { selection.clearPicks() }
             .refreshable { await reload() }
             .task(id: model.filter) { await reload(debounced: !model.filter.text.isEmpty) }
             .task(id: isFiltering) { await loadOptions() }
@@ -103,8 +125,41 @@ struct TransactionsView: View {
         reloadNow()
     }
 
-    private func open(_ transaction: Transaction) {
-        opened = transaction
+    /// A tap opens a transaction, or ticks it while rows are being picked.
+    private func tap(_ transaction: Transaction) {
+        if selection.isSelecting {
+            selection.toggle(transaction.id)
+        } else {
+            opened = transaction
+        }
+    }
+
+    /// Press and hold starts picking with this row ticked; while picking it ticks or unticks like a tap.
+    private func hold(_ transaction: Transaction) {
+        if !selection.isSelecting { selection.start() }
+        selection.toggle(transaction.id)
+    }
+
+    private func selectAll() {
+        Task {
+            guard let api = session.api else { return }
+            if let message = await selection.selectAll(loaded: model.loadedIDs, matching: model.matchCount, filter: model.filter, using: api) {
+                notice = message
+            }
+        }
+    }
+
+    private func trash() {
+        Task {
+            guard let api = session.api else { return }
+            bulkDone(await selection.trash(using: api))
+        }
+    }
+
+    /// The rows changed, so they are picked no more and the list is read again.
+    private func bulkDone(_ message: String) {
+        selection.finish()
+        changed(message)
     }
 
     private func clearFilters() {

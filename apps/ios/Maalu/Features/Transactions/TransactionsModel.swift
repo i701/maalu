@@ -17,6 +17,9 @@ final class TransactionsModel {
 
     var isEmpty: Bool { transactions.isEmpty }
     var hasMore: Bool { transactions.count < total }
+    /// How many rows match the filters, loaded or not.
+    var matchCount: Int { total }
+    var loadedIDs: [String] { transactions.map(\.id) }
 
     func reload(using api: Api, debounced: Bool = false) async {
         if debounced {
