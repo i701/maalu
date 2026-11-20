@@ -46,6 +46,7 @@ struct TransactionDetailContent<Actions: View>: View {
             TransactionFilesSection(model: files, canAdd: transaction.deletedAt == nil)
             actions
         }
+        .transactionFilesPresentations(files)
     }
 
     private var when: String? {

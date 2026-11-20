@@ -1,4 +1,3 @@
-import QuickLook
 import SwiftUI
 
 /// A saved transaction's receipts and links: tap one to open it, swipe to remove it, and add more unless it is in the trash.
@@ -6,8 +5,6 @@ struct TransactionFilesSection: View {
     @Environment(Session.self) private var session
     @Bindable var model: TransactionFilesModel
     let canAdd: Bool
-    @State private var isAddingLink = false
-    @State private var typedLink = ""
 
     var body: some View {
         Section {
@@ -40,7 +37,7 @@ struct TransactionFilesSection: View {
                     ReceiptPickers(count: model.attachments.count, onPick: upload, onProblem: show)
                 }
                 if model.canAddLink {
-                    Button("Add Link", systemImage: "link.badge.plus") { isAddingLink = true }
+                    Button("Add Link", systemImage: "link.badge.plus") { model.isAddingLink = true }
                 }
             }
         } header: {
@@ -53,21 +50,6 @@ struct TransactionFilesSection: View {
             }
         }
         .disabled(model.isBusy)
-        .quickLookPreview($model.previewURL)
-        .alert("Add Link", isPresented: $isAddingLink) {
-            TextField("Web address", text: $typedLink)
-                .keyboardType(.URL)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-            Button("Add", action: addLink)
-            Button("Cancel", role: .cancel) { typedLink = "" }
-        }
-        .task { await load() }
-    }
-
-    private func load() async {
-        guard let api = session.api else { return }
-        await model.load(using: api)
     }
 
     private func open(_ file: Attachment) {
@@ -86,15 +68,6 @@ struct TransactionFilesSection: View {
 
     private func show(_ message: String) {
         model.errorMessage = message
-    }
-
-    private func addLink() {
-        let typed = typedLink
-        typedLink = ""
-        Task {
-            guard let api = session.api else { return }
-            await model.addLink(typed, using: api)
-        }
     }
 
     private func remove(_ file: Attachment) {

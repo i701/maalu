@@ -11,6 +11,9 @@ final class TransactionFilesModel {
     var errorMessage: String?
     /// A downloaded file being shown with Quick Look.
     var previewURL: URL?
+    /// The Add Link alert and what is typed in it.
+    var isAddingLink = false
+    var typedLink = ""
 
     init(transactionID: String) {
         self.transactionID = transactionID
