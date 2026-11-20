@@ -21,12 +21,11 @@ import { canLinkRefund, canRefund, isRefund, wasRefunded } from "#/lib/refund";
 import { canSplitSalary } from "#/lib/use-salary-split";
 import { PAYMENT_METHOD_LABELS, type Transaction } from "#/types/api";
 
-/** Amounts are stored positive; the type decides the sign shown and the colour. An expense is the
- * ordinary text colour, not red: most of what is listed is spending, and red everywhere shouts. */
+/** Amounts are stored positive; the type decides the sign shown and the colour. */
 const TYPE_SIGN = { income: "+", expense: "−", transfer: "" } as const;
 const TYPE_AMOUNT_COLOR = {
 	income: "success.main",
-	expense: "text.primary",
+	expense: "error.main",
 	transfer: "text.primary",
 } as const;
 
@@ -144,7 +143,7 @@ export function TxAmount({
 }: {
 	t: Transaction;
 	baseCurrency: string;
-	/** Spending in red as well as income in green (the list keeps spending in the text colour). */
+	/** A direction badge beside the figure, drawn in the figure font. */
 	coloured?: boolean;
 }) {
 	return (
@@ -153,7 +152,7 @@ export function TxAmount({
 				variant="body2"
 				sx={{
 					fontWeight: 600,
-					color: coloured && t.type === "expense" ? "error.main" : TYPE_AMOUNT_COLOR[t.type],
+					color: TYPE_AMOUNT_COLOR[t.type],
 					fontVariantNumeric: "tabular-nums",
 					// a big amount: the badge is centred on the figure, not set on its baseline
 					...(coloured && { display: "flex", alignItems: "center", justifyContent: "flex-end" }),
