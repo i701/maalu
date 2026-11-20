@@ -6,10 +6,16 @@ struct TransactionsView: View {
     @State private var isAdding = false
     @State private var isFiltering = false
     @State private var opened: Transaction?
+    @State private var options = FilterOptionsModel()
 
     var body: some View {
         NavigationStack {
             List {
+                if !chips.isEmpty {
+                    TransactionFilterChips(chips: chips, onRemove: remove)
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                }
                 if let totals = model.totals, !model.isEmpty {
                     TransactionTotalsSection(totals: totals)
                 }
@@ -53,7 +59,21 @@ struct TransactionsView: View {
             }
             .refreshable { await reload() }
             .task(id: model.filter) { await reload(debounced: !model.filter.text.isEmpty) }
+            .task(id: isFiltering) { await loadOptions() }
         }
+    }
+
+    private var chips: [TransactionFilterChip] {
+        model.filter.chips(accounts: options.accounts, categories: options.categories, cards: options.cards, tags: options.tags)
+    }
+
+    private func remove(_ chip: TransactionFilterChip) {
+        model.filter = model.filter.removing(chip.kind)
+    }
+
+    private func loadOptions() async {
+        guard let api = session.api else { return }
+        await options.load(using: api)
     }
 
     private func reload(debounced: Bool = false) async {
