@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// The top of the transactions list: a big light grey field on the white page with the search field, the Filters button, the quick type filters, the other active filters as chips you can
+/// The top of the transactions list: a big white card with a layered shadow on the page with the search field, the Filters button, the quick type filters, the other active filters as chips you can
 /// drop one at a time, and, once the list is narrowed, what the matching rows add up to.
 struct TransactionSearchCard: View {
     @Binding var text: String
@@ -47,6 +47,6 @@ struct TransactionSearchCard: View {
                     .padding(.vertical, 14)
             }
         }
-        .background(Color(.secondarySystemBackground), in: .rect(cornerRadius: Radius.card, style: .continuous))
+        .card(elevation: 3)
     }
 }

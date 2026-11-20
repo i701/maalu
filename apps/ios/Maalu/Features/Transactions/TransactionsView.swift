@@ -45,6 +45,7 @@ struct TransactionsView: View {
                 }
             }
             .listStyle(.plain)
+            .gradientHeader()
             .overlay { TransactionsPlaceholder(model: model, retry: reloadNow, clearFilters: clearFilters) }
             .navigationTitle("Transactions")
             .navigationSubtitle(selection.isSelecting ? Text(selection.isWide ? "All \(selection.count) matching are selected" : "\(selection.count) selected") : Text(""))
