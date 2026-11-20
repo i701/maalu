@@ -3,6 +3,7 @@ import SwiftUI
 struct AccountFactsSection: View {
     let account: Account
     let baseCurrency: String
+    let onShowRateHistory: () -> Void
 
     var body: some View {
         Section {
@@ -12,6 +13,7 @@ struct AccountFactsSection: View {
             if account.currency != baseCurrency && !baseCurrency.isEmpty {
                 LabeledContent("Exchange rate", value: (Money.decimal(account.exchangeRate) ?? 1).formatted() + (account.autoRate ? " · " + String(localized: "auto") : ""))
                 LabeledContent("Worth", value: MoneyFormat.string(account.baseBalance, currency: baseCurrency))
+                Button("Rate history", systemImage: "chart.xyaxis.line", action: onShowRateHistory)
             }
             if let limit = account.creditLimit { LabeledContent("Credit limit", value: MoneyFormat.string(limit, currency: account.currency)) }
             if let statement = account.statementDay, let due = account.dueDay {

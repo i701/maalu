@@ -25,12 +25,20 @@ final class TransactionFormModel {
     /// Whether the person has set "Planned" themselves, which a change of date then never overrides.
     private var plannedTouched: Bool
     private var suggestedMethod = PaymentMethod.other
+    private var api: Api?
+    /// Whether the rate in the field is the person's own, which a market suggestion never replaces. A saved transaction's rate is.
+    private var rateTouched: Bool
+    /// The market rate for the date and account, offered again when the field holds another.
+    private(set) var marketRate: Decimal?
+    /// Says where the market rate came from, or that none was found.
+    private(set) var rateNote: LocalizedStringResource?
     private var defaultAccountId: String?
 
     /// `seed` is a new transaction already filled in, such as a card repayment.
     init(editing transaction: Transaction? = nil, duplicating copy: Transaction? = nil, startingFrom template: TransactionTemplate? = nil, seed: TransactionDraft? = nil) {
         original = transaction
         plannedTouched = transaction != nil
+        rateTouched = transaction != nil
         if let transaction {
             draft = TransactionDraft(editing: transaction)
         } else if let copy {
@@ -58,8 +66,52 @@ final class TransactionFormModel {
 
     /// A future date plans the transaction and a past or present one posts it, until the person has chosen.
     func dateChanged() {
+        Task { await refreshMarketRate() }
         guard !plannedTouched else { return }
         draft.planned = draft.isFuture
+    }
+
+    /// The exchange-rate field: typing in it makes the rate the person's own.
+    var rate: Decimal? {
+        get { draft.rate }
+        set {
+            guard newValue != draft.rate else { return }
+            draft.rate = newValue
+            rateTouched = true
+        }
+    }
+
+    var canUseMarketRate: Bool { marketRate != nil && marketRate != draft.rate }
+
+    func useMarketRate() {
+        draft.rate = marketRate
+        rateTouched = false
+    }
+
+    /// Looks up the market rate of the account's currency for the date and, until the person types their own, fills it in.
+    private func refreshMarketRate() async {
+        guard needsRate, let api, let account else {
+            marketRate = nil
+            rateNote = nil
+            return
+        }
+        let (currency, day) = (account.currency, draft.date)
+        if marketRate == nil { rateNote = "Looking up the market rate…" }
+        let result = await api.marketRate(from: currency, to: baseCurrency, on: day)
+        // An answer for an account or date that was changed since is dropped.
+        guard !Task.isCancelled, needsRate, self.account?.currency == currency, draft.date == day else { return }
+        switch result {
+        case .ok(let market, _):
+            marketRate = Money.decimal(market.rate)
+            if !rateTouched, let value = marketRate { draft.rate = value }
+            rateNote = market.note
+        case .failed(404, _):
+            marketRate = nil
+            rateNote = "No market rate found for this pair. Enter the rate yourself."
+        case .failed:
+            marketRate = nil
+            rateNote = "Couldn't look up the market rate. Enter the rate yourself."
+        }
     }
     var account: Account? { accounts.first { $0.id == draft.accountID } }
     var accountCards: [Card] { cards.filter { $0.account.id == draft.accountID } }
@@ -91,6 +143,7 @@ final class TransactionFormModel {
     }
 
     func load(using api: Api) async {
+        self.api = api
         async let accountsResult: ApiResult<[Account]> = api.get("accounts")
         async let categoriesResult: ApiResult<[NamedRef]> = api.get("categories")
         async let vendorsResult: ApiResult<[Vendor]> = api.get("vendors")
@@ -116,6 +169,7 @@ final class TransactionFormModel {
         if case .ok(let list, _) = tags { self.tags = list.map(\.name) }
         if case .ok(let list, _) = cards { self.cards = list }
         if !isEditing { settleAccount(preferring: defaultAccountId) }
+        await refreshMarketRate()
     }
 
     var vendors: [String] { vendorRecords.map(\.name) }
@@ -130,8 +184,14 @@ final class TransactionFormModel {
 
     func accountChanged() {
         if let cardID = draft.cardID, !accountCards.contains(where: { $0.id == cardID }) { draft.cardID = nil }
+        marketRate = nil
+        rateNote = nil
         guard let account else { return }
-        if let rate = Money.decimal(account.exchangeRate), account.currency != baseCurrency { draft.rate = rate }
+        if let rate = Money.decimal(account.exchangeRate), account.currency != baseCurrency {
+            draft.rate = rate
+            rateTouched = false
+        }
+        Task { await refreshMarketRate() }
         let suggestion = PaymentMethod.suggested(for: account.group)
         if draft.method == suggestedMethod { draft.method = suggestion }
         suggestedMethod = suggestion

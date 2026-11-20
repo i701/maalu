@@ -25,7 +25,13 @@ struct TransactionAccountSection: View {
                 }
             }
             if model.needsRate {
-                DecimalField("Exchange rate to \(model.baseCurrency)", value: $model.draft.rate)
+                DecimalField("Exchange rate to \(model.baseCurrency)", value: $model.rate)
+                if let note = model.rateNote {
+                    Text(note).font(.footnote).foregroundStyle(.secondary)
+                }
+                if model.canUseMarketRate {
+                    Button("Use the market rate") { model.useMarketRate() }.font(.footnote)
+                }
             }
         }
     }

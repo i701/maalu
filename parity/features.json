@@ -453,7 +453,12 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Models/MarketRate.swift",
+          "apps/ios/Maalu/Features/Accounts/Form/AccountFormModel.swift",
+          "apps/ios/Maalu/Features/Transactions/Form/TransactionFormModel.swift"
+        ]
       },
       "api": [
         "/api/v1/currencies",
@@ -479,7 +484,11 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Accounts/Detail/RateHistory/RateHistoryView.swift",
+          "apps/ios/Maalu/Features/Accounts/Detail/RateHistory/RateSummary.swift"
+        ]
       },
       "api": [
         "/api/v1/currencies/rate-history"

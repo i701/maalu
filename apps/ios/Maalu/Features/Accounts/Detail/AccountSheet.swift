@@ -4,6 +4,7 @@ enum AccountSheet: Identifiable {
     case addCard(Account, CardKind)
     case editCard(Account, Card)
     case repay(Card)
+    case rateHistory(Account)
 
     var id: String {
         switch self {
@@ -12,6 +13,7 @@ enum AccountSheet: Identifiable {
         case .addCard(let account, _): "add-card-\(account.id)"
         case .editCard(_, let card): "edit-card-\(card.id)"
         case .repay(let card): "repay-\(card.id)"
+        case .rateHistory(let account): "rate-history-\(account.id)"
         }
     }
 }

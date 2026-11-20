@@ -73,18 +73,10 @@ final class AccountFormModel {
 
     private func fetchMarketRate(for currency: String) async {
         guard let api else { return }
-        let result = await lookUp(currency, using: api)
+        let result = await api.marketRate(from: currency, to: baseCurrency, on: .now)
         // An answer for a currency that was changed since is dropped.
         guard draft.currency == currency else { return }
         apply(result)
-    }
-
-    private func lookUp(_ currency: String, using api: Api) async -> ApiResult<MarketRate> {
-        await api.get("currencies/rate", query: [
-            URLQueryItem(name: "base", value: currency),
-            URLQueryItem(name: "quote", value: baseCurrency),
-            URLQueryItem(name: "on", value: ISODate.string(Date.now)),
-        ])
     }
 
     private func apply(_ result: ApiResult<MarketRate>) {
@@ -92,7 +84,7 @@ final class AccountFormModel {
         case .ok(let market, _):
             rateLookupFailed = false
             if !rateTouched, let value = Money.decimal(market.rate) { draft.rate = value }
-            rateNote = Self.marketNote(market)
+            rateNote = market.note
         case .failed(404, _):
             rateLookupFailed = true
             rateNote = "No market rate found for this pair. Enter the rate yourself."
@@ -100,12 +92,6 @@ final class AccountFormModel {
             rateLookupFailed = true
             rateNote = "Couldn't look up the market rate. Enter the rate yourself."
         }
-    }
-
-    private static func marketNote(_ market: MarketRate) -> LocalizedStringResource {
-        let day = ISODate.date(market.rateDate)?.formatted(.dateTime.day().month(.abbreviated).year()) ?? market.rateDate
-        let nearest = market.exact ? "" : " (nearest day)"
-        return "Market rate for \(day)\(nearest), from \(market.source). Change it if your bank used another."
     }
 
     func load(using api: Api) async {

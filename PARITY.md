@@ -9,9 +9,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 70 | 59 | 50 |
+| ✅ done | 70 | 59 | 52 |
 | 🟡 partial | 0 | 1 | 0 |
-| ❌ missing | 0 | 6 | 16 |
+| ❌ missing | 0 | 6 | 14 |
 | ➖ n/a | 1 | 5 | 5 |
 
 ## Still to build on Android (7)
@@ -24,10 +24,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (16)
+## Still to build on iOS (14)
 
-- ❌ **Market exchange rates** (Accounts and cards).
-- ❌ **Rate history** (Accounts and cards).
 - ❌ **Credit card statements and due dates** (Accounts and cards).
 - ❌ **Bulk actions on selected rows** (Transactions).
 - ❌ **Refunds** (Transactions).
@@ -70,8 +68,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Archive and unarchive an account**<br>Hide an account without losing its history. | ✅ done | ✅ done | ✅ done |
 | **Adjust balance**<br>Set the balance to what the bank shows, or add or take away, as a transaction that reports ignore. | ✅ done | ✅ done | ✅ done |
 | **An account's page**<br>Balance, this month, its own transactions, balance over time and the balance after each row. | ✅ done | ✅ done | ✅ done |
-| **Market exchange rates**<br>A suggested rate for a foreign amount on a date, and the currency list. | ✅ done | ✅ done | ❌ missing |
-| **Rate history**<br>How the market rate of a foreign account's currency moved, 30 days to a year. | ✅ done | ✅ done | ❌ missing |
+| **Market exchange rates**<br>A suggested rate for a foreign amount on a date, and the currency list. | ✅ done | ✅ done | ✅ done |
+| **Rate history**<br>How the market rate of a foreign account's currency moved, 30 days to a year. | ✅ done | ✅ done | ✅ done |
 | **Cards**<br>Debit cards on a bank account and credit cards with a repayment account; a Card field on a purchase and a card filter. | ✅ done | ✅ done | ✅ done |
 | **Credit card statements and due dates**<br>The statement balance, what is left, the due date and a Repay button, worked out each time. | ✅ done | ✅ done | ❌ missing |
 

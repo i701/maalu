@@ -27,7 +27,7 @@ struct AccountDetailView: View {
                 if let month = model.month {
                     AccountMonthSection(month: month)
                 }
-                AccountFactsSection(account: account, baseCurrency: model.baseCurrency)
+                AccountFactsSection(account: account, baseCurrency: model.baseCurrency, onShowRateHistory: { sheet = .rateHistory(account) })
                 if let kind = CardKind.forAccount(in: account.group), !account.isArchived {
                     AccountCardsSection(
                         cards: model.cards,
@@ -64,6 +64,7 @@ struct AccountDetailView: View {
                 case .editCard(let account, let card):
                     CardFormView(account: account, kind: card.kind, editing: card, accounts: listModel.accounts, onSaved: reload)
                 case .repay(let card): TransactionFormView(seed: TransactionDraft(repaying: card), onSaved: reload)
+                case .rateHistory(let account): RateHistoryView(account: account, baseCurrency: model.baseCurrency)
                 }
             }
             .alert("Something went wrong", item: $errorMessage) { _ in
