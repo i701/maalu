@@ -177,18 +177,40 @@ export function layoutFlow(
 	columns.forEach((col, c) => {
 		const heights = col.map((n) => Math.max(minHeight, n.value * scale));
 		if (c === 3) {
-			// What a group was spent on fans out from its group, like a tree, instead of being centred on
-			// the whole column (which bent every band towards the middle). Its items stack, gapless,
-			// from where the group's own bar starts.
-			const cursor = new Map<string, number>();
+			// What a group was spent on fans out like a tree: each group's items get a gap between them
+			// and are centred on their group (so they may stand taller than it), then the groups' blocks
+			// are pushed apart where they would touch, and back inside the diagram where they would
+			// run off its end. Centring the whole column instead bent every band towards the middle.
+			const blocks: { parent: string; ids: number[]; size: number; top: number }[] = [];
 			col.forEach((n, i) => {
-				const parentId = flow.links.find((l) => l.target === n.id)?.source;
-				const parent = parentId ? placed.get(parentId) : undefined;
-				const top = parent ? parent.y + (parent.height - spanOut(flow, parent, scale)) / 2 : 0;
-				const y = cursor.get(parentId ?? "") ?? top;
-				placed.set(n.id, { ...n, x: xs[c], y, width: nodeWidth, height: heights[i] });
-				cursor.set(parentId ?? "", y + heights[i]);
+				const parent = flow.links.find((l) => l.target === n.id)?.source ?? "";
+				const open = blocks.at(-1);
+				if (open?.parent === parent) open.ids.push(i);
+				else blocks.push({ parent, ids: [i], size: 0, top: 0 });
 			});
+			for (const block of blocks) {
+				block.size =
+					block.ids.reduce((sum, i) => sum + heights[i], 0) + gap * (block.ids.length - 1);
+				const group = placed.get(block.parent);
+				block.top = group ? group.y + group.height / 2 - block.size / 2 : 0;
+			}
+			let floor = 0;
+			for (const block of blocks) {
+				block.top = Math.max(block.top, floor);
+				floor = block.top + block.size + gap;
+			}
+			let ceiling = height;
+			for (const block of blocks.toReversed()) {
+				block.top = Math.min(block.top, ceiling - block.size);
+				ceiling = block.top - gap;
+			}
+			for (const block of blocks) {
+				let y = block.top;
+				for (const i of block.ids) {
+					placed.set(col[i].id, { ...col[i], x: xs[c], y, width: nodeWidth, height: heights[i] });
+					y += heights[i] + gap;
+				}
+			}
 			return;
 		}
 		const used = heights.reduce((sum, h) => sum + h, 0) + gap * Math.max(0, col.length - 1);

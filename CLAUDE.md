@@ -226,6 +226,7 @@ just seed             # a realistic first month for the demo user (local DB only
 just reset-db         # dev only: delete ALL data but keep users, sessions and two-factor (asks first; local DB only)
 
 just check            # just api-types, then what CI runs: ruff check + format --check; oxfmt --check, oxlint, tsc --noEmit
+just typecheck-web    # only the type-aware check (oxlint --type-aware --type-check), the last step of check-web
 just fmt              # ruff format/fix + oxfmt + oxlint --fix
 just docs-shots       # remake the screenshots the guides show (public/docs/*.webp), then commit them
 just doctor-web       # react-doctor (CI runs it on PRs; advisory only)

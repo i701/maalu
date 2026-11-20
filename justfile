@@ -112,6 +112,10 @@ check-web:
     pnpm --filter @maalu/web lint
     pnpm --filter @maalu/web typecheck
 
+# Type check only (oxlint --type-aware --type-check): what check-web runs last
+typecheck-web:
+    pnpm --filter @maalu/web typecheck
+
 # React health check (react-doctor); fails on errors, warnings are advisory
 doctor-web:
     pnpm --filter @maalu/web run react-doctor
