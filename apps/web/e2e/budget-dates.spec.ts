@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { defined } from "../src/lib/utils";
 import { apiAs, open, signUp } from "./helpers";
 
 /** An ISO date `days` from today (UTC, like the dates the API checks against). */
@@ -31,7 +32,10 @@ async function withTrip(
 }
 
 const category = async (api: Setup["api"], name: string) =>
-	(await api.get<{ id: string; name: string }[]>("/categories")).find((c) => c.name === name)!.id;
+	defined(
+		(await api.get<{ id: string; name: string }[]>("/categories")).find((c) => c.name === name),
+		`category ${name}`,
+	).id;
 
 test("a limit for set dates is added from the Budget page and counts the whole stretch", async ({
 	page,

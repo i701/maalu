@@ -1,4 +1,5 @@
 import type { CategoryTotal } from "#/types/api";
+import { defined } from "./utils";
 
 /** What a node of the money-flow diagram stands for, which also decides its colour. */
 export type FlowKind = "income" | "deficit" | "total" | "spending" | "saved";
@@ -225,8 +226,8 @@ export function layoutFlow(
 	const outCursor = new Map<string, number>();
 	const inCursor = new Map<string, number>();
 	const links: PlacedLink[] = flow.links.map((link) => {
-		const from = placed.get(link.source)!;
-		const to = placed.get(link.target)!;
+		const from = defined(placed.get(link.source), `node ${link.source}`);
+		const to = defined(placed.get(link.target), `node ${link.target}`);
 		const thickness = link.value * scale;
 		const startTop =
 			outCursor.get(from.id) ?? from.y + (from.height - spanOut(flow, from, scale)) / 2;

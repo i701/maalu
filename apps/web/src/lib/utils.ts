@@ -1,3 +1,10 @@
+/** The value, or an error saying what was missing: for a lookup that must succeed, where `!` would
+ * hide a mistake until it crashed somewhere else. */
+export function defined<T>(value: T | null | undefined, what = "a value"): T {
+	if (value === null || value === undefined) throw new Error(`Expected ${what}, found none`);
+	return value;
+}
+
 export function exhaustiveAssertion(
 	_value: never,
 	message = "Reached unexpected case in exhaustive switch",

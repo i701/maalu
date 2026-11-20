@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { defined } from "../src/lib/utils";
 import { apiAs, open, signUp } from "./helpers";
 
 /** An ISO date `days` from today (UTC, like the dates the API checks against). */
@@ -23,9 +24,10 @@ async function withTrip(
 		category: "Trip",
 		transaction_date: inDays(0),
 	});
-	const trip = (await api.get<{ id: string; name: string }[]>("/categories")).find(
-		(c) => c.name === "Trip",
-	)!.id;
+	const trip = defined(
+		(await api.get<{ id: string; name: string }[]>("/categories")).find((c) => c.name === "Trip"),
+		"category Trip",
+	).id;
 	return { api, trip };
 }
 

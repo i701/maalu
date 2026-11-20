@@ -15,6 +15,7 @@
 	],
 	"rules": {
 		"react/react-in-jsx-scope": "off",
+		"typescript/no-non-null-assertion": "warn",
 		"eslint/array-callback-return": ["error", { "checkForEach": true }]
 	}
 }

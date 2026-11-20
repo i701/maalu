@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
+import { defined } from "../src/lib/utils";
 import { apiAs, open, signUp } from "./helpers";
 
 // A made-up BML statement (the API's own test fixture): four rows, no real names or numbers.
@@ -38,7 +39,7 @@ test("a statement is reviewed, imported and shows up as transactions", async ({
 
 	// the report lists every row and what happened to it
 	const href = await done.getByRole("link", { name: /Download report/ }).getAttribute("href");
-	const report = await page.request.get(href!);
+	const report = await page.request.get(defined(href, "the report link"));
 	expect(report.ok()).toBeTruthy();
 	const csv = await report.text();
 	expect(csv).toContain("POWER COMPANY LTD");

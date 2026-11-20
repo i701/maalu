@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
+import { defined } from "../src/lib/utils";
 import { open } from "./helpers";
 
 /**
@@ -81,9 +82,11 @@ test("the screenshots for the guides", async ({ page, context }) => {
 	 * most MAX_HEIGHT tall. */
 	async function shoot(name: string, target?: ReturnType<Page["locator"]>) {
 		await page.waitForTimeout(500);
-		const box = await (target ?? page.locator("main > .MuiContainer-root")).boundingBox();
-		expect(box, name).not.toBeNull();
-		let top = box!.y;
+		const box = defined(
+			await (target ?? page.locator("main > .MuiContainer-root")).boundingBox(),
+			`the box of ${name}`,
+		);
+		let top = box.y;
 		// skip the page banner: every page has the same one and it costs a third of the height
 		if (!target) {
 			const bottom = await page
@@ -92,10 +95,10 @@ test("the screenshots for the guides", async ({ page, context }) => {
 			top = Math.max(top, bottom + BANNER_GAP);
 		}
 		const clip = {
-			x: box!.x,
+			x: box.x,
 			y: top,
-			width: box!.width,
-			height: Math.min(box!.y + box!.height - top, MAX_HEIGHT),
+			width: box.width,
+			height: Math.min(box.y + box.height - top, MAX_HEIGHT),
 		};
 		const png = await page.screenshot({ clip, fullPage: true });
 		const background = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);

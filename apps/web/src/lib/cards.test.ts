@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { withDefaults } from "#/lib/utils";
+import { defined, withDefaults } from "#/lib/utils";
 import { accountRef } from "#/test/fixtures";
 import type { AccountGroup, Card } from "#/types/api";
 import {
@@ -78,7 +78,10 @@ describe("repaymentSeed", () => {
 	it("is a transfer from the repayment account into the card's account", () => {
 		const bank = account("a2", "BML Current");
 		const owed = account("a3", "BML Credit", "card");
-		const seed = repaymentSeed(card({ kind: "credit", account: owed, repay_account: bank }))!;
+		const seed = defined(
+			repaymentSeed(card({ kind: "credit", account: owed, repay_account: bank })),
+			"a seed",
+		);
 		expect(seed.type).toBe("transfer");
 		expect(seed.account?.id).toBe("a2");
 		expect(seed.to_account?.id).toBe("a3");

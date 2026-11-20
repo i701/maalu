@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { formatRate, summarize } from "./rates";
+import { defined } from "./utils";
 
 const points = [
 	{ date: "2026-10-01", rate: "15.40000000" },
@@ -14,7 +15,7 @@ describe("summarize", () => {
 	});
 
 	it("gives the start, the end, the range and the movement", () => {
-		const s = summarize(points)!;
+		const s = defined(summarize(points), "a summary");
 		expect(s.first).toBe(15.4);
 		expect(s.last).toBe(15.55);
 		expect(s.low).toBe(15.3);
@@ -23,7 +24,7 @@ describe("summarize", () => {
 	});
 
 	it("handles a single point", () => {
-		const s = summarize([points[0]])!;
+		const s = defined(summarize([points[0]]), "a summary");
 		expect(s.change).toBe(0);
 		expect(s.low).toBe(s.high);
 	});

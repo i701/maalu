@@ -82,6 +82,8 @@ Follow these rules when writing or modifying TypeScript code, especially tests:
 - Prefer `satisfies SomeType` for validating fixture objects while preserving their precise inferred types.
 - Treat Oxlint's `no-unsafe-type-assertion` warnings as issues to fix, not warnings to suppress.
 
+- Do not use the non-null assertion `!` (oxlint's `typescript/no-non-null-assertion` warns on it). For a lookup that must succeed, use `defined(value, "what")` from `lib/utils.ts`, which throws a message naming what was missing; otherwise branch on the null.
+
 ### 2. Build valid test fixtures
 - When testing with API types (e.g. `Transaction`, `Account`, or nested objects), fixtures must satisfy the actual type definitions.
 - Inspect the source type before constructing test data. Do not guess the required properties.

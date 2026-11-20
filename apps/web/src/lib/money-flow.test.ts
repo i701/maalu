@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { categoryTotal } from "#/test/fixtures";
 import { lastColumn, layoutFlow, litSlices, moneyFlow } from "./money-flow";
+import { defined } from "./utils";
 
 const cat = (type: "income" | "expense", category: string, total: number) =>
 	categoryTotal({ type, category, total: String(total) });
@@ -12,7 +13,10 @@ describe("moneyFlow", () => {
 	});
 
 	it("saves what was earned and not spent", () => {
-		const flow = moneyFlow([cat("income", "Salary", 1000), cat("expense", "Food", 300)])!;
+		const flow = defined(
+			moneyFlow([cat("income", "Salary", 1000), cat("expense", "Food", 300)]),
+			"a flow",
+		);
 		expect(flow.income).toBe(1000);
 		expect(flow.spent).toBe(300);
 		const saved = flow.nodes.find((n) => n.kind === "saved");
@@ -22,7 +26,10 @@ describe("moneyFlow", () => {
 	});
 
 	it("shows spending beyond income as a source of its own", () => {
-		const flow = moneyFlow([cat("income", "Salary", 500), cat("expense", "Rent", 800)])!;
+		const flow = defined(
+			moneyFlow([cat("income", "Salary", 500), cat("expense", "Rent", 800)]),
+			"a flow",
+		);
 		expect(flow.nodes.find((n) => n.kind === "deficit")?.value).toBe(300);
 		expect(flow.nodes.find((n) => n.kind === "saved")).toBeUndefined();
 		expect(flow.nodes.find((n) => n.kind === "total")?.value).toBe(800);
@@ -36,11 +43,14 @@ describe("moneyFlow", () => {
 			[0, 200],
 			[200, 0],
 		]) {
-			const flow = moneyFlow([
-				...(income ? [cat("income", "A", income)] : []),
-				...(spent ? [cat("expense", "B", spent)] : []),
-			])!;
-			const total = flow.nodes.find((n) => n.kind === "total")!.value;
+			const flow = defined(
+				moneyFlow([
+					...(income ? [cat("income", "A", income)] : []),
+					...(spent ? [cat("expense", "B", spent)] : []),
+				]),
+				"a flow",
+			);
+			const total = defined(flow.nodes.find((n) => n.kind === "total")).value;
 			const into = flow.links.filter((l) => l.target === "total").reduce((s, l) => s + l.value, 0);
 			const out = flow.links.filter((l) => l.source === "total").reduce((s, l) => s + l.value, 0);
 			expect(into).toBeCloseTo(total);
@@ -50,12 +60,12 @@ describe("moneyFlow", () => {
 
 	it("folds the smallest into Other, but never hides a single row behind it", () => {
 		const many = Array.from({ length: 8 }, (_, i) => cat("expense", `C${i}`, 100 - i));
-		const labels = moneyFlow([cat("income", "Pay", 5000), ...many])!
+		const labels = defined(moneyFlow([cat("income", "Pay", 5000), ...many]), "a flow")
 			.nodes.filter((n) => n.kind === "spending")
 			.map((n) => n.label);
 		expect(labels).toEqual(["C0", "C1", "C2", "C3", "C4", "Other spending"]);
 		const exactlySix = Array.from({ length: 6 }, (_, i) => cat("expense", `C${i}`, 100 - i));
-		const shown = moneyFlow([cat("income", "Pay", 5000), ...exactlySix])!
+		const shown = defined(moneyFlow([cat("income", "Pay", 5000), ...exactlySix]), "a flow")
 			.nodes.filter((n) => n.kind === "spending")
 			.map((n) => n.label);
 		expect(shown).toHaveLength(6); // all six, no Other
@@ -63,28 +73,34 @@ describe("moneyFlow", () => {
 	});
 
 	it("ignores categories that net to nothing or below (a refund bigger than the spending)", () => {
-		const flow = moneyFlow([
-			cat("income", "Pay", 100),
-			cat("expense", "Food", 40),
-			cat("expense", "Gadgets", -5),
-		])!;
+		const flow = defined(
+			moneyFlow([
+				cat("income", "Pay", 100),
+				cat("expense", "Food", 40),
+				cat("expense", "Gadgets", -5),
+			]),
+			"a flow",
+		);
 		expect(flow.nodes.some((n) => n.label === "Gadgets")).toBe(false);
 		expect(flow.spent).toBe(40);
 	});
 });
 
 describe("layoutFlow", () => {
-	const flow = moneyFlow([
-		cat("income", "Salary", 800),
-		cat("income", "Side", 200),
-		cat("expense", "Rent", 500),
-		cat("expense", "Food", 300),
-	])!; // saves 200
+	const flow = defined(
+		moneyFlow([
+			cat("income", "Salary", 800),
+			cat("income", "Side", 200),
+			cat("expense", "Rent", 500),
+			cat("expense", "Food", 300),
+		]),
+		"a flow",
+	); // saves 200
 	const box = { width: 600, height: 300, nodeWidth: 12, gap: 8 };
 
 	it("puts the columns at the left, left of the middle and the right", () => {
 		const { nodes } = layoutFlow(flow, box);
-		const x = (kind: string) => nodes.find((n) => n.kind === kind)!.x;
+		const x = (kind: string) => defined(nodes.find((n) => n.kind === kind)).x;
 		expect(x("income")).toBe(0);
 		expect(x("total")).toBeCloseTo(0.36 * 588);
 		expect(x("spending")).toBe(588);
@@ -92,10 +108,10 @@ describe("layoutFlow", () => {
 
 	it("draws heights in proportion to the money, on one scale", () => {
 		const { nodes } = layoutFlow(flow, box);
-		const h = (label: string) => nodes.find((n) => n.label === label)!.height;
+		const h = (label: string) => defined(nodes.find((n) => n.label === label)).height;
 		expect(h("Salary") / h("Side")).toBeCloseTo(4);
 		expect(h("Rent") / h("Food")).toBeCloseTo(5 / 3);
-		const total = nodes.find((n) => n.kind === "total")!;
+		const total = defined(nodes.find((n) => n.kind === "total"));
 		expect(h("Salary") + h("Side")).toBeCloseTo(total.height);
 	});
 
@@ -112,7 +128,7 @@ describe("layoutFlow", () => {
 
 	it("gives every link a thickness in proportion to its money and a path between its nodes", () => {
 		const { links, nodes } = layoutFlow(flow, box);
-		const scale = nodes.find((n) => n.kind === "total")!.height / 1000;
+		const scale = defined(nodes.find((n) => n.kind === "total")).height / 1000;
 		for (const l of links) {
 			expect(l.thickness).toBeCloseTo(l.value * scale);
 			expect(l.path.startsWith("M")).toBe(true);
@@ -122,18 +138,21 @@ describe("layoutFlow", () => {
 
 	it("stacks the links on the total so none overlaps", () => {
 		const { links, nodes } = layoutFlow(flow, box);
-		const total = nodes.find((n) => n.kind === "total")!;
+		const total = defined(nodes.find((n) => n.kind === "total"));
 		const arriving = links.filter((l) => l.target === "total");
-		const ends = arriving.map((l) => Number(l.path.split(" ").at(-1)!.split(",")[1]));
+		const ends = arriving.map((l) => Number(defined(l.path.split(" ").at(-1)).split(",")[1]));
 		const sum = arriving.reduce((s, l) => s + l.thickness, 0);
 		expect(sum).toBeCloseTo(total.height);
 		expect(ends[1] - ends[0]).toBeCloseTo((arriving[0].thickness + arriving[1].thickness) / 2);
 	});
 
 	it("never makes a node thinner than the minimum", () => {
-		const tiny = moneyFlow([cat("income", "Pay", 100000), cat("expense", "Gum", 1)])!;
+		const tiny = defined(
+			moneyFlow([cat("income", "Pay", 100000), cat("expense", "Gum", 1)]),
+			"a flow",
+		);
 		const { nodes } = layoutFlow(tiny, { ...box, minHeight: 4 });
-		expect(nodes.find((n) => n.label === "Gum")!.height).toBeGreaterThanOrEqual(4);
+		expect(defined(nodes.find((n) => n.label === "Gum")).height).toBeGreaterThanOrEqual(4);
 	});
 });
 
@@ -148,18 +167,24 @@ const sub = (category: string, parent: string, total: number) =>
 
 describe("moneyFlow with sub-categories", () => {
 	it("stays three columns deep when no category has a parent", () => {
-		const flow = moneyFlow([cat("income", "Pay", 1000), cat("expense", "Food", 300)])!;
+		const flow = defined(
+			moneyFlow([cat("income", "Pay", 1000), cat("expense", "Food", 300)]),
+			"a flow",
+		);
 		expect(lastColumn(flow)).toBe(2);
 	});
 
 	it("groups sub-categories under their parent, with the parent's own spending beside them", () => {
-		const flow = moneyFlow([
-			cat("income", "Pay", 5000),
-			cat("expense", "Housing", 100),
-			sub("Rent", "Housing", 2000),
-			sub("Repairs", "Housing", 300),
-			cat("expense", "Food", 400),
-		])!;
+		const flow = defined(
+			moneyFlow([
+				cat("income", "Pay", 5000),
+				cat("expense", "Housing", 100),
+				sub("Rent", "Housing", 2000),
+				sub("Repairs", "Housing", 300),
+				cat("expense", "Food", 400),
+			]),
+			"a flow",
+		);
 		const groups = flow.nodes.filter((n) => n.column === 2 && n.kind === "spending");
 		expect(groups.map((g) => [g.label, g.value])).toEqual([
 			["Housing", 2400],
@@ -173,20 +198,23 @@ describe("moneyFlow with sub-categories", () => {
 		]);
 		expect(lastColumn(flow)).toBe(3);
 		// each group hands on exactly what it took in
-		const into = flow.links.find((l) => l.target === "out:0")!.value;
+		const into = defined(flow.links.find((l) => l.target === "out:0")).value;
 		const out = flow.links.filter((l) => l.source === "out:0").reduce((s, l) => s + l.value, 0);
 		expect(out).toBe(into);
 	});
 
 	it("spreads each group's items apart, without overlap, inside the diagram", () => {
-		const flow = moneyFlow([
-			cat("income", "Pay", 3000),
-			sub("Restaurants", "Food", 500),
-			sub("Junk", "Food", 200),
-			sub("Tiny", "Food", 20),
-			sub("Ooredoo", "Bills", 200),
-			sub("Rent", "Home", 1500),
-		])!;
+		const flow = defined(
+			moneyFlow([
+				cat("income", "Pay", 3000),
+				sub("Restaurants", "Food", 500),
+				sub("Junk", "Food", 200),
+				sub("Tiny", "Food", 20),
+				sub("Ooredoo", "Bills", 200),
+				sub("Rent", "Home", 1500),
+			]),
+			"a flow",
+		);
 		const box = { width: 900, height: 400, nodeWidth: 10, gap: 8 };
 		const items = layoutFlow(flow, box)
 			.nodes.filter((n) => n.column === 3)
@@ -200,7 +228,10 @@ describe("moneyFlow with sub-categories", () => {
 	});
 
 	it("keeps the last gap shorter than the others when there are four columns", () => {
-		const flow = moneyFlow([cat("income", "Pay", 1000), sub("Rent", "Housing", 300)])!;
+		const flow = defined(
+			moneyFlow([cat("income", "Pay", 1000), sub("Rent", "Housing", 300)]),
+			"a flow",
+		);
 		const xs = layoutFlow(flow, { width: 900, height: 300, nodeWidth: 10 })
 			.nodes.map((n) => n.x)
 			.toSorted((a, b) => a - b);
@@ -211,20 +242,23 @@ describe("moneyFlow with sub-categories", () => {
 });
 
 describe("litSlices", () => {
-	const flow = moneyFlow([
-		cat("income", "Salary", 800),
-		cat("income", "Side", 200),
-		cat("expense", "Rent", 500),
-		cat("expense", "Food", 300),
-	])!; // saves 200
+	const flow = defined(
+		moneyFlow([
+			cat("income", "Salary", 800),
+			cat("income", "Side", 200),
+			cat("expense", "Rent", 500),
+			cat("expense", "Food", 300),
+		]),
+		"a flow",
+	); // saves 200
 	const layout = layoutFlow(flow, {
 		width: 600,
 		height: 300,
 		nodeWidth: 12,
 		gap: 8,
 	});
-	const scale = layout.links.find((l) => l.target === "total")!.thickness / 800;
-	const id = (label: string) => flow.nodes.find((n) => n.label === label)!.id;
+	const scale = defined(layout.links.find((l) => l.target === "total")).thickness / 800;
+	const id = (label: string) => defined(flow.nodes.find((n) => n.label === label)).id;
 
 	it("lights the part of the income that feeds a hovered spending node", () => {
 		const slices = litSlices(layout, id("Rent"));
