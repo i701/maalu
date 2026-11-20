@@ -22,6 +22,7 @@ struct FixedBudgetLineDetailView: View {
                     }
                 }
             }
+            .gradientHeader(.accentAmber)
             .navigationTitle(line.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -52,6 +53,7 @@ struct FixedBudgetLineDetailView: View {
             } message: { message in
                 Text(message)
             }
+            .accentTint(.accentAmber)
         } else {
             ContentUnavailableView("Limit not found", systemImage: "questionmark.circle")
         }

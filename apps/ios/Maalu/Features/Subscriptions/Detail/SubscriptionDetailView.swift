@@ -20,6 +20,7 @@ struct SubscriptionDetailView: View {
                 }
                 SubscriptionFactsSection(subscription: subscription, baseCurrency: listModel.summary?.currency)
             }
+            .gradientHeader(.accentViolet)
             .navigationTitle(subscription.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbar(for: subscription) }
@@ -40,6 +41,7 @@ struct SubscriptionDetailView: View {
             } message: { message in
                 Text(message)
             }
+            .accentTint(.accentViolet)
         } else {
             ContentUnavailableView("Subscription not found", systemImage: "questionmark.circle")
         }

@@ -21,6 +21,7 @@ struct GoalDetailView: View {
                     }
                 }
             }
+            .gradientHeader(.accentAmber)
             .navigationTitle(goal.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -49,6 +50,7 @@ struct GoalDetailView: View {
             } message: { message in
                 Text(message)
             }
+            .accentTint(.accentAmber)
         } else {
             ContentUnavailableView("Goal not found", systemImage: "questionmark.circle")
         }

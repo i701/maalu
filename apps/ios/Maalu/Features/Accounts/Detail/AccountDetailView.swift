@@ -45,6 +45,7 @@ struct AccountDetailView: View {
                 AccountTransactionsSection(model: model, account: account, loadMore: loadMore)
             }
             .searchable(text: $model.query, prompt: "Search this account")
+            .gradientHeader(.accentGreen)
             .navigationTitle(account.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbar(for: account) }
@@ -79,6 +80,7 @@ struct AccountDetailView: View {
             }
             .task(id: model.range) { await loadDetail() }
             .task(id: model.query) { await loadTransactions(debounced: !model.query.isEmpty) }
+            .accentTint(.accentGreen)
         } else {
             ContentUnavailableView("Account not found", systemImage: "questionmark.circle")
         }
