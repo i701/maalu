@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { categoryTotal } from "#/test/fixtures";
-import { lastColumn, layoutFlow, moneyFlow } from "./money-flow";
+import { lastColumn, layoutFlow, litSlices, moneyFlow } from "./money-flow";
 
 const cat = (type: "income" | "expense", category: string, total: number) =>
 	categoryTotal({ type, category, total: String(total) });
@@ -82,11 +82,11 @@ describe("layoutFlow", () => {
 	])!; // saves 200
 	const box = { width: 600, height: 300, nodeWidth: 12, gap: 8 };
 
-	it("puts the three columns at the left, the middle and the right", () => {
+	it("puts the columns at the left, left of the middle and the right", () => {
 		const { nodes } = layoutFlow(flow, box);
 		const x = (kind: string) => nodes.find((n) => n.kind === kind)!.x;
 		expect(x("income")).toBe(0);
-		expect(x("total")).toBe(294);
+		expect(x("total")).toBeCloseTo(0.36 * 588);
 		expect(x("spending")).toBe(588);
 	});
 
@@ -186,5 +186,32 @@ describe("moneyFlow with sub-categories", () => {
 		const gaps = xs.filter((x, i) => x !== xs[i - 1]).map((x, i, all) => x - (all[i - 1] ?? 0));
 		expect(gaps.slice(1)[2]).toBeLessThan(gaps.slice(1)[1]);
 		expect(xs.at(-1)).toBe(890);
+	});
+});
+
+describe("litSlices", () => {
+	const flow = moneyFlow([
+		cat("income", "Salary", 800),
+		cat("income", "Side", 200),
+		cat("expense", "Rent", 500),
+		cat("expense", "Food", 300),
+	])!; // saves 200
+	const layout = layoutFlow(flow, { width: 600, height: 300, nodeWidth: 12, gap: 8 });
+	const scale = layout.links.find((l) => l.target === "total")!.thickness / 800;
+	const id = (label: string) => flow.nodes.find((n) => n.label === label)!.id;
+
+	it("lights the part of the income that feeds a hovered spending node", () => {
+		const slices = litSlices(layout, id("Rent"));
+		// Rent is the first 500 of the 1000 that came in, all of it from Salary
+		expect(slices).toHaveLength(1);
+		expect(layout.links[slices[0].index].source).toBe(id("Salary"));
+		expect(slices[0].thickness).toBeCloseTo(500 * scale);
+	});
+
+	it("lights the spending an income feeds, and nothing for the total", () => {
+		const slices = litSlices(layout, id("Salary"));
+		expect(slices.reduce((sum, s) => sum + s.thickness, 0)).toBeCloseTo(800 * scale);
+		expect(litSlices(layout, "total")).toEqual([]);
+		expect(litSlices(layout, null)).toEqual([]);
 	});
 });

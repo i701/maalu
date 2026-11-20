@@ -1,12 +1,14 @@
 import Box from "@mui/material/Box";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useId, useMemo, useState } from "react";
 import { spreadLabels } from "#/lib/charts";
 import {
 	type FlowKind,
 	lastColumn,
 	layoutFlow,
+	litSlices,
 	type MoneyFlow,
 	tallestColumn,
+	type PlacedLink,
 	type PlacedNode,
 } from "#/lib/money-flow";
 import ChartTooltip from "./ChartTooltip";
@@ -25,15 +27,26 @@ const BOTTOM = 8;
 const COLOR: Record<FlowKind, string> = {
 	income: "var(--chart-income)",
 	deficit: "var(--chart-expense)",
-	total: "var(--md-sys-color-outline)",
+	total: "var(--chart-line)",
 	spending: "var(--chart-expense)",
 	saved: "var(--chart-line)",
 };
 
-/** A link takes the colour of its outer end (the source on the left, the target on the right). */
-const linkColor = (flow: MoneyFlow, source: string, target: string) => {
-	const outer = source === "total" ? target : source;
-	return COLOR[flow.nodes.find((n) => n.id === outer)?.kind ?? "total"];
+/** The colours a band blends between, as on Android and iOS. A band into the total is its income's
+ * colour; one leaving the total starts as the colour of the income band at the same height there
+ * and ends as its destination's. */
+const linkKinds = (
+	flow: MoneyFlow,
+	links: PlacedLink[],
+	link: PlacedLink,
+): [FlowKind, FlowKind] => {
+	const kind = (id: string) => flow.nodes.find((n) => n.id === id)?.kind ?? "total";
+	if (link.target === "total") return [kind(link.source), kind(link.source)];
+	if (link.source !== "total") return [kind(link.source), kind(link.target)];
+	const incoming = links.filter((l) => l.target === "total");
+	const match =
+		incoming.find((l) => Math.abs(l.y0 - link.y0) <= l.thickness / 2 + 0.001) ?? incoming[0];
+	return [match ? kind(match.source) : "income", kind(link.target)];
 };
 
 type SankeyProps = {
@@ -89,6 +102,7 @@ export function SankeyDiagram({
 	height,
 }: SankeyProps & { width: number; height: number }) {
 	const [active, setActive] = useState<string | null>(null);
+	const gradientId = useId();
 
 	const inner = width - 2 * LABEL_WIDTH;
 	const layout = useMemo(
@@ -122,6 +136,7 @@ export function SankeyDiagram({
 
 	const linked = (source: string, target: string) =>
 		active === null || active === source || active === target;
+	const lit = useMemo(() => litSlices(layout, active), [layout, active]);
 	const activeNode = layout.nodes.find((n) => n.id === active) ?? null;
 
 	return (
@@ -133,28 +148,59 @@ export function SankeyDiagram({
 				style={{ position: "absolute", inset: 0, overflow: "visible" }}
 			>
 				<g transform={`translate(${LABEL_WIDTH} ${TOP})`}>
-					{layout.links.map((l) => (
+					<defs>
+						{layout.links.map((l, i) => {
+							const [from, to] = linkKinds(flow, layout.links, l);
+							return (
+								<linearGradient
+									key={`${l.source}>${l.target}`}
+									id={`${gradientId}-${i}`}
+									gradientUnits="userSpaceOnUse"
+									x1={l.x0}
+									x2={l.x1}
+									y1={0}
+									y2={0}
+								>
+									<stop offset="0" stopColor={COLOR[from]} />
+									<stop offset="1" stopColor={COLOR[to]} />
+								</linearGradient>
+							);
+						})}
+					</defs>
+					{layout.links.map((l, i) => (
 						<path
 							key={`${l.source}>${l.target}`}
 							d={l.path}
 							fill="none"
-							stroke={linkColor(flow, l.source, l.target)}
+							stroke={`url(#${gradientId}-${i})`}
 							strokeWidth={Math.max(1, l.thickness)}
 							strokeOpacity={linked(l.source, l.target) ? (active ? 0.5 : 0.32) : 0.08}
 							style={{ transition: "stroke-opacity 150ms ease-out" }}
 						/>
 					))}
-					{layout.nodes.map((n) => (
-						<rect
-							key={n.id}
-							x={n.x}
-							y={n.y}
-							width={n.width}
-							height={n.height}
-							rx={NODE_WIDTH / 2}
-							fill={COLOR[n.kind]}
+					{lit.map((slice) => (
+						<path
+							key={slice.index}
+							d={slice.path}
+							fill="none"
+							stroke={`url(#${gradientId}-${slice.index})`}
+							strokeWidth={slice.thickness}
+							strokeOpacity={0.5}
 						/>
 					))}
+					{layout.nodes
+						.filter((n) => n.kind !== "total") // the bands meet there; no bar, as on Android and iOS
+						.map((n) => (
+							<rect
+								key={n.id}
+								x={n.x}
+								y={n.y}
+								width={n.width}
+								height={n.height}
+								rx={NODE_WIDTH / 2}
+								fill={COLOR[n.kind]}
+							/>
+						))}
 				</g>
 			</svg>
 			{layout.nodes.map((n) => (
@@ -246,7 +292,7 @@ function NodeLabel({
 				gap: 0.75,
 				whiteSpace: "nowrap",
 				fontSize: 12.5,
-				borderRadius: "var(--shape-xs)",
+				borderRadius: "var(--shape-md)",
 				outline: "none",
 				"&:focus-visible": {
 					boxShadow: "0 0 0 2px var(--md-sys-color-primary)",

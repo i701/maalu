@@ -133,6 +133,11 @@ export type PlacedLink = FlowLink & {
 	/** A centre line from the source to the target, to be stroked `thickness` wide */
 	path: string;
 	thickness: number;
+	/** Where the band starts and ends, for a gradient along it and to match it up with the bands in */
+	x0: number;
+	x1: number;
+	y0: number;
+	y1: number;
 };
 export type FlowLayout = { nodes: PlacedNode[]; links: PlacedLink[] };
 
@@ -164,11 +169,28 @@ export function layoutFlow(
 
 	// Evenly spaced, except that with a fourth column the last gap is shorter: it only holds thin
 	// bands (the group labels need the gap before it), and an even gap leaves them stretched out.
-	const stops = last === 3 ? [0, 0.38, 0.76, 1] : columns.map((_, c) => c / last);
+	// The total sits left of centre: with no gap at it, an even split makes the income side a slab
+	// and squeezes the bands that fan out.
+	const stops = last === 3 ? [0, 0.3, 0.76, 1] : last === 2 ? [0, 0.36, 1] : [0, 1];
 	const xs = stops.map((stop) => stop * (width - nodeWidth));
 	const placed = new Map<string, PlacedNode>();
 	columns.forEach((col, c) => {
 		const heights = col.map((n) => Math.max(minHeight, n.value * scale));
+		if (c === 3) {
+			// What a group was spent on fans out from its group, like a tree, instead of being centred on
+			// the whole column (which bent every band towards the middle). Its items stack, gapless,
+			// from where the group's own bar starts.
+			const cursor = new Map<string, number>();
+			col.forEach((n, i) => {
+				const parentId = flow.links.find((l) => l.target === n.id)?.source;
+				const parent = parentId ? placed.get(parentId) : undefined;
+				const top = parent ? parent.y + (parent.height - spanOut(flow, parent, scale)) / 2 : 0;
+				const y = cursor.get(parentId ?? "") ?? top;
+				placed.set(n.id, { ...n, x: xs[c], y, width: nodeWidth, height: heights[i] });
+				cursor.set(parentId ?? "", y + heights[i]);
+			});
+			return;
+		}
 		const used = heights.reduce((sum, h) => sum + h, 0) + gap * Math.max(0, col.length - 1);
 		let y = (height - used) / 2;
 		col.forEach((n, i) => {
@@ -189,12 +211,21 @@ export function layoutFlow(
 		const endTop = inCursor.get(to.id) ?? to.y + (to.height - spanIn(flow, to, scale)) / 2;
 		outCursor.set(from.id, startTop + thickness);
 		inCursor.set(to.id, endTop + thickness);
-		const x0 = from.x + from.width;
-		const x1 = to.x;
+		// the total has no bar drawn, so the bands meet in the middle of its slot with no gap
+		const x0 = from.kind === "total" ? from.x + from.width / 2 : from.x + from.width;
+		const x1 = to.kind === "total" ? to.x + to.width / 2 : to.x;
 		const mid = (x0 + x1) / 2;
 		const y0 = startTop + thickness / 2;
 		const y1 = endTop + thickness / 2;
-		return { ...link, thickness, path: `M${x0},${y0} C${mid},${y0} ${mid},${y1} ${x1},${y1}` };
+		return {
+			...link,
+			thickness,
+			x0,
+			x1,
+			y0,
+			y1,
+			path: `M${x0},${y0} C${mid},${y0} ${mid},${y1} ${x1},${y1}`,
+		};
 	});
 	return { nodes: [...placed.values()], links };
 }
@@ -205,3 +236,46 @@ const spanOut = (flow: MoneyFlow, node: FlowNode, scale: number) =>
 
 const spanIn = (flow: MoneyFlow, node: FlowNode, scale: number) =>
 	flow.links.filter((l) => l.target === node.id).reduce((sum, l) => sum + l.value * scale, 0);
+
+/** A strip of a band: the part of it that lines up with the lit node's own band at the total. */
+export type LitSlice = { index: number; path: string; thickness: number };
+
+/**
+ * What to light besides the hovered node's own band, so the highlight runs on through the total:
+ * hovering a spending node lights the strips of the income bands that feed it, and hovering an
+ * income node lights the strips of the spending bands it feeds. At the total the two sides line
+ * up exactly (each is stacked down the same side, centred), so each strip is where the lit band's
+ * span overlaps the other band's. Nothing for the total itself or for a node past the groups.
+ */
+export function litSlices(layout: FlowLayout, activeId: string | null): LitSlice[] {
+	const node = layout.nodes.find((n) => n.id === activeId);
+	if (!node || (node.column !== 0 && node.column !== 2)) return [];
+	const spending = node.column === 2;
+	const lit = layout.links.find((l) =>
+		spending
+			? l.source === "total" && l.target === node.id
+			: l.source === node.id && l.target === "total",
+	);
+	if (!lit) return [];
+	// where each side meets the total: a band into it ends at y1, one leaving it starts at y0
+	const at = (l: PlacedLink) => (spending ? l.y1 : l.y0);
+	const litMid = spending ? lit.y0 : lit.y1;
+	const from = litMid - lit.thickness / 2;
+	const to = litMid + lit.thickness / 2;
+	const slices: LitSlice[] = [];
+	layout.links.forEach((l, index) => {
+		if (spending ? l.target !== "total" : l.source !== "total") return;
+		const lo = Math.max(from, at(l) - l.thickness / 2);
+		const hi = Math.min(to, at(l) + l.thickness / 2);
+		if (hi - lo < 0.01) return;
+		// the strip keeps its offset from the band's centre along the whole length
+		const d = (lo + hi) / 2 - at(l);
+		const mid = (l.x0 + l.x1) / 2;
+		slices.push({
+			index,
+			thickness: hi - lo,
+			path: `M${l.x0},${l.y0 + d} C${mid},${l.y0 + d} ${mid},${l.y1 + d} ${l.x1},${l.y1 + d}`,
+		});
+	});
+	return slices;
+}
