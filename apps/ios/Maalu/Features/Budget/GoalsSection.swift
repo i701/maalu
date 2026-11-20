@@ -4,13 +4,13 @@ struct GoalsSection: View {
     let goals: [Goal]
 
     var body: some View {
-        Section {
+        CardSection {
             if goals.isEmpty {
                 Text("Save toward something, like a trip, and see what each month needs.")
                     .foregroundStyle(.secondary)
             }
             ForEach(goals) { goal in
-                NavigationLink(value: BudgetRoute.goal(goal.id)) {
+                CardLink(value: BudgetRoute.goal(goal.id)) {
                     GoalRow(goal: goal)
                 }
             }

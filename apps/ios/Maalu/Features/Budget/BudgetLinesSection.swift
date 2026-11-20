@@ -4,13 +4,13 @@ struct BudgetLinesSection: View {
     let budget: Budget
 
     var body: some View {
-        Section {
+        CardSection {
             if budget.lines.isEmpty {
                 Text("No limits yet. A limit is an amount you allow yourself to spend on some categories each month.")
                     .foregroundStyle(.secondary)
             }
             ForEach(budget.lines) { line in
-                NavigationLink(value: BudgetRoute.line(line.id)) {
+                CardLink(value: BudgetRoute.line(line.id)) {
                     BudgetLineRow(line: line, currency: budget.currency)
                 }
             }
@@ -18,9 +18,9 @@ struct BudgetLinesSection: View {
             SectionTitle("Limits")
         }
         if !budget.fixedLinesInPeriod.isEmpty {
-            Section {
+            CardSection {
                 ForEach(budget.fixedLinesInPeriod) { line in
-                    NavigationLink(value: BudgetRoute.fixedLine(line.id)) {
+                    CardLink(value: BudgetRoute.fixedLine(line.id)) {
                         FixedBudgetLineRow(line: line, currency: budget.currency)
                     }
                 }

@@ -8,12 +8,16 @@ struct BudgetView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                if let budget = model.budget {
-                    BudgetSummarySection(budget: budget, kinds: model.kindTotals)
-                    BudgetLinesSection(budget: budget)
+            ScrollView {
+                LazyVStack(spacing: 24) {
+                    if let budget = model.budget {
+                        BudgetSummarySection(budget: budget, kinds: model.kindTotals)
+                        BudgetLinesSection(budget: budget)
+                    }
+                    GoalsSection(goals: model.goals)
                 }
-                GoalsSection(goals: model.goals)
+                .padding(.horizontal, Spacing.screen)
+                .padding(.vertical, 8)
             }
             .overlay { BudgetPlaceholder(model: model, retry: reloadNow) }
             .gradientHeader(.accentAmber)
