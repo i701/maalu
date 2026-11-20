@@ -20,7 +20,7 @@ struct TransactionsView: View {
                     type: $model.filter.type,
                     planned: $model.filter.planned,
                     chips: chips,
-                    totals: model.isEmpty ? nil : model.totals,
+                    totals: model.displayedTotals,
                     filterCount: model.filter.detailCount,
                     onFilters: { isFiltering = true },
                     onRemove: remove
@@ -46,6 +46,9 @@ struct TransactionsView: View {
             }
             .listStyle(.plain)
             .gradientHeader()
+            // the card's height is the list's to change, so the animation has to be here and not inside the row
+            .animation(.smooth(duration: 0.35), value: model.displayedTotals != nil)
+            .animation(.smooth(duration: 0.35), value: chips.map(\.id))
             .overlay { TransactionsPlaceholder(model: model, retry: reloadNow, clearFilters: clearFilters) }
             .navigationTitle("Transactions")
             .navigationSubtitle(selection.isSelecting ? Text(selection.isWide ? "All \(selection.count) matching are selected" : "\(selection.count) selected") : Text(""))

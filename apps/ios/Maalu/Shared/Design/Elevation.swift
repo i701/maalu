@@ -11,7 +11,9 @@ struct Elevation: ViewModifier {
     private static let offsets: [CGFloat] = [1, 3, 6, 12, 24, 48]
 
     func body(content: Content) -> some View {
-        content.background {
+        content
+            .overlay { if scheme == .dark { insetLight } }
+            .background {
             ZStack {
                 RoundedRectangle(cornerRadius: cornerRadius + 1, style: .continuous)
                     .fill(ring)
@@ -25,6 +27,25 @@ struct Elevation: ViewModifier {
             }
         }
     }
+
+    /// Dark mode paints light instead of shadow (the CSS "inset" layers): a 1px ring all round and a brighter edge at the top, both stronger
+    /// the higher the card sits. Black drops cannot show on a near-black page, this is what lifts the card.
+    private var insetLight: some View {
+        let i = min(max(level, 0), Self.highlight.count - 1)
+        let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        return ZStack {
+            shape.strokeBorder(.white.opacity(Self.insetRing[i]), lineWidth: 1)
+            shape.strokeBorder(
+                LinearGradient(colors: [.white.opacity(Self.highlight[i]), .clear], startPoint: .top, endPoint: UnitPoint(x: 0.5, y: 0.12)),
+                lineWidth: 1.5
+            )
+        }
+        .allowsHitTesting(false)
+    }
+
+    // the dark elevation tokens of the CodePen, per level (0 to 6)
+    private static let highlight: [Double] = [0, 0.04, 0.08, 0.14, 0.18, 0.22, 0.26]
+    private static let insetRing: [Double] = [0.02, 0.04, 0.05, 0.06, 0.08, 0.10, 0.12]
 
     private var ring: Color { scheme == .dark ? .white.opacity(0.06) : .black.opacity(0.06) }
     private var drop: Color { scheme == .dark ? .black.opacity(0.18) : .black.opacity(0.06) }

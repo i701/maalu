@@ -11,6 +11,7 @@ struct TransactionSearchCard: View {
     let filterCount: Int
     let onFilters: () -> Void
     let onRemove: (TransactionFilterChip) -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(spacing: 0) {
@@ -39,14 +40,20 @@ struct TransactionSearchCard: View {
             if !chips.isEmpty {
                 TransactionFilterChips(chips: chips, onRemove: onRemove)
                     .padding(.bottom, 14)
+                    .transition(reveal)
             }
             if let totals {
-                Divider().padding(.horizontal, Spacing.card)
-                TransactionTotalsRow(totals: totals)
-                    .padding(.horizontal, Spacing.card)
-                    .padding(.vertical, 14)
+                TransactionTotalsPanel(totals: totals)
+                    .transition(reveal)
             }
         }
+        .animation(.smooth(duration: 0.35), value: totals != nil)
+        .animation(.smooth(duration: 0.35), value: chips.map(\.id))
         .card(elevation: 3)
+    }
+
+    /// Chips and totals fade in and settle down from the top, or only fade when motion is reduced.
+    private var reveal: AnyTransition {
+        reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.96, anchor: .top))
     }
 }

@@ -26,6 +26,7 @@ struct TransactionTotalsRow: View {
                 .foregroundStyle(color)
                 .minimumScaleFactor(0.7)
                 .lineLimit(1)
+                .contentTransition(.numericText(value: NSDecimalNumber(decimal: amount).doubleValue))
         }
         .frame(maxWidth: .infinity)
     }

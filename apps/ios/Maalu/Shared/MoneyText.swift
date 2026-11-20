@@ -21,21 +21,21 @@ struct MoneyText: View {
     var body: some View {
         let shown = MoneyFormat.string(amount, currency: currency, short: short, sign: sign)
         let full = MoneyFormat.string(amount, currency: currency, short: false, sign: sign)
-        if shown == full {
-            Text(shown).numericFont()
-        } else {
-            Button { isShowingFull = true } label: { Text(shown).numericFont() }
-                .buttonStyle(.plain)
-                .accessibilityLabel(full)
-                .popover(isPresented: $isShowingFull) {
-                    // the same size everywhere, not the size of the figure it came from
-                    Text(full)
-                        .numericFont()
-                        .font(.body)
-                        .fontWeight(.regular)
-                        .padding()
-                        .presentationCompactAdaptation(.popover)
-                }
-        }
+        let isShortened = shown != full
+        // always the same view, so a change of amount is one Text changing and can animate (a rolling number), even from 0.00 to 9K
+        Button { isShowingFull = true } label: { Text(shown).numericFont() }
+            .buttonStyle(.plain)
+            .allowsHitTesting(isShortened)
+            .accessibilityLabel(full)
+            .accessibilityRemoveTraits(isShortened ? [] : .isButton)
+            .popover(isPresented: $isShowingFull) {
+                // the same size everywhere, not the size of the figure it came from
+                Text(full)
+                    .numericFont()
+                    .font(.body)
+                    .fontWeight(.regular)
+                    .padding()
+                    .presentationCompactAdaptation(.popover)
+            }
     }
 }
