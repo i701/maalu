@@ -13,6 +13,12 @@ struct TransactionDetailContent<Actions: View>: View {
                 if let when {
                     LabeledContent("Date", value: when)
                 }
+                if let of = transaction.refundOf {
+                    LabeledContent("Refund of", value: "\(of.vendorName ?? of.category) · \(MoneyFormat.string(of.amount, currency: of.currency))")
+                }
+                if RefundRules.refunded(transaction) > 0 {
+                    LabeledContent("Refunded", value: refundedText)
+                }
                 if transaction.type != .transfer {
                     LabeledContent("Category", value: transaction.category)
                     if let vendor = transaction.vendor { LabeledContent("Vendor", value: vendor.name) }
@@ -47,6 +53,12 @@ struct TransactionDetailContent<Actions: View>: View {
             actions
         }
         .transactionFilesPresentations(files)
+    }
+
+    private var refundedText: String {
+        let refunded = RefundRules.refunded(transaction)
+        let amount = MoneyFormat.string(refunded, currency: transaction.currency)
+        return RefundRules.canRefund(transaction) ? amount : String(localized: "Fully refunded, \(amount)")
     }
 
     private var when: String? {

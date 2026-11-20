@@ -25,6 +25,9 @@ struct TransactionDetailView: View {
                     onMarkPaid: { markPaid(transaction) },
                     onEdit: { sheet = .edit(transaction) },
                     onDuplicate: { sheet = .duplicate(transaction) },
+                    onRefund: { sheet = .refund(transaction) },
+                    onEditRefund: { sheet = .editRefund(transaction) },
+                    onLinkRefund: { sheet = .linkRefund(transaction) },
                     onDelete: { isConfirmingDelete = true }
                 )
             }
@@ -44,6 +47,9 @@ struct TransactionDetailView: View {
                     switch sheet {
                     case .edit(let transaction): TransactionFormView(editing: transaction, onSaved: reload)
                     case .duplicate(let transaction): TransactionFormView(duplicating: transaction, onSaved: reload)
+                    case .refund(let purchase): RefundFormView(purchase: purchase, onSaved: reload)
+                    case .editRefund(let refund): RefundFormView(refund: refund, onSaved: reload)
+                    case .linkRefund(let income): LinkRefundView(income: income, onSaved: reload)
                     }
                 }
                 .markPaidDialog(dialog, session: session)

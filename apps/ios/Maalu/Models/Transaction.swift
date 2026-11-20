@@ -9,6 +9,7 @@ struct Transaction: Decodable, Identifiable, Hashable {
     let exchangeRate: String
     let baseAmount: String
     let category: String
+    let categoryIsSalary: Bool?
     let description: String?
     let transactionDate: String
     let transactionTime: String?
@@ -32,6 +33,8 @@ struct Transaction: Decodable, Identifiable, Hashable {
     let place: String?
 
     var isRefund: Bool { refundOf != nil }
+    var isRefundable: Bool { RefundRules.canRefund(self) }
+    var isLinkableAsRefund: Bool { RefundRules.canLink(self) }
 
     /// Where it was marked on the map, if it was.
     var location: TransactionLocation? {
@@ -47,6 +50,7 @@ struct Transaction: Decodable, Identifiable, Hashable {
 
     /// Refunds and balance adjustments have their own rules on the web.
     var canEdit: Bool { !isRefund && adjustment != true }
+    var canEditRefund: Bool { isRefund && adjustment != true }
 
     var title: String {
         if let vendor { return vendor.name }

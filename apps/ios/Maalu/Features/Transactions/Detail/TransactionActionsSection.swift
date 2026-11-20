@@ -6,6 +6,9 @@ struct TransactionActionsSection: View {
     let onMarkPaid: () -> Void
     let onEdit: () -> Void
     let onDuplicate: () -> Void
+    let onRefund: () -> Void
+    let onEditRefund: () -> Void
+    let onLinkRefund: () -> Void
     let onDelete: () -> Void
 
     var body: some View {
@@ -16,6 +19,15 @@ struct TransactionActionsSection: View {
             if transaction.canEdit {
                 Button("Edit", systemImage: "pencil", action: onEdit)
                 Button("Duplicate", systemImage: "plus.square.on.square", action: onDuplicate)
+            }
+            if transaction.isRefundable {
+                Button("Refund", systemImage: "arrow.uturn.backward", action: onRefund)
+            }
+            if transaction.canEditRefund {
+                Button("Edit refund", systemImage: "pencil", action: onEditRefund)
+            }
+            if transaction.isLinkableAsRefund {
+                Button("Link to a purchase", systemImage: "link", action: onLinkRefund)
             }
             Button("Delete", systemImage: "trash", role: .destructive, action: onDelete)
         }

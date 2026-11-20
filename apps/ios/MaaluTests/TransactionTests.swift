@@ -70,7 +70,7 @@ struct TransactionTests {
         {"id":"2","type":"income","amount":"5","to_amount":null,"currency":"MVR","exchange_rate":"1","base_amount":"5",
          "category":"Food","description":null,"transaction_date":"2026-11-12","transaction_time":null,"planned":false,
          "payment_method":"cash","account":null,"to_account":null,"vendor":null,"card":null,"subscription":null,
-         "tags":[],"refund_of":{"id":"1"},"refunded_amount":"0","splits":[],"adjustment":false}
+         "tags":[],"refund_of":{"id":"1","amount":"5","currency":"MVR","category":"Food","transaction_date":"2026-11-01","vendor_name":null},"refunded_amount":"0","splits":[],"adjustment":false}
         """#)
         #expect(!refund.canEdit)
     }
