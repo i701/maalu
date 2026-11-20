@@ -6,7 +6,7 @@ struct TransactionsPreviewSection: View {
     let emptyText: LocalizedStringResource
 
     var body: some View {
-        Section {
+        CardSection {
             if transactions.isEmpty {
                 Text(emptyText).foregroundStyle(.secondary)
             }

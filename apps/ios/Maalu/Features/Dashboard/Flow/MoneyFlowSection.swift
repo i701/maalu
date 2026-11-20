@@ -7,7 +7,7 @@ struct MoneyFlowSection: View {
     @State private var isExpanded = false
 
     var body: some View {
-        Section {
+        CardSection {
             AmountRow {
                 Text("Total")
             } amount: {

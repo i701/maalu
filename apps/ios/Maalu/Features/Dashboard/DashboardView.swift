@@ -7,11 +7,16 @@ struct DashboardView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                ForEach(model.orderedSections) { section in
-                    DashboardSectionContent(section: section, model: model)
+            ScrollView {
+                LazyVStack(spacing: 24) {
+                    ForEach(model.orderedSections) { section in
+                        DashboardSectionContent(section: section, model: model)
+                    }
                 }
+                .padding(.horizontal, Spacing.screen)
+                .padding(.vertical, 8)
             }
+            .background(Color(.systemGroupedBackground))
             .overlay { DashboardPlaceholder(model: model, retry: reloadNow) }
             .navigationTitle("Dashboard")
             .navigationSubtitle(Text(model.month.start, format: .dateTime.month(.wide).year()))

@@ -5,7 +5,7 @@ struct SpendingSection: View {
     let currency: String
 
     var body: some View {
-        Section {
+        CardSection {
             ForEach(rows) { row in
                 VStack(alignment: .leading) {
                     AmountRow {

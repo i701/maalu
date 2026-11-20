@@ -4,7 +4,7 @@ struct CreditUsedSection: View {
     let cards: [CreditCardUsage]
 
     var body: some View {
-        Section {
+        CardSection {
             ForEach(cards) { card in
                 VStack(alignment: .leading) {
                     AmountRow {

@@ -6,7 +6,7 @@ struct MonthSummarySection: View {
     let previous: TransactionTotals?
 
     var body: some View {
-        Section {
+        CardSection {
             VStack(alignment: .leading, spacing: 14) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Kept this month")

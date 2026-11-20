@@ -5,7 +5,7 @@ struct IncomeRuleSection: View {
     let currency: String
 
     var body: some View {
-        Section {
+        CardSection {
             ForEach(rule.rows) { row in
                 VStack(alignment: .leading) {
                     AmountRow {

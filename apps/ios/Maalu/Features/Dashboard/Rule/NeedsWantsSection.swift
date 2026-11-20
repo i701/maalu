@@ -5,7 +5,7 @@ struct NeedsWantsSection: View {
     let currency: String
 
     var body: some View {
-        Section {
+        CardSection {
             ForEach(shares) { share in
                 VStack(alignment: .leading) {
                     AmountRow {

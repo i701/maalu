@@ -5,7 +5,7 @@ struct AvailableToSpendSection: View {
     let available: AvailableToSpend
 
     var body: some View {
-        Section {
+        CardSection {
             VStack(alignment: .leading, spacing: 6) {
                 Text(available.isShort ? "Short by" : "Available to spend")
                     .font(.subheadline)
@@ -24,11 +24,11 @@ struct AvailableToSpendSection: View {
                     .padding(.top, 6)
             }
             .padding(.vertical, 6)
-            NavigationLink(value: DashboardRoute.working) {
+            CardLink(value: DashboardRoute.working) {
                 Label("Show the working", systemImage: "list.bullet.rectangle")
                     .font(.subheadline)
             }
-            NavigationLink(value: DashboardRoute.plan) {
+            CardLink(value: DashboardRoute.plan) {
                 Label("Open the month plan", systemImage: "calendar")
                     .font(.subheadline)
             }

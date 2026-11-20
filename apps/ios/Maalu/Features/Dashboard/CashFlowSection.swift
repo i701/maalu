@@ -6,7 +6,7 @@ struct CashFlowSection: View {
     @State private var range = CashFlowRange.sixMonths
 
     var body: some View {
-        Section {
+        CardSection {
             Picker("Range", selection: $range) {
                 ForEach(CashFlowRange.allCases) { range in
                     Text(range.title).tag(range)
@@ -37,7 +37,7 @@ struct CashFlowSection: View {
                     MoneyText(last.running, currency: currency)
                 }
             }
-            NavigationLink("Show as Table", value: DashboardRoute.cashFlowTable(months: range.rawValue))
+            CardLink(value: DashboardRoute.cashFlowTable(months: range.rawValue)) { Text("Show as Table") }
         } header: {
             SectionTitle("Cash flow")
         }

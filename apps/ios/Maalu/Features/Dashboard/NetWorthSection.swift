@@ -5,7 +5,7 @@ struct NetWorthSection: View {
     let trend: [BalancePoint]
 
     var body: some View {
-        Section {
+        CardSection {
             MoneyText(summary.total, currency: summary.currency)
                 .font(.title)
             LabeledContent("Assets") { MoneyText(summary.assets, currency: summary.currency) }
@@ -18,7 +18,7 @@ struct NetWorthSection: View {
             if trend.count > 1 {
                 NetWorthChart(points: trend)
             }
-            NavigationLink("What moved it", value: DashboardRoute.netWorth)
+            CardLink(value: DashboardRoute.netWorth) { Text("What moved it") }
         } header: {
             SectionTitle("Net worth")
         }

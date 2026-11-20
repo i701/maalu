@@ -8,7 +8,7 @@ struct BudgetGoalsSection: View {
     private static let goalLimit = 3
 
     var body: some View {
-        Section {
+        CardSection {
             if let budget, !budget.lines.isEmpty {
                 BudgetProgressRow(title: String(localized: "All limits"), spent: budget.totals.activity, limit: budget.totals.amount,
                                   currency: budget.currency, percent: budget.totals.percent, status: budget.totals.status)
