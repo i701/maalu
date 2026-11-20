@@ -16,11 +16,11 @@ struct DashboardView: View {
             .navigationTitle("Dashboard")
             .navigationSubtitle(Text(model.month.start, format: .dateTime.month(.wide).year()))
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Arrange", systemImage: "arrow.up.arrow.down") { isArranging = true }
-                }
-                ToolbarItem(placement: .primaryAction) {
+                ToolbarItemGroup(placement: .primaryAction) {
                     MonthSwitcher(canGoForward: !model.isCurrentMonth, previous: previousMonth, next: nextMonth)
+                    Menu("More", systemImage: "ellipsis.circle") {
+                        Button("Arrange the dashboard", systemImage: "arrow.up.arrow.down") { isArranging = true }
+                    }
                 }
             }
             .navigationDestination(for: DashboardRoute.self) { route in

@@ -17,6 +17,8 @@ struct TransactionsView: View {
             List {
                 TransactionSearchCard(
                     text: $model.filter.text,
+                    type: $model.filter.type,
+                    planned: $model.filter.planned,
                     chips: chips,
                     totals: model.isEmpty ? nil : model.totals,
                     filterCount: model.filter.detailCount,
@@ -55,7 +57,6 @@ struct TransactionsView: View {
                     }
                 } else {
                     ToolbarItemGroup {
-                        TransactionTypeMenu(selection: $model.filter.type, planned: $model.filter.planned)
                         Button("Select", systemImage: "checkmark.circle", action: selection.start)
                     }
                     ToolbarItem(placement: .primaryAction) {
@@ -95,7 +96,9 @@ struct TransactionsView: View {
     }
 
     private var chips: [TransactionFilterChip] {
+        // the type and planned are the quick filters in the card, so they are not chips as well
         model.filter.chips(accounts: options.accounts, categories: options.categories, cards: options.cards, tags: options.tags)
+            .filter { $0.kind != .type && $0.kind != .planned }
     }
 
     private func remove(_ chip: TransactionFilterChip) {
