@@ -18,6 +18,12 @@ struct TransactionSearchCard: View {
             HStack(spacing: 10) {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(.secondary)
+                if let type {
+                    TransactionSearchToken(title: String(localized: type.title), tint: type.tint) { self.type = nil }
+                }
+                if planned {
+                    TransactionSearchToken(title: String(localized: "Planned"), tint: .orange) { planned = false }
+                }
                 TextField("Search transactions", text: $text)
                     .submitLabel(.search)
                     .autocorrectionDisabled()
