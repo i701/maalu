@@ -2,9 +2,10 @@ import PhotosUI
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// The Add Photo and Add File buttons. Each picked file is handed on with its name and type; a photo is sent as a JPEG.
+/// The Add Photo and Add File buttons. Each picked file is handed on with its name and type; a photo is sent as a JPEG
+/// and keeps its name apart from the extension (IMG_1234.HEIC becomes IMG_1234.jpg).
 struct ReceiptPickers: View {
-    /// How many files there are already, so a photo is named "Photo 3.jpg" after two.
+    /// How many files there are already, so a photo whose name is unknown is called "Photo 3.jpg" after two.
     let count: Int
     let onPick: (Data, String, String) -> Void
     let onProblem: (String) -> Void
@@ -23,11 +24,12 @@ struct ReceiptPickers: View {
         let picked = photos
         photos = []
         for (offset, item) in picked.enumerated() {
-            guard let data = try? await item.loadTransferable(type: Data.self), let jpeg = ReceiptImage.jpeg(from: data) else {
+            guard let photo = try? await item.loadTransferable(type: PickedPhoto.self), let jpeg = ReceiptImage.jpeg(from: photo.data) else {
                 onProblem(String(localized: "A photo could not be read."))
                 continue
             }
-            onPick(jpeg, String(localized: "Photo \(count + offset + 1).jpg"), "image/jpeg")
+            let name = photo.baseName.map { "\($0).jpg" } ?? String(localized: "Photo \(count + offset + 1).jpg")
+            onPick(jpeg, name, "image/jpeg")
         }
     }
 
