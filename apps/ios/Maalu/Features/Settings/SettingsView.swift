@@ -26,6 +26,9 @@ struct SettingsView: View {
                     Text("Offer your saved templates when adding a transaction. A new transaction starts in the default account.")
                 }
                 Section {
+                    NavigationLink("When my salary arrives", value: SettingsRoute.salaryRules)
+                }
+                Section {
                     Toggle("Payments", isOn: flag("notify_payments", settings.notifyPayments) { $0.notifyPayments = $1 })
                     Toggle("Budget", isOn: flag("notify_budget", settings.notifyBudget) { $0.notifyBudget = $1 })
                     Toggle("Goals", isOn: flag("notify_goals", settings.notifyGoals) { $0.notifyGoals = $1 })
@@ -53,6 +56,7 @@ struct SettingsView: View {
             case .password: ChangePasswordView(twoFactor: model.settings?.twoFactorEnabled ?? false)
             case .twoFactor: TwoFactorView(enabled: model.settings?.twoFactorEnabled ?? false) { await load() }
             case .sessions: SessionsView()
+            case .salaryRules: SalaryRulesView()
             }
         }
         .refreshable { await load() }

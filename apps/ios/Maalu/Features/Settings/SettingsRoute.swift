@@ -1,3 +1,3 @@
 enum SettingsRoute: Hashable {
-    case password, twoFactor, sessions
+    case password, twoFactor, sessions, salaryRules
 }

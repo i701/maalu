@@ -9,9 +9,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 70 | 59 | 54 |
+| ✅ done | 70 | 59 | 55 |
 | 🟡 partial | 0 | 1 | 0 |
-| ❌ missing | 0 | 6 | 12 |
+| ❌ missing | 0 | 6 | 11 |
 | ➖ n/a | 1 | 5 | 5 |
 
 ## Still to build on Android (7)
@@ -24,13 +24,12 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (12)
+## Still to build on iOS (11)
 
 - ❌ **Credit card statements and due dates** (Accounts and cards).
 - ❌ **Bulk actions on selected rows** (Transactions).
 - ❌ **Merge two entries into one transfer** (Transactions).
 - ❌ **Export to Excel** (Transactions).
-- ❌ **Salary split rules** (Budget, goals and planning).
 - ❌ **Split a salary and the Pending screen** (Budget, goals and planning).
 - ❌ **Arrange the dashboard** (Dashboard and reports).
 - ❌ **Notifications** (Notifications).
@@ -124,7 +123,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Move money between limits**<br>Move what is left in one limit to another for one period, undo it, and see the history. | ✅ done | ✅ done | ✅ done |
 | **Savings goals**<br>A target that follows a savings account or a log of amounts set aside by hand. | ✅ done | ✅ done | ✅ done |
 | **Month plan**<br>What you have, the bills still to pay by day and where the money runs out. | ✅ done | ✅ done | ✅ done |
-| **Salary split rules**<br>Rules that divide a salary between accounts and goals, each one manual or automatic. | ✅ done | ✅ done | ❌ missing |
+| **Salary split rules**<br>Rules that divide a salary between accounts and goals, each one manual or automatic. | ✅ done | ✅ done | ✅ done |
 | **Split a salary and the Pending screen**<br>Review, edit, approve or dismiss waiting salary splits; undo one. | ✅ done | ✅ done | ❌ missing |
 
 ## Dashboard and reports
