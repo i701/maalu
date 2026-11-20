@@ -9,9 +9,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 70 | 59 | 49 |
+| ✅ done | 70 | 59 | 50 |
 | 🟡 partial | 0 | 1 | 0 |
-| ❌ missing | 0 | 6 | 17 |
+| ❌ missing | 0 | 6 | 16 |
 | ➖ n/a | 1 | 5 | 5 |
 
 ## Still to build on Android (7)
@@ -24,9 +24,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (17)
+## Still to build on iOS (16)
 
-- ❌ **Set up and manage two-factor** (Sign in and security).
 - ❌ **Market exchange rates** (Accounts and cards).
 - ❌ **Rate history** (Accounts and cards).
 - ❌ **Credit card statements and due dates** (Accounts and cards).
@@ -51,7 +50,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Sign in and sign out**<br>Email and password sign-in, signing out, the first-run server screen on the app. | ✅ done | ✅ done | ✅ done |
 | **Create the first account**<br>Sign-up on a new install (open only while no account exists, unless REGISTRATION=open). | ✅ done | ➖ n/a | ➖ n/a |
 | **Two-factor sign-in**<br>The second step at sign-in: an authenticator code or a recovery code. | ✅ done | ✅ done | ✅ done |
-| **Set up and manage two-factor**<br>Turn it on with a QR code, new recovery codes, turn it off. | ✅ done | ✅ done | ❌ missing |
+| **Set up and manage two-factor**<br>Turn it on with a QR code, new recovery codes, turn it off. | ✅ done | ✅ done | ✅ done |
 | **Where you are signed in**<br>List of devices, sign one out, sign out all the others. | ✅ done | ✅ done | ✅ done |
 | **Change password**<br>Current password, a new one twice, and a code when two-factor is on. | ✅ done | ✅ done | ✅ done |
 | **Sign-in alerts**<br>The switch for the email sent at every sign-in. | ✅ done | ✅ done | ✅ done |

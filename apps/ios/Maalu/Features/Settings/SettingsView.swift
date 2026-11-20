@@ -40,6 +40,7 @@ struct SettingsView: View {
                 }
                 Section("Security") {
                     NavigationLink("Change password") { ChangePasswordView(twoFactor: settings.twoFactorEnabled) }
+                    NavigationLink("Two-factor sign-in") { TwoFactorView(enabled: settings.twoFactorEnabled) { await load() } }
                     NavigationLink("Where you are signed in") { SessionsView() }
                 }
             }
