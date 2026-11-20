@@ -6,7 +6,7 @@ struct MaaluApp: App {
     @State private var session = Session()
 
     init() {
-        if let url = Bundle.main.url(forResource: "Rubik-VariableFont_wght", withExtension: "ttf") {
+        if let url = Bundle.main.url(forResource: "Sora-VariableFont_wght", withExtension: "ttf") {
             CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil)
         }
     }

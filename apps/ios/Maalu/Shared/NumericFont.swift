@@ -1,14 +1,14 @@
 import SwiftUI
 
-/// Figures in Rubik at the surrounding text style, so Dynamic Type still scales them, with tabular digits.
-/// Headline figures are Medium and tracked tighter (as the web's figures, -0.03em): Rubik is wide, and its Bold outweighs the title above them.
+/// Figures in Sora at the surrounding text style, so Dynamic Type still scales them, with tabular digits.
+/// Headline figures are Medium and tracked tighter (as the web's figures, -0.03em): Sora is wide, and its Bold outweighs the title above them.
 struct NumericFont: ViewModifier {
     @Environment(\.font) private var font
 
     func body(content: Content) -> some View {
         let (size, style, weight, tracking) = metrics
         content
-            .font(.custom("Rubik", size: size, relativeTo: style).weight(weight))
+            .font(.custom("Sora", size: size, relativeTo: style).weight(weight))
             .monospacedDigit()
             .tracking(size * tracking)
     }
