@@ -189,7 +189,11 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Settings/SessionsView.swift",
+          "apps/ios/Maalu/Features/Settings/SessionsModel.swift"
+        ]
       },
       "api": [
         "/api/v1/auth/sessions",
@@ -215,7 +219,11 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Settings/ChangePasswordView.swift",
+          "apps/ios/Maalu/Features/Settings/PasswordDraft.swift"
+        ]
       },
       "api": [
         "/api/v1/auth/password"

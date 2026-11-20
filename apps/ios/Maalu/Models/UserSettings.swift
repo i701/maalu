@@ -8,4 +8,5 @@ struct UserSettings: Decodable {
     var notifyGoals: Bool
     var notifyEmail: Bool
     var notifyLogin: Bool
+    var twoFactorEnabled: Bool
 }

@@ -38,6 +38,10 @@ struct SettingsView: View {
                 } footer: {
                     Text(model.canEmail ? "Email goes to \(settings.email)." : "Email is not set up on this server.")
                 }
+                Section("Security") {
+                    NavigationLink("Change password") { ChangePasswordView(twoFactor: settings.twoFactorEnabled) }
+                    NavigationLink("Where you are signed in") { SessionsView() }
+                }
             }
         }
         .overlay { if model.settings == nil && model.errorMessage == nil { ProgressView() } }
