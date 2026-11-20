@@ -11,8 +11,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 |---|---:|---:|---:|
 | ✅ done | 70 | 59 | 58 |
 | 🟡 partial | 0 | 1 | 0 |
-| ❌ missing | 0 | 6 | 8 |
-| ➖ n/a | 1 | 5 | 5 |
+| ❌ missing | 0 | 6 | 7 |
+| ➖ n/a | 1 | 5 | 6 |
 
 ## Still to build on Android (7)
 
@@ -24,7 +24,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (8)
+## Still to build on iOS (7)
 
 - ❌ **Bulk actions on selected rows** (Transactions).
 - ❌ **Merge two entries into one transfer** (Transactions).
@@ -33,7 +33,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Email digest** (Notifications).
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
-- ❌ **Health check** (Settings and the rest).
 
 ## Sign in and security
 
@@ -161,10 +160,11 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Guides**<br>The in-app guides with search; on the app they are generated from the web's. | ✅ done | ✅ done | ✅ done |
 | **Install the app**<br>Add to home screen (web), or the app itself. | ✅ done | ➖ n/a | ➖ n/a |
 | **Offline page and cached app files**<br>A service worker keeps only static files; data is never cached. | ✅ done | ➖ n/a | ➖ n/a |
-| **Health check**<br>An unauthenticated endpoint for monitoring. | ✅ done | ✅ done | ❌ missing |
+| **Health check**<br>An unauthenticated endpoint for monitoring. | ✅ done | ✅ done | ➖ n/a |
 
 - **Install the app** (Android): This is the app.
 - **Install the app** (iOS): This is the app.
 - **Offline page and cached app files** (Android): Native app.
 - **Offline page and cached app files** (iOS): Native app.
+- **Health check** (iOS): The app does not probe /health: it checks a server address with GET /api/v1/server (ServerAddress.check), which says it is Maalu, and which also answers behind the web address.
 

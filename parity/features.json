@@ -2138,7 +2138,8 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "na",
+        "note": "The app does not probe /health: it checks a server address with GET /api/v1/server (ServerAddress.check), which says it is Maalu, and which also answers behind the web address."
       },
       "api": [
         "/health"
