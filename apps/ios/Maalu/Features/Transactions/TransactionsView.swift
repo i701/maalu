@@ -43,9 +43,7 @@ struct TransactionsView: View {
                 NavigationStack {
                     TransactionDetailView(model: model, id: transaction.id)
                 }
-                .presentationDetents([.medium, .large])
-                // iOS 26 draws a half-open sheet as glass; keep the solid look it has when fully open
-                .presentationBackground(Color(.systemGroupedBackground))
+                .presentationDetents([.large])
             }
             .sheet(isPresented: $isFiltering) {
                 TransactionFiltersView(filter: model.filter) { model.filter = $0 }

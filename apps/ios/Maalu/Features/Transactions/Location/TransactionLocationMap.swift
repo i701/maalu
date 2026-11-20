@@ -10,11 +10,12 @@ struct TransactionLocationMap: View {
             LocationPreviewMap(location: location, isInteractive: false, isFullScreen: $isFullScreen)
                 .frame(height: 180)
                 .listRowInsets(EdgeInsets())
+                // on the Section a List repeats the cover for every row, and presenting it closes the sheet
+                .fullScreenCover(isPresented: $isFullScreen) {
+                    LocationPreviewMap(location: location, isInteractive: true, isFullScreen: $isFullScreen)
+                        .ignoresSafeArea(edges: .bottom)
+                }
             LabeledContent(location.place.isEmpty ? "Coordinates" : location.place, value: location.coordinates)
-        }
-        .fullScreenCover(isPresented: $isFullScreen) {
-            LocationPreviewMap(location: location, isInteractive: true, isFullScreen: $isFullScreen)
-                .ignoresSafeArea(edges: .bottom)
         }
     }
 }

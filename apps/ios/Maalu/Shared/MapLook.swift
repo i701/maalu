@@ -10,7 +10,7 @@ enum MapLook: String {
     var style: MapStyle {
         switch self {
         case .map: .standard(elevation: .realistic)
-        case .earth: .hybrid(elevation: .realistic)
+        case .earth: .hybrid
         }
     }
 
