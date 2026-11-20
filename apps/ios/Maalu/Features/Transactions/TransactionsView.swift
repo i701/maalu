@@ -7,6 +7,7 @@ struct TransactionsView: View {
     @State private var isFiltering = false
     @State private var opened: Transaction?
     @State private var options = FilterOptionsModel()
+    @State private var notice: String?
 
     var body: some View {
         NavigationStack {
@@ -15,6 +16,9 @@ struct TransactionsView: View {
                     TransactionFilterChips(chips: chips, onRemove: remove)
                         .listRowInsets(EdgeInsets())
                         .listRowBackground(Color.clear)
+                }
+                if !model.transferSuggestions.isEmpty {
+                    TransferSuggestionsSection(suggestions: model.transferSuggestions, onChanged: changed, onFailed: { notice = $0 })
                 }
                 if let totals = model.totals, !model.isEmpty {
                     TransactionTotalsSection(totals: totals)
@@ -57,6 +61,10 @@ struct TransactionsView: View {
             .sheet(isPresented: $isAdding) {
                 TransactionFormView(onSaved: reloadNow)
             }
+            .alert("Transactions", isPresented: Binding(get: { notice != nil }, set: { if !$0 { notice = nil } })) {
+            } message: {
+                Text(notice ?? "")
+            }
             .refreshable { await reload() }
             .task(id: model.filter) { await reload(debounced: !model.filter.text.isEmpty) }
             .task(id: isFiltering) { await loadOptions() }
@@ -88,6 +96,11 @@ struct TransactionsView: View {
 
     private func reloadNow() {
         Task { await reload() }
+    }
+
+    private func changed(_ message: String) {
+        notice = message
+        reloadNow()
     }
 
     private func open(_ transaction: Transaction) {

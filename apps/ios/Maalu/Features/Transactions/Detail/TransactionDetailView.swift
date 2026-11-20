@@ -8,6 +8,7 @@ struct TransactionDetailView: View {
     @State private var sheet: TransactionSheet?
     @State private var dialog = MarkPaidDialogModel()
     @State private var isConfirmingDelete = false
+    @State private var transferMatches: [Transaction] = []
     @State private var errorMessage: String?
     @State private var files: TransactionFilesModel
 
@@ -30,6 +31,8 @@ struct TransactionDetailView: View {
                     onLinkRefund: { sheet = .linkRefund(transaction) },
                     onMakeSubscription: { sheet = .makeSubscription(transaction) },
                     onSplitSalary: { sheet = .splitSalary(transaction) },
+                    transferMatches: transferMatches.count,
+                    onLinkTransfer: { sheet = .linkTransfer(transaction) },
                     onDelete: { isConfirmingDelete = true }
                 )
             }
@@ -54,9 +57,11 @@ struct TransactionDetailView: View {
                     case .linkRefund(let income): LinkRefundView(income: income, onSaved: reload)
                     case .makeSubscription(let payment): MakeSubscriptionView(transaction: payment, onSaved: reload)
                     case .splitSalary(let salary): SalarySplitView(transactionID: salary.id, onChanged: reload)
+                    case .linkTransfer(let entry): TransferCandidatesView(base: entry, matches: transferMatches, onLinked: linked)
                     }
                 }
                 .markPaidDialog(dialog, session: session)
+                .task(id: transaction.id) { await loadTransferMatches(for: transaction) }
                 .alert("Could not delete", item: $errorMessage) { _ in
                 } message: { message in
                     Text(message)
@@ -75,6 +80,21 @@ struct TransactionDetailView: View {
 
     /// A planned transaction that was paid is a different row now, so the screen about it closes.
     private func paid() {
+        Task {
+            if let api = session.api { await model.reload(using: api) }
+            dismiss()
+        }
+    }
+
+    /// Only an entry that could be half of a transfer asks, and the merge is only offered when something matches.
+    private func loadTransferMatches(for transaction: Transaction) async {
+        guard TransferLinkRules.canLink(transaction), let api = session.api else { return }
+        let result: ApiResult<[Transaction]> = await api.get("transactions/\(transaction.id)/transfer-candidates")
+        if case .ok(let found, _) = result { transferMatches = found }
+    }
+
+    /// The income went to the trash and the expense is a transfer now, so the screen about either closes.
+    private func linked() {
         Task {
             if let api = session.api { await model.reload(using: api) }
             dismiss()

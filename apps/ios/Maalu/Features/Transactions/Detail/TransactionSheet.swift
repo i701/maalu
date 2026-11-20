@@ -6,6 +6,7 @@ enum TransactionSheet: Identifiable {
     case linkRefund(Transaction)
     case makeSubscription(Transaction)
     case splitSalary(Transaction)
+    case linkTransfer(Transaction)
 
     var id: String {
         switch self {
@@ -16,6 +17,7 @@ enum TransactionSheet: Identifiable {
         case .linkRefund(let transaction): "link-refund-\(transaction.id)"
         case .makeSubscription(let transaction): "make-subscription-\(transaction.id)"
         case .splitSalary(let transaction): "split-salary-\(transaction.id)"
+        case .linkTransfer(let transaction): "link-transfer-\(transaction.id)"
         }
     }
 }

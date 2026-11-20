@@ -6,6 +6,8 @@ final class TransactionsModel {
     var filter = TransactionFilter()
     private(set) var days: [TransactionDay] = []
     private(set) var totals: TransactionTotals?
+    /// Pairs that look like one transfer entered twice. Only for the whole list: a narrowed one has none.
+    private(set) var transferSuggestions: [TransferSuggestion] = []
     private(set) var isLoading = false
     private(set) var errorMessage: String?
     private var transactions: [Transaction] = []
@@ -26,10 +28,13 @@ final class TransactionsModel {
         let showsTotals = filter.isActive && !filter.planned
         async let pageResult: ApiResult<[Transaction]> = api.get("transactions", query: query(offset: 0))
         async let totalsResult: ApiResult<TransactionTotals>? = showsTotals ? api.get("transactions/summary", query: filter.queryItems) : nil
-        let (result, totals) = await (pageResult, totalsResult)
+        async let suggestionsResult: ApiResult<[TransferSuggestion]>? = filter.isActive ? nil : api.get("transactions/transfer-suggestions")
+        let (result, totals, suggestions) = await (pageResult, totalsResult, suggestionsResult)
         guard !Task.isCancelled else { return }
         isLoading = false
         if case .ok(let value, _) = totals { self.totals = value } else { self.totals = nil }
+        // a failure just means no card
+        if case .ok(let value, _)? = suggestions { transferSuggestions = value } else { transferSuggestions = [] }
         if case .ok(let page, let total) = result {
             transactions = page
             self.total = total ?? page.count

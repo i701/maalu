@@ -11,6 +11,9 @@ struct TransactionActionsSection: View {
     let onLinkRefund: () -> Void
     let onMakeSubscription: () -> Void
     let onSplitSalary: () -> Void
+    /// How many entries could be the other half of this one as a transfer.
+    let transferMatches: Int
+    let onLinkTransfer: () -> Void
     let onDelete: () -> Void
 
     var body: some View {
@@ -33,6 +36,9 @@ struct TransactionActionsSection: View {
             }
             if transaction.canSplitSalary {
                 Button("Split salary", systemImage: "arrow.triangle.branch", action: onSplitSalary)
+            }
+            if transferMatches > 0 {
+                Button(TransferLinkRules.mergeLabel(transferMatches), systemImage: "arrow.left.arrow.right", action: onLinkTransfer)
             }
             if transaction.canMakeSubscription {
                 Button("Make a subscription", systemImage: "repeat", action: onMakeSubscription)

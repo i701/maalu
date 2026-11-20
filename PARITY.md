@@ -9,9 +9,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 70 | 59 | 58 |
+| ✅ done | 70 | 59 | 59 |
 | 🟡 partial | 0 | 1 | 0 |
-| ❌ missing | 0 | 6 | 7 |
+| ❌ missing | 0 | 6 | 6 |
 | ➖ n/a | 1 | 5 | 6 |
 
 ## Still to build on Android (7)
@@ -24,10 +24,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (7)
+## Still to build on iOS (6)
 
 - ❌ **Bulk actions on selected rows** (Transactions).
-- ❌ **Merge two entries into one transfer** (Transactions).
 - ❌ **Export to Excel** (Transactions).
 - ❌ **Notifications** (Notifications).
 - ❌ **Email digest** (Notifications).
@@ -83,7 +82,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Split a purchase into items**<br>Items with quantity, category and tax (GST included or excluded) that add up to the amount. | ✅ done | ✅ done | ✅ done |
 | **Receipts and web links**<br>Photos and PDFs and web links on a transaction. | ✅ done | ✅ done | ✅ done |
 | **Mark a transaction on the map**<br>A pin and an optional place name, with place search by name. | ✅ done | ✅ done | ✅ done |
-| **Merge two entries into one transfer**<br>A suggestion card for pairs entered twice, and a manual merge when an entry has an exact match. | ✅ done | ✅ done | ❌ missing |
+| **Merge two entries into one transfer**<br>A suggestion card for pairs entered twice, and a manual merge when an entry has an exact match. | ✅ done | ✅ done | ✅ done |
 | **Transaction groups**<br>Bundle related transactions under a name and see what they add up to. | ✅ done | ✅ done | ✅ done |
 | **Export to Excel**<br>Download what the filters show as a workbook with a summary and a sheet by category. | ✅ done | ❌ missing | ❌ missing |
 | **Import a bank statement**<br>Read a bank's CSV, review the rows, assign vendors and categories, import as one undoable batch. | ✅ done | ➖ n/a | ➖ n/a |
