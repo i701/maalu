@@ -9,9 +9,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 70 | 59 | 43 |
+| ✅ done | 70 | 59 | 44 |
 | 🟡 partial | 0 | 1 | 0 |
-| ❌ missing | 0 | 6 | 23 |
+| ❌ missing | 0 | 6 | 22 |
 | ➖ n/a | 1 | 5 | 5 |
 
 ## Still to build on Android (7)
@@ -24,7 +24,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (23)
+## Still to build on iOS (22)
 
 - ❌ **Set up and manage two-factor** (Sign in and security).
 - ❌ **Where you are signed in** (Sign in and security).
@@ -42,7 +42,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Salary split rules** (Budget, goals and planning).
 - ❌ **Split a salary and the Pending screen** (Budget, goals and planning).
 - ❌ **Arrange the dashboard** (Dashboard and reports).
-- ❌ **Trends** (Dashboard and reports).
 - ❌ **Notifications** (Notifications).
 - ❌ **Email digest** (Notifications).
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
@@ -151,7 +150,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Credit used**<br>What is owed against each credit limit. | ✅ done | ✅ done | ✅ done |
 | **Cash flow**<br>Income and expenses per month, what was kept each month and kept in total, over 6 or 12 months. | ✅ done | ✅ done | ✅ done |
 | **Compare**<br>One period against another: income, spending, what was kept and every category. | ✅ done | ✅ done | ✅ done |
-| **Trends**<br>Category by month, spending or income over 6, 12 or 24 months, as a table or stacked columns. | ✅ done | ✅ done | ❌ missing |
+| **Trends**<br>Category by month, spending or income over 6, 12 or 24 months, as a table or stacked columns. | ✅ done | ✅ done | ✅ done |
 | **Net worth and what moved it**<br>How net worth changed over a period and the drivers that explain it. | ✅ done | ✅ done | ✅ done |
 | **Places map**<br>Where spending went, as circles on a map sized by spend. | ✅ done | ✅ done | ✅ done |
 

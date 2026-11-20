@@ -1757,7 +1757,11 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Trends/TrendsView.swift",
+          "apps/ios/Maalu/Features/Trends/TrendsTable.swift"
+        ]
       },
       "routes": [
         "/trends"

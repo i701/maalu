@@ -11,6 +11,7 @@ struct MoreDestinationView: View {
         case "categories": CategoriesView()
         case "trash": TrashView()
         case "compare": CompareView()
+        case "trends": TrendsView()
         case "vendors": VendorsView()
         case "tags": TagsView()
         case "groups": GroupsView()
