@@ -6,7 +6,7 @@ final class TransactionFormModel {
     var draft: TransactionDraft
     private(set) var accounts: [Account] = []
     private(set) var categories: [String] = []
-    private(set) var vendors: [String] = []
+    private(set) var vendorRecords: [Vendor] = []
     private(set) var tags: [String] = []
     private(set) var cards: [Card] = []
     private(set) var templates: [TransactionTemplate] = []
@@ -93,7 +93,7 @@ final class TransactionFormModel {
     func load(using api: Api) async {
         async let accountsResult: ApiResult<[Account]> = api.get("accounts")
         async let categoriesResult: ApiResult<[NamedRef]> = api.get("categories")
-        async let vendorsResult: ApiResult<[NamedRef]> = api.get("vendors")
+        async let vendorsResult: ApiResult<[Vendor]> = api.get("vendors")
         async let templatesResult: ApiResult<[TransactionTemplate]> = api.get("templates")
         async let tagsResult: ApiResult<[NamedRef]> = api.get("tags")
         async let cardsResult: ApiResult<[Card]> = api.get("cards")
@@ -111,11 +111,21 @@ final class TransactionFormModel {
         baseCurrency = me.baseCurrency
         defaultAccountId = me.defaultAccountId
         if case .ok(let list, _) = categories { self.categories = list.map(\.name) }
-        if case .ok(let list, _) = vendors { self.vendors = list.map(\.name) }
+        if case .ok(let list, _) = vendors { vendorRecords = list }
         if case .ok(let list, _) = templates { self.templates = list }
         if case .ok(let list, _) = tags { self.tags = list.map(\.name) }
         if case .ok(let list, _) = cards { self.cards = list }
         if !isEditing { settleAccount(preferring: defaultAccountId) }
+    }
+
+    var vendors: [String] { vendorRecords.map(\.name) }
+
+    /// Picking a known vendor that has a usual place marks it, unless a place is already marked.
+    func vendorChanged() {
+        guard draft.location == nil,
+              let vendor = vendorRecords.first(where: { $0.name.caseInsensitiveCompare(draft.vendor) == .orderedSame }),
+              let location = vendor.location else { return }
+        draft.location = location
     }
 
     func accountChanged() {

@@ -23,7 +23,7 @@ struct TransactionFormView: View {
                     TransactionItemsSection(model: model)
                 }
                 TransactionDateSection(model: model)
-                TransactionLocationSection(model: model)
+                TransactionLocationSection(location: $model.draft.location)
                 if !model.isEditing {
                     TransactionAttachmentsSection(model: model)
                 }
@@ -86,6 +86,7 @@ struct TransactionFormView: View {
             .navigationDestination(for: TagsRoute.self) { _ in
                 TagsPickerView(options: model.tags, selection: $model.draft.tags)
             }
+            .onChange(of: model.draft.vendor) { model.vendorChanged() }
             .task { await load() }
         }
     }

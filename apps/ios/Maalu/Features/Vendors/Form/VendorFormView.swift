@@ -47,6 +47,11 @@ struct VendorFormView: View {
                 } footer: {
                     Text("Filled in when you pick this vendor on a new transaction.")
                 }
+                TransactionLocationSection(
+                    location: $model.draft.location,
+                    title: "Usual place",
+                    footer: "Marked on a new transaction when you pick this vendor, unless one is already marked."
+                )
                 if let message = model.errorMessage {
                     Text(message).foregroundStyle(.red)
                 }

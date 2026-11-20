@@ -1176,7 +1176,11 @@
         ]
       },
       "ios": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Vendors/Form/VendorFormView.swift",
+          "apps/ios/Maalu/Features/Transactions/Form/TransactionFormModel.swift"
+        ]
       }
     },
     {

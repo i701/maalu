@@ -1,27 +1,31 @@
 import SwiftUI
 
-/// The form's Location row: where it happened, marked on the map, or Add.
+/// A Location row: where it happened (or where a vendor usually is), marked on the map, or Add.
 struct TransactionLocationSection: View {
-    @Bindable var model: TransactionFormModel
+    @Binding var location: TransactionLocation?
+    var title: LocalizedStringResource = "Location"
+    var footer: LocalizedStringResource?
     @State private var isPicking = false
 
     var body: some View {
         Section {
             Button { isPicking = true } label: {
                 LabeledContent {
-                    Text(model.draft.location?.label ?? String(localized: "Add"))
+                    Text(location?.label ?? String(localized: "Add"))
                 } label: {
-                    Label("Location", systemImage: model.draft.location == nil ? "mappin" : "mappin.circle.fill")
+                    Label(String(localized: title), systemImage: location == nil ? "mappin" : "mappin.circle.fill")
                 }
             }
             .foregroundStyle(.primary)
+        } footer: {
+            if let footer { Text(footer) }
         }
         .sheet(isPresented: $isPicking) {
-            LocationPickerView(location: model.draft.location, onSave: setLocation)
+            LocationPickerView(location: location, onSave: setLocation)
         }
     }
 
-    private func setLocation(_ location: TransactionLocation?) {
-        model.draft.location = location
+    private func setLocation(_ picked: TransactionLocation?) {
+        location = picked
     }
 }
