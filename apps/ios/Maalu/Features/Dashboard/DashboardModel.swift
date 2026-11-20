@@ -17,6 +17,8 @@ final class DashboardModel {
     private(set) var upcoming: [Transaction] = []
     private(set) var accounts: [Account] = []
     private(set) var currency = ""
+    /// The order the person saved, or nil for the default one.
+    private(set) var savedOrder: [String]?
     private(set) var isLoading = true
     private(set) var errorMessage: String?
 
@@ -30,6 +32,38 @@ final class DashboardModel {
     var incomeRule: IncomeRule? { IncomeRule.make(from: categories) }
     var moneyFlow: MoneyFlow? { MoneyFlow.make(from: categories) }
     var creditCards: [CreditCardUsage] { CreditCardUsage.cards(from: accounts) }
+
+    /// The cards that have something to show, in the default order. A card with nothing behind it is left out, as on the web.
+    var shownSections: [DashboardSection] {
+        DashboardSection.allCases.filter { section in
+            switch section {
+            case .available: isCurrentMonth && available != nil
+            case .metrics: totals != nil
+            case .spending: !spendingRows.isEmpty
+            case .balance: summary != nil
+            case .monthly: !months.isEmpty
+            case .budget: budget?.isEmpty == false || !goals.isEmpty
+            case .needsWants: kindShares != nil
+            case .incomeRule: incomeRule != nil
+            case .moneyFlow: moneyFlow != nil
+            case .credit: !creditCards.isEmpty
+            case .upcoming, .latest: true
+            }
+        }
+    }
+
+    var orderedSections: [DashboardSection] {
+        DashboardSection.ordered(saved: savedOrder, visible: shownSections)
+    }
+
+    /// Saves the order (nil goes back to the default one). Returns a message when the server refused.
+    func saveOrder(_ order: [DashboardSection]?, using api: Api) async -> String? {
+        let ids = order?.map(\.rawValue)
+        let result: ApiResult<Profile> = await api.patchJSON("users/me", body: ["dashboard_order": ids])
+        if case .failed(_, let message) = result { return message }
+        savedOrder = ids
+        return nil
+    }
 
     func move(by months: Int) {
         month = month.shifted(by: months)
@@ -63,10 +97,12 @@ final class DashboardModel {
             URLQueryItem(name: "limit", value: String(Self.previewCount)),
         ])
         async let accountsResult: ApiResult<[Account]> = api.get("accounts")
+        async let profileResult: ApiResult<Profile> = api.get("users/me")
 
         let (totals, previousTotals, categories, available) = await (totalsResult, previousResult, categoriesResult, availableResult)
         let (summary, trend, months, budget) = await (summaryResult, trendResult, monthsResult, budgetResult)
         let (goals, latest, upcoming, accounts) = await (goalsResult, latestResult, upcomingResult, accountsResult)
+        let profile = await profileResult
         guard !Task.isCancelled else { return }
         isLoading = false
 
@@ -82,6 +118,7 @@ final class DashboardModel {
         self.latest = value(latest) ?? []
         self.upcoming = value(upcoming) ?? []
         self.accounts = value(accounts) ?? []
+        if let profile = value(profile) { savedOrder = profile.dashboardOrder }
         currency = self.totals?.currency ?? self.summary?.currency ?? ""
         errorMessage = hasContent ? nil : [failure(totals), failure(summary)].compactMap { $0 }.first
     }
