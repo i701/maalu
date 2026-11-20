@@ -48,21 +48,31 @@ struct CategoriesView: View {
                     Button("Add Category", systemImage: "plus") { sheet = .add }
                     Button("Needs and wants", systemImage: "tune") { isSorting = true }
                 }
+                .accentTint(.accentPink)
             }
         }
         .sheet(item: $sheet) { sheet in
-            switch sheet {
-            case .add: CategoryFormView(onSaved: reloadNow)
-            case .edit(let category): CategoryFormView(editing: category, onSaved: reloadNow)
+            Group {
+                switch sheet {
+                case .add: CategoryFormView(onSaved: reloadNow)
+                case .edit(let category): CategoryFormView(editing: category, onSaved: reloadNow)
+                }
             }
+            .accentTint(.accentPink)
         }
         .sheet(item: $merging) { category in
-            MergeIntoSheet(category: category, targets: CategoryLogic.mergeTargets(from: model.categories, for: category)) { target in
-                await merge(category, into: target)
+            Group {
+                MergeIntoSheet(category: category, targets: CategoryLogic.mergeTargets(from: model.categories, for: category)) { target in
+                    await merge(category, into: target)
+                }
             }
+            .accentTint(.accentPink)
         }
         .sheet(isPresented: $isSorting) {
-            SortKindsSheet(categories: model.categories, onSaved: reloadNow)
+            Group {
+                SortKindsSheet(categories: model.categories, onSaved: reloadNow)
+            }
+            .accentTint(.accentPink)
         }
         .confirmationDialog("Delete this category?", isPresented: $isConfirmingDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive, action: deleteSelected)

@@ -44,17 +44,21 @@ struct SubscriptionsView: View {
                         }
                     }
                 }
+                .accentTint(.accentViolet)
             }
         }
         .navigationDestination(for: SubscriptionRoute.self) { route in
             SubscriptionDetailView(listModel: model, id: route.id)
         }
         .sheet(item: $sheet) { sheet in
-            switch sheet {
-            case .add: SubscriptionFormView(onSaved: reloadNow)
-            case .edit(let subscription): SubscriptionFormView(editing: subscription, onSaved: reloadNow)
-            case .accept(let candidate): AcceptSuggestionView(candidate: candidate, onSaved: reloadNow)
+            Group {
+                switch sheet {
+                case .add: SubscriptionFormView(onSaved: reloadNow)
+                case .edit(let subscription): SubscriptionFormView(editing: subscription, onSaved: reloadNow)
+                case .accept(let candidate): AcceptSuggestionView(candidate: candidate, onSaved: reloadNow)
+                }
             }
+            .accentTint(.accentViolet)
         }
         .alert("Something went wrong", item: $errorMessage) { _ in
         } message: { message in

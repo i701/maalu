@@ -37,10 +37,13 @@ struct GoalDetailView: View {
                 }
             }
             .sheet(item: $sheet) { sheet in
-                switch sheet {
-                case .edit(let goal): GoalFormView(editing: goal, currency: goal.currency, onSaved: reload)
-                case .money(let goal): GoalMoneyView(goal: goal, onSaved: reload)
+                Group {
+                    switch sheet {
+                    case .edit(let goal): GoalFormView(editing: goal, currency: goal.currency, onSaved: reload)
+                    case .money(let goal): GoalMoneyView(goal: goal, onSaved: reload)
+                    }
                 }
+                .accentTint(.accentAmber)
             }
             .alert("Could not delete", item: $errorMessage) { _ in
             } message: { message in

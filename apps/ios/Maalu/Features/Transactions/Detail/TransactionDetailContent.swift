@@ -6,8 +6,8 @@ struct TransactionDetailContent<Quick: View, Actions: View>: View {
     @ViewBuilder let quickActions: Quick
     @ViewBuilder let actions: Actions
 
-    /// A very light grey on the white page, so the cards show without a grey page behind them.
-    private static var cardFill: Color { Color(.secondarySystemBackground) }
+    /// White cards on the light grey page.
+    private static var cardFill: Color { Color(.secondarySystemGroupedBackground) }
 
     var body: some View {
         List {

@@ -30,15 +30,21 @@ struct AccountsView: View {
             .toolbar {
                 ToolbarItemGroup(placement: .primaryAction) {
                     AccountsViewMenu(model: model)
+                        .accentTint(.accentGreen)
                     Toggle("Archived", systemImage: "archivebox", isOn: $model.showsArchived)
+                        .accentTint(.accentGreen)
                     Button("Add Account", systemImage: "plus") { isAdding = true }
+                        .accentTint(.accentGreen)
                 }
             }
             .navigationDestination(for: AccountRoute.self) { route in
                 AccountDetailView(listModel: model, id: route.id)
             }
             .sheet(isPresented: $isAdding) {
-                AccountFormView(onSaved: reloadNow)
+                Group {
+                    AccountFormView(onSaved: reloadNow)
+                }
+                .accentTint(.accentGreen)
             }
             .refreshable { await load() }
             .task(id: model.showsArchived) { await load() }

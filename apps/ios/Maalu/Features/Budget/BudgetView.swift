@@ -26,31 +26,40 @@ struct BudgetView: View {
             .toolbar {
                 ToolbarItemGroup(placement: .primaryAction) {
                     MonthSwitcher(canGoForward: true, previous: previousMonth, next: nextMonth)
+                        .accentTint(.accentAmber)
                     Menu("Add", systemImage: "plus") {
                         Button("New Limit", systemImage: "gauge.with.needle") { addition = .limit }
                         Button("New Goal", systemImage: "target") { addition = .goal }
                     }
                     .disabled(model.budget == nil)
+                    .accentTint(.accentAmber)
                 }
                 ToolbarItem(placement: .secondaryAction) {
                     Button("Budget Settings", systemImage: "gearshape") { isShowingSettings = true }
                         .disabled(model.budget == nil)
+                        .accentTint(.accentAmber)
                 }
             }
             .sheet(item: $addition) { addition in
-                if let budget = model.budget {
-                    switch addition {
-                    case .limit:
-                        BudgetLineFormView(budget: budget, onSaved: reloadNow)
-                    case .goal:
-                        GoalFormView(currency: budget.currency, onSaved: reloadNow)
+                Group {
+                    if let budget = model.budget {
+                        switch addition {
+                        case .limit:
+                            BudgetLineFormView(budget: budget, onSaved: reloadNow)
+                        case .goal:
+                            GoalFormView(currency: budget.currency, onSaved: reloadNow)
+                        }
                     }
                 }
+                .accentTint(.accentAmber)
             }
             .sheet(isPresented: $isShowingSettings) {
-                if let budget = model.budget {
-                    BudgetSettingsView(budget: budget, onSaved: reloadNow)
+                Group {
+                    if let budget = model.budget {
+                        BudgetSettingsView(budget: budget, onSaved: reloadNow)
+                    }
                 }
+                .accentTint(.accentAmber)
             }
             .navigationDestination(for: BudgetRoute.self) { route in
                 switch route {

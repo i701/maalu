@@ -29,9 +29,12 @@ struct SubscriptionDetailView: View {
                 Text("Its transactions are kept and lose the link. A planned payment stays in your planned list until you delete it there.")
             }
             .sheet(item: $sheet) { sheet in
-                if case .edit(let subscription) = sheet {
-                    SubscriptionFormView(editing: subscription, onSaved: reload)
+                Group {
+                    if case .edit(let subscription) = sheet {
+                        SubscriptionFormView(editing: subscription, onSaved: reload)
+                    }
                 }
+                .accentTint(.accentViolet)
             }
             .alert("Something went wrong", item: $errorMessage) { _ in
             } message: { message in

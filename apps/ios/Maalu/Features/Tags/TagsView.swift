@@ -48,6 +48,7 @@ struct TagsView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Add Tag", systemImage: "plus") { startNaming(.add) }
+                    .accentTint(.accentViolet)
             }
         }
         .alert(naming?.tag == nil ? "New Tag" : "Rename Tag", isPresented: $isNaming, presenting: naming) { naming in
@@ -60,13 +61,16 @@ struct TagsView: View {
             }
         }
         .sheet(item: $merging) { tag in
-            MergeSheet(
-                targets: model.mergeTargets(for: tag),
-                name: \.name,
-                question: "Merge this tag?",
-                consequence: { "Every transaction and template with \(tag.name) gets \($0.name) instead. \(tag.name) is then deleted." },
-                onMerge: { await merge(tag, into: $0) }
-            )
+            Group {
+                MergeSheet(
+                    targets: model.mergeTargets(for: tag),
+                    name: \.name,
+                    question: "Merge this tag?",
+                    consequence: { "Every transaction and template with \(tag.name) gets \($0.name) instead. \(tag.name) is then deleted." },
+                    onMerge: { await merge(tag, into: $0) }
+                )
+            }
+            .accentTint(.accentViolet)
         }
         .confirmationDialog("Delete this tag?", isPresented: $isConfirmingDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive, action: deleteSelected)

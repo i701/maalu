@@ -38,12 +38,15 @@ struct BudgetLineDetailView: View {
                 }
             }
             .sheet(item: $sheet) { sheet in
-                switch sheet {
-                case .edit(let line):
-                    BudgetLineFormView(draft: BudgetLineDraft(editing: line), editingID: line.id, budget: budget, onSaved: reload)
-                case .move(let line):
-                    MoveMoneyView(line: line, budget: budget, period: model.month.start, onSaved: reload)
+                Group {
+                    switch sheet {
+                    case .edit(let line):
+                        BudgetLineFormView(draft: BudgetLineDraft(editing: line), editingID: line.id, budget: budget, onSaved: reload)
+                    case .move(let line):
+                        MoveMoneyView(line: line, budget: budget, period: model.month.start, onSaved: reload)
+                    }
                 }
+                .accentTint(.accentAmber)
             }
             .alert("Something went wrong", item: $errorMessage) { _ in
             } message: { message in

@@ -51,22 +51,29 @@ struct VendorsView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Add Vendor", systemImage: "plus") { sheet = .add }
+                    .accentTint(.accentOrange)
             }
         }
         .sheet(item: $sheet) { sheet in
-            switch sheet {
-            case .add: VendorFormView(onSaved: reloadNow)
-            case .edit(let vendor): VendorFormView(editing: vendor, onSaved: reloadNow)
+            Group {
+                switch sheet {
+                case .add: VendorFormView(onSaved: reloadNow)
+                case .edit(let vendor): VendorFormView(editing: vendor, onSaved: reloadNow)
+                }
             }
+            .accentTint(.accentOrange)
         }
         .sheet(item: $merging) { vendor in
-            MergeSheet(
-                targets: model.mergeTargets(for: vendor),
-                name: \.name,
-                question: "Merge this vendor?",
-                consequence: { "Every transaction, subscription and template of \(vendor.name) moves to \($0.name), which takes any details it lacks. \(vendor.name) is then deleted." },
-                onMerge: { await merge(vendor, into: $0) }
-            )
+            Group {
+                MergeSheet(
+                    targets: model.mergeTargets(for: vendor),
+                    name: \.name,
+                    question: "Merge this vendor?",
+                    consequence: { "Every transaction, subscription and template of \(vendor.name) moves to \($0.name), which takes any details it lacks. \(vendor.name) is then deleted." },
+                    onMerge: { await merge(vendor, into: $0) }
+                )
+            }
+            .accentTint(.accentOrange)
         }
         .confirmationDialog("Delete this vendor?", isPresented: $isConfirmingDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive, action: deleteSelected)

@@ -59,16 +59,19 @@ struct AccountDetailView: View {
                 Text("Its purchases stay on this account, with no card.")
             }
             .sheet(item: $sheet) { sheet in
-                switch sheet {
-                case .edit(let account): AccountFormView(editing: account, onSaved: reload)
-                case .adjust(let account): AdjustBalanceView(account: account, onSaved: reload)
-                case .addCard(let account, let kind):
-                    CardFormView(account: account, kind: kind, accounts: listModel.accounts, onSaved: reload)
-                case .editCard(let account, let card):
-                    CardFormView(account: account, kind: card.kind, editing: card, accounts: listModel.accounts, onSaved: reload)
-                case .repay(let card, let amount): TransactionFormView(seed: TransactionDraft(repaying: card, amount: amount), onSaved: reload)
-                case .rateHistory(let account): RateHistoryView(account: account, baseCurrency: model.baseCurrency)
+                Group {
+                    switch sheet {
+                    case .edit(let account): AccountFormView(editing: account, onSaved: reload)
+                    case .adjust(let account): AdjustBalanceView(account: account, onSaved: reload)
+                    case .addCard(let account, let kind):
+                        CardFormView(account: account, kind: kind, accounts: listModel.accounts, onSaved: reload)
+                    case .editCard(let account, let card):
+                        CardFormView(account: account, kind: card.kind, editing: card, accounts: listModel.accounts, onSaved: reload)
+                    case .repay(let card, let amount): TransactionFormView(seed: TransactionDraft(repaying: card, amount: amount), onSaved: reload)
+                    case .rateHistory(let account): RateHistoryView(account: account, baseCurrency: model.baseCurrency)
+                    }
                 }
+                .accentTint(.accentGreen)
             }
             .alert("Something went wrong", item: $errorMessage) { _ in
             } message: { message in

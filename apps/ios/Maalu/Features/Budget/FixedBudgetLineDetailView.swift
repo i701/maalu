@@ -38,12 +38,15 @@ struct FixedBudgetLineDetailView: View {
                 }
             }
             .sheet(item: $sheet) { sheet in
-                switch sheet {
-                case .edit(let line):
-                    BudgetLineFormView(draft: BudgetLineDraft(editing: line), editingID: line.id, budget: budget, onSaved: reload)
-                case .repeatNext(let line):
-                    BudgetLineFormView(draft: BudgetLineDraft(repeating: line), budget: budget, onSaved: reload)
+                Group {
+                    switch sheet {
+                    case .edit(let line):
+                        BudgetLineFormView(draft: BudgetLineDraft(editing: line), editingID: line.id, budget: budget, onSaved: reload)
+                    case .repeatNext(let line):
+                        BudgetLineFormView(draft: BudgetLineDraft(repeating: line), budget: budget, onSaved: reload)
+                    }
                 }
+                .accentTint(.accentAmber)
             }
             .alert("Something went wrong", item: $errorMessage) { _ in
             } message: { message in

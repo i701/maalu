@@ -23,9 +23,11 @@ struct DashboardView: View {
             .toolbar {
                 ToolbarItemGroup(placement: .primaryAction) {
                     MonthSwitcher(canGoForward: !model.isCurrentMonth, previous: previousMonth, next: nextMonth)
+                        .accentTint(.accentLime)
                     Menu("More", systemImage: "ellipsis.circle") {
                         Button("Arrange the dashboard", systemImage: "arrow.up.arrow.down") { isArranging = true }
                     }
+                    .accentTint(.accentLime)
                 }
             }
             .navigationDestination(for: DashboardRoute.self) { route in
