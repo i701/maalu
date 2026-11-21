@@ -7,6 +7,7 @@ struct DecimalField: View {
     @Binding var value: Decimal?
     @State private var text: String
     @State private var lastTyped: Decimal?
+    @FocusState private var isFocused: Bool
 
     init(_ title: LocalizedStringKey, value: Binding<Decimal?>) {
         self.title = title
@@ -18,6 +19,14 @@ struct DecimalField: View {
     var body: some View {
         TextField(title, text: $text)
             .keyboardType(.decimalPad)
+            .focused($isFocused)
+            .toolbar {
+                // the decimal pad has no Return key
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") { isFocused = false }
+                }
+            }
             .onChange(of: text) {
                 let clean = DecimalInput.sanitized(text)
                 if clean != text {
