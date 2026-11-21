@@ -1644,6 +1644,29 @@
       ]
     },
     {
+      "id": "dashboard-deck",
+      "area": "reports",
+      "name": "Dashboard card deck",
+      "summary": "The Dashboard opens on a stack of three gradient cards (Available to spend, Kept this month, Net worth): swipe up or down to flip through them, the rest of the cards scroll below.",
+      "web": {
+        "status": "missing"
+      },
+      "android": {
+        "status": "missing"
+      },
+      "ios": {
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Dashboard/Deck/DashboardDeck.swift",
+          "apps/ios/Maalu/Features/Dashboard/Deck/DeckCardFrame.swift"
+        ]
+      },
+      "routes": [
+        "/dashboard"
+      ],
+      "api": []
+    },
+    {
       "id": "dashboard-order",
       "area": "reports",
       "name": "Arrange the dashboard",

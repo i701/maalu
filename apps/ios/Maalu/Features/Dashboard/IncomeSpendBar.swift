@@ -4,14 +4,15 @@ import SwiftUI
 struct IncomeSpendBar: View {
     let income: Decimal
     let spent: Decimal
+    var color: Color = .brand
 
     var body: some View {
         GeometryReader { proxy in
             let share = incomeShare
             HStack(spacing: 4) {
-                Capsule().fill(Color.brand)
+                Capsule().fill(color)
                     .frame(width: max(8, (proxy.size.width - 4) * share))
-                Capsule().fill(Color.brand.opacity(0.3))
+                Capsule().fill(color.opacity(0.3))
             }
         }
         .frame(height: 8)

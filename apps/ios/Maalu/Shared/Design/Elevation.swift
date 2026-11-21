@@ -8,6 +8,8 @@ struct Elevation: ViewModifier {
     /// Between two whole levels the layer of the higher one is drawn at that fraction of its strength.
     let level: Double
     let cornerRadius: CGFloat
+    /// Off for a card that is being blurred (the ones behind a deck's front card): its white shadow layers and highlight would blur with it and show as a glow.
+    var isOn = true
 
     /// A card that is all but flat in light mode (the hairline and a 1pt shadow at half strength). Dark mode rounds it up to level 1, where a hairline alone would not lift it off the page.
     static let soft = 0.5
@@ -23,8 +25,9 @@ struct Elevation: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .overlay { if scheme == .dark { insetLight } }
+            .overlay { if scheme == .dark, isOn { insetLight } }
             .background {
+            if isOn {
             ZStack {
                 RoundedRectangle(cornerRadius: cornerRadius + 1, style: .continuous)
                     .fill(ring)
@@ -38,6 +41,7 @@ struct Elevation: ViewModifier {
                             .shadow(color: drop.opacity(strength), radius: offset / 2, y: offset)
                     }
                 }
+            }
             }
         }
     }
@@ -67,7 +71,7 @@ struct Elevation: ViewModifier {
 }
 
 extension View {
-    func elevation(_ level: Double, cornerRadius: CGFloat = Radius.card) -> some View {
-        modifier(Elevation(level: level, cornerRadius: cornerRadius))
+    func elevation(_ level: Double, cornerRadius: CGFloat = Radius.card, isOn: Bool = true) -> some View {
+        modifier(Elevation(level: level, cornerRadius: cornerRadius, isOn: isOn))
     }
 }
