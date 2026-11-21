@@ -4,8 +4,10 @@ import SwiftUI
 struct TransactionFilterChips: View {
     let chips: [TransactionFilterChip]
     let onRemove: (TransactionFilterChip) -> Void
+    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
+        let colors = ChipColors(tint: .brand, scheme: scheme)
         ScrollView(.horizontal) {
             HStack(spacing: 8) {
                 ForEach(chips) { chip in
@@ -15,10 +17,10 @@ struct TransactionFilterChips: View {
                             Image(systemName: "xmark").font(.caption2.weight(.bold))
                         }
                         .font(.subheadline.weight(.medium))
-                        .foregroundStyle(Color.brand)
+                        .foregroundStyle(colors.ink)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 7)
-                        .background(Color.brand.opacity(0.12), in: .capsule)
+                        .background(colors.fill, in: .capsule)
                     }
                     .accessibilityHint("Removes this filter")
                 }

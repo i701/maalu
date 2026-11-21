@@ -5,8 +5,10 @@ struct TransactionSearchToken: View {
     let title: String
     let tint: Color
     let onRemove: () -> Void
+    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
+        let colors = ChipColors(tint: tint, scheme: scheme)
         Button(action: onRemove) {
             HStack(spacing: 4) {
                 Text(title)
@@ -15,10 +17,10 @@ struct TransactionSearchToken: View {
             }
             .font(.footnote.weight(.semibold))
             .fixedSize()
-            .foregroundStyle(tint.mix(with: .black, by: 0.2))
+            .foregroundStyle(colors.ink)
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
-            .background(tint.opacity(0.14), in: .capsule)
+            .background(colors.fill, in: .capsule)
         }
         .buttonStyle(.borderless)
         .accessibilityLabel("Remove \(title) filter")
