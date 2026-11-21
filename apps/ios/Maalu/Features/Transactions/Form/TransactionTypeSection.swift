@@ -14,7 +14,7 @@ struct TransactionTypeSection: View {
                 AmountRow { Text("Amount") } amount: { MoneyText(model.draft.itemsTotal, currency: model.currency) }
                     .foregroundStyle(.secondary)
             } else {
-                DecimalField("Amount", value: $model.draft.amount)
+                BigAmountField(value: $model.draft.amount, currency: model.currency)
             }
         }
     }
