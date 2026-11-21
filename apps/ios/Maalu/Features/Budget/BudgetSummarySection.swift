@@ -52,6 +52,6 @@ struct BudgetSummarySection: View {
         }
         .padding(Spacing.card)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .card(elevation: 3)
+        .card(elevation: 2)
     }
 }

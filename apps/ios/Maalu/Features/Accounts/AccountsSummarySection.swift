@@ -23,7 +23,7 @@ struct AccountsSummarySection: View {
         }
         .padding(Spacing.card)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .card(elevation: 3)
+        .card(elevation: 2)
         .listRowBackground(Color.clear)
         .listRowSeparator(.hidden)
         .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 12, trailing: 0))
