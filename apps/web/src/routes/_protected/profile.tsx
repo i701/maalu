@@ -10,6 +10,7 @@ import Typography from "@mui/material/Typography";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useNotify } from "#/components/Notify";
 import PageHeader from "#/components/PageHeader";
+import ProfileNameForm from "#/components/ProfileNameForm";
 import { formatDate } from "#/lib/format";
 import { unwrap } from "#/lib/unwrap";
 import { useAction } from "#/lib/use-action";
@@ -54,11 +55,11 @@ function ProfilePage() {
 				<CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
 					<Stack direction="row" spacing={2} sx={{ mb: 3, alignItems: "center" }}>
 						<Avatar sx={{ width: 64, height: 64, bgcolor: "primary.main", fontSize: 28 }}>
-							{me.email[0].toUpperCase()}
+							{(me.name ?? me.email)[0].toUpperCase()}
 						</Avatar>
 						<div>
 							<Typography variant="h6" noWrap>
-								{me.email}
+								{me.name ?? me.email}
 							</Typography>
 							<Typography variant="body2" sx={{ color: "text.secondary" }}>
 								Maalu account
@@ -77,6 +78,7 @@ function ProfilePage() {
 							</Stack>
 						))}
 					</Stack>
+					<ProfileNameForm key={me.name} name={me.name} />
 					<TextField
 						select
 						label="Default account"

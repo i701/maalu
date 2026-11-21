@@ -6,16 +6,22 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.schemas.types import CurrencyCode
 
+Name = Annotated[str, Field(max_length=80)]
+
 
 class UserCreate(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
     base_currency: CurrencyCode
+    name: Name | None = Field(default=None, description="What to call you; optional.")
 
 
 class UserUpdate(BaseModel):
     """Partial update of your settings: only provided fields change."""
 
+    name: Name | None = Field(
+        default=None, description="What to call you. Explicit null or blank clears it."
+    )
     default_account_id: uuid.UUID | None = Field(
         default=None,
         description="The account a new transaction starts in. Explicit null clears it.",
@@ -54,6 +60,7 @@ class UserResponse(BaseModel):
 
     id: uuid.UUID
     email: EmailStr
+    name: str | None = Field(description="What to call you; null when not set.")
     base_currency: str
     default_account_id: uuid.UUID | None
     start_from_template: bool

@@ -1587,6 +1587,38 @@
       ]
     },
     {
+      "id": "user-name",
+      "area": "security",
+      "name": "Your name",
+      "summary": "An optional name (up to 80 characters) set at sign-up or in Profile, kept on the server; the Dashboard greets you with it.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/routes/register.tsx",
+          "apps/web/src/components/ProfileNameForm.tsx"
+        ]
+      },
+      "android": {
+        "status": "missing"
+      },
+      "ios": {
+        "status": "partial",
+        "note": "Shows the name in the Dashboard greeting; it is set on the web, as the app has no sign-up and no profile edit yet.",
+        "evidence": [
+          "apps/ios/Maalu/Features/Dashboard/DashboardView.swift",
+          "apps/ios/Maalu/Models/Profile.swift"
+        ]
+      },
+      "routes": [
+        "/register",
+        "/profile"
+      ],
+      "api": [
+        "/api/v1/auth/register",
+        "/api/v1/users/me"
+      ]
+    },
+    {
       "id": "dashboard-order",
       "area": "reports",
       "name": "Arrange the dashboard",

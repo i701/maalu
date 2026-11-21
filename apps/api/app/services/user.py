@@ -15,6 +15,11 @@ from app.services.category import CategoryService
 from app.services.errors import TransactionRuleError
 
 
+def _clean_name(name: str | None) -> str | None:
+    """The name as stored: trimmed, and null when it is blank."""
+    return (name or "").strip() or None
+
+
 class EmailAlreadyRegisteredError(Exception):
     pass
 
@@ -80,6 +85,7 @@ class UserService:
             email=data.email.lower(),
             hashed_password=hash_password(data.password),
             base_currency=data.base_currency,
+            name=_clean_name(data.name),
         )
         self.db.add(user)
         try:
@@ -114,6 +120,8 @@ class UserService:
                         f'"{account.name}" is archived. Unarchive it to use it'
                     )
             user.default_account_id = account_id
+        if "name" in changes:
+            user.name = _clean_name(changes["name"])
         if "dashboard_order" in changes:
             user.dashboard_order = changes["dashboard_order"]
         if "start_from_template" in changes:

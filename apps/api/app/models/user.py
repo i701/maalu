@@ -14,6 +14,8 @@ class User(Base):
     # Stored lowercased; the unique constraint relies on that.
     email: Mapped[str] = mapped_column(String(320), unique=True)
     hashed_password: Mapped[str] = mapped_column(String(255))
+    # What to call the person ("Hi, Aidhaan"). Optional, free text, set at sign-up or later.
+    name: Mapped[str | None] = mapped_column(String(80), default=None)
     # Primary currency, chosen at sign-up. Every transaction's base_amount is in this currency.
     base_currency: Mapped[str] = mapped_column(String(3))
     # The account a new transaction starts in. Only a convenience, so it is cleared when the account

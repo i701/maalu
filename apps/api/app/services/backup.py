@@ -170,6 +170,7 @@ class BackupService:
             "version": VERSION,
             "created_at": datetime.now(UTC).isoformat(),
             "settings": {
+                "name": user.name,
                 "base_currency": user.base_currency,
                 "start_from_template": user.start_from_template,
                 "notify_payments": user.notify_payments,
@@ -259,6 +260,8 @@ class BackupService:
         currency = settings.get("base_currency")
         if isinstance(currency, str) and len(currency) == 3:
             user.base_currency = currency.upper()
+        name = settings.get("name")
+        user.name = name.strip()[:80] or None if isinstance(name, str) else None
         user.start_from_template = bool(settings.get("start_from_template", True))
         user.notify_payments = bool(settings.get("notify_payments", True))
         user.notify_budget = bool(settings.get("notify_budget", True))

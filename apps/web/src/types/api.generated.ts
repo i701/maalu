@@ -6325,6 +6325,11 @@ export interface components {
              * Format: email
              */
             email: string;
+            /**
+             * Name
+             * @description What to call you; optional.
+             */
+            name?: string | null;
             /** Password */
             password: string;
         };
@@ -6356,6 +6361,11 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /**
+             * Name
+             * @description What to call you; null when not set.
+             */
+            name: string | null;
             /** Notify Budget */
             notify_budget: boolean;
             /** Notify Email */
@@ -6395,6 +6405,11 @@ export interface components {
              * @description The account a new transaction starts in. Explicit null clears it.
              */
             default_account_id?: string | null;
+            /**
+             * Name
+             * @description What to call you. Explicit null or blank clears it.
+             */
+            name?: string | null;
             /**
              * Notify Budget
              * @description Notify when a budget limit is close or over.

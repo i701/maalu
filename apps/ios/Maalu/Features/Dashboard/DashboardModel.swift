@@ -18,6 +18,8 @@ final class DashboardModel {
     private(set) var accounts: [Account] = []
     private(set) var currency = ""
     /// The order the person saved, or nil for the default one.
+    /// What to call the person, for the greeting.
+    private(set) var name: String?
     private(set) var savedOrder: [String]?
     /// The cards switched off. Kept on this device, not on the server, so the web and Android do not know them yet.
     private(set) var hidden: Set<DashboardSection>
@@ -139,7 +141,10 @@ final class DashboardModel {
         self.latest = value(latest) ?? []
         self.upcoming = value(upcoming) ?? []
         self.accounts = value(accounts) ?? []
-        if let profile = value(profile) { savedOrder = profile.dashboardOrder }
+        if let profile = value(profile) {
+            savedOrder = profile.dashboardOrder
+            name = profile.name
+        }
         currency = self.totals?.currency ?? self.summary?.currency ?? ""
         errorMessage = hasContent ? nil : [failure(totals), failure(summary)].compactMap { $0 }.first
     }

@@ -9,9 +9,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 70 | 59 | 61 |
-| 🟡 partial | 0 | 1 | 0 |
-| ❌ missing | 2 | 8 | 5 |
+| ✅ done | 71 | 59 | 61 |
+| 🟡 partial | 0 | 1 | 1 |
+| ❌ missing | 2 | 9 | 5 |
 | ➖ n/a | 1 | 5 | 6 |
 | 🗓 planned | 0 | 0 | 1 |
 
@@ -20,11 +20,12 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Hide dashboard cards** (Dashboard and reports).
 - ❌ **Hide dashboard cards, kept on the server** (Dashboard and reports).
 
-## Still to build on Android (9)
+## Still to build on Android (10)
 
 - 🟡 **Email digest** (Notifications). The switch and the email status are in Settings; sending a test email is not.
 - ❌ **Quiet list and detail sheet** (Transactions).
 - ❌ **Export to Excel** (Transactions).
+- ❌ **Your name** (Sign in and security).
 - ❌ **Arrange the dashboard** (Dashboard and reports).
 - ❌ **Hide dashboard cards** (Dashboard and reports).
 - ❌ **Hide dashboard cards, kept on the server** (Dashboard and reports).
@@ -32,8 +33,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (6)
+## Still to build on iOS (7)
 
+- 🟡 **Your name** (Sign in and security). Shows the name in the Dashboard greeting; it is set on the web, as the app has no sign-up and no profile edit yet.
 - 🗓 **Hide dashboard cards, kept on the server** (Dashboard and reports).
 - ❌ **Export to Excel** (Transactions).
 - ❌ **Notifications** (Notifications).
@@ -53,11 +55,13 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Change password**<br>Current password, a new one twice, and a code when two-factor is on. | ✅ done | ✅ done | ✅ done |
 | **Sign-in alerts**<br>The switch for the email sent at every sign-in. | ✅ done | ✅ done | ✅ done |
 | **API keys**<br>Keys for bots, scripts and agents with chosen permissions, an end date and rotation. | ✅ done | ➖ n/a | ➖ n/a |
+| **Your name**<br>An optional name (up to 80 characters) set at sign-up or in Profile, kept on the server; the Dashboard greets you with it. | ✅ done | ❌ missing | 🟡 partial |
 
 - **Create the first account** (Android): The app has no Create account: an account is made on the web or with just seed.
 - **Create the first account** (iOS): Same as Android: the app has no Create account.
 - **API keys** (Android): Web only, by choice: API keys are managed on the web.
 - **API keys** (iOS): Web only, by choice: API keys are managed on the web.
+- **Your name** (iOS): Shows the name in the Dashboard greeting; it is set on the web, as the app has no sign-up and no profile edit yet.
 
 ## Accounts and cards
 

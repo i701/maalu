@@ -215,3 +215,32 @@ async def test_dashboard_order_is_a_setting_that_defaults_to_null_and_is_in_back
     assert (await client.get(ME, headers=auth)).json()["dashboard_order"] == ["latest", "spending"]
     res = await client.patch(ME, json={"dashboard_order": None}, headers=auth)
     assert res.json()["dashboard_order"] is None
+
+
+async def test_name_is_optional_trimmed_changeable_and_in_backups(client: AsyncClient, signup):
+    creds = {
+        "email": "named@example.com",
+        "password": "correct-horse-battery",
+        "base_currency": "MVR",
+        "name": "  Aidhaan  ",
+    }
+    assert (await client.post("/api/v1/auth/register", json=creds)).status_code == 201
+    login = await client.post(
+        "/api/v1/auth/login", data={"username": creds["email"], "password": creds["password"]}
+    )
+    named = {"Authorization": f"Bearer {login.json()['access_token']}"}
+    assert (await client.get(ME, headers=named)).json()["name"] == "Aidhaan"
+    # a blank name is no name, and an unrelated change leaves it alone
+    assert (await client.patch(ME, json={"compact_numbers": True}, headers=named)).json()[
+        "name"
+    ] == "Aidhaan"
+    assert (await client.patch(ME, json={"name": "  "}, headers=named)).json()["name"] is None
+    res = await client.patch(ME, json={"name": "Ali"}, headers=named)
+    assert res.json()["name"] == "Ali"
+    backup = (await client.get("/api/v1/backup", headers=named)).json()
+    assert backup["settings"]["name"] == "Ali"
+    # someone who gave none has none
+    other = await signup("anon@example.com")
+    assert (await client.get(ME, headers=other)).json()["name"] is None
+    # too long is refused
+    assert (await client.patch(ME, json={"name": "x" * 81}, headers=named)).status_code == 422

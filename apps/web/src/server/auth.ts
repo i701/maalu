@@ -15,6 +15,9 @@ export const codeField = z.string().trim().min(6, "Enter the code from your app"
  * sign-in step send it. */
 export const twoFactorCodeSchema = z.object({ code: codeField });
 
+/** What to call the person: optional, trimmed, as the sign-up form and the profile send it. */
+export const nameField = z.string().trim().max(80, "Use at most 80 characters");
+
 /** The sign-in form, which the page validates with too. */
 export const loginSchema = z.object({
 	email: z.email("Enter a valid email address"),
@@ -23,6 +26,7 @@ export const loginSchema = z.object({
 
 /** The sign-up form, which the page validates with too. */
 export const registerSchema = z.object({
+	name: nameField.optional(),
 	email: z.email("Enter a valid email address"),
 	password: z.string().min(8, "Use at least 8 characters").max(128),
 	base_currency: z
@@ -132,10 +136,11 @@ export const getSessionFn = createServerFn({ method: "GET" }).handler(async () =
 	return { user };
 });
 
-/** Change your settings. Only the fields sent change; `null` clears the default account. */
+/** Change your settings. Only the fields sent change; `null` clears the default account or the name. */
 export const updateMeFn = createServerFn({ method: "POST" })
 	.validator(
 		z.object({
+			name: nameField.nullable().optional(),
 			default_account_id: z.uuid().nullable().optional(),
 			start_from_template: z.boolean().optional(),
 			notify_payments: z.boolean().optional(),

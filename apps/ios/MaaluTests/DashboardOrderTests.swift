@@ -29,4 +29,11 @@ struct DashboardOrderTests {
         let profile = try Api.decoder.decode(Profile.self, from: Data(json.utf8))
         #expect(profile.dashboardOrder == ["latest", "metrics"])
     }
+
+    @Test func theProfileCarriesTheNameOrNone() throws {
+        let named = #"{"name":"Aidhaan","base_currency":"MVR","default_account_id":null,"compact_numbers":false,"dashboard_order":null}"#
+        #expect(try Api.decoder.decode(Profile.self, from: Data(named.utf8)).name == "Aidhaan")
+        let unnamed = #"{"name":null,"base_currency":"MVR","default_account_id":null,"compact_numbers":false,"dashboard_order":null}"#
+        #expect(try Api.decoder.decode(Profile.self, from: Data(unnamed.utf8)).name == nil)
+    }
 }

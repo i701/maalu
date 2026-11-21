@@ -35,7 +35,7 @@ function RegisterPage() {
 	const [pending, setPending] = useState(false);
 	const { control, handleSubmit } = useForm({
 		resolver: zodResolver(registerSchema),
-		defaultValues: { email: "", password: "", base_currency: "MVR" },
+		defaultValues: { name: "", email: "", password: "", base_currency: "MVR" },
 	});
 
 	async function submit(data: z.output<typeof registerSchema>) {
@@ -70,12 +70,19 @@ function RegisterPage() {
 			<Stack component="form" onSubmit={handleSubmit(submit)} noValidate spacing={2.5}>
 				<FormTextField
 					control={control}
+					name="name"
+					label="Name"
+					autoComplete="given-name"
+					helperText="Optional. What Maalu calls you."
+					autoFocus
+				/>
+				<FormTextField
+					control={control}
 					name="email"
 					label="Email"
 					type="email"
 					autoComplete="email"
 					required
-					autoFocus
 				/>
 				<FormTextField
 					control={control}

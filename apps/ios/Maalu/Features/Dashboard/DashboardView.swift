@@ -14,7 +14,7 @@ struct DashboardView: View {
             }
             .gradientHeader(.accentLime)
             .overlay { DashboardPlaceholder(model: model, retry: reloadNow) }
-            .navigationTitle("Dashboard")
+            .navigationTitle(model.name.map { String(localized: "Hi, \($0)") } ?? String(localized: "Dashboard"))
             .navigationSubtitle(Text(model.month.start, format: .dateTime.month(.wide).year()))
             .toolbar {
                 ToolbarItemGroup(placement: .primaryAction) {

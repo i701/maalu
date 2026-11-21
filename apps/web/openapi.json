@@ -8796,6 +8796,19 @@
             "title": "Email",
             "type": "string"
           },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What to call you; optional.",
+            "title": "Name"
+          },
           "password": {
             "maxLength": 128,
             "minLength": 8,
@@ -8863,6 +8876,18 @@
             "title": "Id",
             "type": "string"
           },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What to call you; null when not set.",
+            "title": "Name"
+          },
           "notify_budget": {
             "title": "Notify Budget",
             "type": "boolean"
@@ -8896,6 +8921,7 @@
         "required": [
           "id",
           "email",
+          "name",
           "base_currency",
           "default_account_id",
           "start_from_template",
@@ -8950,6 +8976,19 @@
             ],
             "description": "The account a new transaction starts in. Explicit null clears it.",
             "title": "Default Account Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What to call you. Explicit null or blank clears it.",
+            "title": "Name"
           },
           "notify_budget": {
             "default": true,
