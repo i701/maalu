@@ -32,7 +32,7 @@ struct AccountsSummarySection: View {
             }
         }
         .environment(\.deckIsFlat, true)
-        .padding(.horizontal, Spacing.card)
+        .padding(.horizontal, 6)
         .padding(.vertical, 8)
     }
 
