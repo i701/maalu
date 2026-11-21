@@ -2,9 +2,12 @@ import SwiftUI
 
 struct TransactionAccountSection: View {
     @Bindable var model: TransactionFormModel
+    @Environment(\.formType) private var formType
+
+    private var type: TransactionType { formType ?? model.draft.type }
 
     var body: some View {
-        if model.draft.type == .transfer {
+        if type == .transfer {
             Section {
                 TransferSlabs(model: model)
                     .listRowInsets(EdgeInsets())

@@ -2,15 +2,15 @@ import SwiftUI
 
 extension View {
     /// The app's header backdrop: a grainy sky blue in light mode and midnight blue in dark mode (the logo's colours), at the top of the page and fading downward into the page's own colour, so a white card on it has something to stand against.
-    /// `accent` is kept so callers still say which screen they are, but it no longer tints the backdrop; it colours buttons and forms through `accentTint`. `base` is the page's own colour; it fills the whole page, so the fade ends in exactly what is below it.
+    /// `accent` is kept so callers still say which screen they are, but it no longer tints the backdrop; it colours buttons and forms through `accentTint`. `height` is how tall the wash is (shorter fades to the page sooner, as on the transaction form, where the type bar sits on the pale end). `base` is the page's own colour; it fills the whole page, so the fade ends in exactly what is below it.
     /// Put it on a list or scroll view, which must not draw its own background.
-    func gradientHeader(_ accent: Color = .brand, base: Color = Color(.systemGroupedBackground)) -> some View {
+    func gradientHeader(_ accent: Color = .brand, base: Color = Color(.systemGroupedBackground), height: CGFloat = 560) -> some View {
         scrollContentBackground(.hidden)
             .background(alignment: .top) {
                 Image("HeaderWash")
                     .resizable()
                     .scaledToFill()
-                    .frame(height: 560, alignment: .top)
+                    .frame(height: height, alignment: .top)
                     .frame(maxWidth: .infinity)
                     .clipped()
                     .mask(LinearGradient(stops: [.init(color: .black, location: 0), .init(color: .black.opacity(0.55), location: 0.4), .init(color: .clear, location: 1)], startPoint: .top, endPoint: .bottom))

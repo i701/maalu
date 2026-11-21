@@ -2,6 +2,9 @@ import SwiftUI
 
 struct TransactionDetailsSection: View {
     @Bindable var model: TransactionFormModel
+    @Environment(\.formType) private var formType
+
+    private var type: TransactionType { formType ?? model.draft.type }
 
     var body: some View {
         Section {
@@ -18,7 +21,7 @@ struct TransactionDetailsSection: View {
                     Text(method.title).tag(method)
                 }
             }
-            if model.draft.type == .expense, !model.accountCards.isEmpty {
+            if type == .expense, !model.accountCards.isEmpty {
                 Picker("Card", selection: $model.draft.cardID) {
                     Text("None").tag(String?.none)
                     ForEach(model.accountCards) { card in

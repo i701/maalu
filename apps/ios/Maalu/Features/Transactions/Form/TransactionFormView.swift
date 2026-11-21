@@ -5,41 +5,72 @@ struct TransactionFormView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var model: TransactionFormModel
     @State private var isPickingTemplate = false
+    /// The page in view (the type), and how far the pages have scrolled, in pages, for the bar's pill.
+    @State private var position: TransactionType?
+    @State private var progress: Double
+    /// False until the pages have been scrolled to the draft's type: the scroll view first reports its first page, which must not overwrite the type.
+    @State private var isPositioned = false
+    /// The home indicator's height: the pages run to the screen edge, and the blur and the Save button keep clear of it.
+    @State private var bottomInset: CGFloat = 0
     @State private var isSavingTemplate = false
     private let onSaved: () -> Void
+    /// The rounded top of the container the fields sit in, under the fixed type bar.
+    private static let containerShape = UnevenRoundedRectangle(topLeadingRadius: 28, topTrailingRadius: 28, style: .continuous)
 
     init(editing transaction: Transaction? = nil, duplicating copy: Transaction? = nil, startingFrom template: TransactionTemplate? = nil, seed: TransactionDraft? = nil, onSaved: @escaping () -> Void) {
-        _model = State(initialValue: TransactionFormModel(editing: transaction, duplicating: copy, startingFrom: template, seed: seed))
+        let model = TransactionFormModel(editing: transaction, duplicating: copy, startingFrom: template, seed: seed)
+        _model = State(initialValue: model)
+        _position = State(initialValue: model.draft.type)
+        _progress = State(initialValue: Double(TransactionType.allCases.firstIndex(of: model.draft.type) ?? 0))
         self.onSaved = onSaved
     }
 
     var body: some View {
         NavigationStack {
-            Form {
-                TransactionTypeSection(model: model)
-                TransactionAccountSection(model: model)
-                if model.draft.type != .transfer {
-                    TransactionDetailsSection(model: model)
-                    TransactionItemsSection(model: model)
-                }
-                TransactionDateSection(model: model)
-                TransactionLocationSection(location: $model.draft.location)
-                if !model.isEditing {
-                    TransactionAttachmentsSection(model: model)
-                }
-                if let message = model.errorMessage {
-                    Text(message).foregroundStyle(.red)
-                }
-                if !model.isEditing {
-                    Section {
-                        Button("Save and Add Another", action: saveAndAddAnother).disabled(!model.canSave)
-                    } footer: {
-                        if model.savedCount > 0 {
-                            Text("Saved \(model.savedCount). Enter the next one.")
+            VStack(spacing: 0) {
+                // fixed above the pages: they scroll in their own container below and never pass behind the bar
+                TransactionTypePicker(progress: progress, onSelect: select)
+                    .padding(.horizontal, Spacing.screen)
+                    .padding(.bottom, 12)
+                ScrollViewReader { proxy in
+                ScrollView(.horizontal) {
+                    HStack(spacing: 0) {
+                        ForEach(TransactionType.allCases) { type in
+                            TransactionFormPage(model: model, type: type, bottomInset: bottomInset, onSaveAndAddAnother: saveAndAddAnother)
+                                .containerRelativeFrame(.horizontal)
+                                .id(type)
                         }
                     }
+                    .scrollTargetLayout()
+                }
+                .scrollPosition(id: $position)
+                .scrollTargetBehavior(.paging)
+                .scrollIndicators(.hidden)
+                .onScrollGeometryChange(for: Double.self) { $0.containerSize.width > 0 ? $0.contentOffset.x / $0.containerSize.width : 0 } action: { _, page in progress = page }
+                .overlay(alignment: .top) { EdgeBlur(edge: .top, height: 36) }
+                .overlay(alignment: .bottom) {
+                    ZStack(alignment: .bottom) {
+                        EdgeBlur(edge: .bottom, height: 110 + bottomInset)
+                        FloatingSaveButton(isSaving: model.isSaving, isEnabled: model.canSave, action: save)
+                            .padding(.bottom, bottomInset)
+                    }
+                }
+                .background(Color(.systemGroupedBackground), in: Self.containerShape)
+                .clipShape(Self.containerShape)
+                .task {
+                    // shortcut: a short wait lets the pages lay out before scrolling to the draft's page; breaks if layout ever takes longer, when the form would open on the first type
+                    try? await Task.sleep(for: .milliseconds(60))
+                    proxy.scrollTo(model.draft.type, anchor: .leading)
+                    try? await Task.sleep(for: .milliseconds(80))
+                    isPositioned = true
+                }
                 }
             }
+            .ignoresSafeArea(.container, edges: .bottom)
+            .onChange(of: position) { if isPositioned, let position { model.draft.type = position } }
+            .onChange(of: model.draft.type) { if position != model.draft.type { position = model.draft.type } }
+            .sensoryFeedback(.selection, trigger: position)
+            .gradientHeader(height: 320)
             .sensoryFeedback(.success, trigger: model.savedCount)
             .overlay { if model.isLoading { ProgressView() } }
             .saving(model.isSaving)
@@ -60,9 +91,6 @@ struct TransactionFormView: View {
                         }
                         .disabled(model.isSaving)
                     }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    SaveButton(isSaving: model.isSaving, isEnabled: model.canSave, action: save)
                 }
             }
             .sheet(isPresented: $isPickingTemplate) {
@@ -89,6 +117,7 @@ struct TransactionFormView: View {
             .onChange(of: model.draft.vendor) { model.vendorChanged() }
             .task { await load() }
         }
+        .onGeometryChange(for: CGFloat.self) { $0.safeAreaInsets.bottom } action: { bottomInset = $0 }
     }
 
     /// The category of one item, by its id, for the picker.
@@ -100,6 +129,11 @@ struct TransactionFormView: View {
                 model.draft.items[index].category = name
             }
         )
+    }
+
+    /// A tap on a label scrolls the pages to that type.
+    private func select(_ type: TransactionType) {
+        withAnimation(.smooth(duration: 0.35)) { position = type }
     }
 
     private func load() async {
