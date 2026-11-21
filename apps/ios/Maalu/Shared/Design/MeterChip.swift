@@ -1,10 +1,11 @@
 import SwiftUI
 
-/// A category's chip under the meter: its colour and name. Tap it to hold that piece, tap again to let go.
-struct SpendingMeterChip: View {
-    let row: SpendingRow
-    let rank: Int
-    let currency: String
+/// A legend chip under a meter or chart: a colour and a name. Tap it to hold that category, tap again to let go.
+struct MeterChip: View {
+    let name: String
+    let color: Color
+    /// What VoiceOver adds after the name: the amount and share.
+    let value: String
     let isOn: Bool
     let action: () -> Void
 
@@ -12,9 +13,9 @@ struct SpendingMeterChip: View {
         Button(action: action) {
             HStack(spacing: 8) {
                 RoundedRectangle(cornerRadius: 2, style: .continuous)
-                    .fill(MeterPalette.color(rank: rank, isRemainder: row.isOther))
+                    .fill(color)
                     .frame(width: 8, height: 8)
-                Text(row.name)
+                Text(name)
                     .font(.footnote)
                     .lineLimit(1)
             }
@@ -24,8 +25,8 @@ struct SpendingMeterChip: View {
             .scaleEffect(isOn ? 0.975 : 1)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(row.name)
-        .accessibilityValue("\(row.total.formatted(.currency(code: currency))), \(row.share.formatted(.percent.precision(.fractionLength(0))))")
+        .accessibilityLabel(name)
+        .accessibilityValue(value)
         .accessibilityAddTraits(isOn ? .isSelected : [])
     }
 }

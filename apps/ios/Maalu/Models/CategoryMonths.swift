@@ -2,6 +2,8 @@ import Foundation
 
 /// Income and expense per category for each calendar month, in the base currency: the category totals split by month.
 struct CategoryMonths: Decodable {
+    static let empty = CategoryMonths(currency: "", months: [], categories: [])
+
     let currency: String
     /// Every month in the range, oldest first, as `2026-03`.
     let months: [String]

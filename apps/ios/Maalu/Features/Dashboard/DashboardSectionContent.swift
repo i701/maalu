@@ -13,6 +13,8 @@ struct DashboardSectionContent: View {
             if let totals = model.totals { MonthSummarySection(totals: totals, previous: model.previousTotals) }
         case .spending:
             SpendingSection(rows: model.spendingRows, currency: model.currency)
+        case .spendingTrend:
+            if let months = model.categoryMonths { SpendingTrendSection(categoryMonths: months) }
         case .balance:
             if let summary = model.summary { NetWorthSection(summary: summary, trend: model.trend) }
         case .monthly:

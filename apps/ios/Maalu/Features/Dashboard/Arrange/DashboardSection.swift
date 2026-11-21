@@ -1,10 +1,11 @@
 import Foundation
 
-/// A card on the dashboard. The ids are the web's, so one saved order (`users.dashboard_order`) arranges both; `incomeRule` is iOS only.
+/// A card on the dashboard. The ids are the web's, so one saved order (`users.dashboard_order`) arranges both; `incomeRule` and `spendingTrend` are iOS only.
 enum DashboardSection: String, CaseIterable, Identifiable {
     case available
     case metrics
     case spending
+    case spendingTrend = "spending-trend"
     case balance
     case monthly
     case budget
@@ -22,6 +23,7 @@ enum DashboardSection: String, CaseIterable, Identifiable {
         case .available: "Available to spend"
         case .metrics: "Income, spent and saved"
         case .spending: "Spending by category"
+        case .spendingTrend: "Spending by month"
         case .balance: "Net worth"
         case .monthly: "Month by month"
         case .budget: "Budget and goals"

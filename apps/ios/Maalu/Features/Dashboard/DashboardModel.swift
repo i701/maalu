@@ -8,6 +8,7 @@ final class DashboardModel {
     private(set) var totals: TransactionTotals?
     private(set) var previousTotals: TransactionTotals?
     private(set) var categories: [CategoryTotal] = []
+    private(set) var categoryMonths: CategoryMonths?
     private(set) var summary: AccountSummary?
     private(set) var trend: [BalancePoint] = []
     private(set) var months: [MonthlyPoint] = []
@@ -52,6 +53,7 @@ final class DashboardModel {
             case .available: isCurrentMonth && available != nil
             case .metrics: totals != nil
             case .spending: !spendingRows.isEmpty
+            case .spendingTrend: SpendingStack.make(from: categoryMonths ?? CategoryMonths.empty, last: Self.monthsLoaded) != nil
             case .balance: summary != nil
             case .monthly: !months.isEmpty
             case .budget: budget?.isEmpty == false || !goals.isEmpty
@@ -98,6 +100,10 @@ final class DashboardModel {
         async let totalsResult: ApiResult<TransactionTotals> = api.get("transactions/summary", query: range(current))
         async let previousResult: ApiResult<TransactionTotals> = api.get("transactions/summary", query: range(previous))
         async let categoriesResult: ApiResult<CategoryTotals> = api.get("transactions/categories", query: range(current))
+        async let categoryMonthsResult: ApiResult<CategoryMonths> = api.get("transactions/categories/monthly", query: [
+            URLQueryItem(name: "date_from", value: ISODate.string(current.shifted(by: 1 - Self.monthsLoaded).start)),
+            URLQueryItem(name: "date_to", value: ISODate.string(current.end)),
+        ])
         async let availableResult: ApiResult<AvailableToSpend> = api.get("stats/available-to-spend")
         async let summaryResult: ApiResult<AccountSummary> = api.get("accounts/summary")
         async let trendResult: ApiResult<BalanceTrend> = api.get("stats/balance-trend", query: [
@@ -126,12 +132,14 @@ final class DashboardModel {
         let (summary, trend, months, budget) = await (summaryResult, trendResult, monthsResult, budgetResult)
         let (goals, latest, upcoming, accounts) = await (goalsResult, latestResult, upcomingResult, accountsResult)
         let profile = await profileResult
+        let categoryMonths = await categoryMonthsResult
         guard !Task.isCancelled else { return }
         isLoading = false
 
         self.totals = value(totals)
         self.previousTotals = value(previousTotals)
         self.categories = value(categories)?.categories ?? []
+        self.categoryMonths = value(categoryMonths)
         self.available = value(available)
         self.summary = value(summary)
         self.trend = value(trend)?.points ?? []

@@ -1619,6 +1619,31 @@
       ]
     },
     {
+      "id": "dashboard-spending-trend",
+      "area": "reports",
+      "name": "Spending by month, stacked by category",
+      "summary": "A Dashboard card of spending per month for the last 6 or 12 months, stacked by the biggest categories; press along the bars to pick a month, hold a category to follow it.",
+      "web": {
+        "status": "missing"
+      },
+      "android": {
+        "status": "missing"
+      },
+      "ios": {
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Dashboard/Trend/SpendingTrendSection.swift",
+          "apps/ios/Maalu/Features/Dashboard/Trend/SpendingStack.swift"
+        ]
+      },
+      "routes": [
+        "/dashboard"
+      ],
+      "api": [
+        "/api/v1/transactions/categories/monthly"
+      ]
+    },
+    {
       "id": "dashboard-order",
       "area": "reports",
       "name": "Arrange the dashboard",
