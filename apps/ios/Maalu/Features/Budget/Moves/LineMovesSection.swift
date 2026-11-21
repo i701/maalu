@@ -8,7 +8,7 @@ struct LineMovesSection: View {
     let onUndo: (String) -> Void
 
     var body: some View {
-        Section("Money moved this period") {
+        CardSection {
             ForEach(moves) { move in
                 AmountRow {
                     VStack(alignment: .leading) {
@@ -29,6 +29,8 @@ struct LineMovesSection: View {
             } label: {
                 Label("History", systemImage: "clock.arrow.circlepath")
             }
+        } header: {
+            SectionTitle("Money moved this period")
         }
     }
 }

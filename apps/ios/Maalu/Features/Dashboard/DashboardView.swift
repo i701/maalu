@@ -7,14 +7,10 @@ struct DashboardView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                LazyVStack(spacing: 24) {
-                    ForEach(model.orderedSections) { section in
-                        DashboardSectionContent(section: section, model: model)
-                    }
+            CardPage {
+                ForEach(model.orderedSections) { section in
+                    DashboardSectionContent(section: section, model: model)
                 }
-                .padding(.horizontal, Spacing.screen)
-                .padding(.vertical, 8)
             }
             .gradientHeader(.accentLime)
             .overlay { DashboardPlaceholder(model: model, retry: reloadNow) }

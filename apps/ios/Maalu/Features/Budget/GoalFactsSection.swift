@@ -4,7 +4,7 @@ struct GoalFactsSection: View {
     let goal: Goal
 
     var body: some View {
-        Section {
+        CardSection {
             if let account = goal.account {
                 LabeledContent("Follows", value: account.name)
             }
@@ -17,10 +17,12 @@ struct GoalFactsSection: View {
             if let date = goal.targetDate {
                 LabeledContent("Target date", value: BudgetText.shortDate(date))
             }
-        } footer: {
-            if goal.account != nil {
-                Text("This goal follows an account: its balance is what you have saved.")
-            }
+        }
+        if goal.account != nil {
+            Text("This goal follows an account: its balance is what you have saved.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, Spacing.card)
         }
     }
 }

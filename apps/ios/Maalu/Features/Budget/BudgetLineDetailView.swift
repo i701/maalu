@@ -11,8 +11,8 @@ struct BudgetLineDetailView: View {
 
     var body: some View {
         if let line = model.line(id: id), let budget = model.budget {
-            List {
-                Section { BudgetLineRow(line: line, currency: budget.currency) }
+            CardPage(elevation: 0) {
+                CardSection { BudgetLineRow(line: line, currency: budget.currency) }
                 BudgetLineFactsSection(line: line, currency: budget.currency)
                 LineMovesSection(
                     moves: model.moves(for: id),

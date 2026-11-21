@@ -5,7 +5,7 @@ struct FixedBudgetLineFactsSection: View {
     let currency: String
 
     var body: some View {
-        Section {
+        CardSection {
             AmountRow { Text("Limit for these dates") } amount: { MoneyText(line.amount, currency: currency) }
             AmountRow { Text("Spent") } amount: { MoneyText(line.activity, currency: currency) }
             LabeledContent("From", value: day(line.startDate))
@@ -13,9 +13,11 @@ struct FixedBudgetLineFactsSection: View {
             LabeledContent("Categories", value: line.categories.map(\.name).formatted())
             if let warnPercent = line.warnPercent { LabeledContent("Warns at", value: (Double(warnPercent) / 100).formatted(.percent)) }
             if let kind = line.kind { LabeledContent("Kind", value: kind == "need" ? String(localized: "Need") : String(localized: "Want")) }
-        } footer: {
-            Text("One total for the whole stretch, counted once, not per month.")
         }
+        Text("One total for the whole stretch, counted once, not per month.")
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, Spacing.card)
     }
 
     private func day(_ iso: String) -> String {

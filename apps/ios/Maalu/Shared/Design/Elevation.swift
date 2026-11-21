@@ -5,10 +5,21 @@ import SwiftUI
 /// alone, 3 a card, 5 a popover. Draw it behind a card that already has its own fill.
 struct Elevation: ViewModifier {
     @Environment(\.colorScheme) private var scheme
-    let level: Int
+    /// Between two whole levels the layer of the higher one is drawn at that fraction of its strength.
+    let level: Double
     let cornerRadius: CGFloat
 
+    /// A card that is all but flat in light mode (the hairline and a 1pt shadow at half strength). Dark mode rounds it up to level 1, where a hairline alone would not lift it off the page.
+    static let soft = 0.5
+
     private static let offsets: [CGFloat] = [1, 3, 6, 12, 24, 48]
+
+    /// Dark mode has no half steps (the soft level becomes 1), and draws level 2 as level 1; higher levels stay as they are.
+    private var drawn: Double {
+        guard scheme == .dark else { return level }
+        let whole = level.rounded(.up)
+        return whole == 2 ? 1 : whole
+    }
 
     func body(content: Content) -> some View {
         content
@@ -18,11 +29,14 @@ struct Elevation: ViewModifier {
                 RoundedRectangle(cornerRadius: cornerRadius + 1, style: .continuous)
                     .fill(ring)
                     .padding(-1)
-                ForEach(Self.offsets.prefix(min(max(level, 0), Self.offsets.count)), id: \.self) { offset in
-                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .inset(by: offset / 2)
-                        .fill(Color.white)
-                        .shadow(color: drop, radius: offset / 2, y: offset)
+                ForEach(Array(Self.offsets.enumerated()), id: \.offset) { index, offset in
+                    let strength = min(max(drawn - Double(index), 0), 1)
+                    if strength > 0 {
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                            .inset(by: offset / 2)
+                            .fill(Color.white)
+                            .shadow(color: drop.opacity(strength), radius: offset / 2, y: offset)
+                    }
                 }
             }
         }
@@ -31,7 +45,7 @@ struct Elevation: ViewModifier {
     /// Dark mode paints light instead of shadow (the CSS "inset" layers): a 1px ring all round and a brighter edge at the top, both stronger
     /// the higher the card sits. Black drops cannot show on a near-black page, this is what lifts the card.
     private var insetLight: some View {
-        let i = min(max(level, 0), Self.highlight.count - 1)
+        let i = min(max(Int(drawn), 0), Self.highlight.count - 1)
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
         return ZStack {
             shape.strokeBorder(.white.opacity(Self.insetRing[i]), lineWidth: 1)
@@ -53,7 +67,7 @@ struct Elevation: ViewModifier {
 }
 
 extension View {
-    func elevation(_ level: Int, cornerRadius: CGFloat = Radius.card) -> some View {
+    func elevation(_ level: Double, cornerRadius: CGFloat = Radius.card) -> some View {
         modifier(Elevation(level: level, cornerRadius: cornerRadius))
     }
 }

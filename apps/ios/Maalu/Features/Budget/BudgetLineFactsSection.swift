@@ -5,7 +5,7 @@ struct BudgetLineFactsSection: View {
     let currency: String
 
     var body: some View {
-        Section {
+        CardSection {
             LabeledContent("Limit", value: MoneyFormat.string(line.amount, currency: currency))
             if let carried = nonZero(line.carried) { LabeledContent("Carried in", value: MoneyFormat.string(carried, currency: currency)) }
             if let movedIn = nonZero(line.movedIn) { LabeledContent("Moved in", value: MoneyFormat.string(movedIn, currency: currency)) }

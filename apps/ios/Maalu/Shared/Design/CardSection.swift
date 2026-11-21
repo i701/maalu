@@ -23,7 +23,7 @@ struct CardSection<Content: View, Header: View>: View {
                     }
                 }
             }
-            .card(elevation: 2)
+            .card()
         }
     }
 }

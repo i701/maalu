@@ -11,15 +11,17 @@ struct FixedBudgetLineDetailView: View {
 
     var body: some View {
         if let line = model.fixedLine(id: id), let budget = model.budget {
-            List {
-                Section { FixedBudgetLineRow(line: line, currency: budget.currency) }
+            CardPage(elevation: 0) {
+                CardSection { FixedBudgetLineRow(line: line, currency: budget.currency) }
                 FixedBudgetLineFactsSection(line: line, currency: budget.currency)
                 if line.state != "upcoming" {
-                    Section {
+                    CardSection {
                         Button("Repeat for the Next Stretch", systemImage: "arrow.clockwise") { sheet = .repeatNext(line) }
-                    } footer: {
-                        Text("A new limit with the same categories and amount, starting the day after this one ends and as long.")
                     }
+                    Text("A new limit with the same categories and amount, starting the day after this one ends and as long.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, Spacing.card)
                 }
             }
             .gradientHeader(.accentAmber)

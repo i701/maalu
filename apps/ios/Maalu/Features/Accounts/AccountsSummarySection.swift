@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// What you are worth: the net figure large, and what you own against what you owe as one bar, on a card with the same shadow as the Dashboard's. No side inset: the list has already inset its sections, so the card is as wide as they are.
+/// What you are worth: the net figure large, and what you own against what you owe as one bar, on a card with the same shadow as the Dashboard's.
 struct AccountsSummarySection: View {
     let summary: AccountSummary
 
@@ -23,9 +23,6 @@ struct AccountsSummarySection: View {
         }
         .padding(Spacing.card)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .card(elevation: 2)
-        .listRowBackground(Color.clear)
-        .listRowSeparator(.hidden)
-        .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 12, trailing: 0))
+        .card()
     }
 }

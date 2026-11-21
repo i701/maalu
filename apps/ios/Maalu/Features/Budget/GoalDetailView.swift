@@ -11,13 +11,12 @@ struct GoalDetailView: View {
 
     var body: some View {
         if let goal = model.goal(id: id) {
-            List {
-                Section { GoalRow(goal: goal) }
+            CardPage(elevation: 0) {
+                CardSection { GoalRow(goal: goal) }
                 GoalFactsSection(goal: goal)
                 if goal.account == nil {
-                    Section {
+                    CardSection {
                         Button("Add or take out money", systemImage: "plusminus") { sheet = .money(goal) }
-                            .buttonStyle(.borderless)
                     }
                 }
             }

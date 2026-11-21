@@ -7,7 +7,7 @@ struct AccountsView: View {
 
     var body: some View {
         NavigationStack {
-            List {
+            CardPage {
                 if let message = model.errorMessage {
                     Text(message).foregroundStyle(.red)
                 }
@@ -15,12 +15,14 @@ struct AccountsView: View {
                     AccountsSummarySection(summary: summary)
                 }
                 ForEach(model.sections) { section in
-                    Section(section.title) {
+                    CardSection {
                         ForEach(section.accounts) { account in
-                            NavigationLink(value: AccountRoute(id: account.id)) {
+                            CardLink(value: AccountRoute(id: account.id)) {
                                 AccountRow(account: account, trend: model.trends[account.id], statement: model.statements[account.id])
                             }
                         }
+                    } header: {
+                        SectionTitle(verbatim: section.title)
                     }
                 }
             }
