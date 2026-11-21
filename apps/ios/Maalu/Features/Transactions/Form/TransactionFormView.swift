@@ -117,7 +117,8 @@ struct TransactionFormView: View {
             .onChange(of: model.draft.vendor) { model.vendorChanged() }
             .task { await load() }
         }
-        .onGeometryChange(for: CGFloat.self) { $0.safeAreaInsets.bottom } action: { bottomInset = $0 }
+        // shortcut: an inset over 50pt is the keyboard, not the home indicator (34pt at most); then the container ends at the keyboard and needs no inset. Breaks if a device ever has a taller indicator.
+        .onGeometryChange(for: CGFloat.self) { $0.safeAreaInsets.bottom > 50 ? 0 : $0.safeAreaInsets.bottom } action: { bottomInset = $0 }
     }
 
     /// The category of one item, by its id, for the picker.
