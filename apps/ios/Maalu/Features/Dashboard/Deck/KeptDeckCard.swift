@@ -24,22 +24,11 @@ struct KeptDeckCard: View {
                 Spacer(minLength: 4)
                 DeckIncomeBar(income: totals.incomeValue, spent: totals.expenseValue)
                 HStack(alignment: .top) {
-                    legend("Income", totals.incomeValue)
+                    DeckLegend(title: "Income", amount: totals.incomeValue, currency: totals.currency)
                     Spacer()
-                    legend("Spent", totals.expenseValue)
+                    DeckLegend(title: "Spent", amount: totals.expenseValue, currency: totals.currency)
                 }
             }
-        }
-    }
-
-    private func legend(_ title: LocalizedStringKey, _ amount: Decimal) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(title)
-                .font(.footnote)
-                .opacity(0.8)
-            MoneyText(amount, currency: totals.currency)
-                .font(.headline)
-                .allowsHitTesting(false)
         }
     }
 }
