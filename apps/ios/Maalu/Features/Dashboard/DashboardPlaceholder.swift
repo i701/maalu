@@ -17,6 +17,12 @@ struct DashboardPlaceholder: View {
                     Button("Try again", action: retry)
                 }
             }
+        } else if model.orderedSections.isEmpty {
+            ContentUnavailableView(
+                "Every card is switched off",
+                systemImage: "eye.slash",
+                description: Text("Switch some back on from the menu, under Arrange the dashboard.")
+            )
         }
     }
 }

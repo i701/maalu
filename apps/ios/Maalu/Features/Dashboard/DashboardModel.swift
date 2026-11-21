@@ -19,11 +19,21 @@ final class DashboardModel {
     private(set) var currency = ""
     /// The order the person saved, or nil for the default one.
     private(set) var savedOrder: [String]?
+    /// The cards switched off. Kept on this device, not on the server, so the web and Android do not know them yet.
+    private(set) var hidden: Set<DashboardSection>
     private(set) var isLoading = true
     private(set) var errorMessage: String?
 
     static let monthsLoaded = 12
     private static let previewCount = 5
+    private static let hiddenKey = "dashboardHiddenSections"
+
+    @ObservationIgnored private let defaults: UserDefaults
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        hidden = Set((defaults.stringArray(forKey: Self.hiddenKey) ?? []).compactMap(DashboardSection.init(rawValue:)))
+    }
 
     var hasContent: Bool { totals != nil || summary != nil || !months.isEmpty }
     var isCurrentMonth: Bool { month.isCurrent() }
@@ -52,17 +62,28 @@ final class DashboardModel {
         }
     }
 
-    var orderedSections: [DashboardSection] {
+    /// Every card that has something to show, in the saved order, the switched-off ones too: what the arrange sheet lists.
+    var arrangeableSections: [DashboardSection] {
         DashboardSection.ordered(saved: savedOrder, visible: shownSections)
     }
 
-    /// Saves the order (nil goes back to the default one). Returns a message when the server refused.
-    func saveOrder(_ order: [DashboardSection]?, using api: Api) async -> String? {
+    var orderedSections: [DashboardSection] {
+        arrangeableSections.filter { !hidden.contains($0) }
+    }
+
+    /// Saves the order (nil goes back to the default one) and which cards are switched off. Returns a message when the server refused the order.
+    func saveLayout(order: [DashboardSection]?, hidden: Set<DashboardSection>, using api: Api) async -> String? {
         let ids = order?.map(\.rawValue)
         let result: ApiResult<Profile> = await api.patchJSON("users/me", body: ["dashboard_order": ids])
         if case .failed(_, let message) = result { return message }
         savedOrder = ids
+        setHidden(hidden)
         return nil
+    }
+
+    func setHidden(_ sections: Set<DashboardSection>) {
+        hidden = sections
+        defaults.set(sections.map(\.rawValue).sorted(), forKey: Self.hiddenKey)
     }
 
     func move(by months: Int) {

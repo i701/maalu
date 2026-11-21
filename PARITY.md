@@ -9,17 +9,22 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 70 | 59 | 60 |
+| ✅ done | 70 | 59 | 61 |
 | 🟡 partial | 0 | 1 | 0 |
-| ❌ missing | 0 | 6 | 5 |
+| ❌ missing | 1 | 7 | 5 |
 | ➖ n/a | 1 | 5 | 6 |
 
-## Still to build on Android (7)
+## Still to build on Web (1)
+
+- ❌ **Hide dashboard cards** (Dashboard and reports).
+
+## Still to build on Android (8)
 
 - 🟡 **Email digest** (Notifications). The switch and the email status are in Settings; sending a test email is not.
 - ❌ **Quiet list and detail sheet** (Transactions).
 - ❌ **Export to Excel** (Transactions).
 - ❌ **Arrange the dashboard** (Dashboard and reports).
+- ❌ **Hide dashboard cards** (Dashboard and reports).
 - ❌ **Money flow by group** (Dashboard and reports).
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
@@ -126,6 +131,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 |---|:---:|:---:|:---:|
 | **Dashboard**<br>Available to spend, the month strip, spending by category, net worth, cash flow, budget and goals, coming up and latest. | ✅ done | ✅ done | ✅ done |
 | **Arrange the dashboard**<br>Drag the dashboard's cards, or move them with arrows, into your own order; kept on the server. | ✅ done | ❌ missing | ✅ done |
+| **Hide dashboard cards**<br>Switch off the dashboard cards you do not want, from the arrange sheet. Kept on the device for now, not on the server, so no API change. | ❌ missing | ❌ missing | ✅ done |
 | **Budget and goals card**<br>Per-period limits and goals with a meter, and the running limits for set dates. | ✅ done | ✅ done | ✅ done |
 | **Needs and wants, and 50/30/20**<br>Spending split by kind, and the shares of income against the 50/30/20 rule. | ✅ done | ✅ done | ✅ done |
 | **Money flow**<br>A Sankey of income into one total and out to spending and what was saved. | ✅ done | ✅ done | ✅ done |

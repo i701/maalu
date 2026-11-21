@@ -39,7 +39,7 @@ struct DashboardView: View {
                 }
             }
             .sheet(isPresented: $isArranging) {
-                DashboardArrangeView(sections: model.orderedSections, defaults: model.shownSections, onSave: saveOrder)
+                DashboardArrangeView(sections: model.arrangeableSections, defaults: model.shownSections, hidden: model.hidden, onSave: saveLayout)
             }
             .refreshable { await load() }
             .task(id: model.month) { await load() }
@@ -51,9 +51,9 @@ struct DashboardView: View {
         await model.load(using: api)
     }
 
-    private func saveOrder(_ order: [DashboardSection]?) async -> String? {
+    private func saveLayout(_ order: [DashboardSection]?, hidden: Set<DashboardSection>) async -> String? {
         guard let api = session.api else { return nil }
-        return await model.saveOrder(order, using: api)
+        return await model.saveLayout(order: order, hidden: hidden, using: api)
     }
 
     private func previousMonth() {

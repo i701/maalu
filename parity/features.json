@@ -753,7 +753,7 @@
         "evidence": [
           "apps/ios/Maalu/Features/Transactions/Selection/TransactionSelection.swift",
           "apps/ios/Maalu/Features/Transactions/Selection/BulkEditView.swift",
-          "apps/ios/Maalu/Features/Transactions/Selection/TransactionSelectionToolbar.swift"
+          "apps/ios/Maalu/Features/Transactions/Selection/TransactionSelectionMenu.swift"
         ]
       },
       "api": [
@@ -822,7 +822,7 @@
         "status": "done",
         "evidence": [
           "apps/ios/Maalu/Features/Transactions/Form/TransactionDateSection.swift",
-          "apps/ios/Maalu/Features/Transactions/Filters/TransactionTypeMenu.swift",
+          "apps/ios/Maalu/Features/Transactions/Search/TransactionTypeChips.swift",
           "apps/ios/Maalu/Features/Plan/MarkPaid/MarkPaidDialog.swift"
         ]
       },
@@ -1614,6 +1614,29 @@
       "api": [
         "/api/v1/users/me"
       ]
+    },
+    {
+      "id": "dashboard-hide-cards",
+      "area": "reports",
+      "name": "Hide dashboard cards",
+      "summary": "Switch off the dashboard cards you do not want, from the arrange sheet. Kept on the device for now, not on the server, so no API change.",
+      "web": {
+        "status": "missing"
+      },
+      "android": {
+        "status": "missing"
+      },
+      "ios": {
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Dashboard/Arrange/DashboardArrangeView.swift",
+          "apps/ios/Maalu/Features/Dashboard/DashboardModel.swift"
+        ]
+      },
+      "routes": [
+        "/dashboard"
+      ],
+      "api": []
     },
     {
       "id": "dashboard-budget-goals",
