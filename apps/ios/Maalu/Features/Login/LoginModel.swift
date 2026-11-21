@@ -10,6 +10,10 @@ final class LoginModel {
     private(set) var usesRecoveryCode = false
     private(set) var challenge: String?
     private(set) var isBusy = false
+    /// The code was accepted: the code field shows it for a moment before the app opens.
+    private(set) var isVerified = false
+    /// How many wrong codes there have been, for the code field to shiver at each.
+    private(set) var codeFailures = 0
     private(set) var errorMessage: String?
 
     /// What the API says when the five-minute challenge ran out or is no good.
@@ -38,7 +42,14 @@ final class LoginModel {
         isBusy = false
         switch result {
         case .ok(let token, _):
-            if let accessToken = received(token) { session.signedIn(token: accessToken) }
+            let wasSecondStep = challenge != nil
+            if let accessToken = received(token) {
+                if wasSecondStep && !usesRecoveryCode {
+                    isVerified = true
+                    try? await Task.sleep(for: .milliseconds(1100))
+                }
+                session.signedIn(token: accessToken)
+            }
         case .failed(_, let message):
             failed(with: message)
         }
@@ -59,6 +70,7 @@ final class LoginModel {
         if needsCode && message == Self.expired {
             backToPassword(saying: String(localized: "That sign-in timed out. Start again."))
         } else {
+            if needsCode { codeFailures += 1 }
             errorMessage = message
         }
     }
@@ -74,6 +86,7 @@ final class LoginModel {
         challenge = nil
         code = ""
         usesRecoveryCode = false
+        isVerified = false
         errorMessage = message
     }
 }

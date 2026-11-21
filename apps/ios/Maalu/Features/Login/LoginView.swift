@@ -5,35 +5,45 @@ struct LoginView: View {
     @State private var model = LoginModel()
 
     var body: some View {
-        NavigationStack {
-            Form {
+        ScrollView {
+            VStack(spacing: 24) {
+                AuthHeader()
                 if model.needsCode {
-                    TwoFactorCodeSection(model: model)
+                    TwoFactorCodeSection(model: model, onComplete: submit)
                 } else {
-                    Section("Sign in to \(session.server ?? "")") {
-                        TextField("Email", text: $model.email)
-                            .textContentType(.username)
-                            .textInputAutocapitalization(.never)
-                            .keyboardType(.emailAddress)
-                            .autocorrectionDisabled()
-                        SecureField("Password", text: $model.password)
-                            .textContentType(.password)
-                    }
+                    LoginFieldsCard(model: model, server: session.server ?? "")
                 }
                 if let message = model.errorMessage {
-                    Text(message).foregroundStyle(.red)
+                    Text(message)
+                        .font(.callout)
+                        .foregroundStyle(.red)
+                        .multilineTextAlignment(.center)
                 }
-                Button(submitTitle, action: submit)
+                if !(model.needsCode && !model.usesRecoveryCode) {
+                    Button(action: submit) {
+                        Text(submitTitle).font(.body.weight(.semibold)).frame(maxWidth: .infinity, minHeight: 46)
+                    }
+                    .buttonStyle(.glassProminent)
+                    .tint(.brand)
+                    .padding(.horizontal, 12)
                     .disabled(!model.canSubmit)
+                }
                 if model.needsCode {
                     Button(model.usesRecoveryCode ? "Use my authenticator app" : "Use a recovery code instead", action: model.switchCodeKind)
-                    Button("Back to sign in", action: back)
+                    Button("Back to sign in") { model.backToPassword() }
                 } else {
-                    Button("Use a different server", role: .destructive, action: session.clearServer)
+                    Button("Use a different server", action: session.clearServer)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
                 }
             }
-            .navigationTitle("Maalu")
+            .padding(.horizontal, Spacing.screen)
+            .padding(.bottom, 32)
+            .frame(maxWidth: .infinity)
         }
+        .scrollDismissesKeyboard(.interactively)
+        .gradientHeader()
+        .tint(.brand)
     }
 
     private var submitTitle: LocalizedStringKey {
@@ -43,9 +53,5 @@ struct LoginView: View {
 
     private func submit() {
         Task { await model.submit(using: session) }
-    }
-
-    private func back() {
-        model.backToPassword()
     }
 }

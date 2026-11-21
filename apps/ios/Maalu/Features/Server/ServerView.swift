@@ -5,25 +5,44 @@ struct ServerView: View {
     @State private var model = ServerModel()
 
     var body: some View {
-        Form {
-            Section {
-                TextField("maalu.example.com", text: $model.address)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .keyboardType(.URL)
-            } header: {
-                Text("Your Maalu server")
-            } footer: {
-                if let message = model.errorMessage {
-                    Text(message).foregroundStyle(.red)
-                } else {
-                    Text("The address you open Maalu at in a browser.")
+        ScrollView {
+            VStack(spacing: 24) {
+                AuthHeader()
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Your Maalu server")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                    TextField("maalu.example.com", text: $model.address)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .keyboardType(.URL)
+                        .padding(Spacing.card)
+                        .card()
+                    if let message = model.errorMessage {
+                        Text(message).font(.footnote).foregroundStyle(.red)
+                    } else {
+                        Text("The address you open Maalu at in a browser.")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
                 }
-            }
-            Button(model.isChecking ? "Checking…" : "Continue", action: connect)
+                Button(action: connect) {
+                    Text(model.isChecking ? "Checking…" : "Continue")
+                        .font(.body.weight(.semibold))
+                        .frame(maxWidth: .infinity, minHeight: 46)
+                }
+                .buttonStyle(.glassProminent)
+                .tint(.brand)
+                .padding(.horizontal, 12)
                 .disabled(!model.canConnect)
+            }
+            .padding(.horizontal, Spacing.screen)
+            .padding(.bottom, 32)
+            .frame(maxWidth: .infinity)
         }
-        .navigationTitle("Maalu")
+        .scrollDismissesKeyboard(.interactively)
+        .gradientHeader()
+        .tint(.brand)
     }
 
     private func connect() {
