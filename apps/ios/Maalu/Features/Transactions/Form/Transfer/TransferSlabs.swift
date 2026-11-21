@@ -31,6 +31,8 @@ struct TransferSlabs: View {
                 amount(index)
             }
             .opacity(isOpen ? 0 : 1)
+            // the face is gone before the list appears, and back only after the list has gone, so the two never show at once
+            .animation(isOpen ? .easeOut(duration: 0.1) : .easeIn(duration: 0.16).delay(0.14), value: isOpen)
             .allowsHitTesting(!isOpen && picking == nil)
             if isOpen {
                 TransferAccountList(
@@ -40,12 +42,13 @@ struct TransferSlabs: View {
                     onPick: { choose($0, slot: index) },
                     onClose: close
                 )
-                .transition(.opacity.animation(.easeOut(duration: 0.18).delay(0.1)))
+                .transition(.asymmetric(insertion: .opacity.animation(.easeOut(duration: 0.18).delay(0.14)), removal: .opacity.animation(.easeOut(duration: 0.1))))
             }
         }
         .frame(maxWidth: .infinity)
+        .modifier(TransferSlabGrowth(index: index, radius: shapeRadius, progress: isOpen ? 1 : 0))
         .card(radius: shapeRadius)
-        .modifier(TransferSlabGrowth(index: index, progress: isOpen ? 1 : 0))
+        .modifier(TransferSlabOffset(index: index, progress: isOpen ? 1 : 0))
         .opacity(isSqueezed ? 0 : 1)
         .zIndex(isOpen ? 3 : 1)
         .accessibilityElement(children: .contain)
