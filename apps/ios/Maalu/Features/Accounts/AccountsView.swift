@@ -12,7 +12,7 @@ struct AccountsView: View {
                     Text(message).foregroundStyle(.red)
                 }
                 if let summary = model.summary, !model.showsArchived, !model.accounts.isEmpty {
-                    AccountsSummarySection(summary: summary)
+                    AccountsSummarySection(summary: summary, accounts: model.accounts)
                 }
                 ForEach(model.sections) { section in
                     CardSection {

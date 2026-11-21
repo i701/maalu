@@ -4,19 +4,17 @@ struct DashboardView: View {
     @Environment(Session.self) private var session
     @State private var model = DashboardModel()
     @State private var isArranging = false
-    @State private var isDeckHeld = false
 
     var body: some View {
         NavigationStack {
             CardPage {
                 if !model.deckSections.isEmpty {
-                    DashboardDeck(sections: model.deckSections, model: model, isHeld: $isDeckHeld)
+                    DashboardCanvas(sections: model.deckSections, model: model)
                 }
                 ForEach(model.listSections) { section in
                     DashboardSectionContent(section: section, model: model)
                 }
             }
-            .scrollDisabled(isDeckHeld)
             .gradientHeader(.accentLime)
             .overlay { DashboardPlaceholder(model: model, retry: reloadNow) }
             .navigationTitle(model.name.map { String(localized: "Hi, \($0)") } ?? String(localized: "Dashboard"))

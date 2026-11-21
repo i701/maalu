@@ -10,7 +10,6 @@ final class DashboardModel {
     private(set) var categories: [CategoryTotal] = []
     private(set) var categoryMonths: CategoryMonths?
     private(set) var summary: AccountSummary?
-    private(set) var trend: [BalancePoint] = []
     private(set) var months: [MonthlyPoint] = []
     private(set) var budget: Budget?
     private(set) var goals: [Goal] = []
@@ -54,7 +53,7 @@ final class DashboardModel {
             case .metrics: totals != nil
             case .spending: !spendingRows.isEmpty
             case .spendingTrend: SpendingStack.make(from: categoryMonths ?? CategoryMonths.empty, last: Self.monthsLoaded) != nil
-            case .balance: summary != nil
+            case .balance: false // net worth lives on the Accounts screen; the id stays because it is the web's
             case .monthly: !months.isEmpty
             case .budget: budget?.isEmpty == false || !goals.isEmpty
             case .needsWants: kindShares != nil
@@ -110,10 +109,6 @@ final class DashboardModel {
         ])
         async let availableResult: ApiResult<AvailableToSpend> = api.get("stats/available-to-spend")
         async let summaryResult: ApiResult<AccountSummary> = api.get("accounts/summary")
-        async let trendResult: ApiResult<BalanceTrend> = api.get("stats/balance-trend", query: [
-            URLQueryItem(name: "from", value: ISODate.string(current.start)),
-            URLQueryItem(name: "to", value: ISODate.string(current.trendEnd(now: now))),
-        ])
         async let monthsResult: ApiResult<MonthlyStats> = api.get("stats/monthly", query: [
             URLQueryItem(name: "months", value: String(Self.monthsLoaded)),
             URLQueryItem(name: "to", value: ISODate.string(current.end)),
@@ -133,7 +128,7 @@ final class DashboardModel {
         async let profileResult: ApiResult<Profile> = api.get("users/me")
 
         let (totals, previousTotals, categories, available) = await (totalsResult, previousResult, categoriesResult, availableResult)
-        let (summary, trend, months, budget) = await (summaryResult, trendResult, monthsResult, budgetResult)
+        let (summary, months, budget) = await (summaryResult, monthsResult, budgetResult)
         let (goals, latest, upcoming, accounts) = await (goalsResult, latestResult, upcomingResult, accountsResult)
         let profile = await profileResult
         let categoryMonths = await categoryMonthsResult
@@ -146,7 +141,6 @@ final class DashboardModel {
         self.categoryMonths = value(categoryMonths)
         self.available = value(available)
         self.summary = value(summary)
-        self.trend = value(trend)?.points ?? []
         self.months = value(months)?.months ?? []
         self.budget = value(budget)
         self.goals = value(goals) ?? []

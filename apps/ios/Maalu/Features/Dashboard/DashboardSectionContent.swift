@@ -16,7 +16,7 @@ struct DashboardSectionContent: View {
         case .spendingTrend:
             if let months = model.categoryMonths { SpendingTrendSection(categoryMonths: months) }
         case .balance:
-            if let summary = model.summary { NetWorthSection(summary: summary, trend: model.trend) }
+            EmptyView()
         case .monthly:
             CashFlowSection(months: model.months, currency: model.currency)
         case .budget:

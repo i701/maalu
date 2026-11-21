@@ -19,7 +19,7 @@ enum DashboardSection: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 
     /// The cards that go in the deck at the top of the Dashboard, in the saved order among themselves; the rest scroll below it.
-    var isInDeck: Bool { self == .available || self == .metrics || self == .balance }
+    var isInDeck: Bool { self == .available || self == .metrics }
 
     var title: LocalizedStringResource {
         switch self {

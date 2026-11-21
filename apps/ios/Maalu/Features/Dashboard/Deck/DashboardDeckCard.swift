@@ -10,9 +10,7 @@ struct DashboardDeckCard: View {
         case .available:
             if let available = model.available { AvailableDeckCard(available: available) }
         case .metrics:
-            if let totals = model.totals { KeptDeckCard(totals: totals, previous: model.previousTotals) }
-        case .balance:
-            if let summary = model.summary { NetWorthDeckCard(summary: summary, trend: model.trend) }
+            if let totals = model.totals { KeptDeckCard(totals: totals, previous: model.previousTotals, months: model.months) }
         default:
             EmptyView()
         }

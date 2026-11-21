@@ -8,6 +8,7 @@ struct DeckCardFrame<Content: View>: View {
     @ViewBuilder let content: Content
     @Environment(\.colorScheme) private var scheme
     @Environment(\.deckDepth) private var depth
+    @Environment(\.deckIsFlat) private var isFlat
 
     private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: Radius.card, style: .continuous) }
 
@@ -21,6 +22,17 @@ struct DeckCardFrame<Content: View>: View {
     }
 
     var body: some View {
+        if isFlat {
+            content
+                .foregroundStyle(ink)
+                .environment(\.deckInk, ink)
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+        } else {
+            card
+        }
+    }
+
+    private var card: some View {
         content
             .foregroundStyle(ink)
             .environment(\.deckInk, ink)
