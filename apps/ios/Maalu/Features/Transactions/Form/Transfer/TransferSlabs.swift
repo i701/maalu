@@ -21,14 +21,13 @@ struct TransferSlabs: View {
                 .frame(maxHeight: .infinity, alignment: .top)
         }
         .frame(height: TransferSlabLayout.blockHeight)
-        .animation(.spring(duration: 0.6, bounce: 0.12), value: picking)
     }
 
     private func slab(_ index: Int) -> some View {
         let isOpen = picking == index
         let isSqueezed = picking != nil && !isOpen
         return ZStack(alignment: index == 0 ? .top : .bottom) {
-            TransferSlabFace(role: index == 0 ? "From" : "To", account: index == 0 ? from : to, onChoose: { picking = index }, topInset: index == 0 ? 0 : 14) {
+            TransferSlabFace(role: index == 0 ? "From" : "To", account: index == 0 ? from : to, onChoose: { open(index) }, topInset: index == 0 ? 0 : 14) {
                 amount(index)
             }
             .opacity(isOpen ? 0 : 1)
@@ -39,16 +38,14 @@ struct TransferSlabs: View {
                     accounts: model.accounts,
                     selectedID: index == 0 ? model.draft.accountID : model.draft.toAccountID,
                     onPick: { choose($0, slot: index) },
-                    onClose: { picking = nil }
+                    onClose: close
                 )
-                .transition(.opacity)
+                .transition(.opacity.animation(.easeOut(duration: 0.18).delay(0.1)))
             }
         }
         .frame(maxWidth: .infinity)
-        .frame(height: isOpen ? TransferSlabLayout.blockHeight : TransferSlabLayout.slabHeight, alignment: index == 0 ? .top : .bottom)
         .card(radius: shapeRadius)
-        .offset(y: isOpen ? 0 : CGFloat(index) * TransferSlabLayout.pitch)
-        .frame(maxHeight: .infinity, alignment: .top)
+        .modifier(TransferSlabGrowth(index: index, progress: isOpen ? 1 : 0))
         .opacity(isSqueezed ? 0 : 1)
         .zIndex(isOpen ? 3 : 1)
         .accessibilityElement(children: .contain)
@@ -72,7 +69,16 @@ struct TransferSlabs: View {
     private func choose(_ account: Account, slot: Int) {
         model.draft.chooseTransferAccount(account.id, forSource: slot == 0)
         model.accountChanged()
-        picking = nil
+        close()
+    }
+
+    /// The slab grows over the block on a quick spring, the list fading in as it grows. Explicit, so a Form row cannot swallow it.
+    private func open(_ index: Int) {
+        withAnimation(.spring(duration: 0.38, bounce: 0.08)) { picking = index }
+    }
+
+    private func close() {
+        withAnimation(.spring(duration: 0.3, bounce: 0)) { picking = nil }
     }
 
     private func swap() {
