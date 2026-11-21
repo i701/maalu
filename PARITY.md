@@ -9,20 +9,21 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 71 | 59 | 63 |
+| ✅ done | 71 | 59 | 64 |
 | 🟡 partial | 0 | 1 | 1 |
-| ❌ missing | 4 | 11 | 5 |
+| ❌ missing | 5 | 12 | 5 |
 | ➖ n/a | 1 | 5 | 6 |
 | 🗓 planned | 0 | 0 | 1 |
 
-## Still to build on Web (4)
+## Still to build on Web (5)
 
 - ❌ **Spending by month, stacked by category** (Dashboard and reports).
 - ❌ **Dashboard card deck** (Dashboard and reports).
+- ❌ **Transfer as two slabs** (Transactions).
 - ❌ **Hide dashboard cards** (Dashboard and reports).
 - ❌ **Hide dashboard cards, kept on the server** (Dashboard and reports).
 
-## Still to build on Android (12)
+## Still to build on Android (13)
 
 - 🟡 **Email digest** (Notifications). The switch and the email status are in Settings; sending a test email is not.
 - ❌ **Quiet list and detail sheet** (Transactions).
@@ -30,6 +31,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Your name** (Sign in and security).
 - ❌ **Spending by month, stacked by category** (Dashboard and reports).
 - ❌ **Dashboard card deck** (Dashboard and reports).
+- ❌ **Transfer as two slabs** (Transactions).
 - ❌ **Arrange the dashboard** (Dashboard and reports).
 - ❌ **Hide dashboard cards** (Dashboard and reports).
 - ❌ **Hide dashboard cards, kept on the server** (Dashboard and reports).
@@ -102,6 +104,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Transaction groups**<br>Bundle related transactions under a name and see what they add up to. | ✅ done | ✅ done | ✅ done |
 | **Export to Excel**<br>Download what the filters show as a workbook with a summary and a sheet by category. | ✅ done | ❌ missing | ❌ missing |
 | **Import a bank statement**<br>Read a bank's CSV, review the rows, assign vendors and categories, import as one undoable batch. | ✅ done | ➖ n/a | ➖ n/a |
+| **Transfer as two slabs**<br>A transfer is entered as two slabs, what you send and what arrives, with an arrow that swaps the accounts and a slab that grows into the account list. | ❌ missing | ❌ missing | ✅ done |
 
 - **Trash** (iOS): Restore and delete for good one by one; bulk actions wait for tx-bulk.
 - **Import a bank statement** (Android): Web only, by choice: importing a statement is done on the web, where the rows are easier to review.

@@ -1667,6 +1667,31 @@
       "api": []
     },
     {
+      "id": "transfer-slabs",
+      "area": "transactions",
+      "name": "Transfer as two slabs",
+      "summary": "A transfer is entered as two slabs, what you send and what arrives, with an arrow that swaps the accounts and a slab that grows into the account list.",
+      "web": {
+        "status": "missing"
+      },
+      "android": {
+        "status": "missing"
+      },
+      "ios": {
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Transactions/Form/Transfer/TransferSlabs.swift",
+          "apps/ios/Maalu/Features/Transactions/Form/TransactionAccountSection.swift"
+        ]
+      },
+      "routes": [
+        "/transactions"
+      ],
+      "api": [
+        "/api/v1/transactions"
+      ]
+    },
+    {
       "id": "dashboard-order",
       "area": "reports",
       "name": "Arrange the dashboard",

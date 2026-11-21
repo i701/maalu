@@ -11,7 +11,9 @@ struct TransactionTypeSection: View {
                 }
             }
             .pickerStyle(.segmented)
-            if model.draft.hasItems {
+            if model.draft.type == .transfer {
+                EmptyView()
+            } else if model.draft.hasItems {
                 AmountRow { Text("Amount") } amount: { MoneyText(model.draft.itemsTotal, currency: model.currency) }
                     .foregroundStyle(.secondary)
             } else {

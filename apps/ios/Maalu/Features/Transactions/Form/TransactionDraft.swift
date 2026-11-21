@@ -89,6 +89,23 @@ struct TransactionDraft {
         planned = false
     }
 
+    /// Reverses a transfer: the account it leaves and the one it arrives in trade places, and with two currencies so do the two amounts.
+    mutating func reverseTransfer(inTwoCurrencies: Bool) {
+        swap(&accountID, &toAccountID)
+        if inTwoCurrencies { swap(&amount, &toAmount) }
+    }
+
+    /// Puts an account on one side of a transfer; the account already on the other side trades places with the one it replaces, so a transfer is never from an account to itself.
+    mutating func chooseTransferAccount(_ id: String, forSource isSource: Bool) {
+        if isSource {
+            if toAccountID == id { toAccountID = accountID }
+            accountID = id
+        } else {
+            if accountID == id { accountID = toAccountID }
+            toAccountID = id
+        }
+    }
+
     /// What "Save and add another" leaves on the form: where the money went and how, and where it happened, without the amount or note.
     func nextEntry() -> TransactionDraft {
         var next = TransactionDraft()
