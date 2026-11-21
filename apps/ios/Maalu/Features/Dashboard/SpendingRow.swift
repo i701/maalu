@@ -5,6 +5,8 @@ struct SpendingRow: Identifiable {
     let total: Decimal
     let share: Double
     let color: String?
+    /// The folded-together rest, not a category.
+    var isOther = false
 
     var id: String { name }
 
@@ -20,7 +22,7 @@ struct SpendingRow: Identifiable {
         var rows = expenses.prefix(top).map { SpendingRow(name: $0.category, total: $0.value, share: share($0.value), color: $0.color) }
         let rest = expenses.dropFirst(top).reduce(Decimal.zero) { $0 + $1.value }
         if rest > 0 {
-            rows.append(SpendingRow(name: String(localized: "Other"), total: rest, share: share(rest), color: nil))
+            rows.append(SpendingRow(name: String(localized: "Other"), total: rest, share: share(rest), color: nil, isOther: true))
         }
         return rows
     }
