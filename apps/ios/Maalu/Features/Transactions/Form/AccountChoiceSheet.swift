@@ -36,6 +36,7 @@ struct AccountChoiceSheet: View {
             }
         }
         .presentationDetents([.medium, .large])
+        .presentationBackground(Color(.systemGroupedBackground))
     }
 
     private func choose(_ account: Account) {
