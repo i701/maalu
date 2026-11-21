@@ -28,6 +28,14 @@ struct TransactionsView: View {
                 .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 12, trailing: 16))
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
+                if model.isEmpty {
+                    // a row under the card, not an overlay on the whole list: a centred overlay lands on the card when the keyboard leaves little room
+                    TransactionsPlaceholder(model: model, retry: reloadNow, clearFilters: clearFilters)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 24)
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                }
                 if !model.transferSuggestions.isEmpty {
                     TransferSuggestionsSection(suggestions: model.transferSuggestions, onChanged: changed, onFailed: { notice = $0 })
                 }
@@ -49,7 +57,6 @@ struct TransactionsView: View {
             // the card's height is the list's to change, so the animation has to be here and not inside the row
             .animation(.smooth(duration: 0.35), value: model.displayedTotals != nil)
             .animation(.smooth(duration: 0.35), value: chips.map(\.id))
-            .overlay { TransactionsPlaceholder(model: model, retry: reloadNow, clearFilters: clearFilters) }
             .navigationTitle("Transactions")
             .navigationSubtitle(selection.isSelecting ? Text(selection.isWide ? "All \(selection.count) matching are selected" : "\(selection.count) selected") : Text(""))
             .sensoryFeedback(.selection, trigger: selection.count)
