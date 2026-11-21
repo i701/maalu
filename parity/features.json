@@ -1639,6 +1639,27 @@
       "api": []
     },
     {
+      "id": "dashboard-hide-cards-sync",
+      "area": "reports",
+      "name": "Hide dashboard cards, kept on the server",
+      "summary": "Keep which dashboard cards are off on the server, one list per platform (a key each for web, Android and iOS), so a platform keeps its own choice across devices and reinstalls without changing what another platform shows. Today it is only on the device.",
+      "web": {
+        "status": "missing"
+      },
+      "android": {
+        "status": "missing"
+      },
+      "ios": {
+        "status": "planned"
+      },
+      "routes": [
+        "/dashboard"
+      ],
+      "api": [
+        "/api/v1/users/me"
+      ]
+    },
+    {
       "id": "dashboard-budget-goals",
       "area": "reports",
       "name": "Budget and goals card",
