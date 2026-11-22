@@ -33,6 +33,21 @@ export function percentChange(current: string, previous: string): number | null 
 	return ((Number(current) - prev) / prev) * 100;
 }
 
+/** The order of the cards until someone arranges their own (ids the page does not show are skipped). */
+export const DEFAULT_SECTION_ORDER = [
+	"metrics",
+	"money-flow",
+	"available",
+	"spending",
+	"balance",
+	"monthly",
+	"budget",
+	"needs-wants",
+	"credit",
+	"upcoming",
+	"latest",
+];
+
 export type SpendingRow = { name: string; total: number; share: number };
 
 /** The `top` biggest expense categories, with the rest folded into one "Other" row. */

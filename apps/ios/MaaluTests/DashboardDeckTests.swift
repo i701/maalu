@@ -5,7 +5,7 @@ import Testing
 @MainActor
 struct DashboardDeckTests {
     @Test func theDeckHoldsTheTwoSummaryCards() {
-        #expect(DashboardSection.allCases.filter(\.isInDeck) == [.available, .metrics])
+        #expect(DashboardSection.allCases.filter(\.isInDeck) == [.metrics, .available])
     }
 
     @Test func aCardSwitchedOffLeavesItsBlock() throws {

@@ -2,19 +2,19 @@ import Foundation
 
 /// A card on the dashboard. The ids are the web's, so one saved order (`users.dashboard_order`) arranges both; `incomeRule` and `spendingTrend` are iOS only.
 enum DashboardSection: String, CaseIterable, Identifiable {
-    case available
     case metrics
+    case moneyFlow = "money-flow"
+    case available
     case spending
-    case spendingTrend = "spending-trend"
     case balance
     case monthly
     case budget
     case needsWants = "needs-wants"
     case incomeRule = "income-rule"
-    case moneyFlow = "money-flow"
     case credit
     case upcoming
     case latest
+    case spendingTrend = "spending-trend"
 
     var id: String { rawValue }
 

@@ -25,7 +25,14 @@ import PageSkeleton from "#/components/PageSkeleton";
 import SectionGrid, { type Section } from "#/components/dashboard/SectionGrid";
 import PendingOverlay from "#/components/PendingOverlay";
 import Symbol from "#/components/Symbol";
-import { monthBounds, monthLabel, orderSections, percentChange, shiftMonth } from "#/lib/dashboard";
+import {
+	DEFAULT_SECTION_ORDER,
+	monthBounds,
+	monthLabel,
+	orderSections,
+	percentChange,
+	shiftMonth,
+} from "#/lib/dashboard";
 import { formatMoney, formatMoneyCompact, sumDecimals, formatMoneyFull } from "#/lib/format";
 import { localToday } from "#/lib/planned";
 import { unwrap } from "#/lib/unwrap";
@@ -302,7 +309,7 @@ function DashboardPage() {
 	];
 	const byId = new Map(sections.map((section) => [section.id, section]));
 	const ordered = orderSections(
-		editing ? draft : savedOrder,
+		(editing ? draft : savedOrder) ?? DEFAULT_SECTION_ORDER,
 		sections.map((section) => section.id),
 	).flatMap((id) => byId.get(id) ?? []);
 
