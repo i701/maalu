@@ -8,11 +8,12 @@ struct DashboardView: View {
     var body: some View {
         NavigationStack {
             CardPage {
-                if !model.deckSections.isEmpty {
-                    DashboardCanvas(sections: model.deckSections, model: model)
-                }
-                ForEach(model.listSections) { section in
-                    DashboardSectionContent(section: section, model: model)
+                ForEach(model.blocks, id: \.[0].id) { block in
+                    if block[0].isInDeck {
+                        DashboardCanvas(sections: block, model: model)
+                    } else {
+                        DashboardSectionContent(section: block[0], model: model)
+                    }
                 }
             }
             .gradientHeader(.accentLime)

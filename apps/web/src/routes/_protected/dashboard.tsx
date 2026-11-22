@@ -254,11 +254,11 @@ function DashboardPage() {
 		},
 		{
 			id: "balance",
-			label: "Balance trend",
+			label: "Net worth",
 			span: 4,
 			node: <BalanceTrendCard trend={trend} against={monthLabel(month, true)} />,
 		},
-		{ id: "monthly", label: "Month by month", span: 4, node: <MonthlyCard stats={monthly} /> },
+		{ id: "monthly", label: "Cash flow", span: 4, node: <MonthlyCard stats={monthly} /> },
 		{
 			id: "budget",
 			label: "Budget and goals",
@@ -281,7 +281,7 @@ function DashboardPage() {
 			? [
 					{
 						id: "credit",
-						label: "Credit usage",
+						label: "Credit used",
 						span: 6,
 						node: <CreditUsageCard accounts={creditAccounts} />,
 					},

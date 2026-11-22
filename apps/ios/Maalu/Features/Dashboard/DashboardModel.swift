@@ -74,9 +74,16 @@ final class DashboardModel {
         arrangeableSections.filter { !hidden.contains($0) }
     }
 
-    /// The cards for the deck at the top, and the ones that scroll below it, in the saved order.
-    var deckSections: [DashboardSection] { orderedSections.filter(\.isInDeck) }
-    var listSections: [DashboardSection] { orderedSections.filter { !$0.isInDeck } }
+    /// The cards in the saved order, with neighbouring summary cards (`isInDeck`) grouped into one flat canvas, so a summary can sit anywhere in the order.
+    var blocks: [[DashboardSection]] {
+        orderedSections.reduce(into: []) { blocks, section in
+            if section.isInDeck, let last = blocks.last, last[0].isInDeck {
+                blocks[blocks.count - 1].append(section)
+            } else {
+                blocks.append([section])
+            }
+        }
+    }
 
     /// Saves the order (nil goes back to the default one) and which cards are switched off. Returns a message when the server refused the order.
     func saveLayout(order: [DashboardSection]?, hidden: Set<DashboardSection>, using api: Api) async -> String? {

@@ -8,12 +8,18 @@ struct DashboardDeckTests {
         #expect(DashboardSection.allCases.filter(\.isInDeck) == [.available, .metrics])
     }
 
-    @Test func aCardSwitchedOffLeavesTheDeckAndTheRestStayBelow() throws {
+    @Test func aCardSwitchedOffLeavesItsBlock() throws {
         let defaults = try #require(UserDefaults(suiteName: "DashboardDeckTests.\(UUID().uuidString)"))
         let model = DashboardModel(defaults: defaults)
         model.setHidden([.metrics])
-        #expect(!model.deckSections.contains(.metrics))
-        #expect(model.listSections.allSatisfy { !$0.isInDeck })
+        #expect(!model.blocks.joined().contains(.metrics))
+    }
+
+    @Test func aSummaryCardCanSitAnywhereInTheOrder() throws {
+        let defaults = try #require(UserDefaults(suiteName: "DashboardDeckTests.\(UUID().uuidString)"))
+        let model = DashboardModel(defaults: defaults)
+        // with nothing loaded only the always-on cards show, so no summary is left to separate
+        #expect(model.blocks.allSatisfy { $0.count == 1 || $0.allSatisfy(\.isInDeck) })
     }
 }
 
