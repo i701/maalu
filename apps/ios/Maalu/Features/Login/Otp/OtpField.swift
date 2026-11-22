@@ -20,7 +20,7 @@ struct OtpField: View {
                 length: Self.length,
                 isChecking: state == .checking,
                 showsCaret: isFocused && state == .typing,
-                cellColor: Color(.systemGray5),
+                cellColor: scheme == .dark ? Color(.systemGray5) : .white,
                 merge: merge,
                 shake: shake
             )

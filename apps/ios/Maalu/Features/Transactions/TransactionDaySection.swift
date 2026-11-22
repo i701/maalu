@@ -19,6 +19,8 @@ struct TransactionDaySection: View {
                 }
                 .contentShape(.rect)
                 .listRowSeparator(.hidden)
+                // the cards' fill; a plain list's own would be pure black in dark mode
+                .listRowBackground(Color(.secondarySystemGroupedBackground))
                 .listRowInsets(EdgeInsets(top: 7, leading: Spacing.screen + Spacing.card, bottom: 7, trailing: Spacing.screen + Spacing.card))
                 .onTapGesture { onTap(transaction) }
                 .onLongPressGesture { onHold(transaction) }

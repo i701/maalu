@@ -11,6 +11,7 @@ struct OtpCells: View, Animatable {
     let cellColor: Color
     var merge: Double
     var shake: Double
+    @Environment(\.colorScheme) private var scheme
 
     nonisolated var animatableData: AnimatablePair<Double, Double> {
         get { AnimatablePair(merge, shake) }
@@ -85,6 +86,9 @@ struct OtpCells: View, Animatable {
             }
         }
         .frame(width: rowWidth + Self.pad * 2, height: Self.height + Self.pad * 2)
+        // white cells need a lift off the pale sky; the shadow follows the fused shape, so it works on the capsule too
+        .shadow(color: .black.opacity(scheme == .dark ? 0 : 0.06), radius: 1.5, y: 1)
+        .shadow(color: .black.opacity(scheme == .dark ? 0 : 0.08), radius: 8, y: 4)
         .accessibilityHidden(true)
     }
 
