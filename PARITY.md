@@ -9,16 +9,15 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 71 | 59 | 64 |
+| ✅ done | 72 | 59 | 64 |
 | 🟡 partial | 0 | 1 | 1 |
-| ❌ missing | 5 | 12 | 5 |
+| ❌ missing | 4 | 12 | 5 |
 | ➖ n/a | 1 | 5 | 6 |
 | 🗓 planned | 0 | 0 | 1 |
 
-## Still to build on Web (5)
+## Still to build on Web (4)
 
 - ❌ **Spending by month, stacked by category** (Dashboard and reports).
-- ❌ **Dashboard card deck** (Dashboard and reports).
 - ❌ **Transfer as two slabs** (Transactions).
 - ❌ **Hide dashboard cards** (Dashboard and reports).
 - ❌ **Hide dashboard cards, kept on the server** (Dashboard and reports).
@@ -146,7 +145,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 |---|:---:|:---:|:---:|
 | **Dashboard**<br>Available to spend, the month strip, spending by category, net worth, cash flow, budget and goals, coming up and latest. | ✅ done | ✅ done | ✅ done |
 | **Spending by month, stacked by category**<br>A Dashboard card of spending per month for the last 6 or 12 months, stacked by the biggest categories; press along the bars to pick a month, hold a category to follow it. | ❌ missing | ❌ missing | ✅ done |
-| **Dashboard card deck**<br>The Dashboard opens on a stack of three gradient cards (Available to spend, Kept this month, Net worth): swipe up or down to flip through them, the rest of the cards scroll below. | ❌ missing | ❌ missing | ✅ done |
+| **Dashboard card deck**<br>The Dashboard opens on a stack of three gradient cards (Available to spend, Kept this month, Net worth): swipe up or down to flip through them, the rest of the cards scroll below. | ✅ done | ❌ missing | ✅ done |
 | **Arrange the dashboard**<br>Drag the dashboard's cards, or move them with arrows, into your own order; kept on the server. | ✅ done | ❌ missing | ✅ done |
 | **Hide dashboard cards**<br>Switch off the dashboard cards you do not want, from the arrange sheet. Kept on the device for now, not on the server, so no API change. | ❌ missing | ❌ missing | ✅ done |
 | **Hide dashboard cards, kept on the server**<br>Keep which dashboard cards are off on the server, one list per platform (a key each for web, Android and iOS), so a platform keeps its own choice across devices and reinstalls without changing what another platform shows. Today it is only on the device. | ❌ missing | ❌ missing | 🗓 planned |

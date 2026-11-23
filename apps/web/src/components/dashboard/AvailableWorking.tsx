@@ -1,16 +1,8 @@
-import { useCardMorph } from "#/lib/card-morph";
-import Money from "#/components/Money";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
-import { Link } from "@tanstack/react-router";
-import { RouterButton } from "../RouterLinks";
-import { memo, useState } from "react";
-import { hasAccounts, isShort, workingLine } from "#/lib/available";
+import Money from "#/components/Money";
 import { formatDate } from "#/lib/format";
 import type { AvailableToSpend } from "#/types/api";
-import TonalChip from "../TonalChip";
-import { ACCENT } from "#/lib/m3";
 
 /** One line of the working: a name (and a note) with its amount. */
 function Row({
@@ -58,7 +50,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 /** The sums behind the number: where it starts, what is still to pay and what is set aside. */
-function Working({ data }: { data: AvailableToSpend }) {
+export default function AvailableWorking({ data }: { data: AvailableToSpend }) {
 	const c = data.currency;
 	return (
 		<Box
@@ -118,84 +110,3 @@ function Working({ data }: { data: AvailableToSpend }) {
 		</Box>
 	);
 }
-
-/**
- * What you can spend until the end of the budget period: what your everyday accounts hold, less the
- * planned bills still to pay and the money set aside for goals. The number first, in words below it
- * so it can be checked, and the full working a click away.
- */
-const AvailableCard = memo(function AvailableCard({ data }: { data: AvailableToSpend }) {
-	const cardMorph = useCardMorph();
-	const [open, setOpen] = useState(false);
-	const short = isShort(data);
-	return (
-		<Box
-			sx={{
-				p: { xs: 1.75, sm: 2.5 },
-				minWidth: 0,
-				...cardMorph,
-				// a wash of colour: green while there is room, orange when you are short
-				bgcolor: `color-mix(in srgb, ${short ? ACCENT.orange : ACCENT.green} 14%, var(--md-sys-color-surface-container-low))`,
-			}}
-		>
-			<Box
-				sx={{
-					display: "flex",
-					justifyContent: "space-between",
-					alignItems: "center",
-					gap: 2,
-					flexWrap: "wrap",
-				}}
-			>
-				<Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-					<Typography variant="body2" sx={{ color: "text.secondary" }}>
-						Available to spend until {formatDate(data.period_end)}
-					</Typography>
-					{short && <TonalChip accent={ACCENT.orange} label="Short" />}
-				</Box>
-				{/* the number is the point of the card: big, bold and on the right */}
-				{hasAccounts(data) && (
-					<Typography
-						sx={{
-							ml: "auto",
-							textAlign: "right",
-							fontSize: { xs: 36, lg: 52 },
-							lineHeight: 1.05,
-							"--figure-weight": 600,
-							color: short ? "var(--chart-expense)" : "text.primary",
-						}}
-					>
-						<Money amount={data.available} currency={data.currency} figure />
-					</Typography>
-				)}
-			</Box>
-			{hasAccounts(data) ? (
-				<>
-					<Typography variant="body2" sx={{ color: "text.secondary", mt: 0.5 }}>
-						{workingLine(data)}
-						{short && ". You are short unless more comes in or a bill moves."}
-					</Typography>
-					<Button
-						size="small"
-						color="inherit"
-						sx={{ mt: 1, ml: -1 }}
-						onClick={() => setOpen(!open)}
-					>
-						{open ? "Hide the working" : "Show the working"}
-					</Button>
-					<RouterButton to="/plan" size="small" color="inherit" sx={{ mt: 1 }}>
-						Open the month plan
-					</RouterButton>
-					{open && <Working data={data} />}
-				</>
-			) : (
-				<Typography variant="body2" sx={{ color: "text.secondary", mt: 1 }}>
-					Add a cash, current or debit account and this shows what you can spend after your bills.{" "}
-					<Link to="/accounts">Go to Accounts</Link>
-				</Typography>
-			)}
-		</Box>
-	);
-});
-
-export default AvailableCard;

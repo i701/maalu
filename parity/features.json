@@ -1649,7 +1649,10 @@
       "name": "Dashboard card deck",
       "summary": "The Dashboard opens on a stack of three gradient cards (Available to spend, Kept this month, Net worth): swipe up or down to flip through them, the rest of the cards scroll below.",
       "web": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/dashboard/SummaryCard.tsx"
+        ]
       },
       "android": {
         "status": "missing"

@@ -6,19 +6,16 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 import BudgetAlert from "#/components/BudgetAlert";
-import AvailableCard from "#/components/dashboard/AvailableCard";
 import BalanceTrendCard from "#/components/dashboard/BalanceTrendCard";
 import BudgetGoalsCard from "#/components/dashboard/BudgetGoalsCard";
 import CreditUsageCard from "#/components/dashboard/CreditUsageCard";
-import DeltaBadge from "#/components/dashboard/DeltaBadge";
 import LatestTransactionsCard from "#/components/dashboard/LatestTransactionsCard";
 import { CardMorph } from "#/lib/card-morph";
-import MetricCard from "#/components/dashboard/MetricCard";
-import MetricStrip from "#/components/dashboard/MetricStrip";
 import MoneyFlowCard from "#/components/dashboard/MoneyFlowCard";
 import MonthlyCard from "#/components/dashboard/MonthlyCard";
 import NeedsWantsCard from "#/components/dashboard/NeedsWantsCard";
 import UpcomingSoonCard from "#/components/dashboard/UpcomingSoonCard";
+import SummaryCard from "#/components/dashboard/SummaryCard";
 import SpendingCard from "#/components/dashboard/SpendingCard";
 import PageHeader from "#/components/PageHeader";
 import PageSkeleton from "#/components/PageSkeleton";
@@ -30,10 +27,9 @@ import {
 	monthBounds,
 	monthLabel,
 	orderSections,
-	percentChange,
 	shiftMonth,
 } from "#/lib/dashboard";
-import { formatMoney, formatMoneyCompact, sumDecimals, formatMoneyFull } from "#/lib/format";
+import { sumDecimals } from "#/lib/format";
 import { localToday } from "#/lib/planned";
 import { unwrap } from "#/lib/unwrap";
 import { useAction } from "#/lib/use-action";
@@ -153,104 +149,25 @@ function DashboardPage() {
 	const goTo = (on: string | undefined) => navigate({ search: { on }, replace: true });
 	const label = monthLabel(month);
 	const previousLabel = monthLabel(shiftMonth(month, -1));
-	const currency = totals.currency;
 	const isCurrent = month === monthBounds(today()).start;
 
 	const saved = sumDecimals([totals.income, `-${totals.expense}`]);
-	const savedBefore = sumDecimals([before.income, `-${before.expense}`]);
 
 	const sections: Section[] = [
-		...(available
-			? [
-					{
-						id: "available",
-						label: "Available to spend",
-						span: 6,
-						node: <AvailableCard data={available} />,
-					},
-				]
-			: []),
 		{
+			// the id of the old "Income, spent and saved" section, so a saved order keeps its place
 			id: "metrics",
-			label: "Income, spent and saved",
+			label: "Summary",
 			span: 6,
 			node: (
-				<Box
-					sx={{
-						display: "grid",
-						gap: 2,
-						gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "repeat(3, minmax(0, 1fr))" },
-					}}
-				>
-					{/* On a phone the three tiles are one strip (the tiles are for wider screens). */}
-					<Box sx={{ display: { xs: "block", sm: "none" } }}>
-						<MetricStrip
-							against={previousLabel}
-							items={[
-								{
-									label: "Income",
-									value: formatMoneyCompact(totals.income, currency),
-									full: formatMoneyFull(totals.income, currency),
-									percent: percentChange(totals.income, before.income),
-									goodWhenUp: true,
-								},
-								{
-									label: "Spent",
-									value: formatMoneyCompact(totals.expense, currency),
-									full: formatMoneyFull(totals.expense, currency),
-									percent: percentChange(totals.expense, before.expense),
-									goodWhenUp: false,
-								},
-								{
-									label: Number(saved) >= 0 ? "Saved" : "Overspent",
-									value: formatMoneyCompact(saved, currency),
-									full: formatMoneyFull(saved, currency),
-									percent: percentChange(saved, savedBefore),
-									goodWhenUp: true,
-								},
-							]}
-						/>
-					</Box>
-					<Box sx={{ display: { xs: "none", sm: "block" } }}>
-						<MetricCard
-							label={`Income in ${label}`}
-							value={formatMoney(totals.income, currency)}
-							badge={
-								<DeltaBadge
-									percent={percentChange(totals.income, before.income)}
-									goodWhenUp
-									against={previousLabel}
-								/>
-							}
-						/>
-					</Box>
-					<Box sx={{ display: { xs: "none", sm: "block" } }}>
-						<MetricCard
-							label={`Spent in ${label}`}
-							value={formatMoney(totals.expense, currency)}
-							badge={
-								<DeltaBadge
-									percent={percentChange(totals.expense, before.expense)}
-									goodWhenUp={false}
-									against={previousLabel}
-								/>
-							}
-						/>
-					</Box>
-					<Box sx={{ display: { xs: "none", sm: "block" } }}>
-						<MetricCard
-							label={Number(saved) >= 0 ? "Saved this month" : "Overspent this month"}
-							value={formatMoney(saved, currency)}
-							badge={
-								<DeltaBadge
-									percent={percentChange(saved, savedBefore)}
-									goodWhenUp
-									against={previousLabel}
-								/>
-							}
-						/>
-					</Box>
-				</Box>
+				<SummaryCard
+					available={available}
+					kept={saved}
+					totals={totals}
+					before={before}
+					months={monthly.months}
+					previousLabel={previousLabel}
+				/>
 			),
 		},
 		{

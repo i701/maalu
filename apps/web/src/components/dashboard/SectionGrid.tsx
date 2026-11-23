@@ -115,7 +115,11 @@ function EditableSection({
 		<Box
 			ref={setNodeRef}
 			style={{ transform: CSS.Transform.toString(transform), transition }}
-			sx={{ ...column(section.span), position: "relative", zIndex: isDragging ? 2 : 0 }}
+			sx={{
+				...column(section.span),
+				position: "relative",
+				zIndex: isDragging ? 2 : 0,
+			}}
 		>
 			<Box
 				sx={{

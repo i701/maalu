@@ -2,16 +2,6 @@ import Box from "@mui/material/Box";
 import { useEffect, useRef } from "react";
 import { splitCurrency } from "#/lib/format";
 
-/** Hidden from the eye but read aloud (the characters beside it are `aria-hidden`). */
-const VISUALLY_HIDDEN = {
-	position: "absolute",
-	width: 1,
-	height: 1,
-	overflow: "hidden",
-	clip: "rect(0 0 0 0)",
-	whiteSpace: "nowrap",
-} as const;
-
 /** The face for big numbers (the theme's text face too, since 2026-11-19; kept as its own name so
  * the two can be told apart again). */
 export const FIGURE_FONT = '"Sora", "Sora Fallback", system-ui, sans-serif';
@@ -69,10 +59,7 @@ export default function Figure({ children }: { children: string }) {
 					{currency}
 				</Box>
 			)}
-			<Box component="span" sx={VISUALLY_HIDDEN}>
-				{number}
-			</Box>
-			<span aria-hidden>
+			<span role="img" aria-label={number}>
 				{characters.map((character, index) => (
 					<Box
 						component="span"

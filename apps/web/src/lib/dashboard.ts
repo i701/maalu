@@ -37,7 +37,6 @@ export function percentChange(current: string, previous: string): number | null 
 export const DEFAULT_SECTION_ORDER = [
 	"metrics",
 	"money-flow",
-	"available",
 	"spending",
 	"balance",
 	"monthly",
