@@ -1,8 +1,8 @@
 import AddIcon from "@mui/icons-material/Add";
-import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
@@ -15,95 +15,95 @@ import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { memo, startTransition, useCallback, useMemo, useOptimistic, useState } from "react";
 import { z } from "zod";
 import ActiveFilters from "#/components/ActiveFilters";
+import BudgetAlert from "#/components/BudgetAlert";
 import BulkEditDialog from "#/components/BulkEditDialog";
-import GroupDialog from "#/components/GroupDialog";
+import CategoryBreakdown from "#/components/CategoryBreakdown";
 import ConfirmDelete from "#/components/ConfirmDelete";
-import MakeTransferDialog from "#/components/MakeTransferDialog";
 import EmptyState from "#/components/EmptyState";
 import ExportButton from "#/components/ExportButton";
 import FiltersDrawer from "#/components/FiltersDrawer";
+import GroupDialog from "#/components/GroupDialog";
 import MakeSubscriptionDialog from "#/components/MakeSubscriptionDialog";
+import MakeTransferDialog from "#/components/MakeTransferDialog";
 import MobileCard from "#/components/MobileCard";
 import PageHeader from "#/components/PageHeader";
+import PendingOverlay from "#/components/PendingOverlay";
+import RefundDialogHost from "#/components/RefundDialogHost";
+import ResponsiveTable from "#/components/ResponsiveTable";
+import SalarySplitHost from "#/components/SalarySplitHost";
+import SearchField from "#/components/SearchField";
 import SelectAllMatching from "#/components/SelectAllMatching";
 import SelectionBar from "#/components/SelectionBar";
-import PendingOverlay from "#/components/PendingOverlay";
-import ResponsiveTable from "#/components/ResponsiveTable";
-import SearchField from "#/components/SearchField";
 import ShapeTile from "#/components/ShapeTile";
-import Symbol from "#/components/Symbol";
-import { TxAmount } from "#/components/transactions/TxParts";
-import { excludedNote } from "#/lib/accounts";
-import { dayHeading, txRowLine, txRowTitle, txTitle } from "#/lib/tx-display";
-import TransactionDrawer from "#/components/transactions/TransactionDrawer";
-import { useViewMode } from "#/lib/view-mode";
-import { isOverdue, localToday } from "#/lib/planned";
-import TonalChip from "#/components/TonalChip";
+import IconSymbol from "#/components/Symbol";
 import TableCard from "#/components/TableCard";
 import TablePager from "#/components/TablePager";
 import TableToolbar from "#/components/TableToolbar";
+import TonalChip from "#/components/TonalChip";
 import TransactionFilters from "#/components/TransactionFilters";
 import TransactionForm from "#/components/TransactionForm";
-import { seedFromTransaction } from "#/components/transaction-form/request";
-import { CardMorph } from "#/lib/card-morph";
 import TransactionTotals from "#/components/TransactionTotals";
-import BudgetAlert from "#/components/BudgetAlert";
 import TransferSuggestionsCard from "#/components/TransferSuggestionsCard";
+import { seedFromTransaction } from "#/components/transaction-form/request";
+import TransactionDrawer from "#/components/transactions/TransactionDrawer";
+import { TxAmount } from "#/components/transactions/TxParts";
 import UpcomingCard from "#/components/UpcomingCard";
-import CategoryBreakdown from "#/components/CategoryBreakdown";
+import { excludedNote } from "#/lib/accounts";
+import { transactionCount } from "#/lib/bulk-message";
+import { CardMorph } from "#/lib/card-morph";
+import { cardFilterLabel } from "#/lib/cards";
 import { formatMoney, formatWhen } from "#/lib/format";
-import { ACCENT } from "#/lib/m3";
 import { useLiveSearch } from "#/lib/live-search";
+import { ACCENT } from "#/lib/m3";
 import { lastPageIfOutOfRange, pageSearch } from "#/lib/pagination";
+import { isOverdue, localToday } from "#/lib/planned";
+import { isRefund } from "#/lib/refund";
+import { type SelectionState, useSelection } from "#/lib/selection";
 import {
 	buildActiveFilters,
-	tagNamesOf,
 	countActiveFilters,
 	hasAnyFilter,
 	pickFilterValues,
 	type TransactionFilterValues,
 	type TransactionSearch,
+	tagNamesOf,
 } from "#/lib/transaction-filters";
-import { transactionCount } from "#/lib/bulk-message";
-import { type SelectionState, useSelection } from "#/lib/selection";
+import { linkablePair } from "#/lib/transfer-link";
+import { dayHeading, txRowLine, txRowTitle, txTitle } from "#/lib/tx-display";
 import { unwrap } from "#/lib/unwrap";
-import { getAccountFn, listAccountsFn } from "#/server/accounts";
-import { listCardsFn } from "#/server/cards";
-import { cardFilterLabel } from "#/lib/cards";
-import { listCurrenciesFn } from "#/server/currencies";
-import { listSubscriptionsFn } from "#/server/subscriptions";
-import { listSalaryRulesFn } from "#/server/salary";
-import { listTemplatesFn } from "#/server/templates";
+import { useRefundDialog } from "#/lib/use-refund-dialog";
 import { useSalarySplit } from "#/lib/use-salary-split";
-import SalarySplitHost from "#/components/SalarySplitHost";
+import { useViewMode } from "#/lib/view-mode";
+import { getAccountFn, listAccountsFn } from "#/server/accounts";
+import { getMeFn } from "#/server/auth";
+import { getBudgetFn } from "#/server/budget";
+import { listCardsFn } from "#/server/cards";
+import { getCategoryFn, listCategoriesFn } from "#/server/categories";
+import { listCurrenciesFn } from "#/server/currencies";
+import { listGroupsFn } from "#/server/groups";
+import { listSalaryRulesFn } from "#/server/salary";
+import { listSubscriptionsFn } from "#/server/subscriptions";
+import { listTagsFn } from "#/server/tags";
+import { listTemplatesFn } from "#/server/templates";
 import {
-	listUpcomingFn,
-	listTransferSuggestionsFn,
 	bulkTrashFn,
 	deleteTransactionFn,
 	getCategoryTotalsFn,
 	getTransactionTotalsFn,
 	listMatchingIdsFn,
 	listTransactionsFn,
+	listTransferSuggestionsFn,
+	listUpcomingFn,
 } from "#/server/transactions";
-import { getBudgetFn } from "#/server/budget";
-import { getCategoryFn, listCategoriesFn } from "#/server/categories";
-import { listGroupsFn } from "#/server/groups";
-import { getMeFn } from "#/server/auth";
-import RefundDialogHost from "#/components/RefundDialogHost";
-import { linkablePair } from "#/lib/transfer-link";
-import { isRefund } from "#/lib/refund";
-import { useRefundDialog } from "#/lib/use-refund-dialog";
-import { listTagsFn } from "#/server/tags";
 import { getVendorFn, listVendorsFn } from "#/server/vendors";
 import {
 	ACCOUNT_GROUP_LABELS,
-	PAYMENT_METHODS,
-	TRANSACTION_TYPES,
 	type Category,
+	PAYMENT_METHODS,
 	type Tag,
-	type TransactionGroup,
+	TRANSACTION_TYPES,
 	type Transaction,
+	type TransactionGroup,
 	type Vendor,
 } from "#/types/api";
 
@@ -285,7 +285,7 @@ function TxTile({ t, size = 52 }: { t: Transaction; size?: number }) {
 	const k = isRefund(t) ? REFUND_TILE : TYPE_TILE[t.type];
 	return (
 		<ShapeTile shape={k.shape} size={size} accent={k.accent}>
-			<Symbol name={k.symbol} size={size > 40 ? 24 : 20} filled />
+			<IconSymbol name={k.symbol} size={size > 40 ? 24 : 20} filled />
 		</ShapeTile>
 	);
 }
@@ -328,7 +328,9 @@ const TransactionsTable = memo(function TransactionsTable({
 							checked={selectionState === "all"}
 							indeterminate={selectionState === "some"}
 							onChange={onToggleAll}
-							slotProps={{ input: { "aria-label": "Select all transactions on this page" } }}
+							slotProps={{
+								input: { "aria-label": "Select all transactions on this page" },
+							}}
 						/>
 					</TableCell>
 					<TableCell>Details</TableCell>
@@ -364,7 +366,9 @@ const TransactionsTable = memo(function TransactionsTable({
 											fontSize: "0.875rem",
 											fontWeight: 500,
 											borderRadius: "var(--shape-xs)",
-											"&:focus-visible": { outline: "2px solid var(--md-sys-color-primary)" },
+											"&:focus-visible": {
+												outline: "2px solid var(--md-sys-color-primary)",
+											},
 										}}
 									>
 										{txRowTitle(t)}
@@ -495,7 +499,11 @@ function TransactionList({
 						pageCount={items.length}
 						state={selection.state}
 						wide={selection.wide}
-						load={() => listMatchingIdsFn({ data: { ...pickFilterValues(search), q: search.q } })}
+						load={() =>
+							listMatchingIdsFn({
+								data: { ...pickFilterValues(search), q: search.q },
+							})
+						}
 						onLoaded={selection.selectAll}
 					/>
 				}
@@ -607,7 +615,10 @@ function TransactionList({
 /** The frosted pills in the page hero: how many transactions, and how many filters are on. */
 function heroStats(total: number, activeCount: number, upcoming: number) {
 	const pills = [
-		{ symbol: "receipt_long", label: `${total} ${total === 1 ? "transaction" : "transactions"}` },
+		{
+			symbol: "receipt_long",
+			label: `${total} ${total === 1 ? "transaction" : "transactions"}`,
+		},
 	];
 	if (activeCount > 0)
 		pills.push({
@@ -677,7 +688,10 @@ function TransactionsPage() {
 	// or straight away if the load fails.
 	const [shownFilters, showFilters] = useOptimistic(
 		filterValues,
-		(current, change: Partial<TransactionFilterValues>) => ({ ...current, ...change }),
+		(current, change: Partial<TransactionFilterValues>) => ({
+			...current,
+			...change,
+		}),
 	);
 	const activeCount = countActiveFilters(shownFilters);
 	const patch = (p: Partial<TransactionFilterValues>) =>
@@ -688,7 +702,9 @@ function TransactionsPage() {
 	const clearAll = () =>
 		startTransition(async () => {
 			showFilters(pickFilterValues({}));
-			await navigate({ search: (p) => ({ page: 1, pageSize: p.pageSize, q: p.q }) });
+			await navigate({
+				search: (p) => ({ page: 1, pageSize: p.pageSize, q: p.q }),
+			});
 		});
 
 	const activeFilters = buildActiveFilters({

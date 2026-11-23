@@ -1,22 +1,28 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import type { PageResult } from "#/lib/pagination";
+import { DEFAULT_PAGE_SIZE, PAGE_SIZES } from "#/lib/pagination";
+import { MAX_SELECT_ALL } from "#/lib/selection";
 import {
-	PAYMENT_METHODS,
-	TRANSACTION_TYPES,
 	type ApiResult,
 	type BulkResult,
 	type CategoryMonths,
 	type CategoryTotals,
+	PAYMENT_METHODS,
 	type PlaceTotals,
+	TRANSACTION_TYPES,
 	type Transaction,
 	type TransactionTotals,
 	type TransferSuggestion,
 } from "#/types/api";
-import type { PageResult } from "#/lib/pagination";
 import { apiRequest } from "./api";
-import { MAX_SELECT_ALL } from "#/lib/selection";
 
-import { DEFAULT_PAGE_SIZE, PAGE_SIZES } from "#/lib/pagination";
+function formatLocalDate(date: Date): string {
+	const year = date.getFullYear();
+	const month = String(date.getMonth() + 1).padStart(2, "0");
+	const day = String(date.getDate()).padStart(2, "0");
+	return `${year}-${month}-${day}`;
+}
 
 // Decimals are validated as strings and forwarded untouched: no float round-trip. Amounts are
 // always positive: the transaction `type` decides whether money comes in or goes out.
@@ -207,7 +213,9 @@ export const getCategoryMonthsFn = createServerFn({ method: "GET" })
 		}),
 	)
 	.handler(async ({ data }) =>
-		apiRequest<CategoryMonths>("/transactions/categories/monthly", { query: data }),
+		apiRequest<CategoryMonths>("/transactions/categories/monthly", {
+			query: data,
+		}),
 	);
 
 export const createTransactionFn = createServerFn({ method: "POST" })
@@ -297,10 +305,19 @@ export const listTrashIdsFn = createServerFn({ method: "GET" }).handler(async ()
 	apiRequest<string[]>("/transactions/trash/ids"),
 );
 
-/** The planned (upcoming) transactions, soonest first, whatever their date. */
-export const listUpcomingFn = createServerFn({ method: "GET" }).handler(async () =>
-	apiRequest<Transaction[]>("/transactions", { query: { planned: "true", limit: 100 } }),
-);
+/** The planned (upcoming) transactions, soonest first. With `days`, only those due within that many
+ * days from today; overdue ones still lead. Without it, whatever their date. */
+export const listUpcomingFn = createServerFn({ method: "GET" })
+	.validator(z.object({ days: z.number().int().min(1) }).optional())
+	.handler(async ({ data }) => {
+		const query: Record<string, string | number> = { planned: "true", limit: 100 };
+		if (data) {
+			const end = new Date();
+			end.setDate(end.getDate() + data.days);
+			query.date_to = formatLocalDate(end);
+		}
+		return apiRequest<Transaction[]>("/transactions", { query });
+	});
 
 /** Mark a planned transaction as paid, optionally with the real date and amount. */
 export const postTransactionFn = createServerFn({ method: "POST" })
@@ -330,7 +347,12 @@ export const postTransactionFn = createServerFn({ method: "POST" })
 	);
 
 export const listTrashFn = createServerFn({ method: "GET" })
-	.validator(z.object({ page: z.number().int().min(1), pageSize: z.number().int().min(1) }))
+	.validator(
+		z.object({
+			page: z.number().int().min(1),
+			pageSize: z.number().int().min(1),
+		}),
+	)
 	.handler(async ({ data }) => {
 		const res = await apiRequest<Transaction[]>("/transactions/trash", {
 			query: { limit: data.pageSize, offset: (data.page - 1) * data.pageSize },
@@ -348,14 +370,18 @@ export const listTrashFn = createServerFn({ method: "GET" })
 export const restoreTransactionFn = createServerFn({ method: "POST" })
 	.validator(z.object({ id: z.uuid() }))
 	.handler(async ({ data }) =>
-		apiRequest<Transaction>(`/transactions/${data.id}/restore`, { method: "POST" }),
+		apiRequest<Transaction>(`/transactions/${data.id}/restore`, {
+			method: "POST",
+		}),
 	);
 
 /** Deletes for good: only a transaction already in the trash. */
 export const deleteTransactionPermanentlyFn = createServerFn({ method: "POST" })
 	.validator(z.object({ id: z.uuid() }))
 	.handler(async ({ data }) =>
-		apiRequest<void>(`/transactions/${data.id}/permanent`, { method: "DELETE" }),
+		apiRequest<void>(`/transactions/${data.id}/permanent`, {
+			method: "DELETE",
+		}),
 	);
 
 /** Purchases an income could be linked to as a refund, most likely first. */
@@ -368,9 +394,9 @@ export const listRefundCandidatesFn = createServerFn({ method: "GET" })
 	);
 
 /** Pairs that look like one move of your own money entered twice (an expense and an income). */
-export const listTransferSuggestionsFn = createServerFn({ method: "GET" }).handler(async () =>
-	apiRequest<TransferSuggestion[]>("/transactions/transfer-suggestions"),
-);
+export const listTransferSuggestionsFn = createServerFn({
+	method: "GET",
+}).handler(async () => apiRequest<TransferSuggestion[]>("/transactions/transfer-suggestions"));
 
 const pairSchema = z.object({ expense_id: z.uuid(), income_id: z.uuid() });
 
@@ -378,14 +404,20 @@ const pairSchema = z.object({ expense_id: z.uuid(), income_id: z.uuid() });
 export const dismissTransferSuggestionFn = createServerFn({ method: "POST" })
 	.validator(pairSchema)
 	.handler(async ({ data }) =>
-		apiRequest<void>("/transactions/transfer-suggestions/dismiss", { method: "POST", body: data }),
+		apiRequest<void>("/transactions/transfer-suggestions/dismiss", {
+			method: "POST",
+			body: data,
+		}),
 	);
 
 /** Make an expense and an income, the two sides of one transfer, into that transfer. */
 export const linkTransferFn = createServerFn({ method: "POST" })
 	.validator(pairSchema)
 	.handler(async ({ data }) =>
-		apiRequest<Transaction>("/transactions/link-transfer", { method: "POST", body: data }),
+		apiRequest<Transaction>("/transactions/link-transfer", {
+			method: "POST",
+			body: data,
+		}),
 	);
 
 /** Where the spending went, for the map: marked expenses grouped by spot. */

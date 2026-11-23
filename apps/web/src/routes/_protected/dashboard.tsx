@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
@@ -10,18 +10,19 @@ import BalanceTrendCard from "#/components/dashboard/BalanceTrendCard";
 import BudgetGoalsCard from "#/components/dashboard/BudgetGoalsCard";
 import CreditUsageCard from "#/components/dashboard/CreditUsageCard";
 import LatestTransactionsCard from "#/components/dashboard/LatestTransactionsCard";
-import { CardMorph } from "#/lib/card-morph";
 import MoneyFlowCard from "#/components/dashboard/MoneyFlowCard";
 import MonthlyCard from "#/components/dashboard/MonthlyCard";
 import NeedsWantsCard from "#/components/dashboard/NeedsWantsCard";
-import UpcomingSoonCard from "#/components/dashboard/UpcomingSoonCard";
-import SummaryCard from "#/components/dashboard/SummaryCard";
+import SectionGrid, { type Section } from "#/components/dashboard/SectionGrid";
 import SpendingCard from "#/components/dashboard/SpendingCard";
+import SummaryCard from "#/components/dashboard/SummaryCard";
+import UpcomingSoonCard from "#/components/dashboard/UpcomingSoonCard";
 import PageHeader from "#/components/PageHeader";
 import PageSkeleton from "#/components/PageSkeleton";
-import SectionGrid, { type Section } from "#/components/dashboard/SectionGrid";
 import PendingOverlay from "#/components/PendingOverlay";
-import Symbol from "#/components/Symbol";
+import IconSymbol from "#/components/Symbol";
+import { creditUsage } from "#/lib/accounts";
+import { CardMorph } from "#/lib/card-morph";
 import {
 	DEFAULT_SECTION_ORDER,
 	monthBounds,
@@ -33,7 +34,6 @@ import { sumDecimals } from "#/lib/format";
 import { localToday } from "#/lib/planned";
 import { unwrap } from "#/lib/unwrap";
 import { useAction } from "#/lib/use-action";
-import { creditUsage } from "#/lib/accounts";
 import { listAccountsFn } from "#/server/accounts";
 import { getMeFn, updateMeFn } from "#/server/auth";
 import { getBudgetFn } from "#/server/budget";
@@ -86,7 +86,9 @@ export const Route = createFileRoute("/_protected/dashboard")({
 			me,
 		] = await Promise.all([
 			getTransactionTotalsFn({ data: range }),
-			getTransactionTotalsFn({ data: { date_from: previous.start, date_to: previous.end } }),
+			getTransactionTotalsFn({
+				data: { date_from: previous.start, date_to: previous.end },
+			}),
 			getCategoryTotalsFn({ data: range }),
 			getMonthlyStatsFn({ data: { months: 12, to: current.end } }),
 			getBalanceTrendFn({ data: { from: current.start, to: trendEnd } }),
@@ -95,7 +97,7 @@ export const Route = createFileRoute("/_protected/dashboard")({
 			listGoalsFn({ data: {} }),
 			listAccountsFn(),
 			getAvailableToSpendFn(),
-			listUpcomingFn(),
+			listUpcomingFn({ data: { days: 10 } }),
 			getMeFn(),
 		]);
 		return {
@@ -182,7 +184,12 @@ function DashboardPage() {
 			span: 4,
 			node: <BalanceTrendCard trend={trend} against={monthLabel(month, true)} />,
 		},
-		{ id: "monthly", label: "Cash flow", span: 4, node: <MonthlyCard stats={monthly} /> },
+		{
+			id: "monthly",
+			label: "Cash flow",
+			span: 4,
+			node: <MonthlyCard stats={monthly} />,
+		},
 		{
 			id: "budget",
 			label: "Budget and goals",
@@ -268,7 +275,7 @@ function DashboardPage() {
 							aria-label="Previous month"
 							onClick={() => goTo(shiftMonth(month, -1))}
 						>
-							<Symbol name="chevron_left" size={22} />
+							<IconSymbol name="chevron_left" size={22} />
 						</IconButton>
 						<Typography
 							sx={{
@@ -287,7 +294,7 @@ function DashboardPage() {
 							aria-label="Next month"
 							onClick={() => goTo(shiftMonth(month, 1))}
 						>
-							<Symbol name="chevron_right" size={22} />
+							<IconSymbol name="chevron_right" size={22} />
 						</IconButton>
 						{!isCurrent && (
 							<Button color="inherit" size="small" onClick={() => goTo(undefined)}>
@@ -302,7 +309,7 @@ function DashboardPage() {
 							disabled={editing}
 							onClick={startEditing}
 						>
-							<Symbol name="tune" size={22} />
+							<IconSymbol name="tune" size={22} />
 						</IconButton>
 					</Box>
 				}
