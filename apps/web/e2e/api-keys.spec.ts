@@ -49,6 +49,7 @@ test("a key is made with chosen permissions, rotated, and deleted", async ({ pag
 	// delete it: it stops working at once
 	await page.getByRole("button", { name: "Delete", exact: true }).click();
 	await page.getByRole("dialog").getByRole("button", { name: "Delete", exact: true }).click();
+	await expect(page.getByRole("dialog")).toBeHidden();
 	await expect(page.getByText("Telegram bot")).toBeHidden();
 	expect((await request.get(`${API}/budget`, auth(next))).status()).toBe(401);
 });
@@ -61,9 +62,11 @@ test("the permission grid can be changed and the role follows it", async ({ page
 	const form = page.getByRole("dialog", { name: "New API key" });
 	await form.getByLabel("Name").fill("Custom key");
 	// start as Viewer, then add a permission: it is no longer exactly that role
-	await form.getByRole("checkbox", { name: "Transactions: Add and change" }).check();
+	await form
+		.getByRole("checkbox", { name: "Transactions, groups and templates: Add and change" })
+		.check();
 	await expect(form.getByRole("combobox", { name: "Role" })).toHaveText(/Assistant/);
-	await form.getByRole("checkbox", { name: "Goals: Delete" }).check();
+	await form.getByRole("checkbox", { name: "Savings goals: Delete" }).check();
 	await expect(form.getByRole("combobox", { name: "Role" })).toHaveText(/Custom/);
 	await form.getByRole("button", { name: "Make key" }).click();
 	await page

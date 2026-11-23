@@ -22,7 +22,7 @@ test("a savings account can be marked as one you spend from, and the plan counts
 	await expect(dialog).toBeHidden();
 
 	await open(page, "/plan");
-	await expect(page.getByText(/^MVR\s8,000\.00$/).first()).toBeVisible();
+	await expect(page.getByText(/^MVR\s?8,000\.00$/).first()).toBeVisible();
 });
 
 test("a credit card has no spend-from switch", async ({ page, request }) => {

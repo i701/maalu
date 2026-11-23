@@ -84,7 +84,7 @@ test("an account's page can search, and adding a transaction starts in that acco
 
 	await page.getByRole("button", { name: "Add transaction" }).first().click();
 	const form = page.getByRole("dialog", { name: "Add transaction" });
-	await expect(form.getByRole("combobox", { name: "Account" })).toContainText("Main");
+	await expect(form.getByRole("combobox", { name: "Account" })).toHaveValue("Main");
 });
 
 test("an account that does not exist says so", async ({ page }) => {
@@ -112,12 +112,12 @@ test("the accounts list filters by bank and can group by bank", async ({ page, r
 	await expect(page.getByText("MIB Current")).toBeVisible();
 	await expect(page.getByText("BML Current")).toBeHidden();
 	await expect(page.getByText("Drawer")).toBeHidden();
-	await expect(page.getByText("Wallet")).toBeHidden();
+	await expect(page.getByText("Wallet", { exact: true })).toBeHidden();
 
 	// "All banks" brings everything back
 	await page.getByRole("button", { name: "All banks" }).click();
 	await expect(page.getByText("BML Current")).toBeVisible();
-	await expect(page.getByText("Wallet")).toBeVisible();
+	await expect(page.getByText("Wallet", { exact: true })).toBeVisible();
 
 	// By bank groups the cards under each bank, with the rest under "No bank"
 	await page.getByRole("button", { name: "Group by bank" }).click();

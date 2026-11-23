@@ -41,14 +41,37 @@ export async function openTransaction(page: Page, title: string | RegExp) {
 	await page.getByRole("button", { name: title }).first().click();
 }
 
-/** Sign up through the real sign-up page and land on the dashboard. */
+/** Sign up through the real sign-up page and land on the dashboard. A form submitted just before
+ * React owns it goes the plain-HTML way and the page comes back as an empty `/register`, even after
+ * `hydrated`: that is tried again. A sign-up that is only slow (the API hashes passwords one after
+ * another under load) still has its fields filled, and is waited for, not repeated. */
 export async function signUp(page: Page, email = newEmail()): Promise<string> {
-	await open(page, "/register");
-	await page.getByLabel("Email").fill(email);
-	await page.getByLabel("Password").fill(PASSWORD);
-	await page.getByRole("button", { name: "Create account" }).click();
-	await expect(page).toHaveURL(/\/dashboard/);
-	return email;
+	for (let attempt = 1; ; attempt++) {
+		await open(page, "/register");
+		await page.getByLabel("Email").fill(email);
+		await page.getByLabel("Password").fill(PASSWORD);
+		await page.getByRole("button", { name: "Create account" }).click();
+		try {
+			await page.waitForURL(/\/dashboard/, { timeout: 15_000 });
+			return email;
+		} catch (error) {
+			const lost =
+				(await page
+					.getByLabel("Email")
+					.inputValue()
+					.catch(() => "")) === "";
+			// the account was made but the page did not move on: sign in with it
+			if (await page.getByText("Email already registered").isVisible()) {
+				await open(page, "/login");
+				await page.getByLabel("Email").fill(email);
+				await page.getByLabel("Password").fill(PASSWORD);
+				await page.getByRole("button", { name: "Sign in" }).click();
+				await expect(page).toHaveURL(/\/dashboard/);
+				return email;
+			}
+			if (!lost || attempt >= 3) throw error;
+		}
+	}
 }
 
 /** A client for the API as this user, to set up data without clicking through the app. */

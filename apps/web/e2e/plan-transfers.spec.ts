@@ -24,7 +24,7 @@ test("a planned transfer to savings comes off what is available, and marking it 
 	await open(page, "/plan");
 	await expect(page.getByText("Monthly saving")).toBeVisible();
 	await expect(page.getByText("Transfer", { exact: true })).toBeVisible();
-	await expect(page.getByText(/^MVR\s3,800\.00$/).first()).toBeVisible(); // 5,000 less 1,200
+	await expect(page.getByText(/^MVR\s?3,800\.00$/).first()).toBeVisible(); // 5,000 less 1,200
 
 	await page.getByRole("button", { name: "Mark as done" }).click();
 	const dialog = page.getByRole("dialog", { name: "Mark as done" });

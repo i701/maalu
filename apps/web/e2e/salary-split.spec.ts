@@ -50,7 +50,7 @@ test("rules split a new salary, and the split can be undone", async ({ page, req
 	await split.getByLabel("Amount for Savings").fill("2500");
 	await split.getByRole("button", { name: "Make the split" }).click();
 	// the transfer into Savings is now in the list
-	await expect(page.getByText("From salary: Savings")).toBeVisible();
+	await expect(page.getByText("Main → Savings")).toBeVisible();
 
 	// the money moved, and the goal has its share
 	const balance = async (id: string) => Number((await api.get<Account>(`/accounts/${id}`)).balance);
@@ -67,7 +67,7 @@ test("rules split a new salary, and the split can be undone", async ({ page, req
 	await expect(done.getByText(/Savings: MVR\s2,500\.00 moved/)).toBeVisible();
 	await expect(done.getByText(/Trip: MVR\s1,500\.00 set aside/)).toBeVisible();
 	await done.getByRole("button", { name: "Undo the split" }).click();
-	await expect(page.getByText("From salary: Savings")).toBeHidden();
+	await expect(page.getByText("Main → Savings")).toBeHidden();
 	await expect.poll(() => balance(main.id)).toBe(10000);
 	expect(await balance(savings.id)).toBe(0);
 	expect(await saved()).toBe(0);

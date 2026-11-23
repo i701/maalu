@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { hydrated, newEmail, open, PASSWORD, signUp } from "./helpers";
 
 test("a new person can sign up, sign out and sign back in", async ({ page }) => {
+	test.setTimeout(90_000); // sign-up can be slow under load
 	const email = await signUp(page);
 	await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
 

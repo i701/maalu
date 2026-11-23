@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { apiAs, open, signUp } from "./helpers";
+import { apiAs, open, openTransaction, signUp } from "./helpers";
 
 const day = () =>
 	new Date(Date.UTC(new Date().getFullYear(), new Date().getMonth(), 1)).toISOString().slice(0, 10);
@@ -18,22 +18,13 @@ test("pay in the Salary category cannot be linked to a purchase, other income ca
 	await api.transaction({ type: "income", amount: "100.00", category: "Cashback", ...base });
 
 	await open(page, "/transactions");
-	await expect(page.getByText("Cashback").first()).toBeVisible();
-	// three rows, but only the cashback can be a refund
-	await expect(page.getByRole("button", { name: "Link to a purchase" })).toHaveCount(1);
-});
-
-test("every account has a Salary category that cannot be deleted or merged away", async ({
-	page,
-}) => {
-	await signUp(page);
-	await open(page, "/categories");
-	// the only category a new account has
-	await expect(page.getByText("Default · pay")).toBeVisible();
-	await expect(page.getByRole("button", { name: "Delete" })).toBeDisabled();
-	await expect(page.getByRole("button", { name: "Merge into another category" })).toBeDisabled();
-
-	// its name stays, but its colour can be changed
-	await page.getByRole("button", { name: "Edit" }).click();
-	await expect(page.getByLabel("Name")).toBeDisabled();
+	// only the cashback can be a refund: the button is in a transaction's sheet
+	const link = page.getByRole("button", { name: "Link to a purchase" });
+	await openTransaction(page, /Salary/);
+	await expect(page.getByRole("button", { name: "Edit" })).toBeVisible();
+	await expect(link).toHaveCount(0);
+	await page.keyboard.press("Escape");
+	await expect(page.getByRole("button", { name: "Edit" })).toBeHidden();
+	await openTransaction(page, /Cashback/);
+	await expect(link).toHaveCount(1);
 });

@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { expect, test, type Browser, type Page, type TestInfo } from "@playwright/test";
-import { apiAs, open, signUp } from "./helpers";
+import { apiAs, open, openTransaction, signUp } from "./helpers";
 
 type Account = { id: string; name: string; balance: string };
 type Summary = { income: string; expense: string };
@@ -93,10 +93,13 @@ test("a backup restores into a new account, with the same money in it", async ({
 
 	// and in the app: the transactions, with their vendor, tag and items
 	await open(other.page, "/transactions");
-	await expect(other.page.getByText("Weekly shop")).toBeVisible();
 	await expect(other.page.getByText("October pay")).toBeVisible();
 	await expect(other.page.getByText("Corner Shop").first()).toBeVisible();
+	// the card is titled by its vendor; the description and tag are in its sheet
+	await openTransaction(other.page, /Corner Shop/);
+	await expect(other.page.getByText("Weekly shop").first()).toBeVisible();
 	await expect(other.page.getByText("Home").first()).toBeVisible();
+	await other.page.keyboard.press("Escape");
 	await expect(other.page.getByText("Dinner out")).toBeVisible();
 	await open(other.page, "/accounts");
 	await expect(other.page.getByText("1,279.50").first()).toBeVisible();

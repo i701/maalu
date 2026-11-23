@@ -56,7 +56,7 @@ test("a credit card shows its statement, what is still to pay, and the plan coun
 	// the month plan counts it as money not available: 5,000 less the 600 statement
 	await open(page, "/plan");
 	await expect(page.getByText("Visa card payment")).toBeVisible();
-	await expect(page.getByText(/^MVR\s4,400\.00$/).first()).toBeVisible();
+	await expect(page.getByText(/^MVR\s?4,400\.00$/).first()).toBeVisible();
 
 	// paying it through the API clears it from the plan and marks the statement paid
 	await api.post("/transactions", {

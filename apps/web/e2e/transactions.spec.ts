@@ -70,6 +70,7 @@ test("deleting a transaction moves it to the trash, and it can come back", async
 		.getByRole("dialog")
 		.getByRole("button", { name: /Delete|Move/ })
 		.click();
+	await expect(page.getByRole("dialog")).toBeHidden();
 	await expect(page.getByText("Bananas")).toBeHidden();
 
 	await open(page, "/trash");

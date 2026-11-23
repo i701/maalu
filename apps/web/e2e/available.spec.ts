@@ -26,7 +26,7 @@ test("the dashboard shows what is left after bills and money set aside", async (
 	await open(page, "/dashboard");
 	await expect(page.getByText(/Available to spend until/)).toBeVisible();
 	// 5,000 held, less a 300 bill and 1,000 set aside for the trip
-	await expect(page.getByText(/^MVR\s3,700\.00$/).first()).toBeVisible();
+	await expect(page.getByText(/^MVR\s?3,700\.00$/).first()).toBeVisible();
 	await expect(
 		page.getByText(
 			/MVR\s5,000\.00 in 1 account, less MVR\s300\.00 for 1 bill and MVR\s1,000\.00 set aside for 1 goal/,
@@ -65,7 +65,7 @@ test("it says so when the bills come to more than you have", async ({ page, requ
 
 	await open(page, "/dashboard");
 	await expect(page.getByText("Short", { exact: true })).toBeVisible();
-	await expect(page.getByText(/^-MVR\s150\.00$/).first()).toBeVisible();
+	await expect(page.getByText(/^MVR\s?-150\.00$/).first()).toBeVisible();
 	await page.getByRole("button", { name: "Show the working" }).click();
 	// a salary that has not arrived is shown but never counted
 	await expect(page.getByText(/MVR\s9,000\.00 of income is planned before then/)).toBeVisible();

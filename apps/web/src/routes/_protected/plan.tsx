@@ -105,7 +105,7 @@ function PlanPage() {
 								gridTemplateColumns: {
 									xs: "minmax(0, 1fr)",
 									sm: "repeat(2, 1fr)",
-									lg: "repeat(4, 1fr)",
+									xl: "repeat(4, 1fr)",
 								},
 							}}
 						>

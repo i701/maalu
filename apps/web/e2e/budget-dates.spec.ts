@@ -60,7 +60,7 @@ test("a limit for set dates is added from the Budget page and counts the whole s
 	// it has its own section, with what was spent over the whole stretch and the days left
 	await expect(page.getByText("For set dates")).toBeVisible();
 	await expect(page.getByText("Thailand", { exact: true })).toBeVisible();
-	await expect(page.getByText(/MVR\s750\.00/)).toBeVisible();
+	await expect(page.getByText(/MVR\s?750\.00/)).toBeVisible();
 	await expect(page.getByText(/of MVR\s1,000\.00/)).toBeVisible();
 	await expect(page.getByText(/11 days left/)).toBeVisible();
 	await expect(page.getByText(/On track · 75%/)).toBeVisible();
