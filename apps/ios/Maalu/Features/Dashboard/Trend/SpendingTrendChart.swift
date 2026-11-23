@@ -6,14 +6,16 @@ struct SpendingTrendChart: View {
     let stack: SpendingStack
     @Binding var selectedDate: Date?
     let held: String?
+    @State private var isShown = false
 
     var body: some View {
         let picked = selectedDate.flatMap { stack.month(containing: $0) }
         let gap = stack.tallest * 0.012
+        let grown = isShown ? 1.0 : 0
         Chart {
             ForEach(stack.months) { month in
                 ForEach(month.layers(gap: gap)) { layer in
-                    BarMark(x: .value("Month", month.start, unit: .month), yStart: .value("From", layer.start), yEnd: .value("To", layer.end), width: .ratio(0.62))
+                    BarMark(x: .value("Month", month.start, unit: .month), yStart: .value("From", layer.start * grown), yEnd: .value("To", layer.end * grown), width: .ratio(0.62))
                         .foregroundStyle(by: .value("Category", layer.piece.name))
                         .cornerRadius(3)
                         .opacity(isLit(month, layer.piece, picked: picked) ? 1 : 0.25)
@@ -29,6 +31,7 @@ struct SpendingTrendChart: View {
         .chartYAxis(.hidden)
         .chartXSelection(value: $selectedDate)
         .frame(height: 140)
+        .revealOnAppear($isShown)
         .accessibilityHidden(true)
     }
 

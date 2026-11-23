@@ -3,6 +3,7 @@ import SwiftUI
 
 struct CashFlowChart: View {
     let months: [MonthlyPoint]
+    @State private var isShown = false
 
     private static let income = "Income"
     private static let expenses = "Expenses"
@@ -10,10 +11,10 @@ struct CashFlowChart: View {
     var body: some View {
         Chart(months) { month in
             if let start = month.start {
-                BarMark(x: .value("Month", start, unit: .month), y: .value("Amount", month.incomeValue.doubleValue))
+                BarMark(x: .value("Month", start, unit: .month), y: .value("Amount", isShown ? month.incomeValue.doubleValue : 0))
                     .foregroundStyle(by: .value("Type", Self.income))
                     .position(by: .value("Type", Self.income))
-                BarMark(x: .value("Month", start, unit: .month), y: .value("Amount", month.expenseValue.doubleValue))
+                BarMark(x: .value("Month", start, unit: .month), y: .value("Amount", isShown ? month.expenseValue.doubleValue : 0))
                     .foregroundStyle(by: .value("Type", Self.expenses))
                     .position(by: .value("Type", Self.expenses))
             }
@@ -26,6 +27,7 @@ struct CashFlowChart: View {
             }
         }
         .frame(height: 200)
+        .revealOnAppear($isShown)
         .accessibilityLabel("Income and expenses by month")
     }
 }

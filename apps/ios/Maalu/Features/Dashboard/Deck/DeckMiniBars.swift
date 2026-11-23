@@ -5,10 +5,11 @@ import SwiftUI
 struct DeckMiniBars: View {
     let bars: [MiniBar]
     @Environment(\.deckInk) private var ink
+    @State private var isShown = false
 
     var body: some View {
         Chart(bars) { bar in
-            BarMark(x: .value("Label", bar.label), y: .value("Value", bar.value), width: .ratio(0.6))
+            BarMark(x: .value("Label", bar.label), y: .value("Value", isShown ? bar.value : 0), width: .ratio(0.6))
                 .foregroundStyle(ink.opacity(bar.isHighlighted ? 1 : 0.28))
                 .cornerRadius(3)
         }
@@ -19,6 +20,7 @@ struct DeckMiniBars: View {
             }
         }
         .chartYScale(domain: .automatic(includesZero: true))
+        .revealOnAppear($isShown)
         .accessibilityHidden(true)
     }
 }

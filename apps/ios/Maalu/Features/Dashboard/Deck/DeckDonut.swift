@@ -10,18 +10,20 @@ struct DeckDonut: View {
     /// A small bar chart for the space on the right; none leaves it empty.
     var bars: [MiniBar] = []
     @Environment(\.deckInk) private var ink
+    @State private var isShown = false
 
     var body: some View {
         HStack(spacing: 16) {
             Chart {
-                SectorMark(angle: .value("First", first.share), innerRadius: .ratio(0.68), angularInset: 1.5)
+                SectorMark(angle: .value("First", isShown ? first.share : 0), innerRadius: .ratio(0.68), angularInset: 1.5)
                     .foregroundStyle(ink)
                     .cornerRadius(4)
-                SectorMark(angle: .value("Second", second.share), innerRadius: .ratio(0.68), angularInset: 1.5)
+                SectorMark(angle: .value("Second", isShown ? second.share : 0), innerRadius: .ratio(0.68), angularInset: 1.5)
                     .foregroundStyle(ink.opacity(0.28))
                     .cornerRadius(4)
             }
             .frame(width: 92, height: 92)
+            .revealOnAppear($isShown)
             .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 10) {
                 legend(first, dim: false)

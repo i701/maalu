@@ -5,17 +5,19 @@ struct IncomeSpendBar: View {
     let income: Decimal
     let spent: Decimal
     var color: Color = .brand
+    @State private var isShown = false
 
     var body: some View {
         GeometryReader { proxy in
             let share = incomeShare
             HStack(spacing: 4) {
                 Capsule().fill(color)
-                    .frame(width: max(8, (proxy.size.width - 4) * share))
+                    .frame(width: max(8, (proxy.size.width - 4) * (isShown ? share : 0)))
                 Capsule().fill(color.opacity(0.3))
             }
         }
         .frame(height: 8)
+        .revealOnAppear($isShown)
         .accessibilityHidden(true)
     }
 

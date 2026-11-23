@@ -4,6 +4,7 @@ import SwiftUI
 struct SpendingMeterBar: View {
     let rows: [SpendingRow]
     @Binding var hot: SpendingRow.ID?
+    @State private var isShown = false
 
     private static let gap: CGFloat = 3
     private static let outer: CGFloat = 6
@@ -16,7 +17,7 @@ struct SpendingMeterBar: View {
                 ForEach(Array(rows.enumerated()), id: \.element.id) { index, row in
                     UnevenRoundedRectangle(cornerRadii: radii(at: index), style: .continuous)
                         .fill(MeterPalette.color(rank: index, isRemainder: row.isOther))
-                        .frame(width: widths[index])
+                        .frame(width: isShown ? widths[index] : 0)
                         .opacity(hot != nil && hot != row.id ? 0.22 : 1)
                 }
             }
@@ -28,6 +29,7 @@ struct SpendingMeterBar: View {
             )
         }
         .frame(height: 40)
+        .revealOnAppear($isShown)
         .accessibilityHidden(true)
     }
 

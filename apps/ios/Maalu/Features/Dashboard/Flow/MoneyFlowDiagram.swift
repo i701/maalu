@@ -7,6 +7,7 @@ struct MoneyFlowDiagram: View {
     var canvasSize: CGSize?
     @State private var width = 0.0
     @State private var selectedID: String?
+    @State private var isShown = false
 
     private static let labelWidth = 88.0
     private static let height = 290.0
@@ -53,6 +54,7 @@ struct MoneyFlowDiagram: View {
                     select(layout.nodeID(at: location))
                 }
                 .padding(.horizontal, Self.labelWidth)
+                .mask(alignment: .leading) { Rectangle().scaleEffect(x: isShown ? 1 : 0, anchor: .leading) }
                 FlowSideLabels(layout: layout, column: 0, currency: currency, labelWidth: Self.labelWidth, totalWidth: size.width, height: size.height, selectedID: selectedID, onSelect: select)
                 if flow.lastColumn == 3 {
                     FlowSideLabels(layout: layout, column: 2, currency: currency, labelWidth: Self.labelWidth, totalWidth: size.width, height: size.height, selectedID: selectedID, onSelect: select, isInner: true)
@@ -60,6 +62,8 @@ struct MoneyFlowDiagram: View {
                 FlowSideLabels(layout: layout, column: flow.lastColumn, currency: currency, labelWidth: Self.labelWidth, totalWidth: size.width, height: size.height, selectedID: selectedID, onSelect: select)
             }
             .frame(width: canvasSize?.width, height: size.height)
+            .opacity(isShown ? 1 : 0)
+            .revealOnAppear($isShown)
             .onGeometryChange(for: Double.self) { $0.size.width } action: { width = $0 }
             FlowReadout(node: flow.nodes.first { $0.id == selectedID }, total: flow.total, currency: currency)
         }

@@ -4,6 +4,7 @@ import SwiftUI
 struct BudgetRing: View {
     let line: BudgetLine
     let currency: String
+    @State private var isShown = false
 
     private var color: Color { Color(budgetStatus: line.status) }
 
@@ -13,7 +14,7 @@ struct BudgetRing: View {
                 Circle().inset(by: 3).stroke(color.opacity(0.18), lineWidth: 6)
                 Circle()
                     .inset(by: 3)
-                    .trim(from: 0, to: min(Double(line.percent) / 100, 1))
+                    .trim(from: 0, to: isShown ? min(Double(line.percent) / 100, 1) : 0)
                     .stroke(color, style: StrokeStyle(lineWidth: 6, lineCap: .round))
                     .rotationEffect(.degrees(-90))
                 Text("\(line.percent)%")
@@ -21,6 +22,7 @@ struct BudgetRing: View {
                     .numericFont()
             }
             .frame(width: 60, height: 60)
+            .revealOnAppear($isShown)
             Text(line.name)
                 .font(.caption.weight(.medium))
                 .lineLimit(1)
