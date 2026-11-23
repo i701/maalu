@@ -2005,8 +2005,7 @@
         "evidence": [
           "apps/ios/Maalu/Features/NetWorth/NetWorthView.swift",
           "apps/ios/Maalu/Features/NetWorth/NetWorthText.swift",
-          "apps/ios/Maalu/Features/NetWorth/NetWorthBar.swift",
-          "apps/ios/Maalu/Features/Dashboard/NetWorthSection.swift"
+          "apps/ios/Maalu/Features/NetWorth/NetWorthBar.swift"
         ]
       },
       "routes": [
