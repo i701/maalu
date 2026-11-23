@@ -822,7 +822,7 @@
         "status": "done",
         "evidence": [
           "apps/ios/Maalu/Features/Transactions/Form/TransactionDateSection.swift",
-          "apps/ios/Maalu/Features/Transactions/Search/TransactionTypeChips.swift",
+          "apps/ios/Maalu/Features/Transactions/Filters/TransactionFiltersView.swift",
           "apps/ios/Maalu/Features/Plan/MarkPaid/MarkPaidDialog.swift"
         ]
       },
