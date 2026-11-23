@@ -12,7 +12,14 @@ import TableCell from "@mui/material/TableCell";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
-import { memo, startTransition, useCallback, useMemo, useOptimistic, useState } from "react";
+import {
+	memo,
+	startTransition,
+	useCallback,
+	useMemo,
+	useOptimistic,
+	useState,
+} from "react";
 import { z } from "zod";
 import ActiveFilters from "#/components/ActiveFilters";
 import BudgetAlert from "#/components/BudgetAlert";
@@ -147,18 +154,18 @@ export const Route = createFileRoute("/_protected/transactions")({
 		const wantsTotals =
 			Boolean(
 				deps.q ||
-				deps.type ||
-				deps.payment_method ||
-				deps.vendor_id ||
-				deps.category_id ||
-				deps.tag_ids?.length ||
-				deps.account_id ||
-				deps.card_id ||
-				deps.sorted_as ||
-				deps.min_amount ||
-				deps.max_amount ||
-				deps.date_from ||
-				deps.date_to,
+					deps.type ||
+					deps.payment_method ||
+					deps.vendor_id ||
+					deps.category_id ||
+					deps.tag_ids?.length ||
+					deps.account_id ||
+					deps.card_id ||
+					deps.sorted_as ||
+					deps.min_amount ||
+					deps.max_amount ||
+					deps.date_from ||
+					deps.date_to,
 			) && deps.type !== "transfer";
 		const [
 			transactions,
@@ -189,15 +196,23 @@ export const Route = createFileRoute("/_protected/transactions")({
 			listTemplatesFn(),
 			listTagsFn(),
 			getMeFn(),
-			listUpcomingFn(),
+			listUpcomingFn({ data: { days: 10 } }),
 			listCurrenciesFn(),
-			wantsTotals ? getTransactionTotalsFn({ data: deps }) : Promise.resolve(null),
+			wantsTotals
+				? getTransactionTotalsFn({ data: deps })
+				: Promise.resolve(null),
 			wantsTotals ? getCategoryTotalsFn({ data: deps }) : Promise.resolve(null),
 			// Names of the picked vendor/account, so the filter boxes show them without a list fetch.
 			listCategoriesFn(),
-			deps.vendor_id ? getVendorFn({ data: { id: deps.vendor_id } }) : Promise.resolve(null),
-			deps.category_id ? getCategoryFn({ data: { id: deps.category_id } }) : Promise.resolve(null),
-			deps.account_id ? getAccountFn({ data: { id: deps.account_id } }) : Promise.resolve(null),
+			deps.vendor_id
+				? getVendorFn({ data: { id: deps.vendor_id } })
+				: Promise.resolve(null),
+			deps.category_id
+				? getCategoryFn({ data: { id: deps.category_id } })
+				: Promise.resolve(null),
+			deps.account_id
+				? getAccountFn({ data: { id: deps.account_id } })
+				: Promise.resolve(null),
 			// for the "limits needing attention" strip; the page works without it
 			getBudgetFn({ data: {} }),
 			// pairs that look like one transfer entered twice; the page works without them
@@ -217,7 +232,8 @@ export const Route = createFileRoute("/_protected/transactions")({
 			itemCount: rows.items.length,
 		});
 		// e.g. the last row of the last page was deleted: land on the last page that has rows
-		if (last) throw redirect({ to: "/transactions", search: { ...deps, page: last } });
+		if (last)
+			throw redirect({ to: "/transactions", search: { ...deps, page: last } });
 		return {
 			...rows,
 			totals: totals ? unwrap(totals) : null,
@@ -237,8 +253,12 @@ export const Route = createFileRoute("/_protected/transactions")({
 			allGroups: groups.ok ? groups.data : [],
 			transferSuggestions: suggestions.ok ? suggestions.data : [],
 			hasSalaryRules: salaryRules.ok && salaryRules.data.length > 0,
-			selectedVendor: vendor?.ok ? { id: vendor.data.id, label: vendor.data.name } : null,
-			selectedCategory: category?.ok ? { id: category.data.id, label: category.data.name } : null,
+			selectedVendor: vendor?.ok
+				? { id: vendor.data.id, label: vendor.data.name }
+				: null,
+			selectedCategory: category?.ok
+				? { id: category.data.id, label: category.data.name }
+				: null,
 			selectedAccount: account?.ok
 				? {
 						id: account.data.id,
@@ -375,7 +395,10 @@ const TransactionsTable = memo(function TransactionsTable({
 									</Box>
 									<TxStatusPill t={t} today={today} />
 								</Box>
-								<Typography variant="caption" sx={{ color: "text.secondary", display: "block" }}>
+								<Typography
+									variant="caption"
+									sx={{ color: "text.secondary", display: "block" }}
+								>
 									{txRowLine(t)}
 								</Typography>
 							</Box>
@@ -425,7 +448,10 @@ function TxStatusPill({ t, today }: { t: Transaction; today: string }) {
 	if (!t.planned) return null;
 	const late = isOverdue(t, today);
 	return (
-		<TonalChip accent={late ? ACCENT.pink : ACCENT.amber} label={late ? "Overdue" : "Planned"} />
+		<TonalChip
+			accent={late ? ACCENT.pink : ACCENT.amber}
+			label={late ? "Overdue" : "Planned"}
+		/>
 	);
 }
 
@@ -433,7 +459,10 @@ function TxStatusPill({ t, today }: { t: Transaction; today: string }) {
 function CardsDate({ t }: { t: Transaction }) {
 	if (useViewMode() !== "cards") return null;
 	return (
-		<Typography variant="caption" sx={{ display: "block", color: "text.secondary" }}>
+		<Typography
+			variant="caption"
+			sx={{ display: "block", color: "text.secondary" }}
+		>
 			{formatWhen(t.transaction_date, t.transaction_time)}
 		</Typography>
 	);
@@ -480,7 +509,10 @@ function TransactionList({
 	const [grouping, setGrouping] = useState<string[] | null>(null);
 	// two selected transactions that are the two sides of one transfer can be made one
 	const pair = useMemo(
-		() => (selection.wide ? null : linkablePair(items.filter((t) => selection.selected.has(t.id)))),
+		() =>
+			selection.wide
+				? null
+				: linkablePair(items.filter((t) => selection.selected.has(t.id))),
 		[items, selection.selected, selection.wide],
 	);
 	const [linking, setLinking] = useState(false);
@@ -625,7 +657,8 @@ function heroStats(total: number, activeCount: number, upcoming: number) {
 			symbol: "tune",
 			label: `${activeCount} ${activeCount === 1 ? "filter" : "filters"}`,
 		});
-	if (upcoming > 0) pills.push({ symbol: "calendar_month", label: `${upcoming} upcoming` });
+	if (upcoming > 0)
+		pills.push({ symbol: "calendar_month", label: `${upcoming} upcoming` });
 	return pills;
 }
 
@@ -674,10 +707,16 @@ function TransactionsPage() {
 	}, []);
 	const [deleting, setDeleting] = useState<Transaction | null>(null);
 	const [converting, setConverting] = useState<Transaction | null>(null);
-	const { refunding, refundOf, edit, close: closeRefund } = useRefundDialog(setEditing);
+	const {
+		refunding,
+		refundOf,
+		edit,
+		close: closeRefund,
+	} = useRefundDialog(setEditing);
 	const salary = useSalarySplit(hasSalaryRules);
 
-	const setPage = (page: number) => navigate({ search: (p) => ({ ...p, page }), replace: true });
+	const setPage = (page: number) =>
+		navigate({ search: (p) => ({ ...p, page }), replace: true });
 
 	const filtered = hasAnyFilter(search);
 	const filterValues = pickFilterValues(search);
@@ -743,7 +782,11 @@ function TransactionsPage() {
 				description={`Amounts are totalled in ${user.base_currency}.`}
 				stats={heroStats(total, activeCount, upcoming.length)}
 				action={
-					<Button variant="contained" startIcon={<AddIcon />} onClick={() => setEditing("new")}>
+					<Button
+						variant="contained"
+						startIcon={<AddIcon />}
+						onClick={() => setEditing("new")}
+					>
 						Add transaction
 					</Button>
 				}
@@ -796,7 +839,9 @@ function TransactionsPage() {
 							<TableCard>
 								<TableToolbar
 									summary={`${total} ${total === 1 ? "transaction" : "transactions"}`}
-									actions={<ExportButton filters={{ q: search.q, ...filterValues }} />}
+									actions={
+										<ExportButton filters={{ q: search.q, ...filterValues }} />
+									}
 									filters={
 										<>
 											<SearchField
@@ -883,7 +928,11 @@ function TransactionsPage() {
 			{editing && (
 				<TransactionForm
 					transaction={editing === "new" ? undefined : editing}
-					seed={editing === "new" && copyOf ? seedFromTransaction(copyOf) : undefined}
+					seed={
+						editing === "new" && copyOf
+							? seedFromTransaction(copyOf)
+							: undefined
+					}
 					templates={templates}
 					tags={allTags}
 					defaultAccountId={defaultAccountId}
@@ -909,7 +958,10 @@ function TransactionsPage() {
 				onClose={closeRefund}
 			/>
 			{converting && (
-				<MakeSubscriptionDialog transaction={converting} onClose={() => setConverting(null)} />
+				<MakeSubscriptionDialog
+					transaction={converting}
+					onClose={() => setConverting(null)}
+				/>
 			)}
 			{deleting && (
 				<ConfirmDelete
