@@ -28,6 +28,7 @@ struct AccountsView: View {
             }
             .overlay { AccountsPlaceholder(model: model) }
             .gradientHeader(.accentGreen)
+            .environment(\.revealScreen, "accounts")
             .navigationTitle(model.showsArchived ? "Archived Accounts" : "Accounts")
             .toolbar {
                 ToolbarItemGroup(placement: .primaryAction) {

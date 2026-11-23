@@ -17,6 +17,7 @@ struct DashboardView: View {
                 }
             }
             .gradientHeader(.accentLime)
+            .environment(\.revealScreen, "dashboard")
             .overlay { DashboardPlaceholder(model: model, retry: reloadNow) }
             .navigationTitle(model.name.map { String(localized: "Hi, \($0)") } ?? String(localized: "Dashboard"))
             .navigationSubtitle(Text(model.month.start, format: .dateTime.month(.wide).year()))
