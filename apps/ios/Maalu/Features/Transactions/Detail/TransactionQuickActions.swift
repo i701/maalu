@@ -10,13 +10,13 @@ struct TransactionQuickActions: View {
 
     var body: some View {
         if transaction.planned {
-            TransactionActionPill(title: markTitle, systemImage: "checkmark.circle", tint: .success, action: onMarkPaid)
+            TransactionActionPill(title: markTitle, tint: .success, action: onMarkPaid)
         }
         if transaction.canEdit {
-            TransactionActionPill(title: "Edit", systemImage: "pencil", tint: .brand, action: onEdit)
-            TransactionActionPill(title: "Duplicate", systemImage: "plus.square.on.square", tint: .brand, action: onDuplicate)
+            TransactionActionPill(title: "Edit", tint: .brand, action: onEdit)
+            TransactionActionPill(title: "Duplicate", tint: .brand, action: onDuplicate)
         }
-        TransactionActionPill(title: "Delete", systemImage: "trash", tint: .red, action: onDelete)
+        TransactionActionPill(title: "Delete", tint: .red, action: onDelete)
     }
 
     private var markTitle: LocalizedStringResource {
