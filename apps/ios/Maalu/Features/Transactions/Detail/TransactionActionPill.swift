@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// One of the main actions under the amount: a tinted capsule with an icon.
+/// One of the main actions under the amount: a tinted Liquid Glass capsule with an icon.
 struct TransactionActionPill: View {
     let title: LocalizedStringResource
     let systemImage: String
@@ -11,11 +11,12 @@ struct TransactionActionPill: View {
         Button(action: action) {
             Label { Text(title) } icon: { Image(systemName: systemImage) }
                 .font(.subheadline.weight(.semibold))
+                .lineLimit(1)
+                .padding(.vertical, 6)
                 .foregroundStyle(tint.mix(with: .black, by: 0.15))
-                .padding(.horizontal, 14)
-                .padding(.vertical, 8)
-                .background(tint.opacity(0.14), in: .capsule)
         }
-        .buttonStyle(.borderless)
+        .buttonStyle(.glass)
+        .buttonBorderShape(.capsule)
+        .tint(tint.opacity(0.35))
     }
 }

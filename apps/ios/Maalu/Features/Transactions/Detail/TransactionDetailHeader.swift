@@ -26,11 +26,8 @@ struct TransactionDetailHeader<Quick: View>: View {
                     }
                 }
             }
-            ScrollView(.horizontal) {
-                HStack(spacing: 8) { quickActions }
-            }
-            .scrollIndicators(.hidden)
-            .padding(.top, 4)
+            HStack(spacing: 8) { quickActions }
+                .padding(.vertical, 16)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

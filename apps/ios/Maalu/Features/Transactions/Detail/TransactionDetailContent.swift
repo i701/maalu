@@ -15,7 +15,9 @@ struct TransactionDetailContent<Quick: View, Actions: View>: View {
                 TransactionDetailHeader(transaction: transaction) { quickActions }
             }
             .listRowBackground(Color.clear)
-            .listRowInsets(EdgeInsets(top: 4, leading: 4, bottom: 8, trailing: 4))
+            .listSectionMargins(.horizontal, 0)
+            .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
+            .listRowSeparator(.hidden)
             if !transaction.splits.isEmpty {
                 TransactionItemsList(items: transaction.splits, currency: transaction.currency)
                     .listRowBackground(Self.cardFill)

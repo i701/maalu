@@ -7,16 +7,27 @@ extension View {
     func gradientHeader(_ accent: Color = .brand, base: Color = Color(.systemGroupedBackground), height: CGFloat = 560) -> some View {
         scrollContentBackground(.hidden)
             .background(alignment: .top) {
-                Image("HeaderWash")
-                    .resizable()
-                    .scaledToFill()
-                    .frame(height: height, alignment: .top)
-                    .frame(maxWidth: .infinity)
-                    .clipped()
+                HeaderWashImage(height: height)
                     .mask(LinearGradient(stops: [.init(color: .black, location: 0), .init(color: .black.opacity(0.55), location: 0.4), .init(color: .clear, location: 1)], startPoint: .top, endPoint: .bottom))
                     .ignoresSafeArea()
                     .accessibilityHidden(true)
             }
             .background { base.ignoresSafeArea() }
+    }
+}
+
+/// The wash is mirrored in light mode so its dark side sits on the right, away from the titles and figures; dark mode keeps it as drawn.
+private struct HeaderWashImage: View {
+    let height: CGFloat
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        Image("HeaderWash")
+            .resizable()
+            .scaledToFill()
+            .frame(height: height, alignment: .top)
+            .frame(maxWidth: .infinity)
+            .clipped()
+            .scaleEffect(x: colorScheme == .light ? -1 : 1)
     }
 }
