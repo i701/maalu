@@ -6,13 +6,16 @@ struct AccountRow: View {
     let statement: CardStatement?
 
     var body: some View {
-        AmountRow {
+        AmountRow(alignment: .center) {
             VStack(alignment: .leading) {
-                Text(account.name)
-                if let bank = account.bank {
-                    Text(bank)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    Text(account.name)
+                    if let bank = account.bank {
+                        AccountBankChip(bank: bank)
+                    }
+                }
+                if let trend, trend.count > 1 {
+                    AccountSparkline(values: trend)
                 }
                 if let statement {
                     Text(CardStatementText.line(statement))
@@ -24,12 +27,8 @@ struct AccountRow: View {
                 }
             }
         } amount: {
-            VStack(alignment: .trailing) {
-                MoneyText(account.balance, currency: account.currency)
-                if let trend, trend.count > 1 {
-                    AccountSparkline(values: trend)
-                }
-            }
+            MoneyText(account.balance, currency: account.currency)
+                .font(.title3.weight(.semibold))
         }
     }
 }
