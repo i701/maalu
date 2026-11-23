@@ -94,7 +94,7 @@ export const accentForPath = (pathname: string): Accent | undefined =>
 
 /** Heights (px) the page leaves clear for the top bar and the bottom bar (bottom excludes the
  * safe-area inset), the width of the sidebar on wide screens and of the rail on medium ones. */
-export const TOP_BAR_HEIGHT = 64;
+export const TOP_BAR_HEIGHT = 80;
 export const BOTTOM_BAR_HEIGHT = 80;
 export const SIDEBAR_WIDTH = 264;
 /** The navigation rail on medium screens (600-900px): the bottom bar turned on its side. */

@@ -1,18 +1,6 @@
-import Typography from "@mui/material/Typography";
+import Logo from "./Logo";
 
-/** The app name, in the handwriting face (declared in styles/m3.css). */
+/** The app name as the Maalu mark (maalu.svg), for the sidebar and the top bar. */
 export default function Brand() {
-	return (
-		<Typography
-			component="div"
-			sx={{
-				fontFamily: '"Homemade Apple", cursive',
-				fontWeight: 400,
-				lineHeight: 1.5,
-				fontSize: 22,
-			}}
-		>
-			Maalu
-		</Typography>
-	);
+	return <Logo size={56} />;
 }
