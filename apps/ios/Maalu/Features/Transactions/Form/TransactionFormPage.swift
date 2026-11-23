@@ -35,8 +35,7 @@ struct TransactionFormPage: View {
                 }
             }
         }
-        .scrollDismissesKeyboard(.immediately)
-        .simultaneousGesture(TapGesture().onEnded { isAmountFocused = false })
+        .scrollDismissesKeyboard(.automatic)
         // room above and below, where the edge blur and the Save button sit over the scrolling form
         .contentMargins(.top, 16, for: .scrollContent)
         .contentMargins(.bottom, 84 + bottomInset, for: .scrollContent)
