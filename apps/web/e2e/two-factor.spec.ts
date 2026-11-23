@@ -34,11 +34,11 @@ test("with two-factor on, signing in needs a code from the app", async ({ page }
 
 	await signIn(page, email);
 	// the password was right, so the second step asks for the code and the dashboard waits
-	await expect(page.getByLabel("Authentication code")).toBeVisible();
+	await expect(page.getByLabel("6-digit code")).toBeVisible();
 	await expect(page).toHaveURL(/\/login/);
 
-	await page.getByLabel("Authentication code").fill(totp(secret, 1)); // a later step than setup used
-	await page.getByRole("button", { name: "Verify" }).click();
+	// six digits check themselves; the cells fuse into "Verified" for a moment before the app opens
+	await page.getByLabel("6-digit code").fill(totp(secret, 1)); // a later step than setup used
 	await expect(page).toHaveURL(/\/dashboard/);
 });
 
@@ -49,8 +49,7 @@ test("a wrong code is refused, and a recovery code works once", async ({ page })
 	await signOut(page);
 
 	await signIn(page, email);
-	await page.getByLabel("Authentication code").fill("000000");
-	await page.getByRole("button", { name: "Verify" }).click();
+	await page.getByLabel("6-digit code").fill("000000");
 	await expect(page.getByRole("alert")).toBeVisible();
 	await expect(page).toHaveURL(/\/login/);
 
