@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// The top of the transactions list: a big white card with a layered shadow on the page with the search field, the Filters button, the quick type filters, the other active filters as chips you can
+/// The top of the transactions list: a white pill with a layered shadow on the page with the search field and the Filters button; the active filters show as chips you can
 /// drop one at a time, and, once the list is narrowed, what the matching rows add up to.
 struct TransactionSearchCard: View {
     @Binding var text: String
@@ -12,6 +12,7 @@ struct TransactionSearchCard: View {
     let onFilters: () -> Void
     let onRemove: (TransactionFilterChip) -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    var isFocused: FocusState<Bool>.Binding
 
     var body: some View {
         VStack(spacing: 0) {
@@ -24,7 +25,8 @@ struct TransactionSearchCard: View {
                 if planned {
                     TransactionSearchToken(title: String(localized: "Planned"), tint: .orange) { planned = false }
                 }
-                TextField("Search transactions", text: $text)
+                TextField("Search", text: $text)
+                    .focused(isFocused)
                     .submitLabel(.search)
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
@@ -40,9 +42,7 @@ struct TransactionSearchCard: View {
             }
             .buttonStyle(.borderless)
             .padding(.horizontal, Spacing.card)
-            .padding(.vertical, 16)
-            TransactionTypeChips(type: $type, planned: $planned)
-                .padding(.bottom, 14)
+            .padding(.vertical, 20)
             if !chips.isEmpty {
                 TransactionFilterChips(chips: chips, onRemove: onRemove)
                     .padding(.bottom, 14)
@@ -55,8 +55,10 @@ struct TransactionSearchCard: View {
         }
         .animation(.smooth(duration: 0.35), value: totals != nil)
         .animation(.smooth(duration: 0.35), value: chips.map(\.id))
-        .card(elevation: 3)
+        .card(radius: Self.pillRadius, elevation: 3)
     }
+
+    private static let pillRadius: CGFloat = 20
 
     /// Chips and totals fade in and settle down from the top, or only fade when motion is reduced.
     private var reveal: AnyTransition {

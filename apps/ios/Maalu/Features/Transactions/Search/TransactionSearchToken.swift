@@ -20,7 +20,7 @@ struct TransactionSearchToken: View {
             .foregroundStyle(colors.ink)
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
-            .background(colors.fill, in: .capsule)
+            .background(colors.fill, in: .rect(cornerRadius: 8, style: .continuous))
         }
         .buttonStyle(.borderless)
         .accessibilityLabel("Remove \(title) filter")

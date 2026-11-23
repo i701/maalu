@@ -20,7 +20,7 @@ struct TransactionFilterChips: View {
                         .foregroundStyle(colors.ink)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 7)
-                        .background(colors.fill, in: .capsule)
+                        .background(colors.fill, in: .rect(cornerRadius: 8, style: .continuous))
                     }
                     .accessibilityHint("Removes this filter")
                 }

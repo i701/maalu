@@ -11,6 +11,7 @@ struct TransactionsView: View {
     @State private var selection = TransactionSelection()
     @State private var isBulkEditing = false
     @State private var isConfirmingDelete = false
+    @FocusState private var isSearchFocused: Bool
 
     var body: some View {
         NavigationStack {
@@ -23,7 +24,8 @@ struct TransactionsView: View {
                     totals: model.displayedTotals,
                     filterCount: model.filter.detailCount,
                     onFilters: { isFiltering = true },
-                    onRemove: remove
+                    onRemove: remove,
+                    isFocused: $isSearchFocused
                 )
                 .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 12, trailing: 16))
                 .listRowBackground(Color.clear)
@@ -53,6 +55,8 @@ struct TransactionsView: View {
                 }
             }
             .listStyle(.plain)
+            .scrollDismissesKeyboard(.immediately)
+            .simultaneousGesture(TapGesture().onEnded { isSearchFocused = false })
             .gradientHeader()
             // the card's height is the list's to change, so the animation has to be here and not inside the row
             .animation(.smooth(duration: 0.35), value: model.displayedTotals != nil)

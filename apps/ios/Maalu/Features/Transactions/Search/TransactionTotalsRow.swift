@@ -22,7 +22,7 @@ struct TransactionTotalsRow: View {
                 .textCase(.uppercase)
                 .foregroundStyle(.secondary)
             MoneyText(amount, currency: totals.currency)
-                .font(.subheadline.weight(.semibold))
+                .font(.subheadline.weight(.bold))
                 .foregroundStyle(color)
                 .minimumScaleFactor(0.7)
                 .lineLimit(1)

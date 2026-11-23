@@ -7,10 +7,11 @@ struct TransactionFormPage: View {
     /// The home indicator's height, added to the room left under the last row for the Save button.
     let bottomInset: CGFloat
     let onSaveAndAddAnother: () -> Void
+    @FocusState private var isAmountFocused: Bool
 
     var body: some View {
         Form {
-            TransactionTypeSection(model: model)
+            TransactionTypeSection(model: model, isAmountFocused: $isAmountFocused)
             TransactionAccountSection(model: model)
             if type != .transfer {
                 TransactionDetailsSection(model: model)
@@ -35,6 +36,7 @@ struct TransactionFormPage: View {
             }
         }
         .scrollDismissesKeyboard(.immediately)
+        .simultaneousGesture(TapGesture().onEnded { isAmountFocused = false })
         // room above and below, where the edge blur and the Save button sit over the scrolling form
         .contentMargins(.top, 16, for: .scrollContent)
         .contentMargins(.bottom, 84 + bottomInset, for: .scrollContent)

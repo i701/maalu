@@ -28,7 +28,7 @@ struct TransactionFilter: Hashable {
         set { dateTo = newValue }
     }
 
-    /// How many of the sheet's filters are set (the search text and the type menu are not counted).
+    /// How many of the sheet's filters are set (the search text and the type and planned are not counted).
     var detailCount: Int {
         let dates = dateFrom != nil || dateTo != nil ? 1 : 0
         let amounts = minAmount != nil || maxAmount != nil ? 1 : 0

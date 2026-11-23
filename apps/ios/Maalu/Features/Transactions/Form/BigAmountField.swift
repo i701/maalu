@@ -4,6 +4,7 @@ import SwiftUI
 struct BigAmountField: View {
     @Binding var value: Decimal?
     let currency: String
+    var isFocused: FocusState<Bool>.Binding
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -13,6 +14,7 @@ struct BigAmountField: View {
             DecimalField("0", value: $value)
                 .font(.largeTitle.weight(.semibold))
                 .minimumScaleFactor(0.6)
+                .focused(isFocused)
         }
         .padding(.vertical, 6)
     }

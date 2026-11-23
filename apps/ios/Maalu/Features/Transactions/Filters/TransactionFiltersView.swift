@@ -15,6 +15,15 @@ struct TransactionFiltersView: View {
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    Picker("Type", selection: $filter.type) {
+                        Text("Any").tag(TransactionType?.none)
+                        ForEach(TransactionType.allCases) { type in
+                            Text(type.title).tag(Optional(type))
+                        }
+                    }
+                    Toggle("Planned only", isOn: $filter.planned)
+                }
                 FilterDateSection(filter: $filter)
                 Section {
                     Picker("Account", selection: $filter.accountID) {
