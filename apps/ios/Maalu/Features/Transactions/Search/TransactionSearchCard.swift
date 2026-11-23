@@ -13,6 +13,8 @@ struct TransactionSearchCard: View {
     let onRemove: (TransactionFilterChip) -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var isFocused: FocusState<Bool>.Binding
+    /// A fixed row, tall enough for a token, so the bar keeps its height with or without tokens, a clear button or focus.
+    @ScaledMetric private var rowHeight: CGFloat = 32
 
     var body: some View {
         VStack(spacing: 0) {
@@ -41,8 +43,9 @@ struct TransactionSearchCard: View {
                     .foregroundStyle(filterCount == 0 ? Color.secondary : Color.brand)
             }
             .buttonStyle(.borderless)
+            .frame(height: rowHeight)
             .padding(.horizontal, Spacing.card)
-            .padding(.vertical, 20)
+            .padding(.vertical, 15)
             if !chips.isEmpty {
                 TransactionFilterChips(chips: chips, onRemove: onRemove)
                     .padding(.bottom, 14)
