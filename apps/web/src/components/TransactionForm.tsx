@@ -208,7 +208,8 @@ export default function TransactionForm({
 							key="transfer"
 							control={control}
 							accounts={accounts}
-							onPickAccount={fields.pickAccount}
+							onPick={fields.pickTransferAccount}
+							onSwap={fields.swapTransfer}
 							crossCurrency={crossCurrency}
 							switched={switched}
 						/>

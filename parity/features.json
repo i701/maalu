@@ -1731,7 +1731,11 @@
       "name": "Transfer as two slabs",
       "summary": "A transfer is entered as two slabs, what you send and what arrives, with an arrow that swaps the accounts and a slab that grows into the account list.",
       "web": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/transaction-form/TransferSlabs.tsx",
+          "apps/web/src/lib/transfer.ts"
+        ]
       },
       "android": {
         "status": "missing"

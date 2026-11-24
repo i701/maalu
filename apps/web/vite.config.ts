@@ -27,6 +27,8 @@ export default defineConfig(({ mode }) => {
 					"Check",
 					"ChevronRight",
 					"Clear",
+					"ExpandMore",
+					"ArrowDownward",
 					"ContentCopyOutlined",
 					"DarkMode",
 					"DeleteForeverOutlined",

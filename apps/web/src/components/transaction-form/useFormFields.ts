@@ -6,6 +6,14 @@ import { SUGGESTED_PAYMENT_METHOD } from "#/lib/accounts";
 import { cardMethod } from "#/lib/cards";
 import { trimRate } from "#/lib/format";
 import { isFuture, localToday } from "#/lib/planned";
+import {
+	isSwap,
+	pickTransferEnd,
+	swapTransferAmounts,
+	swapTransferEnds,
+	type TransferEnds,
+	type TransferSide,
+} from "#/lib/transfer";
 import type { AccountRef, Card, Transaction, TransactionType } from "#/types/api";
 import type { State, TransactionSeed } from "./request";
 import { initialValues, transactionSchema, type TxValues } from "./schema";
@@ -108,6 +116,34 @@ export function useFormFields({
 		currencyChanged(before, picked ? picked.currency : currency.trim().toUpperCase());
 	}
 
+	/** Picks the account on one side of a transfer. The one on the other side cannot be used twice,
+	 * so picking it swaps the two, and the typed amounts with them between two currencies. */
+	function pickTransferAccount(side: TransferSide, id: string) {
+		const [from, to] = getValues(["account_id", "to_account_id"]);
+		applyTransferEnds({ from, to }, (ends) => pickTransferEnd(ends, side, id));
+	}
+
+	/** The swap arrow: the account the money goes to becomes the one it leaves (a lone account
+	 * moves to the other side). */
+	function swapTransfer() {
+		const [from, to] = getValues(["account_id", "to_account_id"]);
+		applyTransferEnds({ from, to }, swapTransferEnds);
+	}
+
+	/** Sets the accounts to what `change` makes of the two now, and trades the typed amounts when
+	 * they traded places between two currencies. */
+	function applyTransferEnds(before: TransferEnds, change: (ends: TransferEnds) => TransferEnds) {
+		const next = change(before);
+		if (next.from !== before.from) pickAccount(next.from);
+		if (next.to !== before.to) setValue("to_account_id", next.to);
+		if (crossCurrency && isSwap(before, next)) {
+			const [amount, toAmount] = getValues(["amount", "to_amount"]);
+			const swapped = swapTransferAmounts({ amount, to_amount: toAmount }, true);
+			setValue("amount", swapped.amount);
+			setValue("to_amount", swapped.to_amount);
+		}
+	}
+
 	/** A card spends from its account, so picking one sets the account and the method. */
 	function pickCard(id: string) {
 		const picked = cards.find((c) => c.id === id);
@@ -163,6 +199,8 @@ export function useFormFields({
 		changeDate,
 		setPlanned,
 		pickAccount,
+		pickTransferAccount,
+		swapTransfer,
 		pickCard,
 		changeType,
 		fillFrom,

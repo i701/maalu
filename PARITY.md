@@ -9,15 +9,14 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 76 | 59 | 65 |
+| ✅ done | 77 | 59 | 65 |
 | 🟡 partial | 0 | 1 | 1 |
-| ❌ missing | 2 | 14 | 6 |
+| ❌ missing | 1 | 14 | 6 |
 | ➖ n/a | 1 | 5 | 6 |
 | 🗓 planned | 0 | 0 | 1 |
 
-## Still to build on Web (2)
+## Still to build on Web (1)
 
-- ❌ **Transfer as two slabs** (Transactions).
 - ❌ **Hide dashboard cards, kept on the server** (Dashboard and reports).
 
 ## Still to build on Android (15)
@@ -105,7 +104,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Transaction groups**<br>Bundle related transactions under a name and see what they add up to. | ✅ done | ✅ done | ✅ done |
 | **Export to Excel**<br>Download what the filters show as a workbook with a summary and a sheet by category. | ✅ done | ❌ missing | ❌ missing |
 | **Import a bank statement**<br>Read a bank's CSV, review the rows, assign vendors and categories, import as one undoable batch. | ✅ done | ➖ n/a | ➖ n/a |
-| **Transfer as two slabs**<br>A transfer is entered as two slabs, what you send and what arrives, with an arrow that swaps the accounts and a slab that grows into the account list. | ❌ missing | ❌ missing | ✅ done |
+| **Transfer as two slabs**<br>A transfer is entered as two slabs, what you send and what arrives, with an arrow that swaps the accounts and a slab that grows into the account list. | ✅ done | ❌ missing | ✅ done |
 
 - **Trash** (iOS): Restore and delete for good one by one; bulk actions wait for tx-bulk.
 - **Import a bank statement** (Android): Web only, by choice: importing a statement is done on the web, where the rows are easier to review.
