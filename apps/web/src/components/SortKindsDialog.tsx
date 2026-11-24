@@ -10,8 +10,14 @@ import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { useSheet } from "#/lib/sheet";
 import { useAction } from "#/lib/use-action";
+import { needsSorting } from "#/lib/needs-wants";
 import { setCategoryKindsFn } from "#/server/categories";
-import { CATEGORY_KIND_LABELS, CATEGORY_KINDS, type Category } from "#/types/api";
+import {
+	CATEGORY_KIND_LABELS,
+	CATEGORY_KINDS,
+	type Category,
+	type CategoryKind,
+} from "#/types/api";
 import CategoryDot from "./CategoryDot";
 import FormDialog from "./FormDialog";
 import { useNotify } from "./Notify";
@@ -49,7 +55,25 @@ export default function SortKindsDialog({
 		[spending, choices],
 	);
 	// "Unsorted" is judged on what was opened, so a row doesn't vanish the moment it is set.
-	const shown = onlyUnsorted ? spending.filter((c) => c.effective_kind == null) : spending;
+	const shown = onlyUnsorted ? spending.filter(needsSorting) : spending;
+	// The kind a row has while choosing, null for Not set.
+	const pickedKind = (id: string): CategoryKind | null => {
+		const picked = choices[id];
+		return picked === "none" ? null : picked;
+	};
+	// What a row with no pick of its own counts as: its parent's, as picked here.
+	const inheritedKind = (c: Category): CategoryKind | null =>
+		pickedKind(c.id) === null && c.parent_id ? pickedKind(c.parent_id) : null;
+	const inheritedNote = (c: Category) => {
+		const kind = inheritedKind(c);
+		return (
+			kind && (
+				<Typography noWrap variant="caption" sx={{ color: "text.secondary" }}>
+					counts as {CATEGORY_KIND_LABELS[kind]}
+				</Typography>
+			)
+		);
+	};
 
 	async function submit() {
 		const groups = [...CATEGORY_KINDS, "none" as const].map((choice) => ({
@@ -117,6 +141,7 @@ export default function SortKindsDialog({
 							<Typography noWrap variant="body2" sx={{ fontWeight: 500 }}>
 								{c.name}
 							</Typography>
+							{inheritedNote(c)}
 						</Box>
 						<ToggleButtonGroup
 							exclusive
@@ -133,7 +158,7 @@ export default function SortKindsDialog({
 								</ToggleButton>
 							))}
 							<ToggleButton value="none" sx={{ px: 1.5, py: 0.25 }}>
-								Not set
+								{inheritedKind(c) ? "Like parent" : "Not set"}
 							</ToggleButton>
 						</ToggleButtonGroup>
 					</Box>

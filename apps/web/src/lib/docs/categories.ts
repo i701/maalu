@@ -61,7 +61,7 @@ export const categories: Doc = {
 		{
 			type: "steps",
 			items: [
-				"Press **Needs and wants** at the top of the page (it says how many categories are not sorted yet).",
+				"Press **Needs and wants** at the top of the page (it says how many used categories are not sorted yet; a sub-category you leave alone takes its parent's and says so).",
 				"Choose Need or Want for each category, or leave it as Not set.",
 				"Press **Save**. Only the ones you changed are saved.",
 			],

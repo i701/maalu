@@ -48,7 +48,8 @@ const named = (
 	name: string,
 	effective_kind: Category["effective_kind"],
 	is_salary = false,
-): Category => ({ ...makeCategory({ name, is_salary }), effective_kind });
+	transaction_count = 1,
+): Category => ({ ...makeCategory({ name, is_salary, transaction_count }), effective_kind });
 
 describe("unsortedCategories", () => {
 	it("keeps the ones with no kind of their own or a parent's", () => {
@@ -61,6 +62,13 @@ describe("unsortedCategories", () => {
 				(x) => x.name,
 			),
 		).toEqual(["B", "D"]);
+	});
+
+	it("leaves out a category that has never been used, because it cannot move a figure", () => {
+		const c = named;
+		expect(
+			unsortedCategories([c("Used", null), c("Never used", null, false, 0)]).map((x) => x.name),
+		).toEqual(["Used"]);
 	});
 });
 

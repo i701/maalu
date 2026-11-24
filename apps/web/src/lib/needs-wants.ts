@@ -46,10 +46,15 @@ export function kindShares(categories: CategoryTotal[]): KindShare[] | null {
 	return rows.map((r, i) => ({ ...r, share: positive[i] / sum }));
 }
 
-/** The categories (parents first, as the API lists them) that still have no kind of their own and
- * take none from a parent. The default Salary category is pay, not spending, so it is left out. */
+/** Whether a category is worth asking about: it has no kind of its own and takes none from a parent,
+ * and it has been used, because one that never was cannot move a figure. The default Salary
+ * category is pay, not spending, so it is never asked about. */
+export const needsSorting = (c: Category): boolean =>
+	c.effective_kind == null && !c.is_salary && c.transaction_count > 0;
+
+/** The categories (parents first, as the API lists them) that are worth sorting (`needsSorting`). */
 export const unsortedCategories = (categories: Category[]): Category[] =>
-	categories.filter((c) => c.effective_kind == null && !c.is_salary);
+	categories.filter(needsSorting);
 
 /** The colour each kind wears wherever the split is drawn. Not sorted is a neutral, so it never reads as a third kind of spending. */
 export const KIND_COLOR: Record<KindKey, string> = {
