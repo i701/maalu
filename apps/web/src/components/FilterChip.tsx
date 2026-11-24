@@ -1,4 +1,5 @@
 import { CHECK_MASK } from "#/lib/symbols";
+import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import IconSymbol from "./Symbol";
 
@@ -27,7 +28,7 @@ function chipColours(selected: boolean, accent?: string) {
 
 /** Corner at rest and one step less rounded under the pointer or focus (the shape morph, see
  * lib/shape.ts): a selected chip rests at 16px and goes to 12px, an unselected one 8px to 4px. */
-function chipSx(selected: boolean, accent: string | undefined, hasIcon: boolean) {
+function chipSx(selected: boolean, accent: string | undefined, hasIcon: boolean, hasLogo: boolean) {
 	const { bg, fg } = chipColours(selected, accent);
 	const rest = selected ? "var(--shape-lg)" : "var(--shape-sm)";
 	const active = selected ? "var(--shape-md)" : "var(--shape-xs)";
@@ -71,9 +72,11 @@ function chipSx(selected: boolean, accent: string | undefined, hasIcon: boolean)
 				? undefined
 				: "color-mix(in srgb, var(--md-sys-color-on-surface) 10%, transparent)",
 		},
+		// MUI pulls a chip's icon 6px into its label; the label's own padding sets the gap here
+		"& .MuiChip-icon": { mr: 0 },
 		// 10px before the icon, 6px between icon and text, 12px after: the same on every chip
 		"& .MuiChip-label": {
-			pl: hasIcon || selected ? 0.75 : 1.5,
+			pl: hasLogo ? 1 : hasIcon || selected ? 0.75 : 1.5,
 			pr: 1.5,
 			transition: `padding ${SPRING_WIDTH}`,
 		},
@@ -90,6 +93,7 @@ export default function FilterChip({
 	selected,
 	onClick,
 	symbol,
+	logo,
 	accent,
 }: {
 	label: string;
@@ -97,6 +101,8 @@ export default function FilterChip({
 	onClick: () => void;
 	/** Material Symbols name (must exist in the bundled font subset) */
 	symbol?: string;
+	/** The address of a small picture (a bank's logo) to show instead of an icon */
+	logo?: string;
 	/** CSS colour that tints the icon, and the chip when selected */
 	accent?: string;
 }) {
@@ -106,7 +112,14 @@ export default function FilterChip({
 			onClick={onClick}
 			aria-pressed={selected}
 			icon={
-				symbol ? (
+				logo ? (
+					<Box
+						component="img"
+						src={logo}
+						alt=""
+						sx={{ ml: 1, width: 18, height: 18, borderRadius: "4px" }}
+					/>
+				) : symbol ? (
 					<IconSymbol
 						name={symbol}
 						size={18}
@@ -122,7 +135,7 @@ export default function FilterChip({
 					/>
 				) : undefined
 			}
-			sx={chipSx(selected, accent, Boolean(symbol))}
+			sx={chipSx(selected, accent, Boolean(symbol || logo), Boolean(logo))}
 		/>
 	);
 }

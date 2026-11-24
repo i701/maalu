@@ -1,4 +1,5 @@
 import { accountTints, bankSubsections, banksInUse } from "#/lib/accounts";
+import { bankBrand } from "#/lib/banks";
 import AddIcon from "@mui/icons-material/Add";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -240,7 +241,12 @@ function AccountsPage() {
 								<ChipFilter
 									allLabel="All banks"
 									value={search.bank}
-									options={banks.map((b) => ({ value: b, label: b }))}
+									options={banks.map((b) => ({
+										value: b,
+										label: b,
+										logo: bankBrand(b)?.logo,
+										accent: bankBrand(b)?.accent,
+									}))}
 									onChange={(bank) => navigate({ search: (p) => ({ ...p, bank }) })}
 								/>
 							) : undefined
@@ -304,8 +310,12 @@ function AccountsPage() {
 											<Box
 												sx={{
 													display: "grid",
-													gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 340px), 1fr))",
-													gap: 1,
+													// one column on a phone (a minimum column width there runs off the screen), as many 400px ones as fit above it
+													gridTemplateColumns: {
+														xs: "minmax(0, 1fr)",
+														sm: "repeat(auto-fill, minmax(400px, 1fr))",
+													},
+													gap: 1.5,
 													...staggerChildren(),
 												}}
 											>

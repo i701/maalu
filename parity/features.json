@@ -320,6 +320,31 @@
       ]
     },
     {
+      "id": "accounts-bank-chip",
+      "area": "accounts",
+      "name": "Bank chip with logo beside the account name",
+      "summary": "The bank an account is with shows as a chip next to its name: MIB and BML with their logo and the bank's colour, any other bank as a plain grey chip. On the web the bank filter chips carry the logos too.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/BankChip.tsx",
+          "apps/web/src/lib/banks.ts"
+        ]
+      },
+      "android": {
+        "status": "missing"
+      },
+      "ios": {
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Features/Accounts/AccountBankChip.swift"
+        ]
+      },
+      "routes": [
+        "/accounts"
+      ]
+    },
+    {
       "id": "account-form",
       "area": "accounts",
       "name": "Add and edit an account",

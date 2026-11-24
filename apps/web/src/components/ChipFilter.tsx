@@ -14,7 +14,7 @@ export default function ChipFilter<T extends string>({
 }: {
 	allLabel: string;
 	value: T | undefined;
-	options: readonly { value: T; label: string; symbol?: string; accent?: string }[];
+	options: readonly { value: T; label: string; symbol?: string; logo?: string; accent?: string }[];
 	onChange: (value: T | undefined) => void;
 }) {
 	// The chip morph starts from local state, not from the URL, and the real change is handed on
@@ -48,6 +48,7 @@ export default function ChipFilter<T extends string>({
 					key={o.value}
 					label={o.label}
 					symbol={o.symbol}
+					logo={o.logo}
 					accent={o.accent}
 					selected={picked === o.value}
 					onClick={() => pick(picked === o.value ? undefined : o.value)}

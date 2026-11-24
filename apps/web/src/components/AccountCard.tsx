@@ -1,8 +1,7 @@
 import AccountSpark from "#/components/account/AccountSpark";
-import AccountIdentity from "#/components/AccountIdentity";
 import AdjustBalanceDialog from "#/components/AdjustBalanceDialog";
+import BankChip from "#/components/BankChip";
 import CreditUsage from "#/components/CreditUsage";
-import MobileCard from "#/components/MobileCard";
 import Money from "#/components/Money";
 import { useNotify } from "#/components/Notify";
 import RateHistoryDialog from "#/components/RateHistoryDialog";
@@ -10,7 +9,7 @@ import { RouterLink } from "#/components/RouterLinks";
 import ShapeTile from "#/components/ShapeTile";
 import StatementLine from "#/components/StatementLine";
 import IconSymbol from "#/components/Symbol";
-import { accentText, tintBackground } from "#/lib/accounts";
+import { accentText, creditUsage, tintBackground } from "#/lib/accounts";
 import { ACCENT, type Accent } from "#/lib/m3";
 import { MORPH_TRANSITION, morphUp } from "#/lib/shape";
 import { useAction } from "#/lib/use-action";
@@ -104,7 +103,10 @@ function RateHistoryButton({ account, baseCurrency }: { account: Account; baseCu
 	);
 }
 
-/** One account's tile on the Accounts list: its own hue, the balance, and the row of actions. */
+/** One account's tile on the Accounts list: its own hue, the balance, and the row of actions.
+ * Three rows with room between them: who it is (the name, then the bank and the number) and what
+ * it holds on the right; the lines about credit and statements when it has any; and the balance's
+ * trend with the actions. */
 export default function AccountCard({
 	account,
 	tint,
@@ -122,10 +124,16 @@ export default function AccountCard({
 	onEdit: () => void;
 	onDelete: () => void;
 }) {
+	const tile = GROUP_TILE[account.group];
 	return (
 		<Box
 			sx={{
 				bgcolor: tintBackground(tint),
+				p: 2,
+				// a column that fills the grid cell, so the footer can sit at the bottom of every card
+				display: "flex",
+				flexDirection: "column",
+				gap: 1.5,
 				// the action icons in the card's own hue
 				"& .MuiIconButton-root": {
 					color: accentText(tint),
@@ -135,77 +143,95 @@ export default function AccountCard({
 				"&:active": { transform: "scale(.97)" },
 			}}
 		>
-			<MobileCard
-				leading={
-					<ShapeTile shape={GROUP_TILE[account.group].shape} size={52} accent={ACCENT[tint]}>
-						<IconSymbol name={GROUP_TILE[account.group].symbol} size={24} filled />
+			<Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}>
+				<Box sx={{ display: { xs: "none", md: "block" }, flexShrink: 0 }}>
+					<ShapeTile shape={tile.shape} size={48} accent={ACCENT[tint]}>
+						<IconSymbol name={tile.symbol} size={22} filled />
 					</ShapeTile>
-				}
-				primary={
+				</Box>
+				<Box sx={{ flex: 1, minWidth: 0 }}>
 					<RouterLink
 						to="/accounts/$id"
 						params={{ id: account.id }}
 						underline="hover"
 						color="inherit"
-						sx={{ fontWeight: 500, fontSize: 14 }}
+						noWrap
+						sx={{ display: "block", fontWeight: 600, fontSize: 15, lineHeight: 1.35 }}
 					>
 						{account.name}
 					</RouterLink>
-				}
-				secondary={
-					<>
-						<AccountIdentity account={account} />
-						<CreditUsage account={account} />
-						<StatementLine statement={statement} />
-						{account.description && (
-							<Typography variant="caption" sx={{ color: "text.secondary" }}>
-								{account.description}
-							</Typography>
-						)}
-						<AccountSpark trend={trend} />
-					</>
-				}
-				// a compact row keeps just the name and the trend line under it
-				brief={<AccountSpark trend={trend} />}
-				end={
+					{account.bank && (
+						<Box sx={{ mt: 0.75 }}>
+							<BankChip bank={account.bank} />
+						</Box>
+					)}
+				</Box>
+				<Box sx={{ textAlign: "right", flexShrink: 0, maxWidth: "55%" }}>
 					<Typography
-						variant="body2"
 						sx={{
 							fontWeight: 600,
+							fontSize: 22,
+							lineHeight: 1.25,
 							// the card's own hue; a debt keeps the error colour
 							color: isNegative(account.balance) ? "error.main" : accentText(tint),
 						}}
 					>
 						<Money amount={account.balance} currency={account.currency} />
 					</Typography>
-				}
-				endSecondary={
-					account.currency !== baseCurrency ? (
+					{account.currency !== baseCurrency && (
 						<Typography variant="caption" sx={{ display: "block", color: "text.secondary" }}>
 							≈ <Money amount={account.base_balance} currency={baseCurrency} /> @{" "}
 							{Number(account.exchange_rate)}
 							{account.auto_rate ? " · auto" : ""}
 						</Typography>
-					) : (
-						<></>
-					)
-				}
-				actions={
-					<>
-						<IconButton aria-label="Edit" title="Edit" size="small" onClick={onEdit}>
-							<EditOutlinedIcon fontSize="small" />
-						</IconButton>
-						{account.currency !== baseCurrency && (
-							<RateHistoryButton account={account} baseCurrency={baseCurrency} />
-						)}
-						<AdjustButton account={account} />
-						<ArchiveButton account={account} />
-						<IconButton aria-label="Delete" title="Delete" size="small" onClick={onDelete}>
-							<DeleteOutlineIcon fontSize="small" />
-						</IconButton>
-					</>
-				}
-			/>
+					)}
+					<Box sx={{ mt: 0.75 }}>
+						<AccountSpark trend={trend} align="end" />
+					</Box>
+				</Box>
+			</Box>
+			{(account.description || account.exclude_from_stats || creditUsage(account) || statement) && (
+				<Box sx={{ display: "grid", gap: 0.5 }}>
+					<CreditUsage account={account} />
+					<StatementLine statement={statement} />
+					{account.description && (
+						<Typography variant="caption" sx={{ color: "text.secondary" }}>
+							{account.description}
+						</Typography>
+					)}
+				</Box>
+			)}
+			{/* always the bottom of the card, whatever the cards beside it hold, so they all line up */}
+			<Box sx={{ display: "flex", alignItems: "center", gap: 1, minHeight: 34, mt: "auto" }}>
+				{account.account_number && (
+					<Typography
+						noWrap
+						title={account.account_number}
+						sx={{
+							flex: 1,
+							minWidth: 0,
+							fontSize: 13,
+							fontVariantNumeric: "tabular-nums",
+							color: "text.secondary",
+						}}
+					>
+						{account.account_number}
+					</Typography>
+				)}
+				<Box sx={{ display: "flex", ml: "auto", mr: -0.5, flexShrink: 0 }}>
+					<IconButton aria-label="Edit" title="Edit" size="small" onClick={onEdit}>
+						<EditOutlinedIcon fontSize="small" />
+					</IconButton>
+					{account.currency !== baseCurrency && (
+						<RateHistoryButton account={account} baseCurrency={baseCurrency} />
+					)}
+					<AdjustButton account={account} />
+					<ArchiveButton account={account} />
+					<IconButton aria-label="Delete" title="Delete" size="small" onClick={onDelete}>
+						<DeleteOutlineIcon fontSize="small" />
+					</IconButton>
+				</Box>
+			</Box>
 		</Box>
 	);
 }

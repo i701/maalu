@@ -9,9 +9,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 73 | 59 | 64 |
+| ✅ done | 74 | 59 | 65 |
 | 🟡 partial | 0 | 1 | 1 |
-| ❌ missing | 4 | 13 | 6 |
+| ❌ missing | 4 | 14 | 6 |
 | ➖ n/a | 1 | 5 | 6 |
 | 🗓 planned | 0 | 0 | 1 |
 
@@ -22,9 +22,10 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Hide dashboard cards** (Dashboard and reports).
 - ❌ **Hide dashboard cards, kept on the server** (Dashboard and reports).
 
-## Still to build on Android (14)
+## Still to build on Android (15)
 
 - 🟡 **Email digest** (Notifications). The switch and the email status are in Settings; sending a test email is not.
+- ❌ **Bank chip with logo beside the account name** (Accounts and cards).
 - ❌ **Quiet list and detail sheet** (Transactions).
 - ❌ **Export to Excel** (Transactions).
 - ❌ **Spent this month and limit per category** (Categories, tags and vendors).
@@ -75,6 +76,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | Feature | Web | Android | iOS |
 |---|:---:|:---:|:---:|
 | **Accounts list**<br>Accounts by group with balances, credit use, small balance lines, the net worth summary, a bank filter and grouping by bank. | ✅ done | ✅ done | ✅ done |
+| **Bank chip with logo beside the account name**<br>The bank an account is with shows as a chip next to its name: MIB and BML with their logo and the bank's colour, any other bank as a plain grey chip. On the web the bank filter chips carry the logos too. | ✅ done | ❌ missing | ✅ done |
 | **Add and edit an account**<br>Group, bank and number, currency and rate, credit limit, statement days, spendable switch, exclude from stats. | ✅ done | ✅ done | ✅ done |
 | **Archive and unarchive an account**<br>Hide an account without losing its history. | ✅ done | ✅ done | ✅ done |
 | **Adjust balance**<br>Set the balance to what the bank shows, or add or take away, as a transaction that reports ignore. | ✅ done | ✅ done | ✅ done |
