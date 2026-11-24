@@ -1,7 +1,7 @@
 import { ACCENT } from "#/lib/m3";
 import { formatDate, formatMoney, sumDecimals } from "#/lib/format";
 import { KIND_ORDER, type KindKey } from "#/lib/needs-wants";
-import type { Budget, BudgetFixedLine, BudgetLine, BudgetStatus } from "#/types/api";
+import type { Budget, BudgetFixedLine, BudgetLine, BudgetStatus, Category } from "#/types/api";
 
 /** The colour of a budget line's bar and tag: calm while fine, amber when close, red when over. */
 export const STATUS_COLOR: Record<BudgetStatus, string> = {
@@ -144,4 +144,54 @@ export function budgetByKind(budget: Budget): KindBudget[] {
 			},
 		];
 	});
+}
+
+/** The hues limits take in turn, the Categories page's own pink first. Amber, orange and red are
+ * left out: they mean "getting close", which has its own colour (`limitColor`). */
+const LIMIT_HUES = [
+	ACCENT.pink,
+	ACCENT.blue,
+	ACCENT.violet,
+	ACCENT.green,
+	ACCENT.lime,
+	ACCENT.slate,
+];
+
+/** The colour a limit is drawn in: its own hue, red once it is close to its level or over it. The
+ * hue is the limit's place among ALL the budget's limits (monthly ones, then every limit for set
+ * dates, not only those in the period), so it does not change as another month is picked; it only
+ * shifts when a limit is added or removed. */
+export function limitColor(budget: Budget, limit: BudgetLine): string {
+	if (limit.status !== "ok") return STATUS_COLOR.over;
+	const place = [...budget.lines, ...(budget.fixed_lines ?? [])].findIndex(
+		(l) => l.id === limit.id,
+	);
+	return LIMIT_HUES[Math.max(0, place) % LIMIT_HUES.length];
+}
+
+/** The limits that apply in the period shown: the monthly ones, then those for set dates that touch it. */
+export const limitsOnShow = (budget: Budget): (BudgetLine | BudgetFixedLine)[] => [
+	...budget.lines,
+	...fixedInPeriod(budget),
+];
+
+const lists = (limit: BudgetLine, categoryId: string) =>
+	limit.categories.some((c) => c.id === categoryId);
+
+/**
+ * The limit a category counts against in the period shown: a limit that lists it, else one that
+ * lists its parent (a limit on a parent covers its sub-categories). Monthly limits come before
+ * limits for set dates. Null when no limit covers it.
+ */
+export function limitFor(
+	budget: Budget,
+	category: Pick<Category, "id" | "parent_id">,
+): BudgetLine | BudgetFixedLine | null {
+	const limits = limitsOnShow(budget);
+	const parentId = category.parent_id;
+	return (
+		limits.find((l) => lists(l, category.id)) ??
+		(parentId ? limits.find((l) => lists(l, parentId)) : undefined) ??
+		null
+	);
 }

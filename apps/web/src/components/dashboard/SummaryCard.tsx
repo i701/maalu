@@ -1,3 +1,4 @@
+import Donut from "#/components/charts/Donut";
 import AvailableWorking from "#/components/dashboard/AvailableWorking";
 import Money from "#/components/Money";
 import { RouterButton } from "#/components/RouterLinks";
@@ -68,26 +69,6 @@ function AvailableBlock({ data }: { data: AvailableToSpend }) {
 				</Typography>
 			)}
 		</Box>
-	);
-}
-
-/** A donut of the part of the income kept, the rest faint, in the card's accent. */
-function Donut({ share }: { share: number }) {
-	const kept = share * 100;
-	const ring = { fill: "none", strokeWidth: 14, pathLength: 100, transform: "rotate(-90 50 50)" };
-	return (
-		<svg width={92} height={92} viewBox="0 0 100 100" aria-hidden>
-			<circle cx={50} cy={50} r={36} stroke="currentColor" strokeOpacity={0.28} {...ring} />
-			<circle
-				cx={50}
-				cy={50}
-				r={36}
-				stroke="currentColor"
-				strokeDasharray={`${kept} ${100 - kept}`}
-				strokeLinecap="round"
-				{...ring}
-			/>
-		</svg>
 	);
 }
 

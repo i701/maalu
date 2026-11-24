@@ -9,9 +9,12 @@ import {
 	fixedWindow,
 	linesNeedingAttention,
 	fixedInPeriod,
+	limitColor,
+	limitFor,
 	nextStretch,
 	unsigned,
 } from "./budget";
+import { ACCENT } from "./m3";
 
 describe("addDays", () => {
 	it("moves by days without time-zone drift", () => {
@@ -261,5 +264,50 @@ describe("budgetByKind", () => {
 	it("is empty while no limit is a need or a want", () => {
 		expect(budgetByKind(budget([of("Misc", null, "10.0000")]))).toEqual([]);
 		expect(budgetByKind(budget([]))).toEqual([]);
+	});
+});
+
+describe("limitFor", () => {
+	const lines = [line("Eating out", "warning", 85, ["dining"]), line("Food", "ok", 20, ["food"])];
+
+	it("finds the limit that lists the category", () => {
+		expect(limitFor(budget(lines), { id: "dining", parent_id: "food" })?.name).toBe("Eating out");
+	});
+
+	it("falls back to the limit on its parent, which covers its sub-categories", () => {
+		expect(limitFor(budget(lines), { id: "coffee", parent_id: "food" })?.name).toBe("Food");
+	});
+
+	it("is null for a category no limit covers", () => {
+		expect(limitFor(budget(lines), { id: "rent", parent_id: null })).toBeNull();
+		expect(limitFor(budget(lines), { id: "gifts", parent_id: "fun" })).toBeNull();
+	});
+});
+
+describe("limitColor", () => {
+	const lines = [
+		line("A", "ok", 10, ["a"]),
+		line("B", "ok", 20, ["b"]),
+		line("C", "warning", 85, ["c"]),
+		line("D", "over", 120, ["d"]),
+	];
+	const all = budget(lines);
+
+	it("starts with the page's pink and gives each limit its own hue", () => {
+		expect(limitColor(all, lines[0])).toBe(ACCENT.pink);
+		expect(limitColor(all, lines[1])).not.toBe(limitColor(all, lines[0]));
+	});
+
+	it("keeps a limit's hue whichever other limits are in the period", () => {
+		const first = limitColor(all, lines[1]);
+		expect(limitColor({ ...all, period: { ...all.period, start: "2026-09-01" } }, lines[1])).toBe(
+			first,
+		);
+	});
+
+	it("is red once a limit is close to its level or over it", () => {
+		const red = "var(--md-sys-color-error)";
+		expect(limitColor(all, lines[2])).toBe(red);
+		expect(limitColor(all, lines[3])).toBe(red);
 	});
 });

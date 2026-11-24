@@ -9,9 +9,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 72 | 59 | 64 |
+| ✅ done | 73 | 59 | 64 |
 | 🟡 partial | 0 | 1 | 1 |
-| ❌ missing | 4 | 12 | 5 |
+| ❌ missing | 4 | 13 | 6 |
 | ➖ n/a | 1 | 5 | 6 |
 | 🗓 planned | 0 | 0 | 1 |
 
@@ -22,11 +22,12 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Hide dashboard cards** (Dashboard and reports).
 - ❌ **Hide dashboard cards, kept on the server** (Dashboard and reports).
 
-## Still to build on Android (13)
+## Still to build on Android (14)
 
 - 🟡 **Email digest** (Notifications). The switch and the email status are in Settings; sending a test email is not.
 - ❌ **Quiet list and detail sheet** (Transactions).
 - ❌ **Export to Excel** (Transactions).
+- ❌ **Spent this month and limit per category** (Categories, tags and vendors).
 - ❌ **Your name** (Sign in and security).
 - ❌ **Spending by month, stacked by category** (Dashboard and reports).
 - ❌ **Dashboard card deck** (Dashboard and reports).
@@ -38,11 +39,12 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (7)
+## Still to build on iOS (8)
 
 - 🟡 **Your name** (Sign in and security). Shows the name in the Dashboard greeting; it is set on the web, as the app has no sign-up and no profile edit yet.
 - 🗓 **Hide dashboard cards, kept on the server** (Dashboard and reports).
 - ❌ **Export to Excel** (Transactions).
+- ❌ **Spent this month and limit per category** (Categories, tags and vendors).
 - ❌ **Notifications** (Notifications).
 - ❌ **Email digest** (Notifications).
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
@@ -115,6 +117,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 |---|:---:|:---:|:---:|
 | **Categories**<br>Colours, one level of sub-categories, need or want, merge, and the default Salary category. | ✅ done | ✅ done | ✅ done |
 | **Sort every category into need or want**<br>One dialog to sort all categories (or only the unsorted ones) at once. | ✅ done | ✅ done | ✅ done |
+| **Spent this month and limit per category**<br>The Categories table shows what each category spent in the month you pick (a parent with its sub-categories), a donut for the limit that covers it (its own colour, red when close or over), and a summary of the month's spending. | ✅ done | ❌ missing | ❌ missing |
 | **Tags**<br>Coloured labels that cut across categories, with merge. | ✅ done | ✅ done | ✅ done |
 | **Vendors**<br>Address, contact, local or foreign, currency, usual category and tags, merge. | ✅ done | ✅ done | ✅ done |
 | **A vendor's usual place**<br>A usual pin that a new transaction picks up. | ✅ done | ✅ done | ✅ done |

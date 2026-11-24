@@ -20,6 +20,7 @@ import UpcomingSoonCard from "#/components/dashboard/UpcomingSoonCard";
 import PageHeader from "#/components/PageHeader";
 import PageSkeleton from "#/components/PageSkeleton";
 import PendingOverlay from "#/components/PendingOverlay";
+import MonthPicker from "#/components/MonthPicker";
 import IconSymbol from "#/components/Symbol";
 import { creditUsage } from "#/lib/accounts";
 import { CardMorph } from "#/lib/card-morph";
@@ -273,50 +274,7 @@ function DashboardPage() {
 				shape={4}
 				description="Your money this month: what came in, what went out, and what is left to spend."
 				action={
-					// the month picker: a white pill on the grey page
-					<Box
-						sx={{
-							display: "flex",
-							alignItems: "center",
-							gap: 0.5,
-							px: 0.5,
-							height: 40,
-							borderRadius: "var(--shape-full)",
-							bgcolor: "var(--md-sys-color-surface-container-low)",
-						}}
-					>
-						<IconButton
-							color="inherit"
-							size="small"
-							aria-label="Previous month"
-							onClick={() => goTo(shiftMonth(month, -1))}
-						>
-							<IconSymbol name="chevron_left" size={22} />
-						</IconButton>
-						<Typography
-							sx={{
-								fontWeight: 500,
-								minWidth: { xs: 112, sm: 150 },
-								textAlign: "center",
-								fontSize: { xs: 14, sm: 16 },
-							}}
-							aria-live="polite"
-						>
-							{label}
-						</Typography>
-						<IconButton
-							color="inherit"
-							size="small"
-							aria-label="Next month"
-							onClick={() => goTo(shiftMonth(month, 1))}
-						>
-							<IconSymbol name="chevron_right" size={22} />
-						</IconButton>
-						{!isCurrent && (
-							<Button color="inherit" size="small" onClick={() => goTo(undefined)}>
-								This month
-							</Button>
-						)}
+					<MonthPicker month={month} isCurrent={isCurrent} onChange={goTo}>
 						<IconButton
 							color="inherit"
 							size="small"
@@ -327,7 +285,7 @@ function DashboardPage() {
 						>
 							<IconSymbol name="tune" size={22} />
 						</IconButton>
-					</Box>
+					</MonthPicker>
 				}
 			/>
 

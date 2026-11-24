@@ -1135,6 +1135,33 @@
       ]
     },
     {
+      "id": "categories-spend-limits",
+      "area": "organise",
+      "name": "Spent this month and limit per category",
+      "summary": "The Categories table shows what each category spent in the month you pick (a parent with its sub-categories), a donut for the limit that covers it (its own colour, red when close or over), and a summary of the month's spending.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/routes/_protected/categories.tsx",
+          "apps/web/src/components/CategorySpent.tsx",
+          "apps/web/src/components/LimitRing.tsx"
+        ]
+      },
+      "android": {
+        "status": "missing"
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "routes": [
+        "/categories"
+      ],
+      "api": [
+        "/api/v1/transactions/categories",
+        "/api/v1/budget"
+      ]
+    },
+    {
       "id": "tags",
       "area": "organise",
       "name": "Tags",
