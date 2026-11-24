@@ -11,13 +11,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 |---|---:|---:|---:|
 | ✅ done | 77 | 59 | 65 |
 | 🟡 partial | 0 | 1 | 1 |
-| ❌ missing | 1 | 14 | 6 |
-| ➖ n/a | 1 | 5 | 6 |
+| ❌ missing | 0 | 14 | 6 |
+| ➖ n/a | 2 | 5 | 6 |
 | 🗓 planned | 0 | 0 | 1 |
-
-## Still to build on Web (1)
-
-- ❌ **Hide dashboard cards, kept on the server** (Dashboard and reports).
 
 ## Still to build on Android (15)
 
@@ -150,7 +146,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Dashboard card deck**<br>The Dashboard opens on a stack of three gradient cards (Available to spend, Kept this month, Net worth): swipe up or down to flip through them, the rest of the cards scroll below. | ✅ done | ❌ missing | ✅ done |
 | **Arrange the dashboard**<br>Drag the dashboard's cards, or move them with arrows, into your own order; kept on the server. | ✅ done | ❌ missing | ✅ done |
 | **Hide dashboard cards**<br>Switch off the dashboard cards you do not want, from the arrange sheet. Kept on the device for now, not on the server, so no API change. | ✅ done | ❌ missing | ✅ done |
-| **Hide dashboard cards, kept on the server**<br>Keep which dashboard cards are off on the server, one list per platform (a key each for web, Android and iOS), so a platform keeps its own choice across devices and reinstalls without changing what another platform shows. Today it is only on the device. | ❌ missing | ❌ missing | 🗓 planned |
+| **Hide dashboard cards, kept on the server**<br>Keep which dashboard cards are off on the server, one list per platform (a key each for web, Android and iOS), so a platform keeps its own choice across devices and reinstalls without changing what another platform shows. Today it is only on the device. | ➖ n/a | ❌ missing | 🗓 planned |
 | **Budget and goals card**<br>Per-period limits and goals with a meter, and the running limits for set dates. | ✅ done | ✅ done | ✅ done |
 | **Needs and wants, and 50/30/20**<br>Spending split by kind, and the shares of income against the 50/30/20 rule. | ✅ done | ✅ done | ✅ done |
 | **Money flow**<br>A Sankey of income into one total and out to spending and what was saved. | ✅ done | ✅ done | ✅ done |
@@ -161,6 +157,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Trends**<br>Category by month, spending or income over 6, 12 or 24 months, as a table or stacked columns. | ✅ done | ✅ done | ✅ done |
 | **Net worth and what moved it**<br>How net worth changed over a period and the drivers that explain it. | ✅ done | ✅ done | ✅ done |
 | **Places map**<br>Where spending went, as circles on a map sized by spend. | ✅ done | ✅ done | ✅ done |
+
+- **Hide dashboard cards, kept on the server** (Web): Decided: which cards are hidden stays on each device (localStorage), per app, and is not kept on the server. The hiding itself is done: see "Hide dashboard cards".
 
 ## Notifications
 

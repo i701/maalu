@@ -1816,7 +1816,8 @@
       "name": "Hide dashboard cards, kept on the server",
       "summary": "Keep which dashboard cards are off on the server, one list per platform (a key each for web, Android and iOS), so a platform keeps its own choice across devices and reinstalls without changing what another platform shows. Today it is only on the device.",
       "web": {
-        "status": "missing"
+        "status": "na",
+        "note": "Decided: which cards are hidden stays on each device (localStorage), per app, and is not kept on the server. The hiding itself is done: see \"Hide dashboard cards\"."
       },
       "android": {
         "status": "missing"
