@@ -8,7 +8,7 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import { useState, type ReactNode } from "react";
-import Symbol from "../Symbol";
+import IconSymbol from "../Symbol";
 
 export type ChartTable = { head: string[]; rows: string[][] };
 
@@ -71,7 +71,7 @@ export default function ChartCard({
 						onClick={() => setAsTable((v) => !v)}
 						sx={{ mt: -0.5, mr: -0.75 }}
 					>
-						<Symbol name={asTable ? "insights" : "view_list"} size={22} />
+						<IconSymbol name={asTable ? "insights" : "view_list"} size={22} />
 					</IconButton>
 				)}
 			</Box>

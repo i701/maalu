@@ -11,7 +11,7 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import { Link } from "@tanstack/react-router";
 import Money from "#/components/Money";
-import Symbol from "#/components/Symbol";
+import IconSymbol from "#/components/Symbol";
 import TonalChip from "#/components/TonalChip";
 import { PAYMENT_ACCENT, TRANSFER_ACCENT } from "#/lib/accents";
 import { formatMoney } from "#/lib/format";
@@ -131,7 +131,7 @@ function DirectionBadge({ type }: { type: Transaction["type"] }) {
 				bgcolor: "color-mix(in srgb, currentColor 14%, transparent)",
 			}}
 		>
-			<Symbol name={DIRECTION_SYMBOL[type]} size={24} />
+			<IconSymbol name={DIRECTION_SYMBOL[type]} size={24} />
 		</Box>
 	);
 }

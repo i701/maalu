@@ -16,7 +16,7 @@ import type { Transaction } from "#/types/api";
 import MobileCard from "../MobileCard";
 import ResponsiveTable from "../ResponsiveTable";
 import ShapeTile from "../ShapeTile";
-import Symbol from "../Symbol";
+import IconSymbol from "../Symbol";
 import { TagChips } from "../TagChip";
 import TonalChip from "../TonalChip";
 
@@ -168,7 +168,7 @@ const AccountTransactions = memo(function AccountTransactions({
 								size={52}
 								accent={positive ? ACCENT.green : ACCENT.pink}
 							>
-								<Symbol name={positive ? "arrow_downward" : "arrow_upward"} size={24} filled />
+								<IconSymbol name={positive ? "arrow_downward" : "arrow_upward"} size={24} filled />
 							</ShapeTile>
 						}
 						primary={

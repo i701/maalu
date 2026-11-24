@@ -8,7 +8,7 @@ import { ACCENT } from "#/lib/m3";
 import type { Transaction } from "#/types/api";
 import { RouterButton } from "../RouterLinks";
 import ShapeTile from "../ShapeTile";
-import Symbol from "../Symbol";
+import IconSymbol from "../Symbol";
 
 const KIND = {
 	income: { symbol: "arrow_downward", accent: ACCENT.green, sign: "+" },
@@ -64,7 +64,7 @@ const LatestTransactionsCard = memo(function LatestTransactionsCard({
 								sx={{ display: "flex", alignItems: "center", gap: 1.5, py: 1 }}
 							>
 								<ShapeTile shape={0} size={40} accent={kind.accent}>
-									<Symbol name={kind.symbol} size={20} filled />
+									<IconSymbol name={kind.symbol} size={20} filled />
 								</ShapeTile>
 								<Box sx={{ flex: 1, minWidth: 0 }}>
 									<Typography noWrap sx={{ fontSize: 14, fontWeight: 500 }}>

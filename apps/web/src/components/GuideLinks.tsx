@@ -1,7 +1,7 @@
 import { useRouterState } from "@tanstack/react-router";
 import { docsSearchFor } from "#/lib/docs/for-page";
 import { RouterLink } from "./RouterLinks";
-import Symbol from "./Symbol";
+import IconSymbol from "./Symbol";
 
 /** In a page's header: one "Guides" pill that opens the docs with the search box filled in
  * for this page, listing what explains it. One link however many guides there are (so the banner does not grow with the docs), and
@@ -31,7 +31,7 @@ export default function GuideLinks() {
 				"&:hover": { bgcolor: "var(--md-sys-color-secondary-container)" },
 			}}
 		>
-			<Symbol name="article" size={18} />
+			<IconSymbol name="article" size={18} />
 			Guides
 		</RouterLink>
 	);

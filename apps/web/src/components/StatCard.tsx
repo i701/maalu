@@ -21,7 +21,7 @@ const TONAL = {
 	},
 } as const;
 import ShapeTile from "./ShapeTile";
-import Symbol from "./Symbol";
+import IconSymbol from "./Symbol";
 
 /**
  * A headline figure on a pastel tile, with its icon in a small white shape. The shape turns on
@@ -81,7 +81,7 @@ export default function StatCard({
 					}
 					fg={tone ? fg : tintInk(tint)}
 				>
-					<Symbol name={icon} size={26} />
+					<IconSymbol name={icon} size={26} />
 				</ShapeTile>
 			</Box>
 			<Typography variant="body2" sx={{ color: "inherit", opacity: 0.82, flex: "1 1 80px" }}>

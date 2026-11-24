@@ -25,7 +25,7 @@ import SubscriptionForm from "#/components/SubscriptionForm";
 import SubscriptionSuggestionsCard from "#/components/SubscriptionSuggestionsCard";
 import ChipFilter from "#/components/ChipFilter";
 import ShapeTile from "#/components/ShapeTile";
-import Symbol from "#/components/Symbol";
+import IconSymbol from "#/components/Symbol";
 import TonalChip from "#/components/TonalChip";
 import TableCard from "#/components/TableCard";
 import TablePager from "#/components/TablePager";
@@ -235,7 +235,7 @@ const SubscriptionsTable = memo(function SubscriptionsTable({
 				<MobileCard
 					leading={
 						<ShapeTile shape={2} size={52} accent={STATUS_ACCENT[s.status]}>
-							<Symbol name="event_repeat" size={24} filled />
+							<IconSymbol name="event_repeat" size={24} filled />
 						</ShapeTile>
 					}
 					primary={

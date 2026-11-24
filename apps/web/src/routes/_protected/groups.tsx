@@ -19,7 +19,7 @@ import PendingOverlay from "#/components/PendingOverlay";
 import ResponsiveTable from "#/components/ResponsiveTable";
 import SearchField from "#/components/SearchField";
 import ShapeTile from "#/components/ShapeTile";
-import Symbol from "#/components/Symbol";
+import IconSymbol from "#/components/Symbol";
 import TableCard from "#/components/TableCard";
 import TablePager from "#/components/TablePager";
 import TableToolbar from "#/components/TableToolbar";
@@ -160,7 +160,7 @@ const GroupsTable = memo(function GroupsTable({
 				<MobileCard
 					leading={
 						<ShapeTile shape={3} size={52} accent={ACCENT.blue}>
-							<Symbol name="inventory_2" size={24} filled />
+							<IconSymbol name="inventory_2" size={24} filled />
 						</ShapeTile>
 					}
 					primary={<GroupName group={g} onOpen={() => onOpen(g)} />}

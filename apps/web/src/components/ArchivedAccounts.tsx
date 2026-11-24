@@ -15,7 +15,7 @@ import MobileCard from "./MobileCard";
 import { useNotify } from "./Notify";
 import Reveal from "./Reveal";
 import ShapeTile from "./ShapeTile";
-import Symbol from "./Symbol";
+import IconSymbol from "./Symbol";
 
 function UnarchiveButton({ account }: { account: Account }) {
 	const { run, pending } = useAction();
@@ -54,7 +54,7 @@ export default function ArchivedAccounts({
 				color="inherit"
 				aria-expanded={open}
 				onClick={() => setOpen((v) => !v)}
-				startIcon={<Symbol name={open ? "expand_less" : "expand_more"} size={20} />}
+				startIcon={<IconSymbol name={open ? "expand_less" : "expand_more"} size={20} />}
 			>
 				Archived ({accounts.length})
 			</Button>
@@ -81,7 +81,7 @@ export default function ArchivedAccounts({
 							<MobileCard
 								leading={
 									<ShapeTile shape={0} size={52} accent={ACCENT.slate}>
-										<Symbol name="account_balance" size={24} filled />
+										<IconSymbol name="account_balance" size={24} filled />
 									</ShapeTile>
 								}
 								primary={

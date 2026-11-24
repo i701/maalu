@@ -18,7 +18,7 @@ import { useNotify } from "#/components/Notify";
 import PageHeader from "#/components/PageHeader";
 import PendingOverlay from "#/components/PendingOverlay";
 import SavingsGoals from "#/components/SavingsGoals";
-import Symbol from "#/components/Symbol";
+import IconSymbol from "#/components/Symbol";
 import { addDays, fixedInPeriod } from "#/lib/budget";
 import { movesFor } from "#/lib/budget-moves";
 import { formatDate } from "#/lib/format";
@@ -124,7 +124,7 @@ function BudgetPage() {
 			>
 				<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
 					<IconButton aria-label="Previous period" onClick={() => goTo(addDays(period.start, -1))}>
-						<Symbol name="chevron_left" size={24} />
+						<IconSymbol name="chevron_left" size={24} />
 					</IconButton>
 					<Typography
 						sx={{ fontWeight: 500, minWidth: 180, textAlign: "center" }}
@@ -133,7 +133,7 @@ function BudgetPage() {
 						{periodLabel}
 					</Typography>
 					<IconButton aria-label="Next period" onClick={() => goTo(addDays(period.end, 1))}>
-						<Symbol name="chevron_right" size={24} />
+						<IconSymbol name="chevron_right" size={24} />
 					</IconButton>
 					{!period.is_current && (
 						<Button color="inherit" onClick={() => goTo(undefined)}>
@@ -146,7 +146,7 @@ function BudgetPage() {
 					title="Budget settings"
 					onClick={() => setSettings(true)}
 				>
-					<Symbol name="tune" size={24} />
+					<IconSymbol name="tune" size={24} />
 				</IconButton>
 			</Box>
 

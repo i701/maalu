@@ -8,7 +8,7 @@ import PageHeader from "#/components/PageHeader";
 import { RouterLink } from "#/components/RouterLinks";
 import SearchField from "#/components/SearchField";
 import ShapeTile from "#/components/ShapeTile";
-import Symbol from "#/components/Symbol";
+import IconSymbol from "#/components/Symbol";
 import { DOCS } from "#/lib/docs";
 import { searchDocs, type DocHit } from "#/lib/docs/search";
 import { ACCENT } from "#/lib/m3";
@@ -84,7 +84,7 @@ function DocCard({ hit: { doc, section, snippet } }: { hit: DocHit }) {
 		>
 			<Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
 				<ShapeTile shape={3} size={48} accent={ACCENT[doc.accent]}>
-					<Symbol name={doc.symbol} size={24} filled />
+					<IconSymbol name={doc.symbol} size={24} filled />
 				</ShapeTile>
 				<Typography sx={{ fontWeight: 600, fontSize: 17 }}>{doc.title}</Typography>
 			</Box>

@@ -7,7 +7,7 @@ import { ACCENT, type Accent } from "#/lib/m3";
 import GuideLinks from "./GuideLinks";
 import HeaderPill from "./HeaderPill";
 import ShapeTile from "./ShapeTile";
-import Symbol from "./Symbol";
+import IconSymbol from "./Symbol";
 
 /**
  * The page's header, straight on the grey page: a small tinted icon tile, the title and a line of
@@ -54,12 +54,12 @@ export default function PageHeader({
 					<>
 						<Box sx={{ display: { xs: "block", md: "none" } }}>
 							<ShapeTile shape={shape} size={36} accent={ACCENT[accent]}>
-								<Symbol name={symbol} size={20} filled />
+								<IconSymbol name={symbol} size={20} filled />
 							</ShapeTile>
 						</Box>
 						<Box sx={{ display: { xs: "none", md: "block" } }}>
 							<ShapeTile shape={shape} size={48} accent={ACCENT[accent]}>
-								<Symbol name={symbol} size={24} filled />
+								<IconSymbol name={symbol} size={24} filled />
 							</ShapeTile>
 						</Box>
 					</>

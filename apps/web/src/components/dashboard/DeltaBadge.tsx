@@ -1,5 +1,5 @@
 import { ACCENT } from "#/lib/m3";
-import Symbol from "../Symbol";
+import IconSymbol from "../Symbol";
 import TonalChip from "../TonalChip";
 
 /** A signed change against a named period, such as "+12% vs September". Colour says whether the
@@ -25,7 +25,7 @@ export default function DeltaBadge({
 	return (
 		<TonalChip
 			accent={good ? ACCENT.green : "var(--md-sys-color-error)"}
-			icon={<Symbol name={up ? "arrow_upward" : "arrow_downward"} size={14} />}
+			icon={<IconSymbol name={up ? "arrow_upward" : "arrow_downward"} size={14} />}
 			label={`${up ? "+" : "-"}${Math.abs(rounded)}% vs ${against}`}
 		/>
 	);

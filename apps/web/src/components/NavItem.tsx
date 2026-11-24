@@ -5,7 +5,7 @@ import { forwardRef } from "react";
 import { ACCENT, type Accent } from "#/lib/m3";
 import { MORPH_TRANSITION } from "#/lib/shape";
 import { SYMBOL_FILLED } from "#/lib/symbols";
-import Symbol from "./Symbol";
+import IconSymbol from "./Symbol";
 
 const Anchor = forwardRef<HTMLAnchorElement, ButtonBaseProps<"a">>((props, ref) => (
 	<ButtonBase ref={ref} component="a" focusRipple {...props} />
@@ -123,7 +123,7 @@ function NavFace({ symbol, label, badge }: { symbol: string; label: string; badg
 	return (
 		<>
 			<span className="nav-pill">
-				<Symbol name={symbol} />
+				<IconSymbol name={symbol} />
 				{badge ? <NavBadge count={badge} /> : null}
 			</span>
 			<span className="nav-label">{label}</span>

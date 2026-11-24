@@ -18,7 +18,7 @@ import PendingOverlay from "#/components/PendingOverlay";
 import ResponsiveTable from "#/components/ResponsiveTable";
 import SearchField from "#/components/SearchField";
 import ShapeTile from "#/components/ShapeTile";
-import Symbol from "#/components/Symbol";
+import IconSymbol from "#/components/Symbol";
 import TableCard from "#/components/TableCard";
 import TablePager from "#/components/TablePager";
 import TableToolbar from "#/components/TableToolbar";
@@ -105,7 +105,7 @@ function Actions({
 				<EditOutlinedIcon fontSize="small" />
 			</IconButton>
 			<IconButton aria-label="Merge into another tag" title="Merge" size="small" onClick={onMerge}>
-				<Symbol name="sort" size={20} />
+				<IconSymbol name="sort" size={20} />
 			</IconButton>
 			<IconButton aria-label="Delete" title="Delete" size="small" onClick={onDelete}>
 				<DeleteOutlineIcon fontSize="small" />
@@ -160,7 +160,7 @@ const TagsTable = memo(function TagsTable({
 				<MobileCard
 					leading={
 						<ShapeTile shape={6} size={52} accent={tagAccent(t.color)}>
-							<Symbol name="sell" size={24} filled />
+							<IconSymbol name="sell" size={24} filled />
 						</ShapeTile>
 					}
 					primary={<TagName tag={t} />}

@@ -20,7 +20,7 @@ import RateHistoryDialog from "#/components/RateHistoryDialog";
 import { RouterLink } from "#/components/RouterLinks";
 import ShapeTile from "#/components/ShapeTile";
 import StatementLine from "#/components/StatementLine";
-import Symbol from "#/components/Symbol";
+import IconSymbol from "#/components/Symbol";
 import { ACCENT, type Accent } from "#/lib/m3";
 import { useAction } from "#/lib/use-action";
 import { archiveAccountFn } from "#/server/accounts";
@@ -138,7 +138,7 @@ export default function AccountCard({
 			<MobileCard
 				leading={
 					<ShapeTile shape={GROUP_TILE[account.group].shape} size={52} accent={ACCENT[tint]}>
-						<Symbol name={GROUP_TILE[account.group].symbol} size={24} filled />
+						<IconSymbol name={GROUP_TILE[account.group].symbol} size={24} filled />
 					</ShapeTile>
 				}
 				primary={

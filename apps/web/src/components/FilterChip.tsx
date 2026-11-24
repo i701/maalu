@@ -1,6 +1,6 @@
 import Chip from "@mui/material/Chip";
 import { CHECK_MASK } from "#/lib/symbols";
-import Symbol from "./Symbol";
+import IconSymbol from "./Symbol";
 
 const SPRING_SHAPE = "border-radius var(--spring-spatial-fast-dur) var(--spring-spatial-fast)";
 const SPRING_WIDTH = "var(--spring-spatial-bouncy-dur) var(--spring-spatial-bouncy)";
@@ -107,7 +107,7 @@ export default function FilterChip({
 			aria-pressed={selected}
 			icon={
 				symbol ? (
-					<Symbol
+					<IconSymbol
 						name={symbol}
 						size={18}
 						filled={selected}

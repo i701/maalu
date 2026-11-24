@@ -4,7 +4,7 @@ import Typography from "@mui/material/Typography";
 import { describeLine, linesNeedingAttention, STATUS_COLOR } from "#/lib/budget";
 import type { Budget } from "#/types/api";
 import { RouterButton } from "./RouterLinks";
-import Symbol from "./Symbol";
+import IconSymbol from "./Symbol";
 
 const SHOWN = 2;
 
@@ -30,7 +30,7 @@ export default function BudgetAlert({ budget }: { budget: Budget | null }) {
 				bgcolor: `color-mix(in oklab, ${color} 16%, var(--md-sys-color-surface-container-low))`,
 			}}
 		>
-			<Symbol name="warning" size={22} filled sx={{ color, flexShrink: 0 }} />
+			<IconSymbol name="warning" size={22} filled sx={{ color, flexShrink: 0 }} />
 			<Box sx={{ flex: 1, minWidth: 0 }}>
 				<Typography variant="body2" sx={{ fontWeight: 500 }}>
 					{lines

@@ -1,6 +1,6 @@
 import Box from "@mui/material/Box";
 import type { ReactNode } from "react";
-import Symbol from "./Symbol";
+import IconSymbol from "./Symbol";
 
 /** A quiet stat pill under a page's title ("324 transactions"): 32px, white on the grey page. */
 export default function HeaderPill({ symbol, children }: { symbol?: string; children: ReactNode }) {
@@ -21,7 +21,7 @@ export default function HeaderPill({ symbol, children }: { symbol?: string; chil
 				whiteSpace: "nowrap",
 			}}
 		>
-			{symbol && <Symbol name={symbol} size={18} />}
+			{symbol && <IconSymbol name={symbol} size={18} />}
 			{children}
 		</Box>
 	);

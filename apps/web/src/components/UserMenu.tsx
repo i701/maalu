@@ -8,7 +8,7 @@ import { useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { logoutFn } from "#/server/auth";
 import type { SessionUser } from "#/utils/session";
-import Symbol from "./Symbol";
+import IconSymbol from "./Symbol";
 
 // Generated avatar, for now. A fixed non-personal seed, so every user gets the same picture and
 // nothing about them is sent. The first letter of the email shows if it can't load (offline, blocked).
@@ -67,7 +67,7 @@ export default function UserMenu({ user }: { user: SessionUser }) {
 					}}
 					sx={{ gap: 1.5 }}
 				>
-					<Symbol name="person" size={22} />
+					<IconSymbol name="person" size={22} />
 					Profile
 				</MenuItem>
 				<MenuItem
@@ -77,7 +77,7 @@ export default function UserMenu({ user }: { user: SessionUser }) {
 					}}
 					sx={{ gap: 1.5 }}
 				>
-					<Symbol name="settings" size={22} />
+					<IconSymbol name="settings" size={22} />
 					Settings
 				</MenuItem>
 				<MenuItem
@@ -87,11 +87,11 @@ export default function UserMenu({ user }: { user: SessionUser }) {
 					}}
 					sx={{ gap: 1.5 }}
 				>
-					<Symbol name="category" size={22} />
+					<IconSymbol name="category" size={22} />
 					Categories
 				</MenuItem>
 				<MenuItem onClick={logout} sx={{ gap: 1.5 }}>
-					<Symbol name="logout" size={22} />
+					<IconSymbol name="logout" size={22} />
 					Sign out
 				</MenuItem>
 			</Menu>

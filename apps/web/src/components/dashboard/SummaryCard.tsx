@@ -5,7 +5,7 @@ import { Link } from "@tanstack/react-router";
 import { memo, useState } from "react";
 import Money from "#/components/Money";
 import { RouterButton } from "#/components/RouterLinks";
-import Symbol from "#/components/Symbol";
+import IconSymbol from "#/components/Symbol";
 import TonalChip from "#/components/TonalChip";
 import AvailableWorking from "#/components/dashboard/AvailableWorking";
 import { hasAccounts, isShort, workingLine } from "#/lib/available";
@@ -181,7 +181,7 @@ function KeptBlock({
 				{rounded !== 0 && (
 					<TonalChip
 						accent={rounded > 0 ? "var(--md-sys-color-error)" : ACCENT.green}
-						icon={<Symbol name={rounded > 0 ? "arrow_upward" : "arrow_downward"} size={14} />}
+						icon={<IconSymbol name={rounded > 0 ? "arrow_upward" : "arrow_downward"} size={14} />}
 						label={`${Math.abs(rounded)}% spending vs ${previousLabel}`}
 					/>
 				)}

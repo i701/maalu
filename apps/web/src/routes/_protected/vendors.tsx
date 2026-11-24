@@ -21,7 +21,7 @@ import ResponsiveTable from "#/components/ResponsiveTable";
 import SearchField from "#/components/SearchField";
 import ChipFilter from "#/components/ChipFilter";
 import ShapeTile from "#/components/ShapeTile";
-import Symbol from "#/components/Symbol";
+import IconSymbol from "#/components/Symbol";
 import { TagChips } from "#/components/TagChip";
 import TonalChip from "#/components/TonalChip";
 import TableCard from "#/components/TableCard";
@@ -106,7 +106,7 @@ function VendorActions({
 				size="small"
 				onClick={onMerge}
 			>
-				<Symbol name="sort" size={20} />
+				<IconSymbol name="sort" size={20} />
 			</IconButton>
 			<IconButton aria-label="Delete" title="Delete" size="small" onClick={onDelete}>
 				<DeleteOutlineIcon fontSize="small" />
@@ -182,7 +182,7 @@ const VendorsTable = memo(function VendorsTable({
 										: LOCALITY_ACCENT.foreign
 							}
 						>
-							<Symbol name="storefront" size={24} filled />
+							<IconSymbol name="storefront" size={24} filled />
 						</ShapeTile>
 					}
 					primary={

@@ -19,7 +19,7 @@ import SelectionBar from "#/components/SelectionBar";
 import PendingOverlay from "#/components/PendingOverlay";
 import ResponsiveTable from "#/components/ResponsiveTable";
 import ShapeTile from "#/components/ShapeTile";
-import Symbol from "#/components/Symbol";
+import IconSymbol from "#/components/Symbol";
 import TableCard from "#/components/TableCard";
 import TablePager from "#/components/TablePager";
 import TableToolbar from "#/components/TableToolbar";
@@ -185,7 +185,7 @@ const TrashTable = memo(function TrashTable({
 					}
 					leading={
 						<ShapeTile shape={4} size={52} accent={ACCENT.slate}>
-							<Symbol name="receipt_long" size={24} filled />
+							<IconSymbol name="receipt_long" size={24} filled />
 						</ShapeTile>
 					}
 					primary={<Summary transaction={t} />}

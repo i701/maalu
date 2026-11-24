@@ -1,7 +1,7 @@
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import { setViewMode, useViewMode, type ViewMode } from "#/lib/view-mode";
-import Symbol from "./Symbol";
+import IconSymbol from "./Symbol";
 
 /** The site's segmented List / Photos toggle: switches every list between cards and a table. */
 export default function ViewToggle() {
@@ -20,11 +20,11 @@ export default function ViewToggle() {
 			}}
 		>
 			<ToggleButton value="cards" aria-label="Cards">
-				<Symbol name="view_agenda" size={18} />
+				<IconSymbol name="view_agenda" size={18} />
 				<span className="view-label">Cards</span>
 			</ToggleButton>
 			<ToggleButton value="table" aria-label="Table">
-				<Symbol name="view_list" size={18} />
+				<IconSymbol name="view_list" size={18} />
 				<span className="view-label">Table</span>
 			</ToggleButton>
 		</ToggleButtonGroup>

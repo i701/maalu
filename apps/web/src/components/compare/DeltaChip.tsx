@@ -2,7 +2,7 @@ import { memo } from "react";
 import type { Change } from "#/lib/compare";
 import { formatMoney } from "#/lib/format";
 import { ACCENT } from "#/lib/m3";
-import Symbol from "../Symbol";
+import IconSymbol from "../Symbol";
 import TonalChip from "../TonalChip";
 
 /** How far a category moved: the amount, with the share it is of before, and a word for the ones
@@ -33,7 +33,7 @@ const DeltaChip = memo(function DeltaChip({
 	return (
 		<TonalChip
 			accent={up === goodWhenUp ? ACCENT.green : "var(--md-sys-color-error)"}
-			icon={<Symbol name={up ? "arrow_upward" : "arrow_downward"} size={14} />}
+			icon={<IconSymbol name={up ? "arrow_upward" : "arrow_downward"} size={14} />}
 			label={detail ? `${text} · ${detail}` : text}
 		/>
 	);

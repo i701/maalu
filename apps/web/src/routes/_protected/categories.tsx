@@ -22,7 +22,7 @@ import PendingOverlay from "#/components/PendingOverlay";
 import ResponsiveTable from "#/components/ResponsiveTable";
 import SearchField from "#/components/SearchField";
 import ShapeTile from "#/components/ShapeTile";
-import Symbol from "#/components/Symbol";
+import IconSymbol from "#/components/Symbol";
 import TableCard from "#/components/TableCard";
 import TablePager from "#/components/TablePager";
 import TableToolbar from "#/components/TableToolbar";
@@ -141,7 +141,7 @@ function Actions({
 				disabled={locked}
 				onClick={onMerge}
 			>
-				<Symbol name="sort" size={20} />
+				<IconSymbol name="sort" size={20} />
 			</IconButton>
 			<IconButton
 				aria-label="Delete"
@@ -203,7 +203,7 @@ const CategoriesTable = memo(function CategoriesTable({
 				<MobileCard
 					leading={
 						<ShapeTile shape={5} size={52} accent={categoryAccent(c.color)}>
-							<Symbol name="category" size={24} filled />
+							<IconSymbol name="category" size={24} filled />
 						</ShapeTile>
 					}
 					primary={<CategoryName category={c} />}

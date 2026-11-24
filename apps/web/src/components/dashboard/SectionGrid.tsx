@@ -1,16 +1,16 @@
 import {
+	closestCenter,
 	DndContext,
+	type DragEndEvent,
 	KeyboardSensor,
 	PointerSensor,
-	closestCenter,
 	useSensor,
 	useSensors,
-	type DragEndEvent,
 } from "@dnd-kit/core";
 import {
-	SortableContext,
 	arrayMove,
 	rectSortingStrategy,
+	SortableContext,
 	sortableKeyboardCoordinates,
 	useSortable,
 } from "@dnd-kit/sortable";
@@ -21,7 +21,7 @@ import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import type { ReactNode } from "react";
-import Symbol from "#/components/Symbol";
+import IconSymbol from "#/components/Symbol";
 import { staggerChildren } from "#/lib/motion";
 
 export type Section = {
@@ -178,7 +178,7 @@ function EditableSection({
 					disabled={first}
 					onClick={() => onMove(-1)}
 				>
-					<Symbol name="keyboard_arrow_up" size={20} />
+					<IconSymbol name="keyboard_arrow_up" size={20} />
 				</IconButton>
 				<IconButton
 					size="small"
@@ -186,7 +186,7 @@ function EditableSection({
 					disabled={last}
 					onClick={() => onMove(1)}
 				>
-					<Symbol name="keyboard_arrow_down" size={20} />
+					<IconSymbol name="keyboard_arrow_down" size={20} />
 				</IconButton>
 				<IconButton
 					size="small"

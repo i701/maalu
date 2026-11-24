@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { ACCENT, type Accent } from "#/lib/m3";
 import { SPRING } from "#/lib/motion";
 import ShapeTile from "./ShapeTile";
-import Symbol from "./Symbol";
+import IconSymbol from "./Symbol";
 
 const rise = keyframes`from { transform: translateY(8px); } to { transform: none; }`;
 const fade = keyframes`from { opacity: 0; } to { opacity: 1; }`;
@@ -48,7 +48,7 @@ export default function EmptyState({
 			}}
 		>
 			<ShapeTile shape={shape} size={80} accent={ACCENT[accent]}>
-				<Symbol name={symbol} size={34} filled />
+				<IconSymbol name={symbol} size={34} filled />
 			</ShapeTile>
 			<Typography variant="subtitle1" sx={{ maxWidth: 420, color: "text.secondary" }}>
 				{children}
