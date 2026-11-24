@@ -79,3 +79,35 @@ export function orderSections(saved: readonly string[] | null, visible: readonly
 	// Array.sort is stable, so ids sharing the "unsaved" rank keep their default order
 	return visible.toSorted((a, b) => (rank.get(a) ?? rank.size) - (rank.get(b) ?? rank.size));
 }
+
+/** The grid is this many columns wide on a wide screen. */
+export const GRID_COLUMNS = 6;
+
+/**
+ * The span of each card once the cards on show are laid out in rows the way the grid places them
+ * (each card goes after the one before it, and starts a new row when it does not fit). A row that
+ * comes up short, because a card in it is turned off, shares its spare columns between its cards,
+ * so no row is left with a hole. A full row keeps every span as it was.
+ */
+export function fillRows(cards: readonly { id: string; span: number }[]): Map<string, number> {
+	const spans = new Map<string, number>();
+	let row: { id: string; span: number }[] = [];
+	let used = 0;
+	const close = () => {
+		const spare = GRID_COLUMNS - used;
+		row.forEach((card, index) => {
+			// the spare columns go evenly, the odd ones to the first cards of the row
+			const extra = Math.floor(spare / row.length) + (index < spare % row.length ? 1 : 0);
+			spans.set(card.id, card.span + extra);
+		});
+		row = [];
+		used = 0;
+	};
+	for (const card of cards) {
+		if (used + card.span > GRID_COLUMNS) close();
+		row.push(card);
+		used += card.span;
+	}
+	close();
+	return spans;
+}

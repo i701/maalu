@@ -22,6 +22,7 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import type { ReactNode } from "react";
 import IconSymbol from "#/components/Symbol";
+import { fillRows } from "#/lib/dashboard";
 import { staggerChildren } from "#/lib/motion";
 
 export type Section = {
@@ -62,16 +63,22 @@ export default function SectionGrid({
 	);
 	const ids = sections.map((s) => s.id);
 
-	if (!editing)
+	if (!editing) {
+		// cards turned off leave short rows: the ones left share the room
+		const spans = fillRows(sections);
 		return (
 			<Box sx={{ ...GRID_SX, ...staggerChildren() }}>
 				{sections.map((s) => (
-					<Box key={s.id} sx={{ ...column(s.span), "& > *": { height: "100%" } }}>
+					<Box
+						key={s.id}
+						sx={{ ...column(spans.get(s.id) ?? s.span), "& > *": { height: "100%" } }}
+					>
 						{s.node}
 					</Box>
 				))}
 			</Box>
 		);
+	}
 
 	const move = (from: number, to: number) => onReorder(arrayMove(ids, from, to));
 	const onDragEnd = ({ active, over }: DragEndEvent) => {

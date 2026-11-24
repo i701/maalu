@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { CategoryTotal } from "#/types/api";
 import {
+	fillRows,
 	monthBounds,
 	monthLabel,
 	orderSections,
@@ -133,5 +134,40 @@ describe("orderSections", () => {
 
 	it("follows the saved order, puts new sections last and skips saved ones not on show", () => {
 		expect(orderSections(["c", "gone", "a"], visible)).toEqual(["c", "a", "b", "d"]);
+	});
+});
+
+const card = (id: string, span: number) => ({ id, span });
+const spans = (cards: { id: string; span: number }[]) => [...fillRows(cards).values()];
+
+describe("fillRows", () => {
+	it("leaves full rows as they are", () => {
+		expect(spans([card("a", 2), card("b", 4), card("c", 6), card("d", 3), card("e", 3)])).toEqual([
+			2, 4, 6, 3, 3,
+		]);
+	});
+
+	it("shares a short row's spare columns between its cards", () => {
+		// Spending (2) and Budget (2) with the 4-wide cards turned off
+		expect(spans([card("a", 2), card("b", 2)])).toEqual([3, 3]);
+	});
+
+	it("gives a lone card the whole row", () => {
+		expect(spans([card("a", 4)])).toEqual([6]);
+		expect(spans([card("a", 3)])).toEqual([6]);
+	});
+
+	it("starts a new row when a card does not fit, and fills each row on its own", () => {
+		// 2 | 4 + 4 does not fit, so the 2 is alone and the 4s are alone too
+		expect(spans([card("a", 2), card("b", 4), card("c", 4)])).toEqual([2, 4, 6]);
+		expect(spans([card("a", 4), card("b", 4)])).toEqual([6, 6]);
+	});
+
+	it("hands an odd spare column to the first card of the row", () => {
+		// 1 + 2 leaves 3: one each, and the odd one to the first
+		expect(spans([card("a", 1), card("b", 2)])).toEqual([3, 3]);
+		expect(spans([card("a", 1), card("b", 1), card("c", 2)])).toEqual([2, 2, 2]);
+		// 1 + 1 + 3 leaves 1: it goes to the first card
+		expect(spans([card("a", 1), card("b", 1), card("c", 3)])).toEqual([2, 1, 3]);
 	});
 });
