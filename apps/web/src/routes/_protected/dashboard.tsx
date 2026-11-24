@@ -15,6 +15,7 @@ import MonthlyCard from "#/components/dashboard/MonthlyCard";
 import NeedsWantsCard from "#/components/dashboard/NeedsWantsCard";
 import SectionGrid, { type Section } from "#/components/dashboard/SectionGrid";
 import SpendingCard from "#/components/dashboard/SpendingCard";
+import SpendingTrendCard from "#/components/dashboard/SpendingTrendCard";
 import SummaryCard from "#/components/dashboard/SummaryCard";
 import UpcomingSoonCard from "#/components/dashboard/UpcomingSoonCard";
 import PageHeader from "#/components/PageHeader";
@@ -34,6 +35,7 @@ import {
 } from "#/lib/dashboard";
 import { sumDecimals } from "#/lib/format";
 import { localToday } from "#/lib/planned";
+import { trendBounds } from "#/lib/trends";
 import { unwrap } from "#/lib/unwrap";
 import { useAction } from "#/lib/use-action";
 import { listAccountsFn } from "#/server/accounts";
@@ -42,6 +44,7 @@ import { getBudgetFn } from "#/server/budget";
 import { listGoalsFn } from "#/server/goals";
 import { getAvailableToSpendFn, getBalanceTrendFn, getMonthlyStatsFn } from "#/server/stats";
 import {
+	getCategoryMonthsFn,
 	getCategoryTotalsFn,
 	getTransactionTotalsFn,
 	listTransactionsFn,
@@ -88,6 +91,7 @@ export const Route = createFileRoute("/_protected/dashboard")({
 			available,
 			upcoming,
 			me,
+			categoryMonths,
 		] = await Promise.all([
 			getTransactionTotalsFn({ data: range }),
 			getTransactionTotalsFn({
@@ -103,6 +107,8 @@ export const Route = createFileRoute("/_protected/dashboard")({
 			getAvailableToSpendFn(),
 			listUpcomingWithinSetting(mePromise),
 			mePromise,
+			// a year of spending by category, for the "Spending by month" card (works without it)
+			getCategoryMonthsFn({ data: trendBounds(12, now) }),
 		]);
 		return {
 			month: current.start,
@@ -117,6 +123,7 @@ export const Route = createFileRoute("/_protected/dashboard")({
 			asOf: localToday(),
 			// the user's own order of the sections (null is the default one)
 			savedOrder: unwrap(me).dashboard_order,
+			categoryMonths: categoryMonths.ok ? categoryMonths.data : null,
 			// the page works without these two
 			available: available.ok ? available.data : null,
 			budget: budget.ok ? budget.data : null,
@@ -146,6 +153,7 @@ function DashboardPage() {
 		upcoming,
 		asOf,
 		savedOrder,
+		categoryMonths,
 	} = Route.useLoaderData();
 	const { run, pending } = useAction();
 	const [editing, setEditing] = useState(false);
@@ -203,6 +211,17 @@ function DashboardPage() {
 			span: 2,
 			node: <BudgetGoalsCard budget={budget} goals={goals} />,
 		},
+		// only once there is some spending in the year to stack
+		...(categoryMonths?.categories.some((c) => c.type === "expense" && Number(c.total) > 0)
+			? [
+					{
+						id: "spending-trend",
+						label: "Spending by month",
+						span: 6,
+						node: <SpendingTrendCard data={categoryMonths} />,
+					},
+				]
+			: []),
 		{
 			id: "needs-wants",
 			label: "Needs and wants",

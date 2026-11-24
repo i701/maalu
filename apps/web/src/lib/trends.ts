@@ -1,4 +1,5 @@
-import type { CategoryMonthRow } from "#/types/api";
+import type { CategoryMonthRow, CategoryMonths } from "#/types/api";
+import { ACCENT_NAMES, categoryAccent } from "./categories";
 import { monthBounds, shiftMonth } from "./dashboard";
 import { sumDecimals } from "./format";
 
@@ -146,4 +147,29 @@ export function distinctAccents(
 		if (free) used.add(free);
 		return free ?? s.color;
 	});
+}
+
+/** The last `count` months of a category-by-month report: its months, and each category's amounts
+ * and total over just those (so the biggest categories are those of the span, not of the whole). */
+export function lastMonths(data: CategoryMonths, count: number): CategoryMonths {
+	const from = Math.max(data.months.length - count, 0);
+	return {
+		...data,
+		months: data.months.slice(from),
+		categories: data.categories.map((c) => {
+			const amounts = c.amounts.slice(from);
+			return { ...c, amounts, total: sumDecimals(amounts) };
+		}),
+	};
+}
+
+/** `stackSeries` with each segment's own drawing colour: a category's accent, but never the same
+ * one twice in a stack, and a neutral for "Other". */
+export function coloredStack(rows: CategoryMonthRow[], top = 6) {
+	const series = stackSeries(rows, top);
+	const accents = distinctAccents(series, ACCENT_NAMES);
+	return series.map((s, i) => ({
+		...s,
+		color: accents[i] === null ? "var(--md-sys-color-outline)" : categoryAccent(accents[i]),
+	}));
 }

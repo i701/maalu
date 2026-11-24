@@ -1676,7 +1676,11 @@
       "name": "Spending by month, stacked by category",
       "summary": "A Dashboard card of spending per month for the last 6 or 12 months, stacked by the biggest categories; press along the bars to pick a month, hold a category to follow it.",
       "web": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/dashboard/SpendingTrendCard.tsx",
+          "apps/web/src/lib/trends.ts"
+        ]
       },
       "android": {
         "status": "missing"
@@ -1781,7 +1785,11 @@
       "name": "Hide dashboard cards",
       "summary": "Switch off the dashboard cards you do not want, from the arrange sheet. Kept on the device for now, not on the server, so no API change.",
       "web": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/web/src/lib/dashboard-hidden.ts",
+          "apps/web/src/components/dashboard/SectionGrid.tsx"
+        ]
       },
       "android": {
         "status": "missing"

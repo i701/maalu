@@ -19,6 +19,7 @@ export default function StackedColumns({
 	formatValue,
 	ariaLabel,
 	height = 240,
+	highlight = null,
 }: {
 	labels: string[];
 	titles: string[];
@@ -26,6 +27,8 @@ export default function StackedColumns({
 	formatValue: (value: number) => string;
 	ariaLabel: string;
 	height?: number;
+	/** The name of a series to follow: the others fade, the readouts still list everything */
+	highlight?: string | null;
 }) {
 	const [active, setActive] = useState<number | null>(null);
 	const totals = labels.map((_, i) => series.reduce((sum, s) => sum + s.values[i], 0));
@@ -113,6 +116,9 @@ export default function StackedColumns({
 												height: `${share}%`,
 												minHeight: 3,
 												bgcolor: s.color,
+												opacity: highlight !== null && highlight !== s.name ? 0.2 : 1,
+												transition:
+													"opacity var(--spring-effects-fast-dur) var(--spring-effects-fast)",
 												// the gap between segments, in the card's own colour
 												borderTop: "2px solid var(--md-sys-color-surface-container-low)",
 												boxSizing: "border-box",

@@ -46,6 +46,7 @@ export const DEFAULT_SECTION_ORDER = [
 	"balance",
 	"monthly",
 	"budget",
+	"spending-trend",
 	"needs-wants",
 	"credit",
 	"upcoming",

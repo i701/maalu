@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
-import type { CategoryMonthRow } from "#/types/api";
+import type { CategoryMonthRow, CategoryMonths } from "#/types/api";
 import {
 	busiestMonth,
 	cellText,
+	coloredStack,
 	columnTotals,
 	distinctAccents,
 	heat,
+	lastMonths,
 	maxCell,
 	monthColumn,
 	monthTitle,
@@ -173,5 +175,33 @@ describe("distinctAccents", () => {
 			"violet",
 			null,
 		]);
+	});
+});
+
+const report = (categories: CategoryMonthRow[]): CategoryMonths => ({
+	currency: "MVR",
+	months: ["2026-08", "2026-09", "2026-10", "2026-11"],
+	categories,
+});
+
+describe("lastMonths", () => {
+	it("keeps the last months, with each category's total over just those", () => {
+		const span = lastMonths(report([named("Food", ["100.00", "200.00", "300.00", "400.00"])]), 2);
+		expect(span.months).toEqual(["2026-10", "2026-11"]);
+		expect(span.categories[0].amounts).toEqual(["300.00", "400.00"]);
+		expect(span.categories[0].total).toBe("700.00");
+	});
+
+	it("keeps everything when asked for more months than there are", () => {
+		const span = lastMonths(report([named("Food", ["1.00", "2.00", "3.00", "4.00"])]), 12);
+		expect(span.months).toHaveLength(4);
+		expect(span.categories[0].total).toBe("10.00");
+	});
+
+	it("lets the span decide which categories are the biggest", () => {
+		const big = named("Old big", ["900.00", "0.00", "0.00", "0.00"]);
+		const recent = named("Recent", ["0.00", "0.00", "50.00", "60.00"]);
+		const span = lastMonths(report([big, recent]), 2);
+		expect(coloredStack(span.categories, 1).map((series) => series.name)).toEqual(["Recent"]);
 	});
 });

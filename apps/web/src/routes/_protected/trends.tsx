@@ -15,17 +15,9 @@ import PendingOverlay from "#/components/PendingOverlay";
 import KindMonthsTable from "#/components/trends/KindMonthsTable";
 import TrendsTable from "#/components/trends/TrendsTable";
 import { kindMonths } from "#/lib/needs-wants";
-import { ACCENT_NAMES, categoryAccent } from "#/lib/categories";
 import { formatMoney } from "#/lib/format";
 import { localToday } from "#/lib/planned";
-import {
-	distinctAccents,
-	monthColumn,
-	monthTitle,
-	stackSeries,
-	TREND_RANGES,
-	trendBounds,
-} from "#/lib/trends";
+import { coloredStack, monthColumn, monthTitle, TREND_RANGES, trendBounds } from "#/lib/trends";
 import { unwrap } from "#/lib/unwrap";
 import { getCategoryMonthsFn } from "#/server/transactions";
 
@@ -62,15 +54,7 @@ function TrendsPage() {
 	const months = search.months ?? 12;
 	const view = search.view ?? "table";
 	const rows = useMemo(() => data.categories.filter((c) => c.type === kind), [data, kind]);
-	const stack = useMemo(() => {
-		const series = stackSeries(rows);
-		// categories can share an accent; in a stack every segment needs its own
-		const accents = distinctAccents(series, ACCENT_NAMES);
-		return series.map((s, i) => ({
-			...s,
-			color: accents[i] === null ? "var(--md-sys-color-outline)" : categoryAccent(accents[i]),
-		}));
-	}, [rows]);
+	const stack = useMemo(() => coloredStack(rows), [rows]);
 	const kinds = useMemo(
 		() => (kind === "expense" ? kindMonths(data.categories, data.months.length) : []),
 		[data, kind],

@@ -61,19 +61,21 @@ export default function ChartCard({
 						</Typography>
 					)}
 				</Box>
-				{actions}
-				{table && (
-					<IconButton
-						size="small"
-						aria-pressed={asTable}
-						aria-label={asTable ? "Show the chart" : "Show as a table"}
-						title={asTable ? "Show the chart" : "Show as a table"}
-						onClick={() => setAsTable((v) => !v)}
-						sx={{ mt: -0.5, mr: -0.75 }}
-					>
-						<IconSymbol name={asTable ? "insights" : "view_list"} size={22} />
-					</IconButton>
-				)}
+				<Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexShrink: 0 }}>
+					{actions}
+					{table && (
+						<IconButton
+							size="small"
+							aria-pressed={asTable}
+							aria-label={asTable ? "Show the chart" : "Show as a table"}
+							title={asTable ? "Show the chart" : "Show as a table"}
+							onClick={() => setAsTable((v) => !v)}
+							sx={{ mt: -0.5, mr: -0.75 }}
+						>
+							<IconSymbol name={asTable ? "insights" : "view_list"} size={22} />
+						</IconButton>
+					)}
+				</Box>
 			</Box>
 			{legend && <Box sx={{ mb: 1.5 }}>{legend}</Box>}
 			{asTable && table ? (
