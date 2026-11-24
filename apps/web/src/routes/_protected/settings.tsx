@@ -10,6 +10,7 @@ import BackupCard from "#/components/BackupCard";
 import NotificationSettings from "#/components/NotificationSettings";
 import ApiKeysCard from "#/components/api-keys/ApiKeysCard";
 import NumbersCard from "#/components/NumbersCard";
+import UpcomingDaysCard from "#/components/UpcomingDaysCard";
 import InstallCard from "#/components/pwa/InstallCard";
 import PasswordCard from "#/components/PasswordCard";
 import SessionsCard from "#/components/SessionsCard";
@@ -92,6 +93,7 @@ function SettingsPage() {
 				/>
 				<NotificationSettings me={me} email={email} />
 				<NumbersCard me={me} />
+				<UpcomingDaysCard me={me} />
 				<InstallCard />
 				<PasswordCard twoFactor={me.two_factor_enabled} />
 				<TwoFactorSettings enabled={me.two_factor_enabled} />

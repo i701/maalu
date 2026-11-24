@@ -1,5 +1,10 @@
 import type { CategoryTotal } from "#/types/api";
 
+/** How many days ahead the Coming up card and the Transactions page look: the person's choice. */
+export const UPCOMING_DAYS_DEFAULT = 10;
+export const UPCOMING_DAYS_MIN = 5;
+export const UPCOMING_DAYS_MAX = 30;
+
 const pad = (n: number) => String(n).padStart(2, "0");
 const iso = (y: number, m: number, d: number) => `${y}-${pad(m)}-${pad(d)}`;
 

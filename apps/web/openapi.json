@@ -8916,6 +8916,11 @@
             "description": "Whether signing in also needs a code from an authenticator app.",
             "title": "Two Factor Enabled",
             "type": "boolean"
+          },
+          "upcoming_days": {
+            "description": "How many days ahead the upcoming (planned) transactions are shown, 5 to 30.",
+            "title": "Upcoming Days",
+            "type": "integer"
           }
         },
         "required": [
@@ -8932,6 +8937,7 @@
           "notify_login",
           "compact_numbers",
           "dashboard_order",
+          "upcoming_days",
           "two_factor_enabled",
           "created_at"
         ],
@@ -9025,6 +9031,20 @@
             "description": "Whether the transaction form offers to start from a template.",
             "title": "Start From Template",
             "type": "boolean"
+          },
+          "upcoming_days": {
+            "anyOf": [
+              {
+                "maximum": 30.0,
+                "minimum": 5.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How many days ahead the upcoming (planned) transactions are shown, 5 to 30.",
+            "title": "Upcoming Days"
           }
         },
         "title": "UserUpdate",

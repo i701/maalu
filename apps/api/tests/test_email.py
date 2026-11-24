@@ -217,6 +217,26 @@ async def test_dashboard_order_is_a_setting_that_defaults_to_null_and_is_in_back
     assert res.json()["dashboard_order"] is None
 
 
+async def test_upcoming_days_is_a_setting_with_limits_and_in_backups(client: AsyncClient, auth):
+    me = (await client.get(ME, headers=auth)).json()
+    assert me["upcoming_days"] == 10
+    res = await client.patch(ME, json={"upcoming_days": 30}, headers=auth)
+    assert res.status_code == 200, res.text
+    assert res.json()["upcoming_days"] == 30
+    backup = (await client.get("/api/v1/backup", headers=auth)).json()
+    assert backup["settings"]["upcoming_days"] == 30
+    # between 5 and 30 days only; an unrelated change leaves both alone
+    for days in (4, 31):
+        assert (
+            await client.patch(ME, json={"upcoming_days": days}, headers=auth)
+        ).status_code == 422
+    await client.patch(ME, json={"compact_numbers": True}, headers=auth)
+    me = (await client.get(ME, headers=auth)).json()
+    assert me["upcoming_days"] == 30
+    res = await client.patch(ME, json={"upcoming_days": 5}, headers=auth)
+    assert res.json()["upcoming_days"] == 5
+
+
 async def test_name_is_optional_trimmed_changeable_and_in_backups(client: AsyncClient, signup):
     creds = {
         "email": "named@example.com",

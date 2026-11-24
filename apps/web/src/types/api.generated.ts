@@ -6383,6 +6383,11 @@ export interface components {
              * @description Whether signing in also needs a code from an authenticator app.
              */
             two_factor_enabled: boolean;
+            /**
+             * Upcoming Days
+             * @description How many days ahead the upcoming (planned) transactions are shown, 5 to 30.
+             */
+            upcoming_days: number;
         };
         /**
          * UserUpdate
@@ -6446,6 +6451,11 @@ export interface components {
              * @default true
              */
             start_from_template: boolean;
+            /**
+             * Upcoming Days
+             * @description How many days ahead the upcoming (planned) transactions are shown, 5 to 30.
+             */
+            upcoming_days?: number | null;
         };
         /** ValidationError */
         ValidationError: {

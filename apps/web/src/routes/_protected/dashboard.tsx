@@ -23,6 +23,7 @@ import PendingOverlay from "#/components/PendingOverlay";
 import IconSymbol from "#/components/Symbol";
 import { creditUsage } from "#/lib/accounts";
 import { CardMorph } from "#/lib/card-morph";
+import { useHiddenSections } from "#/lib/dashboard-hidden";
 import {
 	DEFAULT_SECTION_ORDER,
 	monthBounds,
@@ -43,7 +44,7 @@ import {
 	getCategoryTotalsFn,
 	getTransactionTotalsFn,
 	listTransactionsFn,
-	listUpcomingFn,
+	listUpcomingWithinSetting,
 } from "#/server/transactions";
 
 const searchSchema = z.object({
@@ -71,6 +72,8 @@ export const Route = createFileRoute("/_protected/dashboard")({
 		const trendEnd = current.end > now && current.start <= now ? now : current.end;
 		const range = { date_from: current.start, date_to: current.end };
 
+		// one /users/me request, shared with the upcoming list, which needs the days setting
+		const mePromise = getMeFn();
 		const [
 			totals,
 			before,
@@ -97,8 +100,8 @@ export const Route = createFileRoute("/_protected/dashboard")({
 			listGoalsFn({ data: {} }),
 			listAccountsFn(),
 			getAvailableToSpendFn(),
-			listUpcomingFn({ data: { days: 10 } }),
-			getMeFn(),
+			listUpcomingWithinSetting(mePromise),
+			mePromise,
 		]);
 		return {
 			month: current.start,
@@ -147,6 +150,9 @@ function DashboardPage() {
 	const [editing, setEditing] = useState(false);
 	// the order being arranged; saved once, when the user is done
 	const [draft, setDraft] = useState<string[] | null>(null);
+	// sections turned off on this device (local, not the account); the draft is saved on Done
+	const [hidden, saveHidden] = useHiddenSections();
+	const [draftHidden, setDraftHidden] = useState<ReadonlySet<string>>(new Set());
 	const navigate = Route.useNavigate();
 	const goTo = (on: string | undefined) => navigate({ search: { on }, replace: true });
 	const label = monthLabel(month);
@@ -237,14 +243,24 @@ function DashboardPage() {
 		sections.map((section) => section.id),
 	).flatMap((id) => byId.get(id) ?? []);
 
+	const shown = editing ? ordered : ordered.filter((section) => !hidden.has(section.id));
+
+	function toggleHidden(id: string) {
+		const next = new Set(draftHidden);
+		if (!next.delete(id)) next.add(id);
+		setDraftHidden(next);
+	}
+
 	function startEditing() {
 		setDraft(ordered.map((section) => section.id));
+		setDraftHidden(hidden);
 		setEditing(true);
 	}
 
 	async function finishEditing() {
 		// a failed save keeps the page in arranging mode, with the error shown by useAction's owner
 		if (!(await run(() => updateMeFn({ data: { dashboard_order: draft } })))) return;
+		saveHidden(draftHidden);
 		setEditing(false);
 	}
 
@@ -330,9 +346,18 @@ function DashboardPage() {
 				>
 					<Typography variant="body2" color="text.secondary">
 						Drag the cards by their handle, or use the arrows, to put them in the order you like.
+						The eye turns a card off on this device.
 					</Typography>
 					<Box sx={{ display: "flex", gap: 1 }}>
-						<Button color="inherit" size="small" disabled={pending} onClick={() => setDraft(null)}>
+						<Button
+							color="inherit"
+							size="small"
+							disabled={pending}
+							onClick={() => {
+								setDraft(null);
+								setDraftHidden(new Set());
+							}}
+						>
 							Reset
 						</Button>
 						<Button variant="contained" size="small" disabled={pending} onClick={finishEditing}>
@@ -343,7 +368,19 @@ function DashboardPage() {
 			)}
 
 			<PendingOverlay>
-				<SectionGrid sections={ordered} editing={editing} onReorder={setDraft} />
+				{shown.length === 0 ? (
+					<Typography color="text.secondary">
+						Every card is turned off. Use the tune button to bring some back.
+					</Typography>
+				) : (
+					<SectionGrid
+						sections={shown}
+						editing={editing}
+						hidden={draftHidden}
+						onReorder={setDraft}
+						onToggleHidden={toggleHidden}
+					/>
+				)}
 			</PendingOverlay>
 		</CardMorph>
 	);

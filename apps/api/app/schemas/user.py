@@ -53,6 +53,12 @@ class UserUpdate(BaseModel):
         max_length=32,
         description="The order of the dashboard's sections. Explicit null resets it.",
     )
+    upcoming_days: int | None = Field(
+        default=None,
+        ge=5,
+        le=30,
+        description="How many days ahead the upcoming (planned) transactions are shown, 5 to 30.",
+    )
 
 
 class UserResponse(BaseModel):
@@ -72,6 +78,9 @@ class UserResponse(BaseModel):
     compact_numbers: bool
     dashboard_order: list[str] | None = Field(
         description="The order of the dashboard's sections; null is the default order."
+    )
+    upcoming_days: int = Field(
+        description="How many days ahead the upcoming (planned) transactions are shown, 5 to 30."
     )
     two_factor_enabled: bool = Field(
         description="Whether signing in also needs a code from an authenticator app."

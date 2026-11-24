@@ -16,6 +16,8 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
+import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import type { ReactNode } from "react";
@@ -43,11 +45,16 @@ const GRID_SX = {
 export default function SectionGrid({
 	sections,
 	editing,
+	hidden,
 	onReorder,
+	onToggleHidden,
 }: {
 	sections: Section[];
 	editing: boolean;
+	/** Ids turned off; while arranging they stay in the grid, dimmed, so they can be turned on. */
+	hidden: ReadonlySet<string>;
 	onReorder: (ids: string[]) => void;
+	onToggleHidden: (id: string) => void;
 }) {
 	const sensors = useSensors(
 		useSensor(PointerSensor),
@@ -82,6 +89,8 @@ export default function SectionGrid({
 							section={s}
 							first={index === 0}
 							last={index === sections.length - 1}
+							hidden={hidden.has(s.id)}
+							onToggleHidden={() => onToggleHidden(s.id)}
 							onMove={(by) => move(index, index + by)}
 						/>
 					))}
@@ -95,11 +104,15 @@ function EditableSection({
 	section,
 	first,
 	last,
+	hidden,
+	onToggleHidden,
 	onMove,
 }: {
 	section: Section;
 	first: boolean;
 	last: boolean;
+	hidden: boolean;
+	onToggleHidden: () => void;
 	onMove: (by: -1 | 1) => void;
 }) {
 	const {
@@ -126,7 +139,7 @@ function EditableSection({
 					height: "100%",
 					// the cards are for looking at while arranging: no links or hovers
 					pointerEvents: "none",
-					opacity: isDragging ? 0.7 : 1,
+					opacity: isDragging ? 0.7 : hidden ? 0.35 : 1,
 					outline: "2px dashed var(--md-sys-color-outline-variant)",
 					outlineOffset: 2,
 					borderRadius: "var(--shape-xl)",
@@ -147,6 +160,18 @@ function EditableSection({
 					boxShadow: 1,
 				}}
 			>
+				<IconButton
+					size="small"
+					aria-label={hidden ? `Show ${section.label}` : `Hide ${section.label}`}
+					aria-pressed={hidden}
+					onClick={onToggleHidden}
+				>
+					{hidden ? (
+						<VisibilityOffOutlinedIcon fontSize="small" />
+					) : (
+						<VisibilityOutlinedIcon fontSize="small" />
+					)}
+				</IconButton>
 				<IconButton
 					size="small"
 					aria-label={`Move ${section.label} earlier`}

@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import type { PageResult } from "#/lib/pagination";
 import { DEFAULT_PAGE_SIZE, PAGE_SIZES } from "#/lib/pagination";
+import { UPCOMING_DAYS_DEFAULT, UPCOMING_DAYS_MAX, UPCOMING_DAYS_MIN } from "#/lib/dashboard";
 import { MAX_SELECT_ALL } from "#/lib/selection";
 import {
 	type ApiResult,
@@ -14,6 +15,7 @@ import {
 	type Transaction,
 	type TransactionTotals,
 	type TransferSuggestion,
+	type User,
 } from "#/types/api";
 import { apiRequest } from "./api";
 
@@ -308,7 +310,9 @@ export const listTrashIdsFn = createServerFn({ method: "GET" }).handler(async ()
 /** The planned (upcoming) transactions, soonest first. With `days`, only those due within that many
  * days from today; overdue ones still lead. Without it, whatever their date. */
 export const listUpcomingFn = createServerFn({ method: "GET" })
-	.validator(z.object({ days: z.number().int().min(1) }).optional())
+	.validator(
+		z.object({ days: z.number().int().min(UPCOMING_DAYS_MIN).max(UPCOMING_DAYS_MAX) }).optional(),
+	)
 	.handler(async ({ data }) => {
 		const query: Record<string, string | number> = { planned: "true", limit: 100 };
 		if (data) {
@@ -318,6 +322,16 @@ export const listUpcomingFn = createServerFn({ method: "GET" })
 		}
 		return apiRequest<Transaction[]>("/transactions", { query });
 	});
+
+/** The upcoming transactions within the person's own "upcoming days" setting, from a `getMeFn()`
+ * already in flight, so the page's one `/users/me` request is shared and nothing waits for it. */
+export function listUpcomingWithinSetting(me: Promise<ApiResult<User>>) {
+	return me.then((result) =>
+		listUpcomingFn({
+			data: { days: result.ok ? result.data.upcoming_days : UPCOMING_DAYS_DEFAULT },
+		}),
+	);
+}
 
 /** Mark a planned transaction as paid, optionally with the real date and amount. */
 export const postTransactionFn = createServerFn({ method: "POST" })

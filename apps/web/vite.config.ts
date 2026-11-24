@@ -34,6 +34,8 @@ export default defineConfig(({ mode }) => {
 					"AttachFile",
 					"Download",
 					"DragIndicator",
+					"VisibilityOffOutlined",
+					"VisibilityOutlined",
 					"DoneAll",
 					"MyLocation",
 					"PlaceOutlined",

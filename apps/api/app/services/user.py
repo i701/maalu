@@ -124,6 +124,9 @@ class UserService:
             user.name = _clean_name(changes["name"])
         if "dashboard_order" in changes:
             user.dashboard_order = changes["dashboard_order"]
+        # a days count is never null: an explicit null leaves it as it was
+        if changes.get("upcoming_days") is not None:
+            user.upcoming_days = changes["upcoming_days"]
         if "start_from_template" in changes:
             user.start_from_template = changes["start_from_template"]
         for flag in (

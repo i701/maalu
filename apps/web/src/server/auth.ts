@@ -7,6 +7,7 @@ import type {
 	TwoFactorSetup,
 	User,
 } from "#/types/api";
+import { UPCOMING_DAYS_MAX, UPCOMING_DAYS_MIN } from "#/lib/dashboard";
 import { apiRequest } from "./api";
 import { getAppSession, getChallengeSession } from "#/utils/session";
 
@@ -150,6 +151,7 @@ export const updateMeFn = createServerFn({ method: "POST" })
 			notify_login: z.boolean().optional(),
 			compact_numbers: z.boolean().optional(),
 			dashboard_order: z.array(z.string().max(32)).max(32).nullable().optional(),
+			upcoming_days: z.number().int().min(UPCOMING_DAYS_MIN).max(UPCOMING_DAYS_MAX).optional(),
 		}),
 	)
 	.handler(async ({ data }) => {

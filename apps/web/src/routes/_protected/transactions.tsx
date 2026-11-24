@@ -93,7 +93,7 @@ import {
 	listMatchingIdsFn,
 	listTransactionsFn,
 	listTransferSuggestionsFn,
-	listUpcomingFn,
+	listUpcomingWithinSetting,
 } from "#/server/transactions";
 import { getVendorFn, listVendorsFn } from "#/server/vendors";
 import {
@@ -160,6 +160,8 @@ export const Route = createFileRoute("/_protected/transactions")({
 				deps.date_from ||
 				deps.date_to,
 			) && deps.type !== "transfer";
+		// one /users/me request, shared with the upcoming list, which needs the days setting
+		const mePromise = getMeFn();
 		const [
 			transactions,
 			vendors,
@@ -188,8 +190,8 @@ export const Route = createFileRoute("/_protected/transactions")({
 			listAccountsFn(),
 			listTemplatesFn(),
 			listTagsFn(),
-			getMeFn(),
-			listUpcomingFn({ data: { days: 10 } }),
+			mePromise,
+			listUpcomingWithinSetting(mePromise),
 			listCurrenciesFn(),
 			wantsTotals ? getTransactionTotalsFn({ data: deps }) : Promise.resolve(null),
 			wantsTotals ? getCategoryTotalsFn({ data: deps }) : Promise.resolve(null),
