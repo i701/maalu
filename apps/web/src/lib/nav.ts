@@ -93,9 +93,7 @@ export const accentForPath = (pathname: string): Accent | undefined =>
 	NAV_ITEMS.find((item) => pathname === item.to || pathname.startsWith(`${item.to}/`))?.accent;
 
 /** Heights (px) the page leaves clear for the top bar and the bottom bar (bottom excludes the
- * safe-area inset), the width of the sidebar on wide screens and of the rail on medium ones. */
+ * safe-area inset), and the width of the sidebar on wide screens (900px and up). */
 export const TOP_BAR_HEIGHT = 80;
 export const BOTTOM_BAR_HEIGHT = 80;
 export const SIDEBAR_WIDTH = 264;
-/** The navigation rail on medium screens (600-900px): the bottom bar turned on its side. */
-export const RAIL_WIDTH = 80;

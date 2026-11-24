@@ -93,7 +93,7 @@ export default function PwaRegister() {
 		<Snackbar
 			open={waiting !== null}
 			anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-			sx={{ bottom: { xs: "calc(96px + env(safe-area-inset-bottom)) !important", sm: 24 } }}
+			sx={{ bottom: { xs: "calc(96px + env(safe-area-inset-bottom)) !important", md: 24 } }}
 		>
 			<SnackbarContent
 				message="A new version of Maalu is ready."

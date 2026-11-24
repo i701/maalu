@@ -5,8 +5,8 @@ import Brand from "./Brand";
 import SideNavItem from "./SideNavItem";
 
 /**
- * The sidebar on wide screens: the app name, then every destination grouped by what it is for. It
- * has no border. Narrow screens use the bottom bar instead, so the list
+ * The sidebar on wide screens (900px and up): the app name, then every destination grouped by what
+ * it is for. It has no border. Narrower screens use the bottom bar instead, so the list
  * here can keep growing. It is a white panel beside the grey page, as the cards are.
  */
 export default function SideNav({ badges = {} }: { badges?: Record<string, number> }) {

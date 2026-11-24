@@ -57,8 +57,8 @@ export function NotifyProvider({ children }: { children: ReactNode }) {
 				sx={{
 					bottom: {
 						xs: "calc(96px + env(safe-area-inset-bottom)) !important",
-						// no bottom bar from 600px up (a rail or the sidebar is at the side)
-						sm: "24px !important",
+						// no bottom bar from the sidebar's breakpoint up (the sidebar is at the side)
+						md: "24px !important",
 					},
 				}}
 				// Enter and leave through the same bottom edge it is anchored to.
