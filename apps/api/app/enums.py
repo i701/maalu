@@ -89,8 +89,10 @@ def is_spendable(group: AccountGroup, override: bool | None) -> bool:
 
 # Only these have a credit limit: the most you can owe on them.
 CREDIT_LIMIT_GROUPS = frozenset({AccountGroup.CARD, AccountGroup.OVERDRAFTS})
-# The category a balance adjustment is filed under (it is left out of every report anyway).
-ADJUSTMENT_CATEGORY = "Balance adjustment"
+# What a balance adjustment is called when it has no description of its own, and what its
+# `category` reads. It has no category row: a correction is not spending, so nothing asks you to
+# sort it, no picker offers it and no budget limit can be put on it.
+ADJUSTMENT_LABEL = "Balance adjustment"
 # The default category for pay. Income in it is never a refund, and nothing but income goes in it.
 SALARY_CATEGORY = "Salary"
 

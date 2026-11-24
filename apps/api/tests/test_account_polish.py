@@ -206,10 +206,47 @@ async def test_adjusting_to_a_new_balance_up(client, auth):
     assert made["adjustment"] is True
     assert made["type"] == "income"
     assert Decimal(made["amount"]) == 40
+    # no category row, but it still reads as what it is (not as a transfer)
     assert made["category"] == "Balance adjustment"
+    assert made["category_id"] is None
     assert made["description"] == "Balance adjustment"
     assert made["account"]["id"] == acc["id"]
     assert await balance(client, auth, acc) == 140
+
+
+async def test_an_adjustment_leaves_no_category_to_sort_or_pick(client, auth):
+    acc = await account(client, auth, opening="100")
+    assert (await adjust(client, auth, acc, new_balance="140")).status_code == 201
+    assert (await adjust(client, auth, acc, amount="-5", note="Bank fee")).status_code == 201
+    names = [c["name"] for c in (await client.get("/api/v1/categories", headers=auth)).json()]
+    assert "Balance adjustment" not in names
+    # both are in the list, read as adjustments, with nothing in any category total
+    rows = (await client.get("/api/v1/transactions", headers=auth)).json()
+    adjustments = [r for r in rows if r["adjustment"]]
+    assert len(adjustments) == 2
+    assert all(
+        r["category"] == "Balance adjustment" and r["category_id"] is None for r in adjustments
+    )
+    totals = (await client.get("/api/v1/transactions/categories", headers=auth)).json()
+    assert totals["categories"] == []
+
+
+async def test_searching_for_adjustment_finds_adjustments_whatever_their_note(client, auth):
+    acc = await account(client, auth, opening="100")
+    await adjust(client, auth, acc, new_balance="140")
+    await adjust(client, auth, acc, amount="-5", note="Bank fee")
+    await spend(client, auth, "10", acc=acc, category="Food")
+
+    async def found(q: str) -> list[str]:
+        rows = (await client.get(TX, params={"q": q}, headers=auth)).json()
+        return sorted(r["description"] or r["category"] for r in rows)
+
+    # both adjustments, the one with a note too; nothing else
+    assert await found("adjustment") == ["Balance adjustment", "Bank fee"]
+    assert await found("Balance adj") == ["Balance adjustment", "Bank fee"]
+    # an ordinary search is not widened by it
+    assert await found("fee") == ["Bank fee"]
+    assert await found("zzz") == []
 
 
 async def test_adjusting_to_a_new_balance_down(client, auth):
@@ -268,12 +305,12 @@ async def test_an_adjustment_is_not_income_or_spending(client, auth):
 
 async def test_an_adjustment_is_not_in_the_budget(client, auth):
     acc = await account(client, auth, opening="100")
+    # a limit on a real category, and an adjustment on the account: the limit counts nothing
+    food = (await client.post("/api/v1/categories", json={"name": "Food"}, headers=auth)).json()
     await adjust(client, auth, acc, amount="-70")
-    cats = (await client.get("/api/v1/categories", headers=auth)).json()
-    adj = next(c["id"] for c in cats if c["name"] == "Balance adjustment")
     made = await client.post(
         f"{BUDGET}/lines",
-        json={"name": "Adj", "category_ids": [adj], "amount": "1000"},
+        json={"name": "Food", "category_ids": [food["id"]], "amount": "1000"},
         headers=auth,
     )
     assert made.status_code in (200, 201), made.text

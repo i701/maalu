@@ -9,7 +9,7 @@ from sqlalchemy import case, func, literal, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.allocation import allocate_base
-from app.enums import ADJUSTMENT_CATEGORY, CardKind, CategoryKind, PaymentMethod, TransactionType
+from app.enums import ADJUSTMENT_LABEL, CardKind, CategoryKind, PaymentMethod, TransactionType
 from app.export import EXPORT_LIMIT, build_workbook
 from app.models import (
     Account,
@@ -531,9 +531,9 @@ class TransactionService:
             user_id=user_id,
             type=kind,
             amount=size,
-            category_ref=await self.categories.get_or_create(user_id, ADJUSTMENT_CATEGORY),
+            category_ref=None,  # a correction is not spending: no category to sort or pick
             payment_method=PaymentMethod.OTHER,
-            description=note or "Balance adjustment",
+            description=note or ADJUSTMENT_LABEL,
             transaction_date=day,
             account=account,
             adjustment=True,
@@ -760,8 +760,15 @@ class TransactionService:
             conditions.append(Transaction.transaction_date <= date_to)
         if q and q.strip():
             term = q.strip()
+            # an adjustment has no category row to match, but its `category` reads as the label
+            matches = (
+                [Transaction.adjustment.is_(True)]
+                if term.lower() in ADJUSTMENT_LABEL.lower()
+                else []
+            )
             conditions.append(
                 or_(
+                    *matches,
                     Transaction.category_ref.has(Category.name.icontains(term, autoescape=True)),
                     Transaction.splits.any(
                         or_(

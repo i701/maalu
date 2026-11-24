@@ -24,7 +24,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, aliased, column_property, mapped_column, relationship
 
-from app.enums import PaymentMethod, TransactionType
+from app.enums import ADJUSTMENT_LABEL, PaymentMethod, TransactionType
 from app.models.account import Account
 from app.models.attachment import TransactionAttachment
 from app.models.base import Base
@@ -219,7 +219,10 @@ class Transaction(Base):
 
     @property
     def category(self) -> str:
-        return self.category_ref.name if self.category_ref else "Transfer"
+        if self.category_ref:
+            return self.category_ref.name
+        # no category row: a transfer, or a balance adjustment (income or expense, but not spending)
+        return ADJUSTMENT_LABEL if self.adjustment else "Transfer"
 
     @property
     def category_color(self) -> str | None:
