@@ -1,8 +1,3 @@
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import { createFileRoute } from "@tanstack/react-router";
-import { useMemo } from "react";
-import { z } from "zod";
 import EmptyState from "#/components/EmptyState";
 import PageHeader from "#/components/PageHeader";
 import { RouterLink } from "#/components/RouterLinks";
@@ -13,6 +8,11 @@ import { DOCS } from "#/lib/docs";
 import { searchDocs, type DocHit } from "#/lib/docs/search";
 import { ACCENT } from "#/lib/m3";
 import { morph } from "#/lib/shape";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import { createFileRoute } from "@tanstack/react-router";
+import { useMemo } from "react";
+import { z } from "zod";
 
 const searchSchema = z.object({
 	q: z.coerce.string().max(100).optional().catch(undefined),

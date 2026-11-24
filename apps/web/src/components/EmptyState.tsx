@@ -1,9 +1,9 @@
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import { keyframes } from "@emotion/react";
-import type { ReactNode } from "react";
 import { ACCENT, type Accent } from "#/lib/m3";
 import { SPRING } from "#/lib/motion";
+import { keyframes } from "@emotion/react";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import type { ReactNode } from "react";
 import ShapeTile from "./ShapeTile";
 import IconSymbol from "./Symbol";
 

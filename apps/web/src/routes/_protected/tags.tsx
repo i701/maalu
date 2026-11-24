@@ -1,14 +1,3 @@
-import AddIcon from "@mui/icons-material/Add";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import IconButton from "@mui/material/IconButton";
-import TableCell from "@mui/material/TableCell";
-import TableRow from "@mui/material/TableRow";
-import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
-import { memo, useState } from "react";
-import { z } from "zod";
 import ConfirmDelete from "#/components/ConfirmDelete";
 import EmptyState from "#/components/EmptyState";
 import MergeTagDialog from "#/components/MergeTagDialog";
@@ -32,6 +21,17 @@ import { tagAccent } from "#/lib/tags";
 import { unwrap } from "#/lib/unwrap";
 import { deleteTagFn, listTagsFn, listTagsPageFn } from "#/server/tags";
 import type { Tag } from "#/types/api";
+import AddIcon from "@mui/icons-material/Add";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
+import TableCell from "@mui/material/TableCell";
+import TableRow from "@mui/material/TableRow";
+import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
+import { memo, useState } from "react";
+import { z } from "zod";
 
 const searchSchema = z.object({
 	...pageSearch,

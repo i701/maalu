@@ -1,5 +1,5 @@
-import Chip from "@mui/material/Chip";
 import { CHECK_MASK } from "#/lib/symbols";
+import Chip from "@mui/material/Chip";
 import IconSymbol from "./Symbol";
 
 const SPRING_SHAPE = "border-radius var(--spring-spatial-fast-dur) var(--spring-spatial-fast)";

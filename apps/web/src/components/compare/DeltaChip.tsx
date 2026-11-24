@@ -1,7 +1,7 @@
-import { memo } from "react";
 import type { Change } from "#/lib/compare";
 import { formatMoney } from "#/lib/format";
 import { ACCENT } from "#/lib/m3";
+import { memo } from "react";
 import IconSymbol from "../Symbol";
 import TonalChip from "../TonalChip";
 

@@ -1,13 +1,3 @@
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import Box from "@mui/material/Box";
-import IconButton from "@mui/material/IconButton";
-import TableCell from "@mui/material/TableCell";
-import TableRow from "@mui/material/TableRow";
-import Typography from "@mui/material/Typography";
-import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
-import { memo, useState } from "react";
-import { z } from "zod";
 import ConfirmDelete from "#/components/ConfirmDelete";
 import EmptyState from "#/components/EmptyState";
 import MobileCard from "#/components/MobileCard";
@@ -19,8 +9,8 @@ import IconSymbol from "#/components/Symbol";
 import TableCard from "#/components/TableCard";
 import TablePager from "#/components/TablePager";
 import TableToolbar from "#/components/TableToolbar";
-import TemplateRenameDialog from "#/components/TemplateRenameDialog";
 import { TagChips } from "#/components/TagChip";
+import TemplateRenameDialog from "#/components/TemplateRenameDialog";
 import TonalChip from "#/components/TonalChip";
 import { PAYMENT_ACCENT } from "#/lib/accents";
 import { formatMoney } from "#/lib/format";
@@ -33,6 +23,16 @@ import {
 	TRANSACTION_TYPE_LABELS,
 	type TransactionTemplate,
 } from "#/types/api";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import TableCell from "@mui/material/TableCell";
+import TableRow from "@mui/material/TableRow";
+import Typography from "@mui/material/Typography";
+import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
+import { memo, useState } from "react";
+import { z } from "zod";
 
 const searchSchema = z.object(pageSearch);
 

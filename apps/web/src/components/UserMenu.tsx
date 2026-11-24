@@ -1,3 +1,5 @@
+import { logoutFn } from "#/server/auth";
+import type { SessionUser } from "#/utils/session";
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
 import ButtonBase from "@mui/material/ButtonBase";
@@ -6,8 +8,6 @@ import MenuItem from "@mui/material/MenuItem";
 import Typography from "@mui/material/Typography";
 import { useRouter } from "@tanstack/react-router";
 import { useState } from "react";
-import { logoutFn } from "#/server/auth";
-import type { SessionUser } from "#/utils/session";
 import IconSymbol from "./Symbol";
 
 // Generated avatar, for now. A fixed non-personal seed, so every user gets the same picture and

@@ -1,6 +1,6 @@
+import { setViewMode, useViewMode, type ViewMode } from "#/lib/view-mode";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
-import { setViewMode, useViewMode, type ViewMode } from "#/lib/view-mode";
 import IconSymbol from "./Symbol";
 
 /** The site's segmented List / Photos toggle: switches every list between cards and a table. */
