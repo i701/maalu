@@ -32,6 +32,7 @@ export default defineConfig({
 			? 2
 			: Math.max(1, Math.min(4, Math.floor(cpus().length / 2))),
 	expect: { timeout: 15_000 }, // sign-up and sign-in hash a password, which is slow when tests run side by side
+	timeout: 60_000, // a test starts with a sign-up, which signUp retries when the machine is busy
 	forbidOnly: !!process.env.CI,
 	retries: process.env.CI ? 1 : 0,
 	reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",

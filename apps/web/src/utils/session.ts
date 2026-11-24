@@ -54,6 +54,14 @@ export async function renewSession(session: Awaited<ReturnType<typeof getAppSess
 	await session.update({ refreshedAt: Date.now() });
 }
 
+/** Forget the sign-in (the cookie keeps no token or user, so every guard sends the visitor to
+ * /login). Not `session.clear()`: during a page load many server functions share one session, and
+ * clearing it while another is still opening it makes h3 throw "Cannot convert undefined or null
+ * to object", so the page answers 500 instead of redirecting. */
+export async function dropCredentials(session: Awaited<ReturnType<typeof getAppSession>>) {
+	await session.update({ token: undefined, user: undefined });
+}
+
 /** The proof of a right password while the code is still to come. It lives in its own short-lived
  * encrypted cookie, so the browser never holds it and an abandoned sign-in expires by itself. */
 export function getChallengeSession() {

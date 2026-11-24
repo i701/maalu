@@ -1,6 +1,6 @@
 import { getRequestHeader, getRequestIP } from "@tanstack/react-start/server";
 import type { ApiResult } from "#/types/api";
-import { getAppSession, renewSession } from "#/utils/session";
+import { dropCredentials, getAppSession, renewSession } from "#/utils/session";
 
 const API_URL = () => process.env.API_URL ?? "http://localhost:8000";
 
@@ -54,7 +54,7 @@ export async function apiRequest<T>(
 	} else if (!opts.anonymous) {
 		const { token } = session.data;
 		if (!token) {
-			await session.clear();
+			await dropCredentials(session);
 			return { ok: false, status: 401, error: "Session expired" };
 		}
 		headers.Authorization = `Bearer ${token}`;
@@ -87,7 +87,7 @@ export async function apiRequest<T>(
 		return { ok: false, status: 503, error: "Cannot reach the Maalu API" };
 	}
 
-	if (res.status === 401 && !opts.anonymous) await session.clear();
+	if (res.status === 401 && !opts.anonymous) await dropCredentials(session);
 	if (res.ok && !opts.anonymous && !opts.token) await renewSession(session);
 	// 204 has no body: the caller's T is void for those routes
 	const json = res.status === 204 ? undefined : await res.json().catch(() => null);

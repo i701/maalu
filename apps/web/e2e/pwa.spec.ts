@@ -12,11 +12,14 @@ test("the app has a manifest and registers its service worker", async ({ page })
 	expect(manifest.icons.some((i: { purpose?: string }) => i.purpose === "maskable")).toBe(true);
 
 	// the production build registers the worker, and it takes over
-	const state = await page.evaluate(async () => {
-		const registration = await navigator.serviceWorker.ready;
-		return registration.active?.state;
-	});
-	expect(state).toBe("activated");
+	// (a page that reloads once the worker is in destroys the evaluate's context: ask again)
+	await expect
+		.poll(() =>
+			page
+				.evaluate(async () => (await navigator.serviceWorker.ready).active?.state)
+				.catch(() => undefined),
+		)
+		.toBe("activated");
 
 	// the offline page is kept, so a lost connection shows it instead of the browser's error
 	const offline = await page.evaluate(async () => {
