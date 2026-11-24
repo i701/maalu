@@ -28,6 +28,7 @@ export default function NamePickerField({
 	required = false,
 	maxLength,
 	helper = true,
+	dense = false,
 	onValueChange,
 	error,
 }: {
@@ -43,6 +44,9 @@ export default function NamePickerField({
 	maxLength: number;
 	/** Show the helper line under the input; off in tight spaces such as table rows */
 	helper?: boolean;
+	/** A compact field for a table cell: small, no floating label (the label is its placeholder and
+	 * its accessible name) and no helper line. */
+	dense?: boolean;
 	/** `fromUser` is false when the field sets its own starting value (no event behind it). */
 	onValueChange?: (value: string, fromUser: boolean) => void;
 	/** A message from the form's schema, shown under the field in place of the help text. */
@@ -73,6 +77,18 @@ export default function NamePickerField({
 				}
 				return filtered;
 			}}
+			// a table cell is narrow: the list may be wider than the field it drops from, from the
+			// field's left edge, so a long name and its parent are not squeezed
+			slotProps={
+				dense
+					? {
+							popper: {
+								placement: "bottom-start",
+								style: { width: "max-content", minWidth: 300, maxWidth: "min(420px, 90vw)" },
+							},
+						}
+					: undefined
+			}
 			getOptionLabel={(option) => (typeof option === "string" ? option : option.inputValue)}
 			renderOption={({ key, ...props }, option) => (
 				<li key={key} {...props}>
@@ -89,12 +105,14 @@ export default function NamePickerField({
 			renderInput={(params) => (
 				<TextField
 					{...params}
-					label={label}
+					label={dense ? undefined : label}
+					placeholder={dense ? label : undefined}
+					size={dense ? "small" : undefined}
 					required={required}
 					error={Boolean(error)}
 					helperText={
 						error ??
-						(helper
+						(helper && !dense
 							? isNew
 								? `New ${noun} "${typed}" will be created when you save`
 								: required
@@ -104,7 +122,11 @@ export default function NamePickerField({
 					}
 					slotProps={{
 						...params.slotProps,
-						htmlInput: { ...params.slotProps.htmlInput, maxLength },
+						htmlInput: {
+							...params.slotProps.htmlInput,
+							maxLength,
+							...(dense && { "aria-label": label }),
+						},
 						formHelperText: { sx: isNew && !error ? { color: "primary.main" } : undefined },
 					}}
 				/>
@@ -113,8 +135,8 @@ export default function NamePickerField({
 	);
 }
 
-/** One existing name: a sub-category is indented, with its parent after it so a search hit still
- * says where it belongs. */
+/** One existing name: a sub-category is indented, with its parent under it so a search hit still
+ * says where it belongs (under the name, not after it, so a narrow list does not wrap them). */
 function NameOption({ name, meta }: { name: string; meta?: OptionMeta }) {
 	if (!meta) return name;
 	return (
@@ -122,8 +144,10 @@ function NameOption({ name, meta }: { name: string; meta?: OptionMeta }) {
 			style={{ display: "flex", alignItems: "center", gap: 8, paddingLeft: meta.parent ? 16 : 0 }}
 		>
 			<CategoryDot color={meta.color} />
-			{name}
-			{meta.parent && <span style={{ fontSize: 12, opacity: 0.6 }}>in {meta.parent}</span>}
+			<span style={{ display: "grid", lineHeight: 1.3 }}>
+				<span>{name}</span>
+				{meta.parent && <span style={{ fontSize: 12, opacity: 0.6 }}>in {meta.parent}</span>}
+			</span>
 		</span>
 	);
 }

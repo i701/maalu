@@ -1,3 +1,4 @@
+import Box from "@mui/material/Box";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Switch from "@mui/material/Switch";
@@ -206,36 +207,33 @@ export default function OrdinaryFields({
 			</Cell>
 
 			<Cell size={{ xs: 12, sm: 6 }} fadeIn={switched}>
-				{splits.enabled ? (
+				{/* beside the payment method, split or not, so it never moves; level with the field */}
+				<Box sx={{ minHeight: 56, display: "flex", alignItems: "center" }}>
 					<FormControlLabel
-						control={<Switch checked onChange={() => splits.setEnabled(false)} />}
+						control={
+							<Switch checked={splits.enabled} onChange={(_, on) => splits.setEnabled(on)} />
+						}
 						label="Split by item and category"
 					/>
-				) : (
-					<Controller
-						name="category"
-						control={control}
-						render={({ field, fieldState }) => (
-							<CategoryField
-								key={categoryKey}
-								categories={categories}
-								defaultValue={field.value}
-								onValueChange={field.onChange}
-								error={fieldState.error?.message}
-							/>
-						)}
-					/>
-				)}
+				</Box>
 			</Cell>
 
-			{!splits.enabled && (
-				<Cell size={12} fadeIn={switched}>
-					<FormControlLabel
-						control={<Switch checked={false} onChange={() => splits.setEnabled(true)} />}
-						label="Split by item and category"
-					/>
-				</Cell>
-			)}
+			{/* a split purchase has a category on each item instead */}
+			<RevealCell size={12} show={!splits.enabled}>
+				<Controller
+					name="category"
+					control={control}
+					render={({ field, fieldState }) => (
+						<CategoryField
+							key={categoryKey}
+							categories={categories}
+							defaultValue={field.value}
+							onValueChange={field.onChange}
+							error={fieldState.error?.message}
+						/>
+					)}
+				/>
+			</RevealCell>
 
 			<RevealCell size={12} show={splits.enabled}>
 				<SplitEditor splits={splits} currency={effectiveCurrency} categories={categories} />

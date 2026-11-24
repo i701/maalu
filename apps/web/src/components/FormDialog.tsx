@@ -7,7 +7,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import type { ReactNode, SubmitEvent } from "react";
-import { useLastDefined } from "#/lib/motion";
+import { SPRING, useLastDefined } from "#/lib/motion";
 import type { Sheet } from "#/lib/sheet";
 import Reveal from "./Reveal";
 
@@ -56,6 +56,8 @@ export default function FormDialog({
 			aria-labelledby="form-dialog-title"
 			slotProps={{
 				transition: { onExited: sheet.onExited },
+				// a form that widens (the item table) glides to its new width
+				paper: { sx: { transition: `max-width ${SPRING.spatialFast}` } },
 			}}
 		>
 			<form onSubmit={onSubmit} noValidate style={{ display: "contents" }}>

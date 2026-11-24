@@ -185,6 +185,8 @@ export default function TransactionForm({
 				onSubmit={handleSubmit(submit)}
 				sheet={sheet}
 				fullWidth
+				// the item table needs the room
+				maxWidth={splits.enabled && !isTransfer ? "md" : "sm"}
 			>
 				<Grid container columnSpacing={2} key={fields.round}>
 					{!transaction && templates.length > 0 && (

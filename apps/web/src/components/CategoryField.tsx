@@ -8,6 +8,7 @@ export default function CategoryField({
 	label = "Category",
 	required = true,
 	helper = true,
+	dense = false,
 	onValueChange,
 	error,
 }: {
@@ -16,6 +17,8 @@ export default function CategoryField({
 	label?: string;
 	required?: boolean;
 	helper?: boolean;
+	/** A compact field for a table cell */
+	dense?: boolean;
 	onValueChange?: (value: string, fromUser: boolean) => void;
 	/** A message from the form's schema, shown under the field. */
 	error?: string;
@@ -31,6 +34,7 @@ export default function CategoryField({
 			defaultValue={defaultValue}
 			required={required}
 			helper={helper}
+			dense={dense}
 			maxLength={100}
 			onValueChange={onValueChange}
 			error={error}
