@@ -51,6 +51,7 @@ export default defineConfig(({ mode }) => {
 					"EditOutlined",
 					"ExpandLess",
 					"LightMode",
+					"SettingsBrightness",
 					"Link",
 					"CallSplit",
 					"Logout",

@@ -2192,6 +2192,28 @@
       }
     },
     {
+      "id": "theme",
+      "area": "settings",
+      "name": "Theme",
+      "summary": "Follow the system's light or dark appearance, or pick one.",
+      "web": {
+        "status": "done",
+        "evidence": [
+          "apps/web/src/components/ColorModeToggle.tsx"
+        ]
+      },
+      "android": {
+        "status": "na",
+        "note": "Deliberately follows the device's light or dark appearance; no switcher."
+      },
+      "ios": {
+        "status": "na",
+        "note": "Deliberately follows the device's light or dark appearance; no switcher."
+      },
+      "routes": [],
+      "api": []
+    },
+    {
       "id": "settings",
       "area": "settings",
       "name": "Settings",

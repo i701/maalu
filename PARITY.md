@@ -9,10 +9,10 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 77 | 59 | 65 |
+| ✅ done | 78 | 59 | 65 |
 | 🟡 partial | 0 | 1 | 1 |
 | ❌ missing | 0 | 14 | 6 |
-| ➖ n/a | 2 | 5 | 6 |
+| ➖ n/a | 2 | 6 | 7 |
 | 🗓 planned | 0 | 0 | 1 |
 
 ## Still to build on Android (15)
@@ -175,6 +175,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | Feature | Web | Android | iOS |
 |---|:---:|:---:|:---:|
+| **Theme**<br>Follow the system's light or dark appearance, or pick one. | ✅ done | ➖ n/a | ➖ n/a |
 | **Settings**<br>Account details, numbers display, templates switch, default account and the notification and security cards. | ✅ done | ✅ done | ✅ done |
 | **Short numbers**<br>Show large amounts as 1.23K with the exact amount a tap away. | ✅ done | ✅ done | ✅ done |
 | **Backup and restore**<br>Download everything you own as one file and restore it into an empty account. | ✅ done | ❌ missing | ❌ missing |
@@ -183,6 +184,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Offline page and cached app files**<br>A service worker keeps only static files; data is never cached. | ✅ done | ➖ n/a | ➖ n/a |
 | **Health check**<br>An unauthenticated endpoint for monitoring. | ✅ done | ✅ done | ➖ n/a |
 
+- **Theme** (Android): Deliberately follows the device's light or dark appearance; no switcher.
+- **Theme** (iOS): Deliberately follows the device's light or dark appearance; no switcher.
 - **Install the app** (Android): This is the app.
 - **Install the app** (iOS): This is the app.
 - **Offline page and cached app files** (Android): Native app.

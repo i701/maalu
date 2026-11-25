@@ -8,13 +8,11 @@
 }
 
 /* The tiles are light: in dark mode flip them so the map does not glare. */
-[data-mui-color-scheme="dark"] .maalu-map .leaflet-tile-pane {
+[data-dark] .maalu-map .leaflet-tile-pane {
 	filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9);
 }
 @media (prefers-color-scheme: dark) {
-	:root:not([data-mui-color-scheme="light"]):not([data-mui-color-scheme="dark"])
-		.maalu-map
-		.leaflet-tile-pane {
+	:root:not([data-light]):not([data-dark]) .maalu-map .leaflet-tile-pane {
 		filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9);
 	}
 }
