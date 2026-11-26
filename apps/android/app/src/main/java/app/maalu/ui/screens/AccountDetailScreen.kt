@@ -256,11 +256,7 @@ fun AccountDetailScreen(api: Api, accountId: String, onBack: () -> Unit) {
                     Text(if (committed.isNotEmpty() || type != null) "Nothing matches." else "No transactions in this account yet.", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(24.dp))
                 }
                 groups.forEach { (day, list) ->
-                    stickyHeader(key = "d-$day") {
-                        Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxWidth()) {
-                            Text(dayLabel(day), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
-                        }
-                    }
+                    stickyHeader(key = "d-$day") { DayHeader(dayLabel(day)) }
                     items(list.size, key = { list[it].id }) { i -> Box(springItem()) {
                         val t = list[i]
                         MorphTile({ selected = t }, first = i == 0, last = i == list.lastIndex, modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 2.dp)) {

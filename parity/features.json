@@ -2205,6 +2205,31 @@
       }
     },
     {
+      "id": "app-backdrop",
+      "area": "settings",
+      "name": "Header backdrop",
+      "summary": "A grainy sky blue (midnight blue in dark mode) at the top of the app's pages, fading into the page.",
+      "web": {
+        "status": "na",
+        "note": "The web opens every page with a plain header; its gradient banners were removed."
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/components/HeaderWash.kt",
+          "apps/android/app/src/main/java/app/maalu/MainActivity.kt"
+        ]
+      },
+      "ios": {
+        "status": "done",
+        "evidence": [
+          "apps/ios/Maalu/Shared/Design/GradientHeader.swift"
+        ]
+      },
+      "routes": [],
+      "api": []
+    },
+    {
       "id": "theme",
       "area": "settings",
       "name": "Theme",

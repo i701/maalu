@@ -302,16 +302,7 @@ fun TransactionsScreen(api: Api) {
                         Box(Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) { TransferSuggestionsCard(api, suggestions, onChanged = { reload++ }, onSay = { msg -> scope.launch { snackbar?.showSnackbar(msg) } }) }
                     }
                     groups.forEach { (day, list) ->
-                        stickyHeader(key = "d-$day") {
-                            Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxWidth()) {
-                                Text(
-                                    dayLabel(day),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-                                )
-                            }
-                        }
+                        stickyHeader(key = "d-$day") { DayHeader(dayLabel(day)) }
                         items(list.size, key = { list[it].id }) { i -> Box(springItem()) {
                             val t = list[i]
                             // the native expressive list item: large outer corners, small inner ones, and the

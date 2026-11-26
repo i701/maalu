@@ -9,10 +9,10 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 78 | 62 | 65 |
+| ✅ done | 78 | 63 | 66 |
 | 🟡 partial | 0 | 2 | 1 |
 | ❌ missing | 0 | 11 | 6 |
-| ➖ n/a | 2 | 5 | 7 |
+| ➖ n/a | 3 | 5 | 7 |
 | 🗓 planned | 0 | 0 | 1 |
 
 ## Still to build on Android (13)
@@ -174,6 +174,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | Feature | Web | Android | iOS |
 |---|:---:|:---:|:---:|
+| **Header backdrop**<br>A grainy sky blue (midnight blue in dark mode) at the top of the app's pages, fading into the page. | ➖ n/a | ✅ done | ✅ done |
 | **Theme**<br>Follow the system's light or dark appearance, or pick one. | ✅ done | ✅ done | ➖ n/a |
 | **Settings**<br>Account details, numbers display, templates switch, default account and the notification and security cards. | ✅ done | ✅ done | ✅ done |
 | **Short numbers**<br>Show large amounts as 1.23K with the exact amount a tap away. | ✅ done | ✅ done | ✅ done |
@@ -183,6 +184,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Offline page and cached app files**<br>A service worker keeps only static files; data is never cached. | ✅ done | ➖ n/a | ➖ n/a |
 | **Health check**<br>An unauthenticated endpoint for monitoring. | ✅ done | ✅ done | ➖ n/a |
 
+- **Header backdrop** (Web): The web opens every page with a plain header; its gradient banners were removed.
 - **Theme** (iOS): Deliberately follows the device's light or dark appearance; no switcher.
 - **Install the app** (Android): This is the app.
 - **Install the app** (iOS): This is the app.

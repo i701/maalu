@@ -157,6 +157,9 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
         },
     ) {
         androidx.compose.runtime.CompositionLocalProvider(LocalSnackbar provides snackbar) { Scaffold(
+            // clear, so the backdrop shows through the page and its top bar
+            containerColor = androidx.compose.ui.graphics.Color.Transparent,
+            contentColor = MaterialTheme.colorScheme.onSurface,
             snackbarHost = { androidx.compose.material3.SnackbarHost(snackbar) },
             modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
             topBar = {
@@ -188,6 +191,7 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
                         }
                     },
                     scrollBehavior = scroll,
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = androidx.compose.ui.graphics.Color.Transparent, scrolledContainerColor = androidx.compose.ui.graphics.Color.Transparent),
                 )
             },
             bottomBar = {

@@ -143,6 +143,17 @@ import kotlinx.coroutines.launch
 
 import kotlinx.coroutines.launch
 
+/** A day's heading on its own pill: it stays put while rows scroll under it, and the backdrop shows around it. */
+@Composable
+fun DayHeader(label: String) {
+    Surface(
+        shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.92f),
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+    ) {
+        Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp))
+    }
+}
+
 /** The colour a transaction is marked with: its category's, a transfer's own blue. */
 @Composable
 private fun rowTint(t: Transaction): Color =
