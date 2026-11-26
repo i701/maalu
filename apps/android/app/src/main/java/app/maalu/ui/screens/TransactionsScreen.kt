@@ -1,10 +1,10 @@
 package app.maalu.ui.screens
 
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.platform.LocalFocusManager
 import app.maalu.ui.components.fadingEdges
 import androidx.compose.ui.zIndex
 import androidx.compose.material3.LinearProgressIndicator
-import app.maalu.ui.components.dimWhen
-import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.BottomReveal
 import androidx.compose.animation.animateContentSize
 import app.maalu.ui.components.springItem
@@ -58,7 +58,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.CompositionLocalProvider
 import app.maalu.ui.components.MorphTile
-import app.maalu.ui.components.SearchPill
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -102,20 +101,11 @@ import app.maalu.data.Ref
 import app.maalu.data.CategoryItem
 import app.maalu.data.BulkResult
 import app.maalu.data.ApiResult
-import app.maalu.data.PaymentMethodLabels
 import app.maalu.data.Totals
 import app.maalu.data.TxFilters
-import app.maalu.data.isAmount
-import app.maalu.data.rangeLabel
 import app.maalu.data.toJson
 import app.maalu.data.txFiltersFromJson
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
-import androidx.compose.material.icons.outlined.Tune
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.InputChip
-import androidx.compose.material3.InputChipDefaults
-import app.maalu.ui.components.TintChip
 import app.maalu.data.Transaction
 import app.maalu.data.TransferSuggestion
 import app.maalu.data.dayLabel
@@ -135,19 +125,8 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 private const val PAGE = 30
-/** Income green, expense red, transfer blue; All is the neutral one. */
-@Composable
-private fun typeTint(type: String?): Color = when (type) {
-    "income" -> ChartColors.IncomeLight
-    "expense" -> MaterialTheme.colorScheme.error
-    "transfer" -> ChartColors.Line
-    else -> MaterialTheme.colorScheme.outline
-}
-
-private val TYPES = listOf(null to "All", "income" to "Income", "expense" to "Expense", "transfer" to "Transfer")
-
 /**
- * The list: search, a type filter, the newest first grouped by day in quiet rows, more loading as you reach the end,
+ * The list: search and filters in a card at the top, the newest first grouped by day in quiet rows, more loading as you reach the end,
  * and a sheet with every detail of the one you tap. Read-only for now; adding and editing come later.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -253,52 +232,33 @@ fun TransactionsScreen(api: Api) {
             }
     }
 
+    // scrolling the list puts the keyboard away, as on iOS
+    val focus = LocalFocusManager.current
+    LaunchedEffect(listState) { snapshotFlow { listState.isScrollInProgress }.collect { if (it) focus.clearFocus() } }
+
     Box(Modifier.fillMaxSize()) {
-    Column(Modifier.fillMaxSize()) {
-        Row(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SearchPill(query, onChange = { query = it.take(100) }, modifier = Modifier.weight(1f))
-            IconButton(onClick = { showFilters = true }, shapes = IconButtonDefaults.shapes()) {
-                BadgedBox(badge = { if (filters.detailCount() > 0) Badge { Text("${filters.detailCount()}") } }) {
-                    Icon(Icons.Outlined.Tune, "Filters")
+    PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
+        if (loading && !refreshing && items.isNotEmpty()) LinearProgressIndicator(Modifier.fillMaxWidth().align(Alignment.TopCenter).zIndex(1f))
+        val groups by remember { derivedStateOf { groupByDay(items.toList()) } }
+        LazyColumn(Modifier.fillMaxSize().fadingEdges(listState), state = listState, contentPadding = PaddingValues(bottom = 16.dp)) {
+            item(key = "search") {
+                TransactionSearchCard(query, { query = it.take(100) }, filters, { filters = it }, totals, onOpenFilters = { showFilters = true })
+            }
+            when {
+                loading && items.isEmpty() -> item(key = "loading") { Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() } }
+                error != null -> item(key = "error") {
+                    Column(Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(error ?: "", color = MaterialTheme.colorScheme.error)
+                        Button(onClick = { reload++ }, shapes = ButtonDefaults.shapes()) { Text("Try again") }
+                    }
                 }
-            }
-        }
-        Row(
-            Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            TYPES.forEach { (value, label) ->
-                TintChip(typeTint(value), selected = filters.type == value && !filters.planned, onClick = { filters = filters.copy(type = value, planned = false) }, label = { Text(label) })
-            }
-            TintChip(ChartColors.Warning, selected = filters.planned, onClick = { filters = filters.copy(planned = !filters.planned, type = null) }, label = { Text("Planned") })
-        }
-
-        Column(Modifier.animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec())) {
-            ActiveFilters(filters, onChange = { filters = it })
-            totals?.let { SumsLine(it) }
-        }
-
-        when {
-            loading && items.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-            error != null -> Column(
-                Modifier.fillMaxSize().padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(error ?: "", color = MaterialTheme.colorScheme.error)
-                Button(onClick = { reload++ }, shapes = ButtonDefaults.shapes()) { Text("Try again") }
-            }
-            else -> PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
-                if (loading && !refreshing) LinearProgressIndicator(Modifier.fillMaxWidth().align(Alignment.TopCenter).zIndex(1f))
-                val groups by remember { derivedStateOf { groupByDay(items.toList()) } }
-                if (items.isEmpty()) {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                else -> {
+                    if (items.isEmpty()) item(key = "empty") {
                         Text(
                             if (committed.isNotEmpty() || filters.isFiltered()) "Nothing matches." else "No transactions yet.",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(32.dp),
                         )
                     }
-                } else LazyColumn(Modifier.fillMaxSize().fadeInOnAppear().dimWhen(loading && !refreshing).fadingEdges(listState), state = listState, contentPadding = PaddingValues(bottom = 16.dp)) {
                     if (suggestions.isNotEmpty() && committed.isEmpty() && !filters.isFiltered()) item(key = "transfer-suggestions") {
                         Box(Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) { TransferSuggestionsCard(api, suggestions, onChanged = { reload++ }, onSay = { msg -> scope.launch { snackbar?.showSnackbar(msg) } }) }
                     }
@@ -392,44 +352,5 @@ fun TransactionsScreen(api: Api) {
     if (showFilters) FiltersSheet(api, filters, onApply = { filters = it; showFilters = false }, onDismiss = { showFilters = false })
 }
 
-@Composable
-private fun SumsLine(t: Totals) {
-    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        val small = MaterialTheme.typography.bodySmall
-        Row { Text("In ", style = small); MoneyText(t.income, t.currency, style = small, color = ChartColors.IncomeLight) }
-        Row { Text("Out ", style = small); MoneyText(t.expense, t.currency, style = small, color = MaterialTheme.colorScheme.error) }
-    }
-}
-
 private val FiltersSaver = androidx.compose.runtime.saveable.Saver<TxFilters, String>(save = { it.toJson() }, restore = { txFiltersFromJson(it) })
 
-/** What the sheet applied, as chips you can drop one at a time. */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun ActiveFilters(f: TxFilters, onChange: (TxFilters) -> Unit) {
-    if (f.detailCount() == 0) return
-    Row(
-        Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        @Composable
-        fun chip(label: String, tint: Color, clear: () -> Unit) = InputChip(
-            selected = true, onClick = clear, label = { Text(label) },
-            trailingIcon = { Icon(Icons.Outlined.Clear, "Remove $label", Modifier.size(16.dp)) },
-            colors = InputChipDefaults.inputChipColors(selectedContainerColor = tint.copy(alpha = 0.4f), selectedLabelColor = MaterialTheme.colorScheme.onSurface),
-            shape = CircleShape,
-            border = null,
-        )
-        if (f.dateFrom != null || f.dateTo != null) chip(rangeLabel(f.dateFrom, f.dateTo), Accents.getValue("blue")) { onChange(f.copy(dateFrom = null, dateTo = null)) }
-        f.account?.let { chip(it.name, Accents.getValue("violet")) { onChange(f.copy(account = null)) } }
-        f.card?.let { chip(it.name, Accents.getValue("pink")) { onChange(f.copy(card = null)) } }
-        f.category?.let { chip(it.name, Accents.getValue("amber")) { onChange(f.copy(category = null)) } }
-        f.tags.forEach { tag -> chip("#${tag.name}", idTint(tag.id)) { onChange(f.copy(tags = f.tags - tag)) } }
-        f.method?.let { chip(PaymentMethodLabels[it] ?: it, methodTint(it)) { onChange(f.copy(method = null)) } }
-        f.kind?.let { chip(when (it) { "need" -> "Needs"; "want" -> "Wants"; else -> "Not sorted" }, kindTint(it)) { onChange(f.copy(kind = null)) } }
-        if (isAmount(f.min) || isAmount(f.max)) chip(
-            listOfNotNull(f.min.takeIf { isAmount(it) }?.let { "≥ $it" }, f.max.takeIf { isAmount(it) }?.let { "≤ $it" }).joinToString(" "),
-            Accents.getValue("orange"),
-        ) { onChange(f.copy(min = "", max = "")) }
-    }
-}

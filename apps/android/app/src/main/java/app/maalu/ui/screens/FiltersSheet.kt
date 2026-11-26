@@ -1,5 +1,6 @@
 package app.maalu.ui.screens
 
+import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material3.BottomSheetDefaults
 import app.maalu.ui.components.glowSheet
 import androidx.compose.foundation.layout.Arrangement
@@ -95,7 +96,7 @@ private class Options(val accounts: List<Account>, val categories: List<Category
 private val KINDS = listOf("need" to "Needs", "want" to "Wants", "unsorted" to "Not sorted")
 
 /**
- * Everything beyond type and search: dates, account, category, tags, payment method, need or want and an
+ * Everything beyond the search text: type, planned, dates, account, category, tags, payment method, need or want and an
  * amount range. Changes are a draft until "Show results", so closing the sheet changes nothing.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -128,6 +129,17 @@ fun FiltersSheet(api: Api, initial: TxFilters, onApply: (TxFilters) -> Unit, onD
                 TextButton(shapes = ButtonDefaults.shapes(), onClick = { draft = draft.clearDetails() }, enabled = draft.detailCount() > 0) { Text("Reset") }
             }
             Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Section("Type", Icons.Outlined.SwapHoriz, Accents.getValue("blue")) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf(null to "Any", "income" to "Income", "expense" to "Expense", "transfer" to "Transfer").forEach { (value, label) ->
+                            TintChip(typeTint(value), selected = draft.type == value, onClick = { draft = draft.copy(type = value) }, label = { Text(label) })
+                        }
+                    }
+                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        Text("Planned only", Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                        Switch(checked = draft.planned, onCheckedChange = { draft = draft.copy(planned = it) })
+                    }
+                }
                 Section("Date", Icons.Outlined.CalendarMonth, Accents.getValue("blue")) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         DatePreset.entries.forEachIndexed { i, p ->

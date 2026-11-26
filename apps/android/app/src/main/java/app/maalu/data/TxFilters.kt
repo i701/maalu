@@ -9,8 +9,8 @@ import kotlinx.serialization.encodeToString
 data class Ref(val id: String, val name: String)
 
 /**
- * Everything the Transactions list can be narrowed by (the web's filter drawer). `type` and `planned`
- * are the quick chips under the search; the rest live in the Filters sheet.
+ * Everything the Transactions list can be narrowed by (the web's filter drawer). All are chosen in the Filters sheet;
+ * `type` and `planned` show as tokens in the search field, the rest as chips under it.
  */
 @Serializable
 data class TxFilters(
@@ -44,7 +44,7 @@ data class TxFilters(
         if (isAmount(max)) put("max_amount", max.trim())
     }
 
-    /** How many filters the sheet holds (not counting the type and planned chips). */
+    /** How many filters show as chips (not counting the type and planned tokens). */
     fun detailCount(): Int = listOfNotNull(
         (dateFrom ?: dateTo), account, card, category, tags.firstOrNull(), method, kind,
         min.takeIf { isAmount(it) }, max.takeIf { isAmount(it) },
@@ -52,7 +52,7 @@ data class TxFilters(
 
     fun isFiltered(): Boolean = type != null || planned || detailCount() > 0
 
-    /** Back to nothing in the sheet, keeping the quick chips. */
+    /** Back to nothing but the type and planned tokens. */
     fun clearDetails(): TxFilters = TxFilters(type = type, planned = planned)
 }
 

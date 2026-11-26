@@ -95,6 +95,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Import a bank statement**<br>Read a bank's CSV, review the rows, assign vendors and categories, import as one undoable batch. | ✅ done | ➖ n/a | ➖ n/a |
 | **Transfer as two slabs**<br>A transfer is entered as two slabs, what you send and what arrives, with an arrow that swaps the accounts and a slab that grows into the account list. | ✅ done | ✅ done | ✅ done |
 
+- **Transactions list** (Android): Search, filters and totals sit in one card, as on iOS: the type is chosen in the Filters sheet, not with chips under the search.
 - **Trash** (iOS): Restore and delete for good one by one; bulk actions wait for tx-bulk.
 - **Import a bank statement** (Android): Web only, by choice: importing a statement is done on the web, where the rows are easier to review.
 - **Import a bank statement** (iOS): Web only, by choice: importing a statement is done on the web, where the rows are easier to review.
