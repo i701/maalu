@@ -597,7 +597,11 @@
         ]
       },
       "android": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/TransactionsScreen.kt",
+          "apps/android/app/src/main/java/app/maalu/ui/screens/TransactionParts.kt"
+        ]
       },
       "ios": {
         "status": "done",

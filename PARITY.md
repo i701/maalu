@@ -9,17 +9,16 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 78 | 61 | 65 |
+| ✅ done | 78 | 62 | 65 |
 | 🟡 partial | 0 | 2 | 1 |
-| ❌ missing | 0 | 12 | 6 |
+| ❌ missing | 0 | 11 | 6 |
 | ➖ n/a | 2 | 5 | 7 |
 | 🗓 planned | 0 | 0 | 1 |
 
-## Still to build on Android (14)
+## Still to build on Android (13)
 
 - 🟡 **Your name** (Sign in and security). Shows the name in the Dashboard's title; it is set on the web, as the app has no sign-up and no profile edit yet.
 - 🟡 **Email digest** (Notifications). The switch and the email status are in Settings; sending a test email is not.
-- ❌ **Quiet list and detail sheet** (Transactions).
 - ❌ **Export to Excel** (Transactions).
 - ❌ **Spent this month and limit per category** (Categories, tags and vendors).
 - ❌ **Spending by month, stacked by category** (Dashboard and reports).
@@ -83,7 +82,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | Feature | Web | Android | iOS |
 |---|:---:|:---:|:---:|
-| **Quiet list and detail sheet**<br>Rows show only the title, category and method and the amount, grouped by day; everything else and the actions are in a detail sheet. | ✅ done | ❌ missing | ✅ done |
+| **Quiet list and detail sheet**<br>Rows show only the title, category and method and the amount, grouped by day; everything else and the actions are in a detail sheet. | ✅ done | ✅ done | ✅ done |
 | **Transactions list**<br>The list by day with search, the type chips, paging and the totals line. | ✅ done | ✅ done | ✅ done |
 | **Filters**<br>Dates, account, card, category, tags with any or all, payment method, need or want and an amount range. | ✅ done | ✅ done | ✅ done |
 | **Add and edit a transaction**<br>Expense, income or transfer with account, rate, category, vendor, date and time, way of paying, tags, note and planned. | ✅ done | ✅ done | ✅ done |

@@ -111,13 +111,27 @@ import app.maalu.data.formatNumber
 import app.maalu.data.groupByDay
 import app.maalu.data.canDuplicate
 import app.maalu.data.canMakeSubscription
-import app.maalu.data.summary
 import app.maalu.data.text
 import app.maalu.data.duplicateForm
 import app.maalu.data.isRefund
 import app.maalu.data.refundOfRef
 import app.maalu.data.shortTime
 import app.maalu.data.title
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material.icons.automirrored.outlined.CallSplit
+import androidx.compose.material.icons.automirrored.outlined.Undo
+import androidx.compose.material.icons.outlined.Link
+import androidx.compose.material.icons.outlined.Repeat
+import androidx.compose.material.icons.outlined.SwapHoriz
+import androidx.compose.ui.graphics.vector.ImageVector
+import app.maalu.data.PurchaseItem
+import app.maalu.data.isOverdue
+import app.maalu.data.longWhen
+import app.maalu.data.rowTag
 import app.maalu.ui.components.MoneyText
 import app.maalu.ui.theme.ChartColors
 import app.maalu.ui.theme.MoneyStyle
@@ -129,16 +143,43 @@ import kotlinx.coroutines.launch
 
 import kotlinx.coroutines.launch
 
+/** The colour a transaction is marked with: its category's, a transfer's own blue. */
 @Composable
-fun RowDetails(t: Transaction) {
-    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        val sub = listOfNotNull(shortTime(t.time), t.category.takeIf { t.type != "transfer" }, t.account?.name, t.card?.takeIf { it.name.isNotBlank() }?.text()).joinToString(" · ")
-        Text(sub, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        val marks = listOfNotNull(
-            "Planned".takeIf { t.planned }, "Refund".takeIf { t.isRefund }, "Adjustment".takeIf { t.adjustment },
-            t.subscription?.let { "Subscription" }, t.group?.name,
-        )
-        if (marks.isNotEmpty()) Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(top = 2.dp)) { marks.forEach { Mark(it) } }
+private fun rowTint(t: Transaction): Color =
+    if (t.type == "transfer") ChartColors.Line else Accents[t.categoryColor] ?: MaterialTheme.colorScheme.outline
+
+/** The category in quiet text behind a small dot of its colour, which is where a row's colour comes from. */
+@Composable
+private fun CategoryLabel(t: Transaction) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Box(Modifier.size(7.dp).clip(CircleShape).background(rowTint(t)))
+        Text(t.rowTag(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+/** A small tinted pill; the text stays in the normal ink so it reads on any tint. */
+@Composable
+private fun Pill(text: String, tint: Color) {
+    Surface(shape = CircleShape, color = tint.tintIcon()) {
+        Text(text, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp))
+    }
+}
+
+@Composable
+private fun StatusPill(t: Transaction) {
+    if (t.isOverdue()) Pill("Overdue", ChartColors.Warning) else Pill("Planned", MaterialTheme.colorScheme.outline)
+}
+
+/** The quiet row: the title with its category under it, and the amount; a planned one adds a pill under the amount. */
+@Composable
+fun RowScope.QuietRow(t: Transaction) {
+    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(t.title(), style = MaterialTheme.typography.bodyMediumEmphasized, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        CategoryLabel(t)
+    }
+    Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        MoneyText(t.amount, t.currency, prefix = signPrefix(t), style = MaterialTheme.typography.bodyMedium, color = amountColor(t))
+        if (t.planned) StatusPill(t)
     }
 }
 
@@ -177,67 +218,106 @@ fun amountColor(t: Transaction) = when (t.type) {
     else -> MaterialTheme.colorScheme.onSurface
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun DetailSheet(t: Transaction, onEdit: (() -> Unit)?, onDelete: () -> Unit, onClose: () -> Unit, onPay: (() -> Unit)? = null, onSplit: (() -> Unit)? = null, onMakeSubscription: (() -> Unit)? = null, onLinkTransfer: (() -> Unit)? = null, matchCount: Int = 0, onDuplicate: (() -> Unit)? = null, onRefund: (() -> Unit)? = null, onLinkRefund: (() -> Unit)? = null, receipts: (@Composable () -> Unit)? = null) {
-    ModalBottomSheet(onDismissRequest = onClose, containerColor = androidx.compose.ui.graphics.Color.Transparent, modifier = Modifier.glowSheet(BottomSheetDefaults.ContainerColor)) {
-        Column(Modifier.fillMaxWidth().verticalScroll(androidx.compose.foundation.rememberScrollState()).padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(t.title(), style = MaterialTheme.typography.titleMedium)
-            MoneyText(t.amount, t.currency, prefix = signPrefix(t), style = MaterialTheme.typography.titleLarge, color = amountColor(t))
-            val rate = t.exchangeRate.toBigDecimalOrNull()
-            if (rate != null && rate.compareTo(java.math.BigDecimal.ONE) != 0 && t.baseAmount != null) {
-                Text(
-                    "Rate ${rate.stripTrailingZeros().toPlainString()} · ${formatNumber(t.baseAmount)} in your base currency",
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+fun DetailSheet(t: Transaction, onEdit: (() -> Unit)?, onDelete: () -> Unit, onClose: () -> Unit, onPay: (() -> Unit)? = null, onSplit: (() -> Unit)? = null, onMakeSubscription: (() -> Unit)? = null, onLinkTransfer: (() -> Unit)? = null, matchCount: Int = 0, onDuplicate: (() -> Unit)? = null, onRefund: (() -> Unit)? = null, onEditRefund: (() -> Unit)? = null, onLinkRefund: (() -> Unit)? = null, receipts: (@Composable () -> Unit)? = null) {
+    ModalBottomSheet(onDismissRequest = onClose, containerColor = Color.Transparent, modifier = Modifier.glowSheet(BottomSheetDefaults.ContainerColor)) {
+        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.padding(horizontal = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                CategoryLabel(t)
+                Text(t.title(), style = MaterialTheme.typography.titleLargeEmphasized)
+                MoneyText(t.amount, t.currency, prefix = signPrefix(t), style = MaterialTheme.typography.headlineLarge, color = amountColor(t))
+                Text(longWhen(t.date, t.time), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (t.planned || t.isRefund || t.adjustment || app.maalu.data.wasRefunded(t)) FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    if (t.planned) StatusPill(t)
+                    if (t.isRefund) Pill("Refund", Accents.getValue("orange"))
+                    if (app.maalu.data.wasRefunded(t)) Pill(if (app.maalu.data.canRefund(t)) "Partly refunded" else "Fully refunded", Accents.getValue("orange"))
+                    if (t.adjustment) Pill("Adjustment", MaterialTheme.colorScheme.outline)
+                }
+                // the main things to do, as pills; the rest waits in the list at the bottom
+                FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (onPay != null) ActionPill(app.maalu.data.payTitle(t.type), ChartColors.IncomeLight, onPay)
+                    if (onEdit != null) ActionPill("Edit", ChartColors.Line, onEdit)
+                    if (onDuplicate != null) ActionPill("Duplicate", ChartColors.Line, onDuplicate)
+                    ActionPill("Delete", MaterialTheme.colorScheme.error, onDelete)
+                }
+                if (t.adjustment) Text("A balance adjustment can only be deleted.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            DetailFact("When", dayLabel(t.date) + (shortTime(t.time)?.let { ", $it" } ?: "") + if (t.planned) " (planned)" else "")
-            DetailFact("Type", t.type.replaceFirstChar { it.uppercase() } + if (t.isRefund) " · refund" else "")
-            if (t.type == "transfer") {
-                DetailFact("From", t.account?.name)
-                DetailFact("To", listOfNotNull(t.toAccount?.name, t.toAmount?.let { formatMoney(it, t.toAccount?.currency ?: t.currency) }).joinToString(" · "))
-            } else {
-                DetailFact("Account", t.account?.name)
-                DetailFact("Category", t.category)
-                if (t.splits.isNotEmpty()) DetailFact("Items", t.splits.joinToString("\n") { it.summary(t.currency) })
-                DetailFact("Vendor", t.vendor?.name)
+            if (t.splits.isNotEmpty()) SheetSection("Items") { t.splits.forEach { ItemRow(it, t.currency) } }
+            SheetSection("Details") {
+                if (t.isRefund) t.refundOfRef()?.let { DetailFact("Refund of", app.maalu.data.refundContext(null, t)) }
+                if (app.maalu.data.wasRefunded(t)) DetailFact("Refunded", formatMoney(t.refundedAmount, t.currency))
+                if (t.type != "transfer") {
+                    DetailFact("Vendor", t.vendor?.name)
+                    DetailFact("Paid with", PaymentMethodLabels[t.paymentMethod])
+                }
+                DetailFact(if (t.type == "transfer") "From" else "Account", t.account?.name)
+                DetailFact("To", t.toAccount?.name)
+                DetailFact("Arrived", t.toAmount?.let { formatMoney(it, t.toAccount?.currency ?: t.currency) })
+                val rate = t.exchangeRate.toBigDecimalOrNull()
+                if (rate != null && rate.compareTo(java.math.BigDecimal.ONE) != 0) {
+                    DetailFact("Exchange rate", rate.stripTrailingZeros().toPlainString())
+                    DetailFact("In base currency", t.baseAmount?.let(::formatNumber))
+                }
+                DetailFact("Card", t.card?.text())
+                DetailFact("Subscription", t.subscription?.name)
+                DetailFact("Group", t.group?.name)
+                DetailFact("Tags", t.tags.joinToString(", ") { it.name })
+                if (t.hasPlace()) DetailFact("Place", app.maalu.data.placeLabel(t.place, t.latitude, t.longitude))
             }
-            if (t.isRefund) t.refundOfRef()?.let { DetailFact("Refund of", app.maalu.data.refundContext(null, t)) }
-            if (app.maalu.data.wasRefunded(t)) DetailFact("Refunded", if (app.maalu.data.canRefund(t)) formatMoney(t.refundedAmount, t.currency) else "Fully refunded")
-            DetailFact("Payment", PaymentMethodLabels[t.paymentMethod])
-            DetailFact("Card", t.card?.text())
-            DetailFact("Subscription", t.subscription?.name)
-            DetailFact("Group", t.group?.name)
-            if (t.tags.isNotEmpty()) DetailFact("Tags", t.tags.joinToString(", ") { it.name })
-            DetailFact("Note", t.description)
-            if (t.hasPlace()) DetailFact("Place", app.maalu.data.placeLabel(t.place, t.latitude, t.longitude))
+            if (!t.description.isNullOrBlank()) SheetSection("Note") { Text(t.description, style = MaterialTheme.typography.bodyMedium) }
             receipts?.invoke()
-            // something planned becomes real here, with the real day, amount and rate
-            if (onPay != null) Button(onClick = onPay, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
-                Text(app.maalu.data.payTitle(t.type))
-            }
-            // the same money entered twice (an expense here and an income in another account): pair them into one transfer
-            if (onLinkTransfer != null) OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = onLinkTransfer, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) { Text(app.maalu.data.mergeLabel(matchCount)) }
-            if (onRefund != null) OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = onRefund, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) { Text("Refund") }
-            if (onLinkRefund != null) OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = onLinkRefund, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) { Text("Link to a purchase") }
-            if (onMakeSubscription != null) OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = onMakeSubscription, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) { Text("Make a subscription") }
-            if (onDuplicate != null) OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = onDuplicate, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) { Text("Duplicate as a new transaction") }
-            if (onSplit != null) Button(onClick = onSplit, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth().padding(top = 4.dp), colors = ButtonDefaults.filledTonalButtonColors()) { Text("Split salary") }
-            if (onEdit == null && t.adjustment) Text(
-                if (t.adjustment) "A balance adjustment can only be deleted." else "",
-                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (onEdit != null) Button(shapes = ButtonDefaults.shapes(),
-                    onClick = onEdit, modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.filledTonalButtonColors(),
-                ) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 8.dp)); Text("Edit") }
-                Button(shapes = ButtonDefaults.shapes(),
-                    onClick = onDelete, modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer),
-                ) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 8.dp)); Text("Delete") }
+            if (listOf(onRefund, onEditRefund, onLinkRefund, onSplit, onLinkTransfer, onMakeSubscription).any { it != null }) SheetSection(null) {
+                val orange = Accents.getValue("orange")
+                if (onRefund != null) ActionRow("Refund", Icons.AutoMirrored.Outlined.Undo, orange, onRefund)
+                if (onEditRefund != null) ActionRow("Edit refund", Icons.Outlined.Edit, orange, onEditRefund)
+                if (onLinkRefund != null) ActionRow("Link to a purchase", Icons.Outlined.Link, orange, onLinkRefund)
+                if (onSplit != null) ActionRow("Split salary", Icons.AutoMirrored.Outlined.CallSplit, ChartColors.IncomeLight, onSplit)
+                // the same money entered twice (an expense here and an income in another account): pair them into one transfer
+                if (onLinkTransfer != null) ActionRow(app.maalu.data.mergeLabel(matchCount), Icons.Outlined.SwapHoriz, ChartColors.Line, onLinkTransfer)
+                if (onMakeSubscription != null) ActionRow("Make a subscription", Icons.Outlined.Repeat, Accents.getValue("violet"), onMakeSubscription)
             }
         }
+    }
+}
+
+@Composable
+private fun ActionPill(label: String, tint: Color, onClick: () -> Unit) {
+    Button(
+        onClick = onClick, shapes = ButtonDefaults.shapes(),
+        colors = ButtonDefaults.buttonColors(containerColor = tint.tintIcon(), contentColor = MaterialTheme.colorScheme.onSurface),
+    ) { Text(label) }
+}
+
+/** One tonal block of the sheet, with its heading above it. */
+@Composable
+private fun SheetSection(title: String?, content: @Composable ColumnScope.() -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        if (title != null) Text(title, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp))
+        Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh, modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(10.dp), content = content)
+        }
+    }
+}
+
+@Composable
+private fun ActionRow(label: String, icon: ImageVector, tint: Color, onClick: () -> Unit) {
+    Row(Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small).clickable(onClick = onClick).heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Icon(icon, null, tint = tint)
+        Text(label, style = MaterialTheme.typography.bodyLarge)
+    }
+}
+
+/** One item of a split purchase: "Rice × 2" over its category and GST, and the line total. */
+@Composable
+private fun ItemRow(item: PurchaseItem, currency: String) {
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.weight(1f)) {
+            Text(item.title(), style = MaterialTheme.typography.bodyMedium)
+            val tax = item.taxAmount?.takeIf { (it.toBigDecimalOrNull()?.signum() ?: 0) > 0 }
+            Text(item.category + (tax?.let { " · GST ${formatMoney(it, currency)}" } ?: ""), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        MoneyText(item.amount, currency, style = MaterialTheme.typography.bodyMedium)
     }
 }
 
@@ -266,7 +346,7 @@ fun TransactionDetailHost(api: Api, t: Transaction, scope: kotlinx.coroutines.Co
         if (canLinkAsTransfer(t)) (api.get<List<Transaction>>("transactions/${t.id}/transfer-candidates") as? ApiResult.Ok)?.let { matches = it.data }
     }
     when (phase) {
-        "sheet" -> DetailSheet(t, onEdit = if (t.canEdit()) ({ phase = "edit" }) else if (t.isRefund && !t.adjustment) ({ phase = "refund-edit" }) else null, onRefund = if (app.maalu.data.canRefund(t)) ({ phase = "refund" }) else null, onLinkRefund = if (app.maalu.data.canLinkRefund(t)) ({ phase = "link-refund" }) else null, onDelete = { phase = "delete" }, onClose = onClose, onPay = if (t.planned) ({ phase = "pay" }) else null, onSplit = if (canSplitSalary(t)) ({ phase = "split" }) else null, onMakeSubscription = if (t.canMakeSubscription()) ({ phase = "subscription" }) else null, onLinkTransfer = if (matches.isNotEmpty()) ({ phase = "link" }) else null, matchCount = matches.size, onDuplicate = if (t.canDuplicate()) ({ phase = "duplicate" }) else null, receipts = { ReceiptsSection(api, t, onChanged = onChanged, say = { m -> scope.launch { snackbar?.showSnackbar(m) } }) })
+        "sheet" -> DetailSheet(t, onEdit = if (t.canEdit()) ({ phase = "edit" }) else null, onEditRefund = if (t.isRefund && !t.adjustment) ({ phase = "refund-edit" }) else null, onRefund = if (app.maalu.data.canRefund(t)) ({ phase = "refund" }) else null, onLinkRefund = if (app.maalu.data.canLinkRefund(t)) ({ phase = "link-refund" }) else null, onDelete = { phase = "delete" }, onClose = onClose, onPay = if (t.planned) ({ phase = "pay" }) else null, onSplit = if (canSplitSalary(t)) ({ phase = "split" }) else null, onMakeSubscription = if (t.canMakeSubscription()) ({ phase = "subscription" }) else null, onLinkTransfer = if (matches.isNotEmpty()) ({ phase = "link" }) else null, matchCount = matches.size, onDuplicate = if (t.canDuplicate()) ({ phase = "duplicate" }) else null, receipts = { ReceiptsSection(api, t, onChanged = onChanged, say = { m -> scope.launch { snackbar?.showSnackbar(m) } }) })
         "pay" -> MarkPaidDialog(api, t, null, onClose = onClose, onPaid = {
             onChanged()
             // pay that has just arrived: offer to split it, when there are rules to split it by

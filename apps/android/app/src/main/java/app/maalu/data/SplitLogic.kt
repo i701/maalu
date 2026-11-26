@@ -121,7 +121,9 @@ fun AddForm.splitsJson(): JsonArray {
 }
 
 /** "Rice 2 × 15.00 = 30.00" style line for the detail sheet. */
-fun PurchaseItem.summary(currency: String): String {
+fun PurchaseItem.title(): String {
     val qty = quantity.toBigDecimalOrNull()?.stripTrailingZeros()?.toPlainString() ?: quantity
-    return (if (qty == "1") name else "$name × $qty") + " · " + formatMoney(amount, currency)
+    return if (qty == "1") name else "$name × $qty"
 }
+
+fun PurchaseItem.summary(currency: String): String = title() + " · " + formatMoney(amount, currency)

@@ -108,6 +108,7 @@ import app.maalu.data.isAmount
 import app.maalu.data.rangeLabel
 import app.maalu.data.toJson
 import app.maalu.data.txFiltersFromJson
+import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -145,7 +146,7 @@ private fun typeTint(type: String?): Color = when (type) {
 private val TYPES = listOf(null to "All", "income" to "Income", "expense" to "Expense", "transfer" to "Transfer")
 
 /**
- * The list: search, a type filter, the newest first grouped by day, more loading as you reach the end,
+ * The list: search, a type filter, the newest first grouped by day in quiet rows, more loading as you reach the end,
  * and a sheet with every detail of the one you tap. Read-only for now; adding and editing come later.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -330,13 +331,11 @@ fun TransactionsScreen(api: Api) {
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                                 ) {
-                                    // a picked row swaps its badge for a tick, in the same 36dp, so nothing shifts when picking starts
-                                    if (t.id in picked) PickedBadge() else CategoryBadge(t)
-                                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                        Text(t.title(), style = MaterialTheme.typography.bodyMediumEmphasized, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                                        CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant) { RowDetails(t) }
+                                    // while picking, every row shows whether it is ticked
+                                    if (picked.isNotEmpty()) {
+                                        if (t.id in picked) PickedBadge() else Icon(Icons.Outlined.RadioButtonUnchecked, "Not selected", Modifier.padding(6.dp), tint = MaterialTheme.colorScheme.outline)
                                     }
-                                    MoneyText(t.amount, t.currency, prefix = signPrefix(t), style = MaterialTheme.typography.bodyMedium, color = amountColor(t))
+                                    QuietRow(t)
                                 }
                             }
                          }}

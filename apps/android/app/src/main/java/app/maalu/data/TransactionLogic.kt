@@ -1,6 +1,7 @@
 package app.maalu.data
 
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -38,3 +39,18 @@ fun groupByDay(items: List<Transaction>): List<Pair<String, List<Transaction>>> 
     for (t in items) out.getOrPut(t.date) { mutableListOf() }.add(t)
     return out.map { it.key to it.value }
 }
+
+private val LongDay = DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", Locale.ENGLISH)
+
+/** "Tuesday 10 November 2026", with ", 14:32" when there is a time: the detail sheet's line under the amount. */
+fun longWhen(date: String, time: String?): String = LocalDate.parse(date).format(LongDay) + (shortTime(time)?.let { ", $it" } ?: "")
+
+/** The category on a row ("Transfer" for a transfer), with how many more a split touches ("Groceries +1"). */
+fun Transaction.rowTag(): String {
+    if (type == "transfer") return "Transfer"
+    val categories = if (splits.size > 1) splits.map { it.category }.distinct() else listOf(category)
+    return if (categories.size > 1) "${categories[0]} +${categories.size - 1}" else categories[0]
+}
+
+/** A planned transaction whose day has passed: it just stays planned, the app calls it overdue. */
+fun Transaction.isOverdue(today: LocalDate = LocalDate.now()): Boolean = planned && LocalDate.parse(date) < today
