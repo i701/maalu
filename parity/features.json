@@ -1784,7 +1784,11 @@
         ]
       },
       "android": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/ArrangeDashboard.kt",
+          "apps/android/app/src/main/java/app/maalu/data/DashboardOrderLogic.kt"
+        ]
       },
       "ios": {
         "status": "done",
@@ -1813,7 +1817,11 @@
         ]
       },
       "android": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/ArrangeDashboard.kt",
+          "apps/android/app/src/main/java/app/maalu/data/DashboardStore.kt"
+        ]
       },
       "ios": {
         "status": "done",

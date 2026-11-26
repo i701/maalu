@@ -2,6 +2,17 @@
 
 package app.maalu.ui.screens
 
+import kotlinx.coroutines.launch
+import app.maalu.data.orderSections
+import app.maalu.data.mergeOrder
+import app.maalu.data.dashboardOrderJson
+import app.maalu.data.UserMe
+import app.maalu.data.DashboardStore
+import app.maalu.data.DashboardSection
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.collectAsState
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import app.maalu.ui.components.fadingEdges
 import app.maalu.ui.components.SpringBar
@@ -96,6 +107,8 @@ private data class DashboardData(
     val latest: List<Transaction> = emptyList(),
     val upcoming: List<Transaction> = emptyList(),
     val accounts: List<Account> = emptyList(),
+    /** The order the person saved, or null for the default one. */
+    val savedOrder: List<String>? = null,
 )
 
 private sealed interface State {
@@ -112,6 +125,14 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
     // a pull keeps what is on screen and shows only the pull indicator; a new month or a retry blanks it
     var refreshing by remember { mutableStateOf(false) }
     val on = LocalDate.parse(month)
+    val context = LocalContext.current
+    val store = remember { DashboardStore(context.applicationContext) }
+    // null until read, so a switched-off card never flashes up
+    val hidden by store.hidden.collectAsState(initial = null)
+    var arranging by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    // the order as just saved, ahead of the next load; empty is the default
+    var order by remember { mutableStateOf<List<String>?>(null) }
 
     val state by produceState<State>(State.Loading, month, attempt) {
         if (!refreshing) value = State.Loading
@@ -127,6 +148,7 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
             val trendCall = async { api.get<BalanceTrend>("stats/balance-trend", mapOf("from" to "$start", "to" to "$trendEnd")) }
             val monthlyCall = async { api.get<Monthly>("stats/monthly", mapOf("months" to "12", "to" to "$end")) }
             val budgetCall = async { api.get<Budget>("budget", mapOf("on" to "$start")) }
+            val meCall = async { api.get<UserMe>("users/me") }
             val goalsCall = async { api.get<List<Goal>>("goals") }
             val latestCall = async { api.get<List<Transaction>>("transactions", mapOf("limit" to "5")) }
             val accountsCall = async { api.get<List<Account>>("accounts") }
@@ -147,10 +169,13 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
                         (latestCall.await() as? ApiResult.Ok)?.data.orEmpty(),
                         (upcomingCall.await() as? ApiResult.Ok)?.data.orEmpty(),
                         (accountsCall.await() as? ApiResult.Ok)?.data.orEmpty(),
+                        (meCall.await() as? ApiResult.Ok)?.data?.dashboardOrder,
                     ),
                 )
             }
         }
+        // what was just loaded wins over the order saved from here
+        if (value is State.Ready) order = null
         refreshing = false
     }
 
@@ -179,18 +204,53 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
             ) {
                 // available to spend is for the current budget period only, so it is hidden for other months
                 val isThisMonth = on == LocalDate.now().withDayOfMonth(1)
-                s.data.available?.takeIf { isThisMonth }?.let { item { AvailableCard(it, onOpenPlan) } }
-                item { MonthStrip(s.data.totals, s.data.before) }
-                item { SpendingCard(s.data.categories, s.data.totals.currency) }
-                item { NetWorthCard(s.data.trend, s.data.totals.currency) }
-                item { CashFlowCard(s.data.monthly, s.data.totals.currency) }
-                item { BudgetGoalsCard(s.data.budget, s.data.goals) }
-                item { NeedsWantsCard(kindShares(s.data.categories), s.data.totals.currency, incomeRule(s.data.categories)) }
-                item { MoneyFlowCard(s.data.categories, s.data.totals.currency) }
-                item { CreditUsageCard(s.data.accounts) }
-                item { TransactionsCard("Coming up", null, s.data.upcoming, "Nothing planned.", LocalDate.now().toString()) }
-                item { TransactionsCard("Latest transactions", null, s.data.latest, "No transactions yet.", LocalDate.now().toString()) }
-            } }
+                val available = s.data.available?.takeIf { isThisMonth }
+                val off = hidden ?: return@LazyColumn
+                val defaults = DashboardSection.entries.filter { it != DashboardSection.Available || available != null }
+                items(orderSections(order ?: s.data.savedOrder, defaults).filter { it.id !in off }, key = { it.id }) { section ->
+                    when (section) {
+                        DashboardSection.Available -> available?.let { AvailableCard(it, onOpenPlan) }
+                        DashboardSection.Metrics -> MonthStrip(s.data.totals, s.data.before)
+                        DashboardSection.Spending -> SpendingCard(s.data.categories, s.data.totals.currency)
+                        DashboardSection.Balance -> NetWorthCard(s.data.trend, s.data.totals.currency)
+                        DashboardSection.Monthly -> CashFlowCard(s.data.monthly, s.data.totals.currency)
+                        DashboardSection.Budget -> BudgetGoalsCard(s.data.budget, s.data.goals)
+                        DashboardSection.NeedsWants -> NeedsWantsCard(kindShares(s.data.categories), s.data.totals.currency, incomeRule(s.data.categories))
+                        DashboardSection.MoneyFlow -> MoneyFlowCard(s.data.categories, s.data.totals.currency)
+                        DashboardSection.Credit -> CreditUsageCard(s.data.accounts)
+                        DashboardSection.Upcoming -> TransactionsCard("Coming up", null, s.data.upcoming, "Nothing planned.", LocalDate.now().toString())
+                        DashboardSection.Latest -> TransactionsCard("Latest transactions", null, s.data.latest, "No transactions yet.", LocalDate.now().toString())
+                    }
+                }
+                item(key = "arrange") {
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        TextButton(onClick = { arranging = true }, shapes = ButtonDefaults.shapes()) { Text("Arrange the dashboard") }
+                    }
+                }
+            }
+                if (arranging) {
+                    val available = s.data.available?.takeIf { on == LocalDate.now().withDayOfMonth(1) }
+                    val defaults = DashboardSection.entries.filter { it != DashboardSection.Available || available != null }
+                    val shown = orderSections(order ?: s.data.savedOrder, defaults)
+                    ArrangeDashboard(
+                        shown, defaults, hidden.orEmpty(),
+                        onSave = save@{ arranged, off ->
+                            // the order is sent only when it changed; the default one is saved as no order
+                            if (arranged != shown) {
+                                val saved = order ?: s.data.savedOrder
+                                val next = if (arranged == defaults) null else mergeOrder(saved, arranged)
+                                val r = api.patchJson<UserMe>("users/me", dashboardOrderJson(next).toString())
+                                if (r is ApiResult.Failed) return@save r.message.lines().first()
+                                order = next.orEmpty()
+                            }
+                            // outlives the dialog, which closes as soon as this returns
+                            scope.launch { store.save(off) }
+                            null
+                        },
+                        onClose = { arranging = false },
+                    )
+                }
+            }
         }
     }
 }
