@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.fadingEdges
+import androidx.compose.foundation.lazy.rememberLazyListState
 import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
 import app.maalu.ui.theme.tintSurface
@@ -74,6 +76,7 @@ import java.math.BigDecimal
  */
 @Composable
 fun PlanScreen(api: Api, onOpenAccount: (id: String, name: String) -> Unit) {
+    val edges = rememberLazyListState()
     var reload by remember { mutableIntStateOf(0) }
     var refreshing by remember { mutableStateOf(false) }
     var data by remember { mutableStateOf<AvailableToSpend?>(null) }
@@ -109,7 +112,7 @@ fun PlanScreen(api: Api, onOpenAccount: (id: String, name: String) -> Unit) {
             val days = remember(d) { planDays(d) }
             val culprit = firstShortRow(days)
             PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
-                LazyColumn(Modifier.fillMaxSize().fadeInOnAppear(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 32.dp)) {
+                LazyColumn(Modifier.fillMaxSize().fadeInOnAppear().fadingEdges(edges), state = edges, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 32.dp)) {
                     item { Tiles(d) }
                     item { Verdict(d, culprit) }
                     if (days.isEmpty()) item {

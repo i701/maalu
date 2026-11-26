@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.fadingEdges
 import androidx.compose.material3.BottomSheetDefaults
 import app.maalu.ui.components.glowSheet
 import androidx.compose.ui.zIndex
@@ -169,7 +170,7 @@ fun VendorsScreen(api: Api) {
                 if (loading && !refreshing) LinearProgressIndicator(Modifier.fillMaxWidth().align(Alignment.TopCenter).zIndex(1f))
                     if (items.isEmpty()) Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(if (committed.isEmpty()) "No vendors yet." else "Nothing matches.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    } else LazyColumn(Modifier.fillMaxSize().fadeInOnAppear().dimWhen(loading && !refreshing), state = listState, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 96.dp)) {
+                    } else LazyColumn(Modifier.fillMaxSize().fadeInOnAppear().dimWhen(loading && !refreshing).fadingEdges(listState), state = listState, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 96.dp)) {
                         items(items.size, key = { items[it].id }) { i -> Box(springItem()) {
                             val v = items[i]
                             MorphTile({ selected = v }, first = i == 0, last = i == items.lastIndex, modifier = Modifier.padding(bottom = 2.dp)) { VendorRow(v) }

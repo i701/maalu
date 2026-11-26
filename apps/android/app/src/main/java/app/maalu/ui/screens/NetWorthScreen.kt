@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.fadingEdges
+import androidx.compose.foundation.lazy.rememberLazyListState
 import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
 import androidx.compose.foundation.background
@@ -56,6 +58,7 @@ import java.time.LocalDate
  */
 @Composable
 fun NetWorthScreen(api: Api) {
+    val edges = rememberLazyListState()
     var period by rememberSaveable { mutableStateOf(NetPeriod.Last30.name) }
     var data by remember { mutableStateOf<NetWorthDrivers?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -80,7 +83,7 @@ fun NetWorthScreen(api: Api) {
             val money = { a: String -> app.maalu.data.formatMoney(a, d.currency) }
             val up = d.change.toBigDecimalOrNull()?.signum()?.let { it >= 0 } != false
             PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
-                LazyColumn(Modifier.fillMaxSize().fadeInOnAppear(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                LazyColumn(Modifier.fillMaxSize().fadeInOnAppear().fadingEdges(edges), state = edges, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     item { SentenceCard(netWorthSentence(d, money)) }
                     item {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

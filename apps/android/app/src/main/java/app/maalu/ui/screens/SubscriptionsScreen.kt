@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.fadingEdges
 import androidx.compose.material3.BottomSheetDefaults
 import app.maalu.ui.components.glowSheet
 import app.maalu.ui.components.fadeInOnAppear
@@ -174,7 +175,7 @@ fun SubscriptionsScreen(api: Api) {
                 Button(onClick = { reload++ }, shapes = ButtonDefaults.shapes()) { Text("Try again") }
             }
             else -> PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
-                LazyColumn(Modifier.fillMaxSize().fadeInOnAppear(), state = listState, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 96.dp)) {
+                LazyColumn(Modifier.fillMaxSize().fadeInOnAppear().fadingEdges(listState), state = listState, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 96.dp)) {
                     summary?.let { sm -> item { SummaryRow(sm) } }
                     if (candidates.isNotEmpty()) item { SuggestionsCard(candidates, onAdd = { accepting = it }, onDismiss = { c ->
                         scope.launch {

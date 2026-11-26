@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.fadingEdges
 import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
 import app.maalu.ui.theme.tintSurface
@@ -205,7 +206,7 @@ fun AccountDetailScreen(api: Api, accountId: String, onBack: () -> Unit) {
         acc == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         else -> PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
             val groups = groupByDay(items.toList())
-            LazyColumn(Modifier.fillMaxSize().fadeInOnAppear(), state = listState, contentPadding = PaddingValues(bottom = 24.dp)) {
+            LazyColumn(Modifier.fillMaxSize().fadeInOnAppear().fadingEdges(listState), state = listState, contentPadding = PaddingValues(bottom = 24.dp)) {
                 item { Header(acc, month) }
                 item {
                     Actions(
@@ -254,7 +255,7 @@ fun AccountDetailScreen(api: Api, accountId: String, onBack: () -> Unit) {
                     Text(if (committed.isNotEmpty() || type != null) "Nothing matches." else "No transactions in this account yet.", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(24.dp))
                 }
                 groups.forEach { (day, list) ->
-                    stickyHeader(key = "d-$day") { DayHeader(dayLabel(day)) }
+                    item(key = "d-$day") { DayHeader(dayLabel(day)) }
                     items(list.size, key = { list[it].id }) { i -> Box(springItem()) {
                         val t = list[i]
                         MorphTile({ selected = t }, first = i == 0, last = i == list.lastIndex, modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 2.dp)) {

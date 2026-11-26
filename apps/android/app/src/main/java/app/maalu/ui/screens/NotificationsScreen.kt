@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.fadingEdges
+import androidx.compose.foundation.lazy.rememberLazyListState
 import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
 import app.maalu.ui.theme.tintIcon
@@ -72,6 +74,7 @@ private const val PAGE = 40
  */
 @Composable
 fun NotificationsScreen(api: Api, onOpen: (Target) -> Unit, onChanged: () -> Unit) {
+    val edges = rememberLazyListState()
     var items by remember { mutableStateOf<List<AppNotification>?>(null) }
     var total by remember { mutableIntStateOf(0) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -105,7 +108,7 @@ fun NotificationsScreen(api: Api, onOpen: (Target) -> Unit, onChanged: () -> Uni
             }
         }
         else -> PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
-            LazyColumn(Modifier.fillMaxSize().fadeInOnAppear(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            LazyColumn(Modifier.fillMaxSize().fadeInOnAppear().fadingEdges(edges), state = edges, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 item {
                     Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                         val unread = list.count { it.unread }

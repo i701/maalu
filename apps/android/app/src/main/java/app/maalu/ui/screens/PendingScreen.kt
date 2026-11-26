@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.fadingEdges
+import androidx.compose.foundation.lazy.rememberLazyListState
 import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
 import androidx.compose.foundation.layout.Arrangement
@@ -64,6 +66,7 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun PendingScreen(api: Api, onChanged: () -> Unit) {
+    val edges = rememberLazyListState()
     var tasks by remember { mutableStateOf<List<SplitTask>?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
     var reload by remember { mutableIntStateOf(0) }
@@ -98,7 +101,7 @@ fun PendingScreen(api: Api, onChanged: () -> Unit) {
                     "When a salary arrives and you have split rules, its split waits here for you to approve.",
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 )
-            } else LazyColumn(Modifier.fillMaxSize().fadeInOnAppear(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            } else LazyColumn(Modifier.fillMaxSize().fadeInOnAppear().fadingEdges(edges), state = edges, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(list, key = { it.id }) { task -> Box(springItem()) {
                     TaskCard(
                         task, busy = busyId == task.id,

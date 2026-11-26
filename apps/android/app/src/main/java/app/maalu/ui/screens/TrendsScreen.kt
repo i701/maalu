@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.fadingEdges
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -63,6 +64,7 @@ private val RowHeight = 38.dp
  */
 @Composable
 fun TrendsScreen(api: Api) {
+    val scroll = rememberScrollState()
     var kind by rememberSaveable { mutableStateOf("expense") }
     var months by rememberSaveable { mutableIntStateOf(12) }
     var data by remember { mutableStateOf<CategoryMonths?>(null) }
@@ -90,7 +92,7 @@ fun TrendsScreen(api: Api) {
             PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
                 if (rows.isEmpty()) Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(32.dp), contentAlignment = Alignment.Center) {
                     Text("No ${if (kind == "expense") "spending" else "income"} in these ${d.months.size} months.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                } else Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp)) {
+                } else Column(Modifier.fillMaxSize().fadingEdges(scroll).verticalScroll(scroll).padding(horizontal = 16.dp, vertical = 8.dp)) {
                     Text(d.currency + ". Shaded by share of the biggest month.", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
                     TrendTable(d, rows, base)
                 }

@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.fadingEdges
+import androidx.compose.foundation.lazy.rememberLazyListState
 import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
 import androidx.compose.foundation.layout.Arrangement
@@ -56,6 +58,7 @@ private class Compared(val currency: String, val before: List<app.maalu.data.Cat
  */
 @Composable
 fun CompareScreen(api: Api) {
+    val edges = rememberLazyListState()
     var preset by rememberSaveable { mutableStateOf(ComparePreset.LastMonth.name) }
     var data by remember { mutableStateOf<Compared?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -85,7 +88,7 @@ fun CompareScreen(api: Api) {
             val spending = compareRows(d.before, d.now, "expense")
             val income = compareRows(d.before, d.now, "income")
             PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
-                LazyColumn(Modifier.fillMaxSize().fadeInOnAppear(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                LazyColumn(Modifier.fillMaxSize().fadeInOnAppear().fadingEdges(edges), state = edges, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     item {
                         Text(
                             "${periods.now.label.replaceFirstChar { it.uppercase() }} against ${periods.before.label}" +

@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 /**
  * A soft edge on a scroll container: what is scrolled out of sight fades into whatever is behind, instead of being cut off.
  * An edge fades only while there is more beyond it. Not for a list with sticky
- * headers, which sit in the top edge.
+ * headers, which would be faded with the top edge.
  */
 @Composable
 fun Modifier.fadingEdges(state: ScrollableState): Modifier {
