@@ -50,4 +50,9 @@ class SettingsLogicTest {
             assertEquals("MVR 1,234.50", formatMoneyFull("1234.5", "MVR"))
         } finally { NumberPrefs.short = false }
     }
+
+    @Test fun aNameIsTrimmedAndABlankOneClearsIt() {
+        assertEquals("""{"name":"Aisha"}""", nameJson("  Aisha ").toString())
+        assertEquals("""{"name":null}""", nameJson("   ").toString())
+    }
 }

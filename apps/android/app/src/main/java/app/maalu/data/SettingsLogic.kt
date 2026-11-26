@@ -72,6 +72,12 @@ fun passwordJson(current: String, new: String, code: String?): JsonObject = buil
     if (code != null) put("code", code)
 }
 
+/** The API's limit on a name. */
+const val NAME_LIMIT = 80
+
+/** A `PATCH /users/me` that sets what Maalu calls you; blank clears it (an explicit null). */
+fun nameJson(name: String): JsonObject = buildJsonObject { put("name", name.trim().takeIf { it.isNotEmpty() }?.let(::JsonPrimitive) ?: JsonNull) }
+
 /** A `PATCH /users/me` that changes one switch. */
 fun switchJson(field: String, on: Boolean): JsonObject = buildJsonObject { put(field, on) }
 

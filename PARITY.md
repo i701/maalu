@@ -17,7 +17,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 ## Still to build on Android (7)
 
-- 🟡 **Your name** (Sign in and security). Shows the name in the Dashboard's title; it is set on the web, as the app has no sign-up and no profile edit yet.
+- 🟡 **Your name** (Sign in and security). Shows the name in the Dashboard's title and changes it in Settings; the app has no sign-up, so it is not asked there.
 - 🟡 **Email digest** (Notifications). The switch and the email status are in Settings; sending a test email is not.
 - ❌ **Export to Excel** (Transactions).
 - ❌ **Spent this month and limit per category** (Categories, tags and vendors).
@@ -54,7 +54,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - **Create the first account** (iOS): Same as Android: the app has no Create account.
 - **API keys** (Android): Web only, by choice: API keys are managed on the web.
 - **API keys** (iOS): Web only, by choice: API keys are managed on the web.
-- **Your name** (Android): Shows the name in the Dashboard's title; it is set on the web, as the app has no sign-up and no profile edit yet.
+- **Your name** (Android): Shows the name in the Dashboard's title and changes it in Settings; the app has no sign-up, so it is not asked there.
 - **Your name** (iOS): Shows the name in the Dashboard greeting; it is set on the web, as the app has no sign-up and no profile edit yet.
 
 ## Accounts and cards

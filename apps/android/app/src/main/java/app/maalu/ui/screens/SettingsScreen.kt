@@ -2,6 +2,13 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.CompactField
+import app.maalu.data.nameJson
+import app.maalu.data.NAME_LIMIT
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.outlined.Person
 import app.maalu.ui.components.fadingEdges
 import androidx.compose.foundation.lazy.rememberLazyListState
 import app.maalu.ui.components.fadeInOnAppear
@@ -128,6 +135,31 @@ fun SettingsScreen(api: Api) {
         user == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         else -> PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
             LazyColumn(Modifier.fillMaxSize().fadeInOnAppear().fadingEdges(edges), state = edges, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                item {
+                    SettingsGroup("Your name", Icons.Outlined.Person) {
+                        // what is typed, starting again from the saved name whenever that changes
+                        var typed by rememberSaveable(user.name) { mutableStateOf(user.name.orEmpty()) }
+                        var saving by remember { mutableStateOf(false) }
+                        CompactField(
+                            typed, { typed = it.take(NAME_LIMIT) }, "Name", enabled = !saving,
+                            keyboard = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+                        )
+                        Text("What Maalu calls you, on the Dashboard.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Button(
+                            onClick = {
+                                saving = true
+                                scope.launch {
+                                    when (val r = api.patchJson<UserMe>("users/me", nameJson(typed).toString())) {
+                                        is ApiResult.Ok -> { me = r.data; say(if (r.data.name == null) "Name cleared" else "Name saved") }
+                                        is ApiResult.Failed -> say(r.message.lines().first())
+                                    }
+                                    saving = false
+                                }
+                            },
+                            enabled = !saving && typed.trim() != user.name.orEmpty(), shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth(),
+                        ) { Text(if (saving) "Saving…" else "Save name") }
+                    }
+                }
                 item {
                     SettingsGroup("Preferences", Icons.Outlined.Tune) {
                         SettingSwitch("Short numbers", "Write amounts of a thousand and over as 1.23K or 4.5M. The full figure is always in the details.", user.compactNumbers) { on ->

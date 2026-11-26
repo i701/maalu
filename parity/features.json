@@ -1661,10 +1661,10 @@
       },
       "android": {
         "status": "partial",
-        "note": "Shows the name in the Dashboard's title; it is set on the web, as the app has no sign-up and no profile edit yet.",
+        "note": "Shows the name in the Dashboard's title and changes it in Settings; the app has no sign-up, so it is not asked there.",
         "evidence": [
-          "apps/android/app/src/main/java/app/maalu/ui/screens/Shell.kt",
-          "apps/android/app/src/main/java/app/maalu/data/Models.kt"
+          "apps/android/app/src/main/java/app/maalu/ui/screens/SettingsScreen.kt",
+          "apps/android/app/src/main/java/app/maalu/ui/screens/Shell.kt"
         ]
       },
       "ios": {

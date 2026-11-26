@@ -107,7 +107,7 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
     var month by rememberSaveable { mutableStateOf(LocalDate.now().withDayOfMonth(1).toString()) }
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val snackbar = remember { androidx.compose.material3.SnackbarHostState() }
-    // the person's own: the short-numbers setting, and the name (set on the web) that the Dashboard greets them with
+    // the person's own: the short-numbers setting, and the name (changed in Settings) that the Dashboard greets them with
     var name by rememberSaveable { mutableStateOf<String?>(null) }
     androidx.compose.runtime.LaunchedEffect(route, selected) {
         (api.get<app.maalu.data.UserMe>("users/me") as? app.maalu.data.ApiResult.Ok)?.let { app.maalu.data.NumberPrefs.short = it.data.compactNumbers; name = it.data.name }
