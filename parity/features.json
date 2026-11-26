@@ -2203,8 +2203,11 @@
         ]
       },
       "android": {
-        "status": "na",
-        "note": "Deliberately follows the device's light or dark appearance; no switcher."
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/data/ThemeStore.kt",
+          "apps/android/app/src/main/java/app/maalu/ui/screens/AppDrawer.kt"
+        ]
       },
       "ios": {
         "status": "na",
