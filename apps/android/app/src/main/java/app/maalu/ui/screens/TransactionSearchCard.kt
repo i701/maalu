@@ -38,7 +38,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -51,6 +50,7 @@ import app.maalu.data.kept
 import app.maalu.data.rangeLabel
 import app.maalu.ui.components.MoneyText
 import app.maalu.ui.components.SummaryBlue
+import app.maalu.ui.components.searchCardColor
 import app.maalu.ui.theme.ChartColors
 import app.maalu.ui.theme.tintSurface
 
@@ -77,8 +77,7 @@ fun TransactionSearchCard(
     val quiet = MaterialTheme.colorScheme.onSurfaceVariant
     Surface(
         shape = RoundedCornerShape(20.dp), shadowElevation = 6.dp,
-        // white in light mode; in dark the lowest step is nearly black, so a raised grey, a step above the rows
-        color = MaterialTheme.colorScheme.run { if (surface.luminance() < 0.5f) surfaceContainerHigh else surfaceContainerLowest },
+        color = searchCardColor(),
         modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 12.dp),
     ) {
         Column(Modifier.animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec())) {

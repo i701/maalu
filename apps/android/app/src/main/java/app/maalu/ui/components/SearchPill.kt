@@ -5,10 +5,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Clear
@@ -26,20 +26,28 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.dp
 
-/** A quiet pill, not an outlined field: it should recede next to the list it filters. */
+/** The fill of a search card: white in light mode; in dark the lowest step is nearly black, so a raised grey, a step above the rows. */
 @Composable
-fun SearchPill(value: String, onChange: (String) -> Unit, modifier: Modifier = Modifier, placeholder: String = "Search transactions") {
+fun searchCardColor(): Color =
+    MaterialTheme.colorScheme.run { if (surface.luminance() < 0.5f) surfaceContainerHigh else surfaceContainerLowest }
+
+/** A raised search field on the card of the transactions search, for the other lists. */
+@Composable
+fun SearchPill(value: String, onChange: (String) -> Unit, modifier: Modifier = Modifier, placeholder: String = "Search") {
     var focused by remember { mutableStateOf(false) }
     Surface(
         modifier.fillMaxWidth(),
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shape = RoundedCornerShape(20.dp),
+        color = searchCardColor(),
+        shadowElevation = 6.dp,
         border = if (focused) androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
     ) {
-        Row(Modifier.padding(horizontal = 14.dp).height(40.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(Modifier.padding(horizontal = 14.dp).heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Icon(Icons.Outlined.Search, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
             BasicTextField(
                 value = value,
