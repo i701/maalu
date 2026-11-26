@@ -1954,7 +1954,11 @@
         ]
       },
       "android": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/data/MoneyFlowLogic.kt",
+          "apps/android/app/src/main/java/app/maalu/ui/screens/MoneyFlowUi.kt"
+        ]
       },
       "ios": {
         "status": "done",

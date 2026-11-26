@@ -1,15 +1,21 @@
 package app.maalu.data
 
-// The money-flow diagram: income categories into one total, out to spending categories. Money earned and not spent is a "Saved" use; money
+// The money-flow diagram: income categories into one total, out to spending groups, and from a group to its sub-categories. Money earned and not spent is a "Saved" use; money
 // spent beyond what came in is an "Overspent" source, so both sides always add up to the same total.
 
 enum class FlowKind { Income, Deficit, Total, Spending, Saved }
 
 data class FlowNode(val id: String, val label: String, val column: Int, val value: Double, val kind: FlowKind)
 data class FlowLink(val source: String, val target: String, val value: Double)
-data class MoneyFlow(val nodes: List<FlowNode>, val links: List<FlowLink>, val income: Double, val spent: Double)
+data class MoneyFlow(val nodes: List<FlowNode>, val links: List<FlowLink>, val income: Double, val spent: Double) {
+    /** The right-most column in use: 2 for a flat flow, 3 when a spending group has sub-categories under it. */
+    val lastColumn: Int get() = nodes.maxOf { it.column }
 
-private data class FlowRow(val label: String, val value: Double)
+    /** How many nodes the fullest column holds, which sets the height a diagram needs. */
+    val tallestColumn: Int get() = nodes.groupBy { it.column }.values.maxOf { it.size }
+}
+
+private data class FlowRow(val label: String, val value: Double, val children: List<FlowRow> = emptyList())
 
 /** The [top] biggest rows, the rest folded into one "Other" row; empty and negative ones dropped. */
 private fun biggest(rows: List<FlowRow>, top: Int, other: String): List<FlowRow> {
@@ -21,10 +27,26 @@ private fun biggest(rows: List<FlowRow>, top: Int, other: String): List<FlowRow>
 private fun rowsOf(categories: List<CategoryTotal>, type: String): List<FlowRow> =
     categories.filter { it.type == type }.map { FlowRow(it.category, it.total.toDoubleOrNull() ?: 0.0) }
 
+/**
+ * Spending as groups: a sub-category goes under its parent, and a parent's own spending becomes an "(other)" child beside its
+ * sub-categories. A category with no parent and no children is a group of its own with nothing under it.
+ */
+private fun spendingGroups(categories: List<CategoryTotal>): List<FlowRow> =
+    categories.filter { it.type == "expense" && (it.total.toDoubleOrNull() ?: 0.0) > 0 }
+        .groupBy { it.parentId ?: it.categoryId }
+        .map { (_, family) ->
+            val (subs, own) = family.partition { it.parentId != null }
+            val label = own.firstOrNull()?.category ?: subs.first().parent ?: subs.first().category
+            val ownValue = own.sumOf { it.total.toDouble() }
+            val children = subs.map { FlowRow(it.category, it.total.toDouble()) } +
+                if (ownValue > 0 && subs.isNotEmpty()) listOf(FlowRow("$label (other)", ownValue)) else emptyList()
+            FlowRow(label, family.sumOf { it.total.toDouble() }, children)
+        }
+
 /** Where a period's money came from and where it went; null when there is neither income nor spending. */
 fun moneyFlow(categories: List<CategoryTotal>, top: Int = 5): MoneyFlow? {
     val sources = biggest(rowsOf(categories, "income"), top, "Other income")
-    val uses = biggest(rowsOf(categories, "expense"), top, "Other spending")
+    val uses = biggest(spendingGroups(categories), top, "Other spending")
     val income = sources.sumOf { it.value }
     val spent = uses.sumOf { it.value }
     if (income == 0.0 && spent == 0.0) return null
@@ -35,6 +57,12 @@ fun moneyFlow(categories: List<CategoryTotal>, top: Int = 5): MoneyFlow? {
     if (spent > income) { val gap = spent - income; nodes += FlowNode("deficit", "Overspent", 0, gap, FlowKind.Deficit); links += FlowLink("deficit", "total", gap) }
     nodes += FlowNode("total", "Total", 1, total, FlowKind.Total)
     uses.forEachIndexed { i, r -> nodes += FlowNode("out:$i", r.label, 2, r.value, FlowKind.Spending); links += FlowLink("total", "out:$i", r.value) }
+    // what each group was spent on, in the groups' order so no band crosses another
+    uses.forEachIndexed { i, use ->
+        biggest(use.children, top, "Other ${use.label}").forEachIndexed { c, child ->
+            nodes += FlowNode("out:$i:$c", child.label, 3, child.value, FlowKind.Spending); links += FlowLink("out:$i", "out:$i:$c", child.value)
+        }
+    }
     if (income > spent) { val kept = income - spent; nodes += FlowNode("saved", "Saved", 2, kept, FlowKind.Saved); links += FlowLink("total", "saved", kept) }
     return MoneyFlow(nodes, links, income, spent)
 }
@@ -48,22 +76,49 @@ data class PlacedLink(val link: FlowLink, val x0: Double, val y0: Double, val x1
 data class FlowLayout(val nodes: List<PlacedNode>, val links: List<PlacedLink>, val seam: Double)
 
 /**
+ * Where what each group was spent on starts: it fans out like a tree. A group's items are centred on their group (so they may
+ * stand taller than it), then the groups' blocks are pushed apart where they would touch and back inside the diagram.
+ */
+fun treeTops(parents: List<String>, centers: Map<String, Double>, heights: List<Double>, gap: Double, height: Double): List<Double> {
+    // the items of one parent come next to each other
+    val blocks = parents.indices.groupBy { parents[it] }.values.toList()
+    val sizes = blocks.map { items -> items.sumOf { heights[it] } + gap * (items.size - 1) }
+    val tops = blocks.mapIndexed { b, items -> centers[parents[items.first()]]?.let { it - sizes[b] / 2 } ?: 0.0 }.toMutableList()
+    var floor = 0.0
+    for (b in blocks.indices) { tops[b] = maxOf(tops[b], floor); floor = tops[b] + sizes[b] + gap }
+    var ceiling = height
+    for (b in blocks.indices.reversed()) { tops[b] = minOf(tops[b], ceiling - sizes[b]); ceiling = tops[b] - gap }
+    val out = MutableList(parents.size) { 0.0 }
+    blocks.forEachIndexed { b, items ->
+        var y = tops[b]
+        for (i in items) { out[i] = y; y += heights[i] + gap }
+    }
+    return out
+}
+
+/**
  * Positions the nodes and links in a [width] by [height] box: one column per side with the total in the middle, heights in proportion to the
  * money (the same scale everywhere), each column centred vertically, links stacked along the sides of the nodes in the order of the nodes. A
  * node never gets thinner than [minHeight], so a tiny category stays visible.
  */
 fun layoutFlow(flow: MoneyFlow, width: Double, height: Double, nodeWidth: Double = 4.0, gap: Double = 8.0, minHeight: Double = 4.0): FlowLayout {
     val total = flow.nodes.firstOrNull { it.kind == FlowKind.Total }?.value ?: 1.0
-    val columns = (0..2).map { c -> flow.nodes.filter { it.column == c } }
+    val columns = (0..flow.lastColumn).map { c -> flow.nodes.filter { it.column == c } }
     val tallest = columns.maxOf { it.size }
     val scale = maxOf(0.0, height - gap * (tallest - 1)) / total
-    val xs = listOf(0.0, (width - nodeWidth) / 2, width - nodeWidth)
+    // with a fourth column the total moves left and the last gap is shorter: it holds only thin bands
+    val stops = if (flow.lastColumn == 3) listOf(0.0, 0.3, 0.76, 1.0) else listOf(0.0, 0.5, 1.0)
+    val xs = stops.map { it * (width - nodeWidth) }
     val placed = LinkedHashMap<String, PlacedNode>()
     columns.forEachIndexed { c, col ->
         val heights = col.map { maxOf(minHeight, it.value * scale) }
         val used = heights.sum() + gap * maxOf(0, col.size - 1)
         var y = (height - used) / 2
-        col.forEachIndexed { i, n -> placed[n.id] = PlacedNode(n, xs[c], y, nodeWidth, heights[i]); y += heights[i] + gap }
+        val tops = if (c == 3) treeTops(
+            col.map { n -> flow.links.first { it.target == n.id }.source },
+            placed.mapValues { it.value.y + it.value.height / 2 }, heights, gap, height,
+        ) else heights.map { h -> y.also { y += h + gap } }
+        col.forEachIndexed { i, n -> placed[n.id] = PlacedNode(n, xs[c], tops[i], nodeWidth, heights[i]) }
     }
     fun spanOut(n: PlacedNode) = flow.links.filter { it.source == n.node.id }.sumOf { it.value * scale }
     fun spanIn(n: PlacedNode) = flow.links.filter { it.target == n.node.id }.sumOf { it.value * scale }
@@ -97,8 +152,12 @@ fun spreadLabels(centers: List<Double>, gap: Double, limit: Double): List<Double
 
 fun FlowLayout.node(id: String): PlacedNode? = nodes.firstOrNull { it.node.id == id }
 
-/** Where a band is drawn from and to: incoming bands run from their source to the seam, outgoing ones from the seam to their destination. */
-fun FlowLayout.span(link: PlacedLink): Pair<Double, Double> = if (link.link.target == "total") link.x0 to seam else seam to link.x1
+/** Where a band is drawn from and to: incoming bands end at the seam, those leaving the total start there, a group's run bar to bar. */
+fun FlowLayout.span(link: PlacedLink): Pair<Double, Double> = when {
+    link.link.target == "total" -> link.x0 to seam
+    link.link.source == "total" -> seam to link.x1
+    else -> link.x0 to link.x1
+}
 
 /** The id of the income or spending node a band belongs to. */
 fun outerNodeId(link: PlacedLink): String = if (link.link.target == "total") link.link.source else link.link.target
@@ -144,6 +203,7 @@ fun FlowLayout.gradientKinds(link: PlacedLink): Pair<FlowKind, FlowKind> {
         return own to own
     }
     val end = node(link.link.target)?.node?.kind ?: FlowKind.Spending
+    if (link.link.source != "total") return (node(link.link.source)?.node?.kind ?: FlowKind.Spending) to end
     val incoming = links.filter { it.link.target == "total" }
     val match = incoming.firstOrNull { kotlin.math.abs(it.y1 - link.y0) <= it.thickness / 2 + 0.001 } ?: incoming.firstOrNull()
     return (match?.let { node(it.link.source)?.node?.kind } ?: FlowKind.Income) to end

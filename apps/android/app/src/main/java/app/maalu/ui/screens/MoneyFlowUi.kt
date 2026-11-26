@@ -6,6 +6,8 @@ import app.maalu.ui.components.glowTopBarColors
 import app.maalu.ui.components.glowBackground
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -88,6 +90,7 @@ import app.maalu.ui.theme.MoneyStyle
 // The diagram's measures, the same as the iOS one: thin bars, 88dp side labels, a 290dp-tall box, and three band strengths.
 private val LabelWidth = 88.dp
 private const val DiagramHeight = 290f
+private const val RowHeight = 38f
 private const val NodeWidth = 4.0
 private const val LabelHeight = 34.0
 private const val BandAlpha = 0.32f
@@ -166,7 +169,8 @@ private fun MoneyFlowDiagram(flow: MoneyFlow, currency: String, size: DpSize? = 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         BoxWithConstraints(if (size == null) Modifier.fillMaxWidth() else Modifier) {
             val width = size?.width ?: maxWidth
-            val height = size?.height ?: DiagramHeight.dp
+            // tall enough for a label per node of the fullest column
+            val height = size?.height ?: maxOf(DiagramHeight, flow.tallestColumn * RowHeight).dp
             val layout = remember(flow, width, height) {
                 layoutFlow(flow, (width - LabelWidth * 2).coerceAtLeast(0.dp).value.toDouble(), height.value.toDouble(), nodeWidth = NodeWidth)
             }
@@ -196,15 +200,20 @@ private fun MoneyFlowDiagram(flow: MoneyFlow, currency: String, size: DpSize? = 
                     }
                 }
                 // labels at the sides, kept apart; the total bar is named in the card's header
-                listOf(0, 2).forEach { col ->
+                // with sub-categories the groups are labelled too, just left of their bars, over the bands coming in
+                listOf(0, 2, 3).filter { it <= flow.lastColumn }.forEach { col ->
+                    val inner = col == 2 && flow.lastColumn == 3
+                    val leftOfBar = col == 0 || inner
                     val side = layout.nodes.filter { it.node.column == col }
                     val tops = spreadLabels(side.map { it.y + it.height / 2 - LabelHeight / 2 }, LabelHeight + 4, height.value - LabelHeight)
                     side.forEachIndexed { i, n ->
                         Column(
-                            Modifier.width(LabelWidth - 8.dp).offset(x = if (col == 0) 0.dp else width - LabelWidth + 8.dp, y = tops[i].dp)
+                            Modifier.width(LabelWidth - 8.dp)
+                                .offset(x = when { col == 0 -> 0.dp; inner -> n.x.dp + 2.dp; else -> width - LabelWidth + 8.dp }, y = tops[i].dp)
                                 .alpha(lerp(1f, if (shown == null || shown == n.node.id) 1f else 0.4f, focus))
+                                .background(if (inner) MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.7f) else Color.Transparent, RoundedCornerShape(4.dp))
                                 .clickable { select(n.node.id) },
-                            horizontalAlignment = if (col == 0) Alignment.End else Alignment.Start,
+                            horizontalAlignment = if (leftOfBar) Alignment.End else Alignment.Start,
                         ) {
                             Text(n.node.label, style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Text(formatMoney(n.node.value.toString(), currency), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -255,7 +264,7 @@ private fun MoneyFlowExpanded(flow: MoneyFlow, currency: String, onClose: () -> 
                         .verticalScroll(rememberScrollState()).horizontalScroll(rememberScrollState()),
                 ) {
                     Box(Modifier.defaultMinSize(minWidth = viewportW, minHeight = viewportH).padding(horizontal = 4.dp, vertical = 16.dp), contentAlignment = Alignment.Center) {
-                        MoneyFlowDiagram(flow, currency, DpSize((ExpandedWidth * scale).dp, (ExpandedHeight * scale).dp))
+                        MoneyFlowDiagram(flow, currency, DpSize((ExpandedWidth * scale).dp, (maxOf(ExpandedHeight, flow.tallestColumn * RowHeight) * scale).dp))
                     }
                 }
             }

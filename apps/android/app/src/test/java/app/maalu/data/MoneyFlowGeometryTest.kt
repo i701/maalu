@@ -64,4 +64,31 @@ class MoneyFlowGeometryTest {
         assertEquals("0%", flowShareText(5.0, 0.0))
         assertEquals("100%", flowShareText(7.0, 7.0))
     }
+
+    private val grouped = flow(
+        cat("Pay", "1000", "income"), cat("Home", "100"),
+        cat("Rent", "500").copy(parent = "Home", parentId = "Home"), cat("Power", "100").copy(parent = "Home", parentId = "Home"),
+        cat("Food", "200"),
+    )
+
+    @Test fun aGroupSplitsIntoItsSubCategoriesInAFourthColumn() {
+        assertEquals(3, grouped.lastColumn)
+        assertEquals(listOf("Home" to 700.0, "Food" to 200.0), grouped.nodes.filter { it.column == 2 && it.kind == FlowKind.Spending }.map { it.label to it.value })
+        assertEquals(listOf("Rent", "Power", "Home (other)"), grouped.nodes.filter { it.column == 3 }.map { it.label })
+        assertEquals(2, sample.lastColumn)
+    }
+
+    @Test fun subCategoryBandsRunFromTheirGroupAndStayInside() {
+        val l = layoutFlow(grouped, 400.0, 300.0)
+        val rent = l.links.first { it.link.target == "out:0:0" }
+        assertEquals(rent.x0 to rent.x1, l.span(rent))
+        assertEquals("out:0:0", l.nodeIdAt((rent.x0 + rent.x1) / 2, l.bandCenterY(rent, (rent.x0 + rent.x1) / 2)))
+        assertTrue(l.nodes.all { it.y >= -1e-9 && it.y + it.height <= 300.0 + 1e-9 })
+    }
+
+    @Test fun treeBlocksArePushedApartAndKeptInside() {
+        // two groups centred at the same height would overlap: the second moves below the first
+        assertEquals(listOf(40.0, 70.0), treeTops(listOf("a", "b"), mapOf("a" to 50.0, "b" to 50.0), listOf(20.0, 20.0), 10.0, 100.0))
+        assertEquals(listOf(80.0), treeTops(listOf("a"), mapOf("a" to 100.0), listOf(20.0), 10.0, 100.0))
+    }
 }

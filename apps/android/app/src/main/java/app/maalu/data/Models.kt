@@ -149,6 +149,8 @@ data class CategoryTotal(
     val count: Int = 0,
     val kind: String? = null,
     val parent: String? = null,
+    /** Set on a sub-category. */
+    @SerialName("parent_id") val parentId: String? = null,
 )
 
 /** `/transactions/categories` answers an object, not a bare list. */
