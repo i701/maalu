@@ -15,6 +15,7 @@ enum class DashboardSection(val id: String, val title: String) {
     Balance("balance", "Net worth"),
     Monthly("monthly", "Cash flow"),
     Budget("budget", "Budget and goals"),
+    SpendingTrend("spending-trend", "Spending by month"),
     NeedsWants("needs-wants", "Needs and wants"),
     MoneyFlow("money-flow", "Money flow"),
     Credit("credit", "Credit used"),

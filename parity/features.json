@@ -1696,7 +1696,11 @@
         ]
       },
       "android": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/SpendingTrendCard.kt",
+          "apps/android/app/src/main/java/app/maalu/data/SpendingStackLogic.kt"
+        ]
       },
       "ios": {
         "status": "done",

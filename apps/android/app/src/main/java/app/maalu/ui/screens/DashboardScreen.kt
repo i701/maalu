@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.data.CategoryMonths
 import kotlinx.coroutines.launch
 import app.maalu.data.orderSections
 import app.maalu.data.mergeOrder
@@ -109,6 +110,7 @@ private data class DashboardData(
     val accounts: List<Account> = emptyList(),
     /** The order the person saved, or null for the default one. */
     val savedOrder: List<String>? = null,
+    val categoryMonths: CategoryMonths? = null,
 )
 
 private sealed interface State {
@@ -148,6 +150,9 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
             val trendCall = async { api.get<BalanceTrend>("stats/balance-trend", mapOf("from" to "$start", "to" to "$trendEnd")) }
             val monthlyCall = async { api.get<Monthly>("stats/monthly", mapOf("months" to "12", "to" to "$end")) }
             val budgetCall = async { api.get<Budget>("budget", mapOf("on" to "$start")) }
+            val categoryMonthsCall = async {
+                api.get<CategoryMonths>("transactions/categories/monthly", mapOf("date_from" to "${start.minusMonths(11)}", "date_to" to "$end"))
+            }
             val meCall = async { api.get<UserMe>("users/me") }
             val goalsCall = async { api.get<List<Goal>>("goals") }
             val latestCall = async { api.get<List<Transaction>>("transactions", mapOf("limit" to "5")) }
@@ -170,6 +175,7 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
                         (upcomingCall.await() as? ApiResult.Ok)?.data.orEmpty(),
                         (accountsCall.await() as? ApiResult.Ok)?.data.orEmpty(),
                         (meCall.await() as? ApiResult.Ok)?.data?.dashboardOrder,
+                        categoryMonths = (categoryMonthsCall.await() as? ApiResult.Ok)?.data,
                     ),
                 )
             }
@@ -215,6 +221,7 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
                         DashboardSection.Balance -> NetWorthCard(s.data.trend, s.data.totals.currency)
                         DashboardSection.Monthly -> CashFlowCard(s.data.monthly, s.data.totals.currency)
                         DashboardSection.Budget -> BudgetGoalsCard(s.data.budget, s.data.goals)
+                        DashboardSection.SpendingTrend -> s.data.categoryMonths?.let { SpendingTrendCard(it) }
                         DashboardSection.NeedsWants -> NeedsWantsCard(kindShares(s.data.categories), s.data.totals.currency, incomeRule(s.data.categories))
                         DashboardSection.MoneyFlow -> MoneyFlowCard(s.data.categories, s.data.totals.currency)
                         DashboardSection.Credit -> CreditUsageCard(s.data.accounts)
