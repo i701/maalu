@@ -52,7 +52,6 @@ import app.maalu.data.KindShare
 import app.maalu.data.MonthlyPoint
 import app.maalu.data.Transaction
 import app.maalu.data.formatMoney
-import app.maalu.data.shortDate
 import app.maalu.data.title
 import app.maalu.ui.components.LineChart
 import app.maalu.ui.components.MoneyText
@@ -265,30 +264,10 @@ private fun kindColor(s: KindShare): Color = when (s.kind) {
 }
 
 @Composable
-fun TransactionsCard(title: String, trailing: String?, items: List<Transaction>, empty: String, today: String) {
+fun TransactionsCard(title: String, trailing: String?, items: List<Transaction>, empty: String) {
     SectionCard(title, trailing) {
         if (items.isEmpty()) Text(empty, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        items.forEach { t ->
-            val overdue = t.planned && t.date < today
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(t.title(), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    val sub = listOfNotNull(t.category.takeIf { t.type != "transfer" }, t.account?.name).joinToString(" · ")
-                    Text(
-                        (if (overdue) "Overdue · " else "") + shortDate(t.date) + if (sub.isNotEmpty()) " · $sub" else "",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = if (overdue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1, overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                val sign = when (t.type) { "expense" -> "-"; "income" -> "+"; else -> "" }
-                MoneyText(
-                    t.amount, t.currency, prefix = sign,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = when (t.type) { "income" -> ChartColors.IncomeLight; "expense" -> ChartColors.ExpenseLight; else -> MaterialTheme.colorScheme.onSurface },
-                )
-            }
-        }
+        items.forEach { t -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) { QuietRow(t) } }
     }
 }
 

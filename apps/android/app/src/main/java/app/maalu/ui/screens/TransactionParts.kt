@@ -105,7 +105,6 @@ import app.maalu.data.Transaction
 import app.maalu.data.hasPlace
 import app.maalu.data.canSplitSalary
 import app.maalu.data.isSalaryToSplit
-import app.maalu.data.dayLabel
 import app.maalu.data.formatMoney
 import app.maalu.data.formatNumber
 import app.maalu.data.groupByDay
@@ -115,7 +114,6 @@ import app.maalu.data.text
 import app.maalu.data.duplicateForm
 import app.maalu.data.isRefund
 import app.maalu.data.refundOfRef
-import app.maalu.data.shortTime
 import app.maalu.data.title
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -181,15 +179,20 @@ private fun StatusPill(t: Transaction) {
     if (t.isOverdue()) Pill("Overdue", ChartColors.Warning) else Pill("Planned", MaterialTheme.colorScheme.outline)
 }
 
+@Composable
+private fun RowAmount(t: Transaction) =
+    MoneyText(t.amount, t.currency, prefix = signPrefix(t), style = MaterialTheme.typography.bodyMedium, color = amountColor(t))
+
 /** The quiet row: the title with its category under it, and the amount; a planned one adds a pill under the amount. */
 @Composable
-fun RowScope.QuietRow(t: Transaction) {
+fun RowScope.QuietRow(t: Transaction, amount: @Composable () -> Unit = { RowAmount(t) }, below: String? = null) {
     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(t.title(), style = MaterialTheme.typography.bodyMediumEmphasized, maxLines = 1, overflow = TextOverflow.Ellipsis)
         CategoryLabel(t)
+        if (below != null) Text(below, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
     Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        MoneyText(t.amount, t.currency, prefix = signPrefix(t), style = MaterialTheme.typography.bodyMedium, color = amountColor(t))
+        amount()
         if (t.planned) StatusPill(t)
     }
 }
@@ -203,14 +206,6 @@ fun CategoryBadge(t: Transaction) {
         Text(letter, style = MaterialTheme.typography.labelLargeEmphasized, color = accent)
     }
 }
-
-@Composable
-fun Mark(text: String) {
-    Surface(shape = RoundedCornerShape(6.dp), color = MaterialTheme.colorScheme.secondaryContainer) {
-        Text(text, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp))
-    }
-}
-
 
 /** The sign in front of a transaction's amount: minus for an expense, plus for income, none for a transfer. */
 fun signPrefix(t: Transaction) = when (t.type) { "expense" -> "-"; "income" -> "+"; else -> "" }

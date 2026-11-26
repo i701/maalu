@@ -260,13 +260,8 @@ private fun GroupSheet(api: Api, id: String, onClose: () -> Unit, onChanged: () 
                 }
                 itemsIndexed(g.transactions, key = { _, t -> t.id }) { i, t -> Box(springItem()) {
                     MorphTile(onClick = {}, first = i == 0, last = i == g.transactions.lastIndex, modifier = Modifier.fillMaxWidth()) {
-                        Row(Modifier.fillMaxWidth().padding(start = 12.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            CategoryBadge(t)
-                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                Text(t.title(), style = MaterialTheme.typography.bodyMediumEmphasized, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                                Text(dayLabel(t.date), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
-                            MoneyText(t.amount, t.currency, prefix = signPrefix(t), style = MaterialTheme.typography.bodyMedium, color = amountColor(t))
+                        Row(Modifier.fillMaxWidth().padding(start = 14.dp, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            QuietRow(t)
                             IconButton(
                                 enabled = !busy,
                                 onClick = {

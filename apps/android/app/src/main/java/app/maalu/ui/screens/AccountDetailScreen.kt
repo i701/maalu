@@ -85,10 +85,8 @@ import app.maalu.data.formatMoney
 import app.maalu.data.groupByDay
 import app.maalu.data.groupLabel
 import app.maalu.data.historySummary
-import app.maalu.data.isRefund
 import app.maalu.data.monthBounds
 import app.maalu.data.repayForm
-import app.maalu.data.shortTime
 import app.maalu.data.statementLine
 import app.maalu.data.suggestedMethod
 import app.maalu.data.tidyRate
@@ -410,28 +408,23 @@ private fun Summary(label: String, amount: String, currency: String) {
     }
 }
 
-/** A transaction as this account sees it: its effect on the balance and what the balance was right after it. */
+/** The quiet row as this account sees it: the amount is the effect on its balance, with the balance right after it underneath. */
 @Composable
 private fun AccountTransactionRow(t: Transaction, account: Account, balanceAfter: String?) {
     val effect = accountEffect(t, account.id)
     Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        CategoryBadge(t)
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(t.title(), style = MaterialTheme.typography.bodyMediumEmphasized, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            val sub = listOfNotNull(shortTime(t.time), t.category.takeIf { t.type != "transfer" }, effect.counterpart).joinToString(" · ")
-            Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            val marks = listOfNotNull("Planned".takeIf { t.planned }, "Refund".takeIf { t.isRefund }, "Adjustment".takeIf { t.adjustment })
-            if (marks.isNotEmpty()) Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(top = 2.dp)) { marks.forEach { Mark(it) } }
-        }
-        Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            MoneyText(
-                effect.amount, effect.currency, prefix = if (effect.positive) "+" else "−",
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (effect.positive) ChartColors.IncomeLight else MaterialTheme.colorScheme.error,
-            )
+        QuietRow(
+            t,
+            amount = {
+                MoneyText(
+                    effect.amount, effect.currency, prefix = if (effect.positive) "+" else "−",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (effect.positive) ChartColors.IncomeLight else MaterialTheme.colorScheme.error,
+                )
+            },
             // planned transactions are not in the balance yet, so they have none after them
-            if (balanceAfter != null && !t.planned) Text("Balance ${formatMoney(balanceAfter, account.currency)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
+            below = balanceAfter?.takeUnless { t.planned }?.let { "Balance ${formatMoney(it, account.currency)}" },
+        )
     }
 }
 

@@ -237,8 +237,8 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
                         DashboardSection.NeedsWants -> NeedsWantsCard(kindShares(s.data.categories), s.data.totals.currency, incomeRule(s.data.categories))
                         DashboardSection.MoneyFlow -> MoneyFlowCard(s.data.categories, s.data.totals.currency)
                         DashboardSection.Credit -> CreditUsageCard(s.data.accounts)
-                        DashboardSection.Upcoming -> TransactionsCard("Coming up", null, s.data.upcoming, "Nothing planned.", LocalDate.now().toString())
-                        DashboardSection.Latest -> TransactionsCard("Latest transactions", null, s.data.latest, "No transactions yet.", LocalDate.now().toString())
+                        DashboardSection.Upcoming -> TransactionsCard("Coming up", null, s.data.upcoming, "Nothing planned.")
+                        DashboardSection.Latest -> TransactionsCard("Latest transactions", null, s.data.latest, "No transactions yet.")
                     }
                 }
                 item(key = "arrange") {
