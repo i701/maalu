@@ -143,7 +143,7 @@ import kotlinx.coroutines.launch
 
 import kotlinx.coroutines.launch
 
-/** A day's heading on its own pill: it stays put while rows scroll under it, and the backdrop shows around it. */
+/** A day's heading on its own pill, so it reads over the backdrop (and over rows, where a list keeps it stuck at the top). */
 @Composable
 fun DayHeader(label: String) {
     Surface(

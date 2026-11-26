@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.foundation.lazy.rememberLazyListState
+import app.maalu.ui.components.fadingEdges
 import androidx.compose.material3.BottomSheetDefaults
 import app.maalu.ui.components.glowSheet
 import app.maalu.ui.components.SpringBar
@@ -154,7 +156,8 @@ fun BudgetScreen(api: Api, on: String) {
         is BudgetLoad.Loaded -> {
             val b = s.data.budget
             PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; attempt++ }, modifier = Modifier.fillMaxSize()) {
-                LazyColumn(Modifier.fillMaxSize().fadeInOnAppear(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 32.dp)) {
+                val listState = rememberLazyListState()
+                LazyColumn(Modifier.fillMaxSize().fadeInOnAppear().fadingEdges(listState), state = listState, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 32.dp)) {
                     if (b.lines.isNotEmpty()) item { SummaryCard(b) }
                     item { TextButton(shapes = ButtonDefaults.shapes(), onClick = { settings = true }) { Icon(Icons.Outlined.Settings, null, Modifier.size(18.dp)); Text(settingsText(b), Modifier.padding(start = 6.dp)) } }
                     item { SectionHeader("Monthly limits", "Add limit") { limitForm = LimitFormRequest(null, null) } }

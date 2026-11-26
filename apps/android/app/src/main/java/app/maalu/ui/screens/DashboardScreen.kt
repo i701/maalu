@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.foundation.lazy.rememberLazyListState
+import app.maalu.ui.components.fadingEdges
 import app.maalu.ui.components.SpringBar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -167,8 +169,11 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
                 isRefreshing = refreshing,
                 onRefresh = { refreshing = true; attempt++ },
                 modifier = Modifier.fillMaxSize(),
-            ) { LazyColumn(
-                Modifier.fillMaxSize(),
+            ) {
+                val listState = rememberLazyListState()
+                LazyColumn(
+                Modifier.fillMaxSize().fadingEdges(listState),
+                state = listState,
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {

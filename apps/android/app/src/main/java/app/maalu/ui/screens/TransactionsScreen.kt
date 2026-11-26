@@ -1,5 +1,6 @@
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.fadingEdges
 import androidx.compose.ui.zIndex
 import androidx.compose.material3.LinearProgressIndicator
 import app.maalu.ui.components.dimWhen
@@ -297,12 +298,12 @@ fun TransactionsScreen(api: Api) {
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                } else LazyColumn(Modifier.fillMaxSize().fadeInOnAppear().dimWhen(loading && !refreshing), state = listState, contentPadding = PaddingValues(bottom = 16.dp)) {
+                } else LazyColumn(Modifier.fillMaxSize().fadeInOnAppear().dimWhen(loading && !refreshing).fadingEdges(listState), state = listState, contentPadding = PaddingValues(bottom = 16.dp)) {
                     if (suggestions.isNotEmpty() && committed.isEmpty() && !filters.isFiltered()) item(key = "transfer-suggestions") {
                         Box(Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) { TransferSuggestionsCard(api, suggestions, onChanged = { reload++ }, onSay = { msg -> scope.launch { snackbar?.showSnackbar(msg) } }) }
                     }
                     groups.forEach { (day, list) ->
-                        stickyHeader(key = "d-$day") { DayHeader(dayLabel(day)) }
+                        item(key = "d-$day") { DayHeader(dayLabel(day)) }
                         items(list.size, key = { list[it].id }) { i -> Box(springItem()) {
                             val t = list[i]
                             // the native expressive list item: large outer corners, small inner ones, and the
