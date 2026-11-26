@@ -1751,7 +1751,11 @@
         ]
       },
       "android": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/TransferSlabs.kt",
+          "apps/android/app/src/main/java/app/maalu/data/TransferSlabLogic.kt"
+        ]
       },
       "ios": {
         "status": "done",

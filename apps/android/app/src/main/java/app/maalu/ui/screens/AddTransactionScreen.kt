@@ -363,56 +363,45 @@ private fun Form(o: FormOptions, saveLabel: String, form: AddForm, onForm: (AddF
                 enabled = !busy,
             )
 
-            // the amount: a regular field like the rest, with the currency at its end; the tile takes the type's colour
-            Section("Amount", Icons.Outlined.Numbers, tint) {
-                // with items the amount is their total: it is shown, not typed
-                if (form.splitOn && form.type != "transfer") {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        MoneyText(form.effectiveAmount(), currency, style = MaterialTheme.typography.titleLarge)
-                        Text("  total of the items", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                } else CompactField(
-                    form.amount, { onForm(form.copy(amount = cleanAmount(it))) }, "Amount",
-                    keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    enabled = !busy, isError = errorField == FormField.Amount, suffix = currency,
-                placeholder = "0.00")
-            }
+            if (form.type == "transfer") TransferSlabs(o.accounts, form, onForm, errorField, enabled = !busy)
+            else {
+                // the amount: a regular field like the rest, with the currency at its end; the tile takes the type's colour
+                Section("Amount", Icons.Outlined.Numbers, tint) {
+                    // with items the amount is their total: it is shown, not typed
+                    if (form.splitOn && form.type != "transfer") {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            MoneyText(form.effectiveAmount(), currency, style = MaterialTheme.typography.titleLarge)
+                            Text("  total of the items", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    } else CompactField(
+                        form.amount, { onForm(form.copy(amount = cleanAmount(it))) }, "Amount",
+                        keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        enabled = !busy, isError = errorField == FormField.Amount, suffix = currency,
+                    placeholder = "0.00")
+                }
 
-            Section(if (form.type == "transfer") "From" else "Account", Icons.Outlined.AccountBalance, Accents.getValue("violet")) {
-                PickerField(
-                    isError = errorField == FormField.Account,
-                    title = "Account", value = account?.let { Ref(it.id, it.name) }, placeholder = "No account", anyLabel = null,
-                    entries = o.accounts.map { Ref(it.id, it.name) },
-                    detail = { r -> o.accounts.firstOrNull { it.id == r.id }?.let(::accountDetail) },
-                    // built from the form as it is now: a function reference to a local helper kept an older copy of the form
-                    onPick = { r -> o.accounts.firstOrNull { it.id == r?.id }?.let { a -> onForm(form.withAccount(a)) } },
-                )
-                // a card spends from its own account: picking one sets the account and the way of paying (an expense only)
-                val cardChoices = cardsForForm(o.cards, form.accountId)
-                if (form.type == "expense" && o.cards.isNotEmpty()) PickerField(
-                    title = "Card", value = o.cards.firstOrNull { it.id == form.cardId }?.let { Ref(it.id, it.text()) }, placeholder = "Card (optional)", anyLabel = "No card",
-                    entries = cardChoices.map { Ref(it.id, it.text()) },
-                    detail = { r -> cardChoices.firstOrNull { it.id == r.id }?.account?.name },
-                    onPick = { r -> val c = cardChoices.firstOrNull { it.id == r?.id }; onForm(if (c == null) form.copy(cardId = null) else form.withCard(c, o.accounts)) },
-                )
-                if (foreign) CompactField(
-                    form.rate, { onForm(form.copy(rate = cleanAmount(it))) }, "Exchange rate",
-                    keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !busy, isError = errorField == FormField.Rate,
-                placeholder = "1 $currency = ? $base")
-            }
-
-            if (form.type == "transfer") Section("To", Icons.Outlined.SwapHoriz, Accents.getValue("blue")) {
-                PickerField(
-                    isError = errorField == FormField.ToAccount,
-                    title = "To account", value = toAccount?.let { Ref(it.id, it.name) }, placeholder = "Choose an account", anyLabel = null,
-                    entries = o.accounts.filter { it.id != form.accountId }.map { Ref(it.id, it.name) },
-                    detail = { r -> o.accounts.firstOrNull { it.id == r.id }?.let(::accountDetail) },
-                    onPick = { r -> onForm(form.copy(toAccountId = r?.id)) },
-                )
-                if (crossCurrency) CompactField(
-                    form.toAmount, { onForm(form.copy(toAmount = cleanAmount(it))) }, "Amount received in ${toAccount?.currency}",
-                    keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !busy, isError = errorField == FormField.ToAmount,
-                )
+                Section("Account", Icons.Outlined.AccountBalance, Accents.getValue("violet")) {
+                    PickerField(
+                        isError = errorField == FormField.Account,
+                        title = "Account", value = account?.let { Ref(it.id, it.name) }, placeholder = "No account", anyLabel = null,
+                        entries = o.accounts.map { Ref(it.id, it.name) },
+                        detail = { r -> o.accounts.firstOrNull { it.id == r.id }?.let(::accountDetail) },
+                        // built from the form as it is now: a function reference to a local helper kept an older copy of the form
+                        onPick = { r -> o.accounts.firstOrNull { it.id == r?.id }?.let { a -> onForm(form.withAccount(a)) } },
+                    )
+                    // a card spends from its own account: picking one sets the account and the way of paying (an expense only)
+                    val cardChoices = cardsForForm(o.cards, form.accountId)
+                    if (form.type == "expense" && o.cards.isNotEmpty()) PickerField(
+                        title = "Card", value = o.cards.firstOrNull { it.id == form.cardId }?.let { Ref(it.id, it.text()) }, placeholder = "Card (optional)", anyLabel = "No card",
+                        entries = cardChoices.map { Ref(it.id, it.text()) },
+                        detail = { r -> cardChoices.firstOrNull { it.id == r.id }?.account?.name },
+                        onPick = { r -> val c = cardChoices.firstOrNull { it.id == r?.id }; onForm(if (c == null) form.copy(cardId = null) else form.withCard(c, o.accounts)) },
+                    )
+                    if (foreign) CompactField(
+                        form.rate, { onForm(form.copy(rate = cleanAmount(it))) }, "Exchange rate",
+                        keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !busy, isError = errorField == FormField.Rate,
+                    placeholder = "1 $currency = ? $base")
+                }
             }
 
             if (form.type != "transfer") {
