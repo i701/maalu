@@ -9,19 +9,18 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 78 | 68 | 66 |
+| ✅ done | 78 | 69 | 66 |
 | 🟡 partial | 0 | 2 | 1 |
-| ❌ missing | 0 | 6 | 6 |
+| ❌ missing | 0 | 5 | 6 |
 | ➖ n/a | 3 | 5 | 7 |
 | 🗓 planned | 0 | 0 | 1 |
 
-## Still to build on Android (8)
+## Still to build on Android (7)
 
 - 🟡 **Your name** (Sign in and security). Shows the name in the Dashboard's title; it is set on the web, as the app has no sign-up and no profile edit yet.
 - 🟡 **Email digest** (Notifications). The switch and the email status are in Settings; sending a test email is not.
 - ❌ **Export to Excel** (Transactions).
 - ❌ **Spent this month and limit per category** (Categories, tags and vendors).
-- ❌ **Dashboard card deck** (Dashboard and reports).
 - ❌ **Hide dashboard cards, kept on the server** (Dashboard and reports).
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
@@ -137,7 +136,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 |---|:---:|:---:|:---:|
 | **Dashboard**<br>Available to spend, the month strip, spending by category, net worth, cash flow, budget and goals, coming up and latest. | ✅ done | ✅ done | ✅ done |
 | **Spending by month, stacked by category**<br>A Dashboard card of spending per month for the last 6 or 12 months, stacked by the biggest categories; press along the bars to pick a month, hold a category to follow it. | ✅ done | ✅ done | ✅ done |
-| **Dashboard card deck**<br>The Dashboard opens on a stack of three gradient cards (Available to spend, Kept this month, Net worth): swipe up or down to flip through them, the rest of the cards scroll below. | ✅ done | ❌ missing | ✅ done |
+| **Dashboard summaries**<br>The Dashboard opens on Available to spend and Kept this month, the latter with a donut of income kept against spent. On the apps they are drawn flat on the page, and net worth, with a donut of assets against liabilities, is on Accounts. | ✅ done | ✅ done | ✅ done |
 | **Arrange the dashboard**<br>Drag the dashboard's cards, or move them with arrows, into your own order; kept on the server. | ✅ done | ✅ done | ✅ done |
 | **Hide dashboard cards**<br>Switch off the dashboard cards you do not want, from the arrange sheet. Kept on the device for now, not on the server, so no API change. | ✅ done | ✅ done | ✅ done |
 | **Hide dashboard cards, kept on the server**<br>Keep which dashboard cards are off on the server, one list per platform (a key each for web, Android and iOS), so a platform keeps its own choice across devices and reinstalls without changing what another platform shows. Today it is only on the device. | ➖ n/a | ❌ missing | 🗓 planned |

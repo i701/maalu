@@ -1719,8 +1719,8 @@
     {
       "id": "dashboard-deck",
       "area": "reports",
-      "name": "Dashboard card deck",
-      "summary": "The Dashboard opens on a stack of three gradient cards (Available to spend, Kept this month, Net worth): swipe up or down to flip through them, the rest of the cards scroll below.",
+      "name": "Dashboard summaries",
+      "summary": "The Dashboard opens on Available to spend and Kept this month, the latter with a donut of income kept against spent. On the apps they are drawn flat on the page, and net worth, with a donut of assets against liabilities, is on Accounts.",
       "web": {
         "status": "done",
         "evidence": [
@@ -1728,13 +1728,18 @@
         ]
       },
       "android": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/components/FlatSummary.kt",
+          "apps/android/app/src/main/java/app/maalu/ui/screens/DashboardScreen.kt",
+          "apps/android/app/src/main/java/app/maalu/ui/screens/AccountsScreen.kt"
+        ]
       },
       "ios": {
         "status": "done",
         "evidence": [
-          "apps/ios/Maalu/Features/Dashboard/Deck/DashboardDeck.swift",
-          "apps/ios/Maalu/Features/Dashboard/Deck/DeckCardFrame.swift"
+          "apps/ios/Maalu/Features/Dashboard/Deck/DashboardCanvas.swift",
+          "apps/ios/Maalu/Features/Accounts/AccountsSummarySection.swift"
         ]
       },
       "routes": [

@@ -2,6 +2,23 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.data.isSummary
+import androidx.compose.foundation.lazy.items
+import java.math.BigDecimal
+import app.maalu.ui.components.SummaryTeal
+import app.maalu.ui.components.SummaryPill
+import app.maalu.ui.components.SummaryDonut
+import app.maalu.ui.components.SummaryBlue
+import app.maalu.ui.components.MiniBar
+import app.maalu.ui.components.FlatSummary
+import app.maalu.ui.components.DonutPart
+import app.maalu.data.spendingChangeText
+import app.maalu.data.shareOf
+import app.maalu.data.netRows
+import app.maalu.data.monthShort
+import app.maalu.data.dashboardSections
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.foundation.lazy.itemsIndexed
 import app.maalu.data.CategoryMonths
 import kotlinx.coroutines.launch
 import app.maalu.data.orderSections
@@ -13,7 +30,6 @@ import app.maalu.data.DashboardSection
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.collectAsState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import app.maalu.ui.components.fadingEdges
 import app.maalu.ui.components.SpringBar
@@ -73,8 +89,6 @@ import app.maalu.data.AvailableToSpend
 import app.maalu.data.CategoryTotal
 import app.maalu.data.CategoryTotals
 import app.maalu.data.Totals
-import app.maalu.data.BalancePoint
-import app.maalu.data.BalanceTrend
 import app.maalu.data.Budget
 import app.maalu.data.Goal
 import app.maalu.data.Monthly
@@ -89,7 +103,6 @@ import app.maalu.data.monthLabel
 import app.maalu.data.percentChange
 import app.maalu.data.spendingRows
 import app.maalu.ui.theme.Accents
-import app.maalu.ui.theme.Gradients
 import app.maalu.ui.theme.MoneyStyle
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -101,7 +114,6 @@ private data class DashboardData(
     val categories: List<CategoryTotal>,
     val available: AvailableToSpend?,
     // the page works without any of these
-    val trend: List<BalancePoint> = emptyList(),
     val monthly: List<MonthlyPoint> = emptyList(),
     val budget: Budget? = null,
     val goals: List<Goal> = emptyList(),
@@ -145,9 +157,6 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
             val before = async { api.get<Totals>("transactions/summary", mapOf("date_from" to "$pStart", "date_to" to "$pEnd")) }
             val cats = async { api.get<CategoryTotals>("transactions/categories", mapOf("date_from" to "$start", "date_to" to "$end")) }
             val avail = async { api.get<AvailableToSpend>("stats/available-to-spend") }
-            val today = LocalDate.now()
-            val trendEnd = if (end > today && start <= today) today else end
-            val trendCall = async { api.get<BalanceTrend>("stats/balance-trend", mapOf("from" to "$start", "to" to "$trendEnd")) }
             val monthlyCall = async { api.get<Monthly>("stats/monthly", mapOf("months" to "12", "to" to "$end")) }
             val budgetCall = async { api.get<Budget>("budget", mapOf("on" to "$start")) }
             val categoryMonthsCall = async {
@@ -167,7 +176,6 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
                     DashboardData(
                         (t as ApiResult.Ok).data, (b as ApiResult.Ok).data, (c as ApiResult.Ok).data.categories,
                         (a as? ApiResult.Ok)?.data,
-                        (trendCall.await() as? ApiResult.Ok)?.data?.points.orEmpty(),
                         (monthlyCall.await() as? ApiResult.Ok)?.data?.months.orEmpty(),
                         (budgetCall.await() as? ApiResult.Ok)?.data,
                         (goalsCall.await() as? ApiResult.Ok)?.data.orEmpty(),
@@ -212,13 +220,17 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
                 val isThisMonth = on == LocalDate.now().withDayOfMonth(1)
                 val available = s.data.available?.takeIf { isThisMonth }
                 val off = hidden ?: return@LazyColumn
-                val defaults = DashboardSection.entries.filter { it != DashboardSection.Available || available != null }
-                items(orderSections(order ?: s.data.savedOrder, defaults).filter { it.id !in off }, key = { it.id }) { section ->
+                val defaults = dashboardSections(hasAvailable = available != null)
+                val onShow = orderSections(order ?: s.data.savedOrder, defaults).filter { it.id !in off }
+                itemsIndexed(onShow, key = { _, it -> it.id }) { i, section ->
+                    // neighbouring summaries share the page, parted by a hairline
+                    if (section.isSummary && onShow.getOrNull(i - 1)?.isSummary == true) HorizontalDivider(Modifier.padding(bottom = 12.dp))
                     when (section) {
-                        DashboardSection.Available -> available?.let { AvailableCard(it, onOpenPlan) }
-                        DashboardSection.Metrics -> MonthStrip(s.data.totals, s.data.before)
+                        DashboardSection.Available -> available?.let { AvailableSummary(it, onOpenPlan) }
+                        DashboardSection.Metrics -> KeptSummary(s.data.totals, s.data.before, s.data.monthly)
                         DashboardSection.Spending -> SpendingCard(s.data.categories, s.data.totals.currency)
-                        DashboardSection.Balance -> NetWorthCard(s.data.trend, s.data.totals.currency)
+                        // net worth is on Accounts, as on iOS; the id stays because the saved order has it
+                        DashboardSection.Balance -> Unit
                         DashboardSection.Monthly -> CashFlowCard(s.data.monthly, s.data.totals.currency)
                         DashboardSection.Budget -> BudgetGoalsCard(s.data.budget, s.data.goals)
                         DashboardSection.SpendingTrend -> s.data.categoryMonths?.let { SpendingTrendCard(it) }
@@ -237,7 +249,7 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
             }
                 if (arranging) {
                     val available = s.data.available?.takeIf { on == LocalDate.now().withDayOfMonth(1) }
-                    val defaults = DashboardSection.entries.filter { it != DashboardSection.Available || available != null }
+                    val defaults = dashboardSections(hasAvailable = available != null)
                     val shown = orderSections(order ?: s.data.savedOrder, defaults)
                     ArrangeDashboard(
                         shown, defaults, hidden.orEmpty(),
@@ -262,37 +274,21 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
     }
 }
 
-/** The sum in words, like the web card's "Show the working" line. */
-private fun working(a: AvailableToSpend): String {
-    val parts = mutableListOf("${formatMoney(a.balance, a.currency)} in ${a.accounts.size} ${if (a.accounts.size == 1) "account" else "accounts"}")
-    if (a.bills.isNotEmpty()) parts += "less ${formatMoney(a.billsTotal, a.currency)} for ${a.bills.size} ${if (a.bills.size == 1) "bill" else "bills"}"
-    if (a.cardPayments.isNotEmpty()) parts += "${formatMoney(a.cardPaymentsTotal, a.currency)} for card payments"
-    if (a.reserved.isNotEmpty()) parts += "${formatMoney(a.reservedTotal, a.currency)} set aside"
-    return parts.joinToString(", ")
-}
-
 @Composable
-private fun AvailableCard(a: AvailableToSpend, onOpenPlan: () -> Unit) {
+private fun AvailableSummary(a: AvailableToSpend, onOpenPlan: () -> Unit) {
     val short = a.available.startsWith("-")
     var open by rememberSaveable { mutableStateOf(false) }
-    Surface(
-        shape = MaterialTheme.shapes.extraLarge,
-        color = if (short) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer,
-        contentColor = if (short) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onPrimaryContainer,
-    ) {
-        Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(if (short) "Short by" else "Available to spend", style = MaterialTheme.typography.labelLarge)
-            MoneyText(a.available.removePrefix("-"), a.currency, style = MaterialTheme.typography.headlineLarge)
-            Text("until ${shortDate(a.periodEnd)}", style = MaterialTheme.typography.bodySmall)
-            Text(working(a), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                TextButton(shapes = ButtonDefaults.shapes(), onClick = { open = !open }, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) {
-                    Text(if (open) "Hide the working" else "Show the working")
-                }
-                TextButton(shapes = ButtonDefaults.shapes(), onClick = onOpenPlan, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) { Text("Open the month plan") }
-            }
-            Disclosure(open) { Working(a) }
+    FlatSummary(if (short) MaterialTheme.colorScheme.error else SummaryBlue) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(if (short) "Short by" else "Available to spend", Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
+            SummaryPill("until ${shortDate(a.periodEnd)}")
         }
+        MoneyText(a.available.removePrefix("-"), a.currency, style = MaterialTheme.typography.displaySmall)
+        Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            SummaryPill(if (open) "Hide the working" else "Show the working") { open = !open }
+            SummaryPill("Month plan", onOpenPlan)
+        }
+        Disclosure(open) { Working(a) }
     }
 }
 
@@ -337,52 +333,30 @@ private fun Working(a: AvailableToSpend) {
     }
 }
 
-/** Income, Spent and Saved on one slim gradient strip, each with its change against last month. */
+/** What was kept this month, how spending moved, and the income split into kept and spent with the last six months' bars. */
 @Composable
-private fun MonthStrip(now: Totals, before: Totals) {
+private fun KeptSummary(now: Totals, before: Totals, months: List<MonthlyPoint>) {
     val saved = kept(now.income, now.expense)
-    val savedBefore = kept(before.income, before.expense)
-    val stops = Gradients.Emerald[0] to Gradients.Emerald[1]
-    val brush = Brush.horizontalGradient(
-        0f to stops.first, 0.22f to stops.second, 0.38f to Gradients.Rose[1], 0.5f to Gradients.Rose[0],
-        0.62f to Gradients.Rose[1], 0.78f to Gradients.Blue[1], 1f to Gradients.Blue[0],
-    )
-    Row(
-        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.extraLarge).background(brush).padding(vertical = 12.dp),
-    ) {
-        StripCell("Income", now.income, now.currency, percentChange(now.income, before.income), goodWhenUp = true, first = true, Modifier.weight(1f))
-        StripCell("Spent", now.expense, now.currency, percentChange(now.expense, before.expense), goodWhenUp = false, first = false, Modifier.weight(1f))
-        StripCell("Saved", saved, now.currency, percentChange(saved, savedBefore), goodWhenUp = true, first = false, Modifier.weight(1f))
-    }
-}
-
-@Composable
-private fun StripCell(label: String, amount: String, currency: String, percent: Double?, goodWhenUp: Boolean, first: Boolean, modifier: Modifier) {
-    val white = Color.White
-    Column(
-        modifier.padding(horizontal = 6.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(label, style = MaterialTheme.typography.labelSmall, color = white.copy(alpha = 0.78f))
-        // tight place: short from 10,000 up (the exact figure is on the Transactions totals later)
-        MoneyText(amount, currency, color = white, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp, fontWeight = FontWeight.SemiBold), textAlign = TextAlign.Center)
-        val rounded = percent?.let { Math.round(it).toInt() }
-        when {
-            rounded == null -> Unit
-            rounded == 0 -> Text("No change", style = MaterialTheme.typography.labelSmall, color = white.copy(alpha = 0.8f))
-            else -> {
-                val up = rounded > 0
-                // pale tints that read on the dark gradient; the arrow carries the meaning too
-                val tint = if (up == goodWhenUp) Color(0xFFA7F3D0) else Color(0xFFFECDD3)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(if (up) Icons.Outlined.ArrowUpward else Icons.Outlined.ArrowDownward, null, tint = tint, modifier = Modifier.height(12.dp))
-                    Text("${kotlin.math.abs(rounded)}%", style = MaterialTheme.typography.labelSmallEmphasized, color = tint)
-                }
-            }
+    val income = now.income.toBigDecimalOrNull() ?: BigDecimal.ZERO
+    val spent = now.expense.toBigDecimalOrNull() ?: BigDecimal.ZERO
+    FlatSummary(SummaryTeal) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Kept this month", Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
+            spendingChangeText(now.expense, before.expense)?.let { SummaryPill(it) }
+        }
+        MoneyText(saved, now.currency, style = MaterialTheme.typography.displaySmall)
+        // with no income there is nothing to divide
+        shareOf(spent, income)?.let { share ->
+            Text("of ${formatMoney(now.income, now.currency)} income", style = MaterialTheme.typography.bodySmall)
+            val rows = netRows(months.takeLast(6))
+            SummaryDonut(
+                DonutPart("Kept", 1f - share, formatMoney((income - spent).max(BigDecimal.ZERO).toPlainString(), now.currency)),
+                DonutPart("Spent", share, formatMoney(now.expense, now.currency)),
+                rows.mapIndexed { i, r -> MiniBar(monthShort(r.month).take(1), r.kept.toFloat(), i == rows.lastIndex) },
+            )
         }
     }
 }
-
 /** Ranked bars: the six biggest categories and the rest as Other. */
 @Composable
 private fun SpendingCard(categories: List<CategoryTotal>, currency: String) {

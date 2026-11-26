@@ -2,12 +2,19 @@
 
 package app.maalu.ui.screens
 
+import java.math.BigDecimal
+import app.maalu.ui.components.SummaryDonut
+import app.maalu.ui.components.SummaryBlue
+import app.maalu.ui.components.MiniBar
+import app.maalu.ui.components.FlatSummary
+import app.maalu.ui.components.DonutPart
+import app.maalu.data.shareOf
+import app.maalu.data.heldByGroup
 import app.maalu.ui.components.fadingEdges
 import app.maalu.ui.components.SpringBar
 import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
 import app.maalu.ui.theme.tintIcon
-import app.maalu.ui.theme.tintSurface
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -145,7 +152,7 @@ fun AccountsScreen(api: Api, onOpen: (Account) -> Unit) {
                 val groups = s.data.accounts.groupBy { it.group }
                 PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; attempt++ }, modifier = Modifier.fillMaxSize()) {
                     LazyColumn(Modifier.fillMaxSize().fadeInOnAppear().fadingEdges(listState), state = listState, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 96.dp)) {
-                        s.data.summary?.let { item { SummaryRow(it) } }
+                        s.data.summary?.let { item { NetWorthSummary(it, s.data.accounts) } }
                         if (s.data.accounts.isEmpty()) item { Text("No accounts yet. Add your first one.", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 24.dp)) }
                         groups.forEach { (group, list) ->
                             item(key = "h-$group") {
@@ -225,22 +232,22 @@ fun AccountsScreen(api: Api, onOpen: (Account) -> Unit) {
     if (adding) AccountFormScreen(api, all, null, onClose = { adding = false }, onSaved = { adding = false; attempt++; scope.launch { snackbar?.showSnackbar("Account added") } })
 }
 
-/** What you own, what you owe and what is left, each in its own tint. */
+/** What you are worth, and a donut of what you own against what you owe, with bars of what each type of account holds. */
 @Composable
-private fun SummaryRow(s: AccountSummary) {
-    Row(Modifier.fillMaxWidth().padding(bottom = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        SummaryCard("Assets", s.assets, s.currency, ChartColors.IncomeLight, Modifier.weight(1f))
-        SummaryCard("Liabilities", s.liabilities, s.currency, MaterialTheme.colorScheme.error, Modifier.weight(1f))
-        SummaryCard("Total", s.total, s.currency, ChartColors.Line, Modifier.weight(1f))
-    }
-}
-
-@Composable
-private fun SummaryCard(label: String, amount: String, currency: String, tint: androidx.compose.ui.graphics.Color, modifier: Modifier) {
-    Surface(modifier, shape = MaterialTheme.shapes.large, color = tint.tintSurface()) {
-        Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            MoneyText(amount, currency, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+private fun NetWorthSummary(s: AccountSummary, accounts: List<Account>) {
+    val assets = (s.assets.toBigDecimalOrNull() ?: BigDecimal.ZERO).abs()
+    val liabilities = (s.liabilities.toBigDecimalOrNull() ?: BigDecimal.ZERO).abs()
+    FlatSummary(SummaryBlue) {
+        Text("Net worth", style = MaterialTheme.typography.titleSmall)
+        MoneyText(s.total, s.currency, style = MaterialTheme.typography.displaySmall)
+        shareOf(liabilities, assets + liabilities)?.let { owed ->
+            val held = heldByGroup(accounts)
+            val biggest = held.maxOfOrNull { it.second }
+            SummaryDonut(
+                DonutPart("Assets", 1f - owed, formatMoney(assets.toPlainString(), s.currency)),
+                DonutPart("Liabilities", owed, formatMoney(liabilities.toPlainString(), s.currency)),
+                held.map { (group, total) -> MiniBar(groupLabel(group).take(1).uppercase(), total.toFloat(), total == biggest) },
+            )
         }
     }
 }

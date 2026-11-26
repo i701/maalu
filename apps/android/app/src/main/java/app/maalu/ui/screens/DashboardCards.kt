@@ -32,7 +32,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import app.maalu.data.BalancePoint
 import app.maalu.data.untilText
 import app.maalu.data.runningFixed
 import app.maalu.ui.components.TintChip
@@ -86,24 +85,6 @@ private fun statusColor(status: String): Color = when (status) {
     "over" -> MaterialTheme.colorScheme.error
     "warning" -> ChartColors.Warning
     else -> ChartColors.IncomeLight
-}
-
-@Composable
-fun NetWorthCard(points: List<BalancePoint>, currency: String) {
-    if (points.size < 2) return
-    val first = points.first().total.toBigDecimalOrNull() ?: return
-    val last = points.last().total.toBigDecimalOrNull() ?: return
-    val change = last - first
-    SectionCard("Net worth") {
-        MoneyText(points.last().total, currency, style = MaterialTheme.typography.headlineSmall)
-        // the arrow and the sign say which way it went, not only the colour
-        Text(
-            (if (change.signum() >= 0) "↑ " else "↓ ") + formatMoney(change.abs().toPlainString(), currency) + " this month",
-            style = MaterialTheme.typography.bodySmall,
-            color = if (change.signum() >= 0) ChartColors.IncomeLight else MaterialTheme.colorScheme.error,
-        )
-        LineChart(points.map { it.total.toDoubleOrNull() ?: 0.0 }, ChartColors.Line)
-    }
 }
 
 @Composable

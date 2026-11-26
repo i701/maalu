@@ -23,6 +23,13 @@ enum class DashboardSection(val id: String, val title: String) {
     Latest("latest", "Latest transactions"),
 }
 
+/** The two summaries at the top, drawn flat on the page. */
+val DashboardSection.isSummary: Boolean get() = this == DashboardSection.Available || this == DashboardSection.Metrics
+
+/** The cards there are, in the default order: net worth is on Accounts, and Available to spend is for the current period only. */
+fun dashboardSections(hasAvailable: Boolean): List<DashboardSection> =
+    DashboardSection.entries.filter { it != DashboardSection.Balance && (it != DashboardSection.Available || hasAvailable) }
+
 /** The cards on show in the saved order: ones the save does not know go last, in default order. Ported from the web's `orderSections`. */
 fun orderSections(saved: List<String>?, visible: List<DashboardSection>): List<DashboardSection> {
     val rank = saved.orEmpty().withIndex().associate { (i, id) -> id to i }

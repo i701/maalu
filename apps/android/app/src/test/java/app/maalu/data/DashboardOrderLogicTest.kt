@@ -25,4 +25,9 @@ class DashboardOrderLogicTest {
         assertEquals("""{"dashboard_order":null}""", dashboardOrderJson(null).toString())
         assertEquals("""{"dashboard_order":["balance"]}""", dashboardOrderJson(listOf("balance")).toString())
     }
+
+    @Test fun netWorthIsNotADashboardCard() {
+        assertEquals(false, Balance in dashboardSections(hasAvailable = true))
+        assertEquals(false, Available in dashboardSections(hasAvailable = false))
+    }
 }

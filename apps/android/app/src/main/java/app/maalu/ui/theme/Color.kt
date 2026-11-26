@@ -104,13 +104,6 @@ val Accents: Map<String, Color> = mapOf(
     "slate" to Color(0xFF64748B),
 )
 
-/** Deep two-stop gradients for tiles with white text on them (GRADIENT in m3.ts). */
-object Gradients {
-    val Emerald = listOf(Color(0xFF0F8A64), Color(0xFF04483A))
-    val Rose = listOf(Color(0xFFB3263F), Color(0xFF5F0F26))
-    val Blue = listOf(Color(0xFF1565C0), Color(0xFF0D3C78))
-}
-
 /** The order accents are handed out in when many chips sit side by side, so neighbours differ. */
 private val ChipPalette = listOf("blue", "violet", "pink", "amber", "green", "orange", "lime", "slate")
 
