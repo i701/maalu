@@ -93,6 +93,7 @@ private const val DiagramHeight = 290f
 private const val RowHeight = 38f
 private const val NodeWidth = 4.0
 private const val LabelHeight = 34.0
+private const val LabelGap = 4.0
 private const val BandAlpha = 0.32f
 private const val SelectedAlpha = 0.55f
 private const val DimmedAlpha = 0.12f
@@ -172,10 +173,10 @@ private fun MoneyFlowDiagram(flow: MoneyFlow, currency: String, size: DpSize? = 
             // tall enough for a label per node of the fullest column
             val height = size?.height ?: maxOf(DiagramHeight, flow.tallestColumn * RowHeight).dp
             val layout = remember(flow, width, height) {
-                layoutFlow(flow, (width - LabelWidth * 2).coerceAtLeast(0.dp).value.toDouble(), height.value.toDouble(), nodeWidth = NodeWidth)
+                layoutFlow(flow, (width - LabelWidth * 2).coerceAtLeast(0.dp).value.toDouble(), height.value.toDouble(), nodeWidth = NodeWidth, labelPitch = LabelHeight + LabelGap)
             }
             fun select(id: String?) { selectedId = if (id == selectedId) null else id }
-            Box(Modifier.width(width).height(height)) {
+            Box(Modifier.width(width).height(layout.height.dp)) {
                 Canvas(
                     Modifier.padding(horizontal = LabelWidth).fillMaxSize().pointerInput(layout) {
                         detectTapGestures { at -> select(layout.nodeIdAt(at.x / density.toDouble(), at.y / density.toDouble())) }
@@ -205,7 +206,7 @@ private fun MoneyFlowDiagram(flow: MoneyFlow, currency: String, size: DpSize? = 
                     val inner = col == 2 && flow.lastColumn == 3
                     val leftOfBar = col == 0 || inner
                     val side = layout.nodes.filter { it.node.column == col }
-                    val tops = spreadLabels(side.map { it.y + it.height / 2 - LabelHeight / 2 }, LabelHeight + 4, height.value - LabelHeight)
+                    val tops = spreadLabels(side.map { it.y + it.height / 2 - LabelHeight / 2 }, LabelHeight + LabelGap, layout.height - LabelHeight)
                     side.forEachIndexed { i, n ->
                         Column(
                             Modifier.width(LabelWidth - 8.dp)

@@ -91,4 +91,16 @@ class MoneyFlowGeometryTest {
         assertEquals(listOf(40.0, 70.0), treeTops(listOf("a", "b"), mapOf("a" to 50.0, "b" to 50.0), listOf(20.0, 20.0), 10.0, 100.0))
         assertEquals(listOf(80.0), treeTops(listOf("a"), mapOf("a" to 100.0), listOf(20.0), 10.0, 100.0))
     }
+
+    @Test fun everyLabelledNodeHasRoomForItsLabel() {
+        val many = flow(*(listOf(cat("Pay", "10000", "income"), cat("Rent", "3000"), cat("Food", "10")) +
+            (1..6).map { cat("Sub$it", "${it * 10}").copy(parent = "Food", parentId = "Food") }).toTypedArray())
+        val l = layoutFlow(many, 300.0, 100.0, labelPitch = 38.0)
+        l.nodes.filter { it.node.column != 1 }.groupBy { it.node.column }.values.forEach { column ->
+            column.map { it.y + it.height / 2 }.sorted().zipWithNext().forEach { (a, b) -> assertTrue("$a $b", b - a >= 38.0 - 1e-9) }
+        }
+        // it grew to fit them, and nothing runs off either end
+        assertTrue(l.height > 100.0)
+        assertTrue(l.nodes.all { it.y >= -1e-9 && it.y + it.height <= l.height + 1e-9 })
+    }
 }

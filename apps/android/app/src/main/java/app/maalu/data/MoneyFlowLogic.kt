@@ -72,8 +72,8 @@ data class PlacedNode(val node: FlowNode, val x: Double, val y: Double, val widt
 /** A link's centre line from the source to the target, to be stroked [thickness] wide: a curve with both control points at the middle x. */
 data class PlacedLink(val link: FlowLink, val x0: Double, val y0: Double, val x1: Double, val y1: Double, val thickness: Double)
 
-/** [seam] is where the incoming bands end and the outgoing ones begin: the middle of the (undrawn) total bar. */
-data class FlowLayout(val nodes: List<PlacedNode>, val links: List<PlacedLink>, val seam: Double)
+/** [seam] is where the incoming bands end and the outgoing ones begin: the middle of the (undrawn) total bar. [height] is what the nodes take. */
+data class FlowLayout(val nodes: List<PlacedNode>, val links: List<PlacedLink>, val seam: Double, val height: Double)
 
 /**
  * Where what each group was spent on starts: it fans out like a tree. A group's items are centred on their group (so they may
@@ -99,9 +99,10 @@ fun treeTops(parents: List<String>, centers: Map<String, Double>, heights: List<
 /**
  * Positions the nodes and links in a [width] by [height] box: one column per side with the total in the middle, heights in proportion to the
  * money (the same scale everywhere), each column centred vertically, links stacked along the sides of the nodes in the order of the nodes. A
- * node never gets thinner than [minHeight], so a tiny category stays visible.
+ * node never gets thinner than [minHeight], so a tiny category stays visible. With [labelPitch], each labelled node has at least that much
+ * room to itself, so its label can sit beside it; the diagram then grows past [height] when the labels need it.
  */
-fun layoutFlow(flow: MoneyFlow, width: Double, height: Double, nodeWidth: Double = 4.0, gap: Double = 8.0, minHeight: Double = 4.0): FlowLayout {
+fun layoutFlow(flow: MoneyFlow, width: Double, height: Double, nodeWidth: Double = 4.0, gap: Double = 8.0, minHeight: Double = 4.0, labelPitch: Double = 0.0): FlowLayout {
     val total = flow.nodes.firstOrNull { it.kind == FlowKind.Total }?.value ?: 1.0
     val columns = (0..flow.lastColumn).map { c -> flow.nodes.filter { it.column == c } }
     val tallest = columns.maxOf { it.size }
@@ -109,16 +110,19 @@ fun layoutFlow(flow: MoneyFlow, width: Double, height: Double, nodeWidth: Double
     // with a fourth column the total moves left and the last gap is shorter: it holds only thin bands
     val stops = if (flow.lastColumn == 3) listOf(0.0, 0.3, 0.76, 1.0) else listOf(0.0, 0.5, 1.0)
     val xs = stops.map { it * (width - nodeWidth) }
+    val heights = columns.map { col -> col.map { maxOf(minHeight, it.value * scale) } }
+    // a node's slot: its own height, or the room its label needs (the total, in column 1, has none)
+    val slots = heights.mapIndexed { c, col -> if (c == 1) col else col.map { maxOf(it, labelPitch - gap) } }
+    val full = maxOf(height, slots.maxOf { it.sum() + gap * maxOf(0, it.size - 1) })
     val placed = LinkedHashMap<String, PlacedNode>()
     columns.forEachIndexed { c, col ->
-        val heights = col.map { maxOf(minHeight, it.value * scale) }
-        val used = heights.sum() + gap * maxOf(0, col.size - 1)
-        var y = (height - used) / 2
+        var y = (full - slots[c].sum() - gap * maxOf(0, col.size - 1)) / 2
         val tops = if (c == 3) treeTops(
             col.map { n -> flow.links.first { it.target == n.id }.source },
-            placed.mapValues { it.value.y + it.value.height / 2 }, heights, gap, height,
-        ) else heights.map { h -> y.also { y += h + gap } }
-        col.forEachIndexed { i, n -> placed[n.id] = PlacedNode(n, xs[c], tops[i], nodeWidth, heights[i]) }
+            placed.mapValues { it.value.y + it.value.height / 2 }, slots[c], gap, full,
+        ) else slots[c].map { h -> y.also { y += h + gap } }
+        // the node sits in the middle of its slot
+        col.forEachIndexed { i, n -> placed[n.id] = PlacedNode(n, xs[c], tops[i] + (slots[c][i] - heights[c][i]) / 2, nodeWidth, heights[c][i]) }
     }
     fun spanOut(n: PlacedNode) = flow.links.filter { it.source == n.node.id }.sumOf { it.value * scale }
     fun spanIn(n: PlacedNode) = flow.links.filter { it.target == n.node.id }.sumOf { it.value * scale }
@@ -134,7 +138,7 @@ fun layoutFlow(flow: MoneyFlow, width: Double, height: Double, nodeWidth: Double
         inCursor[to.node.id] = endTop + thickness
         PlacedLink(link, from.x + from.width, startTop + thickness / 2, to.x, endTop + thickness / 2, thickness)
     }
-    return FlowLayout(placed.values.toList(), links, xs[1] + nodeWidth / 2)
+    return FlowLayout(placed.values.toList(), links, xs[1] + nodeWidth / 2, full)
 }
 
 /** Keeps stacked labels apart: each centre at least [gap] from the one above, kept inside 0..[limit] (port of spreadLabels). */
