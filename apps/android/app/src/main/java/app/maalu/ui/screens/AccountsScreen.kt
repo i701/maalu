@@ -252,8 +252,11 @@ private fun AccountRow(a: Account, trend: List<Double>?, baseCurrency: String) {
             Text(a.name.firstOrNull()?.uppercase() ?: "?", style = MaterialTheme.typography.labelLargeEmphasized, color = tint)
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(a.name, style = MaterialTheme.typography.bodyMediumEmphasized, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            a.bank?.takeIf { it.isNotBlank() }?.let { BankChip(it) }
+            // the chip sits beside the name, as on iOS; a long name gives way to it
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(a.name, Modifier.weight(1f, fill = false), style = MaterialTheme.typography.bodyMediumEmphasized, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                a.bank?.takeIf { it.isNotBlank() }?.let { BankChip(it) }
+            }
             a.accountNumber?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis) }
             creditUsage(a.balance, a.creditLimit)?.let { u ->
                 val color = when { u.percent >= 90 -> MaterialTheme.colorScheme.error; u.percent >= 60 -> ChartColors.Warning; else -> ChartColors.IncomeLight }
