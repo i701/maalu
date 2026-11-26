@@ -72,6 +72,7 @@ import app.maalu.data.CreditLimitGroups
 import app.maalu.data.creditUsage
 import app.maalu.data.formatMoney
 import app.maalu.data.groupLabel
+import app.maalu.ui.components.BankChip
 import app.maalu.ui.components.MoneyText
 import app.maalu.ui.components.MorphTile
 import app.maalu.ui.components.Sparkline
@@ -252,8 +253,8 @@ private fun AccountRow(a: Account, trend: List<Double>?, baseCurrency: String) {
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(a.name, style = MaterialTheme.typography.bodyMediumEmphasized, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            val sub = listOfNotNull(a.bank, a.accountNumber).joinToString(" · ")
-            if (sub.isNotEmpty()) Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            a.bank?.takeIf { it.isNotBlank() }?.let { BankChip(it) }
+            a.accountNumber?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis) }
             creditUsage(a.balance, a.creditLimit)?.let { u ->
                 val color = when { u.percent >= 90 -> MaterialTheme.colorScheme.error; u.percent >= 60 -> ChartColors.Warning; else -> ChartColors.IncomeLight }
                 SpringBar(u.percent / 100f, color, 5.dp, Modifier.padding(top = 4.dp), minVisible = 0.03f)

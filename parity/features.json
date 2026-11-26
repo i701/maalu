@@ -332,7 +332,11 @@
         ]
       },
       "android": {
-        "status": "missing"
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/components/BankChip.kt",
+          "apps/android/app/src/main/java/app/maalu/data/BankLogic.kt"
+        ]
       },
       "ios": {
         "status": "done",
@@ -1651,7 +1655,12 @@
         ]
       },
       "android": {
-        "status": "missing"
+        "status": "partial",
+        "note": "Shows the name in the Dashboard's title; it is set on the web, as the app has no sign-up and no profile edit yet.",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/Shell.kt",
+          "apps/android/app/src/main/java/app/maalu/data/Models.kt"
+        ]
       },
       "ios": {
         "status": "partial",

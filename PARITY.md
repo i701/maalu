@@ -9,20 +9,19 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 78 | 60 | 65 |
-| 🟡 partial | 0 | 1 | 1 |
-| ❌ missing | 0 | 14 | 6 |
+| ✅ done | 78 | 61 | 65 |
+| 🟡 partial | 0 | 2 | 1 |
+| ❌ missing | 0 | 12 | 6 |
 | ➖ n/a | 2 | 5 | 7 |
 | 🗓 planned | 0 | 0 | 1 |
 
-## Still to build on Android (15)
+## Still to build on Android (14)
 
+- 🟡 **Your name** (Sign in and security). Shows the name in the Dashboard's title; it is set on the web, as the app has no sign-up and no profile edit yet.
 - 🟡 **Email digest** (Notifications). The switch and the email status are in Settings; sending a test email is not.
-- ❌ **Bank chip with logo beside the account name** (Accounts and cards).
 - ❌ **Quiet list and detail sheet** (Transactions).
 - ❌ **Export to Excel** (Transactions).
 - ❌ **Spent this month and limit per category** (Categories, tags and vendors).
-- ❌ **Your name** (Sign in and security).
 - ❌ **Spending by month, stacked by category** (Dashboard and reports).
 - ❌ **Dashboard card deck** (Dashboard and reports).
 - ❌ **Transfer as two slabs** (Transactions).
@@ -56,12 +55,13 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Change password**<br>Current password, a new one twice, and a code when two-factor is on. | ✅ done | ✅ done | ✅ done |
 | **Sign-in alerts**<br>The switch for the email sent at every sign-in. | ✅ done | ✅ done | ✅ done |
 | **API keys**<br>Keys for bots, scripts and agents with chosen permissions, an end date and rotation. | ✅ done | ➖ n/a | ➖ n/a |
-| **Your name**<br>An optional name (up to 80 characters) set at sign-up or in Profile, kept on the server; the Dashboard greets you with it. | ✅ done | ❌ missing | 🟡 partial |
+| **Your name**<br>An optional name (up to 80 characters) set at sign-up or in Profile, kept on the server; the Dashboard greets you with it. | ✅ done | 🟡 partial | 🟡 partial |
 
 - **Create the first account** (Android): The app has no Create account: an account is made on the web or with just seed.
 - **Create the first account** (iOS): Same as Android: the app has no Create account.
 - **API keys** (Android): Web only, by choice: API keys are managed on the web.
 - **API keys** (iOS): Web only, by choice: API keys are managed on the web.
+- **Your name** (Android): Shows the name in the Dashboard's title; it is set on the web, as the app has no sign-up and no profile edit yet.
 - **Your name** (iOS): Shows the name in the Dashboard greeting; it is set on the web, as the app has no sign-up and no profile edit yet.
 
 ## Accounts and cards
@@ -69,7 +69,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | Feature | Web | Android | iOS |
 |---|:---:|:---:|:---:|
 | **Accounts list**<br>Accounts by group with balances, credit use, small balance lines, the net worth summary, a bank filter and grouping by bank. | ✅ done | ✅ done | ✅ done |
-| **Bank chip with logo beside the account name**<br>The bank an account is with shows as a chip next to its name: MIB and BML with their logo and the bank's colour, any other bank as a plain grey chip. On the web the bank filter chips carry the logos too. | ✅ done | ❌ missing | ✅ done |
+| **Bank chip with logo beside the account name**<br>The bank an account is with shows as a chip next to its name: MIB and BML with their logo and the bank's colour, any other bank as a plain grey chip. On the web the bank filter chips carry the logos too. | ✅ done | ✅ done | ✅ done |
 | **Add and edit an account**<br>Group, bank and number, currency and rate, credit limit, statement days, spendable switch, exclude from stats. | ✅ done | ✅ done | ✅ done |
 | **Archive and unarchive an account**<br>Hide an account without losing its history. | ✅ done | ✅ done | ✅ done |
 | **Adjust balance**<br>Set the balance to what the bank shows, or add or take away, as a transaction that reports ignore. | ✅ done | ✅ done | ✅ done |

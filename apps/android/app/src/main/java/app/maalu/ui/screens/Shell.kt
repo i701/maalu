@@ -107,9 +107,10 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
     var month by rememberSaveable { mutableStateOf(LocalDate.now().withDayOfMonth(1).toString()) }
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val snackbar = remember { androidx.compose.material3.SnackbarHostState() }
-    // the short-numbers setting is the person's, so it is read once when the app opens
-    androidx.compose.runtime.LaunchedEffect(Unit) {
-        (api.get<app.maalu.data.UserMe>("users/me") as? app.maalu.data.ApiResult.Ok)?.let { app.maalu.data.NumberPrefs.short = it.data.compactNumbers }
+    // the person's own: the short-numbers setting, and the name (set on the web) that the Dashboard greets them with
+    var name by rememberSaveable { mutableStateOf<String?>(null) }
+    androidx.compose.runtime.LaunchedEffect(route, selected) {
+        (api.get<app.maalu.data.UserMe>("users/me") as? app.maalu.data.ApiResult.Ok)?.let { app.maalu.data.NumberPrefs.short = it.data.compactNumbers; name = it.data.name }
     }
     // the bell's count: asked again whenever the screen changes and after the notifications page changes something
     var unread by remember { mutableIntStateOf(0) }
@@ -160,7 +161,10 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
             modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
             topBar = {
                 MediumFlexibleTopAppBar(
-                    title = { Text(destination?.label ?: if (onAccountPage) openAccountName else Tabs[selected].label) },
+                    title = {
+                        val title = destination?.label ?: if (onAccountPage) openAccountName else if (selected == DASHBOARD) app.maalu.data.dashboardTitle(name) else Tabs[selected].label
+                        Text(title, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                    },
                     navigationIcon = {
                         // on an account's page the button goes back to the list; elsewhere it opens the drawer
                         if (onGuide) IconButton(onClick = { docSlug = null }) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back to the guides") }
