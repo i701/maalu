@@ -1,5 +1,9 @@
 package app.maalu.ui.components
 
+import androidx.compose.ui.unit.Dp
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
+import app.maalu.ui.theme.DarkColors
 import app.maalu.ui.theme.chosenColors
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.Color
@@ -34,6 +38,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
+/** The dark theme's primary container and its ink, which light mode borrows for the icon switcher. */
+private val DeepBlue = DarkColors.primaryContainer
+private val OnDeepBlue = DarkColors.onPrimaryContainer
+
 /** How long a segment stays widened after a tap lifts (my design decision: M3 gives no value). */
 private const val MIN_WIDEN_MS = 140L
 
@@ -56,57 +64,63 @@ fun <T> SegmentedPills(
     /** Gives each segment a colour of its own when chosen, the others white: for a switcher on the backdrop. */
     tint: (@Composable (T) -> Color)? = null,
 ) {
-    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)) {
-        options.forEachIndexed { i, (value, label) ->
-            val isSelected = value == selected
-            val source = remember { MutableInteractionSource() }
-            // a tap is over in ~100ms, too short for the spring to show, so the widened state outlasts the finger a little
-            var widened by remember { mutableStateOf(false) }
-            // read the raw press events, not the `pressed` state: inside a scrolling parent a quick tap reports its press and
-            // release together, and state is only compared once a frame, so the composition would never see it pressed
-            LaunchedEffect(source) {
-                var held = false
-                coroutineScope {
-                    source.interactions.collect { event ->
-                        when (event) {
-                            is PressInteraction.Press -> { held = true; widened = true }
-                            is PressInteraction.Release, is PressInteraction.Cancel -> {
-                                held = false
-                                launch { delay(MIN_WIDEN_MS); if (!held) widened = false }
+    // segments are 40dp: the 48dp minimum would draw a shadow around more than the button; Compose still widens the touch target
+    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
+        Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)) {
+            options.forEachIndexed { i, (value, label) ->
+                val isSelected = value == selected
+                val source = remember { MutableInteractionSource() }
+                // a tap is over in ~100ms, too short for the spring to show, so the widened state outlasts the finger a little
+                var widened by remember { mutableStateOf(false) }
+                // read the raw press events, not the `pressed` state: inside a scrolling parent a quick tap reports its press and
+                // release together, and state is only compared once a frame, so the composition would never see it pressed
+                LaunchedEffect(source) {
+                    var held = false
+                    coroutineScope {
+                        source.interactions.collect { event ->
+                            when (event) {
+                                is PressInteraction.Press -> { held = true; widened = true }
+                                is PressInteraction.Release, is PressInteraction.Cancel -> {
+                                    held = false
+                                    launch { delay(MIN_WIDEN_MS); if (!held) widened = false }
+                                }
                             }
                         }
                     }
                 }
-            }
-            // a pressed segment asks for a bigger share of the row, so the others shrink
-            val share by animateFloatAsState(if (widened) 1.5f else 1f, MaterialTheme.motionScheme.fastSpatialSpec(), label = "share")
-            val shapes = when {
-                options.size == 1 -> ToggleButtonDefaults.shapesFor(40.dp)
-                i == 0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                i == options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-            // the spec's pressed shape for a 40dp button is 8dp on every corner, round or square, ends included
-            }.copy(pressedShape = RoundedCornerShape(8.dp))
-            val accent = tint?.invoke(value)
-            val surface = MaterialTheme.colorScheme.surfaceContainerLow
-            val (chosen, onChosen) = chosenColors()
-            ToggleButton(
-                checked = isSelected,
-                onCheckedChange = { onSelect(value) },
-                modifier = Modifier.weight(share).height(40.dp),
-                enabled = enabled,
-                shapes = shapes,
-                colors = ToggleButtonDefaults.colors(
-                    containerColor = if (accent != null) surface else MaterialTheme.colorScheme.surfaceContainerHigh,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    checkedContainerColor = accent?.let { lerp(surface, it, 0.3f) } ?: chosen,
-                    checkedContentColor = if (accent != null) MaterialTheme.colorScheme.onSurface else onChosen,
-                ),
-                contentPadding = PaddingValues(horizontal = 8.dp),
-                interactionSource = source,
-            ) {
-                if (icon != null) Icon(icon(value), contentDescription = label, modifier = Modifier.size(20.dp))
-                else Text(label, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                // a pressed segment asks for a bigger share of the row, so the others shrink
+                val share by animateFloatAsState(if (widened) 1.5f else 1f, MaterialTheme.motionScheme.fastSpatialSpec(), label = "share")
+                val shapes = when {
+                    options.size == 1 -> ToggleButtonDefaults.shapesFor(40.dp)
+                    i == 0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                    i == options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                    else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                // the spec's pressed shape for a 40dp button is 8dp on every corner, round or square, ends included
+                }.copy(pressedShape = RoundedCornerShape(8.dp))
+                val accent = tint?.invoke(value)
+                val surface = MaterialTheme.colorScheme.surfaceContainerLow
+                // an icon switcher sits bare on the backdrop, so its chosen segment is the deep blue of dark mode in both themes
+                val (chosen, onChosen) = if (icon != null) DeepBlue to OnDeepBlue else chosenColors()
+                ToggleButton(
+                    checked = isSelected,
+                    onCheckedChange = { onSelect(value) },
+                    // the shadow takes the segment's resting or chosen shape; for the instant of a press the shape morphs past it
+                    modifier = Modifier.weight(share).height(40.dp)
+                        .then(if (icon != null) Modifier.elevation(2, if (isSelected) shapes.checkedShape else shapes.shape) else Modifier),
+                    enabled = enabled,
+                    shapes = shapes,
+                    colors = ToggleButtonDefaults.colors(
+                        containerColor = if (accent != null || icon != null) surface else MaterialTheme.colorScheme.surfaceContainerHigh,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        checkedContainerColor = accent?.let { lerp(surface, it, 0.3f) } ?: chosen,
+                        checkedContentColor = if (accent != null) MaterialTheme.colorScheme.onSurface else onChosen,
+                    ),
+                    contentPadding = PaddingValues(horizontal = 8.dp),
+                    interactionSource = source,
+                ) {
+                    if (icon != null) Icon(icon(value), contentDescription = label, modifier = Modifier.size(20.dp))
+                    else Text(label, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
             }
         }
     }
