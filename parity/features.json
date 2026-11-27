@@ -333,6 +333,7 @@
       },
       "android": {
         "status": "done",
+        "note": "On the Accounts list a bank with a logo shows it on a circle of the bank's colour in place of the initial, with no chip.",
         "evidence": [
           "apps/android/app/src/main/java/app/maalu/ui/components/BankChip.kt",
           "apps/android/app/src/main/java/app/maalu/data/BankLogic.kt"

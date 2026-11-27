@@ -80,7 +80,9 @@ import app.maalu.data.CreditLimitGroups
 import app.maalu.data.creditUsage
 import app.maalu.data.formatMoney
 import app.maalu.data.groupLabel
+import app.maalu.ui.components.BankAvatar
 import app.maalu.ui.components.BankChip
+import app.maalu.data.bankBrand
 import app.maalu.ui.components.MoneyText
 import app.maalu.ui.components.MorphTile
 import app.maalu.ui.components.Sparkline
@@ -254,14 +256,16 @@ private fun NetWorthSummary(s: AccountSummary, accounts: List<Account>) {
 @Composable
 private fun AccountRow(a: Account, trend: List<Double>?, baseCurrency: String) {
     Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Box(Modifier.size(36.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceContainerHighest), contentAlignment = Alignment.Center) {
+        val brand = a.bank?.let(::bankBrand)
+        if (brand != null) BankAvatar(brand)
+        else Box(Modifier.size(36.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceContainerHighest), contentAlignment = Alignment.Center) {
             Text(a.name.firstOrNull()?.uppercase() ?: "?", style = MaterialTheme.typography.labelLargeEmphasized, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            // the chip sits beside the name, as on iOS; a long name gives way to it
+            // a bank without a logo is named in a chip beside the name; a long name gives way to it
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(a.name, Modifier.weight(1f, fill = false), style = MaterialTheme.typography.bodyMediumEmphasized, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                a.bank?.takeIf { it.isNotBlank() }?.let { BankChip(it) }
+                a.bank?.takeIf { brand == null && it.isNotBlank() }?.let { BankChip(it) }
             }
             a.accountNumber?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis) }
             creditUsage(a.balance, a.creditLimit)?.let { u ->

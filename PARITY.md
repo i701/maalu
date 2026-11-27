@@ -71,6 +71,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Cards**<br>Debit cards on a bank account and credit cards with a repayment account; a Card field on a purchase and a card filter. | ✅ done | ✅ done | ✅ done |
 | **Credit card statements and due dates**<br>The statement balance, what is left, the due date and a Repay button, worked out each time. | ✅ done | ✅ done | ✅ done |
 
+- **Bank chip with logo beside the account name** (Android): On the Accounts list a bank with a logo shows it on a circle of the bank's colour in place of the initial, with no chip.
+
 ## Transactions
 
 | Feature | Web | Android | iOS |
