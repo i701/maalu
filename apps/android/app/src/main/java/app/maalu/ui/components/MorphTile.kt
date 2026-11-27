@@ -55,7 +55,8 @@ fun MorphTile(
     val top by animateDpAsState(corner(first), spring, label = "top")
     val bottom by animateDpAsState(corner(last), spring, label = "bottom")
     val shape = RoundedCornerShape(topStart = top, topEnd = top, bottomStart = bottom, bottomEnd = bottom)
-    val raised = modifier.elevation(2, shape)
+    // one level only: tiles sit 2dp apart, so deeper layers pile up in the gaps and under the last one
+    val raised = modifier.elevation(1, shape)
     if (onLongClick == null) Surface(onClick = onClick, modifier = raised, shape = shape, color = fill, interactionSource = source, content = content)
     else Surface(
         modifier = raised.clip(shape).combinedClickable(interactionSource = source, indication = ripple(), onClick = onClick, onLongClick = onLongClick),
