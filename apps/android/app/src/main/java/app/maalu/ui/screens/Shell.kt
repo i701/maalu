@@ -2,6 +2,13 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.R
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -22,12 +29,8 @@ import androidx.compose.material.icons.outlined.Savings
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -67,29 +70,30 @@ val LocalSnackbar = androidx.compose.runtime.staticCompositionLocalOf<androidx.c
 
 private data class Tab(val label: String, val icon: ImageVector)
 
-// The bottom bar keeps the four places used all the time; every destination (these four included) is in the drawer.
+// The bottom bar keeps the four places used all the time; everything else is under More.
 private val Tabs = listOf(
     Tab("Dashboard", Icons.Outlined.GridView),
     Tab("Transactions", Icons.Outlined.ReceiptLong),
     Tab("Accounts", Icons.Outlined.AccountBalance),
     Tab("Budget", Icons.Outlined.Savings),
+    Tab("More", Icons.Outlined.MoreHoriz),
 )
 
 private const val DASHBOARD = 0
 private const val TRANSACTIONS = 1
 private const val ACCOUNTS = 2
 private const val BUDGET = 3
+private const val MORE = 4
 
 /**
- * The signed-in frame: a sidebar drawer with every destination (a menu button opens it, or swipe from the left edge),
- * a top app bar that holds the screen's name and collapses as the content scrolls, and the bottom bar with the four
- * everyday places. Dashboard, Transactions, Accounts, Budget, Categories, Tags, Vendors, Subscriptions, Month plan and Settings are real; the other destinations are placeholders.
+ * The signed-in frame: a top app bar that holds the screen's name and collapses as the content scrolls, and the bottom bar
+ * with the four everyday places and More, which lists every other destination.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun Shell(api: Api, themeMode: ThemeMode, onThemeMode: (ThemeMode) -> Unit, onSignOut: () -> Unit) {
     var selected by rememberSaveable { mutableIntStateOf(0) }
-    // a destination reached only from the drawer, or null while one of the four tabs is showing
+    // a destination opened from More (or from inside another screen), or null while a tab is showing
     var route by rememberSaveable { mutableStateOf<String?>(null) }
     val destination = destinationById(route)
     // the guide open in Docs (its slug), so the top bar can offer a way back to the list
@@ -97,9 +101,8 @@ fun Shell(api: Api, themeMode: ThemeMode, onThemeMode: (ThemeMode) -> Unit, onSi
     // an account's own page (its id and name), opened from the Accounts tab
     var openAccountId by rememberSaveable { mutableStateOf<String?>(null) }
     var openAccountName by rememberSaveable { mutableStateOf("") }
-    val drawer = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-    // back from a drawer destination returns to the tab you were on
+    // back from a destination returns to the tab you were on
     androidx.activity.compose.BackHandler(enabled = destination != null) { route = null }
     androidx.activity.compose.BackHandler(enabled = destination == null && openAccountId != null) { openAccountId = null }
     // the month lives here so the app bar can move it for the Dashboard, the Budget and the Categories
@@ -136,21 +139,6 @@ fun Shell(api: Api, themeMode: ThemeMode, onThemeMode: (ThemeMode) -> Unit, onSi
     // leaving Docs closes the guide, so coming back starts at the list
     androidx.compose.runtime.LaunchedEffect(route) { if (route != "docs") docSlug = null }
     val monthly = (onTab && !onAccountPage && (selected == DASHBOARD || selected == BUDGET)) || destination?.id == "categories"
-    // the drawer's highlighted item: the open destination, else the tab
-    val selectedId = destination?.id ?: MoreDestinations.firstOrNull { it.tabIndex == selected }?.id
-    ModalNavigationDrawer(
-        drawerState = drawer,
-        drawerContent = {
-            AppDrawer(
-                selectedId = selectedId, themeMode = themeMode, onThemeMode = onThemeMode, badges = mapOf("pending" to pending),
-                onOpen = { d ->
-                    if (d.tabIndex != null) { selected = d.tabIndex; route = null } else route = d.id
-                    scope.launch { drawer.close() }
-                },
-                onSignOut = { scope.launch { drawer.close() }; onSignOut() },
-            )
-        },
-    ) {
         androidx.compose.runtime.CompositionLocalProvider(LocalSnackbar provides snackbar) { Scaffold(
             // clear, so the backdrop shows through the page and its top bar
             containerColor = androidx.compose.ui.graphics.Color.Transparent,
@@ -161,16 +149,18 @@ fun Shell(api: Api, themeMode: ThemeMode, onThemeMode: (ThemeMode) -> Unit, onSi
                 MediumFlexibleTopAppBar(
                     title = {
                         val title = destination?.label ?: if (onAccountPage) openAccountName else if (selected == DASHBOARD) app.maalu.data.dashboardTitle(name) else Tabs[selected].label
-                        Text(title, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                        if (onTab && selected == MORE) Brand()
+                        else Text(title, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                     },
                     navigationIcon = {
-                        // on an account's page the button goes back to the list; elsewhere it opens the drawer
+                        // only a screen opened on top of a tab has somewhere to go back to
                         if (onGuide) IconButton(onClick = { docSlug = null }) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back to the guides") }
                         else if (onAccountPage) IconButton(onClick = { openAccountId = null }) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back to accounts") }
-                        else IconButton(onClick = { scope.launch { drawer.open() } }) { Icon(Icons.Outlined.Menu, "Open the menu") }
+                        else if (!onTab) IconButton(onClick = { route = null }) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back") }
                     },
                     subtitle = if (monthly) ({ Text(monthLabel(LocalDate.parse(month))) }) else null,
                     actions = {
+                        if (onTab && selected == MORE) IconButton(onClick = { route = "settings" }) { Icon(Icons.Outlined.Settings, "Settings") }
                         IconButton(onClick = { route = "notifications" }) {
                             androidx.compose.material3.BadgedBox(badge = {
                                 if (unread > 0) androidx.compose.material3.Badge { Text(app.maalu.data.badgeText(unread)) }
@@ -193,11 +183,15 @@ fun Shell(api: Api, themeMode: ThemeMode, onThemeMode: (ThemeMode) -> Unit, onSi
                 NavigationBar {
                     Tabs.forEachIndexed { i, tab ->
                         NavigationBarItem(
-                            // nothing is highlighted while a drawer-only destination is open
-                            selected = onTab && selected == i,
+                            // More stays lit on a screen opened from it; one opened from another tab lights nothing
+                            selected = selected == i && (onTab || i == MORE),
                             // choosing the Accounts tab again from an account's page goes back to the list
                             onClick = { if (i == ACCOUNTS) openAccountId = null; selected = i; route = null },
-                            icon = { Icon(tab.icon, contentDescription = null) },
+                            icon = {
+                                androidx.compose.material3.BadgedBox(badge = {
+                                    if (i == MORE && pending > 0) androidx.compose.material3.Badge { Text(app.maalu.data.badgeText(pending)) }
+                                }) { Icon(tab.icon, contentDescription = if (i == MORE && pending > 0) "$pending waiting" else null) }
+                            },
                             // one line: "Transactions" wrapped at 360dp wide at the default size
                             label = { Text(tab.label, style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false) },
                         )
@@ -234,7 +228,6 @@ fun Shell(api: Api, themeMode: ThemeMode, onThemeMode: (ThemeMode) -> Unit, onSi
                         "notifications" -> NotificationsScreen(api, onChanged = { bellTick++ }, onOpen = openTarget)
                         "docs" -> DocsScreen(slug = docSlug, onSlug = { docSlug = it }, onOpenApp = openTarget)
                         "plan" -> PlanScreen(api, onOpenAccount = { id, name -> openAccountId = id; openAccountName = name; selected = ACCOUNTS; route = null })
-                        else -> ComingSoon(dest)
                     }
                     else when (tab) {
                         DASHBOARD -> DashboardScreen(api, month, onOpenPlan = { route = "plan" })
@@ -245,10 +238,21 @@ fun Shell(api: Api, themeMode: ThemeMode, onThemeMode: (ThemeMode) -> Unit, onSi
                             else AccountDetailScreen(api, id, onBack = { openAccountId = null })
                         }
                         BUDGET -> BudgetScreen(api, month)
+                        MORE -> MoreScreen(themeMode, onThemeMode, onOpen = { route = it.id }, onSignOut = onSignOut, badges = mapOf("pending" to pending))
                     }
                 }
             }
         }
         }
+}
+
+/** The mark and name, heading the More tab. */
+@Composable
+private fun Brand() {
+    // its own navy in light mode, the icon's pale blue in dark, where navy would vanish
+    val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Icon(painterResource(R.drawable.maalu_mark), null, Modifier.size(36.dp), tint = if (dark) Color(0xFFDFF3FB) else Color(0xFF001D4A))
+        Text("Maalu")
     }
 }

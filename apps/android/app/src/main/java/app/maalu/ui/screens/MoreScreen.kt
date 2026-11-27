@@ -2,112 +2,126 @@
 
 package app.maalu.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Article
 import androidx.compose.material.icons.outlined.Bookmark
+import androidx.compose.material.icons.outlined.BrightnessAuto
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.Checklist
-import androidx.compose.material.icons.outlined.AccountBalance
+import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.GridView
-import androidx.compose.material.icons.outlined.ReceiptLong
-import androidx.compose.material.icons.outlined.Savings
-import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.EventRepeat
 import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.Inventory2
+import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Logout
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Sell
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.ShowChart
 import androidx.compose.material.icons.outlined.Storefront
 import androidx.compose.material.icons.outlined.TaskAlt
-import androidx.compose.material.icons.outlined.UploadFile
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Badge
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.maalu.data.ThemeMode
+import app.maalu.data.badgeText
 import app.maalu.ui.components.MorphTile
 import app.maalu.ui.components.SegmentedPills
 
-/** The web's navigation groups, in order: where every destination sits in the sidebar and in More. */
-enum class NavGroup(val label: String) { Money("Money"), Planning("Planning"), Organise("Organise"), Help("Help"), App("This app") }
+/** The groups of the More tab, in order; [App] holds screens reached from a button, which More does not list. */
+enum class NavGroup(val label: String) { Planning("Planning"), Reports("Reports"), Organise("Organise"), Help("Help"), App("This app") }
 
-/** One place in the app that is not in the bottom bar. Icons and colours follow the web's `NAV_ITEMS`. */
-data class Destination(
-    val id: String,
-    val label: String,
-    val icon: ImageVector,
-    val group: NavGroup,
-    /** What it is for, shown on the page that stands in until the real screen exists. */
-    val blurb: String,
-    /** The bottom bar tab this opens, or null for a screen reached only from the drawer. */
-    val tabIndex: Int? = null,
-    /** False for a screen opened from somewhere else (the bell), so the drawer does not list it. */
-    val inDrawer: Boolean = true,
-)
+/** One place in the app that is not in the bottom bar. */
+data class Destination(val id: String, val label: String, val icon: ImageVector, val group: NavGroup)
 
 val MoreDestinations: List<Destination> = listOf(
-    Destination("dashboard", "Dashboard", Icons.Outlined.GridView, NavGroup.Money, "Your month at a glance.", tabIndex = 0),
-    Destination("transactions", "Transactions", Icons.Outlined.ReceiptLong, NavGroup.Money, "Everything you spent and received.", tabIndex = 1),
-    Destination("accounts", "Accounts", Icons.Outlined.AccountBalance, NavGroup.Money, "Where your money is.", tabIndex = 2),
-    Destination("subscriptions", "Subscriptions", Icons.Outlined.EventRepeat, NavGroup.Money, "Recurring bills, with the next payment planned for you and suggestions found in your history."),
-    Destination("net-worth", "Net worth", Icons.Outlined.ShowChart, NavGroup.Money, "How your net worth moved over a period and what moved it: income, spending, adjustments, transfers and exchange rates."),
-    Destination("compare", "Compare", Icons.Outlined.Insights, NavGroup.Money, "Put one period against another: income, spending, what you kept and every category's move."),
-    Destination("trends", "Trends", Icons.Outlined.CalendarMonth, NavGroup.Money, "Every category by month, as a table or stacked columns."),
-    Destination("import", "Import", Icons.Outlined.UploadFile, NavGroup.Money, "Importing a bank statement is done on the web, where the rows are easier to review."),
-    Destination("places", "Places", Icons.Outlined.LocationOn, NavGroup.Money, "A map of where your spending went."),
-    Destination("budget", "Budget", Icons.Outlined.Savings, NavGroup.Planning, "Limits and savings goals.", tabIndex = 3),
-    Destination("plan", "Month plan", Icons.Outlined.Checklist, NavGroup.Planning, "Your bills by day, what is left after each, and where the money runs out."),
-    Destination("pending", "Pending", Icons.Outlined.TaskAlt, NavGroup.Planning, "Salary splits waiting for your approval."),
-    Destination("vendors", "Vendors", Icons.Outlined.Storefront, NavGroup.Organise, "The places and people you pay, with their usual category and tags."),
-    Destination("categories", "Categories", Icons.Outlined.Category, NavGroup.Organise, "Your categories, their colours, parents and whether they are needs or wants."),
-    Destination("tags", "Tags", Icons.Outlined.Sell, NavGroup.Organise, "Labels that cut across categories."),
-    Destination("groups", "Groups", Icons.Outlined.Inventory2, NavGroup.Organise, "Bundle related transactions, like a trip, and see what they add up to."),
-    Destination("templates", "Templates", Icons.Outlined.Bookmark, NavGroup.Organise, "Saved starting points for transactions you repeat."),
-    Destination("trash", "Trash", Icons.Outlined.Delete, NavGroup.Organise, "Deleted transactions, until you restore them or delete them for good."),
-    Destination("settings", "Settings", Icons.Outlined.Settings, NavGroup.App, "Security: two-factor sign-in, and more to come.", inDrawer = false),
-    Destination("notifications", "Notifications", Icons.Outlined.Notifications, NavGroup.App, "Late payments, budgets close to their limit and reached goals.", inDrawer = false),
-    Destination("docs", "Docs", Icons.Outlined.Article, NavGroup.Help, "Guides to what each feature is and how to use it."),
+    Destination("plan", "Month plan", Icons.Outlined.Checklist, NavGroup.Planning),
+    Destination("pending", "Pending", Icons.Outlined.TaskAlt, NavGroup.Planning),
+    Destination("subscriptions", "Subscriptions", Icons.Outlined.EventRepeat, NavGroup.Planning),
+    Destination("net-worth", "Net worth", Icons.Outlined.ShowChart, NavGroup.Reports),
+    Destination("compare", "Compare", Icons.Outlined.Insights, NavGroup.Reports),
+    Destination("trends", "Trends", Icons.Outlined.CalendarMonth, NavGroup.Reports),
+    Destination("places", "Places", Icons.Outlined.LocationOn, NavGroup.Reports),
+    Destination("categories", "Categories", Icons.Outlined.Category, NavGroup.Organise),
+    Destination("vendors", "Vendors", Icons.Outlined.Storefront, NavGroup.Organise),
+    Destination("tags", "Tags", Icons.Outlined.Sell, NavGroup.Organise),
+    Destination("groups", "Groups", Icons.Outlined.Inventory2, NavGroup.Organise),
+    Destination("templates", "Templates", Icons.Outlined.Bookmark, NavGroup.Organise),
+    Destination("trash", "Trash", Icons.Outlined.Delete, NavGroup.Organise),
+    Destination("docs", "Docs", Icons.Outlined.Article, NavGroup.Help),
+    Destination("settings", "Settings", Icons.Outlined.Settings, NavGroup.App),
+    Destination("notifications", "Notifications", Icons.Outlined.Notifications, NavGroup.App),
 )
 
 fun destinationById(id: String?): Destination? = MoreDestinations.firstOrNull { it.id == id }
 
-/** Stands in for a screen that is not built in the app yet: what it is for, and that the web has it. */
+private val ThemeMode.icon get() = when (this) {
+    ThemeMode.System -> Icons.Outlined.BrightnessAuto
+    ThemeMode.Light -> Icons.Outlined.LightMode
+    ThemeMode.Dark -> Icons.Outlined.DarkMode
+}
+
+/**
+ * The More tab: how the app looks, then everything the bottom bar does not hold, as tiles two across in short named groups,
+ * and sign out at the end. [badges] counts what waits on a destination, by its id.
+ */
 @Composable
-fun ComingSoon(d: Destination) {
-    Column(Modifier.fillMaxSize().padding(32.dp), verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(Modifier.size(72.dp).clip(RoundedCornerShape(24.dp)).background(MaterialTheme.colorScheme.surfaceContainerHighest), contentAlignment = Alignment.Center) {
-            Icon(d.icon, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(36.dp))
+fun MoreScreen(themeMode: ThemeMode, onThemeMode: (ThemeMode) -> Unit, onOpen: (Destination) -> Unit, onSignOut: () -> Unit, badges: Map<String, Int> = emptyMap()) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        SegmentedPills(ThemeMode.entries.map { it to "${it.label} theme" }, themeMode, onThemeMode, icon = { it.icon })
+        NavGroup.entries.filter { it != NavGroup.App }.forEach { group ->
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(group.label, Modifier.padding(start = 4.dp), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                MoreDestinations.filter { it.group == group }.chunked(2).forEach { pair ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        pair.forEach { d -> MoreTile(d, badges[d.id] ?: 0, Modifier.weight(1f)) { onOpen(d) } }
+                        // a lone tile keeps the width of the others
+                        if (pair.size == 1) Box(Modifier.weight(1f))
+                    }
+                }
+            }
         }
-        Text(d.label, style = MaterialTheme.typography.titleLarge)
-        Text(d.blurb, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
-        Text("This screen is not in the app yet. It is in the web app.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+        TextButton(onClick = onSignOut, shapes = ButtonDefaults.shapes(), modifier = Modifier.align(Alignment.CenterHorizontally), colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)) {
+            Icon(Icons.Outlined.Logout, null, Modifier.padding(end = 8.dp).size(20.dp)); Text("Sign out")
+        }
+    }
+}
+
+@Composable
+private fun MoreTile(d: Destination, waiting: Int, modifier: Modifier, onClick: () -> Unit) {
+    MorphTile(onClick, first = true, last = true, modifier = modifier) {
+        Row(
+            Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Icon(d.icon, null, tint = MaterialTheme.colorScheme.primary)
+            Text(d.label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            if (waiting > 0) Badge { Text(badgeText(waiting)) }
+        }
     }
 }

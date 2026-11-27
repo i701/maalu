@@ -2296,7 +2296,7 @@
         "status": "done",
         "evidence": [
           "apps/android/app/src/main/java/app/maalu/data/ThemeStore.kt",
-          "apps/android/app/src/main/java/app/maalu/ui/screens/AppDrawer.kt"
+          "apps/android/app/src/main/java/app/maalu/ui/screens/MoreScreen.kt"
         ]
       },
       "ios": {

@@ -18,11 +18,10 @@ class MoreDestinationsTest {
         NavGroup.entries.forEach { g -> assertTrue("${g.label} is empty", MoreDestinations.any { it.group == g }) }
     }
 
-    @Test fun theFourTabsAreInTheDrawerWithTheirIndex() {
-        assertEquals(listOf(0, 1, 2, 3), MoreDestinations.mapNotNull { it.tabIndex }.sorted())
-        assertEquals(0, destinationById("dashboard")?.tabIndex)
-        assertEquals(3, destinationById("budget")?.tabIndex)
-        assertNull(destinationById("subscriptions")?.tabIndex)
-        assertNotNull(destinationById("subscriptions"))
+    @Test fun moreRepeatsNoTabAndHasNoDeadEnd() {
+        listOf("dashboard", "transactions", "accounts", "budget", "import").forEach { assertNull(destinationById(it)) }
+        // reached from a button, so More knows them without listing them
+        assertEquals(NavGroup.App, destinationById("settings")?.group)
+        assertNotNull(destinationById("notifications"))
     }
 }
