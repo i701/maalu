@@ -101,6 +101,11 @@ import app.maalu.data.shortDate
 import app.maalu.data.spendByCategory
 import app.maalu.data.totalSpent
 import app.maalu.ui.components.SummaryPill
+import app.maalu.ui.components.SummaryBlue
+import app.maalu.ui.components.summaryInk
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.runtime.CompositionLocalProvider
 import app.maalu.ui.theme.MoneyStyle
 import java.time.LocalDate
 import kotlin.math.roundToInt
@@ -165,11 +170,20 @@ fun CategoriesScreen(api: Api, month: String) {
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
             SearchPill(query, { query = it.take(100) }, Modifier.padding(horizontal = 16.dp, vertical = 6.dp), placeholder = "Search categories")
-            // sort them all at once; says how many are still unsorted
-            if (all.any { !it.isSalary }) OutlinedButton(onClick = { sorting = true }, shapes = ButtonDefaults.shapes(), modifier = Modifier.padding(horizontal = 16.dp)) {
-                Text(sortKindsButtonLabel(unsortedCount(all)))
+            // the blue of the Dashboard's pills: a grey tint looks muddy over the sky
+            val blue = summaryInk(SummaryBlue)
+            CompositionLocalProvider(LocalContentColor provides blue) {
+                // sort them all at once; says how many are still unsorted
+                if (all.any { !it.isSalary }) OutlinedButton(
+                    onClick = { sorting = true }, shapes = ButtonDefaults.shapes(), modifier = Modifier.padding(horizontal = 16.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor = blue.copy(alpha = 0.1f), contentColor = blue),
+                    // an edge, so the button reads apart from the facts below
+                    border = BorderStroke(1.dp, blue.copy(alpha = 0.35f)),
+                ) {
+                    Text(sortKindsButtonLabel(unsortedCount(all)))
+                }
+                money?.totals?.let { MonthSpent(it, month) }
             }
-            money?.totals?.let { MonthSpent(it, month) }
             when (val s = state) {
                 CatLoad.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
                 is CatLoad.Failed -> Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
