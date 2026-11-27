@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.elevation
 import app.maalu.ui.components.glowTopBarColors
 import app.maalu.ui.components.glowBackground
 import app.maalu.ui.components.fadeInOnAppear
@@ -78,7 +79,7 @@ fun TransferSuggestionsCard(api: Api, suggestions: List<TransferSuggestion>, onC
     var confirming by remember { mutableStateOf<TransferSuggestion?>(null) }
     var busy by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    Surface(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainer) {
+    Surface(Modifier.fillMaxWidth().elevation(2, MaterialTheme.shapes.extraLarge), shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainer) {
         Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Icon(Icons.Outlined.SwapHoriz, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)

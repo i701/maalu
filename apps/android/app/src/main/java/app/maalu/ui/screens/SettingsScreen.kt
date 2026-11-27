@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.elevation
 import app.maalu.ui.components.CompactField
 import app.maalu.data.nameJson
 import app.maalu.data.NAME_LIMIT
@@ -266,7 +267,7 @@ fun SettingsScreen(api: Api) {
 @Composable
 private fun TwoFactorCard(on: Boolean, onSetUp: () -> Unit, onNewCodes: () -> Unit, onTurnOff: () -> Unit) {
     val tint = MaterialTheme.colorScheme.onSurfaceVariant
-    Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainer) {
+    Surface(modifier = Modifier.elevation(2, MaterialTheme.shapes.extraLarge), shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainer) {
         Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Box(Modifier.size(40.dp).clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surfaceContainerHighest), contentAlignment = Alignment.Center) {

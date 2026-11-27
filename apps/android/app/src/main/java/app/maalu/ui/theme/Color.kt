@@ -5,7 +5,8 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 
-// The same roles as apps/web/src/lib/m3.ts (M3_LIGHT / M3_DARK): neutral surfaces, blue primary.
+// The same roles as apps/web/src/lib/m3.ts (M3_LIGHT / M3_DARK): neutral surfaces, blue primary. As there, the light page is a soft
+// grey and cards (surfaceContainerLow and surfaceContainer) are white.
 // Keep the two in step; the web file is the source of truth.
 
 val LightColors: ColorScheme = lightColorScheme(
@@ -26,17 +27,17 @@ val LightColors: ColorScheme = lightColorScheme(
     onError = Color(0xFFFFFFFF),
     errorContainer = Color(0xFFFFDAD6),
     onErrorContainer = Color(0xFF93000A),
-    background = Color(0xFFFFFFFF),
+    background = Color(0xFFF5F5F8),
     onBackground = Color(0xFF1A1B1E),
-    surface = Color(0xFFFFFFFF),
+    surface = Color(0xFFF5F5F8),
     onSurface = Color(0xFF1A1B1E),
     surfaceVariant = Color(0xFFE1E1E5),
     onSurfaceVariant = Color(0xFF47484C),
     surfaceDim = Color(0xFFDCDCE0),
     surfaceBright = Color(0xFFFFFFFF),
     surfaceContainerLowest = Color(0xFFFFFFFF),
-    surfaceContainerLow = Color(0xFFF6F6F8),
-    surfaceContainer = Color(0xFFF0F0F3),
+    surfaceContainerLow = Color(0xFFFFFFFF),
+    surfaceContainer = Color(0xFFFFFFFF),
     surfaceContainerHigh = Color(0xFFEAEAED),
     surfaceContainerHighest = Color(0xFFE4E4E8),
     inverseSurface = Color(0xFF2F3033),

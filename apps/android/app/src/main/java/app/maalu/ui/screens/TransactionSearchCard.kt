@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.elevation
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -75,9 +76,9 @@ fun TransactionSearchCard(
     val focus = LocalFocusManager.current
     val quiet = MaterialTheme.colorScheme.onSurfaceVariant
     Surface(
-        shape = RoundedCornerShape(20.dp), shadowElevation = 6.dp,
+        shape = RoundedCornerShape(20.dp),
         color = searchCardColor(),
-        modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 12.dp),
+        modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 12.dp).elevation(3, RoundedCornerShape(20.dp)),
     ) {
         Column(Modifier.animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec())) {
             Row(Modifier.heightIn(min = 56.dp).padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {

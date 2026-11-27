@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.elevation
 import app.maalu.ui.theme.ChartColors
 import app.maalu.ui.components.fadingEdges
 import app.maalu.ui.components.fadeInOnAppear
@@ -146,7 +147,7 @@ private fun Article(doc: DocItem, section: String?, onLink: (String) -> Unit) {
         item { Text(doc.title, style = MaterialTheme.typography.headlineSmall) }
         item { Text(doc.summary, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         if (doc.webOnly) item {
-            Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
+            Surface(modifier = Modifier.elevation(2, MaterialTheme.shapes.large), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
                 Row(Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Icon(Icons.Outlined.Info, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(22.dp))
                     Text("This is done in the web app, not in this one. The guide is here so you can read how it works.", style = MaterialTheme.typography.bodyMedium)
@@ -207,7 +208,7 @@ private fun Block(b: DocBlockItem, tint: Color, onLink: (String) -> Unit) {
                 "tip" -> Icons.Outlined.Lightbulb to MaterialTheme.colorScheme.primary
                 else -> Icons.Outlined.Info to MaterialTheme.colorScheme.primary
             }
-            Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
+            Surface(modifier = Modifier.elevation(2, MaterialTheme.shapes.large), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
                 Row(Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Icon(icon, null, tint = color, modifier = Modifier.size(22.dp))
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {

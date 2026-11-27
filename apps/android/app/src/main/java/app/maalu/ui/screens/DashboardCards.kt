@@ -1,5 +1,6 @@
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.elevation
 import app.maalu.ui.components.SpringBar
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.foundation.background
@@ -63,7 +64,7 @@ import app.maalu.ui.theme.MoneyStyle
 /** The card every dashboard section sits on: the large corner, one tonal step above the page. */
 @Composable
 fun SectionCard(title: String, trailing: String? = null, content: @Composable () -> Unit) {
-    Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerLow) {
+    Surface(modifier = Modifier.elevation(2, MaterialTheme.shapes.extraLarge), shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerLow) {
         Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))

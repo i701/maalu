@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.elevation
 import app.maalu.ui.components.glowTopBarColors
 import app.maalu.ui.components.glowBackground
 import androidx.compose.material3.OutlinedButton
@@ -594,7 +595,7 @@ private fun ItemsEditor(form: AddForm, onForm: (AddForm) -> Unit, categories: Li
         placeholder = "For example 8")
         form.items.forEachIndexed { i, row ->
             androidx.compose.runtime.key(row.key) {
-                androidx.compose.material3.Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLow) {
+                androidx.compose.material3.Surface(modifier = Modifier.elevation(2, MaterialTheme.shapes.large), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLow) {
                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             CompactField(row.name, { v -> edit(row.key) { it.copy(name = v.take(200)) } }, "Item", Modifier.weight(1f), enabled = !busy)

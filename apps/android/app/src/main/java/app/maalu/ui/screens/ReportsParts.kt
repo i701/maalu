@@ -1,5 +1,6 @@
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.elevation
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -51,7 +52,7 @@ fun <T : Any> ReportState(data: T?, error: String?, onRetry: () -> Unit, content
 /** A tile with a label and an amount. */
 @Composable
 fun StatTile(label: String, value: String, currency: String, modifier: Modifier = Modifier, note: String? = null, noteColor: Color? = null) {
-    Surface(modifier, shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
+    Surface(modifier.elevation(2, MaterialTheme.shapes.large), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             MoneyText(value, currency, style = MaterialTheme.typography.titleSmall)

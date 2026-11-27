@@ -1,5 +1,6 @@
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.elevation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -62,7 +63,7 @@ fun AccountCardsSection(api: Api, account: Account, accounts: List<Account>, car
     val scope = rememberCoroutineScope()
     val credit = account.group == "card"
 
-    Surface(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerLow) {
+    Surface(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp).elevation(2, MaterialTheme.shapes.extraLarge), shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerLow) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Cards", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))

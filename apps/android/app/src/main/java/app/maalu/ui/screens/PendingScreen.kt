@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.elevation
 import app.maalu.ui.components.fadingEdges
 import androidx.compose.foundation.lazy.rememberLazyListState
 import app.maalu.ui.components.fadeInOnAppear
@@ -142,7 +143,7 @@ private fun TaskCard(task: SplitTask, busy: Boolean, onApprove: () -> Unit, onRe
     val ready = pendingLines(plan)
     val blocked = plan.items.filter { !it.ok }
     val sent = madeTotal(plan)
-    Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerLow) {
+    Surface(modifier = Modifier.elevation(2, MaterialTheme.shapes.extraLarge), shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerLow) {
         Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.Top) {
                 Column(Modifier.weight(1f)) {

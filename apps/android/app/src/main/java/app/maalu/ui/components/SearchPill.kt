@@ -41,10 +41,9 @@ fun searchCardColor(): Color =
 fun SearchPill(value: String, onChange: (String) -> Unit, modifier: Modifier = Modifier, placeholder: String = "Search") {
     var focused by remember { mutableStateOf(false) }
     Surface(
-        modifier.fillMaxWidth(),
+        modifier.fillMaxWidth().elevation(3, RoundedCornerShape(20.dp)),
         shape = RoundedCornerShape(20.dp),
         color = searchCardColor(),
-        shadowElevation = 6.dp,
         border = if (focused) androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
     ) {
         Row(Modifier.padding(horizontal = 14.dp).heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {

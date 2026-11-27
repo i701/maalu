@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.elevation
 import app.maalu.ui.components.fadingEdges
 import androidx.compose.foundation.lazy.rememberLazyListState
 import app.maalu.ui.components.fadeInOnAppear
@@ -157,7 +158,7 @@ fun PlanScreen(api: Api, onOpenAccount: (id: String, name: String) -> Unit) {
 
 @Composable
 private fun Tile(label: String, value: String, currency: String, modifier: Modifier, color: Color = Color.Unspecified) {
-    Surface(modifier, shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
+    Surface(modifier.elevation(2, MaterialTheme.shapes.large), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
         Column(Modifier.padding(horizontal = 14.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             MoneyText(value, currency, style = MaterialTheme.typography.titleMedium, color = color)
@@ -187,7 +188,7 @@ private fun Tiles(d: AvailableToSpend) {
 @Composable
 private fun Verdict(d: AvailableToSpend, culprit: PlanRow?) {
     val short = d.isShort()
-    Surface(Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = MaterialTheme.shapes.large, color = if (short) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surfaceContainer) {
+    Surface(Modifier.fillMaxWidth().padding(vertical = 4.dp).elevation(2, MaterialTheme.shapes.large), shape = MaterialTheme.shapes.large, color = if (short) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surfaceContainer) {
         Text(
             if (!short) "Every bill planned until ${shortDate(d.periodEnd)} is covered."
             else if (culprit != null) "The money runs out at ${culprit.title} (${shortDate(culprit.date)})."
@@ -243,7 +244,7 @@ private fun PlanRowContent(row: PlanRow, currency: String, canPay: Boolean, onPa
 @Composable
 private fun Aside(d: AvailableToSpend) {
     var open by rememberSaveable { mutableStateOf(false) }
-    Surface(Modifier.fillMaxWidth().padding(top = 16.dp), shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerLow) {
+    Surface(Modifier.fillMaxWidth().padding(top = 16.dp).elevation(2, MaterialTheme.shapes.extraLarge), shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerLow) {
         Column {
             Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("What this counts", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))

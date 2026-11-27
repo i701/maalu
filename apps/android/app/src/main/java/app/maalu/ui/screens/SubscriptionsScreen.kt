@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.elevation
 import app.maalu.ui.components.fadingEdges
 import androidx.compose.material3.BottomSheetDefaults
 import app.maalu.ui.components.glowSheet
@@ -231,13 +232,13 @@ fun SubscriptionsScreen(api: Api) {
 @Composable
 private fun SummaryRow(s: SubscriptionSummary) {
     Row(Modifier.fillMaxWidth().padding(bottom = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Surface(Modifier.weight(1f), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
+        Surface(Modifier.weight(1f).elevation(2, MaterialTheme.shapes.large), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
             Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text("Active", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("${s.activeCount}", style = MaterialTheme.typography.titleMedium.merge(MoneyStyle))
             }
         }
-        Surface(Modifier.weight(1f), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
+        Surface(Modifier.weight(1f).elevation(2, MaterialTheme.shapes.large), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
             Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text("Costs a month", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 MoneyText(s.monthlyBaseTotal, s.currency, style = MaterialTheme.typography.titleMedium)
@@ -250,7 +251,7 @@ private fun SummaryRow(s: SubscriptionSummary) {
 @Composable
 private fun SuggestionsCard(candidates: List<SubscriptionCandidate>, onAdd: (SubscriptionCandidate) -> Unit, onDismiss: (SubscriptionCandidate) -> Unit) {
     var open by rememberSaveable { mutableStateOf(false) }
-    Surface(Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainer) {
+    Surface(Modifier.fillMaxWidth().padding(vertical = 4.dp).elevation(2, MaterialTheme.shapes.extraLarge), shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainer) {
         Column {
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Outlined.Lightbulb, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(end = 12.dp))
@@ -263,7 +264,7 @@ private fun SuggestionsCard(candidates: List<SubscriptionCandidate>, onAdd: (Sub
             Disclosure(open) {
                 Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     candidates.forEach { c ->
-                        Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLow) {
+                        Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
                             Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(c.vendorName, Modifier.weight(1f), style = MaterialTheme.typography.bodyMediumEmphasized, maxLines = 1, overflow = TextOverflow.Ellipsis)

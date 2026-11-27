@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.elevation
 import app.maalu.data.isSummary
 import androidx.compose.foundation.lazy.items
 import java.math.BigDecimal
@@ -359,7 +360,7 @@ private fun KeptSummary(now: Totals, before: Totals, months: List<MonthlyPoint>)
 @Composable
 private fun SpendingCard(categories: List<CategoryTotal>, currency: String) {
     val rows = spendingRows(categories)
-    Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerLow) {
+    Surface(modifier = Modifier.elevation(2, MaterialTheme.shapes.extraLarge), shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerLow) {
         Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("Spending by category", style = MaterialTheme.typography.titleMedium)
             if (rows.isEmpty()) {

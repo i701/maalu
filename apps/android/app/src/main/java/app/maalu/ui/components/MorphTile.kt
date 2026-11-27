@@ -55,9 +55,10 @@ fun MorphTile(
     val top by animateDpAsState(corner(first), spring, label = "top")
     val bottom by animateDpAsState(corner(last), spring, label = "bottom")
     val shape = RoundedCornerShape(topStart = top, topEnd = top, bottomStart = bottom, bottomEnd = bottom)
-    if (onLongClick == null) Surface(onClick = onClick, modifier = modifier, shape = shape, color = fill, interactionSource = source, content = content)
+    val raised = modifier.elevation(2, shape)
+    if (onLongClick == null) Surface(onClick = onClick, modifier = raised, shape = shape, color = fill, interactionSource = source, content = content)
     else Surface(
-        modifier = modifier.clip(shape).combinedClickable(interactionSource = source, indication = ripple(), onClick = onClick, onLongClick = onLongClick),
+        modifier = raised.clip(shape).combinedClickable(interactionSource = source, indication = ripple(), onClick = onClick, onLongClick = onLongClick),
         shape = shape, color = fill, content = content,
     )
 }

@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.elevation
 import app.maalu.ui.components.fadingEdges
 import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
@@ -297,7 +298,7 @@ fun AccountDetailScreen(api: Api, accountId: String, onBack: () -> Unit) {
 private fun Header(a: Account, month: Totals?) {
     val negative = a.balance.startsWith("-")
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainer) {
+        Surface(modifier = Modifier.elevation(2, MaterialTheme.shapes.extraLarge), shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainer) {
             Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(if (a.isLiability) "Owed" else "Balance", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 MoneyText(
@@ -324,7 +325,7 @@ private fun creditLine(a: Account): String? =
 
 @Composable
 private fun MonthCard(label: String, amount: String, currency: String, modifier: Modifier) {
-    Surface(modifier, shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
+    Surface(modifier.elevation(2, MaterialTheme.shapes.large), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
         Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             MoneyText(amount, currency, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
@@ -349,7 +350,7 @@ private fun Actions(a: Account, onAdd: () -> Unit, onAdjust: () -> Unit, onEdit:
 /** A card's latest statement: what to pay and by when, the four figures, and Repay. */
 @Composable
 private fun StatementPanel(s: CardStatement, onRepay: () -> Unit) {
-    Surface(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), shape = MaterialTheme.shapes.extraLarge, color = if (s.state == "overdue") MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surfaceContainer) {
+    Surface(Modifier.padding(horizontal = 16.dp, vertical = 8.dp).elevation(2, MaterialTheme.shapes.extraLarge), shape = MaterialTheme.shapes.extraLarge, color = if (s.state == "overdue") MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surfaceContainer) {
         Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Statement", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(statementLine(s), style = MaterialTheme.typography.titleSmall)
@@ -373,7 +374,7 @@ private fun StatementFigure(label: String, amount: String, currency: String) {
 /** The balance at the end of each day, as a line, with 30 days / 90 days / 1 year and the figures that matter. */
 @Composable
 private fun BalanceChart(a: Account, history: BalanceHistory?, range: HistoryRange, onRange: (HistoryRange) -> Unit) {
-    Surface(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerLow) {
+    Surface(Modifier.padding(horizontal = 16.dp, vertical = 8.dp).elevation(2, MaterialTheme.shapes.extraLarge), shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerLow) {
         Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("Balance over time", style = MaterialTheme.typography.titleMedium)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

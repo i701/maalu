@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.elevation
 import androidx.compose.foundation.lazy.rememberLazyListState
 import app.maalu.ui.components.fadingEdges
 import androidx.compose.material3.BottomSheetDefaults
@@ -283,7 +284,7 @@ private fun SummaryCard(b: Budget) {
     val t = b.totals
     val color = statusColor(t.status)
     val over = t.status == "over"
-    Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainer) {
+    Surface(modifier = Modifier.elevation(2, MaterialTheme.shapes.extraLarge), shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainer) {
         Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.Bottom) {
                 Column(Modifier.weight(1f)) {

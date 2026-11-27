@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.elevation
 import java.math.BigDecimal
 import app.maalu.ui.components.SummaryDonut
 import app.maalu.ui.components.SummaryBlue
@@ -177,7 +178,7 @@ fun AccountsScreen(api: Api, onOpen: (Account) -> Unit) {
                                 }
                                 items(s.data.archived.size, key = { "archived-" + s.data.archived[it].id }) { i -> Box(springItem()) {
                                     val a = s.data.archived[i]
-                                    Surface(Modifier.fillMaxWidth().padding(bottom = 2.dp), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLow) {
+                                    Surface(Modifier.fillMaxWidth().padding(bottom = 2.dp).elevation(2, MaterialTheme.shapes.large), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLow) {
                                         Row(Modifier.padding(start = 14.dp, top = 6.dp, bottom = 6.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                             Column(Modifier.weight(1f)) {
                                                 Text(a.name, style = MaterialTheme.typography.bodyMediumEmphasized, maxLines = 1, overflow = TextOverflow.Ellipsis)
