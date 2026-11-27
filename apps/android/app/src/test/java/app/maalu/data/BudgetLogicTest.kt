@@ -277,4 +277,11 @@ class RefundLogicTest {
         )
         org.junit.Assert.assertEquals("""{"refund_of_id":"p1"}""", linkRefundJson("p1", null).toString())
     }
+
+    @Test fun theCategoryRowNamesTwoAndCountsTheRest() {
+        val all = listOf("Food", "Dining", "Fuel", "Rent").map { CategoryItem(id = it, name = it) }
+        assertEquals("", categorySummary(emptyList(), all))
+        assertEquals("Food, Dining", categorySummary(listOf("Dining", "Food"), all))
+        assertEquals("Food, Dining +2", categorySummary(all.map { it.id }, all))
+    }
 }

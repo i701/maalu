@@ -98,7 +98,7 @@ fun FormSwitchRow(style: FormRowStyle, detail: String, checked: Boolean, enabled
 
 /** The row that opens and closes the rest of a form; while closed, [summary] says what is already chosen in there. */
 @Composable
-fun DisclosureRow(label: String, summary: String, open: Boolean, onToggle: () -> Unit) {
+fun DisclosureRow(label: String, summary: String, open: Boolean, icon: ImageVector = Icons.Outlined.Tune, isError: Boolean = false, onToggle: () -> Unit) {
     MorphTile(
         onToggle, first = true, last = true,
         modifier = Modifier.fillMaxWidth().semantics { stateDescription = if (open) "Expanded" else "Collapsed" },
@@ -107,9 +107,9 @@ fun DisclosureRow(label: String, summary: String, open: Boolean, onToggle: () ->
             Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Box(Modifier.size(36.dp), contentAlignment = Alignment.Center) { Icon(Icons.Outlined.Tune, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) }
+            Box(Modifier.size(36.dp), contentAlignment = Alignment.Center) { Icon(icon, null, tint = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant) }
             Column(Modifier.weight(1f)) {
-                Text(label, style = MaterialTheme.typography.bodyLarge)
+                Text(label, style = MaterialTheme.typography.bodyLarge, color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface)
                 if (!open && summary.isNotEmpty()) Text(summary, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
             Icon(if (open) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)

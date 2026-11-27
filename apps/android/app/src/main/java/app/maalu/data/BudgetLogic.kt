@@ -83,6 +83,12 @@ fun LineForm.problem(): LineProblem? {
     return null
 }
 
+/** The chosen categories in a few words, for the closed row: two names, then how many more. */
+fun categorySummary(chosen: List<String>, categories: List<CategoryItem>): String {
+    val names = categories.filter { it.id in chosen }.map { it.name }
+    return names.take(2).joinToString(", ") + if (names.size > 2) " +${names.size - 2}" else ""
+}
+
 /** Unspent money only rolls over for a limit that is per period: one total for a stretch has nothing to roll into. */
 private fun LineForm.rolls(): Boolean = rollover && !(dated && !repeat)
 

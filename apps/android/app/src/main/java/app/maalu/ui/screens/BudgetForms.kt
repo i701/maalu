@@ -2,12 +2,24 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Event
+import androidx.compose.material.icons.outlined.Redo
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.saveable.rememberSaveable
+import app.maalu.data.categorySummary
+import app.maalu.ui.components.FormSwitchRow
+import app.maalu.ui.components.FormRowStyle
+import app.maalu.ui.components.FormRow
+import app.maalu.ui.components.DisclosureRow
+import app.maalu.ui.components.Disclosure
+import app.maalu.ui.components.BigAmountField
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
@@ -15,9 +27,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountBalance
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Category
-import androidx.compose.material.icons.outlined.Numbers
-import androidx.compose.material.icons.outlined.Savings
-import androidx.compose.material.icons.outlined.Sell
 import app.maalu.ui.components.AlertDialog
 import androidx.compose.material3.DatePicker
 import app.maalu.ui.components.DatePickerDialog
@@ -26,7 +35,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -45,7 +53,6 @@ import app.maalu.data.Account
 import app.maalu.data.Api
 import app.maalu.data.ApiResult
 import app.maalu.data.Budget
-import app.maalu.data.BudgetLine
 import app.maalu.data.CategoryItem
 import app.maalu.data.Goal
 import app.maalu.data.GoalField
@@ -59,7 +66,6 @@ import app.maalu.data.formatMoney
 import app.maalu.data.goalEntryJson
 import app.maalu.data.goalFormFrom
 import app.maalu.data.isPositive
-import app.maalu.data.lineFormFrom
 import app.maalu.data.patchJson
 import app.maalu.data.problem
 import app.maalu.data.shortDate
@@ -67,7 +73,6 @@ import app.maalu.data.toJson
 import app.maalu.ui.components.CompactField
 import app.maalu.ui.components.FormDialog
 import app.maalu.ui.components.PickerField
-import app.maalu.ui.components.Section
 import app.maalu.ui.components.SegmentedPills
 import app.maalu.ui.components.ChoiceChip
 import app.maalu.data.takenCategories
@@ -97,7 +102,7 @@ fun LineFormScreen(api: Api, currency: String, budget: Budget, start: LineForm?,
     val title = when { editingId != null -> "Edit limit"; start != null -> "Repeat limit"; else -> "New limit" }
 
     FormDialog(
-        title = title, saveLabel = if (editingId != null) "Save changes" else "Add limit",
+        title = title, saveLabel = if (editingId != null) "Save changes" else "Add limit", floating = true,
         busy = busy, error = error, snackbar = snackbar, onClose = onClose,
         onSave = {
             val problem = form.problem()
@@ -119,68 +124,55 @@ fun LineFormScreen(api: Api, currency: String, budget: Budget, start: LineForm?,
             }
         },
     ) {
-        Section("Name", Icons.Outlined.Savings) {
-            CompactField(form.name, { errorField = null; form = form.copy(name = it.take(100)) }, "Name", enabled = !busy, isError = errorField == LineField.Name, placeholder = "For example Food")
+        val oneTotal = form.dated && !form.repeat
+        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+            BigAmountField(form.amount, { errorField = null; form = form.copy(amount = cleanAmount(it)) }, currency, enabled = !busy, isError = errorField == LineField.Amount)
+            Caption(if (oneTotal) "One total for these dates" else "Limit for each period")
         }
-        Section(if (form.dated && !form.repeat) "Limit for these dates" else "Amount each period", Icons.Outlined.Numbers) {
-            CompactField(
-                form.amount, { errorField = null; form = form.copy(amount = cleanAmount(it)) }, "Amount",
-                keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !busy, isError = errorField == LineField.Amount, suffix = currency,
-            placeholder = "0.00")
-        }
-        Section("Dates", Icons.Outlined.CalendarMonth) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(32.dp)) {
-                Column(Modifier.weight(1f)) {
-                    Text("Only for certain dates", style = MaterialTheme.typography.bodyMedium)
-                    Text("For a trip, a project or a few months, instead of every month.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                Switch(checked = form.dated, onCheckedChange = { form = form.copy(dated = it); errorField = null }, enabled = !busy)
-            }
-            if (form.dated) {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ChoiceChip(form.start.isNotBlank(), { pickingDate = 1 }, { Text(if (form.start.isBlank()) "First day" else "From ${shortDate(form.start)}") })
-                    ChoiceChip(form.end.isNotBlank(), { pickingDate = 2 }, { Text(if (form.end.isBlank()) "Last day" else "Until ${shortDate(form.end)}") })
-                }
-                Text("How it counts", style = MaterialTheme.typography.labelLarge)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ChoiceChip(!form.repeat, { form = form.copy(repeat = false) }, { Text("One total for the whole stretch") })
-                    ChoiceChip(form.repeat, { form = form.copy(repeat = true) }, { Text("A limit for every month between") })
-                }
-                Text(
-                    if (form.repeat) "Whole periods count, so the dates snap to them. The amount is for each period." else "The last day is included. The amount is one total, counted once over the stretch.",
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                if (errorField == LineField.Dates) Text("Choose the first and last day.", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
-            }
-        }
-        Section("Categories it covers", Icons.Outlined.Category) {
-            val list = categories
-            if (list == null) Text("Loading…", color = MaterialTheme.colorScheme.onSurfaceVariant)
-            else {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    list.forEach { c ->
-                        val on = c.id in form.categoryIds
-                        val by = taken[c.id]
-                        ChoiceChip(
-                            on, { errorField = null; form = form.copy(categoryIds = if (on) form.categoryIds - c.id else form.categoryIds + c.id) },
-                            { Text(if (by != null && !on) "${c.name} · in $by" else c.name) }, enabled = by == null || on,
-                        )
+        CompactField(form.name, { errorField = null; form = form.copy(name = it.take(100)) }, "Name", enabled = !busy, isError = errorField == LineField.Name, placeholder = "For example Food")
+
+        // closed, it names what is chosen; it opens by itself when nothing is
+        var choosing by rememberSaveable { mutableStateOf(false) }
+        LaunchedEffect(errorField) { if (errorField == LineField.Categories) choosing = true }
+        val list = categories
+        Column {
+            DisclosureRow(
+                "Categories", if (list == null) "Loading…" else categorySummary(form.categoryIds, list).ifEmpty { "Choose at least one" }, choosing,
+                icon = Icons.Outlined.Category, isError = errorField == LineField.Categories,
+            ) { choosing = !choosing }
+            Disclosure(choosing) {
+                Column(Modifier.padding(top = 4.dp)) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        // the ones free to pick come first; those in another limit wait at the end
+                        list.orEmpty().sortedBy { it.id in taken && it.id !in form.categoryIds }.forEach { c ->
+                            val on = c.id in form.categoryIds
+                            val by = taken[c.id]
+                            ChoiceChip(
+                                on, { errorField = null; form = form.copy(categoryIds = if (on) form.categoryIds - c.id else form.categoryIds + c.id) },
+                                { Text(if (by != null && !on) "${c.name} · in $by" else c.name) }, enabled = by == null || on,
+                            )
+                        }
                     }
+                    Caption(if (oneTotal) "A category can be in one limit for any stretch of dates. A parent covers its sub-categories." else "A category can be in one limit at a time. A parent covers its sub-categories.")
                 }
-                if (errorField == LineField.Categories) Text("Choose at least one.", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
-                Text(
-                    if (form.dated && !form.repeat) "A category can be in one limit for any stretch of dates; a parent covers its sub-categories." else "A category can be in one limit at a time; a parent covers its sub-categories.",
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
             }
         }
-        // one total for a stretch has nothing to carry into
-        if (!(form.dated && !form.repeat)) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(32.dp)) {
-            Column(Modifier.weight(1f)) {
-                Text("Carry over what is left", style = MaterialTheme.typography.bodyMedium)
-                Text("Unspent money adds to next period's limit.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            // one total for a stretch has nothing to carry into
+            FormSwitchRow(FormRowStyle("Certain dates only", Icons.Outlined.CalendarMonth, first = true, last = oneTotal), "A trip or a few months", form.dated, !busy) {
+                form = form.copy(dated = it); errorField = null
             }
-            Switch(checked = form.rollover, onCheckedChange = { form = form.copy(rollover = it) }, enabled = !busy)
+            if (!oneTotal) FormSwitchRow(FormRowStyle("Carry over", Icons.Outlined.Redo, last = true), "What is left adds to the next period", form.rollover, !busy) { form = form.copy(rollover = it) }
+        }
+        if (form.dated) Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            SegmentedPills(listOf(false to "One total", true to "Every month"), form.repeat, { form = form.copy(repeat = it) }, enabled = !busy)
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                val bad = errorField == LineField.Dates
+                FormRow(FormRowStyle("First day", Icons.Outlined.Event, first = true), form.start.takeIf { it.isNotBlank() }?.let(::shortDate), "Choose", onClick = { if (!busy) pickingDate = 1 }, isError = bad)
+                FormRow(FormRowStyle("Last day", Icons.Outlined.Event, last = true), form.end.takeIf { it.isNotBlank() }?.let(::shortDate), "Choose", onClick = { if (!busy) pickingDate = 2 }, isError = bad)
+            }
+            if (form.repeat) Caption("Whole periods count, so the dates snap to them.")
         }
     }
 
@@ -220,7 +212,7 @@ fun GoalFormScreen(api: Api, currency: String, editing: Goal?, onClose: () -> Un
     LaunchedEffect(Unit) { accounts = (api.get<List<Account>>("accounts") as? ApiResult.Ok)?.data.orEmpty() }
 
     FormDialog(
-        title = if (editing == null) "New goal" else "Edit goal", saveLabel = if (editing == null) "Add goal" else "Save changes",
+        title = if (editing == null) "New goal" else "Edit goal", saveLabel = if (editing == null) "Add goal" else "Save changes", floating = true,
         busy = busy, error = error, snackbar = snackbar, onClose = onClose,
         onSave = {
             val problem = form.problem()
@@ -242,32 +234,39 @@ fun GoalFormScreen(api: Api, currency: String, editing: Goal?, onClose: () -> Un
             }
         },
     ) {
-        Section("Name", Icons.Outlined.Savings) {
-            CompactField(form.name, { errorField = null; form = form.copy(name = it.take(100)) }, "Name", enabled = !busy, isError = errorField == GoalField.Name, placeholder = "For example Trip to Sri Lanka")
+        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+            BigAmountField(form.target, { errorField = null; form = form.copy(target = cleanAmount(it)) }, currency, enabled = !busy, isError = errorField == GoalField.Target)
+            Caption("How much to save")
         }
-        Section("Target", Icons.Outlined.Numbers) {
-            CompactField(
-                form.target, { errorField = null; form = form.copy(target = cleanAmount(it)) }, "How much to save",
-                keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !busy, isError = errorField == GoalField.Target, suffix = currency,
-            )
-        }
-        Section("Follows an account", Icons.Outlined.AccountBalance) {
-            PickerField(
-                title = "Account to follow", value = form.account, placeholder = "None: I set money aside by hand", anyLabel = "None: I set money aside by hand",
-                entries = accounts.orEmpty().filter { it.group !in LiabilityGroups }.map { Ref(it.id, it.name) },
-                detail = { r -> accounts.orEmpty().firstOrNull { it.id == r.id }?.let { formatMoney(it.balance, it.currency) } },
-                onPick = { form = form.copy(account = it) },
-            )
-            Text("A goal that follows an account counts that account's balance as saved.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        Section("Plan", Icons.Outlined.CalendarMonth) {
-            CompactField(
-                form.monthly, { errorField = null; form = form.copy(monthly = cleanAmount(it)) }, "Put aside each month (optional)",
-                keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !busy, isError = errorField == GoalField.Monthly, suffix = currency,
-            )
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                ChoiceChip(form.targetDate != null, { pickingDate = true }, { Text(form.targetDate?.let { "By ${shortDate(it)}" } ?: "Pick a target date") })
-                if (form.targetDate != null) ChoiceChip(false, { form = form.copy(targetDate = null) }, { Text("No date") })
+        CompactField(form.name, { errorField = null; form = form.copy(name = it.take(100)) }, "Name", enabled = !busy, isError = errorField == GoalField.Name, placeholder = "For example Trip to Sri Lanka")
+        PickerField(
+            title = "Account to follow", value = form.account, placeholder = "None: set aside by hand", anyLabel = "None: I set money aside by hand",
+            entries = accounts.orEmpty().filter { it.group !in LiabilityGroups }.map { Ref(it.id, it.name) },
+            detail = { r -> accounts.orEmpty().firstOrNull { it.id == r.id }?.let { formatMoney(it.balance, it.currency) } },
+            onPick = { form = form.copy(account = it) },
+            row = FormRowStyle("Follows an account", Icons.Outlined.AccountBalance, first = true, last = true),
+        )
+
+        // open from the start when something in it is already set (editing)
+        val planSet = form.monthly.isNotBlank() || form.targetDate != null
+        var planning by rememberSaveable { mutableStateOf(planSet) }
+        LaunchedEffect(planSet, errorField) { if (planSet || errorField == GoalField.Monthly) planning = true }
+        Column {
+            DisclosureRow(
+                "Plan", listOfNotNull(form.monthly.takeIf { it.isNotBlank() }?.let { "$currency $it a month" }, form.targetDate?.let { "by ${shortDate(it)}" })
+                    .joinToString(" · ").ifEmpty { "Monthly amount and date, optional" }, planning,
+            ) { planning = !planning }
+            Disclosure(planning) {
+                Column(Modifier.padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    CompactField(
+                        form.monthly, { errorField = null; form = form.copy(monthly = cleanAmount(it)) }, "Put aside each month",
+                        keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !busy, isError = errorField == GoalField.Monthly, suffix = currency,
+                    )
+                    FormRow(
+                        FormRowStyle("Target date", Icons.Outlined.Event, first = true, last = true), form.targetDate?.let(::shortDate), "Optional", onClick = { if (!busy) pickingDate = true },
+                        trailing = if (form.targetDate == null) null else ({ IconButton(onClick = { form = form.copy(targetDate = null) }, enabled = !busy) { Icon(Icons.Outlined.Close, "Remove the date") } }),
+                    )
+                }
             }
         }
     }
@@ -286,6 +285,13 @@ fun GoalFormScreen(api: Api, currency: String, editing: Goal?, onClose: () -> Un
         ) { DatePicker(state, colors = glowDatePickerColors()) }
     }
 }
+
+/** A line of quiet help under a field. */
+@Composable
+private fun Caption(text: String) = Text(
+    text, Modifier.padding(top = 4.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+)
 
 /** Put money aside for a goal you track by hand, or take some back out. */
 @Composable

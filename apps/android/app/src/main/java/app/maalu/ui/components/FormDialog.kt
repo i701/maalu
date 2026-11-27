@@ -2,6 +2,9 @@
 
 package app.maalu.ui.components
 
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.TopAppBarDefaults
@@ -49,6 +52,8 @@ fun FormDialog(
     onClose: () -> Unit,
     onSave: () -> Unit,
     secure: Boolean = false,
+    /** Save floats over the foot of the form with its shadow, as on the transaction and account forms. */
+    floating: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Dialog(onDismissRequest = { if (!busy) onClose() }, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
@@ -56,7 +61,7 @@ fun FormDialog(
         BackdropPage {
             Scaffold(
                             containerColor = Color.Transparent,
-                snackbarHost = { SnackbarHost(snackbar) },
+                snackbarHost = { SnackbarHost(snackbar, Modifier.padding(bottom = if (floating) SaveButtonRoom else 0.dp)) },
                 topBar = {
                     TopAppBar(
                         colors = glowTopBarColors(),
@@ -65,7 +70,13 @@ fun FormDialog(
                     )
                 },
             ) { padding ->
-                Column(Modifier.padding(padding).fillMaxSize().imePadding()) {
+                if (floating) Box(Modifier.padding(padding).fillMaxSize().imePadding()) {
+                    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        content()
+                        Spacer(Modifier.height(SaveButtonRoom))
+                    }
+                    FloatingSave(saveLabel, busy, error, onSave, Modifier.align(Alignment.BottomCenter))
+                } else Column(Modifier.padding(padding).fillMaxSize().imePadding()) {
                     Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
                         content()
                         Box(Modifier.padding(bottom = 8.dp))
