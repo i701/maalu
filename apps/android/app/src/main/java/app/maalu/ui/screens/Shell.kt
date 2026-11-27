@@ -102,7 +102,7 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
     // back from a drawer destination returns to the tab you were on
     androidx.activity.compose.BackHandler(enabled = destination != null) { route = null }
     androidx.activity.compose.BackHandler(enabled = destination == null && openAccountId != null) { openAccountId = null }
-    // the month lives here so the app bar can move it for the Dashboard and the Budget
+    // the month lives here so the app bar can move it for the Dashboard, the Budget and the Categories
     var month by rememberSaveable { mutableStateOf(LocalDate.now().withDayOfMonth(1).toString()) }
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val snackbar = remember { androidx.compose.material3.SnackbarHostState() }
@@ -135,7 +135,7 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
     val onGuide = destination?.id == "docs" && docSlug != null
     // leaving Docs closes the guide, so coming back starts at the list
     androidx.compose.runtime.LaunchedEffect(route) { if (route != "docs") docSlug = null }
-    val monthly = onTab && !onAccountPage && (selected == DASHBOARD || selected == BUDGET)
+    val monthly = (onTab && !onAccountPage && (selected == DASHBOARD || selected == BUDGET)) || destination?.id == "categories"
     // the drawer's highlighted item: the open destination, else the tab
     val selectedId = destination?.id ?: MoreDestinations.firstOrNull { it.tabIndex == selected }?.id
     ModalNavigationDrawer(
@@ -218,7 +218,7 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
                 ) { (r, tab, acct) ->
                 val dest = destinationById(r)
                     if (dest != null) when (dest.id) {
-                        "categories" -> CategoriesScreen(api)
+                        "categories" -> CategoriesScreen(api, month)
                         "tags" -> TagsScreen(api)
                         "vendors" -> VendorsScreen(api)
                         "subscriptions" -> SubscriptionsScreen(api)

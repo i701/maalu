@@ -9,18 +9,17 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 78 | 69 | 66 |
+| ✅ done | 78 | 70 | 66 |
 | 🟡 partial | 0 | 2 | 1 |
-| ❌ missing | 0 | 5 | 6 |
+| ❌ missing | 0 | 4 | 6 |
 | ➖ n/a | 3 | 5 | 7 |
 | 🗓 planned | 0 | 0 | 1 |
 
-## Still to build on Android (7)
+## Still to build on Android (6)
 
 - 🟡 **Your name** (Sign in and security). Shows the name in the Dashboard's title and changes it in Settings; the app has no sign-up, so it is not asked there.
 - 🟡 **Email digest** (Notifications). The switch and the email status are in Settings; sending a test email is not.
 - ❌ **Export to Excel** (Transactions).
-- ❌ **Spent this month and limit per category** (Categories, tags and vendors).
 - ❌ **Hide dashboard cards, kept on the server** (Dashboard and reports).
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
@@ -106,10 +105,12 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 |---|:---:|:---:|:---:|
 | **Categories**<br>Colours, one level of sub-categories, need or want, merge, and the default Salary category. | ✅ done | ✅ done | ✅ done |
 | **Sort every category into need or want**<br>One dialog to sort all categories (or only the unsorted ones) at once. | ✅ done | ✅ done | ✅ done |
-| **Spent this month and limit per category**<br>The Categories table shows what each category spent in the month you pick (a parent with its sub-categories), a donut for the limit that covers it (its own colour, red when close or over), and a summary of the month's spending. | ✅ done | ❌ missing | ❌ missing |
+| **Spent this month and limit per category**<br>The Categories table shows what each category spent in the month you pick (a parent with its sub-categories), a donut for the limit that covers it (its own colour, red when close or over), and a summary of the month's spending. | ✅ done | ✅ done | ❌ missing |
 | **Tags**<br>Coloured labels that cut across categories, with merge. | ✅ done | ✅ done | ✅ done |
 | **Vendors**<br>Address, contact, local or foreign, currency, usual category and tags, merge. | ✅ done | ✅ done | ✅ done |
 | **A vendor's usual place**<br>A usual pin that a new transaction picks up. | ✅ done | ✅ done | ✅ done |
+
+- **Spent this month and limit per category** (Android): The spent figure does not open its transactions, as it does on the web.
 
 ## Bills and subscriptions
 

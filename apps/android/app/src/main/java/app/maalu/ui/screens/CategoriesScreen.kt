@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.CallMerge
@@ -87,6 +86,27 @@ import app.maalu.ui.components.SearchPill
 import app.maalu.ui.components.SegmentedPills
 import app.maalu.ui.components.Section
 import app.maalu.ui.theme.Accents
+import androidx.compose.foundation.layout.Spacer
+import app.maalu.data.Budget
+import app.maalu.data.CategoryTotals
+import app.maalu.data.budgetDay
+import app.maalu.data.fixedInPeriod
+import app.maalu.data.formatMoney
+import app.maalu.data.kindShares
+import app.maalu.data.Kind
+import app.maalu.data.limitFor
+import app.maalu.data.monthBounds
+import app.maalu.data.monthLabel
+import app.maalu.data.shortDate
+import app.maalu.data.spendByCategory
+import app.maalu.data.totalSpent
+import app.maalu.ui.components.SummaryPill
+import app.maalu.ui.theme.MoneyStyle
+import java.time.LocalDate
+import kotlin.math.roundToInt
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import androidx.compose.foundation.layout.FlowRow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonElement
 
@@ -100,10 +120,11 @@ private fun accent(name: String?) = Accents[name] ?: Accents.getValue("slate")
 
 /**
  * Your categories: sub-categories listed under their parent, each with its colour, whether it is a need or a want, and how
- * many transactions use it. Add one, edit it, merge it into another or delete it (a category in use can only be merged).
+ * many transactions use it, what it spent in [month] and the limit covering it. Add one, edit it, merge it into another or
+ * delete it (a category in use can only be merged).
  */
 @Composable
-fun CategoriesScreen(api: Api) {
+fun CategoriesScreen(api: Api, month: String) {
     var attempt by remember { mutableIntStateOf(0) }
     var refreshing by remember { mutableStateOf(false) }
     var query by remember { mutableStateOf("") }
@@ -127,6 +148,19 @@ fun CategoriesScreen(api: Api) {
         refreshing = false
     }
     val all = (state as? CatLoad.Loaded)?.items.orEmpty()
+    // the money is an extra: the categories work without it
+    val loadedMonth by produceState<CategoryMonth?>(null, month, attempt) {
+        val on = LocalDate.parse(month)
+        val (start, end) = monthBounds(on)
+        value = coroutineScope {
+            val totals = async { api.get<CategoryTotals>("transactions/categories", mapOf("date_from" to "$start", "date_to" to "$end")) }
+            val budget = async { api.get<Budget>("budget", mapOf("on" to "${budgetDay(on, LocalDate.now())}")) }
+            val t = (totals.await() as? ApiResult.Ok)?.data
+            CategoryMonth(month, t, (budget.await() as? ApiResult.Ok)?.data, spendByCategory(t?.categories.orEmpty()))
+        }
+    }
+    // never another month's figures while the one picked is on its way
+    val money = loadedMonth?.takeIf { it.month == month }
 
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
@@ -135,6 +169,7 @@ fun CategoriesScreen(api: Api) {
             if (all.any { !it.isSalary }) OutlinedButton(onClick = { sorting = true }, shapes = ButtonDefaults.shapes(), modifier = Modifier.padding(horizontal = 16.dp)) {
                 Text(sortKindsButtonLabel(unsortedCount(all)))
             }
+            money?.totals?.let { MonthSpent(it, month) }
             when (val s = state) {
                 CatLoad.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
                 is CatLoad.Failed -> Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -149,7 +184,7 @@ fun CategoriesScreen(api: Api) {
                         } else LazyColumn(Modifier.fillMaxSize().fadeInOnAppear().fadingEdges(listState), state = listState, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 96.dp)) {
                             items(shown.size, key = { shown[it].id }) { i -> Box(springItem()) {
                                 val c = shown[i]
-                                MorphTile({ selected = c }, first = i == 0, last = i == shown.lastIndex, modifier = Modifier.padding(bottom = 2.dp)) { CategoryRow(c, indented = c.parentId != null) }
+                                MorphTile({ selected = c }, first = i == 0, last = i == shown.lastIndex, modifier = Modifier.padding(bottom = 2.dp)) { CategoryRow(c, indented = c.parentId != null, money = money) }
                              }}
                         }
                     }
@@ -164,7 +199,7 @@ fun CategoriesScreen(api: Api) {
     }
 
     selected?.let { c ->
-        CategorySheet(c, onEdit = { editing = c; selected = null }, onMerge = { merging = c; selected = null }, onDelete = { deleting = c; selected = null }, onClose = { selected = null })
+        CategorySheet(c, money, onEdit = { editing = c; selected = null }, onMerge = { merging = c; selected = null }, onDelete = { deleting = c; selected = null }, onClose = { selected = null })
     }
     if (sorting) SortKindsDialog(api, all, onClose = { sorting = false }, onSaved = { msg -> sorting = false; attempt++; scope.launch { snackbar?.showSnackbar(msg) } })
     if (adding) CategoryFormScreen(api, all, null, { adding = false }) { adding = false; attempt++; scope.launch { snackbar?.showSnackbar("Category added") } }
@@ -210,7 +245,7 @@ fun CategoriesScreen(api: Api) {
 }
 
 @Composable
-private fun CategoryRow(c: Category, indented: Boolean = false) {
+private fun CategoryRow(c: Category, indented: Boolean = false, money: CategoryMonth? = null) {
     val tint = accent(c.color)
     // a sub-category is the same width as the rest, with more room inside on the left
     Row(Modifier.fillMaxWidth().padding(start = if (indented) 34.dp else 14.dp, end = 14.dp, top = 12.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -220,27 +255,45 @@ private fun CategoryRow(c: Category, indented: Boolean = false) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(c.name, style = MaterialTheme.typography.bodyMediumEmphasized, maxLines = 1, overflow = TextOverflow.Ellipsis)
             val sub = listOfNotNull(
+                "Pay".takeIf { c.isSalary },
+                kindLabel(c.effectiveKind),
                 "${c.transactionCount} ${if (c.transactionCount == 1) "transaction" else "transactions"}",
-                c.childCount.takeIf { it > 0 }?.let { "$it sub-categories" },
-                c.parent?.let { "in $it" },
+                // beside the money there is no room for the tree, which the indent already shows (and the sheet says)
+                c.childCount.takeIf { it > 0 && money?.totals == null }?.let { "$it sub-categories" },
+                c.parent?.takeIf { money?.totals == null }?.let { "in $it" },
             ).joinToString(" · ")
-            Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
-        // a kind of its own is in full ink; one taken from the parent is quiet
-        kindLabel(c.effectiveKind)?.let { label ->
-            val own = c.kind != null
-            Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.surfaceContainerHighest) {
-                Text(label, style = MaterialTheme.typography.labelSmall, color = if (own) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp))
-            }
+        money?.totals?.let { totals ->
+            val spent = money.spend[c.id]?.total?.takeIf { it.signum() != 0 }
+            Text(
+                spent?.let { formatMoney(it.toPlainString(), totals.currency) } ?: "–",
+                style = MaterialTheme.typography.bodyMedium.merge(MoneyStyle), maxLines = 1,
+                color = if (spent == null) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+            )
         }
-        if (c.isSalary) Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.surfaceContainerHighest) {
-            Text("Pay", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp))
+        // room for the ring on every row once any limit runs, so the amounts line up
+        money?.budget?.takeIf { it.lines.isNotEmpty() || fixedInPeriod(it).isNotEmpty() }?.let { budget ->
+            val limit = limitFor(budget, c.id, c.parentId)
+            if (limit != null) LimitRing(limit, budget.currency) else Spacer(Modifier.size(LimitRingSize))
         }
     }
 }
 
+/** The month's spending and how much of it is in categories not yet sorted into need or want. */
 @Composable
-private fun CategorySheet(c: Category, onEdit: () -> Unit, onMerge: () -> Unit, onDelete: () -> Unit, onClose: () -> Unit) {
+private fun MonthSpent(totals: CategoryTotals, month: String) {
+    val spent = totalSpent(totals.categories)
+    if (spent.signum() <= 0) return
+    val unsorted = kindShares(totals.categories)?.firstOrNull { it.kind == Kind.Unsorted }?.share ?: 0.0
+    FlowRow(Modifier.padding(horizontal = 16.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        SummaryPill("${formatMoney(spent.toPlainString(), totals.currency)} spent in ${monthLabel(LocalDate.parse(month))}")
+        if (unsorted > 0) SummaryPill("${(unsorted * 100).roundToInt()}% not sorted")
+    }
+}
+
+@Composable
+private fun CategorySheet(c: Category, money: CategoryMonth?, onEdit: () -> Unit, onMerge: () -> Unit, onDelete: () -> Unit, onClose: () -> Unit) {
     ModalBottomSheet(onDismissRequest = onClose, containerColor = androidx.compose.ui.graphics.Color.Transparent, modifier = Modifier.glowSheet(MaterialTheme.colorScheme.surfaceContainerLow)) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(c.name, style = MaterialTheme.typography.titleMedium)
@@ -249,6 +302,21 @@ private fun CategorySheet(c: Category, onEdit: () -> Unit, onMerge: () -> Unit, 
             Fact("Inside", c.parent)
             Fact("Sub-categories", c.childCount.takeIf { it > 0 }?.toString())
             Fact("Transactions", c.transactionCount.toString())
+            money?.totals?.let { totals ->
+                val spend = money.spend[c.id]
+                Fact(
+                    "Spent in ${monthLabel(LocalDate.parse(money.month))}",
+                    spend?.let { formatMoney(it.total.toPlainString(), totals.currency) + if (it.fromChildren) ", with sub-categories" else "" } ?: "Nothing",
+                )
+            }
+            money?.budget?.let { budget ->
+                limitFor(budget, c.id, c.parentId)?.let { limit ->
+                    Fact("Limit", limitText(limit, budget.currency))
+                    // a budget period that starts mid-month is not the month picked: say which one the figure is for
+                    val (start, end) = monthBounds(LocalDate.parse(money.month))
+                    budget.period?.takeIf { it.start != "$start" || it.end != "$end" }?.let { Fact("Period", "${shortDate(it.start)} to ${shortDate(it.end)}") }
+                }
+            }
             if (c.isSalary) Text("This is the default category for pay: it can't be renamed, merged or deleted.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = onEdit, shapes = ButtonDefaults.shapes(), modifier = Modifier.weight(1f), colors = ButtonDefaults.filledTonalButtonColors()) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Edit") }
