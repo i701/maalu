@@ -106,7 +106,7 @@ fun <T> SegmentedPills(
                     onCheckedChange = { onSelect(value) },
                     // the shadow takes the segment's resting or chosen shape; for the instant of a press the shape morphs past it
                     modifier = Modifier.weight(share).height(40.dp)
-                        .then(if (icon != null) Modifier.elevation(2, if (isSelected) shapes.checkedShape else shapes.shape) else Modifier),
+                        .then(if (icon != null) Modifier.elevation(1, if (isSelected) shapes.checkedShape else shapes.shape) else Modifier),
                     enabled = enabled,
                     shapes = shapes,
                     colors = ToggleButtonDefaults.colors(
