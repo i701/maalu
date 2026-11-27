@@ -50,9 +50,12 @@ fun PickerField(
     isError: Boolean = false,
     /** When set, [entries] are the server's answer to the typed text: they are not filtered again here. */
     onQuery: ((String) -> Unit)? = null,
+    /** When set, drawn as a tile of a form's grouped list, in place of the filled box. */
+    row: FormRowStyle? = null,
 ) {
     var open by remember { mutableStateOf(false) }
-    Surface(
+    if (row != null) FormRow(row, value?.name, placeholder, onClick = { open = true }, isError = isError)
+    else Surface(
         onClick = { open = true },
         shape = MaterialTheme.shapes.medium,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,

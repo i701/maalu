@@ -18,7 +18,7 @@ import kotlinx.coroutines.delay
  * [onPick] gets the name and, when it was an existing vendor, that vendor (so its usual category and tags can be used).
  */
 @Composable
-fun VendorPickerField(api: Api, value: String, onPick: (name: String, vendor: VendorItem?) -> Unit, modifier: Modifier = Modifier) {
+fun VendorPickerField(api: Api, value: String, onPick: (name: String, vendor: VendorItem?) -> Unit, modifier: Modifier = Modifier, row: FormRowStyle? = null) {
     var known by remember { mutableStateOf<List<VendorItem>>(emptyList()) }
     var query by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(query) {
@@ -29,7 +29,7 @@ fun VendorPickerField(api: Api, value: String, onPick: (name: String, vendor: Ve
     PickerField(
         title = "Vendor",
         value = value.takeIf { it.isNotBlank() }?.let { Ref("", it) },
-        placeholder = "Choose or add a vendor (optional)",
+        placeholder = if (row != null) "Optional" else "Choose or add a vendor (optional)",
         anyLabel = "No vendor",
         entries = known.map { Ref(it.id, it.name) },
         searchable = true,
@@ -41,5 +41,6 @@ fun VendorPickerField(api: Api, value: String, onPick: (name: String, vendor: Ve
             onPick(picked?.name ?: r?.name ?: "", picked)
         },
         modifier = modifier,
+        row = row,
     )
 }

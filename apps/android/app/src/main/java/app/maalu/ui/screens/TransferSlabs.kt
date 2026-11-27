@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.elevation
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
@@ -98,13 +99,14 @@ fun TransferSlabs(accounts: List<Account>, form: AddForm, onForm: (AddForm) -> U
             else errorField == FormField.ToAccount || errorField == FormField.ToAmount
             Surface(
                 shape = MaterialTheme.shapes.large,
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
                 border = if (bad) BorderStroke(2.dp, MaterialTheme.colorScheme.error) else null,
                 modifier = Modifier
                     .zIndex(if (picking == i) 2f else 0f)
                     .offset(y = if (source) 0.dp else (slab + gap) * (1f - p))
                     .fillMaxWidth()
                     .height(lerp(slab, block, p))
+                    .elevation(1, MaterialTheme.shapes.large)
                     // the other slab goes while this one's list is open
                     .alpha(if (picking != null && picking != i) 1f - hidden else 1f),
             ) {
@@ -137,12 +139,12 @@ fun TransferSlabs(accounts: List<Account>, form: AddForm, onForm: (AddForm) -> U
             enabled = enabled && (from != null || to != null),
             shapes = IconButtonDefaults.shapes(),
             colors = IconButtonDefaults.filledTonalIconButtonColors(
-                // neutral, like the account pills
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                // white, like the slabs it sits on
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                 contentColor = MaterialTheme.colorScheme.onSurface,
-                disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
             ),
-            modifier = Modifier.align(Alignment.TopCenter).offset(y = slab + gap / 2 - 20.dp).size(40.dp).zIndex(1f),
+            modifier = Modifier.align(Alignment.TopCenter).offset(y = slab + gap / 2 - 20.dp).size(40.dp).zIndex(1f).elevation(2, CircleShape),
         ) {
             // a full turn, so it always ends pointing the way the money goes
             Icon(Icons.Outlined.ArrowDownward, "Swap the accounts", Modifier.rotate(turned))

@@ -53,27 +53,28 @@ fun FormDialog(
 ) {
     Dialog(onDismissRequest = { if (!busy) onClose() }, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         if (secure) SecureWindow()
-        Scaffold(
-            modifier = Modifier.glowBackground(),
-            containerColor = Color.Transparent,
-            snackbarHost = { SnackbarHost(snackbar) },
-            topBar = {
-                TopAppBar(
-                    colors = glowTopBarColors(),
-                    title = { Text(title) },
-                    navigationIcon = { IconButton(onClick = onClose, enabled = !busy) { Icon(Icons.Outlined.Close, "Close") } },
-                )
-            },
-        ) { padding ->
-            Column(Modifier.padding(padding).fillMaxSize().imePadding()) {
-                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                    content()
-                    Box(Modifier.padding(bottom = 8.dp))
-                }
-                Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
-                    Button(onClick = onSave, enabled = !busy, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth()) {
-                        Text(if (busy) "Saving…" else saveLabel)
+        BackdropPage {
+            Scaffold(
+                            containerColor = Color.Transparent,
+                snackbarHost = { SnackbarHost(snackbar) },
+                topBar = {
+                    TopAppBar(
+                        colors = glowTopBarColors(),
+                        title = { Text(title) },
+                        navigationIcon = { IconButton(onClick = onClose, enabled = !busy) { Icon(Icons.Outlined.Close, "Close") } },
+                    )
+                },
+            ) { padding ->
+                Column(Modifier.padding(padding).fillMaxSize().imePadding()) {
+                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                        content()
+                        Box(Modifier.padding(bottom = 8.dp))
+                    }
+                    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
+                        Button(onClick = onSave, enabled = !busy, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth()) {
+                            Text(if (busy) "Saving…" else saveLabel)
+                        }
                     }
                 }
             }

@@ -2,12 +2,30 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.theme.ChartColors
+import app.maalu.ui.components.BackdropPage
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.outlined.Event
+import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.foundation.layout.ColumnScope
+import app.maalu.ui.components.FormSwitchRow
+import androidx.compose.material.icons.outlined.CreditCard
+import androidx.compose.runtime.saveable.rememberSaveable
+import app.maalu.data.dateLabel
+import app.maalu.data.detailsSummary
+import app.maalu.data.hasDetails
+import app.maalu.ui.components.DisclosureRow
+import app.maalu.ui.components.Disclosure
+import app.maalu.data.bankBrand
+import app.maalu.ui.components.BankAvatar
+import app.maalu.ui.components.BigAmountField
+import app.maalu.ui.components.FormRow
+import app.maalu.ui.components.FormRowStyle
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.material3.Surface
 import androidx.compose.foundation.layout.height
 import app.maalu.ui.components.elevation
 import app.maalu.ui.components.glowTopBarColors
-import app.maalu.ui.components.glowBackground
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material.icons.outlined.LocationOn
 import app.maalu.ui.components.PickerSheet
@@ -239,40 +257,42 @@ fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit, edi
     }
 
     androidx.compose.runtime.CompositionLocalProvider(LocalApi provides api) { Dialog(onDismissRequest = { if (!busy) onClose() }, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
-        Scaffold(
-            modifier = Modifier.glowBackground(), containerColor = androidx.compose.ui.graphics.Color.Transparent,
-            // above the floating Save button
-            snackbarHost = { SnackbarHost(snackbar, Modifier.padding(bottom = SaveButtonRoom)) },
-            topBar = {
-                TopAppBar(
-                    colors = glowTopBarColors(),
-                    title = { Text((if (editing == null) "New " else "Edit ") + (TYPES.first { it.first == form.type }.second.lowercase())) },
-                    navigationIcon = { IconButton(onClick = onClose, enabled = !busy) { Icon(Icons.Outlined.Close, "Close") } },
-                    actions = {
-                        // starting from a saved template, and saving what is on the form as one (a new transaction only)
-                        if (editing == null && options != null) {
-                            if (options?.templates?.isNotEmpty() == true) IconButton(onClick = { pickingTemplate = true }, enabled = !busy) { Icon(Icons.Outlined.Bookmark, "Start from a template") }
-                            IconButton(onClick = { savingTemplate = true }, enabled = !busy) { Icon(Icons.Outlined.BookmarkAdd, "Save as a template") }
-                        }
-                    },
-                )
-            },
-        ) { padding ->
-            val o = options
-            when {
-                loadError != null -> Column(Modifier.fillMaxSize().padding(padding).padding(24.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(loadError ?: "", color = MaterialTheme.colorScheme.error)
-                    Button(onClick = onClose, shapes = ButtonDefaults.shapes(), modifier = Modifier.padding(top = 12.dp)) { Text("Close") }
+        BackdropPage {
+            Scaffold(
+                 containerColor = androidx.compose.ui.graphics.Color.Transparent,
+                // above the floating Save button
+                snackbarHost = { SnackbarHost(snackbar, Modifier.padding(bottom = SaveButtonRoom)) },
+                topBar = {
+                    TopAppBar(
+                        colors = glowTopBarColors(),
+                        title = { Text((if (editing == null) "New " else "Edit ") + (TYPES.first { it.first == form.type }.second.lowercase())) },
+                        navigationIcon = { IconButton(onClick = onClose, enabled = !busy) { Icon(Icons.Outlined.Close, "Close") } },
+                        actions = {
+                            // starting from a saved template, and saving what is on the form as one (a new transaction only)
+                            if (editing == null && options != null) {
+                                if (options?.templates?.isNotEmpty() == true) IconButton(onClick = { pickingTemplate = true }, enabled = !busy) { Icon(Icons.Outlined.Bookmark, "Start from a template") }
+                                IconButton(onClick = { savingTemplate = true }, enabled = !busy) { Icon(Icons.Outlined.BookmarkAdd, "Save as a template") }
+                            }
+                        },
+                    )
+                },
+            ) { padding ->
+                val o = options
+                when {
+                    loadError != null -> Column(Modifier.fillMaxSize().padding(padding).padding(24.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(loadError ?: "", color = MaterialTheme.colorScheme.error)
+                        Button(onClick = onClose, shapes = ButtonDefaults.shapes(), modifier = Modifier.padding(top = 12.dp)) { Text("Close") }
+                    }
+                    o == null -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                    else -> Form(
+                        o, if (editing != null) "Save changes" else "Save", form, { errorField = null; form = it }, error, errorField, busy, Modifier.padding(padding),
+                        extra = if (editing == null) ({
+                            PendingReceipts(pendingFiles, pendingLinks, busy, onProblem = { m -> scope.launch { snackbar.showSnackbar(m) } }, onAddLink = { addingLink = true })
+                        }) else null,
+                        onSave = { save(o, false) },
+                        onSaveAnother = if (editing == null && onAdded != null) ({ save(o, true) }) else null,
+                    )
                 }
-                o == null -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-                else -> Form(
-                    o, if (editing != null) "Save changes" else "Save", form, { errorField = null; form = it }, error, errorField, busy, Modifier.padding(padding),
-                    extra = if (editing == null) ({
-                        PendingReceipts(pendingFiles, pendingLinks, busy, onProblem = { m -> scope.launch { snackbar.showSnackbar(m) } }, onAddLink = { addingLink = true })
-                    }) else null,
-                    onSave = { save(o, false) },
-                    onSaveAnother = if (editing == null && onAdded != null) ({ save(o, true) }) else null,
-                )
             }
         }
         val o = options
@@ -299,8 +319,16 @@ fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit, edi
     } }
 }
 
+/** Each type's own colour, as on iOS: income green, expense red, transfer blue. */
+@Composable
+private fun typeTint(type: String): Color = when (type) {
+    "income" -> ChartColors.IncomeLight
+    "transfer" -> ChartColors.Line
+    else -> MaterialTheme.colorScheme.error
+}
+
 /** The height the floating Save button and its margin take over the bottom of the form. */
-private val SaveButtonRoom = 92.dp
+private val SaveButtonRoom = 104.dp
 
 /** Names the form as it stands and saves it as a template: what is empty is left out, so the template does not fill it. */
 @Composable
@@ -354,138 +382,124 @@ private fun Form(o: FormOptions, saveLabel: String, form: AddForm, onForm: (AddF
                 options = TYPES,
                 selected = form.type,
                 onSelect = { value -> onForm(form.copy(type = value, toAccountId = if (value == "transfer") form.toAccountId else null)) },
+                tint = { typeTint(it) },
                 enabled = !busy,
             )
 
             if (form.type == "transfer") TransferSlabs(o.accounts, form, onForm, errorField, enabled = !busy)
-            else {
-                // the amount: a regular field like the rest, with the currency at its end
-                Section("Amount", Icons.Outlined.Numbers) {
-                    // with items the amount is their total: it is shown, not typed
-                    if (form.splitOn && form.type != "transfer") {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            MoneyText(form.effectiveAmount(), currency, style = MaterialTheme.typography.titleLarge)
-                            Text("  total of the items", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    } else CompactField(
-                        form.amount, { onForm(form.copy(amount = cleanAmount(it))) }, "Amount",
-                        keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        enabled = !busy, isError = errorField == FormField.Amount, suffix = currency,
-                    placeholder = "0.00")
-                }
-
-                Section("Account", Icons.Outlined.AccountBalance) {
-                    PickerField(
-                        isError = errorField == FormField.Account,
-                        title = "Account", value = account?.let { Ref(it.id, it.name) }, placeholder = "No account", anyLabel = null,
-                        entries = o.accounts.map { Ref(it.id, it.name) },
-                        detail = { r -> o.accounts.firstOrNull { it.id == r.id }?.let(::accountDetail) },
-                        // built from the form as it is now: a function reference to a local helper kept an older copy of the form
-                        onPick = { r -> o.accounts.firstOrNull { it.id == r?.id }?.let { a -> onForm(form.withAccount(a)) } },
-                    )
-                    // a card spends from its own account: picking one sets the account and the way of paying (an expense only)
-                    val cardChoices = cardsForForm(o.cards, form.accountId)
-                    if (form.type == "expense" && o.cards.isNotEmpty()) PickerField(
-                        title = "Card", value = o.cards.firstOrNull { it.id == form.cardId }?.let { Ref(it.id, it.text()) }, placeholder = "Card (optional)", anyLabel = "No card",
-                        entries = cardChoices.map { Ref(it.id, it.text()) },
-                        detail = { r -> cardChoices.firstOrNull { it.id == r.id }?.account?.name },
-                        onPick = { r -> val c = cardChoices.firstOrNull { it.id == r?.id }; onForm(if (c == null) form.copy(cardId = null) else form.withCard(c, o.accounts)) },
-                    )
-                    if (foreign) CompactField(
-                        form.rate, { onForm(form.copy(rate = cleanAmount(it))) }, "Exchange rate",
-                        keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !busy, isError = errorField == FormField.Rate,
-                    placeholder = "1 $currency = ? $base")
-                }
+            else Column(Modifier.fillMaxWidth()) {
+                // with items the amount is their total: it is shown, not typed
+                if (form.splitOn) Column(Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    MoneyText(form.effectiveAmount(), currency, style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.SemiBold))
+                    Text("Total of the items", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                } else BigAmountField(form.amount, { onForm(form.copy(amount = cleanAmount(it))) }, currency, enabled = !busy, isError = errorField == FormField.Amount)
             }
 
-            if (form.type != "transfer") {
-                // with items each item has its own category, and the transaction takes the biggest item's
-                if (!form.splitOn) Section("Category", Icons.Outlined.Category) {
-                    PickerField(
-                        isError = errorField == FormField.Category,
-                        title = "Category", value = form.category.takeIf { it.isNotBlank() }?.let { Ref("", it) }, placeholder = "Choose or type a category",
-                        anyLabel = null, searchable = true, allowCreate = true,
-                        entries = o.categories.map { Ref(it.id, it.name) },
-                        onPick = { r -> onForm(form.copy(category = r?.name ?: "")) },
-                    )
-                }
-                VendorSection(form, onForm)
-                Section("Items", Icons.Outlined.ReceiptLong) {
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(32.dp)) {
-                        Column(Modifier.weight(1f)) {
-                            Text("Split by items", style = MaterialTheme.typography.bodyMedium)
-                            Text("List what was bought, each with its own category and price. The items make the amount.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        Switch(
-                            checked = form.splitOn, enabled = !busy,
-                            onCheckedChange = { on -> onForm(form.copy(splitOn = on, items = if (on && form.items.isEmpty()) listOf(newItem(), newItem()) else form.items)) },
+            // what nearly every transaction needs; the rest waits under More details
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                if (form.type != "transfer") {
+                    AccountField(o.accounts, account, errorField == FormField.Account) { a -> onForm(form.withAccount(a)) }
+                    // with items each item has its own category, and the transaction takes the biggest item's
+                    if (!form.splitOn) {
+                        PickerField(
+                            isError = errorField == FormField.Category,
+                            title = "Category", value = form.category.takeIf { it.isNotBlank() }?.let { Ref("", it) }, placeholder = "Choose a category",
+                            anyLabel = null, searchable = true, allowCreate = true,
+                            entries = o.categories.map { Ref(it.id, it.name) },
+                            onPick = { r -> onForm(form.copy(category = r?.name ?: "")) },
+                            row = FormRowStyle("Category", Icons.Outlined.Category),
                         )
                     }
-                    if (form.splitOn) ItemsEditor(form, onForm, o.categories, currency, busy)
+                    VendorSection(form, onForm)
                 }
+                FormRow(FormRowStyle("Date", Icons.Outlined.CalendarMonth, first = form.type == "transfer", last = true), dateLabel(form.date, LocalDate.now()), "", onClick = { if (!busy) pickingDate = true })
             }
+            if (foreign) CompactField(
+                form.rate, { onForm(form.copy(rate = cleanAmount(it))) }, "Exchange rate",
+                keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !busy, isError = errorField == FormField.Rate,
+                placeholder = "1 $currency = ? $base",
+            )
 
-            Section("When", Icons.Outlined.CalendarMonth) {
-                val today = LocalDate.now()
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ChoiceChip(form.date == "$today", { onForm(form.withDate("$today")) }, { Text("Today") })
-                    ChoiceChip(form.date == "${today.minusDays(1)}", { onForm(form.withDate("${today.minusDays(1)}")) }, { Text("Yesterday") })
-                    val custom = form.date != "$today" && form.date != "${today.minusDays(1)}"
-                    ChoiceChip(custom, { pickingDate = true }, { Text(if (custom) shortDate(form.date) else "Pick a date") })
-                    ChoiceChip(form.time != null, { if (form.time == null) pickingTime = true else onForm(form.copy(time = null)) }, { Text(form.time ?: "Add time") })
-                }
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(32.dp)) {
-                    // a wide gap before the switch, so the sub-text wraps instead of crowding it
-                    Column(Modifier.weight(1f)) {
-                        Text("Planned", style = MaterialTheme.typography.bodyMedium)
-                        Text("Hasn't happened yet. It counts toward nothing until you mark it paid.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    Switch(checked = form.planned, onCheckedChange = { onForm(form.copy(planned = it, plannedTouched = true)) }, enabled = !busy)
-                }
-            }
-
-            if (form.type != "transfer") {
-                Section("Paid by", Icons.Outlined.Payments) {
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        PaymentMethodLabels.forEach { (value, label) ->
-                            ChoiceChip(form.method == value, { onForm(form.copy(method = value, methodTouched = true)) }, { Text(label) })
+            // open from the start when something in it is already set (editing, a template), and again when that changes
+            val detailsSet = form.hasDetails()
+            var detailsOpen by rememberSaveable { mutableStateOf(detailsSet) }
+            LaunchedEffect(detailsSet, errorField) { if (detailsSet || errorField == FormField.Items) detailsOpen = true }
+            Column {
+                DisclosureRow("More details", form.detailsSummary(o.cards.firstOrNull { it.id == form.cardId }?.text()), detailsOpen) { detailsOpen = !detailsOpen }
+                Disclosure(detailsOpen) {
+                    // three short groups, one line per choice, so it can be read at a glance
+                    Column(Modifier.padding(top = 12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        if (form.type != "transfer") FieldGroup("Payment") {
+                            val cards = form.type == "expense" && o.cards.isNotEmpty()
+                            PickerField(
+                                title = "Paid by", value = Ref(form.method, PaymentMethodLabels[form.method] ?: form.method), placeholder = "Choose", anyLabel = null,
+                                entries = PaymentMethodLabels.map { (value, label) -> Ref(value, label) },
+                                onPick = { r -> if (r != null) onForm(form.copy(method = r.id, methodTouched = true)) },
+                                row = FormRowStyle("Paid by", Icons.Outlined.Payments, first = true, last = !cards),
+                            )
+                            // a card spends from its own account: picking one sets the account and the way of paying (an expense only)
+                            if (cards) {
+                                val cardChoices = cardsForForm(o.cards, form.accountId)
+                                PickerField(
+                                    title = "Card", value = o.cards.firstOrNull { it.id == form.cardId }?.let { Ref(it.id, it.text()) }, placeholder = "Optional", anyLabel = "No card",
+                                    entries = cardChoices.map { Ref(it.id, it.text()) },
+                                    detail = { r -> cardChoices.firstOrNull { it.id == r.id }?.account?.name },
+                                    onPick = { r -> val c = cardChoices.firstOrNull { it.id == r?.id }; onForm(if (c == null) form.copy(cardId = null) else form.withCard(c, o.accounts)) },
+                                    row = FormRowStyle("Card", Icons.Outlined.CreditCard, last = true),
+                                )
+                            }
                         }
-                    }
-                }
-                if (o.tags.isNotEmpty()) Section("Tags", Icons.Outlined.Sell) {
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        o.tags.forEach { tag ->
-                            val on = tag.name in form.tags
-                            ChoiceChip(on, { onForm(form.copy(tags = if (on) form.tags - tag.name else form.tags + tag.name)) }, { Text(tag.name) })
-                        }
-                    }
-                }
-            }
 
-            Section("Note", Icons.Outlined.Notes) {
-                // a text area: the width of the screen and several lines tall
-                CompactField(form.note, { onForm(form.copy(note = it.take(500))) }, "Add a note", Modifier.fillMaxWidth(), singleLine = false, enabled = !busy, minHeight = 112.dp)
-            }
-            Section("Location", Icons.Outlined.LocationOn) {
-                // where it happened, marked on a map; the Places screen shows where spending went
-                val api = LocalApi.current ?: return@Section
-                var marking by remember { mutableStateOf(false) }
-                val marked = form.latitude.isNotBlank() && form.longitude.isNotBlank()
-                if (!marked) OutlinedButton(onClick = { marking = true }, enabled = !busy, shapes = ButtonDefaults.shapes()) {
-                    Icon(Icons.Outlined.LocationOn, null, Modifier.padding(end = 6.dp)); Text("Add location")
-                } else Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ChoiceChip(selected = true, onClick = { marking = true }, label = { Text(app.maalu.data.placeLabel(form.place, form.latitude, form.longitude), maxLines = 1) }, modifier = Modifier.weight(1f, fill = false))
-                    IconButton(onClick = { onForm(form.copy(latitude = "", longitude = "", place = "")) }, enabled = !busy) { Icon(Icons.Outlined.Close, "Remove the location") }
+                        FieldGroup("Options") {
+                            FormRow(
+                                FormRowStyle("Time", Icons.Outlined.Schedule, first = true), form.time, "Optional", onClick = { if (!busy) pickingTime = true },
+                                trailing = if (form.time == null) null else ({ IconButton(onClick = { onForm(form.copy(time = null)) }, enabled = !busy) { Icon(Icons.Outlined.Close, "Remove the time") } }),
+                            )
+                            FormSwitchRow(
+                                FormRowStyle("Planned", Icons.Outlined.Event, last = form.type == "transfer"), "Not paid yet, so it isn't counted",
+                                form.planned, !busy,
+                            ) { onForm(form.copy(planned = it, plannedTouched = true)) }
+                            if (form.type != "transfer") {
+                                FormSwitchRow(FormRowStyle("Split by items", Icons.Outlined.ReceiptLong, last = true), "A category and price for each item", form.splitOn, !busy) { on ->
+                                    onForm(form.copy(splitOn = on, items = if (on && form.items.isEmpty()) listOf(newItem(), newItem()) else form.items))
+                                }
+                                if (form.splitOn) ItemsEditor(form, onForm, o.categories, currency, busy)
+                            }
+                        }
+
+                        FieldGroup("Extras") {
+                            CompactField(form.note, { onForm(form.copy(note = it.take(500))) }, "Add a note", Modifier.fillMaxWidth().padding(bottom = 8.dp), singleLine = false, enabled = !busy)
+                            if (form.type != "transfer" && o.tags.isNotEmpty()) FlowRow(Modifier.padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                o.tags.forEach { tag ->
+                                    val on = tag.name in form.tags
+                                    ChoiceChip(on, { onForm(form.copy(tags = if (on) form.tags - tag.name else form.tags + tag.name)) }, { Text(tag.name) })
+                                }
+                            }
+                            // where it happened, marked on a map; the Places screen shows where spending went
+                            val api = LocalApi.current
+                            var marking by remember { mutableStateOf(false) }
+                            val marked = form.latitude.isNotBlank() && form.longitude.isNotBlank()
+                            FormRow(
+                                FormRowStyle("Location", Icons.Outlined.LocationOn, first = true, last = true),
+                                if (marked) app.maalu.data.placeLabel(form.place, form.latitude, form.longitude) else null, "Optional",
+                                onClick = { if (!busy) marking = true },
+                                trailing = if (!marked) null else ({ IconButton(onClick = { onForm(form.copy(latitude = "", longitude = "", place = "")) }, enabled = !busy) { Icon(Icons.Outlined.Close, "Remove the location") } }),
+                            )
+                            if (marking && api != null) LocationDialog(
+                                api, initial = if (marked) Spot(form.latitude, form.longitude, form.place) else null,
+                                onClose = { marking = false },
+                                onDone = { spot -> marking = false; onForm(if (spot == null) form.copy(latitude = "", longitude = "", place = "") else form.copy(latitude = spot.latitude, longitude = spot.longitude, place = spot.place)) },
+                            )
+                        }
+                        extra?.invoke()
+                    }
                 }
-                if (marking) LocationDialog(
-                    api, initial = if (marked) Spot(form.latitude, form.longitude, form.place) else null,
-                    onClose = { marking = false },
-                    onDone = { spot -> marking = false; onForm(if (spot == null) form.copy(latitude = "", longitude = "", place = "") else form.copy(latitude = spot.latitude, longitude = spot.longitude, place = spot.place)) },
-                )
             }
-            extra?.invoke()
             // the second way to save is the last thing in the form; only Save floats
-            if (onSaveAnother != null) OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = onSaveAnother, enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text("Save and add another") }
+            if (onSaveAnother != null) Button(
+                onClick = onSaveAnother, enabled = !busy, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth().height(48.dp).elevation(1, CircleShape),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow, contentColor = MaterialTheme.colorScheme.primary),
+            ) { Text("Save and add another") }
             // room to scroll the last row clear of the floating button
             Spacer(Modifier.height(SaveButtonRoom))
         }
@@ -495,7 +509,7 @@ private fun Form(o: FormOptions, saveLabel: String, form: AddForm, onForm: (AddF
         Column(
             Modifier.align(Alignment.BottomCenter).fillMaxWidth()
                 .background(Brush.verticalGradient(listOf(page.copy(alpha = 0f), page)))
-                .padding(start = 28.dp, end = 28.dp, top = 24.dp, bottom = 12.dp),
+                .padding(start = 28.dp, end = 28.dp, top = 24.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             error?.let {
@@ -504,7 +518,7 @@ private fun Form(o: FormOptions, saveLabel: String, form: AddForm, onForm: (AddF
                 }
             }
             Button(
-                onClick = onSave, enabled = !busy, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth().height(56.dp),
+                onClick = onSave, enabled = !busy, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth().height(56.dp).elevation(6, CircleShape),
             ) {
                 Text(if (busy) "Saving…" else saveLabel, style = MaterialTheme.typography.titleMedium)
             }
@@ -541,9 +555,32 @@ private fun Form(o: FormOptions, saveLabel: String, form: AddForm, onForm: (AddF
 @Composable
 private fun VendorSection(form: AddForm, onForm: (AddForm) -> Unit) {
     val api = LocalApi.current ?: return
-    Section("Vendor", Icons.Outlined.Storefront) {
-        VendorPickerField(api, form.vendor, onPick = { name, picked -> onForm(if (picked != null) form.withVendor(picked) else form.copy(vendor = name)) })
+    VendorPickerField(api, form.vendor, onPick = { name, picked -> onForm(if (picked != null) form.withVendor(picked) else form.copy(vendor = name)) }, row = FormRowStyle("Vendor", Icons.Outlined.Storefront))
+}
+
+/** A few related choices under one small heading, their tiles 2dp apart. */
+@Composable
+private fun FieldGroup(title: String, content: @Composable ColumnScope.() -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(title, Modifier.padding(start = 4.dp, bottom = 6.dp), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        content()
     }
+}
+
+/** The account as a row with its logo, balance and number, which tell look-alikes apart. */
+@Composable
+private fun AccountField(accounts: List<Account>, account: Account?, isError: Boolean, onPick: (Account) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    val brand = account?.bank?.let(::bankBrand)
+    FormRow(
+        FormRowStyle("Account", Icons.Outlined.AccountBalance, first = true), account?.name, "Choose an account", onClick = { open = true }, detail = account?.let(::accountDetail),
+        isError = isError, leading = brand?.let { { BankAvatar(it) } },
+    )
+    if (open) PickerSheet(
+        title = "Account", anyLabel = null, entries = accounts.map { Ref(it.id, it.name) }, selectedId = account?.id, searchable = false, allowCreate = false,
+        detail = { r -> accounts.firstOrNull { it.id == r.id }?.let(::accountDetail) }, onQuery = null,
+        onPick = { r -> open = false; accounts.firstOrNull { it.id == r?.id }?.let(onPick) }, onDismiss = { open = false },
+    )
 }
 
 /** What the account list shows under a name: the balance, then the bank and number that tell look-alikes apart. */

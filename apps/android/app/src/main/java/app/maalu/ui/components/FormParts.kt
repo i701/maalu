@@ -13,7 +13,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.foundation.border
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -48,9 +51,9 @@ fun Section(title: String, icon: ImageVector, content: @Composable () -> Unit) {
 }
 
 /**
- * The app's text input: Material's outlined text field (4dp corners, a hairline outline that turns into a primary ring on focus, and a
- * floating [label] that stays above the text once there is some), the same look as the web's. [placeholder] is a hint that shows while the
- * field is focused and empty, for an example such as "For example Groceries".
+ * The app's text input: Material's filled text field on the white of the form's tiles, with their shadow, so it reads on the backdrop;
+ * a primary ring shows focus (red for an error) in place of the underline. The [label] floats above the text once there is some.
+ * [placeholder] is a hint that shows while the field is focused and empty, for an example such as "For example Groceries".
  */
 @Composable
 fun CompactField(
@@ -72,10 +75,20 @@ fun CompactField(
     actions: androidx.compose.foundation.text.KeyboardActions = androidx.compose.foundation.text.KeyboardActions.Default,
     placeholder: String? = null,
 ) {
-    OutlinedTextField(
+    var focused by remember { mutableStateOf(false) }
+    val shape = MaterialTheme.shapes.large
+    val ring = when {
+        isError -> MaterialTheme.colorScheme.error
+        focused -> MaterialTheme.colorScheme.primary
+        else -> null
+    }
+    val fill = MaterialTheme.colorScheme.surfaceContainerLow
+    TextField(
         value = value,
         onValueChange = onChange,
-        modifier = modifier.fillMaxWidth().heightIn(min = minHeight),
+        modifier = modifier.fillMaxWidth().heightIn(min = minHeight).elevation(1, shape)
+            .then(if (ring != null) Modifier.border(2.dp, ring, shape) else Modifier)
+            .onFocusChanged { focused = it.isFocused },
         enabled = enabled,
         singleLine = singleLine,
         keyboardOptions = keyboard,
@@ -85,6 +98,11 @@ fun CompactField(
         placeholder = placeholder?.let { hint -> { Text(hint) } },
         suffix = suffix?.let { unit -> { Text(unit) } },
         visualTransformation = if (hidden) PasswordVisualTransformation() else VisualTransformation.None,
-        shape = MaterialTheme.shapes.extraSmall,
+        shape = shape,
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = fill, unfocusedContainerColor = fill, disabledContainerColor = fill, errorContainerColor = fill,
+            focusedIndicatorColor = Color.Transparent, unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent, errorIndicatorColor = Color.Transparent,
+        ),
     )
 }

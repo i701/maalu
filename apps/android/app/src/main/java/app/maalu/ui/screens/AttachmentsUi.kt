@@ -1,5 +1,8 @@
 package app.maalu.ui.screens
 
+import androidx.compose.material3.Button
+import androidx.compose.foundation.shape.CircleShape
+import app.maalu.ui.components.elevation
 import app.maalu.ui.components.glowTopBarColors
 import app.maalu.ui.components.glowBackground
 import androidx.compose.material3.ButtonDefaults
@@ -37,7 +40,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -125,14 +127,17 @@ fun AddReceiptButtons(enabled: Boolean, onFile: (PickedFile) -> Unit, onProblem:
     val files = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) scope.launch { readPicked(context, uri)?.let(onFile) ?: onProblem("That file could not be read.") }
     }
-    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedButton(shapes = ButtonDefaults.shapes(), enabled = enabled, onClick = {
+    // white with a soft shadow, as Save and add another is
+    val white = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow, contentColor = MaterialTheme.colorScheme.primary)
+    // padded inside the scroll, which would otherwise cut off the shadows
+    Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 2.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Button(shapes = ButtonDefaults.shapes(), modifier = Modifier.elevation(1, CircleShape), colors = white, enabled = enabled, onClick = {
             val target = newPhotoTarget(context)
             photo = target
             try { camera.launch(target.second) } catch (e: ActivityNotFoundException) { photo = null; onProblem("There is no camera app on this device.") }
         }) { Icon(Icons.Outlined.AddAPhoto, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Photo") }
-        OutlinedButton(shapes = ButtonDefaults.shapes(), enabled = enabled, onClick = { files.launch(ATTACHMENT_TYPES) }) { Icon(Icons.Outlined.AttachFile, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("File") }
-        OutlinedButton(shapes = ButtonDefaults.shapes(), enabled = enabled, onClick = onLink) { Icon(Icons.Outlined.Link, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Link") }
+        Button(shapes = ButtonDefaults.shapes(), modifier = Modifier.elevation(1, CircleShape), colors = white, enabled = enabled, onClick = { files.launch(ATTACHMENT_TYPES) }) { Icon(Icons.Outlined.AttachFile, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("File") }
+        Button(shapes = ButtonDefaults.shapes(), modifier = Modifier.elevation(1, CircleShape), colors = white, enabled = enabled, onClick = onLink) { Icon(Icons.Outlined.Link, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Link") }
     }
 }
 

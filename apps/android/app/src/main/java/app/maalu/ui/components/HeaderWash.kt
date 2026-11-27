@@ -1,5 +1,11 @@
 package app.maalu.ui.components
 
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.background
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -38,4 +44,15 @@ fun HeaderWash(dark: Boolean) {
                 drawRect(Brush.verticalGradient(0f to Color.Black, 0.4f to Color.Black.copy(alpha = 0.55f), 1f to Color.Transparent), blendMode = BlendMode.DstIn)
             },
     )
+}
+
+/** A full-screen page of its own (a form's window) on the same backdrop as the app's pages. Its Scaffold's container is transparent. */
+@Composable
+fun BackdropPage(content: @Composable BoxScope.() -> Unit) {
+    // the theme in use, which can differ from the phone's
+    val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        HeaderWash(dark)
+        content()
+    }
 }

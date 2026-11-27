@@ -1,5 +1,7 @@
 package app.maalu.ui.components
 
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.Color
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -50,6 +52,8 @@ fun <T> SegmentedPills(
     enabled: Boolean = true,
     /** Draws a segment as an icon, its label then only read out. */
     icon: ((T) -> ImageVector)? = null,
+    /** Gives each segment a colour of its own when chosen, the others white: for a switcher on the backdrop. */
+    tint: (@Composable (T) -> Color)? = null,
 ) {
     Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)) {
         options.forEachIndexed { i, (value, label) ->
@@ -82,6 +86,8 @@ fun <T> SegmentedPills(
                 else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
             // the spec's pressed shape for a 40dp button is 8dp on every corner, round or square, ends included
             }.copy(pressedShape = RoundedCornerShape(8.dp))
+            val accent = tint?.invoke(value)
+            val surface = MaterialTheme.colorScheme.surfaceContainerLow
             ToggleButton(
                 checked = isSelected,
                 onCheckedChange = { onSelect(value) },
@@ -89,9 +95,9 @@ fun <T> SegmentedPills(
                 enabled = enabled,
                 shapes = shapes,
                 colors = ToggleButtonDefaults.colors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    containerColor = if (accent != null) surface else MaterialTheme.colorScheme.surfaceContainerHigh,
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    checkedContainerColor = accent?.let { lerp(surface, it, 0.3f) } ?: MaterialTheme.colorScheme.primaryContainer,
                     checkedContentColor = MaterialTheme.colorScheme.onSurface,
                 ),
                 contentPadding = PaddingValues(horizontal = 8.dp),
