@@ -2,6 +2,9 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.material3.Surface
+import androidx.compose.foundation.layout.height
 import app.maalu.ui.components.elevation
 import app.maalu.ui.components.glowTopBarColors
 import app.maalu.ui.components.glowBackground
@@ -238,7 +241,8 @@ fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit, edi
     androidx.compose.runtime.CompositionLocalProvider(LocalApi provides api) { Dialog(onDismissRequest = { if (!busy) onClose() }, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         Scaffold(
             modifier = Modifier.glowBackground(), containerColor = androidx.compose.ui.graphics.Color.Transparent,
-            snackbarHost = { SnackbarHost(snackbar) },
+            // above the floating Save button
+            snackbarHost = { SnackbarHost(snackbar, Modifier.padding(bottom = SaveButtonRoom)) },
             topBar = {
                 TopAppBar(
                     colors = glowTopBarColors(),
@@ -295,6 +299,9 @@ fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit, edi
     } }
 }
 
+/** The height the floating Save button and its margin take over the bottom of the form. */
+private val SaveButtonRoom = 92.dp
+
 /** Names the form as it stands and saves it as a template: what is empty is left out, so the template does not fill it. */
 @Composable
 private fun SaveTemplateDialog(api: Api, form: AddForm, accounts: List<Account>, onClose: () -> Unit, onSaved: () -> Unit) {
@@ -340,8 +347,8 @@ private fun Form(o: FormOptions, saveLabel: String, form: AddForm, onForm: (AddF
     var pickingDate by remember { mutableStateOf(false) }
     var pickingTime by remember { mutableStateOf(false) }
 
-    Column(modifier.fillMaxSize().imePadding()) {
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+    Box(modifier.fillMaxSize().imePadding()) {
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
             // what it is
             SegmentedPills(
                 options = TYPES,
@@ -477,15 +484,30 @@ private fun Form(o: FormOptions, saveLabel: String, form: AddForm, onForm: (AddF
                 )
             }
             extra?.invoke()
-            Box(Modifier.padding(bottom = 8.dp))
+            // the second way to save is the last thing in the form; only Save floats
+            if (onSaveAnother != null) OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = onSaveAnother, enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text("Save and add another") }
+            // room to scroll the last row clear of the floating button
+            Spacer(Modifier.height(SaveButtonRoom))
         }
 
-        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
-            Button(onClick = onSave, enabled = !busy, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth()) {
-                Text(if (busy) "Saving…" else saveLabel)
+        // the form fades into the page behind the button, so rows scrolling under it don't fight it
+        val page = MaterialTheme.colorScheme.background
+        Column(
+            Modifier.align(Alignment.BottomCenter).fillMaxWidth()
+                .background(Brush.verticalGradient(listOf(page.copy(alpha = 0f), page)))
+                .padding(start = 28.dp, end = 28.dp, top = 24.dp, bottom = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            error?.let {
+                Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.errorContainer) {
+                    Text(it, Modifier.fillMaxWidth().padding(12.dp), color = MaterialTheme.colorScheme.onErrorContainer, style = MaterialTheme.typography.bodyMedium)
+                }
             }
-            if (onSaveAnother != null) OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = onSaveAnother, enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text("Save and add another") }
+            Button(
+                onClick = onSave, enabled = !busy, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth().height(56.dp),
+            ) {
+                Text(if (busy) "Saving…" else saveLabel, style = MaterialTheme.typography.titleMedium)
+            }
         }
     }
 
