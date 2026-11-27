@@ -1666,8 +1666,8 @@
         ]
       },
       "android": {
-        "status": "partial",
-        "note": "Shows the name in the Dashboard's title and changes it in Settings; the app has no sign-up, so it is not asked there.",
+        "status": "done",
+        "note": "Greets in the Dashboard's title and sets or clears the name in Settings. The app has no sign-up (see Create the first account), so it is never asked there.",
         "evidence": [
           "apps/android/app/src/main/java/app/maalu/ui/screens/SettingsScreen.kt",
           "apps/android/app/src/main/java/app/maalu/ui/screens/Shell.kt"
