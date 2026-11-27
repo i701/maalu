@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.SummaryBlue
+import app.maalu.ui.components.summaryInk
 import app.maalu.ui.components.elevation
 import app.maalu.ui.components.fadingEdges
 import app.maalu.ui.components.fadeInOnAppear
@@ -40,7 +42,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
@@ -336,13 +337,16 @@ private fun MonthCard(label: String, amount: String, currency: String, modifier:
 @Composable
 private fun Actions(a: Account, onAdd: () -> Unit, onAdjust: () -> Unit, onEdit: () -> Unit, onArchive: () -> Unit, onDelete: () -> Unit, onRates: (() -> Unit)? = null) {
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        // these sit on the sky, where a grey fill looks muddy: the blue of the Dashboard's pills
+        val blue = summaryInk(SummaryBlue)
+        val tinted = ButtonDefaults.buttonColors(containerColor = blue.copy(alpha = 0.1f), contentColor = blue)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = onAdd, shapes = ButtonDefaults.shapes()) { Icon(Icons.Outlined.Add, null, Modifier.padding(end = 6.dp)); Text("Add transaction") }
-            Button(onClick = onAdjust, shapes = ButtonDefaults.shapes(), colors = ButtonDefaults.filledTonalButtonColors()) { Icon(Icons.Outlined.Tune, null, Modifier.padding(end = 6.dp)); Text("Adjust balance") }
-            Button(onClick = onEdit, shapes = ButtonDefaults.shapes(), colors = ButtonDefaults.filledTonalButtonColors()) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Edit") }
-            Button(onClick = onArchive, shapes = ButtonDefaults.shapes(), colors = ButtonDefaults.filledTonalButtonColors()) { Icon(Icons.Outlined.Archive, null, Modifier.padding(end = 6.dp)); Text("Archive") }
-            if (onRates != null) Button(onClick = onRates, shapes = ButtonDefaults.shapes(), colors = ButtonDefaults.filledTonalButtonColors()) { Icon(Icons.Outlined.Tune, null, Modifier.padding(end = 6.dp)); Text("Rate history") }
-            OutlinedButton(onClick = onDelete, shapes = ButtonDefaults.shapes(), colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 6.dp)); Text("Delete") }
+            Button(onClick = onAdjust, shapes = ButtonDefaults.shapes(), colors = tinted) { Icon(Icons.Outlined.Tune, null, Modifier.padding(end = 6.dp)); Text("Adjust balance") }
+            Button(onClick = onEdit, shapes = ButtonDefaults.shapes(), colors = tinted) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Edit") }
+            Button(onClick = onArchive, shapes = ButtonDefaults.shapes(), colors = tinted) { Icon(Icons.Outlined.Archive, null, Modifier.padding(end = 6.dp)); Text("Archive") }
+            if (onRates != null) Button(onClick = onRates, shapes = ButtonDefaults.shapes(), colors = tinted) { Icon(Icons.Outlined.Tune, null, Modifier.padding(end = 6.dp)); Text("Rate history") }
+            Button(onClick = onDelete, shapes = ButtonDefaults.shapes(), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer)) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 6.dp)); Text("Delete") }
         }
     }
 }
