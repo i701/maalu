@@ -1,5 +1,13 @@
 package app.maalu.ui.components
 
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.background
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.Surface
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.semantics.toggleableState
@@ -130,4 +138,31 @@ fun BigAmountField(value: String, onChange: (String) -> Unit, currency: String, 
             }
         },
     )
+}
+
+/** The height the floating Save button and its margin take over the bottom of a form: the room to leave under its last row. */
+val SaveButtonRoom = 104.dp
+
+/**
+ * A form's confirm button, floating over its foot with the deepest layered shadow. The form fades into the page behind it,
+ * so rows scrolling under it don't fight it, and a refusal shows just above it.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun FloatingSave(label: String, busy: Boolean, error: String?, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val page = MaterialTheme.colorScheme.background
+    Column(
+        modifier.fillMaxWidth().background(Brush.verticalGradient(listOf(page.copy(alpha = 0f), page)))
+            .padding(start = 28.dp, end = 28.dp, top = 24.dp, bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        error?.let {
+            Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.errorContainer) {
+                Text(it, Modifier.fillMaxWidth().padding(12.dp), color = MaterialTheme.colorScheme.onErrorContainer, style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+        Button(onClick = onClick, enabled = !busy, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth().height(56.dp).elevation(6, CircleShape)) {
+            Text(if (busy) "Saving…" else label, style = MaterialTheme.typography.titleMedium)
+        }
+    }
 }

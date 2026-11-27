@@ -80,4 +80,11 @@ class AccountLogicTest {
         assertEquals(1, bankChoices(listOf(a)).count { it == "MIB" })
         assertTrue("BML" in bankChoices(listOf(a)))
     }
+
+    @Test fun moreDetailsOpensOnlyForWhatWasSetAndSaysIt() {
+        assertFalse(AccountForm(name = "Cash", bank = "BML").hasDetails())
+        val form = AccountForm(number = " 777 ", description = "x", spendable = false, exclude = true)
+        assertTrue(form.hasDetails())
+        assertEquals("777 · Note · Not spent from · Not in totals", form.detailsSummary())
+    }
 }

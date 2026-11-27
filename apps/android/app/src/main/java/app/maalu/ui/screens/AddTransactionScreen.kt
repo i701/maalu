@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.SaveButtonRoom
+import app.maalu.ui.components.FloatingSave
 import app.maalu.ui.theme.ChartColors
 import app.maalu.ui.components.BackdropPage
 import androidx.compose.foundation.shape.CircleShape
@@ -21,7 +23,6 @@ import app.maalu.ui.components.BankAvatar
 import app.maalu.ui.components.BigAmountField
 import app.maalu.ui.components.FormRow
 import app.maalu.ui.components.FormRowStyle
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.material3.Surface
 import androidx.compose.foundation.layout.height
 import app.maalu.ui.components.elevation
@@ -36,7 +37,6 @@ import app.maalu.data.formFromTemplate
 import app.maalu.data.Template
 import androidx.compose.material.icons.outlined.BookmarkAdd
 import androidx.compose.material.icons.outlined.Bookmark
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -327,9 +327,6 @@ private fun typeTint(type: String): Color = when (type) {
     else -> MaterialTheme.colorScheme.error
 }
 
-/** The height the floating Save button and its margin take over the bottom of the form. */
-private val SaveButtonRoom = 104.dp
-
 /** Names the form as it stands and saves it as a template: what is empty is left out, so the template does not fill it. */
 @Composable
 private fun SaveTemplateDialog(api: Api, form: AddForm, accounts: List<Account>, onClose: () -> Unit, onSaved: () -> Unit) {
@@ -504,25 +501,7 @@ private fun Form(o: FormOptions, saveLabel: String, form: AddForm, onForm: (AddF
             Spacer(Modifier.height(SaveButtonRoom))
         }
 
-        // the form fades into the page behind the button, so rows scrolling under it don't fight it
-        val page = MaterialTheme.colorScheme.background
-        Column(
-            Modifier.align(Alignment.BottomCenter).fillMaxWidth()
-                .background(Brush.verticalGradient(listOf(page.copy(alpha = 0f), page)))
-                .padding(start = 28.dp, end = 28.dp, top = 24.dp, bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            error?.let {
-                Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.errorContainer) {
-                    Text(it, Modifier.fillMaxWidth().padding(12.dp), color = MaterialTheme.colorScheme.onErrorContainer, style = MaterialTheme.typography.bodyMedium)
-                }
-            }
-            Button(
-                onClick = onSave, enabled = !busy, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth().height(56.dp).elevation(6, CircleShape),
-            ) {
-                Text(if (busy) "Saving…" else saveLabel, style = MaterialTheme.typography.titleMedium)
-            }
-        }
+        FloatingSave(saveLabel, busy, error, onSave, Modifier.align(Alignment.BottomCenter))
     }
 
     if (pickingDate) {

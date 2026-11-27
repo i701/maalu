@@ -2,8 +2,24 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.material.icons.outlined.VisibilityOff
+import androidx.compose.material.icons.outlined.ShoppingBag
+import androidx.compose.material.icons.outlined.Sync
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Spacer
+import app.maalu.data.detailsSummary
+import app.maalu.data.hasDetails
+import app.maalu.ui.components.SaveButtonRoom
+import app.maalu.ui.components.FormSwitchRow
+import app.maalu.ui.components.FormRowStyle
+import app.maalu.ui.components.FloatingSave
+import app.maalu.ui.components.DisclosureRow
+import app.maalu.ui.components.Disclosure
+import app.maalu.ui.components.BigAmountField
+import app.maalu.ui.components.BackdropPage
 import app.maalu.ui.components.glowTopBarColors
-import app.maalu.ui.components.glowBackground
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,13 +35,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountBalance
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Notes
-import androidx.compose.material.icons.outlined.Numbers
 import androidx.compose.material.icons.outlined.Payments
-import androidx.compose.material.icons.outlined.Sell
-import androidx.compose.material.icons.outlined.Tune
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -35,7 +45,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -76,7 +85,6 @@ import app.maalu.data.tidyRate
 import app.maalu.data.toJson
 import app.maalu.ui.components.CompactField
 import app.maalu.ui.components.PickerField
-import app.maalu.ui.components.Section
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -92,7 +100,8 @@ fun AccountFormScreen(api: Api, existing: List<Account>, editing: Account?, onCl
     var lookups by remember { mutableStateOf<Lookups?>(null) }
     var loadError by remember { mutableStateOf<String?>(null) }
     val before = remember(editing) { editing?.let(::formFrom) }
-    var form by remember { mutableStateOf(before ?: AccountForm()) }
+    // a new account's opening balance starts empty (it is sent as zero), so there is no 0 to delete first
+    var form by remember { mutableStateOf(before ?: AccountForm(opening = "")) }
     var error by remember { mutableStateOf<String?>(null) }
     var errorField by remember { mutableStateOf<AccountField?>(null) }
     var busy by remember { mutableStateOf(false) }
@@ -117,54 +126,51 @@ fun AccountFormScreen(api: Api, existing: List<Account>, editing: Account?, onCl
     }
 
     Dialog(onDismissRequest = { if (!busy) onClose() }, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
-        Scaffold(
-            modifier = Modifier.glowBackground(), containerColor = androidx.compose.ui.graphics.Color.Transparent,
-            snackbarHost = { SnackbarHost(snackbar) },
-            topBar = {
-                TopAppBar(
-                    colors = glowTopBarColors(),
-                    title = { Text(if (editing == null) "New account" else "Edit account") },
-                    navigationIcon = { IconButton(onClick = onClose, enabled = !busy) { Icon(Icons.Outlined.Close, "Close") } },
-                )
-            },
-        ) { padding ->
-            val l = lookups
-            when {
-                loadError != null -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { Text(loadError ?: "", color = MaterialTheme.colorScheme.error) }
-                l == null -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-                else -> Column(Modifier.padding(padding).fillMaxSize().imePadding()) {
-                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                        AccountFields(form, { errorField = null; form = it }, l, existing, errorField, !busy)
-                        Box(Modifier.padding(bottom = 8.dp))
-                    }
-                    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
-                        Button(shapes = ButtonDefaults.shapes(),
-                            onClick = {
-                                val problem = form.problem(l.base)
-                                if (problem != null) {
-                                    errorField = problem.field; error = null
-                                    scope.launch { snackbar.currentSnackbarData?.dismiss(); snackbar.showSnackbar(problem.message) }
-                                    return@Button
-                                }
-                                val patch = if (editing != null && before != null) form.patchJson(before, l.base) else null
-                                if (patch != null && patch.isEmpty()) { onClose(); return@Button }
-                                busy = true; error = null; errorField = null
-                                scope.launch {
-                                    val result = if (editing != null && patch != null) api.patchJson<Account>("accounts/${editing.id}", patch.toString())
-                                    else api.postJson<Account>("accounts", form.toJson(l.base).toString())
-                                    when (val r = result) {
-                                        is ApiResult.Ok -> onSaved()
-                                        is ApiResult.Failed -> {
-                                            error = r.message; busy = false
-                                            snackbar.currentSnackbarData?.dismiss()
-                                            launch { snackbar.showSnackbar(r.message.lines().first()) }
-                                        }
+        BackdropPage {
+            Scaffold(
+                containerColor = androidx.compose.ui.graphics.Color.Transparent,
+                // above the floating Save button
+                snackbarHost = { SnackbarHost(snackbar, Modifier.padding(bottom = SaveButtonRoom)) },
+                topBar = {
+                    TopAppBar(
+                        colors = glowTopBarColors(),
+                        title = { Text(if (editing == null) "New account" else "Edit account") },
+                        navigationIcon = { IconButton(onClick = onClose, enabled = !busy) { Icon(Icons.Outlined.Close, "Close") } },
+                    )
+                },
+            ) { padding ->
+                val l = lookups
+                when {
+                    loadError != null -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { Text(loadError ?: "", color = MaterialTheme.colorScheme.error) }
+                    l == null -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                    else -> Box(Modifier.padding(padding).fillMaxSize().imePadding()) {
+                        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            AccountFields(form, { errorField = null; form = it }, l, existing, errorField, !busy)
+                            Spacer(Modifier.height(SaveButtonRoom))
+                        }
+                        FloatingSave(if (editing != null) "Save changes" else "Add account", busy, error, onClick = save@{
+                            val problem = form.problem(l.base)
+                            if (problem != null) {
+                                errorField = problem.field; error = null
+                                scope.launch { snackbar.currentSnackbarData?.dismiss(); snackbar.showSnackbar(problem.message) }
+                                return@save
+                            }
+                            val patch = if (editing != null && before != null) form.patchJson(before, l.base) else null
+                            if (patch != null && patch.isEmpty()) { onClose(); return@save }
+                            busy = true; error = null; errorField = null
+                            scope.launch {
+                                val result = if (editing != null && patch != null) api.patchJson<Account>("accounts/${editing.id}", patch.toString())
+                                else api.postJson<Account>("accounts", form.toJson(l.base).toString())
+                                when (val r = result) {
+                                    is ApiResult.Ok -> onSaved()
+                                    is ApiResult.Failed -> {
+                                        error = r.message; busy = false
+                                        snackbar.currentSnackbarData?.dismiss()
+                                        launch { snackbar.showSnackbar(r.message.lines().first()) }
                                     }
                                 }
-                            },
-                            enabled = !busy, modifier = Modifier.fillMaxWidth(),
-                        ) { Text(if (busy) "Saving…" else if (editing != null) "Save changes" else "Add account") }
+                            }
+                        }, modifier = Modifier.align(Alignment.BottomCenter))
                     }
                 }
             }
@@ -174,86 +180,83 @@ fun AccountFormScreen(api: Api, existing: List<Account>, editing: Account?, onCl
 
 @Composable
 private fun AccountFields(form: AccountForm, onForm: (AccountForm) -> Unit, l: Lookups, existing: List<Account>, errorField: AccountField?, enabled: Boolean) {
-    val foreign = form.currency.isNotBlank() && form.currency != l.base
+    val currency = form.currency.ifBlank { l.base }
+    val foreign = currency != l.base
     val liability = form.group in LiabilityGroups
+    val numbers = KeyboardOptions(keyboardType = KeyboardType.Decimal)
 
-    Section("Kind", Icons.Outlined.Category) {
+    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+        BigAmountField(form.opening, { onForm(form.copy(opening = cleanSigned(it))) }, currency, enabled = enabled, isError = errorField == AccountField.Opening)
+        Text(
+            if (liability) "Opening balance. Enter what you owe as a negative number." else "Opening balance, before the first transaction you track.",
+            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center,
+        )
+    }
+
+    CompactField(form.name, { onForm(form.copy(name = it.take(100))) }, "Name", enabled = enabled, isError = errorField == AccountField.Name, placeholder = "For example BML Current")
+
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         PickerField(
             title = "Kind of account", value = Ref(form.group, groupLabel(form.group)), placeholder = "Kind", anyLabel = null,
             entries = AccountGroupsInOrder.map { Ref(it, groupLabel(it)) },
             detail = { GroupHelp[it.id] },
-            onPick = { r -> r?.let { onForm(form.copy(group = it.id.let { id -> id })) } },
+            onPick = { r -> r?.let { onForm(form.copy(group = it.id)) } },
+            row = FormRowStyle("Kind", Icons.Outlined.Category, first = true),
         )
-        Text(GroupHelp[form.group].orEmpty(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-    }
-    Section("Name", Icons.Outlined.AccountBalance) {
-        CompactField(form.name, { onForm(form.copy(name = it.take(100))) }, "Name", enabled = enabled, isError = errorField == AccountField.Name, placeholder = "For example BML Current")
-    }
-    Section("Currency", Icons.Outlined.Payments) {
         PickerField(
-            title = "Currency", value = form.currency.takeIf { it.isNotBlank() }?.let { Ref(it, it) }, placeholder = l.base, anyLabel = null,
+            title = "Currency", value = Ref(currency, currency), placeholder = l.base, anyLabel = null,
             searchable = true, entries = l.currencies.map { Ref(it, it) },
             onPick = { r -> r?.let { onForm(form.copy(currency = it.id, rateTouched = false, rate = "1")) } },
+            row = FormRowStyle("Currency", Icons.Outlined.Payments),
         )
-        if (foreign) {
-            CompactField(
-                form.rate, { onForm(form.copy(rate = cleanAmount(it), rateTouched = true)) }, "Exchange rate",
-                keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = enabled, isError = errorField == AccountField.Rate,
-            placeholder = "1 ${form.currency} = ? ${l.base}")
-            SwitchRow("Keep this rate up to date", "Follows the market rate every day.", form.autoRate, enabled) { onForm(form.copy(autoRate = it)) }
-        }
-    }
-    Section("Opening amount", Icons.Outlined.Numbers) {
-        CompactField(
-            form.opening, { onForm(form.copy(opening = cleanSigned(it))) }, "Opening balance",
-            keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = enabled,
-            isError = errorField == AccountField.Opening, suffix = form.currency.ifBlank { l.base },
-        placeholder = "0.00")
-        Text(
-            if (liability) "What you owe counts below zero: enter it as a negative number." else "What the account held before the first transaction you track.",
-            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-    Section("Bank", Icons.Outlined.Sell) {
         PickerField(
-            title = "Bank", value = form.bank.takeIf { it.isNotBlank() }?.let { Ref("", it) }, placeholder = "Which bank (optional)", anyLabel = "No bank",
+            title = "Bank", value = form.bank.takeIf { it.isNotBlank() }?.let { Ref("", it) }, placeholder = "Optional", anyLabel = "No bank",
             searchable = true, allowCreate = true, entries = bankChoices(existing).map { Ref(it, it) },
             onPick = { r -> onForm(form.copy(bank = r?.name ?: "")) },
+            row = FormRowStyle("Bank", Icons.Outlined.AccountBalance, last = true),
         )
-        CompactField(form.number, { onForm(form.copy(number = it.take(34))) }, "Account number (optional)", enabled = enabled)
     }
-    if (form.group in CreditLimitGroups) Section("Credit limit", Icons.Outlined.Payments) {
+
+    // only what this kind of account or currency needs
+    if (foreign) Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         CompactField(
-            form.creditLimit, { onForm(form.copy(creditLimit = cleanAmount(it))) }, "Credit limit",
-            keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = enabled,
-            isError = errorField == AccountField.CreditLimit, suffix = form.currency.ifBlank { l.base },
-        placeholder = "The most that can be owed")
-        if (form.group == "card") Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            form.rate, { onForm(form.copy(rate = cleanAmount(it), rateTouched = true)) }, "Exchange rate",
+            keyboard = numbers, enabled = enabled, isError = errorField == AccountField.Rate, placeholder = "1 $currency = ? ${l.base}",
+        )
+        FormSwitchRow(FormRowStyle("Keep this rate up to date", Icons.Outlined.Sync, first = true, last = true), "Follows the market every day", form.autoRate, enabled) { onForm(form.copy(autoRate = it)) }
+    }
+    if (form.group in CreditLimitGroups) Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        CompactField(
+            form.creditLimit, { onForm(form.copy(creditLimit = cleanAmount(it))) }, "Credit limit (optional)",
+            keyboard = numbers, enabled = enabled, isError = errorField == AccountField.CreditLimit, suffix = currency,
+        )
+        if (form.group == "card") Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             CompactField(form.statementDay, { onForm(form.copy(statementDay = it.filter(Char::isDigit).take(2))) }, "Statement day", Modifier.weight(1f), KeyboardOptions(keyboardType = KeyboardType.Number), enabled = enabled, isError = errorField == AccountField.Days)
             CompactField(form.dueDay, { onForm(form.copy(dueDay = it.filter(Char::isDigit).take(2))) }, "Due day", Modifier.weight(1f), KeyboardOptions(keyboardType = KeyboardType.Number), enabled = enabled, isError = errorField == AccountField.Days)
         }
     }
-    Section("Note", Icons.Outlined.Notes) {
-        CompactField(form.description, { onForm(form.copy(description = it.take(300))) }, "Add a note", Modifier.fillMaxWidth(), singleLine = false, enabled = enabled, minHeight = 80.dp)
-    }
-    Section("Counting", Icons.Outlined.Tune) {
-        if (!liability) {
-            val effective = form.spendable ?: spendableByGroup(form.group)
-            SwitchRow("I spend from this account", "Its money counts toward what is available to spend.", effective, enabled) {
-                onForm(form.copy(spendable = if (it == spendableByGroup(form.group)) null else it))
+
+    // open from the start when something in it is already set (editing)
+    val detailsSet = form.hasDetails()
+    var open by rememberSaveable { mutableStateOf(detailsSet) }
+    LaunchedEffect(detailsSet) { if (detailsSet) open = true }
+    Column {
+        DisclosureRow("More details", form.detailsSummary(), open) { open = !open }
+        Disclosure(open) {
+            Column(Modifier.padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                CompactField(form.number, { onForm(form.copy(number = it.take(34))) }, "Account number (optional)", enabled = enabled)
+                CompactField(form.description, { onForm(form.copy(description = it.take(300))) }, "Add a note", Modifier.fillMaxWidth(), singleLine = false, enabled = enabled)
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    if (!liability) FormSwitchRow(
+                        FormRowStyle("I spend from it", Icons.Outlined.ShoppingBag, first = true), "Counts toward what you can spend",
+                        form.spendable ?: spendableByGroup(form.group), enabled,
+                    ) { onForm(form.copy(spendable = if (it == spendableByGroup(form.group)) null else it)) }
+                    FormSwitchRow(
+                        FormRowStyle("Leave out of totals", Icons.Outlined.VisibilityOff, first = liability, last = true), "Reports and budgets ignore it",
+                        form.exclude, enabled,
+                    ) { onForm(form.copy(exclude = it)) }
+                }
             }
         }
-        SwitchRow("Leave out of my totals", "Net worth, reports and budgets ignore it; the account itself still works.", form.exclude, enabled) { onForm(form.copy(exclude = it)) }
-    }
-}
-
-@Composable
-private fun SwitchRow(title: String, sub: String, checked: Boolean, enabled: Boolean, onChange: (Boolean) -> Unit) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(32.dp)) {
-        Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyMedium)
-            Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        Switch(checked = checked, onCheckedChange = onChange, enabled = enabled)
     }
 }

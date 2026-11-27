@@ -104,6 +104,17 @@ fun AccountForm.problem(baseCurrency: String): AccountProblem? {
 private fun AccountForm.foreign(base: String) = currency.isNotBlank() && currency != base
 private fun AccountForm.liability() = group in LiabilityGroups
 
+/** Whether anything under the form's "More details" was set. */
+fun AccountForm.hasDetails(): Boolean = number.isNotBlank() || description.isNotBlank() || exclude || spendable != null
+
+/** What the closed "More details" row says is in there. */
+fun AccountForm.detailsSummary(): String = listOfNotNull(
+    number.trim().takeIf { it.isNotEmpty() },
+    "Note".takeIf { description.isNotBlank() },
+    spendable?.takeIf { group !in LiabilityGroups }?.let { if (it) "Spent from" else "Not spent from" },
+    "Not in totals".takeIf { exclude },
+).joinToString(" · ")
+
 /** The body for `POST /accounts`. Blank optional fields are left out. */
 fun AccountForm.toJson(baseCurrency: String): JsonObject = buildJsonObject {
     put("group", group)
