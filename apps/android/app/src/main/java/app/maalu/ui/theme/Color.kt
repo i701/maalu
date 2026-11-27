@@ -1,5 +1,8 @@
 package app.maalu.ui.theme
 
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.runtime.Composable
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -7,7 +10,8 @@ import androidx.compose.ui.graphics.Color
 
 // The same roles as apps/web/src/lib/m3.ts (M3_LIGHT / M3_DARK): neutral surfaces, blue primary. As there, the light page is a soft
 // grey and cards (surfaceContainerLow and surfaceContainer) are white.
-// Keep the two in step; the web file is the source of truth.
+// Keep the two in step; the web file is the source of truth. One difference, on purpose: in light mode the app's raised fills
+// (surfaceContainerHigh, Highest and secondaryContainer) are pale blue, not grey, which looked muddy on the sky backdrop.
 
 val LightColors: ColorScheme = lightColorScheme(
     primary = Color(0xFF1976D2),
@@ -17,8 +21,8 @@ val LightColors: ColorScheme = lightColorScheme(
     inversePrimary = Color(0xFFA5C8FF),
     secondary = Color(0xFF5D5E62),
     onSecondary = Color(0xFFFFFFFF),
-    secondaryContainer = Color(0xFFE4E4E8),
-    onSecondaryContainer = Color(0xFF1A1B1E),
+    secondaryContainer = Color(0xFFD6E6FA),
+    onSecondaryContainer = Color(0xFF0B3260),
     tertiary = Color(0xFF515E7D),
     onTertiary = Color(0xFFFFFFFF),
     tertiaryContainer = Color(0xFFD8E2FF),
@@ -38,8 +42,8 @@ val LightColors: ColorScheme = lightColorScheme(
     surfaceContainerLowest = Color(0xFFFFFFFF),
     surfaceContainerLow = Color(0xFFFFFFFF),
     surfaceContainer = Color(0xFFFFFFFF),
-    surfaceContainerHigh = Color(0xFFEAEAED),
-    surfaceContainerHighest = Color(0xFFE4E4E8),
+    surfaceContainerHigh = Color(0xFFE5EFFB),
+    surfaceContainerHighest = Color(0xFFDCE9F8),
     inverseSurface = Color(0xFF2F3033),
     inverseOnSurface = Color(0xFFF1F0F4),
     outline = Color(0xFF77777B),
@@ -117,3 +121,9 @@ fun kindTint(kind: String): Color = when (kind) {
 fun Color.tintSurface(): Color = copy(alpha = 0.16f)
 /** An icon tile or a selected row. */
 fun Color.tintIcon(): Color = copy(alpha = 0.2f)
+
+/** A chosen chip or segment: in light mode a stronger blue than the pale resting fill, with deep blue ink; the container in dark. */
+@Composable
+fun chosenColors(): Pair<Color, Color> = MaterialTheme.colorScheme.run {
+    if (surface.luminance() < 0.5f) primaryContainer to onSurface else Color(0xFFB5D3FA) to Color(0xFF00376E)
+}

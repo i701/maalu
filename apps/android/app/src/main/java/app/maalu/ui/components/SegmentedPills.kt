@@ -1,5 +1,6 @@
 package app.maalu.ui.components
 
+import app.maalu.ui.theme.chosenColors
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.animation.core.animateFloatAsState
@@ -88,6 +89,7 @@ fun <T> SegmentedPills(
             }.copy(pressedShape = RoundedCornerShape(8.dp))
             val accent = tint?.invoke(value)
             val surface = MaterialTheme.colorScheme.surfaceContainerLow
+            val (chosen, onChosen) = chosenColors()
             ToggleButton(
                 checked = isSelected,
                 onCheckedChange = { onSelect(value) },
@@ -97,8 +99,8 @@ fun <T> SegmentedPills(
                 colors = ToggleButtonDefaults.colors(
                     containerColor = if (accent != null) surface else MaterialTheme.colorScheme.surfaceContainerHigh,
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    checkedContainerColor = accent?.let { lerp(surface, it, 0.3f) } ?: MaterialTheme.colorScheme.primaryContainer,
-                    checkedContentColor = MaterialTheme.colorScheme.onSurface,
+                    checkedContainerColor = accent?.let { lerp(surface, it, 0.3f) } ?: chosen,
+                    checkedContentColor = if (accent != null) MaterialTheme.colorScheme.onSurface else onChosen,
                 ),
                 contentPadding = PaddingValues(horizontal = 8.dp),
                 interactionSource = source,
