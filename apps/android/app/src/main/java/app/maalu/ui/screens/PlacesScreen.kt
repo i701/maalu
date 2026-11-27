@@ -2,10 +2,10 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.ui.graphics.luminance
 import app.maalu.ui.components.fadingEdges
 import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -96,7 +96,7 @@ fun PlacesScreen(api: Api) {
             Column(Modifier.fillMaxSize()) {
                 Box(Modifier.fillMaxWidth().height(300.dp).padding(horizontal = 16.dp).clip(RoundedCornerShape(24.dp))) {
                     OsmMap(
-                        Modifier.fillMaxSize(), startLat = DEFAULT_LAT, startLng = DEFAULT_LNG, dark = isSystemInDarkTheme(),
+                        Modifier.fillMaxSize(), startLat = DEFAULT_LAT, startLng = DEFAULT_LNG, dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f,
                         spots = spots, selected = selected, fitKey = d,
                         focus = focus, spotColor = primary, selectedColor = primary, pinColor = primary,
                         onSpotClick = { i -> selected = i; focus = MapFocus(d.places[i].lat, d.places[i].lng, 16.0, (focus?.nonce ?: 0) + 1) },

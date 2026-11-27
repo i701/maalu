@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.ui.graphics.luminance
 import app.maalu.ui.components.glowTopBarColors
 import app.maalu.ui.components.glowBackground
 import android.Manifest
@@ -11,7 +12,6 @@ import android.content.pm.PackageManager
 import android.location.LocationManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -145,7 +145,7 @@ fun LocationDialog(api: Api, initial: Spot?, onClose: () -> Unit, onDone: (Spot?
                 Box(Modifier.weight(1f).fillMaxWidth().padding(top = 6.dp)) {
                     OsmMap(
                         Modifier.fillMaxSize(), startLat = pin?.first ?: DEFAULT_LAT, startLng = pin?.second ?: DEFAULT_LNG, startZoom = if (pin != null) 16.0 else 15.0,
-                        dark = isSystemInDarkTheme(), pin = pin, focus = focus,
+                        dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f, pin = pin, focus = focus,
                         spotColor = primary, selectedColor = primary, pinColor = primary,
                         onTap = { la, lo -> place(la, lo) },
                     )
