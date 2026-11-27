@@ -105,6 +105,10 @@ test("a limit that has not started yet does not warn", async ({ page, request })
 	});
 
 	await open(page, "/budget");
+	// near a month's end the dates start in the next period, and a limit is listed only under its own
+	if (inDays(5).slice(0, 7) !== inDays(0).slice(0, 7)) {
+		await page.getByRole("button", { name: "Next period" }).click();
+	}
 	await expect(page.getByText("Later", { exact: true })).toBeVisible();
 	await expect(page.getByText(/to its end/)).toBeVisible();
 	await open(page, "/transactions");
