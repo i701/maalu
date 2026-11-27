@@ -1,5 +1,8 @@
 package app.maalu.ui.screens
 
+import androidx.compose.ui.unit.Dp
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.Button
 import androidx.compose.foundation.shape.CircleShape
 import app.maalu.ui.components.elevation
@@ -129,15 +132,19 @@ fun AddReceiptButtons(enabled: Boolean, onFile: (PickedFile) -> Unit, onProblem:
     }
     // white with a soft shadow, as Save and add another is
     val white = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow, contentColor = MaterialTheme.colorScheme.primary)
-    // padded inside the scroll, which would otherwise cut off the shadows
-    Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 2.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Button(shapes = ButtonDefaults.shapes(), modifier = Modifier.elevation(1, CircleShape), colors = white, enabled = enabled, onClick = {
-            val target = newPhotoTarget(context)
-            photo = target
-            try { camera.launch(target.second) } catch (e: ActivityNotFoundException) { photo = null; onProblem("There is no camera app on this device.") }
-        }) { Icon(Icons.Outlined.AddAPhoto, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Photo") }
-        Button(shapes = ButtonDefaults.shapes(), modifier = Modifier.elevation(1, CircleShape), colors = white, enabled = enabled, onClick = { files.launch(ATTACHMENT_TYPES) }) { Icon(Icons.Outlined.AttachFile, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("File") }
-        Button(shapes = ButtonDefaults.shapes(), modifier = Modifier.elevation(1, CircleShape), colors = white, enabled = enabled, onClick = onLink) { Icon(Icons.Outlined.Link, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Link") }
+    // without the 48dp minimum, which the shadow would be drawn around instead of the 40dp button; a press just outside still
+    // counts, since Compose widens small touch targets
+    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
+        // padded inside the scroll, which would otherwise cut off the shadows
+        Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 2.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(shapes = ButtonDefaults.shapes(), modifier = Modifier.elevation(1, CircleShape), colors = white, enabled = enabled, onClick = {
+                val target = newPhotoTarget(context)
+                photo = target
+                try { camera.launch(target.second) } catch (e: ActivityNotFoundException) { photo = null; onProblem("There is no camera app on this device.") }
+            }) { Icon(Icons.Outlined.AddAPhoto, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Photo") }
+            Button(shapes = ButtonDefaults.shapes(), modifier = Modifier.elevation(1, CircleShape), colors = white, enabled = enabled, onClick = { files.launch(ATTACHMENT_TYPES) }) { Icon(Icons.Outlined.AttachFile, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("File") }
+            Button(shapes = ButtonDefaults.shapes(), modifier = Modifier.elevation(1, CircleShape), colors = white, enabled = enabled, onClick = onLink) { Icon(Icons.Outlined.Link, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Link") }
+        }
     }
 }
 
