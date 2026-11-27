@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.material3.Surface
 import app.maalu.ui.components.fadingEdges
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -92,9 +94,16 @@ fun TrendsScreen(api: Api) {
             PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
                 if (rows.isEmpty()) Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(32.dp), contentAlignment = Alignment.Center) {
                     Text("No ${if (kind == "expense") "spending" else "income"} in these ${d.months.size} months.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                } else Column(Modifier.fillMaxSize().fadingEdges(scroll).verticalScroll(scroll).padding(horizontal = 16.dp, vertical = 8.dp)) {
-                    Text(d.currency + ". Shaded by share of the biggest month.", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
-                    TrendTable(d, rows, base)
+                } else Surface(
+                    // edge to edge and down to the bottom, on the theme's own white or near-black, so the figures don't sit on the backdrop
+                    Modifier.fillMaxSize().padding(top = 8.dp),
+                    shape = MaterialTheme.shapes.extraLarge.copy(bottomStart = CornerSize(0.dp), bottomEnd = CornerSize(0.dp)),
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                ) {
+                    Column(Modifier.fadingEdges(scroll).verticalScroll(scroll).padding(horizontal = 16.dp, vertical = 16.dp)) {
+                        Text(d.currency + ". Shaded by share of the biggest month.", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
+                        TrendTable(d, rows, base)
+                    }
                 }
             }
         }
