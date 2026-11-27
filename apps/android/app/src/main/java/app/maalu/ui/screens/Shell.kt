@@ -87,7 +87,7 @@ private const val BUDGET = 3
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMode) -> Unit, onSignOut: () -> Unit) {
+fun Shell(api: Api, themeMode: ThemeMode, onThemeMode: (ThemeMode) -> Unit, onSignOut: () -> Unit) {
     var selected by rememberSaveable { mutableIntStateOf(0) }
     // a destination reached only from the drawer, or null while one of the four tabs is showing
     var route by rememberSaveable { mutableStateOf<String?>(null) }
@@ -142,7 +142,7 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
         drawerState = drawer,
         drawerContent = {
             AppDrawer(
-                server = server, selectedId = selectedId, themeMode = themeMode, onThemeMode = onThemeMode, badges = mapOf("pending" to pending),
+                selectedId = selectedId, themeMode = themeMode, onThemeMode = onThemeMode, badges = mapOf("pending" to pending),
                 onOpen = { d ->
                     if (d.tabIndex != null) { selected = d.tabIndex; route = null } else route = d.id
                     scope.launch { drawer.close() }

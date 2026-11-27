@@ -34,7 +34,7 @@ class Raw(val code: Int, val body: String, val total: Int?)
  * a sign-out: that call is made with no token.)
  */
 class Api(
-    private val server: String,
+    val server: String,
     private val token: () -> String?,
     private val onSignedOut: () -> Unit = {},
 ) {

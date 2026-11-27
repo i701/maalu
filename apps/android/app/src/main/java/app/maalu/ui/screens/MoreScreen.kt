@@ -92,7 +92,7 @@ val MoreDestinations: List<Destination> = listOf(
     Destination("groups", "Groups", Icons.Outlined.Inventory2, NavGroup.Organise, "Bundle related transactions, like a trip, and see what they add up to."),
     Destination("templates", "Templates", Icons.Outlined.Bookmark, NavGroup.Organise, "Saved starting points for transactions you repeat."),
     Destination("trash", "Trash", Icons.Outlined.Delete, NavGroup.Organise, "Deleted transactions, until you restore them or delete them for good."),
-    Destination("settings", "Settings", Icons.Outlined.Settings, NavGroup.App, "Security: two-factor sign-in, and more to come."),
+    Destination("settings", "Settings", Icons.Outlined.Settings, NavGroup.App, "Security: two-factor sign-in, and more to come.", inDrawer = false),
     Destination("notifications", "Notifications", Icons.Outlined.Notifications, NavGroup.App, "Late payments, budgets close to their limit and reached goals.", inDrawer = false),
     Destination("docs", "Docs", Icons.Outlined.Article, NavGroup.Help, "Guides to what each feature is and how to use it."),
 )

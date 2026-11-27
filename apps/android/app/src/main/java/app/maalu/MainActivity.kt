@@ -87,7 +87,7 @@ class MainActivity : ComponentActivity() {
                                 )
                             } else {
                                 Shell(
-                                    api, current,
+                                    api,
                                     themeMode = mode,
                                     onThemeMode = { themeScope.launch { themes.save(it) } },
                                     onSignOut = { scope.launch { api.post("auth/logout"); signedOut() } },

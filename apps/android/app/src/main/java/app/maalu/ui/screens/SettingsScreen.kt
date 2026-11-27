@@ -211,6 +211,7 @@ fun SettingsScreen(api: Api) {
                 }
                 item {
                     SettingsGroup("Where you are signed in", Icons.Outlined.Devices) {
+                        Text("This app is connected to ${api.server}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         if (sessions.isEmpty()) Text("Could not load your devices. Pull down to try again.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         else SessionsList(
                             sessions, busy,
