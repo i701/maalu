@@ -67,11 +67,8 @@ import app.maalu.ui.components.FormDialog
 import app.maalu.ui.components.PickerField
 import app.maalu.ui.components.SegmentedPills
 import app.maalu.ui.components.Section
-import app.maalu.ui.components.TintChip
+import app.maalu.ui.components.ChoiceChip
 import app.maalu.ui.components.VendorPickerField
-import app.maalu.ui.theme.Accents
-import app.maalu.ui.theme.methodTint
-import app.maalu.ui.theme.paletteTint
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
@@ -126,10 +123,10 @@ fun SubscriptionFormScreen(api: Api, editing: Subscription?, onClose: () -> Unit
             }
         },
     ) {
-        Section("Name", Icons.Outlined.EventRepeat, Accents.getValue("violet")) {
+        Section("Name", Icons.Outlined.EventRepeat) {
             CompactField(form.name, { set(form.copy(name = it.take(100))) }, "Name", enabled = !busy, isError = errorField == SubField.Name, placeholder = "For example Netflix")
         }
-        Section("Amount", Icons.Outlined.Numbers, Accents.getValue("orange")) {
+        Section("Amount", Icons.Outlined.Numbers) {
             CompactField(
                 form.amount, { set(form.copy(amount = cleanAmount(it))) }, "Amount",
                 keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !busy, isError = errorField == SubField.Amount, suffix = currency,
@@ -142,7 +139,7 @@ fun SubscriptionFormScreen(api: Api, editing: Subscription?, onClose: () -> Unit
                 Switch(checked = form.varies, onCheckedChange = { set(form.copy(varies = it)) }, enabled = !busy)
             }
         }
-        Section("Pay from", Icons.Outlined.AccountBalance, Accents.getValue("green")) {
+        Section("Pay from", Icons.Outlined.AccountBalance) {
             PickerField(
                 title = "Pay from", value = account?.let { Ref(it.id, it.name) }, placeholder = "No account chosen", anyLabel = "No account",
                 entries = accounts.map { Ref(it.id, it.name) },
@@ -154,44 +151,44 @@ fun SubscriptionFormScreen(api: Api, editing: Subscription?, onClose: () -> Unit
                 keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !busy, isError = errorField == SubField.Rate,
             placeholder = "1 $currency = ? $baseCurrency")
         }
-        Section("Vendor", Icons.Outlined.Storefront, Accents.getValue("pink")) {
+        Section("Vendor", Icons.Outlined.Storefront) {
             VendorPickerField(api, form.vendor, onPick = { name, picked -> set(form.copy(vendor = name, category = if (form.category.isBlank()) picked?.defaultCategory ?: form.category else form.category)) })
         }
-        Section("Category", Icons.Outlined.Category, Accents.getValue("amber")) {
+        Section("Category", Icons.Outlined.Category) {
             PickerField(
                 title = "Category", value = form.category.takeIf { it.isNotBlank() }?.let { Ref("", it) }, placeholder = "Choose or type a category", anyLabel = null,
                 searchable = true, allowCreate = true, entries = categories.map { Ref(it.id, it.name) }, onPick = { set(form.copy(category = it?.name ?: "")) },
                 isError = errorField == SubField.Category,
             )
         }
-        Section("Paid by", Icons.Outlined.Payments, Accents.getValue("slate")) {
+        Section("Paid by", Icons.Outlined.Payments) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                PaymentMethodLabels.forEach { (value, label) -> TintChip(methodTint(value), form.method == value, { set(form.copy(method = value)) }, { Text(label) }) }
+                PaymentMethodLabels.forEach { (value, label) -> ChoiceChip(form.method == value, { set(form.copy(method = value)) }, { Text(label) }) }
             }
         }
-        Section("How often", Icons.Outlined.Tune, Accents.getValue("blue")) {
+        Section("How often", Icons.Outlined.Tune) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 CompactField(form.count, { set(form.copy(count = it.filter(Char::isDigit).take(2))) }, "Every", Modifier.weight(0.35f), KeyboardOptions(keyboardType = KeyboardType.Number), enabled = !busy, isError = errorField == SubField.Count, placeholder = "1")
             }
-            SegmentedPills(IntervalUnits, form.unit, { set(form.copy(unit = it)) }, tint = { u -> paletteTint(IntervalUnits.indexOfFirst { it.first == u }) }, enabled = !busy)
+            SegmentedPills(IntervalUnits, form.unit, { set(form.copy(unit = it)) }, enabled = !busy)
         }
-        Section("First payment", Icons.Outlined.CalendarMonth, Accents.getValue("lime")) {
-            TintChip(Accents.getValue("lime"), true, { pickingDate = true }, { Text(shortDate(form.startDate) + ", " + LocalDate.parse(form.startDate).year) })
+        Section("First payment", Icons.Outlined.CalendarMonth) {
+            ChoiceChip(true, { pickingDate = true }, { Text(shortDate(form.startDate) + ", " + LocalDate.parse(form.startDate).year) })
             Text("The schedule counts from this day.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Section("Number of payments", Icons.Outlined.Numbers, Accents.getValue("violet")) {
+        Section("Number of payments", Icons.Outlined.Numbers) {
             CompactField(
                 form.installments, { set(form.copy(installments = it.filter(Char::isDigit).take(3))) }, "Number of payments",
                 keyboard = KeyboardOptions(keyboardType = KeyboardType.Number), enabled = !busy, isError = errorField == SubField.Installments,
             placeholder = "Leave empty if it goes on")
         }
-        Section("Remind me", Icons.Outlined.Notifications, Accents.getValue("amber")) {
+        Section("Remind me", Icons.Outlined.Notifications) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                RemindOptions.forEachIndexed { i, (days, label) -> TintChip(paletteTint(i), form.remind == days, { set(form.copy(remind = days)) }, { Text(label) }) }
+                RemindOptions.forEachIndexed { i, (days, label) -> ChoiceChip(form.remind == days, { set(form.copy(remind = days)) }, { Text(label) }) }
             }
         }
-        if (editing != null) Section("Status", Icons.Outlined.EventRepeat, Accents.getValue("green")) {
-            SegmentedPills(SubscriptionStatuses, form.status, { set(form.copy(status = it)) }, tint = { s -> Accents.getValue(when (s) { "active" -> "green"; "paused" -> "amber"; else -> "slate" }) }, enabled = !busy)
+        if (editing != null) Section("Status", Icons.Outlined.EventRepeat) {
+            SegmentedPills(SubscriptionStatuses, form.status, { set(form.copy(status = it)) }, enabled = !busy)
         }
     }
 

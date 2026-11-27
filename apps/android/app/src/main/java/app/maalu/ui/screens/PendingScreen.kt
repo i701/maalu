@@ -55,8 +55,7 @@ import app.maalu.data.pendingLines
 import app.maalu.data.ruleText
 import app.maalu.data.splitRequest
 import app.maalu.ui.components.MoneyText
-import app.maalu.ui.components.TintChip
-import app.maalu.ui.theme.Accents
+import app.maalu.ui.components.ChoiceChip
 import kotlinx.coroutines.launch
 
 /**
@@ -95,7 +94,7 @@ fun PendingScreen(api: Api, onChanged: () -> Unit) {
         list == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         else -> PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
             if (list.isEmpty()) Column(Modifier.fillMaxSize().padding(32.dp), verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(Icons.Outlined.TaskAlt, null, Modifier.size(48.dp), tint = Accents.getValue("green"))
+                Icon(Icons.Outlined.TaskAlt, null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("Nothing is waiting", style = MaterialTheme.typography.titleMedium)
                 Text(
                     "When a salary arrives and you have split rules, its split waits here for you to approve.",
@@ -170,7 +169,7 @@ private fun TaskCard(task: SplitTask, busy: Boolean, onApprove: () -> Unit, onRe
                 }
                 blocked.forEach { i -> Text("${i.targetName}: ${i.reason ?: "can't be made"}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
             }
-            if (plan.over) TintChip(Accents.getValue("orange"), selected = true, onClick = {}, label = { Text("Adds up to more than the salary") })
+            if (plan.over) ChoiceChip(selected = true, onClick = {}, label = { Text("Adds up to more than the salary") })
             else Text(
                 "Moving ${formatMoney(plan.total, plan.currency)}${if (sent != "0.00") " more" else ""}. ${formatMoney(plan.left, plan.currency)} stays in ${plan.accountName}.",
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,

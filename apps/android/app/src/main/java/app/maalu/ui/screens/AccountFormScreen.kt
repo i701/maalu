@@ -77,7 +77,6 @@ import app.maalu.data.toJson
 import app.maalu.ui.components.CompactField
 import app.maalu.ui.components.PickerField
 import app.maalu.ui.components.Section
-import app.maalu.ui.theme.Accents
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -178,7 +177,7 @@ private fun AccountFields(form: AccountForm, onForm: (AccountForm) -> Unit, l: L
     val foreign = form.currency.isNotBlank() && form.currency != l.base
     val liability = form.group in LiabilityGroups
 
-    Section("Kind", Icons.Outlined.Category, Accents.getValue("violet")) {
+    Section("Kind", Icons.Outlined.Category) {
         PickerField(
             title = "Kind of account", value = Ref(form.group, groupLabel(form.group)), placeholder = "Kind", anyLabel = null,
             entries = AccountGroupsInOrder.map { Ref(it, groupLabel(it)) },
@@ -187,10 +186,10 @@ private fun AccountFields(form: AccountForm, onForm: (AccountForm) -> Unit, l: L
         )
         Text(GroupHelp[form.group].orEmpty(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
-    Section("Name", Icons.Outlined.AccountBalance, Accents.getValue("blue")) {
+    Section("Name", Icons.Outlined.AccountBalance) {
         CompactField(form.name, { onForm(form.copy(name = it.take(100))) }, "Name", enabled = enabled, isError = errorField == AccountField.Name, placeholder = "For example BML Current")
     }
-    Section("Currency", Icons.Outlined.Payments, Accents.getValue("green")) {
+    Section("Currency", Icons.Outlined.Payments) {
         PickerField(
             title = "Currency", value = form.currency.takeIf { it.isNotBlank() }?.let { Ref(it, it) }, placeholder = l.base, anyLabel = null,
             searchable = true, entries = l.currencies.map { Ref(it, it) },
@@ -204,7 +203,7 @@ private fun AccountFields(form: AccountForm, onForm: (AccountForm) -> Unit, l: L
             SwitchRow("Keep this rate up to date", "Follows the market rate every day.", form.autoRate, enabled) { onForm(form.copy(autoRate = it)) }
         }
     }
-    Section("Opening amount", Icons.Outlined.Numbers, Accents.getValue("orange")) {
+    Section("Opening amount", Icons.Outlined.Numbers) {
         CompactField(
             form.opening, { onForm(form.copy(opening = cleanSigned(it))) }, "Opening balance",
             keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = enabled,
@@ -215,7 +214,7 @@ private fun AccountFields(form: AccountForm, onForm: (AccountForm) -> Unit, l: L
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
-    Section("Bank", Icons.Outlined.Sell, Accents.getValue("amber")) {
+    Section("Bank", Icons.Outlined.Sell) {
         PickerField(
             title = "Bank", value = form.bank.takeIf { it.isNotBlank() }?.let { Ref("", it) }, placeholder = "Which bank (optional)", anyLabel = "No bank",
             searchable = true, allowCreate = true, entries = bankChoices(existing).map { Ref(it, it) },
@@ -223,7 +222,7 @@ private fun AccountFields(form: AccountForm, onForm: (AccountForm) -> Unit, l: L
         )
         CompactField(form.number, { onForm(form.copy(number = it.take(34))) }, "Account number (optional)", enabled = enabled)
     }
-    if (form.group in CreditLimitGroups) Section("Credit limit", Icons.Outlined.Payments, Accents.getValue("pink")) {
+    if (form.group in CreditLimitGroups) Section("Credit limit", Icons.Outlined.Payments) {
         CompactField(
             form.creditLimit, { onForm(form.copy(creditLimit = cleanAmount(it))) }, "Credit limit",
             keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = enabled,
@@ -234,10 +233,10 @@ private fun AccountFields(form: AccountForm, onForm: (AccountForm) -> Unit, l: L
             CompactField(form.dueDay, { onForm(form.copy(dueDay = it.filter(Char::isDigit).take(2))) }, "Due day", Modifier.weight(1f), KeyboardOptions(keyboardType = KeyboardType.Number), enabled = enabled, isError = errorField == AccountField.Days)
         }
     }
-    Section("Note", Icons.Outlined.Notes, Accents.getValue("lime")) {
+    Section("Note", Icons.Outlined.Notes) {
         CompactField(form.description, { onForm(form.copy(description = it.take(300))) }, "Add a note", Modifier.fillMaxWidth(), singleLine = false, enabled = enabled, minHeight = 80.dp)
     }
-    Section("Counting", Icons.Outlined.Tune, Accents.getValue("slate")) {
+    Section("Counting", Icons.Outlined.Tune) {
         if (!liability) {
             val effective = form.spendable ?: spendableByGroup(form.group)
             SwitchRow("I spend from this account", "Its money counts toward what is available to spend.", effective, enabled) {

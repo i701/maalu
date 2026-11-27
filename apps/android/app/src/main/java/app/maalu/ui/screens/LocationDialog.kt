@@ -67,7 +67,6 @@ import app.maalu.data.toCoordinate
 import app.maalu.ui.components.CompactField
 import app.maalu.ui.components.MapFocus
 import app.maalu.ui.components.OsmMap
-import app.maalu.ui.theme.Accents
 import kotlinx.coroutines.launch
 
 /** What the picker hands back: both coordinates to six decimals and an optional name; or null to remove the spot. */
@@ -147,7 +146,7 @@ fun LocationDialog(api: Api, initial: Spot?, onClose: () -> Unit, onDone: (Spot?
                     OsmMap(
                         Modifier.fillMaxSize(), startLat = pin?.first ?: DEFAULT_LAT, startLng = pin?.second ?: DEFAULT_LNG, startZoom = if (pin != null) 16.0 else 15.0,
                         dark = isSystemInDarkTheme(), pin = pin, focus = focus,
-                        spotColor = Accents.getValue("pink").toArgb(), selectedColor = primary, pinColor = primary,
+                        spotColor = primary, selectedColor = primary, pinColor = primary,
                         onTap = { la, lo -> place(la, lo) },
                     )
                     if (pin == null) Surface(Modifier.align(Alignment.TopCenter).padding(12.dp), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.92f)) {

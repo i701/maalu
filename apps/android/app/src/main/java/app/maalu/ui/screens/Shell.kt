@@ -2,7 +2,6 @@
 
 package app.maalu.ui.screens
 
-import app.maalu.ui.theme.AccentTheme
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -139,10 +138,6 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
     val monthly = onTab && !onAccountPage && (selected == DASHBOARD || selected == BUDGET)
     // the drawer's highlighted item: the open destination, else the tab
     val selectedId = destination?.id ?: MoreDestinations.firstOrNull { it.tabIndex == selected }?.id
-    // the page's colour: a drawer destination's own, else the open tab's
-    val accent = (destination ?: MoreDestinations.firstOrNull { it.tabIndex == selected })?.accent
-
-    AccentTheme(accent) {
     ModalNavigationDrawer(
         drawerState = drawer,
         drawerContent = {
@@ -255,6 +250,5 @@ fun Shell(api: Api, server: String, themeMode: ThemeMode, onThemeMode: (ThemeMod
             }
         }
         }
-    }
     }
 }

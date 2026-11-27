@@ -45,7 +45,6 @@ import app.maalu.data.spendingSentence
 import app.maalu.ui.components.MoneyText
 import app.maalu.ui.components.MorphTile
 import app.maalu.ui.theme.Accents
-import app.maalu.ui.theme.ChartColors
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import java.time.LocalDate
@@ -80,7 +79,7 @@ fun CompareScreen(api: Api) {
 
     Column(Modifier.fillMaxSize()) {
         Box(Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 4.dp)) {
-            ChipRow(ComparePreset.entries, chosen, { it.label }, Accents.getValue("violet")) { data = null; preset = it.name }
+            ChipRow(ComparePreset.entries, chosen, { it.label }) { data = null; preset = it.name }
         }
         ReportState(data, error, onRetry = { error = null; reload++ }) { d ->
             val money = { a: String -> app.maalu.data.formatMoney(a, d.currency) }
@@ -127,9 +126,8 @@ private fun arrow(change: Change): String = when (change.change.toBigDecimalOrNu
 
 @Composable
 private fun ChangeTile(label: String, c: Change, currency: String, upIsGood: Boolean, modifier: Modifier) {
-    val tint = tone(c, upIsGood) ?: ChartColors.Line
     StatTile(
-        label, c.now, currency, tint, modifier,
+        label, c.now, currency, modifier, noteColor = tone(c, upIsGood),
         note = arrow(c) + " " + (c.percent?.let { "%.0f%%".format(java.util.Locale.ENGLISH, Math.abs(it)) } ?: app.maalu.data.formatMoneyFull(c.change.removePrefix("-"), currency)),
     )
 }

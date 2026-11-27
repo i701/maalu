@@ -5,7 +5,6 @@ package app.maalu.ui.screens
 import app.maalu.ui.components.fadingEdges
 import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
-import app.maalu.ui.theme.tintSurface
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -59,7 +58,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
@@ -99,11 +97,9 @@ import app.maalu.ui.components.MoneyText
 import app.maalu.ui.components.MorphTile
 import app.maalu.ui.components.SearchPill
 import app.maalu.ui.components.SegmentedPills
-import app.maalu.ui.components.TintChip
-import app.maalu.ui.theme.Accents
+import app.maalu.ui.components.ChoiceChip
 import app.maalu.ui.theme.ChartColors
 import app.maalu.ui.theme.MoneyStyle
-import app.maalu.ui.theme.idTint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -245,8 +241,7 @@ fun AccountDetailScreen(api: Api, accountId: String, onBack: () -> Unit) {
                         SearchPill(query, { query = it.take(100) }, Modifier.padding(horizontal = 16.dp, vertical = 6.dp), placeholder = "Search this account")
                         Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             TYPES.forEach { (value, label) ->
-                                val tint = when (value) { "income" -> ChartColors.IncomeLight; "expense" -> MaterialTheme.colorScheme.error; "transfer" -> ChartColors.Line; else -> MaterialTheme.colorScheme.outline }
-                                TintChip(tint, type == value, { type = value }, { Text(label) })
+                                ChoiceChip(type == value, { type = value }, { Text(label) })
                             }
                         }
                     }
@@ -300,10 +295,9 @@ fun AccountDetailScreen(api: Api, accountId: String, onBack: () -> Unit) {
 /** The balance, in its colour, with what came in and went out this month. */
 @Composable
 private fun Header(a: Account, month: Totals?) {
-    val tint = idTint(a.id)
     val negative = a.balance.startsWith("-")
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Surface(shape = MaterialTheme.shapes.extraLarge, color = tint.tintSurface()) {
+        Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainer) {
             Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(if (a.isLiability) "Owed" else "Balance", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 MoneyText(
@@ -319,8 +313,8 @@ private fun Header(a: Account, month: Totals?) {
             }
         }
         if (month != null) Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            MonthCard("In this month", month.income, month.currency, ChartColors.IncomeLight, Modifier.weight(1f))
-            MonthCard("Out this month", month.expense, month.currency, MaterialTheme.colorScheme.error, Modifier.weight(1f))
+            MonthCard("In this month", month.income, month.currency, Modifier.weight(1f))
+            MonthCard("Out this month", month.expense, month.currency, Modifier.weight(1f))
         }
     }
 }
@@ -329,8 +323,8 @@ private fun creditLine(a: Account): String? =
     app.maalu.data.creditUsage(a.balance, a.creditLimit)?.let { "${it.percent}% of ${formatMoney(it.limit.toPlainString(), a.currency)} used" }
 
 @Composable
-private fun MonthCard(label: String, amount: String, currency: String, tint: Color, modifier: Modifier) {
-    Surface(modifier, shape = MaterialTheme.shapes.large, color = tint.tintSurface()) {
+private fun MonthCard(label: String, amount: String, currency: String, modifier: Modifier) {
+    Surface(modifier, shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
         Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             MoneyText(amount, currency, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
@@ -355,8 +349,7 @@ private fun Actions(a: Account, onAdd: () -> Unit, onAdjust: () -> Unit, onEdit:
 /** A card's latest statement: what to pay and by when, the four figures, and Repay. */
 @Composable
 private fun StatementPanel(s: CardStatement, onRepay: () -> Unit) {
-    val tint = when (s.state) { "overdue" -> MaterialTheme.colorScheme.error; "paid", "none" -> ChartColors.IncomeLight; else -> ChartColors.Warning }
-    Surface(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), shape = MaterialTheme.shapes.extraLarge, color = tint.tintSurface()) {
+    Surface(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), shape = MaterialTheme.shapes.extraLarge, color = if (s.state == "overdue") MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surfaceContainer) {
         Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Statement", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(statementLine(s), style = MaterialTheme.typography.titleSmall)
@@ -384,7 +377,7 @@ private fun BalanceChart(a: Account, history: BalanceHistory?, range: HistoryRan
         Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("Balance over time", style = MaterialTheme.typography.titleMedium)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                HistoryRange.entries.forEachIndexed { i, r -> TintChip(Accents.getValue(listOf("blue", "violet", "pink")[i]), range == r, { onRange(r) }, { Text(r.label) }) }
+                HistoryRange.entries.forEachIndexed { i, r -> ChoiceChip(range == r, { onRange(r) }, { Text(r.label) }) }
             }
             val points: List<AccountBalancePoint> = history?.points.orEmpty()
             if (points.size < 2) Text(if (history == null) "Loading…" else "Not enough history yet.", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -446,7 +439,7 @@ private fun AdjustBalanceDialog(api: Api, a: Account, onClose: () -> Unit, onDon
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 SegmentedPills(
                     listOf(AdjustMode.Balance to "Set balance", AdjustMode.Amount to "Add or take away"), mode, { mode = it; error = null },
-                    tint = { Accents.getValue(if (it == AdjustMode.Balance) "blue" else "violet") }, enabled = !busy,
+                    enabled = !busy,
                 )
                 CompactField(
                     typed, { typed = cleanSigned(it); error = null }, "Amount",

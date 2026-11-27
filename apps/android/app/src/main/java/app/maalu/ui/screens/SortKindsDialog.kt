@@ -28,7 +28,6 @@ import app.maalu.data.sortableCategories
 import app.maalu.data.startingKinds
 import app.maalu.ui.components.FormDialog
 import app.maalu.ui.components.SegmentedPills
-import app.maalu.ui.theme.kindTint
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonElement
 
@@ -80,7 +79,7 @@ fun SortKindsDialog(api: Api, categories: List<Category>, onClose: () -> Unit, o
                 inherited?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                 SegmentedPills(
                     listOf<Pair<String?, String>>("need" to "Need", "want" to "Want", null to "Not set"), choices[c.id], { choices = choices + (c.id to it) },
-                    tint = { kindTint(it ?: "other") }, enabled = !busy,
+                    enabled = !busy,
                 )
             }
         }

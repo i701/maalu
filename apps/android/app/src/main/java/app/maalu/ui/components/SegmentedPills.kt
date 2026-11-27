@@ -25,7 +25,6 @@ import kotlinx.coroutines.launch
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
@@ -45,7 +44,6 @@ fun <T> SegmentedPills(
     selected: T,
     onSelect: (T) -> Unit,
     modifier: Modifier = Modifier,
-    tint: @Composable (T) -> Color? = { null },
     enabled: Boolean = true,
 ) {
     Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)) {
@@ -79,7 +77,6 @@ fun <T> SegmentedPills(
                 else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
             // the spec's pressed shape for a 40dp button is 8dp on every corner, round or square, ends included
             }.copy(pressedShape = RoundedCornerShape(8.dp))
-            val accent = tint(value) ?: MaterialTheme.colorScheme.secondary
             ToggleButton(
                 checked = isSelected,
                 onCheckedChange = { onSelect(value) },
@@ -89,7 +86,7 @@ fun <T> SegmentedPills(
                 colors = ToggleButtonDefaults.colors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    checkedContainerColor = accent.copy(alpha = 0.34f),
+                    checkedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                     checkedContentColor = MaterialTheme.colorScheme.onSurface,
                 ),
                 contentPadding = PaddingValues(horizontal = 8.dp),

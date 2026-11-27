@@ -10,8 +10,6 @@ import androidx.compose.material3.LinearProgressIndicator
 import app.maalu.ui.components.dimWhen
 import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
-import app.maalu.ui.theme.tintBadge
-import app.maalu.ui.theme.tintIcon
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import app.maalu.data.placeLabel
@@ -95,9 +93,7 @@ import app.maalu.ui.components.PickerSheet
 import app.maalu.ui.components.SearchPill
 import app.maalu.ui.components.SegmentedPills
 import app.maalu.ui.components.Section
-import app.maalu.ui.components.TintChip
-import app.maalu.ui.theme.Accents
-import app.maalu.ui.theme.idTint
+import app.maalu.ui.components.ChoiceChip
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonElement
@@ -224,10 +220,9 @@ fun VendorsScreen(api: Api) {
 
 @Composable
 private fun VendorRow(v: Vendor) {
-    val tint = idTint(v.id)
     Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Box(Modifier.size(36.dp).clip(CircleShape).background(tint.tintIcon()), contentAlignment = Alignment.Center) {
-            Text(v.name.firstOrNull()?.uppercase() ?: "?", style = MaterialTheme.typography.labelLargeEmphasized, color = tint)
+        Box(Modifier.size(36.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceContainerHighest), contentAlignment = Alignment.Center) {
+            Text(v.name.firstOrNull()?.uppercase() ?: "?", style = MaterialTheme.typography.labelLargeEmphasized, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(v.name, style = MaterialTheme.typography.bodyMediumEmphasized, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -235,7 +230,7 @@ private fun VendorRow(v: Vendor) {
             if (sub.isNotEmpty()) Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         localityLabel(v.isLocal)?.let { label ->
-            Surface(shape = RoundedCornerShape(8.dp), color = Accents.getValue(if (v.isLocal == true) "green" else "orange").tintBadge()) {
+            Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.surfaceContainerHighest) {
                 Text(label, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp))
             }
         }
@@ -332,15 +327,15 @@ private fun VendorFormScreen(api: Api, editing: Vendor?, onClose: () -> Unit, on
             }
         },
     ) {
-        Section("Name", Icons.Outlined.Storefront, Accents.getValue("orange")) {
+        Section("Name", Icons.Outlined.Storefront) {
             CompactField(form.name, { nameError = false; form = form.copy(name = it.take(100)) }, "Name", enabled = !busy, isError = nameError, placeholder = "For example Ensis Mart")
         }
-        Section("Usual place", Icons.Outlined.LocationOn, Accents.getValue("pink")) {
+        Section("Usual place", Icons.Outlined.LocationOn) {
             val marked = form.latitude.isNotBlank() && form.longitude.isNotBlank()
             if (!marked) OutlinedButton(onClick = { marking = true }, enabled = !busy, shapes = ButtonDefaults.shapes()) {
                 Icon(Icons.Outlined.LocationOn, null, Modifier.padding(end = 6.dp)); Text("Mark where it is")
             } else Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TintChip(Accents.getValue("pink"), selected = true, onClick = { marking = true }, label = { Text(placeLabel(form.place, form.latitude, form.longitude), maxLines = 1) }, modifier = Modifier.weight(1f, fill = false))
+                ChoiceChip(selected = true, onClick = { marking = true }, label = { Text(placeLabel(form.place, form.latitude, form.longitude), maxLines = 1) }, modifier = Modifier.weight(1f, fill = false))
                 IconButton(onClick = { form = form.copy(latitude = "", longitude = "", place = "") }, enabled = !busy) { Icon(Icons.Outlined.Close, "Remove the place") }
             }
             Text("Picking this vendor on a transaction marks this place on it, unless one is already marked.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -349,30 +344,30 @@ private fun VendorFormScreen(api: Api, editing: Vendor?, onClose: () -> Unit, on
                 onDone = { spot -> marking = false; form = if (spot == null) form.copy(latitude = "", longitude = "", place = "") else form.copy(latitude = spot.latitude, longitude = spot.longitude, place = spot.place) },
             )
         }
-        Section("Usually", Icons.Outlined.Category, Accents.getValue("amber")) {
+        Section("Usually", Icons.Outlined.Category) {
             PickerField(
                 title = "Usual category", value = form.defaultCategory.takeIf { it.isNotBlank() }?.let { Ref("", it) }, placeholder = "A usual category (optional)", anyLabel = "None",
                 searchable = true, allowCreate = true, entries = categories.map { Ref(it.id, it.name) }, onPick = { form = form.copy(defaultCategory = it?.name ?: "") },
             )
             Text("Picking this vendor on a transaction fills in the category and tags it usually gets.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        if (tags.isNotEmpty()) Section("Usual tags", Icons.Outlined.Sell, Accents.getValue("pink")) {
+        if (tags.isNotEmpty()) Section("Usual tags", Icons.Outlined.Sell) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 tags.forEach { t ->
                     val on = t.name in form.defaultTags
-                    TintChip(idTint(t.id), on, { form = form.copy(defaultTags = if (on) form.defaultTags - t.name else form.defaultTags + t.name) }, { Text(t.name) })
+                    ChoiceChip(on, { form = form.copy(defaultTags = if (on) form.defaultTags - t.name else form.defaultTags + t.name) }, { Text(t.name) })
                 }
             }
         }
-        Section("Where", Icons.Outlined.LocationOn, Accents.getValue("green")) {
+        Section("Where", Icons.Outlined.LocationOn) {
             SegmentedPills(
                 listOf<Pair<Boolean?, String>>(null to "Not set", true to "Local", false to "Foreign"), form.isLocal, { form = form.copy(isLocal = it) },
-                tint = { when (it) { true -> Accents.getValue("green"); false -> Accents.getValue("orange"); null -> Accents.getValue("slate") } }, enabled = !busy,
+                enabled = !busy,
             )
             CompactField(form.address, { form = form.copy(address = it.take(200)) }, "Address (optional)", enabled = !busy)
             CompactField(form.contact, { form = form.copy(contact = it.take(200)) }, "Phone or email (optional)", enabled = !busy)
         }
-        Section("Currency", Icons.Outlined.Payments, Accents.getValue("blue")) {
+        Section("Currency", Icons.Outlined.Payments) {
             PickerField(
                 title = "Currency", value = form.currency.takeIf { it.isNotBlank() }?.let { Ref(it, it) }, placeholder = "Usual currency (optional)", anyLabel = "None",
                 searchable = true, entries = currencies.map { Ref(it, it) }, onPick = { form = form.copy(currency = it?.id ?: "") },

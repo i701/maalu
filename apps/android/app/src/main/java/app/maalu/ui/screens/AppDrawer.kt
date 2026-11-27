@@ -4,7 +4,6 @@ package app.maalu.ui.screens
 
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.height
-import app.maalu.ui.theme.tintIcon
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,7 +34,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import app.maalu.data.ThemeMode
 import app.maalu.ui.components.SegmentedPills
-import app.maalu.ui.theme.Accents
 
 /**
  * The sidebar: every destination in the web's groups (Money, Planning, Organise, Help) with its colour, the current
@@ -70,15 +68,14 @@ fun AppDrawer(
                 if (items.isEmpty()) return@forEach
                 Text(group.label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 12.dp, top = 10.dp, bottom = 2.dp))
                 items.forEach { d ->
-                    val tint = Accents.getValue(d.accent)
                     NavigationDrawerItem(
                         label = { Text(d.label) },
-                        icon = { Icon(d.icon, null, tint = tint, modifier = Modifier.size(22.dp)) },
+                        icon = { Icon(d.icon, null, modifier = Modifier.size(22.dp)) },
                         selected = d.id == selectedId,
                         onClick = { onOpen(d) },
                         modifier = Modifier.height(44.dp),
                         badge = badges[d.id]?.takeIf { it > 0 }?.let { n -> { androidx.compose.material3.Badge { Text(app.maalu.data.badgeText(n)) } } },
-                        colors = NavigationDrawerItemDefaults.colors(selectedContainerColor = tint.tintIcon(), unselectedContainerColor = androidx.compose.ui.graphics.Color.Transparent),
+                        colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = androidx.compose.ui.graphics.Color.Transparent),
                     )
                 }
             }
@@ -87,8 +84,7 @@ fun AppDrawer(
             SegmentedPills(
                 ThemeMode.entries.map { it to it.label }, themeMode, onThemeMode,
                 modifier = Modifier.padding(horizontal = 4.dp),
-                tint = { Accents.getValue(when (it) { ThemeMode.Light -> "amber"; ThemeMode.Dark -> "violet"; ThemeMode.System -> "blue" }) },
-            )
+                )
             NavigationDrawerItem(
                 label = { Text("Sign out", color = MaterialTheme.colorScheme.error) },
                 icon = { Icon(Icons.Outlined.Logout, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(22.dp)) },

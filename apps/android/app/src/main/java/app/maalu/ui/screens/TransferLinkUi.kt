@@ -6,7 +6,6 @@ import app.maalu.ui.components.glowTopBarColors
 import app.maalu.ui.components.glowBackground
 import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
-import app.maalu.ui.theme.tintSurface
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -67,7 +66,6 @@ import app.maalu.data.pairOf
 import app.maalu.data.title
 import app.maalu.ui.components.MoneyText
 import app.maalu.ui.components.MorphTile
-import app.maalu.ui.theme.Accents
 import kotlinx.coroutines.launch
 
 /**
@@ -80,11 +78,10 @@ fun TransferSuggestionsCard(api: Api, suggestions: List<TransferSuggestion>, onC
     var confirming by remember { mutableStateOf<TransferSuggestion?>(null) }
     var busy by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    val tint = Accents.getValue("blue")
-    Surface(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.extraLarge, color = tint.tintSurface()) {
+    Surface(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainer) {
         Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Icon(Icons.Outlined.SwapHoriz, null, tint = tint)
+                Icon(Icons.Outlined.SwapHoriz, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 Column(Modifier.weight(1f)) {
                     Text("Looks like one transfer", style = MaterialTheme.typography.titleSmall)
                     Text(

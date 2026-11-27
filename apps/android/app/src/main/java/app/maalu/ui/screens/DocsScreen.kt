@@ -2,11 +2,11 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.theme.ChartColors
 import app.maalu.ui.components.fadingEdges
 import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
 import app.maalu.ui.theme.tintIcon
-import app.maalu.ui.theme.tintSurface
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -75,7 +75,6 @@ import app.maalu.data.parseDocs
 import app.maalu.data.searchDocs
 import app.maalu.ui.components.CompactField
 import app.maalu.ui.components.MorphTile
-import app.maalu.ui.theme.Accents
 
 /**
  * Docs: guides to what each feature is and how to use it. They are the web's guides, bundled in the app (assets/docs.json, kept in step by
@@ -114,7 +113,7 @@ private fun GuideList(empty: Boolean, hits: List<DocHit>, query: String, onQuery
         if (empty) item { Text("The guides could not be loaded.", color = MaterialTheme.colorScheme.error) }
         else if (hits.isEmpty()) item { Text("No guide has all of those words.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         itemsIndexed(hits, key = { _, h -> h.doc.slug }) { i, hit -> Box(springItem()) {
-            val tint = Accents[hit.doc.accent] ?: MaterialTheme.colorScheme.primary
+            val tint = MaterialTheme.colorScheme.primary
             MorphTile(onClick = { onOpen(hit) }, first = i == 0, last = i == hits.lastIndex, modifier = Modifier.fillMaxWidth()) {
                 Row(Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
                     Box(Modifier.size(40.dp).clip(RoundedCornerShape(14.dp)).background(tint.tintIcon()), contentAlignment = Alignment.Center) {
@@ -136,7 +135,7 @@ private fun GuideList(empty: Boolean, hits: List<DocHit>, query: String, onQuery
 
 @Composable
 private fun Article(doc: DocItem, section: String?, onLink: (String) -> Unit) {
-    val tint = Accents[doc.accent] ?: MaterialTheme.colorScheme.primary
+    val tint = MaterialTheme.colorScheme.primary
     val state = rememberLazyListState()
     // a search that found the words in the body lands on that section (the header and summary are the first two items)
     LaunchedEffect(doc.slug, section) {
@@ -147,9 +146,9 @@ private fun Article(doc: DocItem, section: String?, onLink: (String) -> Unit) {
         item { Text(doc.title, style = MaterialTheme.typography.headlineSmall) }
         item { Text(doc.summary, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         if (doc.webOnly) item {
-            Surface(shape = MaterialTheme.shapes.large, color = Accents.getValue("amber").tintSurface()) {
+            Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
                 Row(Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Icon(Icons.Outlined.Info, null, tint = Accents.getValue("amber"), modifier = Modifier.size(22.dp))
+                    Icon(Icons.Outlined.Info, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(22.dp))
                     Text("This is done in the web app, not in this one. The guide is here so you can read how it works.", style = MaterialTheme.typography.bodyMedium)
                 }
             }
@@ -204,11 +203,11 @@ private fun Block(b: DocBlockItem, tint: Color, onLink: (String) -> Unit) {
         }
         "callout" -> {
             val (icon, color) = when (b.tone) {
-                "warning" -> Icons.Outlined.ErrorOutline to Accents.getValue("amber")
-                "tip" -> Icons.Outlined.Lightbulb to Accents.getValue("green")
-                else -> Icons.Outlined.Info to Accents.getValue("blue")
+                "warning" -> Icons.Outlined.ErrorOutline to ChartColors.Warning
+                "tip" -> Icons.Outlined.Lightbulb to MaterialTheme.colorScheme.primary
+                else -> Icons.Outlined.Info to MaterialTheme.colorScheme.primary
             }
-            Surface(shape = MaterialTheme.shapes.large, color = color.tintSurface()) {
+            Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
                 Row(Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Icon(icon, null, tint = color, modifier = Modifier.size(22.dp))
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {

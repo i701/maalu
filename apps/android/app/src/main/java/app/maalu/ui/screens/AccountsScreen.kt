@@ -14,7 +14,6 @@ import app.maalu.ui.components.fadingEdges
 import app.maalu.ui.components.SpringBar
 import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
-import app.maalu.ui.theme.tintIcon
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -86,7 +85,6 @@ import app.maalu.ui.components.MorphTile
 import app.maalu.ui.components.Sparkline
 import app.maalu.ui.theme.ChartColors
 import app.maalu.ui.theme.MoneyStyle
-import app.maalu.ui.theme.idTint
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -254,10 +252,9 @@ private fun NetWorthSummary(s: AccountSummary, accounts: List<Account>) {
 
 @Composable
 private fun AccountRow(a: Account, trend: List<Double>?, baseCurrency: String) {
-    val tint = idTint(a.id)
     Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Box(Modifier.size(36.dp).clip(CircleShape).background(tint.tintIcon()), contentAlignment = Alignment.Center) {
-            Text(a.name.firstOrNull()?.uppercase() ?: "?", style = MaterialTheme.typography.labelLargeEmphasized, color = tint)
+        Box(Modifier.size(36.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceContainerHighest), contentAlignment = Alignment.Center) {
+            Text(a.name.firstOrNull()?.uppercase() ?: "?", style = MaterialTheme.typography.labelLargeEmphasized, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             // the chip sits beside the name, as on iOS; a long name gives way to it

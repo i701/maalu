@@ -52,7 +52,6 @@ import app.maalu.ui.components.MoneyText
 import app.maalu.ui.components.SummaryBlue
 import app.maalu.ui.components.searchCardColor
 import app.maalu.ui.theme.ChartColors
-import app.maalu.ui.theme.tintSurface
 
 /** Income green, expense red, transfer blue; the colour of a type's token and of its chip in the filters. */
 @Composable
@@ -83,8 +82,8 @@ fun TransactionSearchCard(
         Column(Modifier.animateContentSize(MaterialTheme.motionScheme.defaultSpatialSpec())) {
             Row(Modifier.heightIn(min = 56.dp).padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Icon(Icons.Outlined.Search, null, Modifier.size(20.dp), tint = quiet)
-                filters.type?.let { type -> Token(type.replaceFirstChar { it.uppercase() }, typeTint(type)) { onFilters(filters.copy(type = null)) } }
-                if (filters.planned) Token("Planned", ChartColors.Warning) { onFilters(filters.copy(planned = false)) }
+                filters.type?.let { type -> Token(type.replaceFirstChar { it.uppercase() }) { onFilters(filters.copy(type = null)) } }
+                if (filters.planned) Token("Planned") { onFilters(filters.copy(planned = false)) }
                 BasicTextField(
                     value = query, onValueChange = onQuery, singleLine = true,
                     textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
@@ -124,11 +123,11 @@ fun TransactionSearchCard(
 
 /** A quick filter that is on, in the search field with a cross to turn it off. */
 @Composable
-private fun Token(label: String, tint: Color, onRemove: () -> Unit) {
+private fun Token(label: String, onRemove: () -> Unit) {
     InputChip(
         selected = true, onClick = onRemove, label = { Text(label) },
         trailingIcon = { Icon(Icons.Outlined.Clear, "Remove $label filter", Modifier.size(14.dp)) },
-        colors = InputChipDefaults.inputChipColors(selectedContainerColor = tint.tintSurface(), selectedLabelColor = MaterialTheme.colorScheme.onSurface),
+        colors = InputChipDefaults.inputChipColors(selectedContainerColor = MaterialTheme.colorScheme.primaryContainer, selectedLabelColor = MaterialTheme.colorScheme.onSurface),
         shape = MaterialTheme.shapes.small, border = null,
     )
 }
@@ -146,7 +145,6 @@ private fun TotalColumn(label: String, amount: String, currency: String, color: 
 @Composable
 private fun ActiveFilters(f: TxFilters, onChange: (TxFilters) -> Unit) {
     if (f.detailCount() == 0) return
-    val brand = SummaryBlue
     Row(
         Modifier.horizontalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -155,7 +153,7 @@ private fun ActiveFilters(f: TxFilters, onChange: (TxFilters) -> Unit) {
         fun chip(label: String, clear: () -> Unit) = InputChip(
             selected = true, onClick = clear, label = { Text(label) },
             trailingIcon = { Icon(Icons.Outlined.Clear, "Remove $label", Modifier.size(16.dp)) },
-            colors = InputChipDefaults.inputChipColors(selectedContainerColor = brand.tintSurface(), selectedLabelColor = MaterialTheme.colorScheme.onSurface),
+            colors = InputChipDefaults.inputChipColors(selectedContainerColor = MaterialTheme.colorScheme.primaryContainer, selectedLabelColor = MaterialTheme.colorScheme.onSurface),
             shape = MaterialTheme.shapes.small,
             border = null,
         )

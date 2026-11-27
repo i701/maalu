@@ -104,23 +104,6 @@ val Accents: Map<String, Color> = mapOf(
     "slate" to Color(0xFF64748B),
 )
 
-/** The order accents are handed out in when many chips sit side by side, so neighbours differ. */
-private val ChipPalette = listOf("blue", "violet", "pink", "amber", "green", "orange", "lime", "slate")
-
-/** The i-th colour of the palette, cycling. */
-fun paletteTint(i: Int): Color = Accents.getValue(ChipPalette[Math.floorMod(i, ChipPalette.size)])
-
-/** A stable colour for a thing with an id (a tag): the same tag is the same colour in the sheet and on its chip. */
-fun idTint(id: String): Color = paletteTint(id.hashCode())
-
-fun methodTint(method: String): Color = when (method) {
-    "cash" -> Accents.getValue("green")
-    "bank_transfer" -> Accents.getValue("blue")
-    "debit_card" -> Accents.getValue("violet")
-    "credit_card" -> Accents.getValue("pink")
-    else -> Accents.getValue("slate")
-}
-
 /** Needs are the blue of the net-worth line, wants the orange of expenses, as on the dashboard card. */
 fun kindTint(kind: String): Color = when (kind) {
     "need" -> Accents.getValue("blue")
@@ -133,5 +116,3 @@ fun kindTint(kind: String): Color = when (kind) {
 fun Color.tintSurface(): Color = copy(alpha = 0.16f)
 /** An icon tile or a selected row. */
 fun Color.tintIcon(): Color = copy(alpha = 0.2f)
-/** A small badge. */
-fun Color.tintBadge(): Color = copy(alpha = 0.25f)

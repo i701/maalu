@@ -69,10 +69,8 @@ import app.maalu.ui.components.FormDialog
 import app.maalu.ui.components.PickerField
 import app.maalu.ui.components.Section
 import app.maalu.ui.components.SegmentedPills
-import app.maalu.ui.components.TintChip
+import app.maalu.ui.components.ChoiceChip
 import app.maalu.data.takenCategories
-import app.maalu.ui.theme.Accents
-import app.maalu.ui.theme.idTint
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
@@ -121,16 +119,16 @@ fun LineFormScreen(api: Api, currency: String, budget: Budget, start: LineForm?,
             }
         },
     ) {
-        Section("Name", Icons.Outlined.Savings, Accents.getValue("blue")) {
+        Section("Name", Icons.Outlined.Savings) {
             CompactField(form.name, { errorField = null; form = form.copy(name = it.take(100)) }, "Name", enabled = !busy, isError = errorField == LineField.Name, placeholder = "For example Food")
         }
-        Section(if (form.dated && !form.repeat) "Limit for these dates" else "Amount each period", Icons.Outlined.Numbers, Accents.getValue("orange")) {
+        Section(if (form.dated && !form.repeat) "Limit for these dates" else "Amount each period", Icons.Outlined.Numbers) {
             CompactField(
                 form.amount, { errorField = null; form = form.copy(amount = cleanAmount(it)) }, "Amount",
                 keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !busy, isError = errorField == LineField.Amount, suffix = currency,
             placeholder = "0.00")
         }
-        Section("Dates", Icons.Outlined.CalendarMonth, Accents.getValue("violet")) {
+        Section("Dates", Icons.Outlined.CalendarMonth) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(32.dp)) {
                 Column(Modifier.weight(1f)) {
                     Text("Only for certain dates", style = MaterialTheme.typography.bodyMedium)
@@ -140,13 +138,13 @@ fun LineFormScreen(api: Api, currency: String, budget: Budget, start: LineForm?,
             }
             if (form.dated) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TintChip(Accents.getValue("blue"), form.start.isNotBlank(), { pickingDate = 1 }, { Text(if (form.start.isBlank()) "First day" else "From ${shortDate(form.start)}") })
-                    TintChip(Accents.getValue("blue"), form.end.isNotBlank(), { pickingDate = 2 }, { Text(if (form.end.isBlank()) "Last day" else "Until ${shortDate(form.end)}") })
+                    ChoiceChip(form.start.isNotBlank(), { pickingDate = 1 }, { Text(if (form.start.isBlank()) "First day" else "From ${shortDate(form.start)}") })
+                    ChoiceChip(form.end.isNotBlank(), { pickingDate = 2 }, { Text(if (form.end.isBlank()) "Last day" else "Until ${shortDate(form.end)}") })
                 }
                 Text("How it counts", style = MaterialTheme.typography.labelLarge)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TintChip(Accents.getValue("green"), !form.repeat, { form = form.copy(repeat = false) }, { Text("One total for the whole stretch") })
-                    TintChip(Accents.getValue("green"), form.repeat, { form = form.copy(repeat = true) }, { Text("A limit for every month between") })
+                    ChoiceChip(!form.repeat, { form = form.copy(repeat = false) }, { Text("One total for the whole stretch") })
+                    ChoiceChip(form.repeat, { form = form.copy(repeat = true) }, { Text("A limit for every month between") })
                 }
                 Text(
                     if (form.repeat) "Whole periods count, so the dates snap to them. The amount is for each period." else "The last day is included. The amount is one total, counted once over the stretch.",
@@ -155,7 +153,7 @@ fun LineFormScreen(api: Api, currency: String, budget: Budget, start: LineForm?,
                 if (errorField == LineField.Dates) Text("Choose the first and last day.", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
             }
         }
-        Section("Categories it covers", Icons.Outlined.Category, Accents.getValue("amber")) {
+        Section("Categories it covers", Icons.Outlined.Category) {
             val list = categories
             if (list == null) Text("Loading…", color = MaterialTheme.colorScheme.onSurfaceVariant)
             else {
@@ -163,8 +161,8 @@ fun LineFormScreen(api: Api, currency: String, budget: Budget, start: LineForm?,
                     list.forEach { c ->
                         val on = c.id in form.categoryIds
                         val by = taken[c.id]
-                        TintChip(
-                            Accents[c.color] ?: idTint(c.id), on, { errorField = null; form = form.copy(categoryIds = if (on) form.categoryIds - c.id else form.categoryIds + c.id) },
+                        ChoiceChip(
+                            on, { errorField = null; form = form.copy(categoryIds = if (on) form.categoryIds - c.id else form.categoryIds + c.id) },
                             { Text(if (by != null && !on) "${c.name} · in $by" else c.name) }, enabled = by == null || on,
                         )
                     }
@@ -244,16 +242,16 @@ fun GoalFormScreen(api: Api, currency: String, editing: Goal?, onClose: () -> Un
             }
         },
     ) {
-        Section("Name", Icons.Outlined.Savings, Accents.getValue("pink")) {
+        Section("Name", Icons.Outlined.Savings) {
             CompactField(form.name, { errorField = null; form = form.copy(name = it.take(100)) }, "Name", enabled = !busy, isError = errorField == GoalField.Name, placeholder = "For example Trip to Sri Lanka")
         }
-        Section("Target", Icons.Outlined.Numbers, Accents.getValue("orange")) {
+        Section("Target", Icons.Outlined.Numbers) {
             CompactField(
                 form.target, { errorField = null; form = form.copy(target = cleanAmount(it)) }, "How much to save",
                 keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !busy, isError = errorField == GoalField.Target, suffix = currency,
             )
         }
-        Section("Follows an account", Icons.Outlined.AccountBalance, Accents.getValue("violet")) {
+        Section("Follows an account", Icons.Outlined.AccountBalance) {
             PickerField(
                 title = "Account to follow", value = form.account, placeholder = "None: I set money aside by hand", anyLabel = "None: I set money aside by hand",
                 entries = accounts.orEmpty().filter { it.group !in LiabilityGroups }.map { Ref(it.id, it.name) },
@@ -262,14 +260,14 @@ fun GoalFormScreen(api: Api, currency: String, editing: Goal?, onClose: () -> Un
             )
             Text("A goal that follows an account counts that account's balance as saved.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Section("Plan", Icons.Outlined.CalendarMonth, Accents.getValue("blue")) {
+        Section("Plan", Icons.Outlined.CalendarMonth) {
             CompactField(
                 form.monthly, { errorField = null; form = form.copy(monthly = cleanAmount(it)) }, "Put aside each month (optional)",
                 keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !busy, isError = errorField == GoalField.Monthly, suffix = currency,
             )
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TintChip(Accents.getValue("blue"), form.targetDate != null, { pickingDate = true }, { Text(form.targetDate?.let { "By ${shortDate(it)}" } ?: "Pick a target date") })
-                if (form.targetDate != null) TintChip(Accents.getValue("slate"), false, { form = form.copy(targetDate = null) }, { Text("No date") })
+                ChoiceChip(form.targetDate != null, { pickingDate = true }, { Text(form.targetDate?.let { "By ${shortDate(it)}" } ?: "Pick a target date") })
+                if (form.targetDate != null) ChoiceChip(false, { form = form.copy(targetDate = null) }, { Text("No date") })
             }
         }
     }
@@ -302,7 +300,7 @@ fun GoalMoneyDialog(api: Api, goal: Goal, onClose: () -> Unit, onDone: () -> Uni
         title = { Text(goal.name) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                SegmentedPills(listOf(false to "Add money", true to "Take out"), take, { take = it }, tint = { if (it) MaterialTheme.colorScheme.error else Accents.getValue("green") }, enabled = !busy)
+                SegmentedPills(listOf(false to "Add money", true to "Take out"), take, { take = it }, enabled = !busy)
                 CompactField(
                     amount, { amount = cleanAmount(it); error = null }, "Amount",
                     keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !busy, isError = error != null, suffix = goal.currency,

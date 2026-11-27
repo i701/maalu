@@ -52,10 +52,8 @@ import app.maalu.data.SelectAll
 import app.maalu.data.TagItem
 import app.maalu.data.transactionCount
 import app.maalu.ui.components.PickerField
-import app.maalu.ui.components.TintChip
+import app.maalu.ui.components.ChoiceChip
 import app.maalu.ui.components.VendorPickerField
-import app.maalu.ui.theme.idTint
-import app.maalu.ui.theme.paletteTint
 import androidx.compose.foundation.layout.Box as LayoutBox
 
 /** The tick that stands in for a picked row's category badge: the same size, so the row does not change shape. */
@@ -129,7 +127,7 @@ fun BulkEditSheet(api: Api, count: Int, onClose: () -> Unit, onApply: (BulkEdit)
             Text("Way of paying", style = MaterialTheme.typography.labelLarge)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 PaymentMethodLabels.forEach { (value, label) ->
-                    TintChip(paletteTint(value.length), edit.method == value, { edit = edit.copy(method = if (edit.method == value) null else value); problem = null }, { Text(label) })
+                    ChoiceChip(edit.method == value, { edit = edit.copy(method = if (edit.method == value) null else value); problem = null }, { Text(label) })
                 }
             }
             if (tags.isNotEmpty()) {
@@ -137,14 +135,14 @@ fun BulkEditSheet(api: Api, count: Int, onClose: () -> Unit, onApply: (BulkEdit)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     tags.forEach { t ->
                         val on = t.name in edit.addTags
-                        TintChip(idTint(t.id), on, { edit = edit.copy(addTags = if (on) edit.addTags - t.name else edit.addTags + t.name, removeTags = edit.removeTags - t.name); problem = null }, { Text(t.name) })
+                        ChoiceChip(on, { edit = edit.copy(addTags = if (on) edit.addTags - t.name else edit.addTags + t.name, removeTags = edit.removeTags - t.name); problem = null }, { Text(t.name) })
                     }
                 }
                 Text("Remove tags", style = MaterialTheme.typography.labelLarge)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     tags.forEach { t ->
                         val on = t.name in edit.removeTags
-                        TintChip(idTint(t.id), on, { edit = edit.copy(removeTags = if (on) edit.removeTags - t.name else edit.removeTags + t.name, addTags = edit.addTags - t.name); problem = null }, { Text(t.name) })
+                        ChoiceChip(on, { edit = edit.copy(removeTags = if (on) edit.removeTags - t.name else edit.removeTags + t.name, addTags = edit.addTags - t.name); problem = null }, { Text(t.name) })
                     }
                 }
             }

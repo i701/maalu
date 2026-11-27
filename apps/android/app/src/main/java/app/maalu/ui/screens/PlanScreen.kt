@@ -6,7 +6,6 @@ import app.maalu.ui.components.fadingEdges
 import androidx.compose.foundation.lazy.rememberLazyListState
 import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
-import app.maalu.ui.theme.tintSurface
 import app.maalu.ui.components.Disclosure
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -63,7 +62,6 @@ import app.maalu.data.planDays
 import app.maalu.data.shortDate
 import app.maalu.ui.components.MoneyText
 import app.maalu.ui.components.MorphTile
-import app.maalu.ui.theme.Accents
 import app.maalu.ui.theme.ChartColors
 import app.maalu.ui.theme.MoneyStyle
 import kotlinx.coroutines.launch
@@ -158,11 +156,11 @@ fun PlanScreen(api: Api, onOpenAccount: (id: String, name: String) -> Unit) {
 }
 
 @Composable
-private fun Tile(label: String, value: String, currency: String, tint: Color, modifier: Modifier) {
-    Surface(modifier, shape = MaterialTheme.shapes.large, color = tint.tintSurface()) {
+private fun Tile(label: String, value: String, currency: String, modifier: Modifier, color: Color = Color.Unspecified) {
+    Surface(modifier, shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
         Column(Modifier.padding(horizontal = 14.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            MoneyText(value, currency, style = MaterialTheme.typography.titleMedium)
+            MoneyText(value, currency, style = MaterialTheme.typography.titleMedium, color = color)
         }
     }
 }
@@ -175,12 +173,12 @@ private fun Tiles(d: AvailableToSpend) {
     val toPay = (d.billsTotal.toBigDecimalOrNull() ?: BigDecimal.ZERO) + (d.cardPaymentsTotal.toBigDecimalOrNull() ?: BigDecimal.ZERO)
     Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 4.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Tile("You have", d.balance, d.currency, Accents.getValue("blue"), Modifier.weight(1f))
-            Tile("Bills to pay" + if (overdue > 0) " ($overdue overdue)" else "", toPay.toPlainString(), d.currency, Accents.getValue("amber"), Modifier.weight(1f))
+            Tile("You have", d.balance, d.currency, Modifier.weight(1f))
+            Tile("Bills to pay" + if (overdue > 0) " ($overdue overdue)" else "", toPay.toPlainString(), d.currency, Modifier.weight(1f))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Tile("Set aside", d.reservedTotal, d.currency, Accents.getValue("violet"), Modifier.weight(1f))
-            Tile(if (short) "Short by" else "Available to spend", d.available.removePrefix("-"), d.currency, if (short) MaterialTheme.colorScheme.error else ChartColors.IncomeLight, Modifier.weight(1f))
+            Tile("Set aside", d.reservedTotal, d.currency, Modifier.weight(1f))
+            Tile(if (short) "Short by" else "Available to spend", d.available.removePrefix("-"), d.currency, Modifier.weight(1f), if (short) MaterialTheme.colorScheme.error else Color.Unspecified)
         }
     }
 }
@@ -189,7 +187,7 @@ private fun Tiles(d: AvailableToSpend) {
 @Composable
 private fun Verdict(d: AvailableToSpend, culprit: PlanRow?) {
     val short = d.isShort()
-    Surface(Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = MaterialTheme.shapes.large, color = (if (short) MaterialTheme.colorScheme.error else ChartColors.IncomeLight).tintSurface()) {
+    Surface(Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = MaterialTheme.shapes.large, color = if (short) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surfaceContainer) {
         Text(
             if (!short) "Every bill planned until ${shortDate(d.periodEnd)} is covered."
             else if (culprit != null) "The money runs out at ${culprit.title} (${shortDate(culprit.date)})."

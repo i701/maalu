@@ -58,7 +58,6 @@ import app.maalu.ui.components.MapSpot
 import app.maalu.ui.components.MoneyText
 import app.maalu.ui.components.MorphTile
 import app.maalu.ui.components.OsmMap
-import app.maalu.ui.theme.Accents
 import java.time.LocalDate
 
 /**
@@ -88,7 +87,7 @@ fun PlacesScreen(api: Api) {
 
     Column(Modifier.fillMaxSize()) {
         Box(Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)) {
-            ChipRow(PlaceRange.entries, chosen, { it.label }, Accents.getValue("pink")) { data = null; range = it.name }
+            ChipRow(PlaceRange.entries, chosen, { it.label }) { data = null; range = it.name }
         }
         ReportState(data, error, onRetry = { error = null; reload++ }) { d ->
             val biggest = biggestSpend(d.places)
@@ -99,7 +98,7 @@ fun PlacesScreen(api: Api) {
                     OsmMap(
                         Modifier.fillMaxSize(), startLat = DEFAULT_LAT, startLng = DEFAULT_LNG, dark = isSystemInDarkTheme(),
                         spots = spots, selected = selected, fitKey = d,
-                        focus = focus, spotColor = Accents.getValue("pink").toArgb(), selectedColor = primary, pinColor = primary,
+                        focus = focus, spotColor = primary, selectedColor = primary, pinColor = primary,
                         onSpotClick = { i -> selected = i; focus = MapFocus(d.places[i].lat, d.places[i].lng, 16.0, (focus?.nonce ?: 0) + 1) },
                     )
                 }
@@ -108,7 +107,7 @@ fun PlacesScreen(api: Api) {
                     style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
                 )
                 if (d.places.isEmpty()) Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Outlined.LocationOn, null, Modifier.size(40.dp), tint = Accents.getValue("pink"))
+                    Icon(Icons.Outlined.LocationOn, null, Modifier.size(40.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text("Nothing is marked on the map in this range", style = MaterialTheme.typography.titleSmall)
                     Text(
                         "Mark where a purchase happened with the pin button when you add or edit a transaction, and it shows up here.",

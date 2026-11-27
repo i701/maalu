@@ -1,6 +1,5 @@
 package app.maalu.ui.screens
 
-import app.maalu.ui.theme.tintSurface
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -24,14 +23,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import app.maalu.data.formatMoney
 import app.maalu.ui.components.MoneyText
-import app.maalu.ui.components.TintChip
+import app.maalu.ui.components.ChoiceChip
 import app.maalu.ui.theme.ChartColors
 
 /** A row of choices that scrolls sideways when it does not fit. */
 @Composable
-fun <T> ChipRow(options: List<T>, selected: T, label: (T) -> String, tint: Color, onSelect: (T) -> Unit) {
+fun <T> ChipRow(options: List<T>, selected: T, label: (T) -> String, onSelect: (T) -> Unit) {
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        options.forEach { o -> TintChip(tint, selected = o == selected, onClick = { onSelect(o) }, label = { Text(label(o)) }) }
+        options.forEach { o -> ChoiceChip(selected = o == selected, onClick = { onSelect(o) }, label = { Text(label(o)) }) }
     }
 }
 
@@ -49,14 +48,14 @@ fun <T : Any> ReportState(data: T?, error: String?, onRetry: () -> Unit, content
     }
 }
 
-/** A tinted tile with a label and an amount. */
+/** A tile with a label and an amount. */
 @Composable
-fun StatTile(label: String, value: String, currency: String, tint: Color, modifier: Modifier = Modifier, note: String? = null) {
-    Surface(modifier, shape = MaterialTheme.shapes.large, color = tint.tintSurface()) {
+fun StatTile(label: String, value: String, currency: String, modifier: Modifier = Modifier, note: String? = null, noteColor: Color? = null) {
+    Surface(modifier, shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             MoneyText(value, currency, style = MaterialTheme.typography.titleSmall)
-            note?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            note?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = noteColor ?: MaterialTheme.colorScheme.onSurfaceVariant) }
         }
     }
 }

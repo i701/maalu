@@ -3,7 +3,6 @@ package app.maalu.ui
 import app.maalu.ui.screens.MoreDestinations
 import app.maalu.ui.screens.NavGroup
 import app.maalu.ui.screens.destinationById
-import app.maalu.ui.theme.Accents
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -17,10 +16,6 @@ class MoreDestinationsTest {
 
     @Test fun everyGroupHasSomething() {
         NavGroup.entries.forEach { g -> assertTrue("${g.label} is empty", MoreDestinations.any { it.group == g }) }
-    }
-
-    @Test fun accentsAreRealColours() {
-        MoreDestinations.forEach { assertTrue("${it.id}: ${it.accent}", it.accent in Accents.keys) }
     }
 
     @Test fun theFourTabsAreInTheDrawerWithTheirIndex() {

@@ -52,8 +52,7 @@ import app.maalu.ui.components.CompactField
 import app.maalu.ui.components.FormDialog
 import app.maalu.ui.components.PickerField
 import app.maalu.ui.components.Section
-import app.maalu.ui.components.TintChip
-import app.maalu.ui.theme.Accents
+import app.maalu.ui.components.ChoiceChip
 import kotlinx.coroutines.launch
 
 private const val TOP_UP = ""
@@ -93,7 +92,7 @@ fun MoveMoneyDialog(api: Api, budget: Budget, line: BudgetLine, onClose: () -> U
             }
         },
     ) {
-        Section("From", Icons.Outlined.SwapHoriz, Accents.getValue("blue")) {
+        Section("From", Icons.Outlined.SwapHoriz) {
             PickerField(
                 title = "From", value = if (from == TOP_UP) Ref(TOP_UP, "Nowhere: just add to this limit") else source?.let { Ref(it.line.id, it.line.name) },
                 placeholder = "Choose where it comes from", anyLabel = null,
@@ -106,7 +105,7 @@ fun MoveMoneyDialog(api: Api, budget: Budget, line: BudgetLine, onClose: () -> U
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        Section("Amount (${budget.currency})", Icons.Outlined.Numbers, Accents.getValue("orange")) {
+        Section("Amount (${budget.currency})", Icons.Outlined.Numbers) {
             CompactField(
                 amount, { amount = cleanAmount(it); problem = null }, "Amount", keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 enabled = !busy, isError = problem != null,
@@ -114,7 +113,7 @@ fun MoveMoneyDialog(api: Api, budget: Budget, line: BudgetLine, onClose: () -> U
             if (source != null) Text("Up to ${money(source.left)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             problem?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
         }
-        Section("Note", Icons.Outlined.Notes, Accents.getValue("lime")) {
+        Section("Note", Icons.Outlined.Notes) {
             CompactField(note, { note = it.take(200) }, "Note (optional)", enabled = !busy, placeholder = "Guests over for the weekend")
         }
     }
@@ -155,7 +154,7 @@ fun MoveHistorySheet(api: Api, line: BudgetLine, currency: String, onClose: () -
                                         textDecoration = if (undone) TextDecoration.LineThrough else null,
                                         color = if (undone) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
                                     )
-                                    if (undone) TintChip(Accents.getValue("slate"), false, {}, { Text("Undone") })
+                                    if (undone) ChoiceChip(false, {}, { Text("Undone") })
                                 }
                                 e.note?.takeIf { it.isNotBlank() }?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                                 Text(

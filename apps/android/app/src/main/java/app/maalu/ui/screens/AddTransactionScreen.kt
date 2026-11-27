@@ -129,13 +129,8 @@ import app.maalu.ui.components.PickerField
 import app.maalu.ui.components.VendorPickerField
 import app.maalu.ui.components.SegmentedPills
 import app.maalu.ui.components.Section
-import app.maalu.ui.components.TintChip
-import app.maalu.ui.theme.Accents
-import app.maalu.ui.theme.ChartColors
+import app.maalu.ui.components.ChoiceChip
 import app.maalu.ui.theme.MoneyStyle
-import app.maalu.ui.theme.idTint
-import app.maalu.ui.theme.methodTint
-import app.maalu.ui.theme.paletteTint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -334,13 +329,6 @@ private fun SaveTemplateDialog(api: Api, form: AddForm, accounts: List<Account>,
 }
 
 @Composable
-private fun typeTint(type: String): Color = when (type) {
-    "income" -> ChartColors.IncomeLight
-    "transfer" -> ChartColors.Line
-    else -> MaterialTheme.colorScheme.error
-}
-
-@Composable
 private fun Form(o: FormOptions, saveLabel: String, form: AddForm, onForm: (AddForm) -> Unit, error: String?, errorField: FormField?, busy: Boolean, modifier: Modifier, onSave: () -> Unit, onSaveAnother: (() -> Unit)? = null, extra: (@Composable () -> Unit)? = null) {
     val base = o.me.baseCurrency
     val account = o.accounts.firstOrNull { it.id == form.accountId }
@@ -348,25 +336,23 @@ private fun Form(o: FormOptions, saveLabel: String, form: AddForm, onForm: (AddF
     val currency = account?.currency ?: base
     val foreign = form.type != "transfer" && currency != base
     val crossCurrency = form.type == "transfer" && account != null && toAccount != null && account.currency != toAccount.currency
-    val tint = typeTint(form.type)
     var pickingDate by remember { mutableStateOf(false) }
     var pickingTime by remember { mutableStateOf(false) }
 
     Column(modifier.fillMaxSize().imePadding()) {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-            // what it is: each type in its own colour, the chosen one stronger
+            // what it is
             SegmentedPills(
                 options = TYPES,
                 selected = form.type,
                 onSelect = { value -> onForm(form.copy(type = value, toAccountId = if (value == "transfer") form.toAccountId else null)) },
-                tint = { typeTint(it) },
                 enabled = !busy,
             )
 
             if (form.type == "transfer") TransferSlabs(o.accounts, form, onForm, errorField, enabled = !busy)
             else {
-                // the amount: a regular field like the rest, with the currency at its end; the tile takes the type's colour
-                Section("Amount", Icons.Outlined.Numbers, tint) {
+                // the amount: a regular field like the rest, with the currency at its end
+                Section("Amount", Icons.Outlined.Numbers) {
                     // with items the amount is their total: it is shown, not typed
                     if (form.splitOn && form.type != "transfer") {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -380,7 +366,7 @@ private fun Form(o: FormOptions, saveLabel: String, form: AddForm, onForm: (AddF
                     placeholder = "0.00")
                 }
 
-                Section("Account", Icons.Outlined.AccountBalance, Accents.getValue("violet")) {
+                Section("Account", Icons.Outlined.AccountBalance) {
                     PickerField(
                         isError = errorField == FormField.Account,
                         title = "Account", value = account?.let { Ref(it.id, it.name) }, placeholder = "No account", anyLabel = null,
@@ -406,7 +392,7 @@ private fun Form(o: FormOptions, saveLabel: String, form: AddForm, onForm: (AddF
 
             if (form.type != "transfer") {
                 // with items each item has its own category, and the transaction takes the biggest item's
-                if (!form.splitOn) Section("Category", Icons.Outlined.Category, Accents.getValue("amber")) {
+                if (!form.splitOn) Section("Category", Icons.Outlined.Category) {
                     PickerField(
                         isError = errorField == FormField.Category,
                         title = "Category", value = form.category.takeIf { it.isNotBlank() }?.let { Ref("", it) }, placeholder = "Choose or type a category",
@@ -416,7 +402,7 @@ private fun Form(o: FormOptions, saveLabel: String, form: AddForm, onForm: (AddF
                     )
                 }
                 VendorSection(form, onForm)
-                Section("Items", Icons.Outlined.ReceiptLong, Accents.getValue("orange")) {
+                Section("Items", Icons.Outlined.ReceiptLong) {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(32.dp)) {
                         Column(Modifier.weight(1f)) {
                             Text("Split by items", style = MaterialTheme.typography.bodyMedium)
@@ -431,14 +417,14 @@ private fun Form(o: FormOptions, saveLabel: String, form: AddForm, onForm: (AddF
                 }
             }
 
-            Section("When", Icons.Outlined.CalendarMonth, Accents.getValue("blue")) {
+            Section("When", Icons.Outlined.CalendarMonth) {
                 val today = LocalDate.now()
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TintChip(paletteTint(0), form.date == "$today", { onForm(form.withDate("$today")) }, { Text("Today") })
-                    TintChip(paletteTint(1), form.date == "${today.minusDays(1)}", { onForm(form.withDate("${today.minusDays(1)}")) }, { Text("Yesterday") })
+                    ChoiceChip(form.date == "$today", { onForm(form.withDate("$today")) }, { Text("Today") })
+                    ChoiceChip(form.date == "${today.minusDays(1)}", { onForm(form.withDate("${today.minusDays(1)}")) }, { Text("Yesterday") })
                     val custom = form.date != "$today" && form.date != "${today.minusDays(1)}"
-                    TintChip(paletteTint(2), custom, { pickingDate = true }, { Text(if (custom) shortDate(form.date) else "Pick a date") })
-                    TintChip(paletteTint(3), form.time != null, { if (form.time == null) pickingTime = true else onForm(form.copy(time = null)) }, { Text(form.time ?: "Add time") })
+                    ChoiceChip(custom, { pickingDate = true }, { Text(if (custom) shortDate(form.date) else "Pick a date") })
+                    ChoiceChip(form.time != null, { if (form.time == null) pickingTime = true else onForm(form.copy(time = null)) }, { Text(form.time ?: "Add time") })
                 }
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(32.dp)) {
                     // a wide gap before the switch, so the sub-text wraps instead of crowding it
@@ -451,28 +437,28 @@ private fun Form(o: FormOptions, saveLabel: String, form: AddForm, onForm: (AddF
             }
 
             if (form.type != "transfer") {
-                Section("Paid by", Icons.Outlined.Payments, Accents.getValue("slate")) {
+                Section("Paid by", Icons.Outlined.Payments) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         PaymentMethodLabels.forEach { (value, label) ->
-                            TintChip(methodTint(value), form.method == value, { onForm(form.copy(method = value, methodTouched = true)) }, { Text(label) })
+                            ChoiceChip(form.method == value, { onForm(form.copy(method = value, methodTouched = true)) }, { Text(label) })
                         }
                     }
                 }
-                if (o.tags.isNotEmpty()) Section("Tags", Icons.Outlined.Sell, Accents.getValue("pink")) {
+                if (o.tags.isNotEmpty()) Section("Tags", Icons.Outlined.Sell) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         o.tags.forEach { tag ->
                             val on = tag.name in form.tags
-                            TintChip(idTint(tag.id), on, { onForm(form.copy(tags = if (on) form.tags - tag.name else form.tags + tag.name)) }, { Text(tag.name) })
+                            ChoiceChip(on, { onForm(form.copy(tags = if (on) form.tags - tag.name else form.tags + tag.name)) }, { Text(tag.name) })
                         }
                     }
                 }
             }
 
-            Section("Note", Icons.Outlined.Notes, Accents.getValue("lime")) {
+            Section("Note", Icons.Outlined.Notes) {
                 // a text area: the width of the screen and several lines tall
                 CompactField(form.note, { onForm(form.copy(note = it.take(500))) }, "Add a note", Modifier.fillMaxWidth(), singleLine = false, enabled = !busy, minHeight = 112.dp)
             }
-            Section("Location", Icons.Outlined.LocationOn, Accents.getValue("pink")) {
+            Section("Location", Icons.Outlined.LocationOn) {
                 // where it happened, marked on a map; the Places screen shows where spending went
                 val api = LocalApi.current ?: return@Section
                 var marking by remember { mutableStateOf(false) }
@@ -480,7 +466,7 @@ private fun Form(o: FormOptions, saveLabel: String, form: AddForm, onForm: (AddF
                 if (!marked) OutlinedButton(onClick = { marking = true }, enabled = !busy, shapes = ButtonDefaults.shapes()) {
                     Icon(Icons.Outlined.LocationOn, null, Modifier.padding(end = 6.dp)); Text("Add location")
                 } else Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TintChip(Accents.getValue("pink"), selected = true, onClick = { marking = true }, label = { Text(app.maalu.data.placeLabel(form.place, form.latitude, form.longitude), maxLines = 1) }, modifier = Modifier.weight(1f, fill = false))
+                    ChoiceChip(selected = true, onClick = { marking = true }, label = { Text(app.maalu.data.placeLabel(form.place, form.latitude, form.longitude), maxLines = 1) }, modifier = Modifier.weight(1f, fill = false))
                     IconButton(onClick = { onForm(form.copy(latitude = "", longitude = "", place = "")) }, enabled = !busy) { Icon(Icons.Outlined.Close, "Remove the location") }
                 }
                 if (marking) LocationDialog(
@@ -532,7 +518,7 @@ private fun Form(o: FormOptions, saveLabel: String, form: AddForm, onForm: (AddF
 @Composable
 private fun VendorSection(form: AddForm, onForm: (AddForm) -> Unit) {
     val api = LocalApi.current ?: return
-    Section("Vendor", Icons.Outlined.Storefront, Accents.getValue("orange")) {
+    Section("Vendor", Icons.Outlined.Storefront) {
         VendorPickerField(api, form.vendor, onPick = { name, picked -> onForm(if (picked != null) form.withVendor(picked) else form.copy(vendor = name)) })
     }
 }
@@ -600,7 +586,7 @@ private fun ItemsEditor(form: AddForm, onForm: (AddForm) -> Unit, categories: Li
     fun edit(key: String, change: (ItemRow) -> ItemRow) = onForm(form.copy(items = form.items.map { if (it.key == key) change(it) else it }))
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TaxMode.entries.forEach { m -> TintChip(paletteTint(m.ordinal), form.taxMode == m, { onForm(form.copy(taxMode = m, items = unlocked(form.items))) }, { Text(m.label) }) }
+            TaxMode.entries.forEach { m -> ChoiceChip(form.taxMode == m, { onForm(form.copy(taxMode = m, items = unlocked(form.items))) }, { Text(m.label) }) }
         }
         if (form.taxMode != TaxMode.None) CompactField(
             form.taxRate, { onForm(form.copy(taxRate = cleanAmount(it), items = unlocked(form.items))) }, "GST rate (%)",

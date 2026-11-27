@@ -31,7 +31,6 @@ import app.maalu.data.formatMoney
 import app.maalu.data.fromTransactionJson
 import app.maalu.ui.components.CompactField
 import app.maalu.ui.components.SegmentedPills
-import app.maalu.ui.theme.Accents
 import kotlinx.coroutines.launch
 
 /**
@@ -62,7 +61,6 @@ fun MakeSubscriptionDialog(api: Api, t: Transaction, onClose: () -> Unit, onDone
                 }
                 SegmentedPills(
                     IntervalUnits, unit, { unit = it },
-                    tint = { Accents.getValue(listOf("blue", "violet", "pink")[IntervalUnits.indexOfFirst { p -> p.first == it }.coerceAtLeast(0)]) },
                     enabled = !busy,
                 )
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }

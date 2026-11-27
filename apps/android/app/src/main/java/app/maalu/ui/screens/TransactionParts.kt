@@ -30,9 +30,6 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import app.maalu.ui.theme.Accents
-import app.maalu.ui.theme.idTint
-import app.maalu.ui.theme.kindTint
-import app.maalu.ui.theme.methodTint
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -100,7 +97,7 @@ import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.InputChipDefaults
-import app.maalu.ui.components.TintChip
+import app.maalu.ui.components.ChoiceChip
 import app.maalu.data.Transaction
 import app.maalu.data.hasPlace
 import app.maalu.data.canSplitSalary
@@ -166,17 +163,17 @@ private fun CategoryLabel(t: Transaction) {
     }
 }
 
-/** A small tinted pill; the text stays in the normal ink so it reads on any tint. */
+/** A small grey pill; only a warning takes a [tint]. */
 @Composable
-private fun Pill(text: String, tint: Color) {
-    Surface(shape = CircleShape, color = tint.tintIcon()) {
+private fun Pill(text: String, tint: Color? = null) {
+    Surface(shape = CircleShape, color = tint?.tintIcon() ?: MaterialTheme.colorScheme.surfaceContainerHighest) {
         Text(text, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp))
     }
 }
 
 @Composable
 private fun StatusPill(t: Transaction) {
-    if (t.isOverdue()) Pill("Overdue", ChartColors.Warning) else Pill("Planned", MaterialTheme.colorScheme.outline)
+    if (t.isOverdue()) Pill("Overdue", ChartColors.Warning) else Pill("Planned")
 }
 
 @Composable
@@ -236,16 +233,16 @@ fun DetailSheet(t: Transaction, onEdit: (() -> Unit)?, onDelete: () -> Unit, onC
                 Text(longWhen(t.date, t.time), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (t.planned || t.isRefund || t.adjustment || app.maalu.data.wasRefunded(t)) FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     if (t.planned) StatusPill(t)
-                    if (t.isRefund) Pill("Refund", Accents.getValue("orange"))
-                    if (app.maalu.data.wasRefunded(t)) Pill(if (app.maalu.data.canRefund(t)) "Partly refunded" else "Fully refunded", Accents.getValue("orange"))
-                    if (t.adjustment) Pill("Adjustment", MaterialTheme.colorScheme.outline)
+                    if (t.isRefund) Pill("Refund")
+                    if (app.maalu.data.wasRefunded(t)) Pill(if (app.maalu.data.canRefund(t)) "Partly refunded" else "Fully refunded")
+                    if (t.adjustment) Pill("Adjustment")
                 }
                 // the main things to do, as pills; the rest waits in the list at the bottom
                 FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (onPay != null) ActionPill(app.maalu.data.payTitle(t.type), ChartColors.IncomeLight, onPay)
-                    if (onEdit != null) ActionPill("Edit", ChartColors.Line, onEdit)
-                    if (onDuplicate != null) ActionPill("Duplicate", ChartColors.Line, onDuplicate)
-                    ActionPill("Delete", MaterialTheme.colorScheme.error, onDelete)
+                    if (onPay != null) ActionPill(app.maalu.data.payTitle(t.type), onClick = onPay)
+                    if (onEdit != null) ActionPill("Edit", onClick = onEdit)
+                    if (onDuplicate != null) ActionPill("Duplicate", onClick = onDuplicate)
+                    ActionPill("Delete", danger = true, onClick = onDelete)
                 }
                 if (t.adjustment) Text("A balance adjustment can only be deleted.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
@@ -274,24 +271,26 @@ fun DetailSheet(t: Transaction, onEdit: (() -> Unit)?, onDelete: () -> Unit, onC
             if (!t.description.isNullOrBlank()) SheetSection("Note") { Text(t.description, style = MaterialTheme.typography.bodyMedium) }
             receipts?.invoke()
             if (listOf(onRefund, onEditRefund, onLinkRefund, onSplit, onLinkTransfer, onMakeSubscription).any { it != null }) SheetSection(null) {
-                val orange = Accents.getValue("orange")
-                if (onRefund != null) ActionRow("Refund", Icons.AutoMirrored.Outlined.Undo, orange, onRefund)
-                if (onEditRefund != null) ActionRow("Edit refund", Icons.Outlined.Edit, orange, onEditRefund)
-                if (onLinkRefund != null) ActionRow("Link to a purchase", Icons.Outlined.Link, orange, onLinkRefund)
-                if (onSplit != null) ActionRow("Split salary", Icons.AutoMirrored.Outlined.CallSplit, ChartColors.IncomeLight, onSplit)
+                if (onRefund != null) ActionRow("Refund", Icons.AutoMirrored.Outlined.Undo, onRefund)
+                if (onEditRefund != null) ActionRow("Edit refund", Icons.Outlined.Edit, onEditRefund)
+                if (onLinkRefund != null) ActionRow("Link to a purchase", Icons.Outlined.Link, onLinkRefund)
+                if (onSplit != null) ActionRow("Split salary", Icons.AutoMirrored.Outlined.CallSplit, onSplit)
                 // the same money entered twice (an expense here and an income in another account): pair them into one transfer
-                if (onLinkTransfer != null) ActionRow(app.maalu.data.mergeLabel(matchCount), Icons.Outlined.SwapHoriz, ChartColors.Line, onLinkTransfer)
-                if (onMakeSubscription != null) ActionRow("Make a subscription", Icons.Outlined.Repeat, Accents.getValue("violet"), onMakeSubscription)
+                if (onLinkTransfer != null) ActionRow(app.maalu.data.mergeLabel(matchCount), Icons.Outlined.SwapHoriz, onLinkTransfer)
+                if (onMakeSubscription != null) ActionRow("Make a subscription", Icons.Outlined.Repeat, onMakeSubscription)
             }
         }
     }
 }
 
 @Composable
-private fun ActionPill(label: String, tint: Color, onClick: () -> Unit) {
+private fun ActionPill(label: String, danger: Boolean = false, onClick: () -> Unit) {
     Button(
         onClick = onClick, shapes = ButtonDefaults.shapes(),
-        colors = ButtonDefaults.buttonColors(containerColor = tint.tintIcon(), contentColor = MaterialTheme.colorScheme.onSurface),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (danger) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surfaceContainerHighest,
+            contentColor = if (danger) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSurface,
+        ),
     ) { Text(label) }
 }
 
@@ -307,9 +306,9 @@ private fun SheetSection(title: String?, content: @Composable ColumnScope.() -> 
 }
 
 @Composable
-private fun ActionRow(label: String, icon: ImageVector, tint: Color, onClick: () -> Unit) {
+private fun ActionRow(label: String, icon: ImageVector, onClick: () -> Unit) {
     Row(Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small).clickable(onClick = onClick).heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Icon(icon, null, tint = tint)
+        Icon(icon, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(label, style = MaterialTheme.typography.bodyLarge)
     }
 }

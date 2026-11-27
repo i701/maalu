@@ -5,7 +5,6 @@ package app.maalu.ui.screens
 import app.maalu.data.isSummary
 import androidx.compose.foundation.lazy.items
 import java.math.BigDecimal
-import app.maalu.ui.components.SummaryTeal
 import app.maalu.ui.components.SummaryPill
 import app.maalu.ui.components.SummaryDonut
 import app.maalu.ui.components.SummaryBlue
@@ -76,7 +75,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -339,7 +337,7 @@ private fun KeptSummary(now: Totals, before: Totals, months: List<MonthlyPoint>)
     val saved = kept(now.income, now.expense)
     val income = now.income.toBigDecimalOrNull() ?: BigDecimal.ZERO
     val spent = now.expense.toBigDecimalOrNull() ?: BigDecimal.ZERO
-    FlatSummary(SummaryTeal) {
+    FlatSummary(SummaryBlue) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Kept this month", Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
             spendingChangeText(now.expense, before.expense)?.let { SummaryPill(it) }

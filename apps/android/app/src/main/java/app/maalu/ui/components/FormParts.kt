@@ -1,6 +1,5 @@
 package app.maalu.ui.components
 
-import app.maalu.ui.theme.tintIcon
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -27,7 +26,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
@@ -35,13 +33,13 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 
-/** A section of a sheet or form: an accent-coloured icon tile and a title, so each group reads as its own thing. */
+/** A section of a sheet or form: a quiet icon tile and a title, so each group reads as its own thing. */
 @Composable
-fun Section(title: String, icon: ImageVector, tint: Color, content: @Composable () -> Unit) {
+fun Section(title: String, icon: ImageVector, content: @Composable () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Box(Modifier.size(28.dp).clip(RoundedCornerShape(10.dp)).background(tint.tintIcon()), contentAlignment = Alignment.Center) {
-                Icon(icon, null, tint = tint, modifier = Modifier.size(18.dp))
+            Box(Modifier.size(28.dp).clip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surfaceContainerHighest), contentAlignment = Alignment.Center) {
+                Icon(icon, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
             }
             Text(title, style = MaterialTheme.typography.titleSmall)
         }

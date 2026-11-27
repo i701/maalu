@@ -34,7 +34,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.maalu.data.untilText
 import app.maalu.data.runningFixed
-import app.maalu.ui.components.TintChip
+import app.maalu.ui.components.ChoiceChip
 import app.maalu.ui.components.NetColumns
 import app.maalu.data.netRows
 import app.maalu.data.monthShort
@@ -96,7 +96,7 @@ fun CashFlowCard(allMonths: List<MonthlyPoint>, currency: String) {
         // 6 or 12 months: one switch drives every chart on the card
         if (allMonths.size > 6) Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             listOf(6, 12).forEach { n ->
-                TintChip(ChartColors.Line, range == n, { range = n }, { Text("$n months") })
+                ChoiceChip(range == n, { range = n }, { Text("$n months") })
             }
         }
         PairedColumns(

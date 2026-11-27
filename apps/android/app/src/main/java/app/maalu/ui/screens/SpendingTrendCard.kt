@@ -42,7 +42,7 @@ import app.maalu.data.formatMoney
 import app.maalu.data.monthShort
 import app.maalu.data.spendingStack
 import app.maalu.ui.components.MoneyText
-import app.maalu.ui.components.TintChip
+import app.maalu.ui.components.ChoiceChip
 
 /** The iOS card's colours by rank (Bencho's meter palette, MIT): a clear change of hue at every step, biggest share first. */
 private val Ranked = listOf(Color(0xFF3D7BFF), Color(0xFFD77BF2), Color(0xFFFF7A1A), Color(0xFFFFBE1A))
@@ -70,7 +70,7 @@ fun SpendingTrendCard(data: CategoryMonths) {
         val monthName = month?.let { "${monthShort(it.month)} ${it.month.take(4)}" }
         Text(listOfNotNull(held, monthName ?: span).joinToString(" · "), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         if (data.months.size > 6) Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            listOf(6, 12).forEach { n -> TintChip(Ranked[0], count == n, { count = n }, { Text("$n months") }) }
+            listOf(6, 12).forEach { n -> ChoiceChip(count == n, { count = n }, { Text("$n months") }) }
         }
         val baseline = MaterialTheme.colorScheme.outlineVariant
         val spoken = stack.months.joinToString(", ") { "${monthShort(it.month)} ${formatMoney(it.total.toPlainString(), data.currency)}" }
@@ -111,7 +111,7 @@ fun SpendingTrendCard(data: CategoryMonths) {
         }
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             stack.names.forEachIndexed { rank, name ->
-                TintChip(colorAt(rank), held == name, { held = if (held == name) null else name }, {
+                ChoiceChip(held == name, { held = if (held == name) null else name }, {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         Box(Modifier.size(8.dp).clip(CircleShape).background(colorAt(rank)))
                         Text("$name · ${formatMoney(stack.total(name).toPlainString(), data.currency)}")

@@ -9,7 +9,6 @@ import app.maalu.ui.components.glowSheet
 import app.maalu.ui.components.SpringBar
 import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
-import app.maalu.ui.theme.tintSurface
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -83,7 +82,6 @@ import app.maalu.data.shortDate
 import app.maalu.data.statusLabel
 import app.maalu.ui.components.MoneyText
 import app.maalu.ui.components.MorphTile
-import app.maalu.ui.theme.Accents
 import app.maalu.ui.theme.ChartColors
 import app.maalu.ui.theme.kindTint
 import kotlinx.coroutines.async
@@ -285,7 +283,7 @@ private fun SummaryCard(b: Budget) {
     val t = b.totals
     val color = statusColor(t.status)
     val over = t.status == "over"
-    Surface(shape = MaterialTheme.shapes.extraLarge, color = color.tintSurface()) {
+    Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainer) {
         Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.Bottom) {
                 Column(Modifier.weight(1f)) {
@@ -374,7 +372,7 @@ private fun fixedWindow(f: FixedLine): String {
 
 @Composable
 private fun GoalRow(g: Goal) {
-    val tint = Accents.getValue(if (g.reached) "green" else "pink")
+    val tint = if (g.reached) ChartColors.IncomeLight else MaterialTheme.colorScheme.primary
     Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(g.name + if (g.reached) "  ✓" else "", Modifier.weight(1f), style = MaterialTheme.typography.bodyMediumEmphasized, maxLines = 1, overflow = TextOverflow.Ellipsis)

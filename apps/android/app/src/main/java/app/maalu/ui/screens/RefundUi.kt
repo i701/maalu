@@ -89,9 +89,7 @@ import app.maalu.ui.components.FormDialog
 import app.maalu.ui.components.MoneyText
 import app.maalu.ui.components.PickerField
 import app.maalu.ui.components.Section
-import app.maalu.ui.components.TintChip
-import app.maalu.ui.theme.Accents
-import app.maalu.ui.theme.paletteTint
+import app.maalu.ui.components.ChoiceChip
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
@@ -175,7 +173,7 @@ fun RefundDialog(api: Api, purchase: Transaction?, refund: Transaction?, onClose
         },
     ) {
         Text(refundContext(purchase, refund), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Section(if (hasItems) "Items given back" else "Amount ($currency)", Icons.Outlined.Numbers, Accents.getValue("orange")) {
+        Section(if (hasItems) "Items given back" else "Amount ($currency)", Icons.Outlined.Numbers) {
             if (hasItems) {
                 RefundItemRows(items, currency, locked = refund != null, enabled = !busy) { items = it; problem = null }
                 Text("Refund total: ${formatMoney(total ?: "0", currency)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -185,28 +183,28 @@ fun RefundDialog(api: Api, purchase: Transaction?, refund: Transaction?, onClose
             }
             problem?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
         }
-        Section("When", Icons.Outlined.CalendarMonth, Accents.getValue("blue")) {
+        Section("When", Icons.Outlined.CalendarMonth) {
             val today = LocalDate.now()
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TintChip(paletteTint(0), date == "$today", { date = "$today" }, { Text("Today") })
-                TintChip(paletteTint(1), date == "${today.minusDays(1)}", { date = "${today.minusDays(1)}" }, { Text("Yesterday") })
+                ChoiceChip(date == "$today", { date = "$today" }, { Text("Today") })
+                ChoiceChip(date == "${today.minusDays(1)}", { date = "${today.minusDays(1)}" }, { Text("Yesterday") })
                 val custom = date != "$today" && date != "${today.minusDays(1)}"
-                TintChip(paletteTint(2), custom, { pickingDate = true }, { Text(if (custom) shortDate(date) else "Pick a date") })
-                TintChip(paletteTint(3), time != null, { if (time == null) pickingTime = true else time = null }, { Text(time ?: "Add time") })
+                ChoiceChip(custom, { pickingDate = true }, { Text(if (custom) shortDate(date) else "Pick a date") })
+                ChoiceChip(time != null, { if (time == null) pickingTime = true else time = null }, { Text(time ?: "Add time") })
             }
             if (foreign) {
                 CompactField(rate, { rate = cleanAmount(it) }, "Exchange rate", keyboard = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !busy)
                 Text("Starts as the purchase's rate. Change it to the rate the refund really came in at.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
-        Section("Account", Icons.Outlined.SwapHoriz, Accents.getValue("green")) {
+        Section("Account", Icons.Outlined.SwapHoriz) {
             PickerField(
                 title = "Account", value = usable.firstOrNull { it.id == accountId }?.let { Ref(it.id, it.name) }, placeholder = "No account", anyLabel = "No account",
                 entries = usable.map { Ref(it.id, it.name) }, onPick = { accountId = it?.id },
             )
             Text("Where the money went back. Only accounts in $currency are offered.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Section("Note", Icons.Outlined.Notes, Accents.getValue("violet")) {
+        Section("Note", Icons.Outlined.Notes) {
             CompactField(note, { note = it }, "Note (optional)", enabled = !busy, placeholder = "For example: damaged, returned")
         }
     }

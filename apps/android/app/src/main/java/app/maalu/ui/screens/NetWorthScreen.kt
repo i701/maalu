@@ -47,8 +47,6 @@ import app.maalu.data.netPeriod
 import app.maalu.data.netWorthSentence
 import app.maalu.ui.components.MoneyText
 import app.maalu.ui.components.MorphTile
-import app.maalu.ui.theme.Accents
-import app.maalu.ui.theme.ChartColors
 import java.time.LocalDate
 
 /**
@@ -77,7 +75,7 @@ fun NetWorthScreen(api: Api) {
 
     Column(Modifier.fillMaxSize()) {
         Box(Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 4.dp)) {
-            ChipRow(NetPeriod.entries, chosen, { it.label }, Accents.getValue("green")) { data = null; period = it.name }
+            ChipRow(NetPeriod.entries, chosen, { it.label }) { data = null; period = it.name }
         }
         ReportState(data, error, onRetry = { error = null; reload++ }) { d ->
             val money = { a: String -> app.maalu.data.formatMoney(a, d.currency) }
@@ -87,10 +85,10 @@ fun NetWorthScreen(api: Api) {
                     item { SentenceCard(netWorthSentence(d, money)) }
                     item {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            StatTile("Start", d.start, d.currency, ChartColors.Line, Modifier.weight(1f))
-                            StatTile("End", d.end, d.currency, ChartColors.Line, Modifier.weight(1f))
+                            StatTile("Start", d.start, d.currency, Modifier.weight(1f))
+                            StatTile("End", d.end, d.currency, Modifier.weight(1f))
                             StatTile(
-                                "Change", d.change, d.currency, if (up) GoodColor else BadColor, Modifier.weight(1f),
+                                "Change", d.change, d.currency, Modifier.weight(1f), noteColor = if (up) GoodColor else BadColor,
                                 note = changePercent(d.start, d.change)?.let { "%+.1f%%".format(java.util.Locale.ENGLISH, it) },
                             )
                         }

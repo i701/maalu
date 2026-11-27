@@ -9,7 +9,6 @@ import app.maalu.ui.components.glowTopBarColors
 import app.maalu.ui.components.glowBackground
 import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
-import app.maalu.ui.theme.tintSurface
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -88,7 +87,6 @@ import app.maalu.ui.components.CompactField
 import app.maalu.ui.components.FormDialog
 import app.maalu.ui.components.MoneyText
 import app.maalu.ui.components.MorphTile
-import app.maalu.ui.theme.Accents
 import app.maalu.ui.theme.ChartColors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -129,7 +127,7 @@ fun GroupsScreen(api: Api) {
             list == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             else -> PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
                 if (list.isEmpty()) Column(Modifier.fillMaxSize().padding(32.dp), verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Outlined.Inventory2, null, Modifier.size(48.dp), tint = Accents.getValue("blue"))
+                    Icon(Icons.Outlined.Inventory2, null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text("No groups yet", style = MaterialTheme.typography.titleMedium)
                     Text(
                         "Bundle related transactions, like a trip or an instalment plan, and see what they add up to. Nothing else about them changes.",
@@ -254,9 +252,9 @@ private fun GroupSheet(api: Api, id: String, onClose: () -> Unit, onChanged: () 
                 }
                 item {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Tile("Money in", g.moneyIn, g.currency, ChartColors.IncomeLight, Modifier.weight(1f))
-                        Tile("Money out", g.moneyOut, g.currency, ChartColors.ExpenseLight, Modifier.weight(1f))
-                        Tile("Net", g.net, g.currency, if (isNegative(g.net)) MaterialTheme.colorScheme.error else ChartColors.Line, Modifier.weight(1f))
+                        Tile("Money in", g.moneyIn, g.currency, Modifier.weight(1f))
+                        Tile("Money out", g.moneyOut, g.currency, Modifier.weight(1f))
+                        Tile("Net", g.net, g.currency, Modifier.weight(1f), if (isNegative(g.net)) MaterialTheme.colorScheme.error else androidx.compose.ui.graphics.Color.Unspecified)
                     }
                 }
                 itemsIndexed(g.transactions, key = { _, t -> t.id }) { i, t -> Box(springItem()) {
@@ -335,11 +333,11 @@ private fun GroupSheet(api: Api, id: String, onClose: () -> Unit, onChanged: () 
 }
 
 @Composable
-private fun Tile(label: String, value: String, currency: String, tint: androidx.compose.ui.graphics.Color, modifier: Modifier) {
-    Surface(modifier, shape = MaterialTheme.shapes.large, color = tint.tintSurface()) {
+private fun Tile(label: String, value: String, currency: String, modifier: Modifier, color: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.Unspecified) {
+    Surface(modifier, shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            MoneyText(value, currency, style = MaterialTheme.typography.titleSmall)
+            MoneyText(value, currency, style = MaterialTheme.typography.titleSmall, color = color)
         }
     }
 }

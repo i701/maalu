@@ -67,7 +67,6 @@ import app.maalu.ui.components.OtpInput
 import app.maalu.ui.components.QrCode
 import app.maalu.ui.components.SecureWindow
 import app.maalu.ui.components.Section
-import app.maalu.ui.theme.Accents
 import kotlinx.coroutines.launch
 
 /** Copies text, marked sensitive so Android does not show it in clipboard previews. */
@@ -123,7 +122,7 @@ fun TwoFactorSetupScreen(api: Api, onClose: () -> Unit, onEnabled: (List<String>
         onSave = { submit(code) },
     ) {
         val s = setup
-        Section("1. Add Maalu to an authenticator app", Icons.Outlined.Key, Accents.getValue("violet")) {
+        Section("1. Add Maalu to an authenticator app", Icons.Outlined.Key) {
             if (s == null) {
                 if (loadError == null) Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             } else {
@@ -151,7 +150,7 @@ fun TwoFactorSetupScreen(api: Api, onClose: () -> Unit, onEnabled: (List<String>
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { QrCode(s.otpauthUri, description = "QR code for your authenticator app") }
             }
         }
-        Section("2. Enter the code it shows", Icons.Outlined.Dialpad, Accents.getValue("green")) {
+        Section("2. Enter the code it shows", Icons.Outlined.Dialpad) {
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 OtpInput(code, { code = it; codeError = false }, enabled = !busy && s != null, isError = codeError, onComplete = { submit(it) })
             }

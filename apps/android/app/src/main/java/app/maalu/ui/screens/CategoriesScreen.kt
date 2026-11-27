@@ -11,8 +11,6 @@ import app.maalu.data.sortKindsButtonLabel
 import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
 import app.maalu.ui.theme.tintIcon
-import app.maalu.ui.theme.tintBadge
-import app.maalu.ui.theme.tintSurface
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -89,7 +87,6 @@ import app.maalu.ui.components.SearchPill
 import app.maalu.ui.components.SegmentedPills
 import app.maalu.ui.components.Section
 import app.maalu.ui.theme.Accents
-import app.maalu.ui.theme.kindTint
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonElement
 
@@ -229,14 +226,14 @@ private fun CategoryRow(c: Category, indented: Boolean = false) {
             ).joinToString(" · ")
             Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        // a kind of its own is full colour; one taken from the parent is faded
+        // a kind of its own is in full ink; one taken from the parent is quiet
         kindLabel(c.effectiveKind)?.let { label ->
             val own = c.kind != null
-            Surface(shape = RoundedCornerShape(8.dp), color = kindTint(c.effectiveKind!!).let { if (own) it.tintBadge() else it.tintSurface() }) {
-                Text(label, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp))
+            Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.surfaceContainerHighest) {
+                Text(label, style = MaterialTheme.typography.labelSmall, color = if (own) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp))
             }
         }
-        if (c.isSalary) Surface(shape = RoundedCornerShape(8.dp), color = accent("green").tintBadge()) {
+        if (c.isSalary) Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.surfaceContainerHighest) {
             Text("Pay", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp))
         }
     }
@@ -308,21 +305,21 @@ private fun CategoryFormScreen(api: Api, existing: List<Category>, editing: Cate
             }
         },
     ) {
-        Section("Name", Icons.Outlined.Category, accent("blue")) {
+        Section("Name", Icons.Outlined.Category) {
             CompactField(form.name, { nameError = false; form = form.copy(name = it.take(100)) }, "Name", enabled = !busy && editing?.isSalary != true, isError = nameError, placeholder = "For example Groceries")
         }
-        Section("Colour", Icons.Outlined.Palette, accent("pink")) {
+        Section("Colour", Icons.Outlined.Palette) {
             ColorSwatches(AccentNames, form.color, { form = form.copy(color = it) }, enabled = !busy)
             if (editing == null && form.color == null) Text("Left alone, Maalu picks the colour you use least.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Section("Need or want", Icons.Outlined.Tune, accent("lime")) {
+        Section("Need or want", Icons.Outlined.Tune) {
             SegmentedPills(
                 listOf<Pair<String?, String>>(null to "Not sorted", "need" to "Need", "want" to "Want"), form.kind, { form = form.copy(kind = it) },
-                tint = { kindTint(it ?: "other") }, enabled = !busy,
+                enabled = !busy,
             )
             Text("Reports and budgets can split spending into needs and wants.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        if (editing?.isSalary != true) Section("Inside", Icons.Outlined.Category, accent("violet")) {
+        if (editing?.isSalary != true) Section("Inside", Icons.Outlined.Category) {
             if (parents.isEmpty() && form.parentId == null) Text(
                 if (editing != null && editing.childCount > 0) "This category has sub-categories, so it can't go inside another." else "There are no other top-level categories yet.",
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,

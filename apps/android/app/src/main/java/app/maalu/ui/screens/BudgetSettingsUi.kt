@@ -28,7 +28,6 @@ import app.maalu.data.startDayProblem
 import app.maalu.ui.components.CompactField
 import app.maalu.ui.components.FormDialog
 import app.maalu.ui.components.Section
-import app.maalu.ui.theme.Accents
 import kotlinx.coroutines.launch
 
 /** The budget's two settings: the day each budget month starts on, and how full a limit gets before it warns. */
@@ -58,11 +57,11 @@ fun BudgetSettingsDialog(api: Api, budget: Budget, onClose: () -> Unit, onDone: 
             }
         },
     ) {
-        Section("Month starts on day", Icons.Outlined.CalendarMonth, Accents.getValue("blue")) {
+        Section("Month starts on day", Icons.Outlined.CalendarMonth) {
             CompactField(day, { day = it.filter(Char::isDigit).take(2); dayProblem = null }, "Day of the month", keyboard = KeyboardOptions(keyboardType = KeyboardType.Number), enabled = !busy, isError = dayProblem != null, placeholder = "1")
             Text(dayProblem ?: "1 to $MAX_START_DAY. Set it to the day you are paid to budget from payday to payday.", style = MaterialTheme.typography.bodySmall, color = if (dayProblem != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Section("Warn at ${percent.roundToInt()}%", Icons.Outlined.Warning, Accents.getValue("orange")) {
+        Section("Warn at ${percent.roundToInt()}%", Icons.Outlined.Warning) {
             Slider(value = percent, onValueChange = { percent = it }, valueRange = 1f..100f, enabled = !busy, steps = 0, modifier = Modifier.fillMaxWidth())
             Text("A limit shows a warning once this much is spent. A limit can have its own level.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }

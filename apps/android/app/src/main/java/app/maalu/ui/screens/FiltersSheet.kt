@@ -52,12 +52,7 @@ import app.maalu.ui.components.glowDatePickerColors
 import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.DropdownMenuPopup
 import androidx.compose.material3.ExperimentalMaterial3Api
-import app.maalu.ui.components.TintChip
-import app.maalu.ui.theme.Accents
-import app.maalu.ui.theme.idTint
-import app.maalu.ui.theme.kindTint
-import app.maalu.ui.theme.methodTint
-import app.maalu.ui.theme.paletteTint
+import app.maalu.ui.components.ChoiceChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Switch
@@ -129,10 +124,10 @@ fun FiltersSheet(api: Api, initial: TxFilters, onApply: (TxFilters) -> Unit, onD
                 TextButton(shapes = ButtonDefaults.shapes(), onClick = { draft = draft.clearDetails() }, enabled = draft.detailCount() > 0) { Text("Reset") }
             }
             Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Section("Type", Icons.Outlined.SwapHoriz, Accents.getValue("blue")) {
+                Section("Type", Icons.Outlined.SwapHoriz) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         listOf(null to "Any", "income" to "Income", "expense" to "Expense", "transfer" to "Transfer").forEach { (value, label) ->
-                            TintChip(typeTint(value), selected = draft.type == value, onClick = { draft = draft.copy(type = value) }, label = { Text(label) })
+                            ChoiceChip(selected = draft.type == value, onClick = { draft = draft.copy(type = value) }, label = { Text(label) })
                         }
                     }
                     Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
@@ -140,18 +135,17 @@ fun FiltersSheet(api: Api, initial: TxFilters, onApply: (TxFilters) -> Unit, onD
                         Switch(checked = draft.planned, onCheckedChange = { draft = draft.copy(planned = it) })
                     }
                 }
-                Section("Date", Icons.Outlined.CalendarMonth, Accents.getValue("blue")) {
+                Section("Date", Icons.Outlined.CalendarMonth) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         DatePreset.entries.forEachIndexed { i, p ->
                             val range = presetRange(p)
-                            TintChip(paletteTint(i * 3), 
-                                selected = draft.dateFrom == range.first && draft.dateTo == range.second,
+                            ChoiceChip(selected = draft.dateFrom == range.first && draft.dateTo == range.second,
                                 onClick = { draft = if (draft.dateFrom == range.first && draft.dateTo == range.second) draft.copy(dateFrom = null, dateTo = null) else draft.copy(dateFrom = range.first, dateTo = range.second) },
                                 label = { Text(p.label) },
                             )
                         }
                         val custom = draft.dateFrom != null && DatePreset.entries.none { presetRange(it) == (draft.dateFrom to draft.dateTo) }
-                        TintChip(paletteTint(4), selected = custom, onClick = { pickingDates = true }, label = { Text(if (custom) rangeLabel(draft.dateFrom, draft.dateTo) else "Custom…") })
+                        ChoiceChip(selected = custom, onClick = { pickingDates = true }, label = { Text(if (custom) rangeLabel(draft.dateFrom, draft.dateTo) else "Custom…") })
                     }
                 }
 
@@ -159,7 +153,7 @@ fun FiltersSheet(api: Api, initial: TxFilters, onApply: (TxFilters) -> Unit, onD
                 if (o == null) {
                     Text("Loading your accounts, categories and tags…", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 } else {
-                    Section("Account", Icons.Outlined.AccountBalance, Accents.getValue("violet")) {
+                    Section("Account", Icons.Outlined.AccountBalance) {
                         PickerField(
                             title = "Account", value = draft.account, placeholder = "Any account",
                             entries = o.accounts.map { Ref(it.id, it.name) },
@@ -167,7 +161,7 @@ fun FiltersSheet(api: Api, initial: TxFilters, onApply: (TxFilters) -> Unit, onD
                             onPick = { draft = draft.copy(account = it) },
                         )
                     }
-                    if (o.cards.isNotEmpty()) Section("Card", Icons.Outlined.CreditCard, Accents.getValue("pink")) {
+                    if (o.cards.isNotEmpty()) Section("Card", Icons.Outlined.CreditCard) {
                         PickerField(
                             title = "Card", value = draft.card, placeholder = "Any card",
                             entries = o.cards.map { Ref(it.id, it.text()) },
@@ -175,7 +169,7 @@ fun FiltersSheet(api: Api, initial: TxFilters, onApply: (TxFilters) -> Unit, onD
                             onPick = { draft = draft.copy(card = it) },
                         )
                     }
-                    Section("Category", Icons.Outlined.Category, Accents.getValue("amber")) {
+                    Section("Category", Icons.Outlined.Category) {
                         PickerField(
                             title = "Category", value = draft.category, placeholder = "Any category",
                             searchable = true,
@@ -183,12 +177,11 @@ fun FiltersSheet(api: Api, initial: TxFilters, onApply: (TxFilters) -> Unit, onD
                             onPick = { draft = draft.copy(category = it) },
                         )
                     }
-                    if (o.tags.isNotEmpty()) Section("Tags", Icons.Outlined.Sell, Accents.getValue("pink")) {
+                    if (o.tags.isNotEmpty()) Section("Tags", Icons.Outlined.Sell) {
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             o.tags.forEach { tag ->
                                 val on = draft.tags.any { it.id == tag.id }
-                                TintChip(idTint(tag.id), 
-                                    selected = on,
+                                ChoiceChip(selected = on,
                                     onClick = { draft = draft.copy(tags = if (on) draft.tags.filterNot { it.id == tag.id } else draft.tags + Ref(tag.id, tag.name)) },
                                     label = { Text(tag.name) },
                                 )
@@ -201,21 +194,21 @@ fun FiltersSheet(api: Api, initial: TxFilters, onApply: (TxFilters) -> Unit, onD
                     }
                 }
 
-                Section("Paid by", Icons.Outlined.Payments, Accents.getValue("slate")) {
+                Section("Paid by", Icons.Outlined.Payments) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         PaymentMethodLabels.forEach { (value, label) ->
-                            TintChip(methodTint(value), selected = draft.method == value, onClick = { draft = draft.copy(method = if (draft.method == value) null else value) }, label = { Text(label) })
+                            ChoiceChip(selected = draft.method == value, onClick = { draft = draft.copy(method = if (draft.method == value) null else value) }, label = { Text(label) })
                         }
                     }
                 }
-                Section("Need or want", Icons.Outlined.Balance, Accents.getValue("lime")) {
+                Section("Need or want", Icons.Outlined.Balance) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         KINDS.forEach { (value, label) ->
-                            TintChip(kindTint(value), selected = draft.kind == value, onClick = { draft = draft.copy(kind = if (draft.kind == value) null else value) }, label = { Text(label) })
+                            ChoiceChip(selected = draft.kind == value, onClick = { draft = draft.copy(kind = if (draft.kind == value) null else value) }, label = { Text(label) })
                         }
                     }
                 }
-                Section("Amount", Icons.Outlined.Numbers, Accents.getValue("orange")) {
+                Section("Amount", Icons.Outlined.Numbers) {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         CompactField(draft.min, { draft = draft.copy(min = cleanAmount(it)) }, "Min", Modifier.weight(1f), KeyboardOptions(keyboardType = KeyboardType.Decimal))
                         CompactField(draft.max, { draft = draft.copy(max = cleanAmount(it)) }, "Max", Modifier.weight(1f), KeyboardOptions(keyboardType = KeyboardType.Decimal))

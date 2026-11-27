@@ -7,9 +7,6 @@ import androidx.compose.material3.BottomSheetDefaults
 import app.maalu.ui.components.glowSheet
 import app.maalu.ui.components.fadeInOnAppear
 import app.maalu.ui.components.springItem
-import app.maalu.ui.theme.tintBadge
-import app.maalu.ui.theme.tintIcon
-import app.maalu.ui.theme.tintSurface
 import app.maalu.ui.components.Disclosure
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -95,11 +92,8 @@ import app.maalu.ui.components.MoneyText
 import app.maalu.ui.components.MorphTile
 import app.maalu.ui.components.SearchPill
 import app.maalu.ui.components.SegmentedPills
-import app.maalu.ui.components.TintChip
-import app.maalu.ui.theme.Accents
-import app.maalu.ui.theme.ChartColors
+import app.maalu.ui.components.ChoiceChip
 import app.maalu.ui.theme.MoneyStyle
-import app.maalu.ui.theme.idTint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonElement
@@ -108,13 +102,7 @@ import kotlinx.serialization.json.put
 
 private val STATUS_FILTERS = listOf<Pair<String?, String>>(null to "All", "active" to "Active", "paused" to "Paused", "completed" to "Completed", "cancelled" to "Cancelled")
 
-@Composable
-private fun statusTint(status: String): Color = when (status) {
-    "active" -> ChartColors.IncomeLight
-    "paused" -> ChartColors.Warning
-    "completed" -> ChartColors.Line
-    else -> MaterialTheme.colorScheme.outline
-}
+
 
 /**
  * Recurring bills. At the top what is active and what it costs a month, and (folded away) payments found in your history
@@ -164,7 +152,7 @@ fun SubscriptionsScreen(api: Api) {
         Column(Modifier.padding(horizontal = 16.dp)) {
             SearchPill(query, { query = it.take(100) }, Modifier.padding(vertical = 6.dp), placeholder = "Search subscriptions")
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                STATUS_FILTERS.forEach { (value, label) -> TintChip(if (value == null) MaterialTheme.colorScheme.outline else statusTint(value), status == value, { status = value }, { Text(label) }) }
+                STATUS_FILTERS.forEach { (value, label) -> ChoiceChip(status == value, { status = value }, { Text(label) }) }
             }
         }
         if (reloading) androidx.compose.material3.LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 8.dp))
@@ -243,13 +231,13 @@ fun SubscriptionsScreen(api: Api) {
 @Composable
 private fun SummaryRow(s: SubscriptionSummary) {
     Row(Modifier.fillMaxWidth().padding(bottom = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Surface(Modifier.weight(1f), shape = MaterialTheme.shapes.large, color = Accents.getValue("violet").tintSurface()) {
+        Surface(Modifier.weight(1f), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
             Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text("Active", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("${s.activeCount}", style = MaterialTheme.typography.titleMedium.merge(MoneyStyle))
             }
         }
-        Surface(Modifier.weight(1f), shape = MaterialTheme.shapes.large, color = Accents.getValue("orange").tintSurface()) {
+        Surface(Modifier.weight(1f), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
             Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text("Costs a month", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 MoneyText(s.monthlyBaseTotal, s.currency, style = MaterialTheme.typography.titleMedium)
@@ -262,11 +250,10 @@ private fun SummaryRow(s: SubscriptionSummary) {
 @Composable
 private fun SuggestionsCard(candidates: List<SubscriptionCandidate>, onAdd: (SubscriptionCandidate) -> Unit, onDismiss: (SubscriptionCandidate) -> Unit) {
     var open by rememberSaveable { mutableStateOf(false) }
-    val tint = Accents.getValue("amber")
-    Surface(Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = MaterialTheme.shapes.extraLarge, color = tint.tintSurface()) {
+    Surface(Modifier.fillMaxWidth().padding(vertical = 4.dp), shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainer) {
         Column {
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Outlined.Lightbulb, null, tint = tint, modifier = Modifier.padding(end = 12.dp))
+                Icon(Icons.Outlined.Lightbulb, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(end = 12.dp))
                 Column(Modifier.weight(1f)) {
                     Text("${candidates.size} suggested ${if (candidates.size == 1) "subscription" else "subscriptions"}", style = MaterialTheme.typography.titleSmall)
                     Text("Repeating payments we found in your history.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -301,10 +288,9 @@ private fun SuggestionsCard(candidates: List<SubscriptionCandidate>, onAdd: (Sub
 
 @Composable
 private fun SubscriptionRow(s: Subscription) {
-    val tint = idTint(s.id)
     Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Box(Modifier.size(36.dp).clip(CircleShape).background(tint.tintIcon()), contentAlignment = Alignment.Center) {
-            Text(s.name.firstOrNull()?.uppercase() ?: "?", style = MaterialTheme.typography.labelLargeEmphasized, color = tint)
+        Box(Modifier.size(36.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceContainerHighest), contentAlignment = Alignment.Center) {
+            Text(s.name.firstOrNull()?.uppercase() ?: "?", style = MaterialTheme.typography.labelLargeEmphasized, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(s.name, style = MaterialTheme.typography.bodyMediumEmphasized, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -312,7 +298,7 @@ private fun SubscriptionRow(s: Subscription) {
         }
         Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
             MoneyText(s.amount, s.currency, prefix = amountPrefix(s.amountVaries), style = MaterialTheme.typography.bodyMedium)
-            if (s.status != "active") Surface(shape = RoundedCornerShape(8.dp), color = statusTint(s.status).tintBadge()) {
+            if (s.status != "active") Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.surfaceContainerHighest) {
                 Text(subscriptionStatusLabel(s.status), style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp))
             }
         }
@@ -378,7 +364,7 @@ private fun AcceptDialog(api: Api, c: SubscriptionCandidate, onClose: () -> Unit
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                     CompactField(count, { count = it.filter(Char::isDigit).take(2) }, "Every", Modifier.weight(0.4f), KeyboardOptions(keyboardType = KeyboardType.Number), enabled = !busy, placeholder = "1")
                 }
-                SegmentedPills(IntervalUnits, unit, { unit = it }, tint = { Accents.getValue(listOf("blue", "violet", "pink")[IntervalUnits.indexOfFirst { p -> p.first == it }.coerceAtLeast(0)]) }, enabled = !busy)
+                SegmentedPills(IntervalUnits, unit, { unit = it }, enabled = !busy)
                 Text("Every payment of this pattern is linked to it, so its history and next payment are right from the start.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
             }

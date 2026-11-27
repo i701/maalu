@@ -49,7 +49,6 @@ import kotlin.math.roundToInt
 
 /** The iOS app's brand blue. */
 val SummaryBlue = Color(0xFF437CEF)
-val SummaryTeal = lerp(SummaryBlue, Color.Cyan, 0.4f)
 private const val Faint = 0.28f
 
 /** [hue] deepened for light mode and lightened for dark, so text in it reads on the page. */

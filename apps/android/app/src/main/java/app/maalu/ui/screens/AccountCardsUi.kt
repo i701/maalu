@@ -44,8 +44,7 @@ import app.maalu.data.text
 import app.maalu.data.AddForm
 import app.maalu.ui.components.CompactField
 import app.maalu.ui.components.PickerField
-import app.maalu.ui.components.TintChip
-import app.maalu.ui.theme.Accents
+import app.maalu.ui.components.ChoiceChip
 import kotlinx.coroutines.launch
 
 /**
@@ -79,7 +78,7 @@ fun AccountCardsSection(api: Api, account: Account, accounts: List<Account>, car
                     Column(Modifier.weight(1f)) {
                         Text(c.text(), style = MaterialTheme.typography.bodyMedium)
                         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                            TintChip(Accents.getValue(if (c.kind == "credit") "orange" else "blue"), true, {}, { Text(if (c.kind == "credit") "Credit" else "Debit") })
+                            ChoiceChip(true, {}, { Text(if (c.kind == "credit") "Credit" else "Debit") })
                             c.repayAccount?.let { Text("Repaid from ${it.name}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                         }
                     }

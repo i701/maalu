@@ -61,7 +61,6 @@ import app.maalu.data.kindMeta
 import app.maalu.data.markRead
 import app.maalu.data.targetFor
 import app.maalu.ui.components.MorphTile
-import app.maalu.ui.theme.Accents
 import kotlinx.coroutines.launch
 import java.time.Instant
 
@@ -184,7 +183,7 @@ private fun SwipeRow(n: AppNotification, first: Boolean, last: Boolean, onOpen: 
 @Composable
 private fun NotificationRow(n: AppNotification, first: Boolean, last: Boolean, onOpen: () -> Unit) {
     val meta = kindMeta(n.kind)
-    val tint = if (meta.accent == "error") MaterialTheme.colorScheme.error else Accents.getValue(meta.accent)
+    val tint = if (meta.accent == "error") MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
     MorphTile(onClick = onOpen, first = first, last = last, modifier = Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
             Box(Modifier.size(40.dp).clip(RoundedCornerShape(14.dp)).background(tint.tintIcon()), contentAlignment = Alignment.Center) {

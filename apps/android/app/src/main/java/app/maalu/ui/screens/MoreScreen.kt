@@ -2,7 +2,6 @@
 
 package app.maalu.ui.screens
 
-import app.maalu.ui.theme.tintIcon
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -56,7 +55,6 @@ import androidx.compose.ui.unit.dp
 import app.maalu.data.ThemeMode
 import app.maalu.ui.components.MorphTile
 import app.maalu.ui.components.SegmentedPills
-import app.maalu.ui.theme.Accents
 
 /** The web's navigation groups, in order: where every destination sits in the sidebar and in More. */
 enum class NavGroup(val label: String) { Money("Money"), Planning("Planning"), Organise("Organise"), Help("Help"), App("This app") }
@@ -66,7 +64,6 @@ data class Destination(
     val id: String,
     val label: String,
     val icon: ImageVector,
-    val accent: String,
     val group: NavGroup,
     /** What it is for, shown on the page that stands in until the real screen exists. */
     val blurb: String,
@@ -77,27 +74,27 @@ data class Destination(
 )
 
 val MoreDestinations: List<Destination> = listOf(
-    Destination("dashboard", "Dashboard", Icons.Outlined.GridView, "lime", NavGroup.Money, "Your month at a glance.", tabIndex = 0),
-    Destination("transactions", "Transactions", Icons.Outlined.ReceiptLong, "blue", NavGroup.Money, "Everything you spent and received.", tabIndex = 1),
-    Destination("accounts", "Accounts", Icons.Outlined.AccountBalance, "green", NavGroup.Money, "Where your money is.", tabIndex = 2),
-    Destination("subscriptions", "Subscriptions", Icons.Outlined.EventRepeat, "violet", NavGroup.Money, "Recurring bills, with the next payment planned for you and suggestions found in your history."),
-    Destination("net-worth", "Net worth", Icons.Outlined.ShowChart, "green", NavGroup.Money, "How your net worth moved over a period and what moved it: income, spending, adjustments, transfers and exchange rates."),
-    Destination("compare", "Compare", Icons.Outlined.Insights, "violet", NavGroup.Money, "Put one period against another: income, spending, what you kept and every category's move."),
-    Destination("trends", "Trends", Icons.Outlined.CalendarMonth, "lime", NavGroup.Money, "Every category by month, as a table or stacked columns."),
-    Destination("import", "Import", Icons.Outlined.UploadFile, "orange", NavGroup.Money, "Importing a bank statement is done on the web, where the rows are easier to review."),
-    Destination("places", "Places", Icons.Outlined.LocationOn, "pink", NavGroup.Money, "A map of where your spending went."),
-    Destination("budget", "Budget", Icons.Outlined.Savings, "amber", NavGroup.Planning, "Limits and savings goals.", tabIndex = 3),
-    Destination("plan", "Month plan", Icons.Outlined.Checklist, "amber", NavGroup.Planning, "Your bills by day, what is left after each, and where the money runs out."),
-    Destination("pending", "Pending", Icons.Outlined.TaskAlt, "orange", NavGroup.Planning, "Salary splits waiting for your approval."),
-    Destination("vendors", "Vendors", Icons.Outlined.Storefront, "orange", NavGroup.Organise, "The places and people you pay, with their usual category and tags."),
-    Destination("categories", "Categories", Icons.Outlined.Category, "pink", NavGroup.Organise, "Your categories, their colours, parents and whether they are needs or wants."),
-    Destination("tags", "Tags", Icons.Outlined.Sell, "violet", NavGroup.Organise, "Labels that cut across categories."),
-    Destination("groups", "Groups", Icons.Outlined.Inventory2, "blue", NavGroup.Organise, "Bundle related transactions, like a trip, and see what they add up to."),
-    Destination("templates", "Templates", Icons.Outlined.Bookmark, "lime", NavGroup.Organise, "Saved starting points for transactions you repeat."),
-    Destination("trash", "Trash", Icons.Outlined.Delete, "slate", NavGroup.Organise, "Deleted transactions, until you restore them or delete them for good."),
-    Destination("settings", "Settings", Icons.Outlined.Settings, "slate", NavGroup.App, "Security: two-factor sign-in, and more to come."),
-    Destination("notifications", "Notifications", Icons.Outlined.Notifications, "amber", NavGroup.App, "Late payments, budgets close to their limit and reached goals.", inDrawer = false),
-    Destination("docs", "Docs", Icons.Outlined.Article, "blue", NavGroup.Help, "Guides to what each feature is and how to use it."),
+    Destination("dashboard", "Dashboard", Icons.Outlined.GridView, NavGroup.Money, "Your month at a glance.", tabIndex = 0),
+    Destination("transactions", "Transactions", Icons.Outlined.ReceiptLong, NavGroup.Money, "Everything you spent and received.", tabIndex = 1),
+    Destination("accounts", "Accounts", Icons.Outlined.AccountBalance, NavGroup.Money, "Where your money is.", tabIndex = 2),
+    Destination("subscriptions", "Subscriptions", Icons.Outlined.EventRepeat, NavGroup.Money, "Recurring bills, with the next payment planned for you and suggestions found in your history."),
+    Destination("net-worth", "Net worth", Icons.Outlined.ShowChart, NavGroup.Money, "How your net worth moved over a period and what moved it: income, spending, adjustments, transfers and exchange rates."),
+    Destination("compare", "Compare", Icons.Outlined.Insights, NavGroup.Money, "Put one period against another: income, spending, what you kept and every category's move."),
+    Destination("trends", "Trends", Icons.Outlined.CalendarMonth, NavGroup.Money, "Every category by month, as a table or stacked columns."),
+    Destination("import", "Import", Icons.Outlined.UploadFile, NavGroup.Money, "Importing a bank statement is done on the web, where the rows are easier to review."),
+    Destination("places", "Places", Icons.Outlined.LocationOn, NavGroup.Money, "A map of where your spending went."),
+    Destination("budget", "Budget", Icons.Outlined.Savings, NavGroup.Planning, "Limits and savings goals.", tabIndex = 3),
+    Destination("plan", "Month plan", Icons.Outlined.Checklist, NavGroup.Planning, "Your bills by day, what is left after each, and where the money runs out."),
+    Destination("pending", "Pending", Icons.Outlined.TaskAlt, NavGroup.Planning, "Salary splits waiting for your approval."),
+    Destination("vendors", "Vendors", Icons.Outlined.Storefront, NavGroup.Organise, "The places and people you pay, with their usual category and tags."),
+    Destination("categories", "Categories", Icons.Outlined.Category, NavGroup.Organise, "Your categories, their colours, parents and whether they are needs or wants."),
+    Destination("tags", "Tags", Icons.Outlined.Sell, NavGroup.Organise, "Labels that cut across categories."),
+    Destination("groups", "Groups", Icons.Outlined.Inventory2, NavGroup.Organise, "Bundle related transactions, like a trip, and see what they add up to."),
+    Destination("templates", "Templates", Icons.Outlined.Bookmark, NavGroup.Organise, "Saved starting points for transactions you repeat."),
+    Destination("trash", "Trash", Icons.Outlined.Delete, NavGroup.Organise, "Deleted transactions, until you restore them or delete them for good."),
+    Destination("settings", "Settings", Icons.Outlined.Settings, NavGroup.App, "Security: two-factor sign-in, and more to come."),
+    Destination("notifications", "Notifications", Icons.Outlined.Notifications, NavGroup.App, "Late payments, budgets close to their limit and reached goals.", inDrawer = false),
+    Destination("docs", "Docs", Icons.Outlined.Article, NavGroup.Help, "Guides to what each feature is and how to use it."),
 )
 
 fun destinationById(id: String?): Destination? = MoreDestinations.firstOrNull { it.id == id }
@@ -105,10 +102,9 @@ fun destinationById(id: String?): Destination? = MoreDestinations.firstOrNull { 
 /** Stands in for a screen that is not built in the app yet: what it is for, and that the web has it. */
 @Composable
 fun ComingSoon(d: Destination) {
-    val tint = Accents.getValue(d.accent)
     Column(Modifier.fillMaxSize().padding(32.dp), verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(Modifier.size(72.dp).clip(RoundedCornerShape(24.dp)).background(tint.tintIcon()), contentAlignment = Alignment.Center) {
-            Icon(d.icon, null, tint = tint, modifier = Modifier.size(36.dp))
+        Box(Modifier.size(72.dp).clip(RoundedCornerShape(24.dp)).background(MaterialTheme.colorScheme.surfaceContainerHighest), contentAlignment = Alignment.Center) {
+            Icon(d.icon, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(36.dp))
         }
         Text(d.label, style = MaterialTheme.typography.titleLarge)
         Text(d.blurb, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)

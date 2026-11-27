@@ -55,7 +55,6 @@ import app.maalu.data.templateNameProblem
 import app.maalu.data.templateSummary
 import app.maalu.ui.components.CompactField
 import app.maalu.ui.components.MorphTile
-import app.maalu.ui.theme.Accents
 import kotlinx.coroutines.launch
 
 /**
@@ -95,7 +94,7 @@ fun TemplatesScreen(api: Api) {
         list == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         else -> PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
             if (list.isEmpty()) Column(Modifier.fillMaxSize().padding(32.dp), verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(Icons.Outlined.Bookmark, null, Modifier.size(48.dp), tint = Accents.getValue("lime"))
+                Icon(Icons.Outlined.Bookmark, null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("No templates yet", style = MaterialTheme.typography.titleMedium)
                 Text(
                     "Fill in a transaction you repeat, then use the bookmark button at the top of the new-transaction form to save it as a template.",

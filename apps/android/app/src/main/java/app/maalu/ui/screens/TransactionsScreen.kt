@@ -27,12 +27,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import app.maalu.ui.theme.Accents
-import app.maalu.ui.theme.idTint
-import app.maalu.ui.theme.kindTint
-import app.maalu.ui.theme.methodTint
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -116,7 +111,6 @@ import app.maalu.data.isRefund
 import app.maalu.data.shortTime
 import app.maalu.data.title
 import app.maalu.ui.components.MoneyText
-import app.maalu.ui.theme.ChartColors
 import app.maalu.ui.theme.MoneyStyle
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope

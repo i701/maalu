@@ -11,15 +11,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 
-/**
- * A filter chip with a colour of its own: a tinted outline at rest, a tinted fill and a
- * check when chosen. Text stays in the normal ink so it reads on any tint, in light and dark.
- */
+/** A filter chip: grey at rest, the primary container and a check when chosen. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TintChip(tint: Color, selected: Boolean, onClick: () -> Unit, label: @Composable () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+fun ChoiceChip(selected: Boolean, onClick: () -> Unit, label: @Composable () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
     FilterChip(
         selected = selected,
         onClick = onClick,
@@ -27,11 +23,10 @@ fun TintChip(tint: Color, selected: Boolean, onClick: () -> Unit, label: @Compos
         label = label,
         modifier = modifier,
         leadingIcon = if (selected) ({ Icon(Icons.Outlined.Check, null, Modifier.size(FilterChipDefaults.IconSize)) }) else null,
-        // no border: a soft tint at rest, a much stronger one when chosen
         colors = FilterChipDefaults.filterChipColors(
-            containerColor = tint.copy(alpha = 0.08f),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             labelColor = MaterialTheme.colorScheme.onSurface,
-            selectedContainerColor = tint.copy(alpha = 0.55f),
+            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
             selectedLabelColor = MaterialTheme.colorScheme.onSurface,
             selectedLeadingIconColor = MaterialTheme.colorScheme.onSurface,
         ),

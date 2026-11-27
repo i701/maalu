@@ -83,8 +83,8 @@ fun TrendsScreen(api: Api) {
 
     Column(Modifier.fillMaxSize()) {
         Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            SegmentedPills(listOf("expense" to "Spending", "income" to "Income"), kind, { kind = it }, tint = { Accents.getValue(if (it == "expense") "orange" else "green") })
-            ChipRow(TrendRanges, months, { "$it months" }, Accents.getValue("lime")) { data = null; months = it }
+            SegmentedPills(listOf("expense" to "Spending", "income" to "Income"), kind, { kind = it })
+            ChipRow(TrendRanges, months, { "$it months" }) { data = null; months = it }
         }
         ReportState(data, error, onRetry = { error = null; reload++ }) { d ->
             val rows = d.categories.filter { it.type == kind }.sortedByDescending { it.total.toBigDecimalOrNull() ?: java.math.BigDecimal.ZERO }

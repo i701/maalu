@@ -52,8 +52,7 @@ import app.maalu.data.tidyAmount
 import app.maalu.data.tidyRate
 import app.maalu.data.title
 import app.maalu.ui.components.CompactField
-import app.maalu.ui.components.TintChip
-import app.maalu.ui.theme.paletteTint
+import app.maalu.ui.components.ChoiceChip
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonElement
 import java.time.Instant
@@ -123,11 +122,11 @@ fun MarkPaidDialog(api: Api, t: Transaction, baseCurrency: String?, onClose: () 
                 Text(if (transfer) "Done on" else if (income) "Received on" else "Paid on", style = MaterialTheme.typography.labelLarge)
                 val today = LocalDate.now()
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TintChip(paletteTint(0), date == "$today", { date = "$today" }, { Text("Today") })
-                    TintChip(paletteTint(1), date == "${today.minusDays(1)}", { date = "${today.minusDays(1)}" }, { Text("Yesterday") })
+                    ChoiceChip(date == "$today", { date = "$today" }, { Text("Today") })
+                    ChoiceChip(date == "${today.minusDays(1)}", { date = "${today.minusDays(1)}" }, { Text("Yesterday") })
                     val custom = date != "$today" && date != "${today.minusDays(1)}"
-                    TintChip(paletteTint(2), custom, { pickingDate = true }, { Text(if (custom) shortDate(date) else "Pick a date") })
-                    TintChip(paletteTint(3), time != null, { if (time == null) pickingTime = true else time = null }, { Text(time ?: "Add time") })
+                    ChoiceChip(custom, { pickingDate = true }, { Text(if (custom) shortDate(date) else "Pick a date") })
+                    ChoiceChip(time != null, { if (time == null) pickingTime = true else time = null }, { Text(time ?: "Add time") })
                 }
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
             }

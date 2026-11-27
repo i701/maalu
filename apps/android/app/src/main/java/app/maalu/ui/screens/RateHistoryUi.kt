@@ -38,7 +38,7 @@ import app.maalu.data.shortDate
 import app.maalu.data.summarizeRates
 import app.maalu.data.tidyRate
 import app.maalu.ui.components.LineChart
-import app.maalu.ui.components.TintChip
+import app.maalu.ui.components.ChoiceChip
 import app.maalu.ui.theme.ChartColors
 
 /** How the market rate of a foreign account's currency moved against the base currency: 30 days, 90 days or a year, with start, end, low, high and movement. */
@@ -65,7 +65,7 @@ fun RateHistorySheet(api: Api, account: Account, onClose: () -> Unit) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text("${account.currency} rate history", style = MaterialTheme.typography.titleLarge)
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                RATE_RANGES.forEach { n -> TintChip(ChartColors.Line, days == n, { days = n }, { Text(if (n == 365) "1 year" else "$n days") }) }
+                RATE_RANGES.forEach { n -> ChoiceChip(days == n, { days = n }, { Text(if (n == 365) "1 year" else "$n days") }) }
             }
             val h = history
             val summary = h?.let { summarizeRates(it.points) }
