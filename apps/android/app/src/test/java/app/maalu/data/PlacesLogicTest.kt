@@ -52,4 +52,13 @@ class PlacesLogicTest {
         val t = Transaction(id = "t", type = "expense", amount = "20", currency = "MVR", category = "Food", date = "2026-11-01", latitude = "4.175500", longitude = "73.509300", place = "Super Mart")
         assertTrue(t.hasPlace()); assertEquals("73.509300", formFrom(t).longitude); assertEquals("Super Mart", formFrom(t).place)
     }
+
+    @Test fun searchMatchesANameOrAnUnnamedSpotsCoordinates() {
+        fun spot(place: String?) = PlaceTotal(latitude = "4.1755", longitude = "73.5093", place = place, count = 1, spent = "1")
+        val named = spot("Ensis Mart")
+        val unnamed = spot(null)
+        assertEquals(listOf(named), searchSpots(listOf(named, unnamed), " ensis "))
+        assertEquals(listOf(unnamed), searchSpots(listOf(named, unnamed), "73.50"))
+        assertEquals(2, searchSpots(listOf(named, unnamed), "  ").size)
+    }
 }

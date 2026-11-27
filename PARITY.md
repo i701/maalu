@@ -9,11 +9,15 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 78 | 71 | 66 |
+| ✅ done | 78 | 72 | 66 |
 | 🟡 partial | 0 | 1 | 1 |
-| ❌ missing | 0 | 4 | 6 |
+| ❌ missing | 1 | 4 | 7 |
 | ➖ n/a | 3 | 5 | 7 |
 | 🗓 planned | 0 | 0 | 1 |
+
+## Still to build on Web (1)
+
+- ❌ **Search places** (Dashboard and reports).
 
 ## Still to build on Android (5)
 
@@ -23,12 +27,13 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (8)
+## Still to build on iOS (9)
 
 - 🟡 **Your name** (Sign in and security). Shows the name in the Dashboard greeting; it is set on the web, as the app has no sign-up and no profile edit yet.
 - 🗓 **Hide dashboard cards, kept on the server** (Dashboard and reports).
 - ❌ **Export to Excel** (Transactions).
 - ❌ **Spent this month and limit per category** (Categories, tags and vendors).
+- ❌ **Search places** (Dashboard and reports).
 - ❌ **Notifications** (Notifications).
 - ❌ **Email digest** (Notifications).
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
@@ -153,6 +158,7 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Trends**<br>Category by month, spending or income over 6, 12 or 24 months, as a table or stacked columns. | ✅ done | ✅ done | ✅ done |
 | **Net worth and what moved it**<br>How net worth changed over a period and the drivers that explain it. | ✅ done | ✅ done | ✅ done |
 | **Places map**<br>Where spending went, as circles on a map sized by spend. | ✅ done | ✅ done | ✅ done |
+| **Search places**<br>Narrow the Places list and map by a place's name. | ❌ missing | ✅ done | ❌ missing |
 
 - **Hide dashboard cards, kept on the server** (Web): Decided: which cards are hidden stays on each device (localStorage), per app, and is not kept on the server. The hiding itself is done: see "Hide dashboard cards".
 

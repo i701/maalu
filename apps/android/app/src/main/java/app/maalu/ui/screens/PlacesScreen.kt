@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.SearchPill
+import app.maalu.data.searchSpots
 import androidx.compose.ui.graphics.luminance
 import app.maalu.ui.components.fadingEdges
 import app.maalu.ui.components.fadeInOnAppear
@@ -72,6 +74,7 @@ fun PlacesScreen(api: Api) {
     var reload by remember { mutableIntStateOf(0) }
     var selected by remember { mutableIntStateOf(-1) }
     var focus by remember { mutableStateOf<MapFocus?>(null) }
+    var query by rememberSaveable { mutableStateOf("") }
     val listState = rememberLazyListState()
     val chosen = PlaceRange.valueOf(range)
 
@@ -86,20 +89,25 @@ fun PlacesScreen(api: Api) {
     LaunchedEffect(selected) { if (selected >= 0) listState.animateScrollToItem(selected) }
 
     Column(Modifier.fillMaxSize()) {
-        Box(Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)) {
+        SearchPill(
+            // a pick points into the narrowed list, so a new search drops it
+            query, { query = it.take(100); selected = -1 }, Modifier.padding(horizontal = 16.dp, vertical = 6.dp), placeholder = "Search places",
+        )
+        Box(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)) {
             ChipRow(PlaceRange.entries, chosen, { it.label }) { data = null; range = it.name }
         }
         ReportState(data, error, onRetry = { error = null; reload++ }) { d ->
             val biggest = biggestSpend(d.places)
-            val spots = d.places.map { MapSpot(it.lat, it.lng, spotRadius(it.spent, biggest), placeLabel(it.place, it.latitude, it.longitude)) }
+            val shown = remember(d, query) { searchSpots(d.places, query) }
+            val spots = shown.map { MapSpot(it.lat, it.lng, spotRadius(it.spent, biggest), placeLabel(it.place, it.latitude, it.longitude)) }
             val primary = MaterialTheme.colorScheme.primary.toArgb()
             Column(Modifier.fillMaxSize()) {
                 Box(Modifier.fillMaxWidth().height(300.dp).padding(horizontal = 16.dp).clip(RoundedCornerShape(24.dp))) {
                     OsmMap(
                         Modifier.fillMaxSize(), startLat = DEFAULT_LAT, startLng = DEFAULT_LNG, dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f,
-                        spots = spots, selected = selected, fitKey = d,
+                        spots = spots, selected = selected, fitKey = shown,
                         focus = focus, spotColor = primary, selectedColor = primary, pinColor = primary,
-                        onSpotClick = { i -> selected = i; focus = MapFocus(d.places[i].lat, d.places[i].lng, 16.0, (focus?.nonce ?: 0) + 1) },
+                        onSpotClick = { i -> selected = i; focus = MapFocus(shown[i].lat, shown[i].lng, 16.0, (focus?.nonce ?: 0) + 1) },
                     )
                 }
                 Text(
@@ -113,9 +121,11 @@ fun PlacesScreen(api: Api) {
                         "Mark where a purchase happened with the pin button when you add or edit a transaction, and it shows up here.",
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     )
+                } else if (shown.isEmpty()) Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
+                    Text("No place matches in this range.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 } else LazyColumn(Modifier.fillMaxSize().fadeInOnAppear().fadingEdges(listState), state = listState, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    itemsIndexed(d.places, key = { i, p -> "$i-${p.latitude}-${p.longitude}" }) { i, p -> Box(springItem()) {
-                        SpotRow(p, d.currency, selected = i == selected, first = i == 0, last = i == d.places.lastIndex) {
+                    itemsIndexed(shown, key = { i, p -> "$i-${p.latitude}-${p.longitude}" }) { i, p -> Box(springItem()) {
+                        SpotRow(p, d.currency, selected = i == selected, first = i == 0, last = i == shown.lastIndex) {
                             selected = i; focus = MapFocus(p.lat, p.lng, 16.0, (focus?.nonce ?: 0) + 1)
                         }
                      }}

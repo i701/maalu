@@ -2161,6 +2161,26 @@
       ]
     },
     {
+      "id": "places-search",
+      "area": "reports",
+      "name": "Search places",
+      "summary": "Narrow the Places list and map by a place's name.",
+      "web": {
+        "status": "missing"
+      },
+      "android": {
+        "status": "done",
+        "evidence": [
+          "apps/android/app/src/main/java/app/maalu/ui/screens/PlacesScreen.kt"
+        ]
+      },
+      "ios": {
+        "status": "missing"
+      },
+      "routes": [],
+      "api": []
+    },
+    {
       "id": "notifications",
       "area": "notifications",
       "name": "Notifications",

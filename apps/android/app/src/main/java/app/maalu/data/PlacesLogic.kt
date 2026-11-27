@@ -71,6 +71,10 @@ fun placeLabel(place: String?, latitude: String?, longitude: String?): String = 
     else -> ""
 }
 
+/** The spots whose name (or coordinates, for one with no name) contains what was typed; all of them for a blank search. */
+fun searchSpots(places: List<PlaceTotal>, query: String): List<PlaceTotal> =
+    places.filter { placeLabel(it.place, it.latitude, it.longitude).contains(query.trim(), ignoreCase = true) }
+
 /** How big a spot's circle is, in dp, against the biggest spend on the map: area follows the amount, between [min] and [max]. */
 fun spotRadius(spent: String, biggest: String, min: Float = 9f, max: Float = 30f): Float {
     val s = spent.toBigDecimalOrNull() ?: BigDecimal.ZERO
