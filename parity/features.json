@@ -1824,7 +1824,7 @@
       "id": "dashboard-hide-cards",
       "area": "reports",
       "name": "Hide dashboard cards",
-      "summary": "Switch off the dashboard cards you do not want, from the arrange sheet. Kept on the device for now, not on the server, so no API change.",
+      "summary": "Switch off the dashboard cards you do not want, from the arrange sheet. Kept on the device, not on the server.",
       "web": {
         "status": "done",
         "evidence": [
@@ -1855,16 +1855,18 @@
       "id": "dashboard-hide-cards-sync",
       "area": "reports",
       "name": "Hide dashboard cards, kept on the server",
-      "summary": "Keep which dashboard cards are off on the server, one list per platform (a key each for web, Android and iOS), so a platform keeps its own choice across devices and reinstalls without changing what another platform shows. Today it is only on the device.",
+      "summary": "Keep which dashboard cards are off on the server, one list per platform (a key each for web, Android and iOS), so a platform keeps its own choice across devices and reinstalls without changing what another platform shows. Decided against: each app keeps its own on the device.",
       "web": {
         "status": "na",
         "note": "Decided: which cards are hidden stays on each device (localStorage), per app, and is not kept on the server. The hiding itself is done: see \"Hide dashboard cards\"."
       },
       "android": {
-        "status": "missing"
+        "status": "na",
+        "note": "Decided: hidden cards stay on the device; see the web note."
       },
       "ios": {
-        "status": "planned"
+        "status": "na",
+        "note": "Decided: hidden cards stay on the device; see the web note."
       },
       "routes": [
         "/dashboard"

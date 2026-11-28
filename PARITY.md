@@ -11,26 +11,23 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 |---|---:|---:|---:|
 | ✅ done | 78 | 72 | 66 |
 | 🟡 partial | 0 | 1 | 1 |
-| ❌ missing | 1 | 4 | 7 |
-| ➖ n/a | 3 | 5 | 7 |
-| 🗓 planned | 0 | 0 | 1 |
+| ❌ missing | 1 | 3 | 7 |
+| ➖ n/a | 3 | 6 | 8 |
 
 ## Still to build on Web (1)
 
 - ❌ **Search places** (Dashboard and reports).
 
-## Still to build on Android (5)
+## Still to build on Android (4)
 
 - 🟡 **Email digest** (Notifications). The switch and the email status are in Settings; sending a test email is not.
 - ❌ **Export to Excel** (Transactions).
-- ❌ **Hide dashboard cards, kept on the server** (Dashboard and reports).
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
 
-## Still to build on iOS (9)
+## Still to build on iOS (8)
 
 - 🟡 **Your name** (Sign in and security). Shows the name in the Dashboard greeting; it is set on the web, as the app has no sign-up and no profile edit yet.
-- 🗓 **Hide dashboard cards, kept on the server** (Dashboard and reports).
 - ❌ **Export to Excel** (Transactions).
 - ❌ **Spent this month and limit per category** (Categories, tags and vendors).
 - ❌ **Search places** (Dashboard and reports).
@@ -146,8 +143,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Spending by month, stacked by category**<br>A Dashboard card of spending per month for the last 6 or 12 months, stacked by the biggest categories; press along the bars to pick a month, hold a category to follow it. | ✅ done | ✅ done | ✅ done |
 | **Dashboard summaries**<br>The Dashboard opens on Available to spend and Kept this month, the latter with a donut of income kept against spent. On the apps they are drawn flat on the page, and net worth, with a donut of assets against liabilities, is on Accounts. | ✅ done | ✅ done | ✅ done |
 | **Arrange the dashboard**<br>Drag the dashboard's cards, or move them with arrows, into your own order; kept on the server. | ✅ done | ✅ done | ✅ done |
-| **Hide dashboard cards**<br>Switch off the dashboard cards you do not want, from the arrange sheet. Kept on the device for now, not on the server, so no API change. | ✅ done | ✅ done | ✅ done |
-| **Hide dashboard cards, kept on the server**<br>Keep which dashboard cards are off on the server, one list per platform (a key each for web, Android and iOS), so a platform keeps its own choice across devices and reinstalls without changing what another platform shows. Today it is only on the device. | ➖ n/a | ❌ missing | 🗓 planned |
+| **Hide dashboard cards**<br>Switch off the dashboard cards you do not want, from the arrange sheet. Kept on the device, not on the server. | ✅ done | ✅ done | ✅ done |
+| **Hide dashboard cards, kept on the server**<br>Keep which dashboard cards are off on the server, one list per platform (a key each for web, Android and iOS), so a platform keeps its own choice across devices and reinstalls without changing what another platform shows. Decided against: each app keeps its own on the device. | ➖ n/a | ➖ n/a | ➖ n/a |
 | **Budget and goals card**<br>Per-period limits and goals with a meter, and the running limits for set dates. | ✅ done | ✅ done | ✅ done |
 | **Needs and wants, and 50/30/20**<br>Spending split by kind, and the shares of income against the 50/30/20 rule. | ✅ done | ✅ done | ✅ done |
 | **Money flow**<br>A Sankey of income into one total and out to spending and what was saved. | ✅ done | ✅ done | ✅ done |
@@ -161,6 +158,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Search places**<br>Narrow the Places list and map by a place's name. | ❌ missing | ✅ done | ❌ missing |
 
 - **Hide dashboard cards, kept on the server** (Web): Decided: which cards are hidden stays on each device (localStorage), per app, and is not kept on the server. The hiding itself is done: see "Hide dashboard cards".
+- **Hide dashboard cards, kept on the server** (Android): Decided: hidden cards stay on the device; see the web note.
+- **Hide dashboard cards, kept on the server** (iOS): Decided: hidden cards stay on the device; see the web note.
 
 ## Notifications
 
