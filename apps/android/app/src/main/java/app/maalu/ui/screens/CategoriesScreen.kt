@@ -61,6 +61,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.maalu.data.AccentNames
+import androidx.compose.foundation.clickable
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.minimumInteractiveComponentSize
+import androidx.compose.ui.semantics.Role
+import app.maalu.data.TxFilters
+import app.maalu.data.categoryTransactions
 import app.maalu.data.Api
 import app.maalu.data.ApiResult
 import app.maalu.data.Category
@@ -129,7 +135,7 @@ private fun accent(name: String?) = Accents[name] ?: Accents.getValue("slate")
  * delete it (a category in use can only be merged).
  */
 @Composable
-fun CategoriesScreen(api: Api, month: String) {
+fun CategoriesScreen(api: Api, month: String, onOpenTransactions: (TxFilters) -> Unit) {
     var attempt by remember { mutableIntStateOf(0) }
     var refreshing by remember { mutableStateOf(false) }
     var query by remember { mutableStateOf("") }
@@ -166,6 +172,7 @@ fun CategoriesScreen(api: Api, month: String) {
     }
     // never another month's figures while the one picked is on its way
     val money = loadedMonth?.takeIf { it.month == month }
+    val openSpent = { c: Category -> onOpenTransactions(categoryTransactions(c.id, c.name, LocalDate.parse(month))) }
 
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
@@ -198,7 +205,7 @@ fun CategoriesScreen(api: Api, month: String) {
                         } else LazyColumn(Modifier.fillMaxSize().fadeInOnAppear().fadingEdges(listState), state = listState, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 96.dp)) {
                             items(shown.size, key = { shown[it].id }) { i -> Box(springItem()) {
                                 val c = shown[i]
-                                MorphTile({ selected = c }, first = i == 0, last = i == shown.lastIndex, modifier = Modifier.padding(bottom = 2.dp)) { CategoryRow(c, indented = c.parentId != null, money = money) }
+                                MorphTile({ selected = c }, first = i == 0, last = i == shown.lastIndex, modifier = Modifier.padding(bottom = 2.dp)) { CategoryRow(c, indented = c.parentId != null, money = money, onSpent = { openSpent(c) }) }
                              }}
                         }
                     }
@@ -213,7 +220,7 @@ fun CategoriesScreen(api: Api, month: String) {
     }
 
     selected?.let { c ->
-        CategorySheet(c, money, onEdit = { editing = c; selected = null }, onMerge = { merging = c; selected = null }, onDelete = { deleting = c; selected = null }, onClose = { selected = null })
+        CategorySheet(c, money, onSpent = { openSpent(c) }, onEdit = { editing = c; selected = null }, onMerge = { merging = c; selected = null }, onDelete = { deleting = c; selected = null }, onClose = { selected = null })
     }
     if (sorting) SortKindsDialog(api, all, onClose = { sorting = false }, onSaved = { msg -> sorting = false; attempt++; scope.launch { snackbar?.showSnackbar(msg) } })
     if (adding) CategoryFormScreen(api, all, null, { adding = false }) { adding = false; attempt++; scope.launch { snackbar?.showSnackbar("Category added") } }
@@ -259,7 +266,7 @@ fun CategoriesScreen(api: Api, month: String) {
 }
 
 @Composable
-private fun CategoryRow(c: Category, indented: Boolean = false, money: CategoryMonth? = null) {
+private fun CategoryRow(c: Category, indented: Boolean = false, money: CategoryMonth? = null, onSpent: () -> Unit) {
     val tint = accent(c.color)
     // a sub-category is the same width as the rest, with more room inside on the left
     Row(Modifier.fillMaxWidth().padding(start = if (indented) 34.dp else 14.dp, end = 14.dp, top = 12.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -283,7 +290,11 @@ private fun CategoryRow(c: Category, indented: Boolean = false, money: CategoryM
             Text(
                 spent?.let { formatMoney(it.toPlainString(), totals.currency) } ?: "–",
                 style = MaterialTheme.typography.bodyMedium.merge(MoneyStyle), maxLines = 1,
-                color = if (spent == null) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                color = if (spent == null) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
+                // a figure opens the transactions behind it; the rest of the row opens the category
+                modifier = if (spent == null) Modifier else Modifier.clip(CircleShape)
+                    .clickable(onClickLabel = "Show ${c.name} transactions", role = Role.Button, onClick = onSpent)
+                    .minimumInteractiveComponentSize().padding(horizontal = 8.dp),
             )
         }
         // room for the ring on every row once any limit runs, so the amounts line up
@@ -307,11 +318,11 @@ private fun MonthSpent(totals: CategoryTotals, month: String) {
 }
 
 @Composable
-private fun CategorySheet(c: Category, money: CategoryMonth?, onEdit: () -> Unit, onMerge: () -> Unit, onDelete: () -> Unit, onClose: () -> Unit) {
+private fun CategorySheet(c: Category, money: CategoryMonth?, onSpent: () -> Unit, onEdit: () -> Unit, onMerge: () -> Unit, onDelete: () -> Unit, onClose: () -> Unit) {
     ModalBottomSheet(onDismissRequest = onClose, containerColor = androidx.compose.ui.graphics.Color.Transparent, modifier = Modifier.glowSheet(MaterialTheme.colorScheme.surfaceContainerLow)) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(c.name, style = MaterialTheme.typography.titleMedium)
-            CategoryRow(c)
+            CategoryRow(c, onSpent = onSpent)
             Fact("Kind", kindLabel(c.kind)?.let { "$it (its own)" } ?: kindLabel(c.effectiveKind)?.let { "$it (from ${c.parent})" } ?: "Not sorted")
             Fact("Inside", c.parent)
             Fact("Sub-categories", c.childCount.takeIf { it > 0 }?.toString())
@@ -322,6 +333,7 @@ private fun CategorySheet(c: Category, money: CategoryMonth?, onEdit: () -> Unit
                     "Spent in ${monthLabel(LocalDate.parse(money.month))}",
                     spend?.let { formatMoney(it.total.toPlainString(), totals.currency) + if (it.fromChildren) ", with sub-categories" else "" } ?: "Nothing",
                 )
+                if (spend != null && spend.total.signum() != 0) TextButton(onClick = onSpent, shapes = ButtonDefaults.shapes()) { Text("Show these transactions") }
             }
             money?.budget?.let { budget ->
                 limitFor(budget, c.id, c.parentId)?.let { limit ->

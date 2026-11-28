@@ -125,10 +125,11 @@ private const val PAGE = 30
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun TransactionsScreen(api: Api) {
+fun TransactionsScreen(api: Api, initial: TxFilters? = null, onInitialUsed: () -> Unit = {}) {
     var query by rememberSaveable { mutableStateOf("") }
     var committed by rememberSaveable { mutableStateOf("") }
-    var filters by rememberSaveable(stateSaver = FiltersSaver) { mutableStateOf(TxFilters()) }
+    var filters by rememberSaveable(stateSaver = FiltersSaver) { mutableStateOf(initial ?: TxFilters()) }
+    LaunchedEffect(Unit) { onInitialUsed() }
     var showFilters by remember { mutableStateOf(false) }
     var adding by remember { mutableStateOf(false) }
     val snackbar = LocalSnackbar.current

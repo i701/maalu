@@ -23,6 +23,11 @@ class CategorySpendLogicTest {
         assertEquals(CategorySpend(BigDecimal("800"), true), spendByCategory(listOf(total("dining", "800", "food")))["food"])
     }
 
+    @Test fun aFigureFiltersTransactionsToItsCategoryAndMonth() {
+        val query = categoryTransactions("food", "Food", LocalDate.of(2026, 11, 1)).query()
+        assertEquals(mapOf("date_from" to "2026-11-01", "date_to" to "2026-11-30", "category_id" to "food"), query)
+    }
+
     private fun line(id: String, category: String) = BudgetLine(
         id = id, name = id, activity = "50", amount = "100", available = "50", percent = 50, status = "ok",
         carried = "20", movedIn = "5", movedOut = "10", categories = listOf(IdName(category, category)),

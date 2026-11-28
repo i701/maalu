@@ -1187,8 +1187,7 @@
         "evidence": [
           "apps/android/app/src/main/java/app/maalu/ui/screens/CategoryMoney.kt",
           "apps/android/app/src/main/java/app/maalu/data/CategorySpendLogic.kt"
-        ],
-        "note": "The spent figure does not open its transactions, as it does on the web."
+        ]
       },
       "ios": {
         "status": "missing"
@@ -2224,11 +2223,10 @@
         ]
       },
       "android": {
-        "status": "partial",
+        "status": "done",
         "evidence": [
           "apps/android/app/src/main/java/app/maalu/ui/screens/SettingsScreen.kt"
-        ],
-        "note": "The switch and the email status are in Settings; sending a test email is not."
+        ]
       },
       "ios": {
         "status": "missing"

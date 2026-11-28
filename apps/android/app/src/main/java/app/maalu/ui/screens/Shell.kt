@@ -61,6 +61,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import app.maalu.data.Api
 import app.maalu.data.ThemeMode
+import app.maalu.data.toJson
+import app.maalu.data.txFiltersFromJson
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -98,6 +100,8 @@ fun Shell(api: Api, themeMode: ThemeMode, onThemeMode: (ThemeMode) -> Unit, onSi
     val destination = destinationById(route)
     // the guide open in Docs (its slug), so the top bar can offer a way back to the list
     var docSlug by rememberSaveable { mutableStateOf<String?>(null) }
+    // filters the Transactions tab should open with (as JSON, to be saveable); used once
+    var txSeed by rememberSaveable { mutableStateOf<String?>(null) }
     // an account's own page (its id and name), opened from the Accounts tab
     var openAccountId by rememberSaveable { mutableStateOf<String?>(null) }
     var openAccountName by rememberSaveable { mutableStateOf("") }
@@ -212,7 +216,7 @@ fun Shell(api: Api, themeMode: ThemeMode, onThemeMode: (ThemeMode) -> Unit, onSi
                 ) { (r, tab, acct) ->
                 val dest = destinationById(r)
                     if (dest != null) when (dest.id) {
-                        "categories" -> CategoriesScreen(api, month)
+                        "categories" -> CategoriesScreen(api, month, onOpenTransactions = { txSeed = it.toJson(); selected = TRANSACTIONS; route = null })
                         "tags" -> TagsScreen(api)
                         "vendors" -> VendorsScreen(api)
                         "subscriptions" -> SubscriptionsScreen(api)
@@ -231,7 +235,7 @@ fun Shell(api: Api, themeMode: ThemeMode, onThemeMode: (ThemeMode) -> Unit, onSi
                     }
                     else when (tab) {
                         DASHBOARD -> DashboardScreen(api, month, onOpenPlan = { route = "plan" })
-                        TRANSACTIONS -> TransactionsScreen(api)
+                        TRANSACTIONS -> TransactionsScreen(api, initial = txSeed?.let(::txFiltersFromJson), onInitialUsed = { txSeed = null })
                         ACCOUNTS -> {
                             val id = acct
                             if (id == null) AccountsScreen(api, onOpen = { openAccountId = it.id; openAccountName = it.name })

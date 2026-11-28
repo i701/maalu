@@ -18,6 +18,12 @@ fun spendByCategory(totals: List<CategoryTotal>): Map<String, CategorySpend> {
     }
 }
 
+/** The Transactions filters behind a category's figure for a month; the API counts a parent's sub-categories in. */
+fun categoryTransactions(categoryId: String, name: String, month: LocalDate): TxFilters {
+    val (start, end) = monthBounds(month)
+    return TxFilters(category = Ref(categoryId, name), dateFrom = "$start", dateTo = "$end")
+}
+
 /** Everything spent in the month, each category counted once. */
 fun totalSpent(totals: List<CategoryTotal>): BigDecimal =
     totals.filter { it.type == "expense" }.fold(BigDecimal.ZERO) { sum, t -> sum + amountOf(t.total) }

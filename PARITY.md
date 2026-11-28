@@ -9,8 +9,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 | | Web | Android | iOS |
 |---|---:|---:|---:|
-| ✅ done | 78 | 72 | 66 |
-| 🟡 partial | 0 | 1 | 1 |
+| ✅ done | 78 | 73 | 66 |
+| 🟡 partial | 0 | 0 | 1 |
 | ❌ missing | 1 | 3 | 7 |
 | ➖ n/a | 3 | 6 | 8 |
 
@@ -18,9 +18,8 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 
 - ❌ **Search places** (Dashboard and reports).
 
-## Still to build on Android (4)
+## Still to build on Android (3)
 
-- 🟡 **Email digest** (Notifications). The switch and the email status are in Settings; sending a test email is not.
 - ❌ **Export to Excel** (Transactions).
 - ❌ **Push notifications** (Notifications). Needs a push channel in the API first.
 - ❌ **Backup and restore** (Settings and the rest).
@@ -113,8 +112,6 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | **Vendors**<br>Address, contact, local or foreign, currency, usual category and tags, merge. | ✅ done | ✅ done | ✅ done |
 | **A vendor's usual place**<br>A usual pin that a new transaction picks up. | ✅ done | ✅ done | ✅ done |
 
-- **Spent this month and limit per category** (Android): The spent figure does not open its transactions, as it does on the web.
-
 ## Bills and subscriptions
 
 | Feature | Web | Android | iOS |
@@ -166,10 +163,9 @@ Key: ✅ done · 🟡 partial · ❌ missing · ➖ n/a (deliberately not on thi
 | Feature | Web | Android | iOS |
 |---|:---:|:---:|:---:|
 | **Notifications**<br>The bell, the list, read and dismiss, and the switches for payments, budget and goals. | ✅ done | ✅ done | ❌ missing |
-| **Email digest**<br>The switch to be emailed a digest of notifications, and a test email. | ✅ done | 🟡 partial | ❌ missing |
+| **Email digest**<br>The switch to be emailed a digest of notifications, and a test email. | ✅ done | ✅ done | ❌ missing |
 | **Push notifications**<br>Notifications delivered to the phone when something needs a look. | ➖ n/a | ❌ missing | ❌ missing |
 
-- **Email digest** (Android): The switch and the email status are in Settings; sending a test email is not.
 - **Push notifications** (Web): Web has none; the API has no push channel yet.
 
 ## Settings and the rest

@@ -190,6 +190,21 @@ fun SettingsScreen(api: Api) {
                         if (mail != null && mail.configured) {
                             SettingSwitch("Email me", "A digest to ${user.email} when there is something new.", user.notifyEmail) { on -> save({ it.copy(notifyEmail = on) }, switchJson("notify_email", on)) }
                             SettingSwitch("Sign-in alerts", "An email with the device, address and time whenever someone signs in.", user.notifyLogin) { on -> save({ it.copy(notifyLogin = on) }, switchJson("notify_login", on)) }
+                            var sending by remember { mutableStateOf(false) }
+                            Button(
+                                onClick = {
+                                    sending = true
+                                    scope.launch {
+                                        // a failure carries the mail provider's own reason
+                                        when (val r = api.post("email/test")) {
+                                            is ApiResult.Ok -> say("A test email is on its way to ${user.email}.")
+                                            is ApiResult.Failed -> say(r.message.lines().first())
+                                        }
+                                        sending = false
+                                    }
+                                },
+                                enabled = !sending, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.filledTonalButtonColors(),
+                            ) { Text(if (sending) "Sending…" else "Send a test email") }
                         }
                         else if (mail != null) Text("Email is not set up on this server.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
