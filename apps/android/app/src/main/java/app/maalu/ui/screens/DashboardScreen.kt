@@ -2,6 +2,9 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import app.maalu.ui.components.elevation
 import app.maalu.data.isSummary
 import androidx.compose.foundation.lazy.items
@@ -115,10 +118,13 @@ private data class DashboardData(
     val monthly: List<MonthlyPoint> = emptyList(),
     val budget: Budget? = null,
     val goals: List<Goal> = emptyList(),
-    val latest: List<Transaction> = emptyList(),
-    val upcoming: List<Transaction> = emptyList(),
+    // null when the load failed, so the card does not claim there are none
+    val latest: List<Transaction>? = null,
+    val upcoming: List<Transaction>? = null,
     val accounts: List<Account> = emptyList(),
     val categoryMonths: CategoryMonths? = null,
+    /** Something above failed to load, so a card may be missing. */
+    val partial: Boolean = false,
 )
 
 private sealed interface State {
@@ -161,6 +167,7 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
             val accountsCall = async { api.get<List<Account>>("accounts") }
             val upcomingCall = async { api.get<List<Transaction>>("transactions", mapOf("planned" to "true", "limit" to "5")) }
             val t = totals.await(); val b = before.await(); val c = cats.await(); val a = avail.await()
+            val extras = listOf(a, monthlyCall.await(), budgetCall.await(), categoryMonthsCall.await(), goalsCall.await(), latestCall.await(), upcomingCall.await(), accountsCall.await())
             when {
                 t is ApiResult.Failed -> State.Failed(t.message)
                 b is ApiResult.Failed -> State.Failed(b.message)
@@ -172,10 +179,11 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
                         (monthlyCall.await() as? ApiResult.Ok)?.data?.months.orEmpty(),
                         (budgetCall.await() as? ApiResult.Ok)?.data,
                         (goalsCall.await() as? ApiResult.Ok)?.data.orEmpty(),
-                        (latestCall.await() as? ApiResult.Ok)?.data.orEmpty(),
-                        (upcomingCall.await() as? ApiResult.Ok)?.data.orEmpty(),
+                        (latestCall.await() as? ApiResult.Ok)?.data,
+                        (upcomingCall.await() as? ApiResult.Ok)?.data,
                         (accountsCall.await() as? ApiResult.Ok)?.data.orEmpty(),
                         categoryMonths = (categoryMonthsCall.await() as? ApiResult.Ok)?.data,
+                        partial = extras.any { it is ApiResult.Failed },
                     ),
                 )
             }
@@ -212,6 +220,12 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
                 val (order, off) = layout ?: return@LazyColumn
                 val defaults = dashboardSections(hasAvailable = available != null)
                 val onShow = orderSections(order, defaults).filter { it.id !in off }
+                if (s.data.partial) item(key = "partial") {
+                    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Part of the dashboard couldn't load.", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
+                        TextButton(onClick = { refreshing = true; attempt++ }, shapes = ButtonDefaults.shapes()) { Text("Try again") }
+                    }
+                }
                 itemsIndexed(onShow, key = { _, it -> it.id }) { i, section ->
                     // neighbouring summaries share the page, parted by a hairline
                     if (section.isSummary && onShow.getOrNull(i - 1)?.isSummary == true) HorizontalDivider(Modifier.padding(bottom = 12.dp))
@@ -267,13 +281,13 @@ private fun AvailableSummary(a: AvailableToSpend, onOpenPlan: () -> Unit) {
     var open by rememberSaveable { mutableStateOf(false) }
     FlatSummary(if (short) MaterialTheme.colorScheme.error else SummaryBlue) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(if (short) "Short by" else "Available to spend", Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
+            Text(if (short) "Short by" else "Available to spend", Modifier.weight(1f).semantics { heading() }, style = MaterialTheme.typography.titleSmall)
             SummaryPill("until ${shortDate(a.periodEnd)}")
         }
         MoneyText(a.available.removePrefix("-"), a.currency, style = MaterialTheme.typography.displaySmall)
         Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            SummaryPill(if (open) "Hide the working" else "Show the working") { open = !open }
-            SummaryPill("Month plan", onOpenPlan)
+            SummaryPill(if (open) "Hide the working" else "Show the working", Modifier.semantics { stateDescription = if (open) "Expanded" else "Collapsed" }) { open = !open }
+            SummaryPill("Month plan", onClick = onOpenPlan)
         }
         Disclosure(open) { Working(a) }
     }
@@ -328,7 +342,7 @@ private fun KeptSummary(now: Totals, before: Totals, months: List<MonthlyPoint>)
     val spent = now.expense.toBigDecimalOrNull() ?: BigDecimal.ZERO
     FlatSummary(SummaryBlue) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Kept this month", Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
+            Text("Kept this month", Modifier.weight(1f).semantics { heading() }, style = MaterialTheme.typography.titleSmall)
             spendingChangeText(now.expense, before.expense)?.let { SummaryPill(it) }
         }
         MoneyText(saved, now.currency, style = MaterialTheme.typography.displaySmall)
@@ -350,7 +364,7 @@ private fun SpendingCard(categories: List<CategoryTotal>, currency: String) {
     val rows = spendingRows(categories)
     Surface(modifier = Modifier.elevation(2, MaterialTheme.shapes.extraLarge), shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerLow) {
         Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Spending by category", style = MaterialTheme.typography.titleMedium)
+            Text("Spending by category", Modifier.semantics { heading() }, style = MaterialTheme.typography.titleMedium)
             if (rows.isEmpty()) {
                 Text("No spending this month.", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }

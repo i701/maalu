@@ -2,6 +2,11 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import app.maalu.ui.theme.warningInk
+import app.maalu.ui.theme.incomeInk
 import app.maalu.ui.components.elevation
 import java.math.BigDecimal
 import app.maalu.ui.components.SummaryDonut
@@ -239,7 +244,7 @@ private fun NetWorthSummary(s: AccountSummary, accounts: List<Account>) {
     val assets = (s.assets.toBigDecimalOrNull() ?: BigDecimal.ZERO).abs()
     val liabilities = (s.liabilities.toBigDecimalOrNull() ?: BigDecimal.ZERO).abs()
     FlatSummary(SummaryBlue) {
-        Text("Net worth", style = MaterialTheme.typography.titleSmall)
+        Text("Net worth", Modifier.semantics { heading() }, style = MaterialTheme.typography.titleSmall)
         MoneyText(s.total, s.currency, style = MaterialTheme.typography.displaySmall)
         shareOf(liabilities, assets + liabilities)?.let { owed ->
             val held = heldByGroup(accounts)
@@ -269,7 +274,7 @@ private fun AccountRow(a: Account, trend: List<Double>?, baseCurrency: String) {
             }
             a.accountNumber?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis) }
             creditUsage(a.balance, a.creditLimit)?.let { u ->
-                val color = when { u.percent >= 90 -> MaterialTheme.colorScheme.error; u.percent >= 60 -> ChartColors.Warning; else -> ChartColors.IncomeLight }
+                val color = when { u.percent >= 90 -> MaterialTheme.colorScheme.error; u.percent >= 60 -> warningInk(); else -> incomeInk() }
                 SpringBar(u.percent / 100f, color, 5.dp, Modifier.padding(top = 4.dp), minVisible = 0.03f)
                 Text("${u.percent}% of ${formatMoney(u.limit.toPlainString(), a.currency)} used", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
@@ -283,7 +288,10 @@ private fun AccountRow(a: Account, trend: List<Double>?, baseCurrency: String) {
             if (a.exchangeRate.toBigDecimalOrNull()?.compareTo(java.math.BigDecimal.ONE) != 0) {
                 Text("≈ ${formatMoney(a.baseBalance, baseCurrency)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            trend?.let { Sparkline(it, ChartColors.IncomeLight, ChartColors.ExpenseLight, MaterialTheme.colorScheme.outline) }
+            trend?.let {
+                val way = if (it.size < 2 || it.last() == it.first()) "unchanged" else if (it.last() > it.first()) "up" else "down"
+                Sparkline(it, ChartColors.IncomeLight, ChartColors.ExpenseLight, MaterialTheme.colorScheme.outline, Modifier.semantics { contentDescription = "Balance trend: $way" })
+            }
         }
     }
 }

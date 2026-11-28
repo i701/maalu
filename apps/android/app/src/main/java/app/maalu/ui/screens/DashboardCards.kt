@@ -1,5 +1,11 @@
 package app.maalu.ui.screens
 
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import app.maalu.ui.theme.expenseInk
+import app.maalu.ui.theme.warningInk
+import app.maalu.ui.theme.incomeInk
 import app.maalu.ui.components.elevation
 import app.maalu.ui.components.SpringBar
 import androidx.compose.material3.ButtonDefaults
@@ -67,7 +73,7 @@ fun SectionCard(title: String, trailing: String? = null, content: @Composable ()
     Surface(modifier = Modifier.elevation(2, MaterialTheme.shapes.extraLarge), shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerLow) {
         Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f).semantics { heading() })
                 if (trailing != null) Text(trailing, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             content()
@@ -83,8 +89,8 @@ private fun Bar(fraction: Float, color: Color, height: Int = 8) {
 @Composable
 private fun statusColor(status: String): Color = when (status) {
     "over" -> MaterialTheme.colorScheme.error
-    "warning" -> ChartColors.Warning
-    else -> ChartColors.IncomeLight
+    "warning" -> warningInk()
+    else -> incomeInk()
 }
 
 @Composable
@@ -103,6 +109,7 @@ fun CashFlowCard(allMonths: List<MonthlyPoint>, currency: String) {
         PairedColumns(
             months.map { Pair2(it.income.toDoubleOrNull() ?: 0.0, (it.expense.toDoubleOrNull() ?: 0.0).coerceAtLeast(0.0)) },
             ChartColors.IncomeLight, ChartColors.ExpenseLight,
+            Modifier.semantics { contentDescription = chartText("Income and expenses", months.map { "${monthShort(it.month)} in ${formatMoney(it.income, currency)}, out ${formatMoney(it.expense, currency)}" }) },
         )
         MonthEnds(months)
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -122,7 +129,10 @@ fun CashFlowCard(allMonths: List<MonthlyPoint>, currency: String) {
 
         // what was kept each month: up from a zero line when income beat spending, down when it did not
         Text("Kept each month", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))
-        NetColumns(rows.map { it.kept.toDouble() }, ChartColors.Line, ChartColors.ExpenseLight, MaterialTheme.colorScheme.outlineVariant)
+        NetColumns(
+            rows.map { it.kept.toDouble() }, ChartColors.Line, ChartColors.ExpenseLight, MaterialTheme.colorScheme.outlineVariant,
+            Modifier.semantics { contentDescription = chartText("Kept each month", rows.map { "${monthShort(it.month)} ${formatMoney(it.kept.toPlainString(), currency)}" }) },
+        )
         MonthEnds(months)
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             Legend("Kept", ChartColors.Line)
@@ -138,7 +148,10 @@ fun CashFlowCard(allMonths: List<MonthlyPoint>, currency: String) {
         // the running total of what was kept, from the first month shown
         if (rows.size > 1) {
             Text("Kept in total", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))
-            LineChart(rows.map { it.running.toDouble() }, ChartColors.Line)
+            LineChart(
+                rows.map { it.running.toDouble() }, ChartColors.Line,
+                Modifier.semantics { contentDescription = chartText("Kept in total", rows.map { "${monthShort(it.month)} ${formatMoney(it.running.toPlainString(), currency)}" }) },
+            )
             MonthEnds(months)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Since ${monthShort(rows.first().month)}: ", style = small, color = dim)
@@ -146,6 +159,16 @@ fun CashFlowCard(allMonths: List<MonthlyPoint>, currency: String) {
             }
         }
     }
+}
+
+/** What a screen reader says in place of a drawn chart. */
+private fun chartText(title: String, points: List<String>) = "$title chart: ${points.joinToString("; ")}"
+
+/** A bar's colour said in words; nothing while the limit is fine. */
+@Composable
+private fun StatusWord(status: String) {
+    val word = when (status) { "over" -> "Over the limit"; "warning" -> "Close to the limit"; else -> return }
+    Text(word, style = MaterialTheme.typography.labelSmall, color = statusColor(status))
 }
 
 /** The first and last month under a chart, so the axis is named without a label on every column. */
@@ -197,6 +220,7 @@ fun BudgetGoalsCard(budget: Budget?, goals: List<Goal>) {
                         }
                     }
                     Bar(line.percent / 100f, statusColor(line.status), 6)
+                    StatusWord(line.status)
                 }
             }
         }
@@ -215,12 +239,13 @@ fun BudgetGoalsCard(budget: Budget?, goals: List<Goal>) {
                     }
                 }
                 Bar(f.percent / 100f, statusColor(f.status), 6)
+                StatusWord(f.status)
             }
         }
         goals.take(3).forEach { goal ->
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Row {
-                    Text(goal.name + if (goal.reached) " ✓" else "", Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(goal.name + if (goal.reached) " · Reached" else "", Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         MoneyText(goal.saved, goal.currency, style = MaterialTheme.typography.bodySmall)
                         Text(" of ", style = MaterialTheme.typography.bodySmall)
@@ -265,10 +290,11 @@ private fun kindColor(s: KindShare): Color = when (s.kind) {
 }
 
 @Composable
-fun TransactionsCard(title: String, trailing: String?, items: List<Transaction>, empty: String) {
+fun TransactionsCard(title: String, trailing: String?, items: List<Transaction>?, empty: String) {
     SectionCard(title, trailing) {
-        if (items.isEmpty()) Text(empty, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        items.forEach { t -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) { QuietRow(t) } }
+        // null is a failed load, which must not read as having none
+        if (items.isNullOrEmpty()) Text(if (items == null) "Couldn't load these." else empty, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        items?.forEach { t -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) { QuietRow(t) } }
     }
 }
 
@@ -278,7 +304,7 @@ private fun IncomeRuleSection(rule: IncomeRule, currency: String) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 8.dp)) {
         Text("Against 50/30/20 of your income", style = MaterialTheme.typography.titleSmall)
         rule.rows.forEach { r ->
-            val color = if (r.status == RuleStatus.On) ChartColors.IncomeLight else ChartColors.ExpenseLight
+            val color = if (r.status == RuleStatus.On) incomeInk() else expenseInk()
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(r.label, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)

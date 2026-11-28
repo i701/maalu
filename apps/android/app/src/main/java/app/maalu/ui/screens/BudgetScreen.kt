@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.theme.warningInk
+import app.maalu.ui.theme.incomeInk
 import app.maalu.ui.components.elevation
 import androidx.compose.foundation.lazy.rememberLazyListState
 import app.maalu.ui.components.fadingEdges
@@ -104,8 +106,8 @@ private sealed interface BudgetLoad {
 @Composable
 private fun statusColor(status: String): Color = when (status) {
     "over" -> MaterialTheme.colorScheme.error
-    "warning" -> ChartColors.Warning
-    else -> ChartColors.IncomeLight
+    "warning" -> warningInk()
+    else -> incomeInk()
 }
 
 /**
@@ -373,10 +375,10 @@ private fun fixedWindow(f: FixedLine): String {
 
 @Composable
 private fun GoalRow(g: Goal) {
-    val tint = if (g.reached) ChartColors.IncomeLight else MaterialTheme.colorScheme.primary
+    val tint = if (g.reached) incomeInk() else MaterialTheme.colorScheme.primary
     Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(g.name + if (g.reached) "  ✓" else "", Modifier.weight(1f), style = MaterialTheme.typography.bodyMediumEmphasized, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(g.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyMediumEmphasized, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text("${g.percent}%", style = MaterialTheme.typography.labelMediumEmphasized, color = tint)
         }
         Bar(g.percent, tint)

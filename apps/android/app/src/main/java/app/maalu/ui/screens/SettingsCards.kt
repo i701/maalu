@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import app.maalu.ui.components.elevation
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.foundation.background
@@ -56,7 +58,7 @@ fun SettingsGroup(title: String, icon: ImageVector, content: @Composable () -> U
         Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Box(Modifier.size(40.dp).clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surfaceContainerHighest), contentAlignment = Alignment.Center) { Icon(icon, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) }
-                Text(title, style = MaterialTheme.typography.titleMedium)
+                Text(title, Modifier.semantics { heading() }, style = MaterialTheme.typography.titleMedium)
             }
             content()
         }

@@ -1,5 +1,7 @@
 package app.maalu.ui.screens
 
+import app.maalu.ui.theme.expenseInk
+import app.maalu.ui.theme.incomeInk
 import app.maalu.ui.components.elevation
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -82,5 +84,5 @@ fun Swatch(color: Color) {
 fun moneyIn(currency: String): (String) -> String = { a -> formatMoney(a, currency) }
 
 /** Colours for good and bad: money coming in or less spending is good. */
-val GoodColor get() = ChartColors.IncomeLight
-val BadColor get() = ChartColors.ExpenseLight
+val GoodColor: Color @Composable get() = incomeInk()
+val BadColor: Color @Composable get() = expenseInk()

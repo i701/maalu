@@ -1,5 +1,7 @@
 package app.maalu.ui.screens
 
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.material3.BottomSheetDefaults
 import app.maalu.ui.components.glowSheet
 import androidx.compose.foundation.layout.Arrangement
@@ -77,7 +79,7 @@ fun RateHistorySheet(api: Api, account: Account, onClose: () -> Unit) {
                     error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
                     // the chart stays (dimmed) while another range loads, with the loading indicator over it, so the sheet never changes size
                     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        LineChart(h.points.mapNotNull { it.rate.toDoubleOrNull() }, ChartColors.Line, Modifier.alpha(if (loading) 0.35f else 1f))
+                        LineChart(h.points.mapNotNull { it.rate.toDoubleOrNull() }, ChartColors.Line, Modifier.alpha(if (loading) 0.35f else 1f).semantics { contentDescription = "Exchange rate history chart" })
                         if (loading) LoadingIndicator()
                     }
                     Row(Modifier.fillMaxWidth()) {

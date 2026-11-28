@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.theme.incomeInk
 import app.maalu.ui.components.elevation
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.horizontalScroll
@@ -110,7 +111,7 @@ fun TransactionSearchCard(
                 HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                 Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(horizontal = 16.dp, vertical = 14.dp)) {
                     val net = kept(totals.income, totals.expense)
-                    val good = ChartColors.IncomeDark
+                    val good = incomeInk()
                     TotalColumn("TOTAL SPENT", totals.expense, totals.currency, MaterialTheme.colorScheme.onSurface, Modifier.weight(1f))
                     VerticalDivider()
                     TotalColumn("TOTAL INCOME", totals.income, totals.currency, good, Modifier.weight(1f))

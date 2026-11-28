@@ -2,6 +2,9 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -76,7 +79,17 @@ fun SpendingTrendCard(data: CategoryMonths) {
         val spoken = stack.months.joinToString(", ") { "${monthShort(it.month)} ${formatMoney(it.total.toPlainString(), data.currency)}" }
         Canvas(
             Modifier.fillMaxWidth().height(140.dp)
-                .semantics { contentDescription = "Spending by month: $spoken" }
+                .semantics {
+                    contentDescription = "Spending by month: $spoken"
+                    stateDescription = month?.let { "${monthName} picked" } ?: "All months"
+                    // the screen reader's way to do what a tap or drag does
+                    val last = stack.months.lastIndex
+                    customActions = listOf(
+                        CustomAccessibilityAction("Previous month") { picked = ((picked ?: stack.months.size) - 1).coerceAtLeast(0); true },
+                        CustomAccessibilityAction("Next month") { picked = ((picked ?: -1) + 1).coerceAtMost(last); true },
+                        CustomAccessibilityAction("All months") { picked = null; true },
+                    )
+                }
                 // a tap picks a month, or lets go of the one picked; a sideways drag moves along them
                 .pointerInput(stack) {
                     detectTapGestures { at -> val i = monthAt(at.x, size.width, stack.months.size); picked = if (picked == i) null else i }

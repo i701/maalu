@@ -2,6 +2,9 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import app.maalu.ui.theme.incomeInk
 import app.maalu.ui.components.SummaryBlue
 import app.maalu.ui.components.summaryInk
 import app.maalu.ui.components.elevation
@@ -387,7 +390,7 @@ private fun BalanceChart(a: Account, history: BalanceHistory?, range: HistoryRan
             val points: List<AccountBalancePoint> = history?.points.orEmpty()
             if (points.size < 2) Text(if (history == null) "Loading…" else "Not enough history yet.", color = MaterialTheme.colorScheme.onSurfaceVariant)
             else {
-                LineChart(points.map { it.balance.toDoubleOrNull() ?: 0.0 }, ChartColors.Line)
+                LineChart(points.map { it.balance.toDoubleOrNull() ?: 0.0 }, ChartColors.Line, Modifier.semantics { contentDescription = "Balance history chart" })
                 historySummary(points)?.let { s ->
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Summary("Start", s.start.toPlainString(), a.currency); Summary("End", s.end.toPlainString(), a.currency)
@@ -418,7 +421,7 @@ private fun AccountTransactionRow(t: Transaction, account: Account, balanceAfter
                 MoneyText(
                     effect.amount, effect.currency, prefix = if (effect.positive) "+" else "−",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = if (effect.positive) ChartColors.IncomeLight else MaterialTheme.colorScheme.error,
+                    color = if (effect.positive) incomeInk() else MaterialTheme.colorScheme.onSurface,
                 )
             },
             // planned transactions are not in the balance yet, so they have none after them

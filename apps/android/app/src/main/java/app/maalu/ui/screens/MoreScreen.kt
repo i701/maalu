@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -96,7 +98,7 @@ fun MoreScreen(themeMode: ThemeMode, onThemeMode: (ThemeMode) -> Unit, onOpen: (
         SegmentedPills(ThemeMode.entries.map { it to "${it.label} theme" }, themeMode, onThemeMode, icon = { it.icon })
         NavGroup.entries.filter { it != NavGroup.App }.forEach { group ->
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(group.label, Modifier.padding(start = 4.dp), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(group.label, Modifier.padding(start = 4.dp).semantics { heading() }, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 MoreDestinations.filter { it.group == group }.chunked(2).forEach { pair ->
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         pair.forEach { d -> MoreTile(d, badges[d.id] ?: 0, Modifier.weight(1f)) { onOpen(d) } }

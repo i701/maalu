@@ -1,5 +1,6 @@
 package app.maalu.ui.components
 
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -65,11 +66,11 @@ fun FlatSummary(hue: Color, content: @Composable ColumnScope.() -> Unit) {
 
 /** A small tinted pill in the summary's ink: a link, or a fact like "until 4 Dec". */
 @Composable
-fun SummaryPill(text: String, onClick: (() -> Unit)? = null) {
+fun SummaryPill(text: String, modifier: Modifier = Modifier, onClick: (() -> Unit)? = null) {
     val ink = LocalContentColor.current
     val label: @Composable () -> Unit = { Text(text, Modifier.padding(horizontal = 12.dp, vertical = 6.dp), style = MaterialTheme.typography.labelLarge) }
-    if (onClick == null) Surface(shape = CircleShape, color = ink.copy(alpha = 0.1f), contentColor = ink, content = label)
-    else Surface(onClick = onClick, shape = CircleShape, color = ink.copy(alpha = 0.1f), contentColor = ink, content = label)
+    if (onClick == null) Surface(modifier, shape = CircleShape, color = ink.copy(alpha = 0.1f), contentColor = ink, content = label)
+    else Surface(onClick = onClick, modifier = modifier, shape = CircleShape, color = ink.copy(alpha = 0.1f), contentColor = ink, content = label)
 }
 
 /** One part of a donut: its name, its share of the whole (0 to 1) and the amount, already formatted. */
@@ -106,7 +107,7 @@ fun SummaryDonut(first: DonutPart, second: DonutPart, bars: List<MiniBar>) {
         }
         val tallest = bars.maxOfOrNull { it.value } ?: 0f
         // decoration beside figures that are already said; it takes what room is left
-        Row(Modifier.weight(1f).height(92.dp), horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End), verticalAlignment = Alignment.Bottom) {
+        Row(Modifier.weight(1f).height(92.dp).clearAndSetSemantics {}, horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End), verticalAlignment = Alignment.Bottom) {
             bars.forEach { bar ->
                 Column(Modifier.weight(1f, fill = false).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom) {
                     val share = if (tallest > 0f) (bar.value / tallest).coerceIn(0f, 1f) else 0f

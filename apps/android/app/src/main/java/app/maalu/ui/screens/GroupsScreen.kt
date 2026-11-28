@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.theme.incomeInk
 import app.maalu.ui.components.elevation
 import app.maalu.ui.components.fadingEdges
 import androidx.compose.material3.BottomSheetDefaults
@@ -143,7 +144,7 @@ fun GroupsScreen(api: Api) {
                                     Text(groupLine(g.transactionCount, g.dateFrom, g.dateTo), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                                 Column(horizontalAlignment = Alignment.End) {
-                                    MoneyText(g.net, g.currency, style = MaterialTheme.typography.bodyMedium, color = if (isNegative(g.net)) MaterialTheme.colorScheme.error else ChartColors.IncomeLight)
+                                    MoneyText(g.net, g.currency, style = MaterialTheme.typography.bodyMedium, color = if (isNegative(g.net)) MaterialTheme.colorScheme.error else incomeInk())
                                     Text("net", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }

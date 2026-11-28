@@ -12,10 +12,11 @@ import androidx.compose.ui.graphics.Color
 // grey and cards (surfaceContainerLow and surfaceContainer) are white.
 // Keep the two in step; the web file is the source of truth. One difference, on purpose: in light mode the app's raised fills
 // (surfaceContainerHigh, Highest and secondaryContainer) are pale blue, not grey, which looked muddy on the sky backdrop. Another: the
-// light primary is the deeper blue of the iOS app's Save button, not the web's.
+// light primary is a deeper blue than the web's: the iOS Save button's, darkened until
+// white text on it passes 4.5:1.
 
-/** The deep blue of the iOS app's Save button: the light primary, and every filled button's fill in both themes (RaisedButton). */
-val DeepBlue = Color(0xFF4179ED)
+/** The iOS app's Save blue, darkened for contrast: the light primary, and every filled button's fill in both themes (RaisedButton). */
+val DeepBlue = Color(0xFF2F66D9)
 
 val LightColors: ColorScheme = lightColorScheme(
     primary = DeepBlue,
@@ -100,6 +101,16 @@ object ChartColors {
     val Line = Color(0xFF3B82F6)
     val Warning = Color(0xFFEAB308)
 }
+
+/** Green and amber money text: the bright [ChartColors] are too faint to read on a light surface, so light mode deepens them. */
+@Composable
+fun incomeInk(): Color = if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) ChartColors.IncomeLight else Color(0xFF047857)
+
+@Composable
+fun expenseInk(): Color = if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) ChartColors.ExpenseLight else Color(0xFFC2410C)
+
+@Composable
+fun warningInk(): Color = if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) ChartColors.Warning else Color(0xFF854D0E)
 
 /** Category and tag accents by name (apps/web/src/lib/m3.ts ACCENT). */
 val Accents: Map<String, Color> = mapOf(

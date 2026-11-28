@@ -117,6 +117,7 @@ fun CompareScreen(api: Api) {
 }
 
 /** Colour says good or bad (spending down is good, income up is good) and an arrow says which way, so colour is never alone. */
+@Composable
 private fun tone(change: Change, upIsGood: Boolean): Color? {
     val v = change.change.toBigDecimalOrNull()?.signum() ?: 0
     return when { v == 0 -> null; (v > 0) == upIsGood -> GoodColor; else -> BadColor }

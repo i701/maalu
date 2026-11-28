@@ -1,5 +1,12 @@
 package app.maalu.ui.components
 
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.material3.minimumInteractiveComponentSize
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -9,7 +16,6 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
 import app.maalu.ui.components.AlertDialog
@@ -39,13 +45,18 @@ fun ConfirmDialog(title: String, text: String, confirmLabel: String, onConfirm: 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ColorSwatches(names: List<String>, selected: String?, onSelect: (String) -> Unit, enabled: Boolean = true) {
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    FlowRow(Modifier.selectableGroup(), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         names.forEach { name ->
             val tint = Accents.getValue(name)
             Box(
-                Modifier.size(40.dp).clip(CircleShape).background(tint.copy(alpha = if (name == selected) 1f else 0.35f)).clickable(enabled = enabled) { onSelect(name) },
+                Modifier.minimumInteractiveComponentSize().size(40.dp).clip(CircleShape).background(tint.copy(alpha = if (name == selected) 1f else 0.35f))
+                    .selectable(selected = name == selected, enabled = enabled, role = Role.RadioButton) { onSelect(name) }
+                    .semantics { contentDescription = name },
                 contentAlignment = Alignment.Center,
-            ) { if (name == selected) Icon(Icons.Outlined.Check, "$name, chosen", tint = Color.White, modifier = Modifier.size(22.dp)) }
+            ) {
+                // white vanishes on the pale accents
+                if (name == selected) Icon(Icons.Outlined.Check, null, tint = if (tint.luminance() > 0.3f) Color.Black else Color.White, modifier = Modifier.size(22.dp))
+            }
         }
     }
 }

@@ -2,6 +2,9 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import app.maalu.ui.theme.incomeInk
 import androidx.compose.material3.BottomSheetDefaults
 import app.maalu.ui.components.glowSheet
 import app.maalu.ui.theme.tintIcon
@@ -216,8 +219,8 @@ fun signed(t: Transaction) = when (t.type) {
 
 @Composable
 fun amountColor(t: Transaction) = when (t.type) {
-    "income" -> ChartColors.IncomeLight
-    "expense" -> MaterialTheme.colorScheme.error
+    // spending is the ordinary case, marked by its sign: red is kept for things that are wrong
+    "income" -> incomeInk()
     else -> MaterialTheme.colorScheme.onSurface
 }
 
@@ -297,7 +300,7 @@ private fun ActionPill(label: String, danger: Boolean = false, onClick: () -> Un
 @Composable
 private fun SheetSection(title: String?, content: @Composable ColumnScope.() -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        if (title != null) Text(title, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp))
+        if (title != null) Text(title, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp).semantics { heading() })
         Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh, modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(10.dp), content = content)
         }

@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.theme.incomeInk
 import app.maalu.ui.components.elevation
 import app.maalu.ui.components.fadingEdges
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -221,7 +222,7 @@ private fun PlanRowContent(row: PlanRow, currency: String, canPay: Boolean, onPa
                 MoneyText(
                     row.amount, currency, prefix = if (row.estimate) "≈ " else if (row.kind == PlanKind.Income) "+" else "",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = if (row.kind == PlanKind.Income) ChartColors.IncomeLight else MaterialTheme.colorScheme.onSurface,
+                    color = if (row.kind == PlanKind.Income) incomeInk() else MaterialTheme.colorScheme.onSurface,
                 )
                 row.left?.let { left ->
                     Text(

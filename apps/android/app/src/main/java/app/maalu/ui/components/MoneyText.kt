@@ -1,5 +1,7 @@
 package app.maalu.ui.components
 
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.clickable
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.PlainTooltip
@@ -54,6 +56,6 @@ fun MoneyText(
         tooltip = { PlainTooltip { Text(full) } },
         state = tooltip,
     ) {
-        Text(short, modifier.clickable { scope.launch { tooltip.show() } }, color = color, style = look, textAlign = textAlign)
+        Text(short, modifier.clickable(onClickLabel = "Show the exact amount") { scope.launch { tooltip.show() } }.semantics { contentDescription = full }, color = color, style = look, textAlign = textAlign)
     }
 }
