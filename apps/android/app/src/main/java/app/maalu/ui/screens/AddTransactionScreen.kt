@@ -63,7 +63,7 @@ import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material.icons.outlined.Sell
 import androidx.compose.material.icons.outlined.Storefront
 import app.maalu.ui.components.AlertDialog
-import androidx.compose.material3.Button
+import app.maalu.ui.components.RaisedButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
@@ -281,7 +281,7 @@ fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit, edi
                 when {
                     loadError != null -> Column(Modifier.fillMaxSize().padding(padding).padding(24.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(loadError ?: "", color = MaterialTheme.colorScheme.error)
-                        Button(onClick = onClose, shapes = ButtonDefaults.shapes(), modifier = Modifier.padding(top = 12.dp)) { Text("Close") }
+                        RaisedButton(onClick = onClose, modifier = Modifier.padding(top = 12.dp)) { Text("Close") }
                     }
                     o == null -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
                     else -> Form(
@@ -493,8 +493,8 @@ private fun Form(o: FormOptions, saveLabel: String, form: AddForm, onForm: (AddF
                 }
             }
             // the second way to save is the last thing in the form; only Save floats
-            if (onSaveAnother != null) Button(
-                onClick = onSaveAnother, enabled = !busy, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth().height(48.dp).elevation(1, CircleShape),
+            if (onSaveAnother != null) RaisedButton(
+                onClick = onSaveAnother, enabled = !busy, modifier = Modifier.fillMaxWidth().height(48.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow, contentColor = MaterialTheme.colorScheme.primary),
             ) { Text("Save and add another") }
             // room to scroll the last row clear of the floating button

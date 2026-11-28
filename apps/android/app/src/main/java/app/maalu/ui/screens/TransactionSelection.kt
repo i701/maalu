@@ -20,7 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material3.Button
+import app.maalu.ui.components.RaisedButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -86,8 +86,7 @@ fun TransactionSelectionBar(
             }
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 OutlinedButton(onClick = onEdit, enabled = !busy, shapes = ButtonDefaults.shapes()) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Edit") }
-                Button(shapes = ButtonDefaults.shapes(),
-                    onClick = onDelete, enabled = !busy,
+                RaisedButton(onClick = onDelete, enabled = !busy,
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer),
                 ) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Delete") }
                 when (selectAll) {
@@ -147,8 +146,7 @@ fun BulkEditSheet(api: Api, count: Int, onClose: () -> Unit, onApply: (BulkEdit)
                 }
             }
             problem?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
-            Button(shapes = ButtonDefaults.shapes(),
-                onClick = { if (edit.isEmpty) problem = "Choose something to change." else onApply(edit) },
+            RaisedButton(onClick = { if (edit.isEmpty) problem = "Choose something to change." else onApply(edit) },
                 modifier = Modifier.fillMaxWidth(),
             ) { Text("Apply to ${transactionCount(count)}") }
         }

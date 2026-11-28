@@ -32,7 +32,7 @@ import app.maalu.data.settingsText
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import app.maalu.ui.components.AlertDialog
-import androidx.compose.material3.Button
+import app.maalu.ui.components.RaisedButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -150,7 +150,7 @@ fun BudgetScreen(api: Api, on: String) {
         BudgetLoad.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         is BudgetLoad.Failed -> Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(s.message, color = MaterialTheme.colorScheme.error)
-            Button(onClick = { attempt++ }, shapes = ButtonDefaults.shapes()) { Text("Try again") }
+            RaisedButton(onClick = { attempt++ }) { Text("Try again") }
         }
         is BudgetLoad.Loaded -> {
             val b = s.data.budget
@@ -405,9 +405,8 @@ private fun SheetActions(onEdit: (() -> Unit)?, onDelete: (() -> Unit)?, extra: 
     Column(Modifier.fillMaxWidth().padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         extra?.invoke()
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (onEdit != null) Button(onClick = onEdit, shapes = ButtonDefaults.shapes(), modifier = Modifier.weight(1f), colors = ButtonDefaults.filledTonalButtonColors()) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Edit") }
-            if (onDelete != null) Button(shapes = ButtonDefaults.shapes(),
-                onClick = onDelete, modifier = Modifier.weight(1f),
+            if (onEdit != null) RaisedButton(onClick = onEdit, modifier = Modifier.weight(1f), colors = ButtonDefaults.filledTonalButtonColors()) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Edit") }
+            if (onDelete != null) RaisedButton(onClick = onDelete, modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer),
             ) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 6.dp)); Text("Delete") }
         }
@@ -477,7 +476,7 @@ private fun GoalSheet(g: Goal, onMoney: () -> Unit, onEdit: () -> Unit, onDelete
             Fact("This period", if (g.periodStatus != null && g.periodPlanned != null) "${formatMoney(g.periodContributed ?: "0", g.currency)} of ${formatMoney(g.periodPlanned, g.currency)} · ${if (g.periodStatus == "funded") "funded" else "still to set aside"}" else null)
             Fact("Target date", g.targetDate?.let(::shortDate))
             SheetActions(onEdit, onDelete) {
-                if (g.account == null) Button(onClick = onMoney, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth()) { Text("Add or take out money") }
+                if (g.account == null) RaisedButton(onClick = onMoney, modifier = Modifier.fillMaxWidth()) { Text("Add or take out money") }
                 else Text("This goal follows ${g.account.name}: its balance is what you have saved.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }

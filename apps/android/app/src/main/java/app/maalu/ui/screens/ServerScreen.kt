@@ -8,8 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import app.maalu.ui.components.RaisedButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -56,8 +55,7 @@ fun ServerScreen(onConnected: (String) -> Unit) {
             supportingText = error?.let { { Text(it) } },
             modifier = Modifier.fillMaxWidth(),
         )
-        Button(shapes = ButtonDefaults.shapes(),
-            enabled = text.isNotBlank() && !checking,
+        RaisedButton(enabled = text.isNotBlank() && !checking,
             modifier = Modifier.fillMaxWidth(),
             onClick = {
                 val server = normalizeServer(text)

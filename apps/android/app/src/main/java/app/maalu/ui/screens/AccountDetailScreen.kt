@@ -35,7 +35,7 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Tune
 import app.maalu.ui.components.AlertDialog
-import androidx.compose.material3.Button
+import app.maalu.ui.components.RaisedButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -199,7 +199,7 @@ fun AccountDetailScreen(api: Api, accountId: String, onBack: () -> Unit) {
     when {
         failed != null -> Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(failed ?: "", color = MaterialTheme.colorScheme.error)
-            Button(onClick = { failed = null; reload++ }, shapes = ButtonDefaults.shapes()) { Text("Try again") }
+            RaisedButton(onClick = { failed = null; reload++ }) { Text("Try again") }
         }
         acc == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         else -> PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
@@ -341,12 +341,12 @@ private fun Actions(a: Account, onAdd: () -> Unit, onAdjust: () -> Unit, onEdit:
         val blue = summaryInk(SummaryBlue)
         val tinted = ButtonDefaults.buttonColors(containerColor = blue.copy(alpha = 0.1f), contentColor = blue)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = onAdd, shapes = ButtonDefaults.shapes()) { Icon(Icons.Outlined.Add, null, Modifier.padding(end = 6.dp)); Text("Add transaction") }
-            Button(onClick = onAdjust, shapes = ButtonDefaults.shapes(), colors = tinted) { Icon(Icons.Outlined.Tune, null, Modifier.padding(end = 6.dp)); Text("Adjust balance") }
-            Button(onClick = onEdit, shapes = ButtonDefaults.shapes(), colors = tinted) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Edit") }
-            Button(onClick = onArchive, shapes = ButtonDefaults.shapes(), colors = tinted) { Icon(Icons.Outlined.Archive, null, Modifier.padding(end = 6.dp)); Text("Archive") }
-            if (onRates != null) Button(onClick = onRates, shapes = ButtonDefaults.shapes(), colors = tinted) { Icon(Icons.Outlined.Tune, null, Modifier.padding(end = 6.dp)); Text("Rate history") }
-            Button(onClick = onDelete, shapes = ButtonDefaults.shapes(), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer)) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 6.dp)); Text("Delete") }
+            RaisedButton(onClick = onAdd) { Icon(Icons.Outlined.Add, null, Modifier.padding(end = 6.dp)); Text("Add transaction") }
+            RaisedButton(onClick = onAdjust, colors = tinted) { Icon(Icons.Outlined.Tune, null, Modifier.padding(end = 6.dp)); Text("Adjust balance") }
+            RaisedButton(onClick = onEdit, colors = tinted) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Edit") }
+            RaisedButton(onClick = onArchive, colors = tinted) { Icon(Icons.Outlined.Archive, null, Modifier.padding(end = 6.dp)); Text("Archive") }
+            if (onRates != null) RaisedButton(onClick = onRates, colors = tinted) { Icon(Icons.Outlined.Tune, null, Modifier.padding(end = 6.dp)); Text("Rate history") }
+            RaisedButton(onClick = onDelete, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer)) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 6.dp)); Text("Delete") }
         }
     }
 }
@@ -362,7 +362,7 @@ private fun StatementPanel(s: CardStatement, onRepay: () -> Unit) {
             StatementFigure("Paid since", s.paidSince, s.currency)
             StatementFigure("Spent since (next statement)", s.spentSince, s.currency)
             StatementFigure("Owed now", s.owedNow, s.currency)
-            if (s.remaining.toBigDecimalOrNull()?.signum()?.let { it > 0 } == true) Button(onClick = onRepay, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth()) { Text("Repay ${formatMoney(s.remaining, s.currency)}") }
+            if (s.remaining.toBigDecimalOrNull()?.signum()?.let { it > 0 } == true) RaisedButton(onClick = onRepay, modifier = Modifier.fillMaxWidth()) { Text("Repay ${formatMoney(s.remaining, s.currency)}") }
         }
     }
 }

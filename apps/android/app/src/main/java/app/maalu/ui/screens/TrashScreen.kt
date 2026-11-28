@@ -25,7 +25,7 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.RestoreFromTrash
 import app.maalu.ui.components.AlertDialog
-import androidx.compose.material3.Button
+import app.maalu.ui.components.RaisedButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
@@ -123,7 +123,7 @@ fun TrashScreen(api: Api) {
     when {
         list == null && error != null -> Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(error ?: "", color = MaterialTheme.colorScheme.error)
-            Button(onClick = { reload++ }, shapes = ButtonDefaults.shapes()) { Text("Try again") }
+            RaisedButton(onClick = { reload++ }) { Text("Try again") }
         }
         list == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         list.isEmpty() -> PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
@@ -227,7 +227,7 @@ private fun SelectionBar(count: Int, total: Int, loaded: Int, busy: Boolean, onR
                 TextButton(shapes = ButtonDefaults.shapes(), onClick = onClear, enabled = !busy) { Text("Clear") }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Button(onClick = onRestore, enabled = !busy, shapes = ButtonDefaults.shapes()) { Icon(Icons.Outlined.RestoreFromTrash, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Restore") }
+                RaisedButton(onClick = onRestore, enabled = !busy) { Icon(Icons.Outlined.RestoreFromTrash, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Restore") }
                 OutlinedButton(onClick = onDelete, enabled = !busy, shapes = ButtonDefaults.shapes()) { Icon(Icons.Outlined.DeleteForever, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Delete forever") }
                 if (total > loaded && count < total) TextButton(shapes = ButtonDefaults.shapes(), onClick = onSelectAll, enabled = !busy) { Text("Select all $total") }
             }
@@ -248,9 +248,8 @@ private fun TrashSheet(t: Transaction, onClose: () -> Unit, onRestore: () -> Uni
             DetailFact("Vendor", t.vendor?.name)
             DetailFact("Note", t.description)
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = onRestore, shapes = ButtonDefaults.shapes(), modifier = Modifier.weight(1f), colors = ButtonDefaults.filledTonalButtonColors()) { Icon(Icons.Outlined.RestoreFromTrash, null, Modifier.padding(end = 8.dp)); Text("Restore") }
-                Button(shapes = ButtonDefaults.shapes(),
-                    onClick = onDelete, modifier = Modifier.weight(1f),
+                RaisedButton(onClick = onRestore, modifier = Modifier.weight(1f), colors = ButtonDefaults.filledTonalButtonColors()) { Icon(Icons.Outlined.RestoreFromTrash, null, Modifier.padding(end = 8.dp)); Text("Restore") }
+                RaisedButton(onClick = onDelete, modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer),
                 ) { Icon(Icons.Outlined.DeleteForever, null, Modifier.padding(end = 8.dp)); Text("Delete forever") }
             }

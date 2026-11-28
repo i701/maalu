@@ -50,7 +50,7 @@ import androidx.compose.material.icons.outlined.ArrowDownward
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.ArrowUpward
 import app.maalu.ui.components.Disclosure
-import androidx.compose.material3.Button
+import app.maalu.ui.components.RaisedButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LocalContentColor
@@ -192,7 +192,7 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(s.message, color = MaterialTheme.colorScheme.error)
-                Button(onClick = { attempt++ }, shapes = ButtonDefaults.shapes()) { Text("Try again") }
+                RaisedButton(onClick = { attempt++ }) { Text("Try again") }
             }
             is State.Ready -> PullToRefreshBox(
                 isRefreshing = refreshing,

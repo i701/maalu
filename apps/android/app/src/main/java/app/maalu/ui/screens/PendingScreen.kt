@@ -20,7 +20,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.TaskAlt
-import androidx.compose.material3.Button
+import app.maalu.ui.components.RaisedButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -90,7 +90,7 @@ fun PendingScreen(api: Api, onChanged: () -> Unit) {
     when {
         list == null && error != null -> Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(error ?: "", color = MaterialTheme.colorScheme.error)
-            Button(onClick = { reload++ }, shapes = ButtonDefaults.shapes()) { Text("Try again") }
+            RaisedButton(onClick = { reload++ }) { Text("Try again") }
         }
         list == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         else -> PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
@@ -176,7 +176,7 @@ private fun TaskCard(task: SplitTask, busy: Boolean, onApprove: () -> Unit, onRe
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Button(onClick = onApprove, enabled = !busy && ready.isNotEmpty() && !plan.over, shapes = ButtonDefaults.shapes()) { Text(if (busy) "Working…" else "Approve") }
+                RaisedButton(onClick = onApprove, enabled = !busy && ready.isNotEmpty() && !plan.over) { Text(if (busy) "Working…" else "Approve") }
                 OutlinedButton(onClick = onReview, enabled = !busy, shapes = ButtonDefaults.shapes()) { Text("Review and edit") }
                 TextButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss, enabled = !busy) { Text("Dismiss") }
             }

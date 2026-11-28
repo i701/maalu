@@ -3,9 +3,7 @@ package app.maalu.ui.screens
 import androidx.compose.ui.unit.Dp
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
-import androidx.compose.material3.Button
-import androidx.compose.foundation.shape.CircleShape
-import app.maalu.ui.components.elevation
+import app.maalu.ui.components.RaisedButton
 import app.maalu.ui.components.glowTopBarColors
 import app.maalu.ui.components.glowBackground
 import androidx.compose.material3.ButtonDefaults
@@ -130,20 +128,18 @@ fun AddReceiptButtons(enabled: Boolean, onFile: (PickedFile) -> Unit, onProblem:
     val files = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) scope.launch { readPicked(context, uri)?.let(onFile) ?: onProblem("That file could not be read.") }
     }
-    // white with a soft shadow, as Save and add another is
+    // white on its lip, as Save and add another is
     val white = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow, contentColor = MaterialTheme.colorScheme.primary)
-    // without the 48dp minimum, which the shadow would be drawn around instead of the 40dp button; a press just outside still
-    // counts, since Compose widens small touch targets
+    // without the 48dp minimum, so the row stays low; a press just outside still counts, since Compose widens small touch targets
     CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
-        // padded inside the scroll, which would otherwise cut off the shadows
         Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 2.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(shapes = ButtonDefaults.shapes(), modifier = Modifier.elevation(1, CircleShape), colors = white, enabled = enabled, onClick = {
+            RaisedButton(colors = white, enabled = enabled, onClick = {
                 val target = newPhotoTarget(context)
                 photo = target
                 try { camera.launch(target.second) } catch (e: ActivityNotFoundException) { photo = null; onProblem("There is no camera app on this device.") }
             }) { Icon(Icons.Outlined.AddAPhoto, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Photo") }
-            Button(shapes = ButtonDefaults.shapes(), modifier = Modifier.elevation(1, CircleShape), colors = white, enabled = enabled, onClick = { files.launch(ATTACHMENT_TYPES) }) { Icon(Icons.Outlined.AttachFile, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("File") }
-            Button(shapes = ButtonDefaults.shapes(), modifier = Modifier.elevation(1, CircleShape), colors = white, enabled = enabled, onClick = onLink) { Icon(Icons.Outlined.Link, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Link") }
+            RaisedButton(colors = white, enabled = enabled, onClick = { files.launch(ATTACHMENT_TYPES) }) { Icon(Icons.Outlined.AttachFile, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("File") }
+            RaisedButton(colors = white, enabled = enabled, onClick = onLink) { Icon(Icons.Outlined.Link, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Link") }
         }
     }
 }

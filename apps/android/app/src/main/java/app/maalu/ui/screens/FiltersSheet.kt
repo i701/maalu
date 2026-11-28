@@ -44,7 +44,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import app.maalu.ui.components.RaisedButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import app.maalu.ui.components.DatePickerDialog
@@ -216,8 +216,7 @@ fun FiltersSheet(api: Api, initial: TxFilters, onApply: (TxFilters) -> Unit, onD
                     Text("In each transaction's own currency.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-            Button(shapes = ButtonDefaults.shapes(),
-                onClick = { onApply(draft) },
+            RaisedButton(onClick = { onApply(draft) },
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 24.dp),
             ) { Text("Show results") }
         }

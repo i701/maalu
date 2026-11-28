@@ -41,7 +41,7 @@ import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import app.maalu.ui.components.AlertDialog
-import androidx.compose.material3.Button
+import app.maalu.ui.components.RaisedButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -147,7 +147,7 @@ fun AccountsScreen(api: Api, onOpen: (Account) -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(s.message, color = MaterialTheme.colorScheme.error)
-                Button(onClick = { attempt++ }, shapes = ButtonDefaults.shapes()) { Text("Try again") }
+                RaisedButton(onClick = { attempt++ }) { Text("Try again") }
             }
             is Load.Loaded -> {
                 val groups = s.data.accounts.groupBy { it.group }

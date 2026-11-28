@@ -46,7 +46,7 @@ import app.maalu.data.canEdit
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.Button
+import app.maalu.ui.components.RaisedButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.IconButtonDefaults
@@ -285,9 +285,8 @@ fun DetailSheet(t: Transaction, onEdit: (() -> Unit)?, onDelete: () -> Unit, onC
 
 @Composable
 private fun ActionPill(label: String, danger: Boolean = false, onClick: () -> Unit) {
-    Button(
-        onClick = onClick, shapes = ButtonDefaults.shapes(),
-        colors = ButtonDefaults.buttonColors(
+    RaisedButton(
+        onClick = onClick, colors = ButtonDefaults.buttonColors(
             containerColor = if (danger) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surfaceContainerHighest,
             contentColor = if (danger) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSurface,
         ),

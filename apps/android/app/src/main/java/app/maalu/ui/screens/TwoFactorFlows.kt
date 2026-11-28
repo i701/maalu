@@ -23,7 +23,7 @@ import androidx.compose.material.icons.outlined.Key
 import androidx.compose.material.icons.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.QrCode2
 import app.maalu.ui.components.AlertDialog
-import androidx.compose.material3.Button
+import app.maalu.ui.components.RaisedButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -127,8 +127,7 @@ fun TwoFactorSetupScreen(api: Api, onClose: () -> Unit, onEnabled: (List<String>
                 if (loadError == null) Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             } else {
                 Text("Use any authenticator app, such as Google Authenticator, Aegis or 2FAS.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (isOtpauthUri(s.otpauthUri)) Button(shapes = ButtonDefaults.shapes(),
-                    onClick = {
+                if (isOtpauthUri(s.otpauthUri)) RaisedButton(onClick = {
                         try { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(s.otpauthUri)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
                         catch (e: ActivityNotFoundException) { scope.launch { snackbar.showSnackbar("No authenticator app found. Copy the key instead.") } }
                     },

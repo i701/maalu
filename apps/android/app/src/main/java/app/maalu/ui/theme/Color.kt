@@ -11,10 +11,14 @@ import androidx.compose.ui.graphics.Color
 // The same roles as apps/web/src/lib/m3.ts (M3_LIGHT / M3_DARK): neutral surfaces, blue primary. As there, the light page is a soft
 // grey and cards (surfaceContainerLow and surfaceContainer) are white.
 // Keep the two in step; the web file is the source of truth. One difference, on purpose: in light mode the app's raised fills
-// (surfaceContainerHigh, Highest and secondaryContainer) are pale blue, not grey, which looked muddy on the sky backdrop.
+// (surfaceContainerHigh, Highest and secondaryContainer) are pale blue, not grey, which looked muddy on the sky backdrop. Another: the
+// light primary is the deeper blue of the iOS app's Save button, not the web's.
+
+/** The deep blue of the iOS app's Save button: the light primary, and every filled button's fill in both themes (RaisedButton). */
+val DeepBlue = Color(0xFF4179ED)
 
 val LightColors: ColorScheme = lightColorScheme(
-    primary = Color(0xFF1976D2),
+    primary = DeepBlue,
     onPrimary = Color(0xFFFFFFFF),
     primaryContainer = Color(0xFFD3E4FF),
     onPrimaryContainer = Color(0xFF001C3B),
@@ -55,7 +59,7 @@ val DarkColors: ColorScheme = darkColorScheme(
     onPrimary = Color(0xFF0B2E4F),
     primaryContainer = Color(0xFF0D4A8A),
     onPrimaryContainer = Color(0xFFD3E4FF),
-    inversePrimary = Color(0xFF1976D2),
+    inversePrimary = DeepBlue,
     secondary = Color(0xFFC4C4C8),
     onSecondary = Color(0xFF2E2E32),
     secondaryContainer = Color(0xFF38383D),

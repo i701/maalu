@@ -10,8 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import app.maalu.ui.components.RaisedButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
@@ -43,7 +42,7 @@ fun <T : Any> ReportState(data: T?, error: String?, onRetry: () -> Unit, content
         data != null -> content(data)
         error != null -> Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(error, color = MaterialTheme.colorScheme.error)
-            Button(onClick = onRetry, shapes = ButtonDefaults.shapes()) { Text("Try again") }
+            RaisedButton(onClick = onRetry) { Text("Try again") }
         }
         else -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
     }

@@ -44,7 +44,7 @@ import app.maalu.data.canEdit
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.Button
+import app.maalu.ui.components.RaisedButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.IconButtonDefaults
@@ -244,7 +244,7 @@ fun TransactionsScreen(api: Api, initial: TxFilters? = null, onInitialUsed: () -
                 error != null -> item(key = "error") {
                     Column(Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(error ?: "", color = MaterialTheme.colorScheme.error)
-                        Button(onClick = { reload++ }, shapes = ButtonDefaults.shapes()) { Text("Try again") }
+                        RaisedButton(onClick = { reload++ }) { Text("Try again") }
                     }
                 }
                 else -> {

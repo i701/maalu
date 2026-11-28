@@ -27,7 +27,7 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Inventory2
 import app.maalu.ui.components.AlertDialog
-import androidx.compose.material3.Button
+import app.maalu.ui.components.RaisedButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
@@ -123,7 +123,7 @@ fun GroupsScreen(api: Api) {
         when {
             list == null && error != null -> Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(error ?: "", color = MaterialTheme.colorScheme.error)
-                Button(onClick = { reload++ }, shapes = ButtonDefaults.shapes()) { Text("Try again") }
+                RaisedButton(onClick = { reload++ }) { Text("Try again") }
             }
             list == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             else -> PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
@@ -283,7 +283,7 @@ private fun GroupSheet(api: Api, id: String, onClose: () -> Unit, onChanged: () 
                  }}
                 item {
                     Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(onClick = { adding = true }, enabled = !busy && g.transactionCount < MAX_GROUP, shapes = ButtonDefaults.shapes(), modifier = Modifier.weight(1f)) { Text("Add transactions") }
+                        RaisedButton(onClick = { adding = true }, enabled = !busy && g.transactionCount < MAX_GROUP, modifier = Modifier.weight(1f)) { Text("Add transactions") }
                         OutlinedButton(onClick = { editing = true }, enabled = !busy, shapes = ButtonDefaults.shapes()) { Text("Edit") }
                     }
                 }
@@ -448,7 +448,7 @@ fun TransactionPicker(api: Api, initial: Set<String>, maxPick: Int, onClose: () 
                 }
                 Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     if (chosen.size >= maxPick) Text("That is the most a group can hold.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Button(onClick = { onDone(chosen) }, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth()) {
+                    RaisedButton(onClick = { onDone(chosen) }, modifier = Modifier.fillMaxWidth()) {
                         Text(if (chosen.isEmpty()) "Done" else "Use ${chosen.size} ${if (chosen.size == 1) "transaction" else "transactions"}")
                     }
                 }

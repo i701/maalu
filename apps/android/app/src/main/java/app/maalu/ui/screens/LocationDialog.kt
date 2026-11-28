@@ -26,7 +26,7 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.MyLocation
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.Button
+import app.maalu.ui.components.RaisedButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -125,7 +125,7 @@ fun LocationDialog(api: Api, initial: Spot?, onClose: () -> Unit, onDone: (Spot?
             Column(Modifier.padding(padding).fillMaxSize().imePadding()) {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.weight(1f)) { CompactField(query, { query = it }, "Search for a place", keyboard = KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search), actions = androidx.compose.foundation.text.KeyboardActions(onSearch = { runSearch() })) }
-                    Button(enabled = query.trim().length >= 2 && !searching, shapes = ButtonDefaults.shapes(), onClick = ::runSearch) { Icon(Icons.Outlined.Search, "Search") }
+                    RaisedButton(enabled = query.trim().length >= 2 && !searching, onClick = ::runSearch) { Icon(Icons.Outlined.Search, "Search") }
                 }
                 if (hits.isNotEmpty()) Surface(Modifier.fillMaxWidth().padding(horizontal = 16.dp), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
                     Column {
@@ -172,8 +172,7 @@ fun LocationDialog(api: Api, initial: Spot?, onClose: () -> Unit, onDone: (Spot?
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (initial != null) OutlinedButton(onClick = { onDone(null) }, shapes = ButtonDefaults.shapes()) { Text("Remove") }
-                        Button(shapes = ButtonDefaults.shapes(),
-                            onClick = { pin?.let { onDone(Spot(toCoordinate(it.first), toCoordinate(it.second), name.trim())) } },
+                        RaisedButton(onClick = { pin?.let { onDone(Spot(toCoordinate(it.first), toCoordinate(it.second), name.trim())) } },
                             enabled = pin != null, modifier = Modifier.weight(1f),
                         ) { Icon(Icons.Outlined.LocationOn, null, Modifier.padding(end = 6.dp)); Text("Use this spot") }
                     }

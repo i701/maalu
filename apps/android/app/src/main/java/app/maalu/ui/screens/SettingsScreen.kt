@@ -31,7 +31,7 @@ import androidx.compose.material.icons.outlined.Key
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Tune
-import androidx.compose.material3.Button
+import app.maalu.ui.components.RaisedButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -131,7 +131,7 @@ fun SettingsScreen(api: Api) {
     when {
         error != null && user == null -> Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(error ?: "", color = MaterialTheme.colorScheme.error)
-            Button(onClick = { reload++ }, shapes = ButtonDefaults.shapes()) { Text("Try again") }
+            RaisedButton(onClick = { reload++ }) { Text("Try again") }
         }
         user == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         else -> PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
@@ -146,7 +146,7 @@ fun SettingsScreen(api: Api) {
                             keyboard = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                         )
                         Text("What Maalu calls you, on the Dashboard.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Button(
+                        RaisedButton(
                             onClick = {
                                 saving = true
                                 scope.launch {
@@ -157,7 +157,7 @@ fun SettingsScreen(api: Api) {
                                     saving = false
                                 }
                             },
-                            enabled = !saving && typed.trim() != user.name.orEmpty(), shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth(),
+                            enabled = !saving && typed.trim() != user.name.orEmpty(), modifier = Modifier.fillMaxWidth(),
                         ) { Text(if (saving) "Saving…" else "Save name") }
                     }
                 }
@@ -191,7 +191,7 @@ fun SettingsScreen(api: Api) {
                             SettingSwitch("Email me", "A digest to ${user.email} when there is something new.", user.notifyEmail) { on -> save({ it.copy(notifyEmail = on) }, switchJson("notify_email", on)) }
                             SettingSwitch("Sign-in alerts", "An email with the device, address and time whenever someone signs in.", user.notifyLogin) { on -> save({ it.copy(notifyLogin = on) }, switchJson("notify_login", on)) }
                             var sending by remember { mutableStateOf(false) }
-                            Button(
+                            RaisedButton(
                                 onClick = {
                                     sending = true
                                     scope.launch {
@@ -203,7 +203,7 @@ fun SettingsScreen(api: Api) {
                                         sending = false
                                     }
                                 },
-                                enabled = !sending, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.filledTonalButtonColors(),
+                                enabled = !sending, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.filledTonalButtonColors(),
                             ) { Text(if (sending) "Sending…" else "Send a test email") }
                         }
                         else if (mail != null) Text("Email is not set up on this server.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -213,7 +213,7 @@ fun SettingsScreen(api: Api) {
                 item {
                     SettingsGroup("Password", Icons.Outlined.Key) {
                         Text("Change it any time. Your other devices are signed out.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Button(onClick = { changingPassword = true }, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.filledTonalButtonColors()) { Text("Change password") }
+                        RaisedButton(onClick = { changingPassword = true }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.filledTonalButtonColors()) { Text("Change password") }
                     }
                 }
                 item {
@@ -300,9 +300,9 @@ private fun TwoFactorCard(on: Boolean, onSetUp: () -> Unit, onNewCodes: () -> Un
                 style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             if (on) Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = onNewCodes, shapes = ButtonDefaults.shapes(), modifier = Modifier.weight(1f), colors = ButtonDefaults.filledTonalButtonColors()) { Text("New recovery codes") }
+                RaisedButton(onClick = onNewCodes, modifier = Modifier.weight(1f), colors = ButtonDefaults.filledTonalButtonColors()) { Text("New recovery codes") }
                 OutlinedButton(onClick = onTurnOff, shapes = ButtonDefaults.shapes(), modifier = Modifier.weight(1f), colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)) { Text("Turn off") }
-            } else Button(onClick = onSetUp, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth()) { Text("Set up two-factor") }
+            } else RaisedButton(onClick = onSetUp, modifier = Modifier.fillMaxWidth()) { Text("Set up two-factor") }
         }
     }
 }

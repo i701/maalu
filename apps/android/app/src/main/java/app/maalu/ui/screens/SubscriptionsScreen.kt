@@ -37,7 +37,7 @@ import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.PlayArrow
 import app.maalu.ui.components.AlertDialog
-import androidx.compose.material3.Button
+import app.maalu.ui.components.RaisedButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -161,7 +161,7 @@ fun SubscriptionsScreen(api: Api) {
             loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             error != null -> Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(error ?: "", color = MaterialTheme.colorScheme.error)
-                Button(onClick = { reload++ }, shapes = ButtonDefaults.shapes()) { Text("Try again") }
+                RaisedButton(onClick = { reload++ }) { Text("Try again") }
             }
             else -> PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
                 LazyColumn(Modifier.fillMaxSize().fadeInOnAppear().fadingEdges(listState), state = listState, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 96.dp)) {
@@ -275,7 +275,7 @@ private fun SuggestionsCard(candidates: List<SubscriptionCandidate>, onAdd: (Sub
                                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    Button(onClick = { onAdd(c) }, shapes = ButtonDefaults.shapes()) { Text("Add") }
+                                    RaisedButton(onClick = { onAdd(c) }) { Text("Add") }
                                     TextButton(shapes = ButtonDefaults.shapes(), onClick = { onDismiss(c) }) { Text("Not a subscription") }
                                 }
                             }
@@ -332,13 +332,12 @@ private fun SubscriptionSheet(s: Subscription, onEdit: () -> Unit, onToggle: () 
             Fact("Payments", app.maalu.data.installmentsText(s.installmentsTotal, s.paymentsMade))
             Fact("Reminder", s.remindDaysBefore?.let { d -> app.maalu.data.RemindOptions.firstOrNull { it.first == d }?.second ?: "$d days before" } ?: "None")
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = onEdit, shapes = ButtonDefaults.shapes(), modifier = Modifier.weight(1f), colors = ButtonDefaults.filledTonalButtonColors()) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Edit") }
-                if (s.canPause() || s.canResume()) Button(onClick = onToggle, shapes = ButtonDefaults.shapes(), modifier = Modifier.weight(1f), colors = ButtonDefaults.filledTonalButtonColors()) {
+                RaisedButton(onClick = onEdit, modifier = Modifier.weight(1f), colors = ButtonDefaults.filledTonalButtonColors()) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Edit") }
+                if (s.canPause() || s.canResume()) RaisedButton(onClick = onToggle, modifier = Modifier.weight(1f), colors = ButtonDefaults.filledTonalButtonColors()) {
                     Icon(if (s.canPause()) Icons.Outlined.Pause else Icons.Outlined.PlayArrow, null, Modifier.padding(end = 6.dp)); Text(if (s.canPause()) "Pause" else "Resume")
                 }
             }
-            Button(shapes = ButtonDefaults.shapes(),
-                onClick = onDelete, modifier = Modifier.fillMaxWidth(),
+            RaisedButton(onClick = onDelete, modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer),
             ) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 6.dp)); Text("Delete") }
         }
