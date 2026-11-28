@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.SecondaryButton
+import app.maalu.ui.components.DangerButton
 import app.maalu.ui.components.elevation
 import app.maalu.ui.components.CompactField
 import app.maalu.data.nameJson
@@ -191,8 +193,7 @@ fun SettingsScreen(api: Api) {
                             SettingSwitch("Email me", "A digest to ${user.email} when there is something new.", user.notifyEmail) { on -> save({ it.copy(notifyEmail = on) }, switchJson("notify_email", on)) }
                             SettingSwitch("Sign-in alerts", "An email with the device, address and time whenever someone signs in.", user.notifyLogin) { on -> save({ it.copy(notifyLogin = on) }, switchJson("notify_login", on)) }
                             var sending by remember { mutableStateOf(false) }
-                            RaisedButton(
-                                onClick = {
+                            SecondaryButton(onClick = {
                                     sending = true
                                     scope.launch {
                                         // a failure carries the mail provider's own reason
@@ -203,8 +204,7 @@ fun SettingsScreen(api: Api) {
                                         sending = false
                                     }
                                 },
-                                enabled = !sending, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.filledTonalButtonColors(),
-                            ) { Text(if (sending) "Sending…" else "Send a test email") }
+                                enabled = !sending, modifier = Modifier.fillMaxWidth()) { Text(if (sending) "Sending…" else "Send a test email") }
                         }
                         else if (mail != null) Text("Email is not set up on this server.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
@@ -213,7 +213,7 @@ fun SettingsScreen(api: Api) {
                 item {
                     SettingsGroup("Password", Icons.Outlined.Key) {
                         Text("Change it any time. Your other devices are signed out.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        RaisedButton(onClick = { changingPassword = true }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.filledTonalButtonColors()) { Text("Change password") }
+                        SecondaryButton(onClick = { changingPassword = true }, modifier = Modifier.fillMaxWidth()) { Text("Change password") }
                     }
                 }
                 item {
@@ -300,8 +300,8 @@ private fun TwoFactorCard(on: Boolean, onSetUp: () -> Unit, onNewCodes: () -> Un
                 style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             if (on) Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                RaisedButton(onClick = onNewCodes, modifier = Modifier.weight(1f), colors = ButtonDefaults.filledTonalButtonColors()) { Text("New recovery codes") }
-                OutlinedButton(onClick = onTurnOff, shapes = ButtonDefaults.shapes(), modifier = Modifier.weight(1f), colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)) { Text("Turn off") }
+                SecondaryButton(onClick = onNewCodes, modifier = Modifier.weight(1f)) { Text("New recovery codes") }
+                DangerButton(onClick = onTurnOff, modifier = Modifier.weight(1f)) { Text("Turn off") }
             } else RaisedButton(onClick = onSetUp, modifier = Modifier.fillMaxWidth()) { Text("Set up two-factor") }
         }
     }

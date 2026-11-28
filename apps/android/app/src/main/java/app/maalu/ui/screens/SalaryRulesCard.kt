@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.SecondaryButton
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -80,7 +81,7 @@ fun SalaryRulesCard(api: Api, rules: List<SalaryRule>, accounts: List<Account>, 
             }
         }
         if (rules.isNotEmpty()) Text("Together: ${rulesSummary(rules, currency)}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        RaisedButton(onClick = { adding = true }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.filledTonalButtonColors()) { Text("Add a rule") }
+        SecondaryButton(onClick = { adding = true }, modifier = Modifier.fillMaxWidth()) { Text("Add a rule") }
     }
 
     if (adding || editing != null) RuleDialog(

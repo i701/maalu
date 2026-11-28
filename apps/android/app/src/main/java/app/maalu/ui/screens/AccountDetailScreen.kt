@@ -2,10 +2,12 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.material.icons.outlined.History
+import app.maalu.ui.components.SecondaryButton
+import app.maalu.ui.components.DangerButton
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import app.maalu.ui.theme.incomeInk
-import app.maalu.ui.components.SummaryBlue
 import app.maalu.ui.components.summaryInk
 import app.maalu.ui.components.elevation
 import app.maalu.ui.components.fadingEdges
@@ -340,16 +342,13 @@ private fun MonthCard(label: String, amount: String, currency: String, modifier:
 @Composable
 private fun Actions(a: Account, onAdd: () -> Unit, onAdjust: () -> Unit, onEdit: () -> Unit, onArchive: () -> Unit, onDelete: () -> Unit, onRates: (() -> Unit)? = null) {
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        // these sit on the sky, where a grey fill looks muddy: the blue of the Dashboard's pills
-        val blue = summaryInk(SummaryBlue)
-        val tinted = ButtonDefaults.buttonColors(containerColor = blue.copy(alpha = 0.1f), contentColor = blue)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             RaisedButton(onClick = onAdd) { Icon(Icons.Outlined.Add, null, Modifier.padding(end = 6.dp)); Text("Add transaction") }
-            RaisedButton(onClick = onAdjust, colors = tinted) { Icon(Icons.Outlined.Tune, null, Modifier.padding(end = 6.dp)); Text("Adjust balance") }
-            RaisedButton(onClick = onEdit, colors = tinted) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Edit") }
-            RaisedButton(onClick = onArchive, colors = tinted) { Icon(Icons.Outlined.Archive, null, Modifier.padding(end = 6.dp)); Text("Archive") }
-            if (onRates != null) RaisedButton(onClick = onRates, colors = tinted) { Icon(Icons.Outlined.Tune, null, Modifier.padding(end = 6.dp)); Text("Rate history") }
-            RaisedButton(onClick = onDelete, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer)) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 6.dp)); Text("Delete") }
+            SecondaryButton(onClick = onAdjust) { Icon(Icons.Outlined.Tune, null, Modifier.padding(end = 6.dp)); Text("Adjust balance") }
+            SecondaryButton(onClick = onEdit) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Edit") }
+            SecondaryButton(onClick = onArchive) { Icon(Icons.Outlined.Archive, null, Modifier.padding(end = 6.dp)); Text("Archive") }
+            if (onRates != null) SecondaryButton(onClick = onRates) { Icon(Icons.Outlined.History, null, Modifier.padding(end = 6.dp)); Text("Rate history") }
+            DangerButton(onClick = onDelete) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 6.dp)); Text("Delete") }
         }
     }
 }

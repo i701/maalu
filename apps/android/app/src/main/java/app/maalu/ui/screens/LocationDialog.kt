@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.SecondaryButton
 import androidx.compose.ui.graphics.luminance
 import app.maalu.ui.components.glowTopBarColors
 import app.maalu.ui.components.glowBackground
@@ -162,16 +163,14 @@ fun LocationDialog(api: Api, initial: Spot?, onClose: () -> Unit, onDone: (Spot?
                                 "Or paste coordinates", isError = coords.isNotBlank() && parseCoordinates(coords) == null && pin == null,
                             placeholder = "4.1755, 73.5093")
                         }
-                        OutlinedButton(shapes = ButtonDefaults.shapes(),
-                            onClick = {
+                        SecondaryButton(onClick = {
                                 if (context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED || context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)
                                     lastKnown(context)?.let { place(it.first, it.second, 17.0) } ?: say("Could not find where you are. Tap the map instead.")
                                 else askLocation.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-                            },
-                        ) { Icon(Icons.Outlined.MyLocation, null, Modifier.padding(end = 6.dp)); Text("Where I am") }
+                            }) { Icon(Icons.Outlined.MyLocation, null, Modifier.padding(end = 6.dp)); Text("Where I am") }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        if (initial != null) OutlinedButton(onClick = { onDone(null) }, shapes = ButtonDefaults.shapes()) { Text("Remove") }
+                        if (initial != null) SecondaryButton(onClick = { onDone(null) }) { Text("Remove") }
                         RaisedButton(onClick = { pin?.let { onDone(Spot(toCoordinate(it.first), toCoordinate(it.second), name.trim())) } },
                             enabled = pin != null, modifier = Modifier.weight(1f),
                         ) { Icon(Icons.Outlined.LocationOn, null, Modifier.padding(end = 6.dp)); Text("Use this spot") }

@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.SecondaryButton
+import app.maalu.ui.components.DangerButton
 import app.maalu.ui.components.fadingEdges
 import androidx.compose.material3.BottomSheetDefaults
 import app.maalu.ui.components.glowSheet
@@ -198,12 +200,10 @@ private fun TagSheet(t: Tag, onEdit: () -> Unit, onMerge: () -> Unit, onDelete: 
             Text(t.name, style = MaterialTheme.typography.titleMedium)
             TagRow(t)
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                RaisedButton(onClick = onEdit, modifier = Modifier.weight(1f), colors = ButtonDefaults.filledTonalButtonColors()) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Rename") }
-                RaisedButton(onClick = onMerge, modifier = Modifier.weight(1f), colors = ButtonDefaults.filledTonalButtonColors()) { Icon(Icons.Outlined.CallMerge, null, Modifier.padding(end = 6.dp)); Text("Merge") }
+                RaisedButton(onClick = onEdit, modifier = Modifier.weight(1f)) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Rename") }
+                SecondaryButton(onClick = onMerge, modifier = Modifier.weight(1f)) { Icon(Icons.Outlined.CallMerge, null, Modifier.padding(end = 6.dp)); Text("Merge") }
             }
-            RaisedButton(onClick = onDelete, modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer),
-            ) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 6.dp)); Text("Delete") }
+            DangerButton(onClick = onDelete, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 6.dp)); Text("Delete") }
         }
     }
 }

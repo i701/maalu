@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.SecondaryButton
 import app.maalu.ui.theme.incomeInk
 import app.maalu.ui.components.elevation
 import app.maalu.ui.components.fadingEdges
@@ -212,7 +213,7 @@ private fun NewGroupDialog(api: Api, onClose: () -> Unit, onCreated: (String) ->
                 Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(if (chosen.isEmpty()) "No transactions chosen" else "${chosen.size} ${if (chosen.size == 1) "transaction" else "transactions"} chosen", style = MaterialTheme.typography.bodyLarge)
                     Text("A group holds 2 to 50. A transaction can be in one group, and a transfer can't be grouped.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    OutlinedButton(onClick = { picking = true }, enabled = !busy, shapes = ButtonDefaults.shapes()) { Text(if (chosen.isEmpty()) "Choose transactions" else "Change the choice") }
+                    SecondaryButton(onClick = { picking = true }, enabled = !busy) { Text(if (chosen.isEmpty()) "Choose transactions" else "Change the choice") }
                 }
             }
         }
@@ -285,7 +286,7 @@ private fun GroupSheet(api: Api, id: String, onClose: () -> Unit, onChanged: () 
                 item {
                     Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         RaisedButton(onClick = { adding = true }, enabled = !busy && g.transactionCount < MAX_GROUP, modifier = Modifier.weight(1f)) { Text("Add transactions") }
-                        OutlinedButton(onClick = { editing = true }, enabled = !busy, shapes = ButtonDefaults.shapes()) { Text("Edit") }
+                        SecondaryButton(onClick = { editing = true }, enabled = !busy) { Text("Edit") }
                     }
                 }
                 item {

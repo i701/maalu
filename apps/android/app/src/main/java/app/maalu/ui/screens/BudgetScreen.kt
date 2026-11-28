@@ -2,6 +2,9 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.foundation.layout.RowScope
+import app.maalu.ui.components.SecondaryButton
+import app.maalu.ui.components.DangerButton
 import app.maalu.ui.theme.warningInk
 import app.maalu.ui.theme.incomeInk
 import app.maalu.ui.components.elevation
@@ -403,15 +406,15 @@ private fun Fact(label: String, value: String?) {
 }
 
 @Composable
-private fun SheetActions(onEdit: (() -> Unit)?, onDelete: (() -> Unit)?, extra: (@Composable () -> Unit)? = null) {
+private fun SheetActions(onEdit: (() -> Unit)?, onDelete: (() -> Unit)?, editIsMain: Boolean = true, extra: (@Composable () -> Unit)? = null) {
     Column(Modifier.fillMaxWidth().padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         extra?.invoke()
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (onEdit != null) RaisedButton(onClick = onEdit, modifier = Modifier.weight(1f), colors = ButtonDefaults.filledTonalButtonColors()) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Edit") }
-            if (onDelete != null) RaisedButton(onClick = onDelete, modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer),
-            ) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 6.dp)); Text("Delete") }
+        if (onEdit != null) {
+            val label: @Composable RowScope.() -> Unit = { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Edit") }
+            if (editIsMain) RaisedButton(onClick = onEdit, modifier = Modifier.fillMaxWidth(), content = label)
+            else SecondaryButton(onClick = onEdit, modifier = Modifier.fillMaxWidth(), content = label)
         }
+        if (onDelete != null) DangerButton(onClick = onDelete, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 6.dp)); Text("Delete") }
     }
 }
 
@@ -442,8 +445,8 @@ private fun LineSheet(l: BudgetLine, currency: String, moves: List<LineMove>, on
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = onMove, modifier = Modifier.weight(1f)) { Text("Move money here") }
-                OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = onHistory, modifier = Modifier.weight(1f)) { Text("History") }
+                SecondaryButton(onClick = onMove, modifier = Modifier.weight(1f)) { Text("Move money here") }
+                SecondaryButton(onClick = onHistory, modifier = Modifier.weight(1f)) { Text("History") }
             }
             SheetActions(onEdit, onDelete)
         }
@@ -461,7 +464,7 @@ private fun FixedSheet(f: FixedLine, currency: String, onEdit: () -> Unit, onRep
             Text("A limit for set dates is one total for the whole stretch.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             SheetActions(onEdit, onDelete) {
                 // for the stretch that follows: same name, categories and amount, starting the day after and as long
-                OutlinedButton(shapes = ButtonDefaults.shapes(), onClick = onRepeat, modifier = Modifier.fillMaxWidth()) { Text("Repeat for the next stretch") }
+                SecondaryButton(onClick = onRepeat, modifier = Modifier.fillMaxWidth()) { Text("Repeat for the next stretch") }
             }
         }
     }
@@ -477,7 +480,7 @@ private fun GoalSheet(g: Goal, onMoney: () -> Unit, onEdit: () -> Unit, onDelete
             Fact("Plan", g.monthlyAmount?.let { "${formatMoney(it, g.currency)} a month" })
             Fact("This period", if (g.periodStatus != null && g.periodPlanned != null) "${formatMoney(g.periodContributed ?: "0", g.currency)} of ${formatMoney(g.periodPlanned, g.currency)} · ${if (g.periodStatus == "funded") "funded" else "still to set aside"}" else null)
             Fact("Target date", g.targetDate?.let(::shortDate))
-            SheetActions(onEdit, onDelete) {
+            SheetActions(onEdit, onDelete, editIsMain = g.account != null) {
                 if (g.account == null) RaisedButton(onClick = onMoney, modifier = Modifier.fillMaxWidth()) { Text("Add or take out money") }
                 else Text("This goal follows ${g.account.name}: its balance is what you have saved.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }

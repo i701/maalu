@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.SecondaryButton
 import app.maalu.ui.components.elevation
 import app.maalu.ui.theme.ChartColors
 import app.maalu.ui.components.fadingEdges
@@ -159,7 +160,7 @@ private fun Article(doc: DocItem, section: String?, onLink: (String) -> Unit) {
             item { Text("Where to find it", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp)) }
             items(doc.where) { w ->
                 val link = docLink(w.to)
-                OutlinedButton(onClick = { onLink(w.to) }, enabled = link != DocLink.Web, shapes = ButtonDefaults.shapes(), modifier = Modifier.fillMaxWidth()) {
+                SecondaryButton(onClick = { onLink(w.to) }, enabled = link != DocLink.Web, modifier = Modifier.fillMaxWidth()) {
                     Text(w.label + if (link == DocLink.Web) " (on the web)" else "")
                 }
             }

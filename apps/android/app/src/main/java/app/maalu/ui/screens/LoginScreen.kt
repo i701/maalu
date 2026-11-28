@@ -107,10 +107,12 @@ fun LoginScreen(api: Api, server: String, onSignedIn: (String) -> Unit, onChange
         }
         error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
 
-        RaisedButton(enabled = !busy && (if (challenge == null) email.isNotBlank() && password.isNotEmpty() else code.isNotBlank()),
+        RaisedButton(enabled = !busy,
             modifier = Modifier.fillMaxWidth(),
             onClick = {
-                if (challenge == null) {
+                if (challenge == null && (email.isBlank() || password.isEmpty())) error = "Enter your email and password."
+                else if (challenge != null && code.isBlank()) error = if (recoveryMode) "Enter a recovery code." else "Enter the code."
+                else if (challenge == null) {
                     busy = true; error = null
                     scope.launch { finish(api.postForm("auth/login", mapOf("username" to email.trim(), "password" to password))) }
                 } else verify(code)

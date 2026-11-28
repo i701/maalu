@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.SecondaryButton
+import app.maalu.ui.components.DangerButton
 import app.maalu.ui.components.elevation
 import app.maalu.ui.components.fadingEdges
 import androidx.compose.material3.BottomSheetDefaults
@@ -332,14 +334,12 @@ private fun SubscriptionSheet(s: Subscription, onEdit: () -> Unit, onToggle: () 
             Fact("Payments", app.maalu.data.installmentsText(s.installmentsTotal, s.paymentsMade))
             Fact("Reminder", s.remindDaysBefore?.let { d -> app.maalu.data.RemindOptions.firstOrNull { it.first == d }?.second ?: "$d days before" } ?: "None")
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                RaisedButton(onClick = onEdit, modifier = Modifier.weight(1f), colors = ButtonDefaults.filledTonalButtonColors()) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Edit") }
-                if (s.canPause() || s.canResume()) RaisedButton(onClick = onToggle, modifier = Modifier.weight(1f), colors = ButtonDefaults.filledTonalButtonColors()) {
+                RaisedButton(onClick = onEdit, modifier = Modifier.weight(1f)) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Edit") }
+                if (s.canPause() || s.canResume()) SecondaryButton(onClick = onToggle, modifier = Modifier.weight(1f)) {
                     Icon(if (s.canPause()) Icons.Outlined.Pause else Icons.Outlined.PlayArrow, null, Modifier.padding(end = 6.dp)); Text(if (s.canPause()) "Pause" else "Resume")
                 }
             }
-            RaisedButton(onClick = onDelete, modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer),
-            ) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 6.dp)); Text("Delete") }
+            DangerButton(onClick = onDelete, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 6.dp)); Text("Delete") }
         }
     }
 }

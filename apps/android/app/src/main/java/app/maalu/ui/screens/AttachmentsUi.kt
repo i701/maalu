@@ -1,5 +1,6 @@
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.SecondaryButton
 import androidx.compose.ui.unit.Dp
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
@@ -128,18 +129,16 @@ fun AddReceiptButtons(enabled: Boolean, onFile: (PickedFile) -> Unit, onProblem:
     val files = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) scope.launch { readPicked(context, uri)?.let(onFile) ?: onProblem("That file could not be read.") }
     }
-    // white on its lip, as Save and add another is
-    val white = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow, contentColor = MaterialTheme.colorScheme.primary)
     // without the 48dp minimum, so the row stays low; a press just outside still counts, since Compose widens small touch targets
     CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
         Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 2.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            RaisedButton(colors = white, enabled = enabled, onClick = {
+            SecondaryButton(enabled = enabled, onClick = {
                 val target = newPhotoTarget(context)
                 photo = target
                 try { camera.launch(target.second) } catch (e: ActivityNotFoundException) { photo = null; onProblem("There is no camera app on this device.") }
             }) { Icon(Icons.Outlined.AddAPhoto, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Photo") }
-            RaisedButton(colors = white, enabled = enabled, onClick = { files.launch(ATTACHMENT_TYPES) }) { Icon(Icons.Outlined.AttachFile, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("File") }
-            RaisedButton(colors = white, enabled = enabled, onClick = onLink) { Icon(Icons.Outlined.Link, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Link") }
+            SecondaryButton(enabled = enabled, onClick = { files.launch(ATTACHMENT_TYPES) }) { Icon(Icons.Outlined.AttachFile, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("File") }
+            SecondaryButton(enabled = enabled, onClick = onLink) { Icon(Icons.Outlined.Link, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Link") }
         }
     }
 }

@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.SecondaryButton
+import app.maalu.ui.components.DangerButton
 import app.maalu.ui.components.fadingEdges
 import androidx.compose.material3.BottomSheetDefaults
 import app.maalu.ui.components.glowSheet
@@ -259,12 +261,10 @@ private fun VendorSheet(v: Vendor, onEdit: () -> Unit, onMerge: () -> Unit, onDe
             Fact("Currency", v.currency)
             Fact("Place", v.place)
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                RaisedButton(onClick = onEdit, modifier = Modifier.weight(1f), colors = ButtonDefaults.filledTonalButtonColors()) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Edit") }
-                RaisedButton(onClick = onMerge, modifier = Modifier.weight(1f), colors = ButtonDefaults.filledTonalButtonColors()) { Icon(Icons.Outlined.CallMerge, null, Modifier.padding(end = 6.dp)); Text("Merge") }
+                RaisedButton(onClick = onEdit, modifier = Modifier.weight(1f)) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Edit") }
+                SecondaryButton(onClick = onMerge, modifier = Modifier.weight(1f)) { Icon(Icons.Outlined.CallMerge, null, Modifier.padding(end = 6.dp)); Text("Merge") }
             }
-            RaisedButton(onClick = onDelete, modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer),
-            ) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 6.dp)); Text("Delete") }
+            DangerButton(onClick = onDelete, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 6.dp)); Text("Delete") }
         }
     }
 }
@@ -331,7 +331,7 @@ private fun VendorFormScreen(api: Api, editing: Vendor?, onClose: () -> Unit, on
         }
         Section("Usual place", Icons.Outlined.LocationOn) {
             val marked = form.latitude.isNotBlank() && form.longitude.isNotBlank()
-            if (!marked) OutlinedButton(onClick = { marking = true }, enabled = !busy, shapes = ButtonDefaults.shapes()) {
+            if (!marked) SecondaryButton(onClick = { marking = true }, enabled = !busy) {
                 Icon(Icons.Outlined.LocationOn, null, Modifier.padding(end = 6.dp)); Text("Mark where it is")
             } else Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ChoiceChip(selected = true, onClick = { marking = true }, label = { Text(placeLabel(form.place, form.latitude, form.longitude), maxLines = 1) }, modifier = Modifier.weight(1f, fill = false))

@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.SecondaryButton
+import app.maalu.ui.components.DangerButton
 import app.maalu.ui.components.fadingEdges
 import androidx.compose.material3.BottomSheetDefaults
 import app.maalu.ui.components.glowSheet
@@ -109,7 +111,6 @@ import app.maalu.data.totalSpent
 import app.maalu.ui.components.SummaryPill
 import app.maalu.ui.components.SummaryBlue
 import app.maalu.ui.components.summaryInk
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.CompositionLocalProvider
 import app.maalu.ui.theme.MoneyStyle
@@ -181,12 +182,7 @@ fun CategoriesScreen(api: Api, month: String, onOpenTransactions: (TxFilters) ->
             val blue = summaryInk(SummaryBlue)
             CompositionLocalProvider(LocalContentColor provides blue) {
                 // sort them all at once; says how many are still unsorted
-                if (all.any { !it.isSalary }) OutlinedButton(
-                    onClick = { sorting = true }, shapes = ButtonDefaults.shapes(), modifier = Modifier.padding(horizontal = 16.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(containerColor = blue.copy(alpha = 0.1f), contentColor = blue),
-                    // an edge, so the button reads apart from the facts below
-                    border = BorderStroke(1.dp, blue.copy(alpha = 0.35f)),
-                ) {
+                if (all.any { !it.isSalary }) SecondaryButton(onClick = { sorting = true }, modifier = Modifier.padding(horizontal = 16.dp)) {
                     Text(sortKindsButtonLabel(unsortedCount(all)))
                 }
                 money?.totals?.let { MonthSpent(it, month) }
@@ -345,12 +341,10 @@ private fun CategorySheet(c: Category, money: CategoryMonth?, onSpent: () -> Uni
             }
             if (c.isSalary) Text("This is the default category for pay: it can't be renamed, merged or deleted.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                RaisedButton(onClick = onEdit, modifier = Modifier.weight(1f), colors = ButtonDefaults.filledTonalButtonColors()) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Edit") }
-                if (!c.isSalary) RaisedButton(onClick = onMerge, modifier = Modifier.weight(1f), colors = ButtonDefaults.filledTonalButtonColors()) { Icon(Icons.Outlined.CallMerge, null, Modifier.padding(end = 6.dp)); Text("Merge") }
+                RaisedButton(onClick = onEdit, modifier = Modifier.weight(1f)) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Edit") }
+                if (!c.isSalary) SecondaryButton(onClick = onMerge, modifier = Modifier.weight(1f)) { Icon(Icons.Outlined.CallMerge, null, Modifier.padding(end = 6.dp)); Text("Merge") }
             }
-            if (!c.isSalary) RaisedButton(onClick = onDelete, modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer),
-            ) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 6.dp)); Text("Delete") }
+            if (!c.isSalary) DangerButton(onClick = onDelete, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 6.dp)); Text("Delete") }
         }
     }
 }

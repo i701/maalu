@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.SecondaryButton
+import app.maalu.ui.components.DangerButton
 import app.maalu.ui.components.fadingEdges
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.BottomSheetDefaults
@@ -228,7 +230,7 @@ private fun SelectionBar(count: Int, total: Int, loaded: Int, busy: Boolean, onR
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 RaisedButton(onClick = onRestore, enabled = !busy) { Icon(Icons.Outlined.RestoreFromTrash, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Restore") }
-                OutlinedButton(onClick = onDelete, enabled = !busy, shapes = ButtonDefaults.shapes()) { Icon(Icons.Outlined.DeleteForever, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Delete forever") }
+                DangerButton(onClick = onDelete, enabled = !busy) { Icon(Icons.Outlined.DeleteForever, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Delete forever") }
                 if (total > loaded && count < total) TextButton(shapes = ButtonDefaults.shapes(), onClick = onSelectAll, enabled = !busy) { Text("Select all $total") }
             }
         }
@@ -247,12 +249,8 @@ private fun TrashSheet(t: Transaction, onClose: () -> Unit, onRestore: () -> Uni
             if (t.type != "transfer") DetailFact("Category", t.category)
             DetailFact("Vendor", t.vendor?.name)
             DetailFact("Note", t.description)
-            Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                RaisedButton(onClick = onRestore, modifier = Modifier.weight(1f), colors = ButtonDefaults.filledTonalButtonColors()) { Icon(Icons.Outlined.RestoreFromTrash, null, Modifier.padding(end = 8.dp)); Text("Restore") }
-                RaisedButton(onClick = onDelete, modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer),
-                ) { Icon(Icons.Outlined.DeleteForever, null, Modifier.padding(end = 8.dp)); Text("Delete forever") }
-            }
+            RaisedButton(onClick = onRestore, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) { Icon(Icons.Outlined.RestoreFromTrash, null, Modifier.padding(end = 8.dp)); Text("Restore") }
+            DangerButton(onClick = onDelete, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Outlined.DeleteForever, null, Modifier.padding(end = 8.dp)); Text("Delete forever") }
         }
     }
 }

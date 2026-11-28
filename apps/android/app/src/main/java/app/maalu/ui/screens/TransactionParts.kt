@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.SecondaryButton
+import app.maalu.ui.components.DangerButton
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import app.maalu.ui.theme.incomeInk
@@ -242,8 +244,8 @@ fun DetailSheet(t: Transaction, onEdit: (() -> Unit)?, onDelete: () -> Unit, onC
                 }
                 // the main things to do, as pills; the rest waits in the list at the bottom
                 FlowRow(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (onPay != null) ActionPill(app.maalu.data.payTitle(t.type), onClick = onPay)
-                    if (onEdit != null) ActionPill("Edit", onClick = onEdit)
+                    if (onPay != null) ActionPill(app.maalu.data.payTitle(t.type), main = true, onClick = onPay)
+                    if (onEdit != null) ActionPill("Edit", main = onPay == null, onClick = onEdit)
                     if (onDuplicate != null) ActionPill("Duplicate", onClick = onDuplicate)
                     ActionPill("Delete", danger = true, onClick = onDelete)
                 }
@@ -287,13 +289,12 @@ fun DetailSheet(t: Transaction, onEdit: (() -> Unit)?, onDelete: () -> Unit, onC
 }
 
 @Composable
-private fun ActionPill(label: String, danger: Boolean = false, onClick: () -> Unit) {
-    RaisedButton(
-        onClick = onClick, colors = ButtonDefaults.buttonColors(
-            containerColor = if (danger) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surfaceContainerHighest,
-            contentColor = if (danger) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSurface,
-        ),
-    ) { Text(label) }
+private fun ActionPill(label: String, main: Boolean = false, danger: Boolean = false, onClick: () -> Unit) {
+    when {
+        danger -> DangerButton(onClick) { Text(label) }
+        main -> RaisedButton(onClick) { Text(label) }
+        else -> SecondaryButton(onClick) { Text(label) }
+    }
 }
 
 /** One tonal block of the sheet, with its heading above it. */

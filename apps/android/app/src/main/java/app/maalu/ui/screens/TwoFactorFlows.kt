@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.SecondaryButton
 import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -137,9 +138,7 @@ fun TwoFactorSetupScreen(api: Api, onClose: () -> Unit, onEnabled: (List<String>
                     Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("Or type this key in by hand", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(groupSecret(s.secret), style = MaterialTheme.typography.titleMedium, fontFamily = FontFamily.Monospace)
-                        OutlinedButton(shapes = ButtonDefaults.shapes(),
-                            onClick = { copySecret(context, "Authenticator key", s.secret); scope.launch { snackbar.showSnackbar("Key copied") } },
-                        ) { Icon(Icons.Outlined.ContentCopy, null, Modifier.padding(end = 8.dp)); Text("Copy key") }
+                        SecondaryButton(onClick = { copySecret(context, "Authenticator key", s.secret); scope.launch { snackbar.showSnackbar("Key copied") } }) { Icon(Icons.Outlined.ContentCopy, null, Modifier.padding(end = 8.dp)); Text("Copy key") }
                     }
                 }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -179,7 +178,7 @@ fun RecoveryCodesDialog(codes: List<String>, onDone: () -> Unit) {
                         }
                     }
                 }
-                OutlinedButton(onClick = { copySecret(context, "Recovery codes", recoveryText(codes)) }, shapes = ButtonDefaults.shapes()) {
+                SecondaryButton(onClick = { copySecret(context, "Recovery codes", recoveryText(codes)) }) {
                     Icon(Icons.Outlined.ContentCopy, null, Modifier.padding(end = 8.dp)); Text("Copy all")
                 }
             }

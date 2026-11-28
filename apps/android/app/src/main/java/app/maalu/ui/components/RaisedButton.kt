@@ -1,5 +1,7 @@
 package app.maalu.ui.components
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -50,6 +52,35 @@ private val Squircle = object : Shape {
         val rounding = CornerRounding(with(density) { 12.dp.toPx() }, smoothing = 0.6f)
         val polygon = RoundedPolygon.rectangle(size.width, size.height, rounding, centerX = size.width / 2, centerY = size.height / 2)
         return Outline.Generic(polygon.toPath().asComposePath())
+    }
+}
+
+/** The level under [RaisedButton], for the other things to do: flat and tonal, the same shape and height so they line up. */
+@Composable
+fun SecondaryButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable RowScope.() -> Unit) {
+    Levelled(modifier) { inner ->
+        Button(onClick, inner, enabled, shape = Squircle, colors = ButtonDefaults.filledTonalButtonColors(), content = content)
+    }
+}
+
+/** Deleting and turning off: an outline in the error colour, so it is never mistaken for the main action. */
+@Composable
+fun DangerButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable RowScope.() -> Unit) {
+    val error = MaterialTheme.colorScheme.error
+    Levelled(modifier) { inner ->
+        OutlinedButton(
+            onClick, inner, enabled, shape = Squircle,
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = error),
+            border = BorderStroke(1.dp, error.copy(alpha = if (enabled) 0.6f else 0.2f)), content = content,
+        )
+    }
+}
+
+/** The raised button's footprint without its lip: 48dp to touch, with the lip's room left under the shape. */
+@Composable
+private fun Levelled(modifier: Modifier, button: @Composable (Modifier) -> Unit) {
+    Box(Modifier.minimumInteractiveComponentSize().then(modifier), propagateMinConstraints = true) {
+        CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) { button(Modifier.padding(bottom = Lip)) }
     }
 }
 

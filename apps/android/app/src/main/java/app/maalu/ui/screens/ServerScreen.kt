@@ -55,15 +55,18 @@ fun ServerScreen(onConnected: (String) -> Unit) {
             supportingText = error?.let { { Text(it) } },
             modifier = Modifier.fillMaxWidth(),
         )
-        RaisedButton(enabled = text.isNotBlank() && !checking,
+        RaisedButton(enabled = !checking,
             modifier = Modifier.fillMaxWidth(),
             onClick = {
-                val server = normalizeServer(text)
-                checking = true
-                scope.launch {
-                    val problem = checkServer(server)
-                    checking = false
-                    if (problem == null) onConnected(server) else error = problem
+                if (text.isBlank()) error = "Enter the server address."
+                else {
+                    val server = normalizeServer(text)
+                    checking = true
+                    scope.launch {
+                        val problem = checkServer(server)
+                        checking = false
+                        if (problem == null) onConnected(server) else error = problem
+                    }
                 }
             },
         ) { Text(if (checking) "Connecting…" else "Connect") }

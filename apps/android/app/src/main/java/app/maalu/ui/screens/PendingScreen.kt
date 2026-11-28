@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.SecondaryButton
 import app.maalu.ui.components.elevation
 import app.maalu.ui.components.fadingEdges
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -177,7 +178,7 @@ private fun TaskCard(task: SplitTask, busy: Boolean, onApprove: () -> Unit, onRe
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 RaisedButton(onClick = onApprove, enabled = !busy && ready.isNotEmpty() && !plan.over) { Text(if (busy) "Working…" else "Approve") }
-                OutlinedButton(onClick = onReview, enabled = !busy, shapes = ButtonDefaults.shapes()) { Text("Review and edit") }
+                SecondaryButton(onClick = onReview, enabled = !busy) { Text("Review and edit") }
                 TextButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss, enabled = !busy) { Text("Dismiss") }
             }
         }

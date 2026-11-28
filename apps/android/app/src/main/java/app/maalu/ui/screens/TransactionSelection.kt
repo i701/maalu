@@ -1,5 +1,7 @@
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.SecondaryButton
+import app.maalu.ui.components.DangerButton
 import androidx.compose.material3.BottomSheetDefaults
 import app.maalu.ui.components.glowSheet
 import androidx.compose.foundation.background
@@ -85,10 +87,8 @@ fun TransactionSelectionBar(
                 TextButton(shapes = ButtonDefaults.shapes(), onClick = onClear, enabled = !busy) { Text("Clear") }
             }
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                OutlinedButton(onClick = onEdit, enabled = !busy, shapes = ButtonDefaults.shapes()) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Edit") }
-                RaisedButton(onClick = onDelete, enabled = !busy,
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer),
-                ) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Delete") }
+                RaisedButton(onClick = onEdit, enabled = !busy) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Edit") }
+                DangerButton(onClick = onDelete, enabled = !busy) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Delete") }
                 when (selectAll) {
                     is SelectAll.Offer -> TextButton(shapes = ButtonDefaults.shapes(), onClick = onSelectAll, enabled = !busy) { Text("Select all ${selectAll.total}") }
                     is SelectAll.TooMany -> Text("${selectAll.total} match: narrow it to $MAX_SELECT_ALL or fewer to select them all", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

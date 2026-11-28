@@ -2,6 +2,7 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.SecondaryButton
 import app.maalu.ui.components.SaveButtonRoom
 import app.maalu.ui.components.FloatingSave
 import app.maalu.ui.theme.ChartColors
@@ -493,10 +494,7 @@ private fun Form(o: FormOptions, saveLabel: String, form: AddForm, onForm: (AddF
                 }
             }
             // the second way to save is the last thing in the form; only Save floats
-            if (onSaveAnother != null) RaisedButton(
-                onClick = onSaveAnother, enabled = !busy, modifier = Modifier.fillMaxWidth().height(48.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow, contentColor = MaterialTheme.colorScheme.primary),
-            ) { Text("Save and add another") }
+            if (onSaveAnother != null) SecondaryButton(onClick = onSaveAnother, enabled = !busy, modifier = Modifier.fillMaxWidth().height(48.dp)) { Text("Save and add another") }
             // room to scroll the last row clear of the floating button
             Spacer(Modifier.height(SaveButtonRoom))
         }
