@@ -136,7 +136,9 @@ private sealed interface State {
 /** Home: available to spend, the month's income, spending and what was kept, and where it went. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
+fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}, onOpenTransactions: () -> Unit = {}) {
+    // the transaction whose sheet is open
+    var picked by remember { mutableStateOf<Transaction?>(null) }
     var attempt by remember { mutableIntStateOf(0) }
     // a pull keeps what is on screen and shows only the pull indicator; a new month or a retry blanks it
     var refreshing by remember { mutableStateOf(false) }
@@ -241,8 +243,8 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
                         DashboardSection.NeedsWants -> NeedsWantsCard(kindShares(s.data.categories), s.data.totals.currency, incomeRule(s.data.categories))
                         DashboardSection.MoneyFlow -> MoneyFlowCard(s.data.categories, s.data.totals.currency)
                         DashboardSection.Credit -> CreditUsageCard(s.data.accounts)
-                        DashboardSection.Upcoming -> TransactionsCard("Coming up", null, s.data.upcoming, "Nothing planned.")
-                        DashboardSection.Latest -> TransactionsCard("Latest transactions", null, s.data.latest, "No transactions yet.")
+                        DashboardSection.Upcoming -> TransactionsCard("Coming up", s.data.upcoming, "Nothing planned.", onOpen = { picked = it })
+                        DashboardSection.Latest -> TransactionsCard("Latest transactions", s.data.latest, "No transactions yet.", onOpen = { picked = it }, onSeeAll = onOpenTransactions)
                     }
                 }
                 item(key = "arrange") {
@@ -272,6 +274,10 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
                 }
             }
         }
+    }
+    // outside the page's states, so the sheet stays while a change reloads behind it
+    picked?.let { t ->
+        TransactionDetailHost(api, t, scope, onClose = { picked = null }, onChanged = { refreshing = true; attempt++ })
     }
 }
 
@@ -345,7 +351,7 @@ private fun KeptSummary(now: Totals, before: Totals, months: List<MonthlyPoint>)
             Text("Kept this month", Modifier.weight(1f).semantics { heading() }, style = MaterialTheme.typography.titleSmall)
             spendingChangeText(now.expense, before.expense)?.let { SummaryPill(it) }
         }
-        MoneyText(saved, now.currency, style = MaterialTheme.typography.displaySmall)
+        MoneyText(saved, now.currency, style = MaterialTheme.typography.headlineMedium)
         // with no income there is nothing to divide
         shareOf(spent, income)?.let { share ->
             Text("of ${formatMoney(now.income, now.currency)} income", style = MaterialTheme.typography.bodySmall)

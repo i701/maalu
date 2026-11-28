@@ -1790,7 +1790,7 @@
       "id": "dashboard-order",
       "area": "reports",
       "name": "Arrange the dashboard",
-      "summary": "Drag the dashboard's cards, or move them with arrows, into your own order; kept on the device, one per app.",
+      "summary": "Drag the dashboard's cards, or move them with arrows or a move menu, into your own order; kept on the device, one per app.",
       "web": {
         "status": "done",
         "evidence": [

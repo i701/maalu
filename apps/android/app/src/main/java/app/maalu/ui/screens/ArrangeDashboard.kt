@@ -2,6 +2,10 @@
 
 package app.maalu.ui.screens
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material.icons.outlined.SwapVert
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -47,7 +51,7 @@ import app.maalu.ui.components.FormDialog
 import kotlin.math.roundToInt
 
 /**
- * Put the cards in your own order, by dragging a handle or with the arrows, and switch off the ones you do not want.
+ * Put the cards in your own order, by dragging a handle or from each card's move menu, and switch off the ones you do not want.
  * Saved once, on Done.
  */
 @Composable
@@ -104,8 +108,14 @@ fun ArrangeDashboard(
                                 }.padding(12.dp),
                             )
                             Text(section.title, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                            IconButton(onClick = { move(section, -1) }, enabled = i > 0, shapes = IconButtonDefaults.shapes()) { Icon(Icons.Outlined.ArrowUpward, "Move ${section.title} up") }
-                            IconButton(onClick = { move(section, 1) }, enabled = i < order.lastIndex, shapes = IconButtonDefaults.shapes()) { Icon(Icons.Outlined.ArrowDownward, "Move ${section.title} down") }
+                            Box {
+                                var menu by remember { mutableStateOf(false) }
+                                IconButton(onClick = { menu = true }, shapes = IconButtonDefaults.shapes()) { Icon(Icons.Outlined.SwapVert, "Move ${section.title}") }
+                                DropdownMenu(menu, onDismissRequest = { menu = false }) {
+                                    DropdownMenuItem({ Text("Move up") }, onClick = { menu = false; move(section, -1) }, enabled = i > 0, leadingIcon = { Icon(Icons.Outlined.ArrowUpward, null) })
+                                    DropdownMenuItem({ Text("Move down") }, onClick = { menu = false; move(section, 1) }, enabled = i < order.lastIndex, leadingIcon = { Icon(Icons.Outlined.ArrowDownward, null) })
+                                }
+                            }
                             Switch(
                                 checked = section.id !in off,
                                 onCheckedChange = { on -> off = if (on) off - section.id else off + section.id },

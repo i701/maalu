@@ -165,11 +165,6 @@ fun Shell(api: Api, themeMode: ThemeMode, onThemeMode: (ThemeMode) -> Unit, onSi
                     subtitle = if (monthly) ({ Text(monthLabel(LocalDate.parse(month))) }) else null,
                     actions = {
                         if (onTab && selected == MORE) IconButton(onClick = { route = "settings" }) { Icon(Icons.Outlined.Settings, "Settings") }
-                        IconButton(onClick = { route = "notifications" }) {
-                            androidx.compose.material3.BadgedBox(badge = {
-                                if (unread > 0) androidx.compose.material3.Badge { Text(app.maalu.data.badgeText(unread)) }
-                            }) { Icon(Icons.Outlined.Notifications, if (unread > 0) "Notifications, $unread unread" else "Notifications") }
-                        }
                         if (monthly) {
                             IconButton(onClick = { month = LocalDate.parse(month).minusMonths(1).toString() }) {
                                 Icon(Icons.AutoMirrored.Outlined.KeyboardArrowLeft, "Previous month")
@@ -177,6 +172,11 @@ fun Shell(api: Api, themeMode: ThemeMode, onThemeMode: (ThemeMode) -> Unit, onSi
                             IconButton(onClick = { month = LocalDate.parse(month).plusMonths(1).toString() }) {
                                 Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, "Next month")
                             }
+                        }
+                        IconButton(onClick = { route = "notifications" }) {
+                            androidx.compose.material3.BadgedBox(badge = {
+                                if (unread > 0) androidx.compose.material3.Badge { Text(app.maalu.data.badgeText(unread)) }
+                            }) { Icon(Icons.Outlined.Notifications, if (unread > 0) "Notifications, $unread unread" else "Notifications") }
                         }
                     },
                     scrollBehavior = scroll,
@@ -234,7 +234,7 @@ fun Shell(api: Api, themeMode: ThemeMode, onThemeMode: (ThemeMode) -> Unit, onSi
                         "plan" -> PlanScreen(api, onOpenAccount = { id, name -> openAccountId = id; openAccountName = name; selected = ACCOUNTS; route = null })
                     }
                     else when (tab) {
-                        DASHBOARD -> DashboardScreen(api, month, onOpenPlan = { route = "plan" })
+                        DASHBOARD -> DashboardScreen(api, month, onOpenPlan = { route = "plan" }, onOpenTransactions = { selected = TRANSACTIONS })
                         TRANSACTIONS -> TransactionsScreen(api, initial = txSeed?.let(::txFiltersFromJson), onInitialUsed = { txSeed = null })
                         ACCOUNTS -> {
                             val id = acct

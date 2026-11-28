@@ -1,5 +1,9 @@
 package app.maalu.ui.screens
 
+import app.maalu.data.shortDate
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -69,7 +73,7 @@ import app.maalu.ui.theme.MoneyStyle
 
 /** The card every dashboard section sits on: the large corner, one tonal step above the page. */
 @Composable
-fun SectionCard(title: String, trailing: String? = null, content: @Composable () -> Unit) {
+fun SectionCard(title: String, trailing: String? = null, content: @Composable ColumnScope.() -> Unit) {
     Surface(modifier = Modifier.elevation(2, MaterialTheme.shapes.extraLarge), shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerLow) {
         Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -161,6 +165,10 @@ fun CashFlowCard(allMonths: List<MonthlyPoint>, currency: String) {
     }
 }
 
+@Composable
+private fun SubHeading(text: String) =
+    Text(text, Modifier.padding(top = 4.dp).semantics { heading() }, style = MaterialTheme.typography.titleSmall)
+
 /** What a screen reader says in place of a drawn chart. */
 private fun chartText(title: String, points: List<String>) = "$title chart: ${points.joinToString("; ")}"
 
@@ -196,6 +204,7 @@ fun BudgetGoalsCard(budget: Budget?, goals: List<Goal>) {
     SectionCard("Budget and goals") {
         if (budget != null && budget.lines.isNotEmpty()) {
             val t = budget.totals
+            SubHeading("Spending limits")
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Row {
                     Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
@@ -207,7 +216,7 @@ fun BudgetGoalsCard(budget: Budget?, goals: List<Goal>) {
                     Text("${t.percent}%", style = MaterialTheme.typography.bodyMedium.merge(MoneyStyle), color = statusColor(t.status))
                 }
                 Bar(t.percent / 100f, statusColor(t.status), 10)
-                if (budget.attention > 0) Text("${budget.attention} ${if (budget.attention == 1) "limit needs" else "limits need"} attention", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (budget.attention > 0) Text("${budget.attention} ${if (budget.attention == 1) "limit needs" else "limits need"} attention", style = MaterialTheme.typography.labelLarge, color = warningInk())
             }
             budget.lines.take(4).forEach { line ->
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -225,6 +234,7 @@ fun BudgetGoalsCard(budget: Budget?, goals: List<Goal>) {
             }
         }
         // limits for set dates that are running now: one total for the whole stretch, shown beside the monthly ones
+        if (running.isNotEmpty()) SubHeading("Limits for set dates")
         if (budget != null) running.forEach { f ->
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Row {
@@ -242,6 +252,7 @@ fun BudgetGoalsCard(budget: Budget?, goals: List<Goal>) {
                 StatusWord(f.status)
             }
         }
+        if (goals.isNotEmpty()) SubHeading("Goals")
         goals.take(3).forEach { goal ->
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Row {
@@ -290,11 +301,17 @@ private fun kindColor(s: KindShare): Color = when (s.kind) {
 }
 
 @Composable
-fun TransactionsCard(title: String, trailing: String?, items: List<Transaction>?, empty: String) {
-    SectionCard(title, trailing) {
+fun TransactionsCard(title: String, items: List<Transaction>?, empty: String, onOpen: (Transaction) -> Unit, onSeeAll: (() -> Unit)? = null) {
+    SectionCard(title) {
         // null is a failed load, which must not read as having none
         if (items.isNullOrEmpty()) Text(if (items == null) "Couldn't load these." else empty, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        items?.forEach { t -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) { QuietRow(t) } }
+        items?.forEach { t ->
+            Row(
+                Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small).clickable(onClickLabel = "Open") { onOpen(t) }.heightIn(min = 48.dp),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) { QuietRow(t, below = shortDate(t.date)) }
+        }
+        if (onSeeAll != null) TextButton(onClick = onSeeAll, shapes = ButtonDefaults.shapes(), modifier = Modifier.align(Alignment.End)) { Text("See all") }
     }
 }
 
