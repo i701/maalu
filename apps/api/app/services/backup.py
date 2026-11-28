@@ -179,7 +179,6 @@ class BackupService:
                 "notify_email": user.notify_email,
                 "notify_login": user.notify_login,
                 "compact_numbers": user.compact_numbers,
-                "dashboard_order": user.dashboard_order,
                 "upcoming_days": user.upcoming_days,
                 "default_account_id": _encode(user.default_account_id),
             },
@@ -270,7 +269,6 @@ class BackupService:
         user.notify_email = bool(settings.get("notify_email", False))
         user.notify_login = bool(settings.get("notify_login", True))
         user.compact_numbers = bool(settings.get("compact_numbers", False))
-        user.dashboard_order = settings.get("dashboard_order")
         user.upcoming_days = min(30, max(5, int(settings.get("upcoming_days", 10))))
         default = settings.get("default_account_id")
         user.default_account_id = new_ids["accounts"].get(default) if default else None

@@ -23,8 +23,7 @@ import app.maalu.data.CategoryMonths
 import kotlinx.coroutines.launch
 import app.maalu.data.orderSections
 import app.maalu.data.mergeOrder
-import app.maalu.data.dashboardOrderJson
-import app.maalu.data.UserMe
+import app.maalu.data.DashboardLayout
 import app.maalu.data.DashboardStore
 import app.maalu.data.DashboardSection
 import androidx.compose.ui.platform.LocalContext
@@ -119,8 +118,6 @@ private data class DashboardData(
     val latest: List<Transaction> = emptyList(),
     val upcoming: List<Transaction> = emptyList(),
     val accounts: List<Account> = emptyList(),
-    /** The order the person saved, or null for the default one. */
-    val savedOrder: List<String>? = null,
     val categoryMonths: CategoryMonths? = null,
 )
 
@@ -141,11 +138,9 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
     val context = LocalContext.current
     val store = remember { DashboardStore(context.applicationContext) }
     // null until read, so a switched-off card never flashes up
-    val hidden by store.hidden.collectAsState(initial = null)
+    val layout by store.layout.collectAsState(initial = null)
     var arranging by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    // the order as just saved, ahead of the next load; empty is the default
-    var order by remember { mutableStateOf<List<String>?>(null) }
 
     val state by produceState<State>(State.Loading, month, attempt) {
         if (!refreshing) value = State.Loading
@@ -161,7 +156,6 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
             val categoryMonthsCall = async {
                 api.get<CategoryMonths>("transactions/categories/monthly", mapOf("date_from" to "${start.minusMonths(11)}", "date_to" to "$end"))
             }
-            val meCall = async { api.get<UserMe>("users/me") }
             val goalsCall = async { api.get<List<Goal>>("goals") }
             val latestCall = async { api.get<List<Transaction>>("transactions", mapOf("limit" to "5")) }
             val accountsCall = async { api.get<List<Account>>("accounts") }
@@ -181,14 +175,11 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
                         (latestCall.await() as? ApiResult.Ok)?.data.orEmpty(),
                         (upcomingCall.await() as? ApiResult.Ok)?.data.orEmpty(),
                         (accountsCall.await() as? ApiResult.Ok)?.data.orEmpty(),
-                        (meCall.await() as? ApiResult.Ok)?.data?.dashboardOrder,
                         categoryMonths = (categoryMonthsCall.await() as? ApiResult.Ok)?.data,
                     ),
                 )
             }
         }
-        // what was just loaded wins over the order saved from here
-        if (value is State.Ready) order = null
         refreshing = false
     }
 
@@ -218,9 +209,9 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
                 // available to spend is for the current budget period only, so it is hidden for other months
                 val isThisMonth = on == LocalDate.now().withDayOfMonth(1)
                 val available = s.data.available?.takeIf { isThisMonth }
-                val off = hidden ?: return@LazyColumn
+                val (order, off) = layout ?: return@LazyColumn
                 val defaults = dashboardSections(hasAvailable = available != null)
-                val onShow = orderSections(order ?: s.data.savedOrder, defaults).filter { it.id !in off }
+                val onShow = orderSections(order, defaults).filter { it.id !in off }
                 itemsIndexed(onShow, key = { _, it -> it.id }) { i, section ->
                     // neighbouring summaries share the page, parted by a hairline
                     if (section.isSummary && onShow.getOrNull(i - 1)?.isSummary == true) HorizontalDivider(Modifier.padding(bottom = 12.dp))
@@ -228,7 +219,7 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
                         DashboardSection.Available -> available?.let { AvailableSummary(it, onOpenPlan) }
                         DashboardSection.Metrics -> KeptSummary(s.data.totals, s.data.before, s.data.monthly)
                         DashboardSection.Spending -> SpendingCard(s.data.categories, s.data.totals.currency)
-                        // net worth is on Accounts, as on iOS; the id stays because the saved order has it
+                        // net worth is on Accounts, as on iOS; the id stays because a saved order may have it
                         DashboardSection.Balance -> Unit
                         DashboardSection.Monthly -> CashFlowCard(s.data.monthly, s.data.totals.currency)
                         DashboardSection.Budget -> BudgetGoalsCard(s.data.budget, s.data.goals)
@@ -249,21 +240,18 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}) {
                 if (arranging) {
                     val available = s.data.available?.takeIf { on == LocalDate.now().withDayOfMonth(1) }
                     val defaults = dashboardSections(hasAvailable = available != null)
-                    val shown = orderSections(order ?: s.data.savedOrder, defaults)
+                    val saved = layout?.order.orEmpty()
+                    val shown = orderSections(saved, defaults)
                     ArrangeDashboard(
-                        shown, defaults, hidden.orEmpty(),
-                        onSave = save@{ arranged, off ->
-                            // the order is sent only when it changed; the default one is saved as no order
-                            if (arranged != shown) {
-                                val saved = order ?: s.data.savedOrder
-                                val next = if (arranged == defaults) null else mergeOrder(saved, arranged)
-                                val r = api.patchJson<UserMe>("users/me", dashboardOrderJson(next).toString())
-                                if (r is ApiResult.Failed) return@save r.message.lines().first()
-                                order = next.orEmpty()
+                        shown, defaults, layout?.hidden.orEmpty(),
+                        onSave = { arranged, off ->
+                            val next = when (arranged) {
+                                shown -> saved
+                                defaults -> emptyList()
+                                else -> mergeOrder(saved, arranged)
                             }
-                            // outlives the dialog, which closes as soon as this returns
-                            scope.launch { store.save(off) }
-                            null
+                            // outlives the dialog, which closes at once
+                            scope.launch { store.save(DashboardLayout(next, off)) }
                         },
                         onClose = { arranging = false },
                     )

@@ -6344,11 +6344,6 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
-            /**
-             * Dashboard Order
-             * @description The order of the dashboard's sections; null is the default order.
-             */
-            dashboard_order: string[] | null;
             /** Default Account Id */
             default_account_id: string | null;
             /**
@@ -6400,11 +6395,6 @@ export interface components {
              * @default false
              */
             compact_numbers: boolean;
-            /**
-             * Dashboard Order
-             * @description The order of the dashboard's sections. Explicit null resets it.
-             */
-            dashboard_order?: string[] | null;
             /**
              * Default Account Id
              * @description The account a new transaction starts in. Explicit null clears it.

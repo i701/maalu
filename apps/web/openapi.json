@@ -8839,21 +8839,6 @@
             "title": "Created At",
             "type": "string"
           },
-          "dashboard_order": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "The order of the dashboard's sections; null is the default order.",
-            "title": "Dashboard Order"
-          },
           "default_account_id": {
             "anyOf": [
               {
@@ -8936,7 +8921,6 @@
           "notify_email",
           "notify_login",
           "compact_numbers",
-          "dashboard_order",
           "upcoming_days",
           "two_factor_enabled",
           "created_at"
@@ -8952,23 +8936,6 @@
             "description": "Show amounts of a thousand and over in a short form (1.2K, 3.4M) everywhere.",
             "title": "Compact Numbers",
             "type": "boolean"
-          },
-          "dashboard_order": {
-            "anyOf": [
-              {
-                "items": {
-                  "maxLength": 32,
-                  "type": "string"
-                },
-                "maxItems": 32,
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "The order of the dashboard's sections. Explicit null resets it.",
-            "title": "Dashboard Order"
           },
           "default_account_id": {
             "anyOf": [

@@ -17,11 +17,11 @@ final class DashboardModel {
     private(set) var upcoming: [Transaction] = []
     private(set) var accounts: [Account] = []
     private(set) var currency = ""
-    /// The order the person saved, or nil for the default one.
     /// What to call the person, for the greeting.
     private(set) var name: String?
+    /// The order the person saved, or nil for the default one. Kept on this device, as are the cards switched off.
     private(set) var savedOrder: [String]?
-    /// The cards switched off. Kept on this device, not on the server, so the web and Android do not know them yet.
+    /// The cards switched off.
     private(set) var hidden: Set<DashboardSection>
     private(set) var isLoading = true
     private(set) var errorMessage: String?
@@ -29,11 +29,13 @@ final class DashboardModel {
     static let monthsLoaded = 12
     private static let previewCount = 5
     private static let hiddenKey = "dashboardHiddenSections"
+    private static let orderKey = "dashboardSectionOrder"
 
     @ObservationIgnored private let defaults: UserDefaults
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
+        savedOrder = defaults.stringArray(forKey: Self.orderKey)
         hidden = Set((defaults.stringArray(forKey: Self.hiddenKey) ?? []).compactMap(DashboardSection.init(rawValue:)))
     }
 
@@ -85,14 +87,11 @@ final class DashboardModel {
         }
     }
 
-    /// Saves the order (nil goes back to the default one) and which cards are switched off. Returns a message when the server refused the order.
-    func saveLayout(order: [DashboardSection]?, hidden: Set<DashboardSection>, using api: Api) async -> String? {
-        let ids = order?.map(\.rawValue)
-        let result: ApiResult<Profile> = await api.patchJSON("users/me", body: ["dashboard_order": ids])
-        if case .failed(_, let message) = result { return message }
-        savedOrder = ids
+    /// Saves the order (nil goes back to the default one) and which cards are switched off.
+    func saveLayout(order: [DashboardSection]?, hidden: Set<DashboardSection>) {
+        savedOrder = order?.map(\.rawValue)
+        defaults.set(savedOrder, forKey: Self.orderKey)
         setHidden(hidden)
-        return nil
     }
 
     func setHidden(_ sections: Set<DashboardSection>) {
@@ -154,10 +153,7 @@ final class DashboardModel {
         self.latest = value(latest) ?? []
         self.upcoming = value(upcoming) ?? []
         self.accounts = value(accounts) ?? []
-        if let profile = value(profile) {
-            savedOrder = profile.dashboardOrder
-            name = profile.name
-        }
+        if let profile = value(profile) { name = profile.name }
         currency = self.totals?.currency ?? self.summary?.currency ?? ""
         errorMessage = hasContent ? nil : [failure(totals), failure(summary)].compactMap { $0 }.first
     }

@@ -1,13 +1,6 @@
 package app.maalu.data
 
-import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonArray
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
-
-/** A card on the Dashboard, in the default order. The ids are the web's, so one saved order (`users.dashboard_order`) arranges both. */
+/** A card on the Dashboard, in the default order. The ids are the saved ones, so do not rename them. */
 enum class DashboardSection(val id: String, val title: String) {
     Available("available", "Available to spend"),
     Metrics("metrics", "Income, spent and saved"),
@@ -37,18 +30,10 @@ fun orderSections(saved: List<String>?, visible: List<DashboardSection>): List<D
     return visible.sortedBy { rank[it.id] ?: rank.size }
 }
 
-/**
- * The order to save after arranging. The list is shared with the other apps, which have cards of their own (and a card with
- * nothing to show is not arranged here), so an id that was not arranged keeps its place and the arranged ones fill the rest.
- */
+/** The order to save after arranging: a card with nothing to show is not arranged, so its id keeps its place and the arranged ones fill the rest. */
 fun mergeOrder(saved: List<String>?, arranged: List<DashboardSection>): List<String> {
     val ids = arranged.map { it.id }
     val next = ids.iterator()
     val merged = saved.orEmpty().distinct().map { if (it in ids) next.next() else it }
     return merged + next.asSequence()
-}
-
-/** The body of `PATCH /users/me`: an explicit null goes back to the default order. */
-fun dashboardOrderJson(order: List<String>?): JsonObject = buildJsonObject {
-    put("dashboard_order", order?.let { ids -> buildJsonArray { ids.forEach { add(JsonPrimitive(it)) } } } ?: JsonNull)
 }

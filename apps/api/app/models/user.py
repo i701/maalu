@@ -1,7 +1,7 @@
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import JSON, BigInteger, Boolean, DateTime, ForeignKey, Integer, String, Uuid, func
+from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Integer, String, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base
@@ -38,9 +38,6 @@ class User(Base):
     # Show big amounts in a short form (1.2K, 3.4M) everywhere, from a thousand up. Off, the short
     # form is only used in tight places (a strip of figures on a phone), from ten thousand up.
     compact_numbers: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
-    # The order of the dashboard's sections, as the web's section ids. Null is the default order.
-    # The server never interprets the ids: the client ignores unknown ones and appends new sections.
-    dashboard_order: Mapped[list[str] | None] = mapped_column(JSON, default=None)
     # How many days ahead the dashboard's Coming up card and the Transactions page look (5 to 30).
     upcoming_days: Mapped[int] = mapped_column(Integer, default=10, server_default="10")
     # Two-factor (an authenticator app). The secret is kept encrypted (`app/two_factor.py`); it is

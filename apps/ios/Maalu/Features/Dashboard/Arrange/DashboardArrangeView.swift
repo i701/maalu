@@ -5,10 +5,8 @@ struct DashboardArrangeView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var order: [DashboardSection]
     @State private var hidden: Set<DashboardSection>
-    @State private var isSaving = false
-    @State private var errorMessage: String?
-    /// Saves the order (nil for the default one) and the cards switched off; returns a message when the server refused.
-    let onSave: ([DashboardSection]?, Set<DashboardSection>) async -> String?
+    /// Saves the order (nil for the default one) and the cards switched off.
+    let onSave: @MainActor ([DashboardSection]?, Set<DashboardSection>) -> Void
     private let defaults: [DashboardSection]
 
     /// `sections` are the cards that have something to show, in their current order; `defaults` the same cards in the default one.
@@ -16,7 +14,7 @@ struct DashboardArrangeView: View {
         sections: [DashboardSection],
         defaults: [DashboardSection],
         hidden: Set<DashboardSection>,
-        onSave: @escaping ([DashboardSection]?, Set<DashboardSection>) async -> String?
+        onSave: @escaping @MainActor ([DashboardSection]?, Set<DashboardSection>) -> Void
     ) {
         _order = State(initialValue: sections)
         _hidden = State(initialValue: hidden)
@@ -33,11 +31,7 @@ struct DashboardArrangeView: View {
                     }
                     .onMove { order.move(fromOffsets: $0, toOffset: $1) }
                 } footer: {
-                    if let errorMessage {
-                        Text(errorMessage).foregroundStyle(.red)
-                    } else {
-                        Text("Drag the handles to put the cards in the order you like, and switch off the ones you do not want. Which cards are off is kept on this device.")
-                    }
+                    Text("Drag the handles to put the cards in the order you like, and switch off the ones you do not want. Both are kept on this device.")
                 }
                 Section {
                     Button("Reset order and show every card", role: .destructive, action: reset)
@@ -45,15 +39,14 @@ struct DashboardArrangeView: View {
                 }
             }
             .environment(\.editMode, .constant(.active))
-            .saving(isSaving)
             .navigationTitle("Arrange the dashboard")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", role: .cancel) { dismiss() }.disabled(isSaving)
+                    Button("Cancel", role: .cancel) { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    SaveButton("Done", isSaving: isSaving, action: save)
+                    SaveButton("Done", isSaving: false, action: save)
                 }
             }
         }
@@ -73,12 +66,8 @@ struct DashboardArrangeView: View {
     }
 
     private func save() {
-        Task {
-            isSaving = true
-            // the default order is saved as no order, so a card added later lands where it belongs
-            errorMessage = await onSave(order == defaults ? nil : order, hidden)
-            isSaving = false
-            if errorMessage == nil { dismiss() }
-        }
+        // the default order is saved as no order, so a card added later lands where it belongs
+        onSave(order == defaults ? nil : order, hidden)
+        dismiss()
     }
 }

@@ -69,7 +69,6 @@ data class UserMe(
     @SerialName("notify_email") val notifyEmail: Boolean = false,
     @SerialName("notify_login") val notifyLogin: Boolean = true,
     val name: String? = null,
-    @SerialName("dashboard_order") val dashboardOrder: List<String>? = null,
 )
 
 /** One sign-in of the person's, for "Where you are signed in". */

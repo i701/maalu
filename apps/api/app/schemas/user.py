@@ -48,11 +48,6 @@ class UserUpdate(BaseModel):
         default=False,
         description="Show amounts of a thousand and over in a short form (1.2K, 3.4M) everywhere.",
     )
-    dashboard_order: list[Annotated[str, Field(max_length=32)]] | None = Field(
-        default=None,
-        max_length=32,
-        description="The order of the dashboard's sections. Explicit null resets it.",
-    )
     upcoming_days: int | None = Field(
         default=None,
         ge=5,
@@ -76,9 +71,6 @@ class UserResponse(BaseModel):
     notify_email: bool
     notify_login: bool
     compact_numbers: bool
-    dashboard_order: list[str] | None = Field(
-        description="The order of the dashboard's sections; null is the default order."
-    )
     upcoming_days: int = Field(
         description="How many days ahead the upcoming (planned) transactions are shown, 5 to 30."
     )

@@ -31,7 +31,6 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,24 +45,20 @@ import androidx.compose.ui.zIndex
 import app.maalu.data.DashboardSection
 import app.maalu.ui.components.FormDialog
 import kotlin.math.roundToInt
-import kotlinx.coroutines.launch
 
 /**
  * Put the cards in your own order, by dragging a handle or with the arrows, and switch off the ones you do not want.
- * Saved once, on Done. [onSave] returns the server's message when it refuses.
+ * Saved once, on Done.
  */
 @Composable
 fun ArrangeDashboard(
     sections: List<DashboardSection>, defaults: List<DashboardSection>, hidden: Set<String>,
-    onSave: suspend (List<DashboardSection>, Set<String>) -> String?, onClose: () -> Unit,
+    onSave: (List<DashboardSection>, Set<String>) -> Unit, onClose: () -> Unit,
 ) {
     var order by remember { mutableStateOf(sections) }
     var off by remember { mutableStateOf(hidden) }
-    var busy by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf<String?>(null) }
     var dragging by remember { mutableStateOf<DashboardSection?>(null) }
     var dragged by remember { mutableFloatStateOf(0f) }
-    val scope = rememberCoroutineScope()
     // one height for every row (taller with large text), so a drag knows how far a place is
     val rowHeight = 56.dp * LocalDensity.current.fontScale.coerceAtLeast(1f)
     val step = with(LocalDensity.current) { (rowHeight + 2.dp).toPx() }
@@ -77,17 +72,10 @@ fun ArrangeDashboard(
     }
 
     FormDialog(
-        "Arrange the dashboard", "Done", busy, error, remember { SnackbarHostState() }, onClose,
-        onSave = {
-            busy = true; error = null
-            scope.launch {
-                error = onSave(order, off)
-                busy = false
-                if (error == null) onClose()
-            }
-        },
+        "Arrange the dashboard", "Done", false, null, remember { SnackbarHostState() }, onClose,
+        onSave = { onSave(order, off); onClose() },
     ) {
-        Text("Which cards are off is kept on this device. The order is kept with your account.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("The order and which cards are off are kept on this device.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             order.forEachIndexed { i, section ->
                 // keyed, so a row keeps its drag gesture as it changes places
@@ -101,8 +89,8 @@ fun ArrangeDashboard(
                         Row(Modifier.padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 Icons.Outlined.DragIndicator, null,
-                                Modifier.pointerInput(section, busy) {
-                                    if (!busy) detectDragGestures(
+                                Modifier.pointerInput(section) {
+                                    detectDragGestures(
                                         onDragStart = { dragging = section; dragged = 0f },
                                         onDragEnd = { dragging = null },
                                         onDragCancel = { dragging = null },
@@ -116,10 +104,10 @@ fun ArrangeDashboard(
                                 }.padding(12.dp),
                             )
                             Text(section.title, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                            IconButton(onClick = { move(section, -1) }, enabled = !busy && i > 0, shapes = IconButtonDefaults.shapes()) { Icon(Icons.Outlined.ArrowUpward, "Move ${section.title} up") }
-                            IconButton(onClick = { move(section, 1) }, enabled = !busy && i < order.lastIndex, shapes = IconButtonDefaults.shapes()) { Icon(Icons.Outlined.ArrowDownward, "Move ${section.title} down") }
+                            IconButton(onClick = { move(section, -1) }, enabled = i > 0, shapes = IconButtonDefaults.shapes()) { Icon(Icons.Outlined.ArrowUpward, "Move ${section.title} up") }
+                            IconButton(onClick = { move(section, 1) }, enabled = i < order.lastIndex, shapes = IconButtonDefaults.shapes()) { Icon(Icons.Outlined.ArrowDownward, "Move ${section.title} down") }
                             Switch(
-                                checked = section.id !in off, enabled = !busy,
+                                checked = section.id !in off,
                                 onCheckedChange = { on -> off = if (on) off - section.id else off + section.id },
                                 modifier = Modifier.padding(start = 4.dp).semantics { contentDescription = "Show ${section.title}" },
                             )
@@ -128,7 +116,7 @@ fun ArrangeDashboard(
                 }
             }
         }
-        TextButton(onClick = { order = defaults; off = emptySet() }, enabled = !busy && (order != defaults || off.isNotEmpty()), shapes = ButtonDefaults.shapes()) {
+        TextButton(onClick = { order = defaults; off = emptySet() }, enabled = order != defaults || off.isNotEmpty(), shapes = ButtonDefaults.shapes()) {
             Text("Reset order and show every card")
         }
     }

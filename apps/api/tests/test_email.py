@@ -201,22 +201,6 @@ async def test_short_numbers_is_a_setting_that_defaults_off_and_is_in_backups(
     assert backup["settings"]["compact_numbers"] is True
 
 
-async def test_dashboard_order_is_a_setting_that_defaults_to_null_and_is_in_backups(
-    client: AsyncClient, auth
-):
-    assert (await client.get(ME, headers=auth)).json()["dashboard_order"] is None
-    res = await client.patch(ME, json={"dashboard_order": ["latest", "spending"]}, headers=auth)
-    assert res.status_code == 200, res.text
-    assert res.json()["dashboard_order"] == ["latest", "spending"]
-    backup = (await client.get("/api/v1/backup", headers=auth)).json()
-    assert backup["settings"]["dashboard_order"] == ["latest", "spending"]
-    # an unrelated change leaves it alone; an explicit null resets it
-    await client.patch(ME, json={"compact_numbers": True}, headers=auth)
-    assert (await client.get(ME, headers=auth)).json()["dashboard_order"] == ["latest", "spending"]
-    res = await client.patch(ME, json={"dashboard_order": None}, headers=auth)
-    assert res.json()["dashboard_order"] is None
-
-
 async def test_upcoming_days_is_a_setting_with_limits_and_in_backups(client: AsyncClient, auth):
     me = (await client.get(ME, headers=auth)).json()
     assert me["upcoming_days"] == 10

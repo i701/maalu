@@ -25,7 +25,7 @@ import MonthPicker from "#/components/MonthPicker";
 import IconSymbol from "#/components/Symbol";
 import { creditUsage } from "#/lib/accounts";
 import { CardMorph } from "#/lib/card-morph";
-import { useHiddenSections } from "#/lib/dashboard-hidden";
+import { useHiddenSections, useSectionOrder } from "#/lib/dashboard-layout";
 import {
 	DEFAULT_SECTION_ORDER,
 	monthBounds,
@@ -37,9 +37,8 @@ import { sumDecimals } from "#/lib/format";
 import { localToday } from "#/lib/planned";
 import { trendBounds } from "#/lib/trends";
 import { unwrap } from "#/lib/unwrap";
-import { useAction } from "#/lib/use-action";
 import { listAccountsFn } from "#/server/accounts";
-import { getMeFn, updateMeFn } from "#/server/auth";
+import { getMeFn } from "#/server/auth";
 import { getBudgetFn } from "#/server/budget";
 import { listGoalsFn } from "#/server/goals";
 import { getAvailableToSpendFn, getBalanceTrendFn, getMonthlyStatsFn } from "#/server/stats";
@@ -76,8 +75,6 @@ export const Route = createFileRoute("/_protected/dashboard")({
 		const trendEnd = current.end > now && current.start <= now ? now : current.end;
 		const range = { date_from: current.start, date_to: current.end };
 
-		// one /users/me request, shared with the upcoming list, which needs the days setting
-		const mePromise = getMeFn();
 		const [
 			totals,
 			before,
@@ -90,7 +87,6 @@ export const Route = createFileRoute("/_protected/dashboard")({
 			accounts,
 			available,
 			upcoming,
-			me,
 			categoryMonths,
 		] = await Promise.all([
 			getTransactionTotalsFn({ data: range }),
@@ -105,8 +101,7 @@ export const Route = createFileRoute("/_protected/dashboard")({
 			listGoalsFn({ data: {} }),
 			listAccountsFn(),
 			getAvailableToSpendFn(),
-			listUpcomingWithinSetting(mePromise),
-			mePromise,
+			listUpcomingWithinSetting(getMeFn()),
 			// a year of spending by category, for the "Spending by month" card (works without it)
 			getCategoryMonthsFn({ data: trendBounds(12, now) }),
 		]);
@@ -121,8 +116,6 @@ export const Route = createFileRoute("/_protected/dashboard")({
 			// planned bills and income, soonest first (the page works without them)
 			upcoming: upcoming.ok ? upcoming.data : [],
 			asOf: localToday(),
-			// the user's own order of the sections (null is the default one)
-			savedOrder: unwrap(me).dashboard_order,
 			categoryMonths: categoryMonths.ok ? categoryMonths.data : null,
 			// the page works without these two
 			available: available.ok ? available.data : null,
@@ -152,14 +145,13 @@ function DashboardPage() {
 		available,
 		upcoming,
 		asOf,
-		savedOrder,
 		categoryMonths,
 	} = Route.useLoaderData();
-	const { run, pending } = useAction();
 	const [editing, setEditing] = useState(false);
-	// the order being arranged; saved once, when the user is done
+	// the order being arranged (null is the default one); saved once, when the user is done
+	const [savedOrder, saveOrder] = useSectionOrder();
 	const [draft, setDraft] = useState<string[] | null>(null);
-	// sections turned off on this device (local, not the account); the draft is saved on Done
+	// sections turned off on this device; the draft is saved on Done
 	const [hidden, saveHidden] = useHiddenSections();
 	const [draftHidden, setDraftHidden] = useState<ReadonlySet<string>>(new Set());
 	const navigate = Route.useNavigate();
@@ -259,7 +251,7 @@ function DashboardPage() {
 	];
 	const byId = new Map(sections.map((section) => [section.id, section]));
 	const ordered = orderSections(
-		(editing ? draft : savedOrder) ?? DEFAULT_SECTION_ORDER,
+		(editing ? draft : savedOrder.length > 0 ? savedOrder : null) ?? DEFAULT_SECTION_ORDER,
 		sections.map((section) => section.id),
 	).flatMap((id) => byId.get(id) ?? []);
 
@@ -277,9 +269,8 @@ function DashboardPage() {
 		setEditing(true);
 	}
 
-	async function finishEditing() {
-		// a failed save keeps the page in arranging mode, with the error shown by useAction's owner
-		if (!(await run(() => updateMeFn({ data: { dashboard_order: draft } })))) return;
+	function finishEditing() {
+		saveOrder(draft ?? []);
 		saveHidden(draftHidden);
 		setEditing(false);
 	}
@@ -323,13 +314,12 @@ function DashboardPage() {
 				>
 					<Typography variant="body2" color="text.secondary">
 						Drag the cards by their handle, or use the arrows, to put them in the order you like.
-						The eye turns a card off on this device.
+						The eye turns a card off. Both are kept on this device.
 					</Typography>
 					<Box sx={{ display: "flex", gap: 1 }}>
 						<Button
 							color="inherit"
 							size="small"
-							disabled={pending}
 							onClick={() => {
 								setDraft(null);
 								setDraftHidden(new Set());
@@ -337,7 +327,7 @@ function DashboardPage() {
 						>
 							Reset
 						</Button>
-						<Button variant="contained" size="small" disabled={pending} onClick={finishEditing}>
+						<Button variant="contained" size="small" onClick={finishEditing}>
 							Done
 						</Button>
 					</Box>

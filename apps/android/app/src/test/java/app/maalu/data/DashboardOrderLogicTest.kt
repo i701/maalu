@@ -15,15 +15,10 @@ class DashboardOrderLogicTest {
         assertEquals(listOf(Spending, Available, Metrics, Balance), orderSections(listOf("spending", "gone", "available"), visible))
     }
 
-    @Test fun savingKeepsTheCardsThisAppDidNotArrange() {
+    @Test fun savingKeepsTheCardsThatWereNotArranged() {
         val saved = listOf("metrics", "income-rule", "spending", "spending-trend")
         assertEquals(listOf("spending", "income-rule", "metrics", "spending-trend", "balance"), mergeOrder(saved, listOf(Spending, Metrics, Balance)))
         assertEquals(listOf("balance", "metrics"), mergeOrder(null, listOf(Balance, Metrics)))
-    }
-
-    @Test fun resettingSendsAnExplicitNull() {
-        assertEquals("""{"dashboard_order":null}""", dashboardOrderJson(null).toString())
-        assertEquals("""{"dashboard_order":["balance"]}""", dashboardOrderJson(listOf("balance")).toString())
     }
 
     @Test fun netWorthIsNotADashboardCard() {

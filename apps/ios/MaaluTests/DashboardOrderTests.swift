@@ -19,21 +19,20 @@ struct DashboardOrderTests {
         #expect(DashboardSection.ordered(saved: saved, visible: visible) == [.balance, .metrics, .spending, .upcoming, .latest])
     }
 
-    @Test func theIdsAreTheWebsSoOneSavedOrderArrangesBoth() {
-        let web = ["available", "metrics", "spending", "balance", "monthly", "budget", "needs-wants", "money-flow", "credit", "upcoming", "latest"]
-        #expect(web.allSatisfy { id in DashboardSection(rawValue: id) != nil })
-    }
-
-    @Test func theProfileCarriesTheSavedOrder() throws {
-        let json = #"{"base_currency":"MVR","default_account_id":null,"compact_numbers":false,"dashboard_order":["latest","metrics"]}"#
-        let profile = try Api.decoder.decode(Profile.self, from: Data(json.utf8))
-        #expect(profile.dashboardOrder == ["latest", "metrics"])
+    @MainActor @Test func theOrderIsKeptOnTheDevice() throws {
+        let suite = "DashboardOrderTests"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defaults.removePersistentDomain(forName: suite)
+        DashboardModel(defaults: defaults).saveLayout(order: [.latest, .metrics], hidden: [])
+        #expect(DashboardModel(defaults: defaults).savedOrder == ["latest", "metrics"])
+        DashboardModel(defaults: defaults).saveLayout(order: nil, hidden: [])
+        #expect(DashboardModel(defaults: defaults).savedOrder == nil)
     }
 
     @Test func theProfileCarriesTheNameOrNone() throws {
-        let named = #"{"name":"Aidhaan","base_currency":"MVR","default_account_id":null,"compact_numbers":false,"dashboard_order":null}"#
+        let named = #"{"name":"Aidhaan","base_currency":"MVR","default_account_id":null,"compact_numbers":false}"#
         #expect(try Api.decoder.decode(Profile.self, from: Data(named.utf8)).name == "Aidhaan")
-        let unnamed = #"{"name":null,"base_currency":"MVR","default_account_id":null,"compact_numbers":false,"dashboard_order":null}"#
+        let unnamed = #"{"name":null,"base_currency":"MVR","default_account_id":null,"compact_numbers":false}"#
         #expect(try Api.decoder.decode(Profile.self, from: Data(unnamed.utf8)).name == nil)
     }
 }

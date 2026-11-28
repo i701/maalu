@@ -1791,7 +1791,7 @@
       "id": "dashboard-order",
       "area": "reports",
       "name": "Arrange the dashboard",
-      "summary": "Drag the dashboard's cards, or move them with arrows, into your own order; kept on the server.",
+      "summary": "Drag the dashboard's cards, or move them with arrows, into your own order; kept on the device, one per app.",
       "web": {
         "status": "done",
         "evidence": [
@@ -1816,9 +1816,7 @@
       "routes": [
         "/dashboard"
       ],
-      "api": [
-        "/api/v1/users/me"
-      ]
+      "api": []
     },
     {
       "id": "dashboard-hide-cards",
@@ -1828,7 +1826,7 @@
       "web": {
         "status": "done",
         "evidence": [
-          "apps/web/src/lib/dashboard-hidden.ts",
+          "apps/web/src/lib/dashboard-layout.ts",
           "apps/web/src/components/dashboard/SectionGrid.tsx"
         ]
       },

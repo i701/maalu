@@ -1,6 +1,6 @@
 import Foundation
 
-/// A card on the dashboard. The ids are the web's, so one saved order (`users.dashboard_order`) arranges both; `incomeRule` and `spendingTrend` are iOS only.
+/// A card on the dashboard. The raw values are what is saved on the device, so do not rename them.
 enum DashboardSection: String, CaseIterable, Identifiable {
     case metrics
     case moneyFlow = "money-flow"
