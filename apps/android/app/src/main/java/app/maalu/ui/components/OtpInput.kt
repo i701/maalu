@@ -90,15 +90,17 @@ fun OtpInput(
                         // a wider gap in the middle reads as 123 456
                         if (i == length / 2 && length % 2 == 0) Spacer(Modifier.width(6.dp))
                         val isActive = focused && enabled && i == active
+                        val shape = RoundedCornerShape(14.dp)
                         Surface(
-                            shape = RoundedCornerShape(14.dp),
-                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            shape = shape,
+                            // white and lifted: the pale blue fill blended into the backdrop and into dialogs
+                            color = searchCardColor(),
                             border = when {
                                 isError -> BorderStroke(2.dp, MaterialTheme.colorScheme.error)
                                 isActive -> BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
                                 else -> null
                             },
-                            modifier = Modifier.size(width = 46.dp, height = 56.dp),
+                            modifier = Modifier.size(width = 46.dp, height = 56.dp).elevation(2, shape),
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 val digit = value.getOrNull(i)

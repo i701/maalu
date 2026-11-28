@@ -2,6 +2,8 @@
 
 package app.maalu.ui.screens
 
+import app.maalu.ui.components.searchCardColor
+import app.maalu.ui.components.elevation
 import app.maalu.ui.components.SecondaryButton
 import android.content.ActivityNotFoundException
 import android.content.ClipData
@@ -134,7 +136,7 @@ fun TwoFactorSetupScreen(api: Api, onClose: () -> Unit, onEnabled: (List<String>
                     },
                     modifier = Modifier.fillMaxWidth(),
                 ) { Icon(Icons.Outlined.OpenInNew, null, Modifier.padding(end = 8.dp)); Text("Open in authenticator app") }
-                Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+                Surface(modifier = Modifier.elevation(2, MaterialTheme.shapes.large), shape = MaterialTheme.shapes.large, color = searchCardColor()) {
                     Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("Or type this key in by hand", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(groupSecret(s.secret), style = MaterialTheme.typography.titleMedium, fontFamily = FontFamily.Monospace)
@@ -169,7 +171,7 @@ fun RecoveryCodesDialog(codes: List<String>, onDone: () -> Unit) {
             SecureWindow()
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Each works once in place of an authenticator code, if you lose your phone. They will not be shown again.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+                Surface(modifier = Modifier.elevation(2, MaterialTheme.shapes.large), shape = MaterialTheme.shapes.large, color = searchCardColor()) {
                     Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         codes.chunked(2).forEach { pair ->
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
