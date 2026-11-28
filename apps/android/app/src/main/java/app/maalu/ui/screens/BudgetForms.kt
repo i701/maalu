@@ -102,7 +102,7 @@ fun LineFormScreen(api: Api, currency: String, budget: Budget, start: LineForm?,
     val title = when { editingId != null -> "Edit limit"; start != null -> "Repeat limit"; else -> "New limit" }
 
     FormDialog(
-        title = title, saveLabel = if (editingId != null) "Save changes" else "Add limit", floating = true,
+        title = title, saveLabel = if (editingId != null) "Save changes" else "Add limit",
         busy = busy, error = error, snackbar = snackbar, onClose = onClose,
         onSave = {
             val problem = form.problem()
@@ -212,7 +212,7 @@ fun GoalFormScreen(api: Api, currency: String, editing: Goal?, onClose: () -> Un
     LaunchedEffect(Unit) { accounts = (api.get<List<Account>>("accounts") as? ApiResult.Ok)?.data.orEmpty() }
 
     FormDialog(
-        title = if (editing == null) "New goal" else "Edit goal", saveLabel = if (editing == null) "Add goal" else "Save changes", floating = true,
+        title = if (editing == null) "New goal" else "Edit goal", saveLabel = if (editing == null) "Add goal" else "Save changes",
         busy = busy, error = error, snackbar = snackbar, onClose = onClose,
         onSave = {
             val problem = form.problem()

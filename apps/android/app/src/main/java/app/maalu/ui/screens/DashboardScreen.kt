@@ -196,14 +196,7 @@ fun DashboardScreen(api: Api, month: String, onOpenPlan: () -> Unit = {}, onOpen
     Column(Modifier.fillMaxSize()) {
         when (val s = state) {
             State.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-            is State.Failed -> Column(
-                Modifier.fillMaxSize().padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(s.message, color = MaterialTheme.colorScheme.error)
-                RaisedButton(onClick = { attempt++ }) { Text("Try again") }
-            }
+            is State.Failed -> LoadFailed(s.message, onRetry = { attempt++ })
             is State.Ready -> PullToRefreshBox(
                 isRefreshing = refreshing,
                 onRefresh = { refreshing = true; attempt++ },

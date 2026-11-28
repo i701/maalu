@@ -160,10 +160,7 @@ fun VendorsScreen(api: Api) {
             SearchPill(query, { query = it.take(100) }, Modifier.padding(horizontal = 16.dp, vertical = 6.dp), placeholder = "Search vendors")
             when {
                 loading && items.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-                error != null -> Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(error ?: "", color = MaterialTheme.colorScheme.error)
-                    RaisedButton(onClick = { reload++ }) { Text("Try again") }
-                }
+                error != null -> LoadFailed(error ?: "", onRetry = { reload++ })
                 else -> PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
                 if (loading && !refreshing) LinearProgressIndicator(Modifier.fillMaxWidth().align(Alignment.TopCenter).zIndex(1f))
                     if (items.isEmpty()) Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

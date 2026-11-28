@@ -38,7 +38,7 @@ import androidx.compose.ui.window.DialogProperties
 
 /**
  * The frame every full-screen form shares: a close button and title on top, the scrolling fields, a message line
- * and a Save button at the bottom (it locks while saving), and a snackbar for problems.
+ * and a Save button floating over the foot (it locks while saving), and a snackbar for problems.
  */
 @Composable
 fun FormDialog(
@@ -50,8 +50,6 @@ fun FormDialog(
     onClose: () -> Unit,
     onSave: () -> Unit,
     secure: Boolean = false,
-    /** Save floats over the foot of the form with its shadow, as on the transaction and account forms. */
-    floating: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Dialog(onDismissRequest = { if (!busy) onClose() }, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
@@ -59,7 +57,7 @@ fun FormDialog(
         BackdropPage {
             Scaffold(
                             containerColor = Color.Transparent,
-                snackbarHost = { SnackbarHost(snackbar, Modifier.padding(bottom = if (floating) SaveButtonRoom else 0.dp)) },
+                snackbarHost = { SnackbarHost(snackbar, Modifier.padding(bottom = SaveButtonRoom)) },
                 topBar = {
                     TopAppBar(
                         colors = glowTopBarColors(),
@@ -68,23 +66,12 @@ fun FormDialog(
                     )
                 },
             ) { padding ->
-                if (floating) Box(Modifier.padding(padding).fillMaxSize().imePadding()) {
+                Box(Modifier.padding(padding).fillMaxSize().imePadding()) {
                     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         content()
                         Spacer(Modifier.height(SaveButtonRoom))
                     }
                     FloatingSave(saveLabel, busy, error, onSave, Modifier.align(Alignment.BottomCenter))
-                } else Column(Modifier.padding(padding).fillMaxSize().imePadding()) {
-                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                        content()
-                        Box(Modifier.padding(bottom = 8.dp))
-                    }
-                    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
-                        RaisedButton(onClick = onSave, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
-                            Text(if (busy) "Saving…" else saveLabel)
-                        }
-                    }
                 }
             }
         }

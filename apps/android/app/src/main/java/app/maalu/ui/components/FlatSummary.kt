@@ -1,5 +1,6 @@
 package app.maalu.ui.components
 
+import app.maalu.ui.theme.DeepBlue
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
@@ -48,8 +49,8 @@ import kotlin.math.roundToInt
 
 // The summaries drawn flat on the page, as on iOS: no card, only text and drawing in the summary's own hue.
 
-/** The iOS app's brand blue. */
-val SummaryBlue = Color(0xFF437CEF)
+/** The summaries' hue: the app's blue. */
+val SummaryBlue = DeepBlue
 private const val Faint = 0.28f
 
 /** [hue] deepened for light mode and lightened for dark, so text in it reads on the page. */

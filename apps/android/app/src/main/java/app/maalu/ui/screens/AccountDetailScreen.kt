@@ -202,10 +202,7 @@ fun AccountDetailScreen(api: Api, accountId: String, onBack: () -> Unit) {
 
     val acc = account
     when {
-        failed != null -> Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(failed ?: "", color = MaterialTheme.colorScheme.error)
-            RaisedButton(onClick = { failed = null; reload++ }) { Text("Try again") }
-        }
+        failed != null -> LoadFailed(failed ?: "", onRetry = { failed = null; reload++ })
         acc == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         else -> PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
             val groups = groupByDay(items.toList())

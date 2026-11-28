@@ -36,16 +36,22 @@ fun <T> ChipRow(options: List<T>, selected: T, label: (T) -> String, onSelect: (
     }
 }
 
+/** A load that failed: why, and a way to ask again. */
+@Composable
+fun LoadFailed(message: String, onRetry: () -> Unit, modifier: Modifier = Modifier.fillMaxSize()) {
+    Column(modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(message, color = MaterialTheme.colorScheme.error)
+        RaisedButton(onClick = onRetry) { Text("Try again") }
+    }
+}
+
 /** What to show while a report loads, or says why it could not. [content] runs once there is data. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun <T : Any> ReportState(data: T?, error: String?, onRetry: () -> Unit, content: @Composable (T) -> Unit) {
     when {
         data != null -> content(data)
-        error != null -> Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(error, color = MaterialTheme.colorScheme.error)
-            RaisedButton(onClick = onRetry) { Text("Try again") }
-        }
+        error != null -> LoadFailed(error, onRetry)
         else -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
     }
 }

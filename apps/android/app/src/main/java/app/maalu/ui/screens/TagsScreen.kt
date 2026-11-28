@@ -111,10 +111,7 @@ fun TagsScreen(api: Api) {
             SearchPill(query, { query = it.take(100) }, Modifier.padding(horizontal = 16.dp, vertical = 6.dp), placeholder = "Search tags")
             when (val s = state) {
                 TagLoad.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-                is TagLoad.Failed -> Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(s.message, color = MaterialTheme.colorScheme.error)
-                    RaisedButton(onClick = { attempt++ }) { Text("Try again") }
-                }
+                is TagLoad.Failed -> LoadFailed(s.message, onRetry = { attempt++ })
                 is TagLoad.Loaded -> {
                     val shown = if (query.isBlank()) s.items else s.items.filter { it.name.contains(query.trim(), ignoreCase = true) }
                     PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; attempt++ }, modifier = Modifier.fillMaxSize()) {

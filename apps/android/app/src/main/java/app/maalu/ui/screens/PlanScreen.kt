@@ -100,10 +100,7 @@ fun PlanScreen(api: Api, onOpenAccount: (id: String, name: String) -> Unit) {
 
     val d = data
     when {
-        error != null && d == null -> Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(error ?: "", color = MaterialTheme.colorScheme.error)
-            RaisedButton(onClick = { reload++ }) { Text("Try again") }
-        }
+        error != null && d == null -> LoadFailed(error ?: "", onRetry = { reload++ })
         d == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         d.accounts.isEmpty() -> Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
             Text("Add a cash, current or debit account and this shows what you can spend after your bills.", color = MaterialTheme.colorScheme.onSurfaceVariant)

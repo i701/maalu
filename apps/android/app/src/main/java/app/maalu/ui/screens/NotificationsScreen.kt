@@ -94,10 +94,7 @@ fun NotificationsScreen(api: Api, onOpen: (Target) -> Unit, onChanged: () -> Uni
 
     val list = items
     when {
-        list == null && error != null -> Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(error ?: "", color = MaterialTheme.colorScheme.error)
-            RaisedButton(onClick = { reload++ }) { Text("Try again") }
-        }
+        list == null && error != null -> LoadFailed(error ?: "", onRetry = { reload++ })
         list == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         list.isEmpty() -> PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize().padding(32.dp), verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {

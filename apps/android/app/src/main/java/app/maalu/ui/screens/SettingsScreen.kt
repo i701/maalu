@@ -131,10 +131,7 @@ fun SettingsScreen(api: Api) {
 
     val user = me
     when {
-        error != null && user == null -> Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(error ?: "", color = MaterialTheme.colorScheme.error)
-            RaisedButton(onClick = { reload++ }) { Text("Try again") }
-        }
+        error != null && user == null -> LoadFailed(error ?: "", onRetry = { reload++ })
         user == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         else -> PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
             LazyColumn(Modifier.fillMaxSize().fadeInOnAppear().fadingEdges(edges), state = edges, contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {

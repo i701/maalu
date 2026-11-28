@@ -161,10 +161,7 @@ fun SubscriptionsScreen(api: Api) {
         if (reloading) androidx.compose.material3.LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 8.dp))
         when {
             loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-            error != null -> Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(error ?: "", color = MaterialTheme.colorScheme.error)
-                RaisedButton(onClick = { reload++ }) { Text("Try again") }
-            }
+            error != null -> LoadFailed(error ?: "", onRetry = { reload++ })
             else -> PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; reload++ }, modifier = Modifier.fillMaxSize()) {
                 LazyColumn(Modifier.fillMaxSize().fadeInOnAppear().fadingEdges(listState), state = listState, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 96.dp)) {
                     summary?.let { sm -> item { SummaryRow(sm) } }

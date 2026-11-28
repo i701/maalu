@@ -242,10 +242,7 @@ fun TransactionsScreen(api: Api, initial: TxFilters? = null, onInitialUsed: () -
             when {
                 loading && items.isEmpty() -> item(key = "loading") { Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() } }
                 error != null -> item(key = "error") {
-                    Column(Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(error ?: "", color = MaterialTheme.colorScheme.error)
-                        RaisedButton(onClick = { reload++ }) { Text("Try again") }
-                    }
+                    LoadFailed(error ?: "", onRetry = { reload++ }, Modifier.fillMaxWidth().padding(24.dp))
                 }
                 else -> {
                     if (items.isEmpty()) item(key = "empty") {

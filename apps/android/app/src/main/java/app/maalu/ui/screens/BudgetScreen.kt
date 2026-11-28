@@ -153,10 +153,7 @@ fun BudgetScreen(api: Api, on: String) {
 
     when (val s = state) {
         BudgetLoad.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-        is BudgetLoad.Failed -> Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(s.message, color = MaterialTheme.colorScheme.error)
-            RaisedButton(onClick = { attempt++ }) { Text("Try again") }
-        }
+        is BudgetLoad.Failed -> LoadFailed(s.message, onRetry = { attempt++ })
         is BudgetLoad.Loaded -> {
             val b = s.data.budget
             PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; attempt++ }, modifier = Modifier.fillMaxSize()) {

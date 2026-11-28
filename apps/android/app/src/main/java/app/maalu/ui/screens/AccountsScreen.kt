@@ -146,14 +146,7 @@ fun AccountsScreen(api: Api, onOpen: (Account) -> Unit) {
     Box(Modifier.fillMaxSize()) {
         when (val s = state) {
             Load.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-            is Load.Failed -> Column(
-                Modifier.fillMaxSize().padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(s.message, color = MaterialTheme.colorScheme.error)
-                RaisedButton(onClick = { attempt++ }) { Text("Try again") }
-            }
+            is Load.Failed -> LoadFailed(s.message, onRetry = { attempt++ })
             is Load.Loaded -> {
                 val groups = s.data.accounts.groupBy { it.group }
                 PullToRefreshBox(isRefreshing = refreshing, onRefresh = { refreshing = true; attempt++ }, modifier = Modifier.fillMaxSize()) {
