@@ -23,7 +23,7 @@ import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.SwapHoriz
 import app.maalu.ui.components.AlertDialog
-import app.maalu.ui.components.RaisedButton
+import app.maalu.ui.components.PrimaryButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -96,7 +96,7 @@ fun TransferSuggestionsCard(api: Api, suggestions: List<TransferSuggestion>, onC
                 if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 PairRows(s)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    RaisedButton(onClick = { confirming = s }, enabled = !busy) { Text("Make one transfer") }
+                    PrimaryButton(onClick = { confirming = s }, enabled = !busy) { Text("Make one transfer") }
                     TextButton(shapes = ButtonDefaults.shapes(),
                         enabled = !busy,
                         onClick = {

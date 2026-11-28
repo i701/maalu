@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.text.KeyboardOptions
-import app.maalu.ui.components.RaisedButton
+import app.maalu.ui.components.PrimaryButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -107,7 +107,7 @@ fun LoginScreen(api: Api, server: String, onSignedIn: (String) -> Unit, onChange
         }
         error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
 
-        RaisedButton(enabled = !busy,
+        PrimaryButton(enabled = !busy,
             modifier = Modifier.fillMaxWidth(),
             onClick = {
                 if (challenge == null && (email.isBlank() || password.isEmpty())) error = "Enter your email and password."

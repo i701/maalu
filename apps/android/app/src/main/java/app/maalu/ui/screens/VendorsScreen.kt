@@ -42,7 +42,7 @@ import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material.icons.outlined.Sell
 import androidx.compose.material.icons.outlined.Storefront
-import app.maalu.ui.components.RaisedButton
+import app.maalu.ui.components.PrimaryButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -258,7 +258,7 @@ private fun VendorSheet(v: Vendor, onEdit: () -> Unit, onMerge: () -> Unit, onDe
             Fact("Currency", v.currency)
             Fact("Place", v.place)
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                RaisedButton(onClick = onEdit, modifier = Modifier.weight(1f)) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Edit") }
+                PrimaryButton(onClick = onEdit, modifier = Modifier.weight(1f)) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Edit") }
                 SecondaryButton(onClick = onMerge, modifier = Modifier.weight(1f)) { Icon(Icons.Outlined.CallMerge, null, Modifier.padding(end = 6.dp)); Text("Merge") }
             }
             DangerButton(onClick = onDelete, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 6.dp)); Text("Delete") }

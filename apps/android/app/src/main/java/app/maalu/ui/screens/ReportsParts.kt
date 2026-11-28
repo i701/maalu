@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import app.maalu.ui.components.RaisedButton
+import app.maalu.ui.components.PrimaryButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
@@ -41,7 +41,7 @@ fun <T> ChipRow(options: List<T>, selected: T, label: (T) -> String, onSelect: (
 fun LoadFailed(message: String, onRetry: () -> Unit, modifier: Modifier = Modifier.fillMaxSize()) {
     Column(modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(message, color = MaterialTheme.colorScheme.error)
-        RaisedButton(onClick = onRetry) { Text("Try again") }
+        PrimaryButton(onClick = onRetry) { Text("Try again") }
     }
 }
 

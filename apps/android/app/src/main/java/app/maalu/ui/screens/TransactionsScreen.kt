@@ -44,7 +44,7 @@ import app.maalu.data.canEdit
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material.icons.outlined.Search
-import app.maalu.ui.components.RaisedButton
+import app.maalu.ui.components.PrimaryButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.IconButtonDefaults

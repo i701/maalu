@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
-import app.maalu.ui.components.RaisedButton
+import app.maalu.ui.components.PrimaryButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -55,7 +55,7 @@ fun ServerScreen(onConnected: (String) -> Unit) {
             supportingText = error?.let { { Text(it) } },
             modifier = Modifier.fillMaxWidth(),
         )
-        RaisedButton(enabled = !checking,
+        PrimaryButton(enabled = !checking,
             modifier = Modifier.fillMaxWidth(),
             onClick = {
                 if (text.isBlank()) error = "Enter the server address."

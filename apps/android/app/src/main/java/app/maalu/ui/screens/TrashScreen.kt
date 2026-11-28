@@ -27,7 +27,7 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.RestoreFromTrash
 import app.maalu.ui.components.AlertDialog
-import app.maalu.ui.components.RaisedButton
+import app.maalu.ui.components.PrimaryButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
@@ -226,7 +226,7 @@ private fun SelectionBar(count: Int, total: Int, loaded: Int, busy: Boolean, onR
                 TextButton(shapes = ButtonDefaults.shapes(), onClick = onClear, enabled = !busy) { Text("Clear") }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                RaisedButton(onClick = onRestore, enabled = !busy) { Icon(Icons.Outlined.RestoreFromTrash, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Restore") }
+                PrimaryButton(onClick = onRestore, enabled = !busy) { Icon(Icons.Outlined.RestoreFromTrash, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Restore") }
                 DangerButton(onClick = onDelete, enabled = !busy) { Icon(Icons.Outlined.DeleteForever, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Delete forever") }
                 if (total > loaded && count < total) TextButton(shapes = ButtonDefaults.shapes(), onClick = onSelectAll, enabled = !busy) { Text("Select all $total") }
             }
@@ -246,7 +246,7 @@ private fun TrashSheet(t: Transaction, onClose: () -> Unit, onRestore: () -> Uni
             if (t.type != "transfer") DetailFact("Category", t.category)
             DetailFact("Vendor", t.vendor?.name)
             DetailFact("Note", t.description)
-            RaisedButton(onClick = onRestore, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) { Icon(Icons.Outlined.RestoreFromTrash, null, Modifier.padding(end = 8.dp)); Text("Restore") }
+            PrimaryButton(onClick = onRestore, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) { Icon(Icons.Outlined.RestoreFromTrash, null, Modifier.padding(end = 8.dp)); Text("Restore") }
             DangerButton(onClick = onDelete, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Outlined.DeleteForever, null, Modifier.padding(end = 8.dp)); Text("Delete forever") }
         }
     }

@@ -37,7 +37,7 @@ import app.maalu.data.settingsText
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import app.maalu.ui.components.AlertDialog
-import app.maalu.ui.components.RaisedButton
+import app.maalu.ui.components.PrimaryButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -408,7 +408,7 @@ private fun SheetActions(onEdit: (() -> Unit)?, onDelete: (() -> Unit)?, editIsM
         extra?.invoke()
         if (onEdit != null) {
             val label: @Composable RowScope.() -> Unit = { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Edit") }
-            if (editIsMain) RaisedButton(onClick = onEdit, modifier = Modifier.fillMaxWidth(), content = label)
+            if (editIsMain) PrimaryButton(onClick = onEdit, modifier = Modifier.fillMaxWidth(), content = label)
             else SecondaryButton(onClick = onEdit, modifier = Modifier.fillMaxWidth(), content = label)
         }
         if (onDelete != null) DangerButton(onClick = onDelete, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 6.dp)); Text("Delete") }
@@ -478,7 +478,7 @@ private fun GoalSheet(g: Goal, onMoney: () -> Unit, onEdit: () -> Unit, onDelete
             Fact("This period", if (g.periodStatus != null && g.periodPlanned != null) "${formatMoney(g.periodContributed ?: "0", g.currency)} of ${formatMoney(g.periodPlanned, g.currency)} · ${if (g.periodStatus == "funded") "funded" else "still to set aside"}" else null)
             Fact("Target date", g.targetDate?.let(::shortDate))
             SheetActions(onEdit, onDelete, editIsMain = g.account != null) {
-                if (g.account == null) RaisedButton(onClick = onMoney, modifier = Modifier.fillMaxWidth()) { Text("Add or take out money") }
+                if (g.account == null) PrimaryButton(onClick = onMoney, modifier = Modifier.fillMaxWidth()) { Text("Add or take out money") }
                 else Text("This goal follows ${g.account.name}: its balance is what you have saved.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }

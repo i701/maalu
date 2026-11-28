@@ -1,5 +1,6 @@
 package app.maalu.ui.components
 
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.background
@@ -158,7 +159,10 @@ fun FloatingSave(label: String, busy: Boolean, error: String?, onClick: () -> Un
                 Text(it, Modifier.fillMaxWidth().padding(12.dp), color = MaterialTheme.colorScheme.onErrorContainer, style = MaterialTheme.typography.bodyMedium)
             }
         }
-        RaisedButton(onClick = onClick, enabled = !busy, modifier = Modifier.fillMaxWidth().height(56.dp)) {
+        PrimaryButton(
+            onClick = onClick, enabled = !busy, modifier = Modifier.fillMaxWidth().height(ButtonDefaults.MediumContainerHeight),
+            shapes = ButtonDefaults.shapesFor(ButtonDefaults.MediumContainerHeight),
+        ) {
             Text(if (busy) "Saving…" else label, style = MaterialTheme.typography.titleMedium)
         }
     }

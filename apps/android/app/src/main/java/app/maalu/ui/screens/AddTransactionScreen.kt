@@ -64,7 +64,7 @@ import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material.icons.outlined.Sell
 import androidx.compose.material.icons.outlined.Storefront
 import app.maalu.ui.components.AlertDialog
-import app.maalu.ui.components.RaisedButton
+import app.maalu.ui.components.PrimaryButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
@@ -282,7 +282,7 @@ fun AddTransactionScreen(api: Api, onClose: () -> Unit, onSaved: () -> Unit, edi
                 when {
                     loadError != null -> Column(Modifier.fillMaxSize().padding(padding).padding(24.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(loadError ?: "", color = MaterialTheme.colorScheme.error)
-                        RaisedButton(onClick = onClose, modifier = Modifier.padding(top = 12.dp)) { Text("Close") }
+                        PrimaryButton(onClick = onClose, modifier = Modifier.padding(top = 12.dp)) { Text("Close") }
                     }
                     o == null -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
                     else -> Form(

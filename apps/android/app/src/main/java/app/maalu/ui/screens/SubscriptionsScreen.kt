@@ -39,7 +39,7 @@ import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.PlayArrow
 import app.maalu.ui.components.AlertDialog
-import app.maalu.ui.components.RaisedButton
+import app.maalu.ui.components.PrimaryButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -274,7 +274,7 @@ private fun SuggestionsCard(candidates: List<SubscriptionCandidate>, onAdd: (Sub
                                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    RaisedButton(onClick = { onAdd(c) }) { Text("Add") }
+                                    PrimaryButton(onClick = { onAdd(c) }) { Text("Add") }
                                     TextButton(shapes = ButtonDefaults.shapes(), onClick = { onDismiss(c) }) { Text("Not a subscription") }
                                 }
                             }
@@ -331,7 +331,7 @@ private fun SubscriptionSheet(s: Subscription, onEdit: () -> Unit, onToggle: () 
             Fact("Payments", app.maalu.data.installmentsText(s.installmentsTotal, s.paymentsMade))
             Fact("Reminder", s.remindDaysBefore?.let { d -> app.maalu.data.RemindOptions.firstOrNull { it.first == d }?.second ?: "$d days before" } ?: "None")
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                RaisedButton(onClick = onEdit, modifier = Modifier.weight(1f)) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Edit") }
+                PrimaryButton(onClick = onEdit, modifier = Modifier.weight(1f)) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Edit") }
                 if (s.canPause() || s.canResume()) SecondaryButton(onClick = onToggle, modifier = Modifier.weight(1f)) {
                     Icon(if (s.canPause()) Icons.Outlined.Pause else Icons.Outlined.PlayArrow, null, Modifier.padding(end = 6.dp)); Text(if (s.canPause()) "Pause" else "Resume")
                 }

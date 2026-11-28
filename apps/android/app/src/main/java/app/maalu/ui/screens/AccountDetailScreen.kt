@@ -40,7 +40,7 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Tune
 import app.maalu.ui.components.AlertDialog
-import app.maalu.ui.components.RaisedButton
+import app.maalu.ui.components.PrimaryButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -340,7 +340,7 @@ private fun MonthCard(label: String, amount: String, currency: String, modifier:
 private fun Actions(a: Account, onAdd: () -> Unit, onAdjust: () -> Unit, onEdit: () -> Unit, onArchive: () -> Unit, onDelete: () -> Unit, onRates: (() -> Unit)? = null) {
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            RaisedButton(onClick = onAdd) { Icon(Icons.Outlined.Add, null, Modifier.padding(end = 6.dp)); Text("Add transaction") }
+            PrimaryButton(onClick = onAdd) { Icon(Icons.Outlined.Add, null, Modifier.padding(end = 6.dp)); Text("Add transaction") }
             SecondaryButton(onClick = onAdjust) { Icon(Icons.Outlined.Tune, null, Modifier.padding(end = 6.dp)); Text("Adjust balance") }
             SecondaryButton(onClick = onEdit) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp)); Text("Edit") }
             SecondaryButton(onClick = onArchive) { Icon(Icons.Outlined.Archive, null, Modifier.padding(end = 6.dp)); Text("Archive") }
@@ -361,7 +361,7 @@ private fun StatementPanel(s: CardStatement, onRepay: () -> Unit) {
             StatementFigure("Paid since", s.paidSince, s.currency)
             StatementFigure("Spent since (next statement)", s.spentSince, s.currency)
             StatementFigure("Owed now", s.owedNow, s.currency)
-            if (s.remaining.toBigDecimalOrNull()?.signum()?.let { it > 0 } == true) RaisedButton(onClick = onRepay, modifier = Modifier.fillMaxWidth()) { Text("Repay ${formatMoney(s.remaining, s.currency)}") }
+            if (s.remaining.toBigDecimalOrNull()?.signum()?.let { it > 0 } == true) PrimaryButton(onClick = onRepay, modifier = Modifier.fillMaxWidth()) { Text("Repay ${formatMoney(s.remaining, s.currency)}") }
         }
     }
 }

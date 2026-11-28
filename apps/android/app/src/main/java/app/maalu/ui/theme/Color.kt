@@ -15,7 +15,7 @@ import androidx.compose.ui.graphics.Color
 // light primary is a deeper blue than the web's: the iOS Save button's, darkened until
 // white text on it passes 4.5:1.
 
-/** The iOS app's Save blue, darkened for contrast: the light primary, and every filled button's fill in both themes (RaisedButton). */
+/** The iOS app's Save blue, darkened for contrast: the light primary. */
 val DeepBlue = Color(0xFF2F66D9)
 
 val LightColors: ColorScheme = lightColorScheme(

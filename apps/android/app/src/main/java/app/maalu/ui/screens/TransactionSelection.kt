@@ -22,7 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
-import app.maalu.ui.components.RaisedButton
+import app.maalu.ui.components.PrimaryButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -87,7 +87,7 @@ fun TransactionSelectionBar(
                 TextButton(shapes = ButtonDefaults.shapes(), onClick = onClear, enabled = !busy) { Text("Clear") }
             }
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                RaisedButton(onClick = onEdit, enabled = !busy) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Edit") }
+                PrimaryButton(onClick = onEdit, enabled = !busy) { Icon(Icons.Outlined.Edit, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Edit") }
                 DangerButton(onClick = onDelete, enabled = !busy) { Icon(Icons.Outlined.Delete, null, Modifier.padding(end = 6.dp).size(18.dp)); Text("Delete") }
                 when (selectAll) {
                     is SelectAll.Offer -> TextButton(shapes = ButtonDefaults.shapes(), onClick = onSelectAll, enabled = !busy) { Text("Select all ${selectAll.total}") }
@@ -146,7 +146,7 @@ fun BulkEditSheet(api: Api, count: Int, onClose: () -> Unit, onApply: (BulkEdit)
                 }
             }
             problem?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
-            RaisedButton(onClick = { if (edit.isEmpty) problem = "Choose something to change." else onApply(edit) },
+            PrimaryButton(onClick = { if (edit.isEmpty) problem = "Choose something to change." else onApply(edit) },
                 modifier = Modifier.fillMaxWidth(),
             ) { Text("Apply to ${transactionCount(count)}") }
         }

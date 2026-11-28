@@ -29,7 +29,7 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Inventory2
 import app.maalu.ui.components.AlertDialog
-import app.maalu.ui.components.RaisedButton
+import app.maalu.ui.components.PrimaryButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
@@ -282,7 +282,7 @@ private fun GroupSheet(api: Api, id: String, onClose: () -> Unit, onChanged: () 
                  }}
                 item {
                     Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        RaisedButton(onClick = { adding = true }, enabled = !busy && g.transactionCount < MAX_GROUP, modifier = Modifier.weight(1f)) { Text("Add transactions") }
+                        PrimaryButton(onClick = { adding = true }, enabled = !busy && g.transactionCount < MAX_GROUP, modifier = Modifier.weight(1f)) { Text("Add transactions") }
                         SecondaryButton(onClick = { editing = true }, enabled = !busy) { Text("Edit") }
                     }
                 }
@@ -447,7 +447,7 @@ fun TransactionPicker(api: Api, initial: Set<String>, maxPick: Int, onClose: () 
                 }
                 Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     if (chosen.size >= maxPick) Text("That is the most a group can hold.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    RaisedButton(onClick = { onDone(chosen) }, modifier = Modifier.fillMaxWidth()) {
+                    PrimaryButton(onClick = { onDone(chosen) }, modifier = Modifier.fillMaxWidth()) {
                         Text(if (chosen.isEmpty()) "Done" else "Use ${chosen.size} ${if (chosen.size == 1) "transaction" else "transactions"}")
                     }
                 }

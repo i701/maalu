@@ -33,7 +33,7 @@ import androidx.compose.material.icons.outlined.Key
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Tune
-import app.maalu.ui.components.RaisedButton
+import app.maalu.ui.components.PrimaryButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -145,7 +145,7 @@ fun SettingsScreen(api: Api) {
                             keyboard = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                         )
                         Text("What Maalu calls you, on the Dashboard.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        RaisedButton(
+                        PrimaryButton(
                             onClick = {
                                 saving = true
                                 scope.launch {
@@ -299,7 +299,7 @@ private fun TwoFactorCard(on: Boolean, onSetUp: () -> Unit, onNewCodes: () -> Un
             if (on) Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SecondaryButton(onClick = onNewCodes, modifier = Modifier.weight(1f)) { Text("New recovery codes") }
                 DangerButton(onClick = onTurnOff, modifier = Modifier.weight(1f)) { Text("Turn off") }
-            } else RaisedButton(onClick = onSetUp, modifier = Modifier.fillMaxWidth()) { Text("Set up two-factor") }
+            } else PrimaryButton(onClick = onSetUp, modifier = Modifier.fillMaxWidth()) { Text("Set up two-factor") }
         }
     }
 }

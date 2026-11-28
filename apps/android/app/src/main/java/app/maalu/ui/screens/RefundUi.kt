@@ -24,7 +24,7 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Notes
 import androidx.compose.material.icons.outlined.Numbers
 import androidx.compose.material.icons.outlined.SwapHoriz
-import app.maalu.ui.components.RaisedButton
+import app.maalu.ui.components.PrimaryButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
@@ -300,9 +300,9 @@ fun LinkRefundDialog(api: Api, income: Transaction, onClose: () -> Unit, onDone:
                 }
                 Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
-                    RaisedButton(enabled = ready && !busy, modifier = Modifier.fillMaxWidth(),
+                    PrimaryButton(enabled = ready && !busy, modifier = Modifier.fillMaxWidth(),
                         onClick = {
-                            val p = chosen ?: return@RaisedButton
+                            val p = chosen ?: return@PrimaryButton
                             busy = true; error = null
                             scope.launch {
                                 when (val r = api.patchJson<Transaction>("transactions/${income.id}", linkRefundJson(p.id, items.takeIf { it.isNotEmpty() }).toString())) {

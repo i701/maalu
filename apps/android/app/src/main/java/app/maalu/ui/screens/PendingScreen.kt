@@ -21,7 +21,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.TaskAlt
-import app.maalu.ui.components.RaisedButton
+import app.maalu.ui.components.PrimaryButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -174,7 +174,7 @@ private fun TaskCard(task: SplitTask, busy: Boolean, onApprove: () -> Unit, onRe
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                RaisedButton(onClick = onApprove, enabled = !busy && ready.isNotEmpty() && !plan.over) { Text(if (busy) "Working…" else "Approve") }
+                PrimaryButton(onClick = onApprove, enabled = !busy && ready.isNotEmpty() && !plan.over) { Text(if (busy) "Working…" else "Approve") }
                 SecondaryButton(onClick = onReview, enabled = !busy) { Text("Review and edit") }
                 TextButton(shapes = ButtonDefaults.shapes(), onClick = onDismiss, enabled = !busy) { Text("Dismiss") }
             }

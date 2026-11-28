@@ -4,7 +4,7 @@ import app.maalu.ui.components.SecondaryButton
 import androidx.compose.ui.unit.Dp
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
-import app.maalu.ui.components.RaisedButton
+import app.maalu.ui.components.PrimaryButton
 import app.maalu.ui.components.glowTopBarColors
 import app.maalu.ui.components.glowBackground
 import androidx.compose.material3.ButtonDefaults
